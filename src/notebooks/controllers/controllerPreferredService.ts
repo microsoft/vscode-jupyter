@@ -54,7 +54,6 @@ import {
     IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
-    IControllerSelection,
     IKernelRankingHelper,
     IVSCodeNotebookController,
     PreferredKernelExactMatchReason
@@ -82,7 +81,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
-        @inject(IControllerSelection) private readonly selection: IControllerSelection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {
@@ -420,7 +418,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         ) {
             return;
         }
-        if (this.selection.getSelected(document)) {
+        if (this.registration.getSelected(document)) {
             return;
         }
 

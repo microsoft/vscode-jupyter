@@ -33,7 +33,7 @@ import { traceInfo } from '../../platform/logging';
 import { ResourceSet } from '../../platform/vscode-path/map';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IControllerLoader, IControllerSelection } from '../controllers/types';
+import { IControllerLoader, IControllerRegistration } from '../controllers/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
 import { DebugCellController } from './controllers/debugCellController';
 import { RestartController } from './controllers/restartController';
@@ -60,7 +60,7 @@ export class DebuggingManager
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
         @inject(IControllerLoader) controllerLoader: IControllerLoader,
-        @inject(IControllerSelection) controllerSelection: IControllerSelection,
+        @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
@@ -72,7 +72,7 @@ export class DebuggingManager
         super(
             kernelProvider,
             controllerLoader,
-            controllerSelection,
+            controllerRegistration,
             commandManager,
             appShell,
             vscNotebook,

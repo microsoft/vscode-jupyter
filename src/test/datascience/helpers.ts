@@ -24,7 +24,7 @@ import { noop, sleep } from '../core';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { isWeb } from '../../platform/common/utils/misc';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { isEqual } from '../../platform/vscode-path/resources';
@@ -324,7 +324,7 @@ export async function verifySelectedControllerIsRemoteForRemoteTests(notebook?: 
     }
     notebook = notebook || vscode.window.activeNotebookEditor!.notebook;
     const api = await initialize();
-    const controller = api.serviceContainer.get<IControllerSelection>(IControllerSelection).getSelected(notebook);
+    const controller = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration).getSelected(notebook);
     if (!controller) {
         return;
     }

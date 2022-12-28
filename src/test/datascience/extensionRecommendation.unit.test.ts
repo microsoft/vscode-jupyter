@@ -14,7 +14,7 @@ import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNote
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../kernels/types';
 import { ExtensionRecommendationService } from '../../standalone/recommendation/extensionRecommendation.node';
 import { JupyterNotebookView } from '../../platform/common/constants';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('Extension Recommendation', () => {
@@ -28,7 +28,7 @@ suite('Extension Recommendation', () => {
                 let appShell: IApplicationShell;
                 let extensions: IExtensions;
                 let commandManager: ICommandManager;
-                let controllerSelection: IControllerSelection;
+                let controllerRegistration: IControllerRegistration;
                 let onDidOpenNotebookDocument: EventEmitter<NotebookDocument>;
                 let onNotebookControllerSelected: EventEmitter<{
                     notebook: NotebookDocument;
@@ -45,15 +45,15 @@ suite('Extension Recommendation', () => {
                     }>();
                     vscNotebook = mock<IVSCodeNotebook>();
                     when(vscNotebook.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
-                    controllerSelection = mock<IControllerSelection>();
-                    when(controllerSelection.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
+                    controllerRegistration = mock<IControllerRegistration>();
+                    when(controllerRegistration.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
                     memento = mock<Memento>();
                     appShell = mock<IApplicationShell>();
                     extensions = mock<IExtensions>();
                     commandManager = mock<ICommandManager>();
                     recommendation = new ExtensionRecommendationService(
                         instance(vscNotebook),
-                        instance(controllerSelection),
+                        instance(controllerRegistration),
                         disposables,
                         instance(memento),
                         instance(appShell),

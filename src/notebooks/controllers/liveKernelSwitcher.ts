@@ -12,7 +12,7 @@ import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferred
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { waitForCondition } from '../../platform/common/utils/async';
-import { IControllerLoader, IControllerRegistration, IControllerSelection } from './types';
+import { IControllerLoader, IControllerRegistration } from './types';
 
 /**
  * This class listens tracks notebook controller selection. When a notebook runs
@@ -26,7 +26,6 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IControllerSelection) private readonly controllerSelection: IControllerSelection,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
@@ -43,7 +42,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
         // When all controllers are loaded, see if one matches
         this.controllerLoader.loaded
             .then(async () => {
-                const active = this.controllerSelection.getSelected(n);
+                const active = this.controllerRegistration.getSelected(n);
                 const preferredRemote = await this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(n.uri);
                 const matching = preferredRemote
                     ? this.controllerRegistration.registered.find((l) => l.id === preferredRemote)
@@ -66,7 +65,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
                         id: kernel.id,
                         extension: JVSC_EXTENSION_ID
                     });
-                    const selected = this.controllerSelection.getSelected(n);
+                    const selected = this.controllerRegistration.getSelected(n);
                     return selected?.connection.id === kernel.id;
                 }
                 return false;

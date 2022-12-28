@@ -19,7 +19,7 @@ import { ServiceContainer } from '../../platform/ioc/container';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { IControllerSelection } from './types';
+import { IControllerRegistration } from './types';
 
 type CreateEnvironmentResult = {
     path: string | undefined;
@@ -37,7 +37,7 @@ export class PythonEnvKernelConnectionCreator {
         disposeAllDisposables(this.disposables);
     }
     constructor(private readonly notebook: NotebookDocument, cancelToken: CancellationToken) {
-        const controllerSelection = ServiceContainer.instance.get<IControllerSelection>(IControllerSelection);
+        const controllerSelection = ServiceContainer.instance.get<IControllerRegistration>(IControllerRegistration);
         // If user selects another controller for this notebook, then stop waiting for the environment to be created.
         controllerSelection.onControllerSelected(
             (e) => {

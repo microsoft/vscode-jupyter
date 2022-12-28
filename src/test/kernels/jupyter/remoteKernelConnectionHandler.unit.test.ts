@@ -23,7 +23,7 @@ import {
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { RemoteKernelConnectionHandler } from '../../../notebooks/controllers/remoteKernelConnectionHandler';
 import { Subject } from 'rxjs/Subject';
-import { IControllerSelection, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 
 use(chaiAsPromised);
 suite('Remote kernel connection handler', async () => {
@@ -36,7 +36,7 @@ suite('Remote kernel connection handler', async () => {
         controller: IVSCodeNotebookController;
     }>;
     let remoteConnectionHandler: RemoteKernelConnectionHandler;
-    let controllers: IControllerSelection;
+    let controllers: IControllerRegistration;
     let kernelProvider: IKernelProvider;
     const disposables: IDisposable[] = [];
     // const server2Uri = 'http://one:1234/hello?token=1234';
@@ -84,7 +84,7 @@ suite('Remote kernel connection handler', async () => {
     setup(() => {
         onDidStartKernel = new EventEmitter<IKernel>();
         kernelProvider = mock<IKernelProvider>();
-        controllers = mock<IControllerSelection>();
+        controllers = mock<IControllerRegistration>();
         tracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
         preferredRemoteKernelProvider = mock<PreferredRemoteKernelIdProvider>();
         onNotebookControllerSelectionChanged = new EventEmitter<{

@@ -3,7 +3,7 @@
 
 'use strict';
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
@@ -21,7 +21,8 @@ import {
     IConfigurationService,
     IExtensionContext,
     IBrowserService,
-    IFeaturesManager
+    IFeaturesManager,
+    IDisposable
 } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceInfoIfCI } from '../../platform/logging';
@@ -58,6 +59,26 @@ export class ControllerRegistration implements IControllerRegistration {
     private get metadatas(): KernelConnectionMetadata[] {
         return [...this.registeredMetadatas.values()];
     }
+    public get onControllerSelected(): Event<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+    }> {
+        return this.selectedEmitter.event;
+    }
+    public get onControllerSelectionChanged(): Event<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+        selected: boolean;
+    }> {
+        return this.selectionChangedEmitter.event;
+    }
+    private selectedEmitter = new EventEmitter<{ notebook: NotebookDocument; controller: IVSCodeNotebookController }>();
+    private selectionChangedEmitter = new EventEmitter<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+        selected: boolean;
+    }>();
+    private selectedControllers = new Map<string, IVSCodeNotebookController>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -97,6 +118,9 @@ export class ControllerRegistration implements IControllerRegistration {
             !this._activeInterpreterControllerIds.has(controller.id) &&
             !this.isControllerAttachedToADocument(controller)
         );
+    }
+    public getSelected(document: NotebookDocument): IVSCodeNotebookController | undefined {
+        return this.selectedControllers.get(document.uri.toString());
     }
     addOrUpdate(
         metadata: KernelConnectionMetadata,
@@ -169,12 +193,15 @@ export class ControllerRegistration implements IControllerRegistration {
                         this.serviceContainer,
                         this.displayDataProvider
                     );
+                    // Hook up to if this NotebookController is selected or de-selected
+                    const controllerDisposables: IDisposable[] = [];
                     controller.onDidDispose(
                         () => {
                             traceInfoIfCI(
                                 `Deleting controller '${controller.id}' associated with view ${viewType} from registration as it was disposed`
                             );
                             this.registeredControllers.delete(controller.id);
+                            controllerDisposables.forEach((d) => d.dispose());
                             // Note to self, registered metadatas survive disposal.
                             // This is so we don't have to recompute them when we switch back
                             // and forth between local and remote
@@ -186,6 +213,21 @@ export class ControllerRegistration implements IControllerRegistration {
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
                     added.push(controller);
+                    controller.onNotebookControllerSelected(
+                        (e) => {
+                            traceInfoIfCI(`Controller ${e.controller?.id} selected`);
+                            this.selectedControllers.set(e.notebook.uri.toString(), e.controller);
+                            // Now notify out that we have updated a notebooks controller
+                            this.selectedEmitter.fire(e);
+                        },
+                        this,
+                        controllerDisposables
+                    );
+                    controller.onNotebookControllerSelectionChanged(
+                        (e) => this.selectionChangedEmitter.fire({ ...e, controller }),
+                        this,
+                        controllerDisposables
+                    );
                 });
             if (triggerChangeEvent && added.length) {
                 this.changeEmitter.fire({ added: added, removed: [] });

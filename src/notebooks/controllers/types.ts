@@ -56,6 +56,16 @@ export interface IControllerRegistration {
      * Gets every registered connection metadata
      */
     all: KernelConnectionMetadata[];
+    readonly onControllerSelected: vscode.Event<{
+        notebook: vscode.NotebookDocument;
+        controller: IVSCodeNotebookController;
+    }>;
+    readonly onControllerSelectionChanged: vscode.Event<{
+        notebook: vscode.NotebookDocument;
+        controller: IVSCodeNotebookController;
+        selected: boolean;
+    }>;
+    getSelected(document: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
     /**
      * Keeps track of controllers created for the active interpreter.
      * These are very special controllers, as they are created out of band even before kernel discovery completes.
@@ -95,20 +105,6 @@ export interface IControllerRegistration {
     isFiltered(metadata: KernelConnectionMetadata): boolean;
 }
 
-export const IControllerSelection = Symbol('IControllerSelection');
-
-export interface IControllerSelection {
-    readonly onControllerSelected: vscode.Event<{
-        notebook: vscode.NotebookDocument;
-        controller: IVSCodeNotebookController;
-    }>;
-    readonly onControllerSelectionChanged: vscode.Event<{
-        notebook: vscode.NotebookDocument;
-        controller: IVSCodeNotebookController;
-        selected: boolean;
-    }>;
-    getSelected(document: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
-}
 export const IControllerPreferredService = Symbol('IControllerPreferredService');
 
 export interface IControllerPreferredService {

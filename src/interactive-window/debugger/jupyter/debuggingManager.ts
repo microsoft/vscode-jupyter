@@ -13,7 +13,7 @@ import {
     NotebookEditor
 } from 'vscode';
 import { IKernelProvider } from '../../../kernels/types';
-import { IControllerLoader, IControllerSelection } from '../../../notebooks/controllers/types';
+import { IControllerLoader, IControllerRegistration } from '../../../notebooks/controllers/types';
 import { pythonIWKernelDebugAdapter } from '../../../notebooks/debugger/constants';
 import { DebuggingManagerBase } from '../../../notebooks/debugger/debuggingManagerBase';
 import {
@@ -54,7 +54,7 @@ export class InteractiveWindowDebuggingManager
 {
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(IControllerSelection) controllerSelection: IControllerSelection,
+        @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(IControllerLoader) controllerLoader: IControllerLoader,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
@@ -69,7 +69,7 @@ export class InteractiveWindowDebuggingManager
         super(
             kernelProvider,
             controllerLoader,
-            controllerSelection,
+            controllerRegistration,
             commandManager,
             appShell,
             vscNotebook,

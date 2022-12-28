@@ -9,13 +9,11 @@ import { ControllerDefaultService } from './controllerDefaultService';
 import { ControllerLoader } from './controllerLoader';
 import { ControllerPreferredService } from './controllerPreferredService';
 import { ControllerRegistration } from './controllerRegistration';
-import { ControllerSelection } from './controllerSelection';
 import {
     IControllerDefaultService,
     IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
-    IControllerSelection,
     IKernelRankingHelper,
     INotebookKernelSourceSelector
 } from './types';
@@ -34,7 +32,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addBinding(IControllerLoader, IExtensionSingleActivationService);
     serviceManager.addSingleton<IControllerPreferredService>(IControllerPreferredService, ControllerPreferredService);
     serviceManager.addBinding(IControllerPreferredService, IExtensionSyncActivationService);
-    serviceManager.addSingleton<IControllerSelection>(IControllerSelection, ControllerSelection);
     serviceManager.addSingleton<ConnectionDisplayDataProvider>(
         ConnectionDisplayDataProvider,
         ConnectionDisplayDataProvider

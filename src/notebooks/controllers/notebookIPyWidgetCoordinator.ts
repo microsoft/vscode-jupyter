@@ -9,7 +9,7 @@ import { traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IWebviewCommunication } from '../../platform/webviews/types';
 import { CommonMessageCoordinator } from './ipywidgets/message/commonMessageCoordinator';
@@ -97,7 +97,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IControllerSelection) private readonly controllerManager: IControllerSelection
+        @inject(IControllerRegistration) private readonly controllerManager: IControllerRegistration
     ) {}
     public activate(): void {
         this.notebook.onDidChangeVisibleNotebookEditors(

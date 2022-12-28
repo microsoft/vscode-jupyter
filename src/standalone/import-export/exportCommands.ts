@@ -19,7 +19,7 @@ import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { isPythonNotebook } from '../../kernels/helpers';
-import { IControllerSelection, IControllerPreferredService } from '../../notebooks/controllers/types';
+import { IControllerRegistration, IControllerPreferredService } from '../../notebooks/controllers/types';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
@@ -37,7 +37,7 @@ export class ExportCommands implements IDisposable {
         private readonly fs: IFileSystem,
         private readonly notebooks: IVSCodeNotebook,
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        private readonly controllerSelection: IControllerSelection,
+        private readonly controllerRegistration: IControllerRegistration,
         private readonly controllerPreferred: IControllerPreferredService
     ) {}
     public register() {
@@ -77,7 +77,7 @@ export class ExportCommands implements IDisposable {
 
         if (document) {
             const interpreter =
-                this.controllerSelection.getSelected(document)?.connection.interpreter ||
+                this.controllerRegistration.getSelected(document)?.connection.interpreter ||
                 this.controllerPreferred.getPreferred(document)?.connection.interpreter;
             return this.export(document, undefined, undefined, interpreter);
         } else {
@@ -105,7 +105,7 @@ export class ExportCommands implements IDisposable {
             // At this point also see if the active editor has a candidate interpreter to use
             interpreter =
                 interpreter ||
-                this.controllerSelection.getSelected(sourceDocument)?.connection.interpreter ||
+                this.controllerRegistration.getSelected(sourceDocument)?.connection.interpreter ||
                 this.controllerPreferred.getPreferred(sourceDocument)?.connection.interpreter;
             if (exportMethod) {
                 sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
