@@ -6,13 +6,15 @@ import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
-import { traceError, traceInfo } from '../../platform/logging';
+import { traceInfo } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { waitForCondition } from '../../platform/common/utils/async';
-import { IControllerLoader, IControllerRegistration } from './types';
+import { IControllerRegistration } from './types';
+import { swallowExceptions } from '../../platform/common/utils/decorators';
+import { isJupyterNotebook } from '../../platform/common/utils';
 
 /**
  * This class listens tracks notebook controller selection. When a notebook runs
@@ -24,7 +26,6 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(PreferredRemoteKernelIdProvider)
@@ -38,21 +39,52 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
         this.vscNotebook.notebookDocuments.forEach((d) => this.onDidOpenNotebook(d));
     }
 
-    private onDidOpenNotebook(n: NotebookDocument) {
-        // When all controllers are loaded, see if one matches
-        this.controllerLoader.loaded
-            .then(async () => {
-                const active = this.controllerRegistration.getSelected(n);
-                const preferredRemote = await this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(n.uri);
-                const matching = preferredRemote
-                    ? this.controllerRegistration.registered.find((l) => l.id === preferredRemote)
-                    : undefined;
-                if (matching && active?.id !== matching.id) {
-                    // This controller is the one we want, but it's not currently set.
-                    await this.switchKernel(n, matching.connection);
+    @swallowExceptions()
+    private async onDidOpenNotebook(notebook: NotebookDocument) {
+        if (!isJupyterNotebook(notebook)) {
+            return;
+        }
+        const preferredRemote = await this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(notebook.uri);
+        if (!preferredRemote) {
+            return;
+        }
+        const findAndSelectRemoteController = () => {
+            const active = this.controllerRegistration.getSelected(notebook);
+            const matching = this.controllerRegistration.registered.find((l) => l.id === preferredRemote);
+            if (matching && active?.id !== matching.id) {
+                // This controller is the one we want, but it's not currently set.
+                this.switchKernel(notebook, matching.connection);
+                return true;
+            }
+            return false;
+        };
+        if (findAndSelectRemoteController()) {
+            return;
+        }
+
+        const disposable = this.controllerRegistration.onDidChange(
+            (e) => {
+                if (!e.added.length) {
+                    return;
                 }
-            })
-            .catch((e) => traceError(e));
+
+                if (findAndSelectRemoteController()) {
+                    disposable.dispose();
+                }
+            },
+            this,
+            this.disposables
+        );
+        this.controllerRegistration.onControllerSelected(
+            (e) => {
+                if (e.notebook === notebook) {
+                    // controller selected, stop attempting to change this our selves.
+                    disposable.dispose();
+                }
+            },
+            this,
+            this.disposables
+        );
     }
 
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {

@@ -32,11 +32,7 @@ import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../consta
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
-import {
-    IControllerDefaultService,
-    IControllerLoader,
-    IControllerRegistration
-} from '../../../notebooks/controllers/types';
+import { IControllerDefaultService, IControllerRegistration } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Remote Execution @kernelCore', function () {
@@ -48,7 +44,6 @@ suite('Remote Execution @kernelCore', function () {
     let serviceContainer: IServiceContainer;
     let globalMemento: Memento;
     let encryptedStorage: IEncryptedStorage;
-    let controllerLoader: IControllerLoader;
     let controllerRegistration: IControllerRegistration;
     let controllerDefault: IControllerDefaultService;
 
@@ -64,7 +59,6 @@ suite('Remote Execution @kernelCore', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         encryptedStorage = api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage);
         globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         controllerDefault = api.serviceContainer.get<IControllerDefaultService>(IControllerDefaultService);
     });
@@ -126,13 +120,11 @@ suite('Remote Execution @kernelCore', function () {
     });
 
     test('Can run against a remote kernelspec', async function () {
-        await controllerLoader.loaded;
-        const controllers = controllerRegistration.registered;
-
-        // Verify we have a remote kernel spec.
-        assert.ok(
-            controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
-            'Should have at least one remote controller'
+        await waitForCondition(
+            () =>
+                controllerRegistration.registered.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
+            defaultNotebookTestTimeout,
+            'No remote controllers'
         );
 
         // Don't wait for the kernel since we will select our own

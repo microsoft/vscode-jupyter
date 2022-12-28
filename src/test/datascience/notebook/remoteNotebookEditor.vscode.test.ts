@@ -96,7 +96,6 @@ suite('Remote Kernel Execution', function () {
             disposables
         );
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-        await controllerLoader.loaded;
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
@@ -110,8 +109,6 @@ suite('Remote Kernel Execution', function () {
 
     // This test needs to run in node only as we have to start another jupyter server
     test('Old Remote kernels are removed when switching to new Remote Server @kernelPicker', async function () {
-        await controllerLoader.loaded;
-
         // Opening a notebook will trigger the refresh of the kernel list.
         let nbUri = await createTemporaryNotebook([], disposables);
         await openNotebook(nbUri);
@@ -162,8 +159,6 @@ suite('Remote Kernel Execution', function () {
         );
     });
     test('Local Kernel state is not lost when connecting to remote @kernelPicker', async function () {
-        await controllerLoader.loaded;
-
         // After resetting connection to local only, verify all remote connections are no longer available.
         await jupyterServerSelector.setJupyterURIToLocal();
 
@@ -288,11 +283,15 @@ suite('Remote Kernel Execution', function () {
         );
 
         // Switch to a local kernel.
-        await controllerLoader.loaded;
-        const localKernelController = controllerRegistration.registered.find(
-            (item) =>
-                item.connection.kind === 'startUsingLocalKernelSpec' ||
-                item.connection.kind === 'startUsingPythonInterpreter'
+        const localKernelController = await waitForCondition(
+            () =>
+                controllerRegistration.registered.find(
+                    (item) =>
+                        item.connection.kind === 'startUsingLocalKernelSpec' ||
+                        item.connection.kind === 'startUsingPythonInterpreter'
+                ),
+            defaultNotebookTestTimeout,
+            'No local kernel controller found'
         );
         await commands.executeCommand('notebook.selectKernel', {
             id: localKernelController?.id,
