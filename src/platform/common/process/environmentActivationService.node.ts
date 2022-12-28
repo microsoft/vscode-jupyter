@@ -9,8 +9,7 @@ import { inject, injectable } from 'inversify';
 
 import { IWorkspaceService } from '../application/types';
 import { IDisposable, Resource } from '../types';
-import { OSType } from '../utils/platform';
-import { EnvironmentVariables, ICustomEnvironmentVariablesProvider } from '../variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
@@ -27,50 +26,6 @@ import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
 import { noop } from '../utils/misc';
 
-export enum TerminalShellType {
-    commandPrompt = 'commandPrompt',
-    bash = 'bash'
-}
-
-// The shell under which we'll execute activation scripts.
-export const defaultShells = {
-    [OSType.Windows]: { shell: 'cmd', shellType: TerminalShellType.commandPrompt },
-    [OSType.OSX]: { shell: 'bash', shellType: TerminalShellType.bash },
-    [OSType.Linux]: { shell: 'bash', shellType: TerminalShellType.bash },
-    [OSType.Unknown]: undefined
-};
-export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
-
-export type EnvironmentVariablesCacheInformation = {
-    activatedEnvVariables: EnvironmentVariables | undefined;
-    originalProcEnvVariablesHash: string;
-    customEnvVariablesHash: string;
-    activationCommands: string[];
-    interpreterVersion: string;
-};
-
-/**
- * Assumption reader is aware of why we need `getActivatedEnvironmentVariables`.
- * When calling the Python API to get this information it takes a while 1-3s.
- * However, when you think of this, all we do to get the activated env variables is as follows:
- * 1. Get the CLI used to activate a Python environment
- * 2. Activate the Python environment using the CLI
- * 3. In the same process, now run `python -c "import os; print(os.environ)"` to print all of the env variables.
- *
- * Solution:
- * 1. Get the commands from Python extension to activate a Python environment.
- * 2. Activate & generate the env variables ourselves.
- * 3. In parallel get the activated env variables from cache.
- * 3. In parallel get the activated env variables from Python extension.
- * 4. Return the results from which ever completes first.
- *
- * Once env variables have been generated, we cache them.
- *
- * We've found that doing this in jupyter yields much better results.
- * Stats: In Jupyter activation takes 800ms & the same in Python would take 2.6s, or with a complex Conda (5s vs 9s).
- * Note: We cache the activate commands, as this is not something that changes day to day. Its almost a constant.
- * Either way, we always fetch the latest from Python extension & update the cache.
- */
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
     private readonly disposables: IDisposable[] = [];

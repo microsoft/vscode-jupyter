@@ -7,8 +7,6 @@ import { OSType } from '../utils/platform';
 //===========================
 // platform
 
-export const IsWindows = Symbol('IS_WINDOWS');
-
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
     readonly osType: OSType;
@@ -26,10 +24,6 @@ export interface IPlatformService {
 export type TemporaryFileUri = { file: vscode.Uri } & vscode.Disposable;
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export type TemporaryDirectory = { path: string } & vscode.Disposable;
-
-export interface ITempFileSystem {
-    createFile(suffix: string, mode?: number): Promise<TemporaryFile>;
-}
 
 // Where to fine executables.
 //

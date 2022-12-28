@@ -8,13 +8,6 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ISignal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
-import { IInteractiveWindowMapping } from '../../../../messageTypes';
-
-export interface IMessageSender {
-    sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;
-}
-
-export type CommTargetCallback = (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>;
 
 export type ScriptLoader = {
     readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;

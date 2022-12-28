@@ -23,9 +23,6 @@ import {
 } from './types.node';
 import { TraceOptions } from '../../logging/types';
 
-// Minimum version number of conda required to be able to use 'conda run'
-export const CONDA_RUN_VERSION = '4.6.0';
-
 /**
  * Creates IPythonExecutionService objects. They can be either process based or daemon based.
  */
