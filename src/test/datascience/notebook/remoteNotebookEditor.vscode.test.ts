@@ -33,11 +33,10 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { IDisposable } from '../../../platform/common/types';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNotebookEditor.vscode.common.test';
-import { IControllerLoader, IControllerRegistration } from '../../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 suite('Remote Kernel Execution', function () {
-    let controllerLoader: IControllerLoader;
     let controllerRegistration: IControllerRegistration;
     let jupyterServerSelector: JupyterServerSelector;
     let vscodeNotebook: IVSCodeNotebook;
@@ -60,7 +59,6 @@ suite('Remote Kernel Execution', function () {
         sinon.restore();
         const serviceContainer = api.serviceContainer;
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         jupyterServerSelector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
         vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
