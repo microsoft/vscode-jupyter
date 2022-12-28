@@ -31,7 +31,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 
-(['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
+(['Stable'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite.only(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
         let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder | LocalPythonAndRelatedNonPythonKernelSpecFinderOld;
         let interpreterService: IInterpreterService;
@@ -303,7 +303,7 @@ import { sleep } from '../../../test/core';
 
             assert.deepEqual(finder.kernels, [venvPythonKernel, condaKernel]);
         });
-        test('Do not get interpreter information if kernel Spec is not trusted', async () => {
+        test.only('Do not get interpreter information if kernel Spec is not trusted', async () => {
             console.error('Started Test 12345');
             when(kernelSpecsFromKnownLocations.kernels).thenReturn([
                 globalPythonKernelSpec,
@@ -321,10 +321,13 @@ import { sleep } from '../../../test/core';
 
             console.error('Started Test 12345 - Activated');
             finder.activate();
-            console.error('Started Test 12345 - Run All');
+            console.error('Started Test 12345 - Run All.0');
             await clock.runAllAsync();
-            await sleep(500);
-
+            clock.uninstall();
+            console.error('Started Test 12345 - Run All.1');
+            await sleep(50);
+            console.error('Started Test 12345 - Run All.2');
+            console.error('Look for test called');
             // Verify we checked whether its trusted & never attempted to read interpreter details.
             const uri = capture(trustedKernels.isTrusted).first()[0];
             assert.strictEqual(
