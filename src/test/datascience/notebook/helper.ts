@@ -106,6 +106,7 @@ import { DisplayOptions } from '../../../kernels/displayOptions';
 import { KernelAPI } from '@jupyterlab/services';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -597,6 +598,7 @@ async function getActiveInterpreterKernelConnection() {
         defaultNotebookTestTimeout,
         'Active Interpreter is undefined.2'
     );
+    const stopWatch = new StopWatch();
     return waitForCondition(
         () =>
             kernelFinder.kernels.find(
@@ -604,13 +606,15 @@ async function getActiveInterpreterKernelConnection() {
                     item.kind === 'startUsingPythonInterpreter' &&
                     areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
             ) as PythonKernelConnectionMetadata,
-        defaultNotebookTestTimeout,
+        defaultNotebookTestTimeout * 2,
         () =>
-            `Kernel Connection pointing to active interpreter not found.0, active interpreter
+            `Kernel Connection pointing to active interpreter not found.0 after ${
+                stopWatch.elapsedTime
+            }ms, active interpreter is
         ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels ${kernelFinder.kernels
-                .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
+                .map((item) => `${item.id} => ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
                 .join(', ')}`,
-        60_000 // Finding kernels can take a while (found on CI that this can take around 1min).
+        500
     );
 }
 async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
