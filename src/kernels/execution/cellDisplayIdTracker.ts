@@ -68,13 +68,16 @@ export class CellOutputDisplayIdTracker implements IExtensionSyncActivationServi
     /**
      * We return a promise, as we need to wait until the output is part of the DOM before we can update it.
      */
-    public static getMappedOutput(notebook: NotebookDocument, displayId: string): NotebookCellOutput | undefined {
+    public static getMappedOutput(
+        notebook: NotebookDocument,
+        displayId: string
+    ): { cell: NotebookCell; output: NotebookCellOutput } | undefined {
         const mapOfDisplayIdToOutput = CellOutputDisplayIdTracker.displayIdCellOutputMappingPerDocument.get(notebook);
         if (!mapOfDisplayIdToOutput) {
             return;
         }
         // Check if the cell still exists.
         const mapping = mapOfDisplayIdToOutput.get(displayId);
-        return mapping?.cell.document.isClosed ? undefined : mapping?.output;
+        return mapping?.cell.document.isClosed ? undefined : mapping;
     }
 }
