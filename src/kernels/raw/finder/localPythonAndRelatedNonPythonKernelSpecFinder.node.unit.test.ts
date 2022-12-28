@@ -303,6 +303,7 @@ import { traceInfo } from '../../../platform/logging';
             assert.deepEqual(finder.kernels, [venvPythonKernel, condaKernel]);
         });
         test('Do not get interpreter information if kernel Spec is not trusted', async () => {
+            console.error('Started Test 12345');
             when(kernelSpecsFromKnownLocations.kernels).thenReturn([
                 globalPythonKernelSpec,
                 globalPythonKernelSpecUnknownExecutable,
@@ -317,7 +318,9 @@ import { traceInfo } from '../../../platform/logging';
             when(trustedKernels.isTrusted(anything())).thenReturn(false);
             when(interpreterService.getInterpreterDetails(anything())).thenResolve(undefined);
 
+            console.error('Started Test 12345 - Activated');
             finder.activate();
+            console.error('Started Test 12345 - Run All');
             await clock.runAllAsync();
 
             // Verify we checked whether its trusted & never attempted to read interpreter details.
