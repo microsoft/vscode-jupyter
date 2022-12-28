@@ -252,7 +252,8 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                     this.connInfo.workingDirectory
                 );
             }
-        } else {
+        } 
+        if (!remoteFilePath) {
             // Create our backing file for the notebook
             backingFile = await this.backingFileCreator.createBackingFile(
                 this.resource,
