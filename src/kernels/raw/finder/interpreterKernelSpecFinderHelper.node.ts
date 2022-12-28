@@ -66,6 +66,7 @@ export class InterpreterKernelSpecFinderHelper {
         const kernelSpecLanguage = kernelSpec.language || '';
         const kernelSpecHash = kernelSpec.specFile ? await getTelemetrySafeHashedString(kernelSpec.specFile) : '';
         const isCreatedByUs = getKernelRegistrationInfo(kernelSpec) ? true : false;
+        console.error('Step1.1', pathInArgv, kernelSpecLanguage, kernelSpecHash, isCreatedByUs);
         // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
         if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
             traceInfoIfCI(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
@@ -89,6 +90,7 @@ export class InterpreterKernelSpecFinderHelper {
             console.error('Step2');
             return;
         }
+        console.error('Step2.1');
         // 1. Check if current interpreter has the same path
         const exactMatch = interpreters.find((i) => {
             if (
@@ -117,6 +119,7 @@ export class InterpreterKernelSpecFinderHelper {
                 language: kernelSpecLanguage
             });
         }
+        console.error('Step3.1', pathInArgv, pathInArgv ? path.basename(pathInArgv) : '<Empty>');
         // 2. Check if we have a fully qualified path in `argv`
         if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const pathInArgVUri = Uri.file(pathInArgv);
