@@ -323,7 +323,6 @@ import { sleep } from '../../../test/core';
             finder.activate();
             console.error('Started Test 12345 - Run All');
             await clock.runAllAsync();
-            // await sleep(1);
             await clock.runAllAsync();
 
             // Verify we checked whether its trusted & never attempted to read interpreter details.
