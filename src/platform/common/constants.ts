@@ -467,6 +467,7 @@ export enum Telemetry {
     KernelSpecLanguage = 'DATASCIENCE.KERNEL_SPEC_LANGUAGE',
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
     KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
+    AmbiguousGlobalKernelSpec = 'GLOBAL_PYTHON_KERNELSPEC',
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',

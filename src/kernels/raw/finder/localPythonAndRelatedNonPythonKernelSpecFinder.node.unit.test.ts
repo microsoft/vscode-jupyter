@@ -17,7 +17,7 @@ import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { assert } from 'chai';
 import { createEventHandler } from '../../../test/common';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -28,6 +28,8 @@ import { deserializePythonEnvironment, serializePythonEnvironment } from '../../
 import { uriEquals } from '../../../test/datascience/helpers';
 import { LocalPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
+import { traceInfo } from '../../../platform/logging';
+import { sleep } from '../../../test/core';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
@@ -139,7 +141,8 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
         let venvPythonKernel: PythonKernelConnectionMetadata;
         let cachedVenvPythonKernel: PythonKernelConnectionMetadata;
 
-        setup(async () => {
+        setup(async function () {
+            traceInfo(`Start Test (started) ${this.currentTest?.title}`);
             interpreterService = mock<IInterpreterService>();
             fs = mock<IFileSystemNode>();
             workspaceService = mock<IWorkspaceService>();
@@ -249,8 +252,12 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
                 );
             });
             disposables.push(new Disposable(() => loadKernelSpecStub.restore()));
+            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         });
-        teardown(() => disposeAllDisposables(disposables));
+        teardown(async function () {
+            traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+            await disposeAllDisposables(disposables);
+        });
 
         test('Nothing found in cache', async () => {
             const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels');
@@ -313,13 +320,14 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
 
             finder.activate();
             await clock.runAllAsync();
-
+            clock.uninstall();
+            await sleep(50);
             // Verify we checked whether its trusted & never attempted to read interpreter details.
-            verify(
-                trustedKernels.isTrusted(
-                    uriEquals(Uri.file(globalPythonKernelSpecUnknownExecutable.kernelSpec.specFile!))
-                )
-            ).atLeast(1);
+            const uri = capture(trustedKernels.isTrusted).first()[0];
+            assert.strictEqual(
+                uri.fsPath,
+                Uri.file(globalPythonKernelSpecUnknownExecutable.kernelSpec.specFile!).fsPath
+            );
             verify(interpreterService.getInterpreterDetails(anything())).never();
         });
         test('Get interpreter information if kernel Spec is trusted', async () => {

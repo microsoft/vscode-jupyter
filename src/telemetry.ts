@@ -1999,6 +1999,56 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * We have a Python Kernel spec without fully qualified path of Python env.
+     * We have no idea how to start these kernels if the user has more than one Python env.
+     *
+     * We could also have a non-python kernelspec such as Powershell, but the runtime is Python.
+     * E.g. argv in kernelspec.json could be ['python', '-m', 'powershell_kernel']
+     * E.g. argv in kernelspec.json could be ['python', '-m', 'sparkmagic.kernels.pysparkkernel.pysparkkernel']
+     *
+     * Note: Have a look at the property `pythonPathDefined` to determine if the python path is ambiguous or not.
+     */
+    [Telemetry.AmbiguousGlobalKernelSpec]: TelemetryEventInfo<{
+        /**
+         * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
+         */
+        kernelSpecHash: string;
+        /**
+         * Whether the fully qualified path to the python executable has been defined or not in the KernleSpec file.
+         */
+        pythonPathDefined: boolean;
+        /**
+         * If the python path is defined, then this property will be set to true if we found the python env.
+         */
+        pythonEnvFound?: 'found' | 'foundViaGetEnvDetails' | 'notTrusted' | 'notFound';
+        /**
+         * Language of the target notebook or interactive window
+         */
+        language: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            pythonPathDefined: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            pythonEnvFound: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            language: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            kernelSpecHash: {
+                classification: 'EndUserPseudonymizedInformation',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
      * Time taken to load kernels if needed and rank them all.
      */
     [Telemetry.RankKernelsPerf]: TelemetryEventInfo<DurationMeasurement> = {
