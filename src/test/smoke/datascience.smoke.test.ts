@@ -5,14 +5,14 @@
 
 import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
-
+import * as os from 'os';
 import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
+import { IExtensionTestApi, PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
@@ -40,7 +40,7 @@ suite('Smoke Tests', () => {
             await captureScreenShot(this);
         }
         await closeActiveWindows();
-        traceInfo(`End Test Compelete ${this.currentTest?.title}`);
+        traceInfo(`End Test Complete ${this.currentTest?.title}`);
     });
 
     // test('Run Cell in interactive window', async () => {
@@ -87,12 +87,27 @@ suite('Smoke Tests', () => {
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
+        traceInfo(`Opening notebook file ${file}`);
         await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(file), 'jupyter-notebook');
 
         // Wait for 15 seconds for notebook to launch.
         // Unfortunately there's no way to know for sure it has completely loaded.
         await sleep(15_000);
 
+        let controllerId = '';
+        let pythonPath = PYTHON_PATH;
+        if (os.platform() !== 'darwin' && os.platform() !== 'linux') {
+            pythonPath = `${PYTHON_PATH.substring(0, 1).toLowerCase()}${PYTHON_PATH.substring(1)}`;
+        }
+        const hash = await getInterpreterHash(vscode.Uri.file(pythonPath));
+        controllerId = `.jvsc74a57bd0${hash}.${pythonPath}.${pythonPath}.-m#ipykernel_launcher`;
+        traceVerbose(`Before selected kernel ${controllerId}`);
+        await vscode.commands.executeCommand('notebook.selectKernel', {
+            id: controllerId,
+            extension: 'ms-toolsai.jupyter'
+        });
+
+        traceVerbose(`Selected kernel ${controllerId}`);
         await vscode.commands.executeCommand<void>('notebook.execute');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
@@ -138,4 +153,63 @@ suite('Smoke Tests', () => {
         //     'Interactive window not created with newly selected interpreter'
         // );
     });
+    async function computeHash(data: string, algorithm: 'SHA-512' | 'SHA-256' | 'SHA-1'): Promise<string> {
+        const inputBuffer = new TextEncoder().encode(data);
+        const hashBuffer = await require('node:crypto').webcrypto.subtle.digest({ name: algorithm }, inputBuffer);
+
+        // Turn into hash string (got this logic from https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function getInterpreterHash(uri: vscode.Uri) {
+        const interpreterPath = getNormalizedInterpreterPath(uri);
+        return computeHash(interpreterPath.path, 'SHA-256');
+    }
+    /**
+     * Sometimes on CI, we have paths such as (this could happen on user machines as well)
+     *  - /opt/hostedtoolcache/Python/3.8.11/x64/python
+     *  - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
+     *  They are both the same.
+     * This function will take that into account.
+     */
+    function getNormalizedInterpreterPath(path: vscode.Uri, forceLowerCase: boolean = false) {
+        let fsPath = getFilePath(path);
+        if (forceLowerCase) {
+            fsPath = fsPath.toLowerCase();
+        }
+
+        // No need to generate hashes, its unnecessarily slow.
+        if (!fsPath.endsWith('/bin/python')) {
+            return vscode.Uri.file(fsPath);
+        }
+        // Sometimes on CI, we have paths such as (this could happen on user machines as well)
+        // - /opt/hostedtoolcache/Python/3.8.11/x64/python
+        // - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
+        // They are both the same.
+        // To ensure we treat them as the same, lets drop the `bin` on unix.
+        const isWindows = /^win/.test(process.platform);
+        if (!isWindows) {
+            // We need to exclude paths such as `/usr/bin/python`
+            return fsPath.endsWith('/bin/python') && fsPath.split('/').length > 4
+                ? vscode.Uri.file(fsPath.replace('/bin/python', '/python'))
+                : vscode.Uri.file(fsPath);
+        }
+        return vscode.Uri.file(fsPath);
+    }
+    function getFilePath(file: vscode.Uri | undefined) {
+        const isWindows = /^win/.test(process.platform);
+        if (file) {
+            const fsPath = file.path;
+
+            // Remove separator on the front if not a network drive.
+            // Example, if you create a URI with Uri.file('hello world'), the fsPath will come out as '\Hello World' on windows. We don't want that
+            // However if you create a URI from a network drive, like '\\mydrive\foo\bar\python.exe', we want to keep the \\ on the front.
+            if (fsPath && fsPath.startsWith(path.sep) && fsPath.length > 1 && fsPath[1] !== path.sep && isWindows) {
+                return fsPath.slice(1);
+            }
+            return fsPath || '';
+        }
+        return '';
+    }
 });
