@@ -15,11 +15,12 @@ import {
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './extension';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
-import { isTestExecution } from '../../platform/common/constants';
-import { IExtensionContext } from '../../platform/common/types';
+import { isTestExecution, Telemetry } from '../../platform/common/constants';
+import { IExtensionContext, IExtensions } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
 import { IControllerPreferredService, IControllerRegistration } from '../../notebooks/controllers/types';
+import { sendTelemetryEvent } from '../../telemetry';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -92,6 +93,14 @@ function waitForNotebookControllersCreationForServer(
     });
 }
 
+function sendApiUsageTelemetry(extensions: IExtensions, pemUsed: keyof IExtensionApi) {
+    extensions.determineExtensionFromCallStack().then((info) => {
+        sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+            extensionId: info.extensionId,
+            pemUsed
+        });
+    });
+}
 export function buildApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ready: Promise<any>,
@@ -100,6 +109,7 @@ export function buildApi(
     context: IExtensionContext
 ): IExtensionApi {
     let registered = false;
+    const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
@@ -115,14 +125,17 @@ export function buildApi(
             apiProvider.setApi(pythonApi);
         },
         async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
+            sendApiUsageTelemetry(extensions, 'showDataViewer');
             const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
             await dataViewerProviderService.create(dataProvider, title);
         },
         registerRemoteServerProvider(picker: IJupyterUriProvider): void {
+            sendApiUsageTelemetry(extensions, 'registerRemoteServerProvider');
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
             container.registerProvider(picker);
         },
         getKernelService: async () => {
+            sendApiUsageTelemetry(extensions, 'getKernelService');
             const kernelServiceFactory =
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
@@ -132,6 +145,7 @@ export function buildApi(
             handle: JupyterServerUriHandle,
             notebook: NotebookDocument
         ) => {
+            sendApiUsageTelemetry(extensions, 'getSuggestedController');
             const controllers = serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
             const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
             const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
@@ -164,6 +178,7 @@ export function buildApi(
             }
         },
         addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {
+            sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
             await new Promise<void>(async (resolve) => {
                 const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
                 const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
