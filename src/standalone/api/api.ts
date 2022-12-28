@@ -21,6 +21,7 @@ import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
 import { IControllerPreferredService, IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
+import { noop } from '../../platform/common/utils/misc';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -94,12 +95,15 @@ function waitForNotebookControllersCreationForServer(
 }
 
 function sendApiUsageTelemetry(extensions: IExtensions, pemUsed: keyof IExtensionApi) {
-    extensions.determineExtensionFromCallStack().then((info) => {
-        sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
-            extensionId: info.extensionId,
-            pemUsed
-        });
-    });
+    extensions
+        .determineExtensionFromCallStack()
+        .then((info) => {
+            sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+                extensionId: info.extensionId,
+                pemUsed
+            });
+        })
+        .catch(noop);
 }
 export function buildApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
