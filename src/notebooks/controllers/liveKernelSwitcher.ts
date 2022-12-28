@@ -15,6 +15,7 @@ import { waitForCondition } from '../../platform/common/utils/async';
 import { IControllerRegistration } from './types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { isJupyterNotebook } from '../../platform/common/utils';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * This class listens tracks notebook controller selection. When a notebook runs
@@ -53,7 +54,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
             const matching = this.controllerRegistration.registered.find((l) => l.id === preferredRemote);
             if (matching && active?.id !== matching.id) {
                 // This controller is the one we want, but it's not currently set.
-                this.switchKernel(notebook, matching.connection);
+                this.switchKernel(notebook, matching.connection).catch(noop);
                 return true;
             }
             return false;
