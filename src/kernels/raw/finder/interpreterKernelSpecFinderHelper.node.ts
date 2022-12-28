@@ -57,6 +57,7 @@ export class InterpreterKernelSpecFinderHelper {
         kernelSpec: IJupyterKernelSpec,
         isGlobalKernelSpec: boolean
     ): Promise<PythonEnvironment | undefined> {
+        console.error('Step1');
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? this.interpreterService.resolvedEnvironments
             : [];
@@ -85,6 +86,7 @@ export class InterpreterKernelSpecFinderHelper {
                     language: kernelSpecLanguage
                 });
             }
+            console.error('Step2');
             return;
         }
         // 1. Check if current interpreter has the same path
@@ -99,6 +101,7 @@ export class InterpreterKernelSpecFinderHelper {
             return false;
         });
         if (exactMatch) {
+            console.error('Step3', exactMatch);
             return exactMatch;
         }
         if (
@@ -133,13 +136,16 @@ export class InterpreterKernelSpecFinderHelper {
                         language: kernelSpecLanguage
                     });
                 }
+                console.error('Step4', exactMatchBasedOnArgv);
                 return exactMatchBasedOnArgv;
             }
 
             // 3. Sometimes we have path paths such as `/usr/bin/python3.6` in the kernel spec.
             // & in the list of interpreters we have `/usr/bin/python3`, they are both the same.
             // Hence we need to ensure we take that into account (just get the interpreter info from Python extension).
+            console.error('Step5', kernelSpec.specFile);
             if (!kernelSpec.specFile || this.trustedKernels.isTrusted(Uri.file(kernelSpec.specFile))) {
+                console.error('Step6');
                 const interpreterInArgv = await this.interpreterService.getInterpreterDetails(pathInArgVUri);
                 if (interpreterInArgv) {
                     if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
