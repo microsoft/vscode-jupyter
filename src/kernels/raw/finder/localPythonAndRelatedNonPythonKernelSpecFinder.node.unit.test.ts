@@ -29,7 +29,6 @@ import { uriEquals } from '../../../test/datascience/helpers';
 import { LocalPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { traceInfo } from '../../../platform/logging';
-import { sleep } from '../../../test/core';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
