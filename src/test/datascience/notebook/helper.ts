@@ -610,7 +610,7 @@ async function getActiveInterpreterKernelConnection() {
         ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels ${kernelFinder.kernels
                 .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
                 .join(', ')}`,
-        500
+        60_000 // Finding kernels can take a while (found on CI that this can take around 1min).
     );
 }
 async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
