@@ -8,7 +8,6 @@ import { CancellationToken, Uri } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../../errors/types';
 import { IDisposable } from '../types';
-import { EnvironmentVariables } from '../variables/types';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
@@ -98,8 +97,4 @@ export class StdErrError extends BaseError {
     constructor(message: string) {
         super('unknown', message);
     }
-}
-
-export interface IExecutionEnvironmentVariablesService {
-    getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined>;
 }

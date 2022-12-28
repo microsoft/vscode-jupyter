@@ -76,10 +76,6 @@ export interface ICellAction {
 }
 export interface IShowDataViewerAction extends IShowDataViewer {}
 
-export interface IOpenSettingsAction {
-    setting: string | undefined;
-}
-
 export interface IVariableExplorerHeight {
     containerHeight: number;
     gridHeight: number;
