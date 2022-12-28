@@ -23,11 +23,7 @@ import {
     defaultNotebookTestTimeout
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import {
-    IControllerLoader,
-    IControllerPreferredService,
-    IControllerRegistration
-} from '../../../notebooks/controllers/types';
+import { IControllerPreferredService, IControllerRegistration } from '../../../notebooks/controllers/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { IKernelProvider } from '../../../kernels/types';
 import { noop } from '../../core';
@@ -74,8 +70,6 @@ suite('Non-Python Kernel @nonPython ', async function () {
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        const controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
-        await controllerLoader.loaded;
     });
     function verifyPromptWasNotDisplayed() {
         assert.strictEqual(

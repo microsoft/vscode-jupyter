@@ -464,13 +464,10 @@ async function waitForKernelToChangeImpl(
     timeout = defaultNotebookTestTimeout,
     skipAutoSelection?: boolean
 ) {
-    const { controllerLoader, controllerRegistration } = await getServices();
+    const { controllerRegistration } = await getServices();
 
     // Wait for the active editor to come up
     const editor = await waitForActiveNotebookEditor(notebookEditor);
-
-    // Get the list of NotebookControllers for this document
-    await controllerLoader.loaded;
 
     // Find the kernel id that matches the name we want
     let controller: IVSCodeNotebookController | undefined;
@@ -645,13 +642,10 @@ export function selectDefaultController(notebookEditor: NotebookEditor, timeout 
         : selectActiveInterpreterController(notebookEditor, timeout);
 }
 async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
-    const { controllerLoader, controllerRegistration, interpreterService } = await getServices();
+    const { controllerRegistration, interpreterService } = await getServices();
 
     // Get the list of NotebookControllers for this document
-    const [interpreter] = await Promise.all([
-        interpreterService.getActiveInterpreter(notebookEditor.notebook.uri),
-        controllerLoader.loaded
-    ]);
+    const interpreter = await interpreterService.getActiveInterpreter(notebookEditor.notebook.uri);
 
     // Find the kernel id that matches the name we want
     const controller = await waitForCondition(
@@ -760,15 +754,12 @@ export async function waitForKernelToGetAutoSelectedImpl(
     skipAutoSelection: boolean = false
 ) {
     traceInfoIfCI('Wait for kernel to get auto selected');
-    const { controllerLoader, controllerRegistration, controllerPreferred, interpreterService, isWebExtension } =
-        await getServices();
+    const { controllerRegistration, controllerPreferred, interpreterService, isWebExtension } = await getServices();
     const useRemoteKernelSpec = preferRemoteKernelSpec || isWebExtension; // Web is only remote
 
     // Wait for the active editor to come up
     notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
 
-    // Get the list of NotebookControllers for this document
-    await controllerLoader.loaded;
     traceInfoIfCI(`Wait for kernel - got notebook controllers`);
     const notebookControllers = controllerRegistration.registered;
 
