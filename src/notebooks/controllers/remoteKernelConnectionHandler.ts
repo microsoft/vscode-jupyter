@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, NotebookDocument } from 'vscode';
-import { IControllerSelection, IVSCodeNotebookController } from './types';
+import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -20,7 +20,7 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IControllerSelection) private readonly controllers: IControllerSelection,
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
         @inject(ILiveRemoteKernelConnectionUsageTracker)
         private readonly liveKernelTracker: ILiveRemoteKernelConnectionUsageTracker,
         @inject(PreferredRemoteKernelIdProvider)

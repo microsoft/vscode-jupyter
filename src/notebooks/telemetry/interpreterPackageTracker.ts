@@ -9,7 +9,7 @@ import { IExtensions, IDisposableRegistry, InterpreterUri } from '../../platform
 import { isResource, noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IInstaller, Product } from '../../kernels/installer/types';
-import { IControllerSelection, IVSCodeNotebookController } from '../controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../controllers/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { IInterpreterPackages } from '../../platform/interpreter/types';
 
@@ -28,7 +28,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IControllerSelection) private readonly notebookControllerManager: IControllerSelection
+        @inject(IControllerRegistration) private readonly notebookControllerManager: IControllerRegistration
     ) {}
     public async activate(): Promise<void> {
         this.notebookControllerManager.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);

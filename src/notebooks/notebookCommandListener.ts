@@ -32,7 +32,7 @@ import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
-import { IControllerSelection } from './controllers/types';
+import { IControllerRegistration } from './controllers/types';
 
 /**
  * Registers commands specific to the notebook UI
@@ -48,7 +48,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
-        @inject(IControllerSelection) private notebookControllerSelection: IControllerSelection,
+        @inject(IControllerRegistration) private controllerRegistration: IControllerRegistration,
         @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
@@ -215,7 +215,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         const promise = (async () => {
             // Get currently executing cell and controller
             const currentCell = this.kernelProvider.getKernelExecution(kernel).pendingCells[0];
-            const controller = this.notebookControllerSelection.getSelected(notebook);
+            const controller = this.controllerRegistration.getSelected(notebook);
             try {
                 if (!controller) {
                     throw new Error('No kernel associated with the notebook');

@@ -57,11 +57,7 @@ import {
     InteractiveTab
 } from './types';
 import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
-import {
-    IControllerRegistration,
-    IControllerSelection,
-    IVSCodeNotebookController
-} from '../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
 import { KernelConnector } from '../notebooks/controllers/kernelConnector';
@@ -132,7 +128,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private readonly jupyterExporter: INotebookExporter;
     private readonly workspaceService: IWorkspaceService;
     private readonly exportDialog: IExportDialog;
-    private readonly notebookControllerSelection: IControllerSelection;
     private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined;
     private readonly errorHandler: IDataScienceErrorHandler;
     private readonly codeGeneratorFactory: ICodeGeneratorFactory;
@@ -157,7 +152,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.jupyterExporter = this.serviceContainer.get<INotebookExporter>(INotebookExporter);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.exportDialog = this.serviceContainer.get<IExportDialog>(IExportDialog);
-        this.notebookControllerSelection = this.serviceContainer.get<IControllerSelection>(IControllerSelection);
         this.interactiveWindowDebugger =
             this.serviceContainer.tryGet<IInteractiveWindowDebugger>(IInteractiveWindowDebugger);
         this.errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
@@ -479,7 +473,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
     private listenForControllerSelection() {
         // Ensure we hear about any controller changes so we can update our cached promises
-        this.notebookControllerSelection.onControllerSelected(
+        this.controllerRegistration.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
                 if (e.notebook.uri.toString() !== this.notebookUri.toString()) {
                     return;
@@ -525,7 +519,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const insertionIndex =
             notebookCell && notebookCell.index >= 0 ? notebookCell.index : this.notebookEditor.notebook.cellCount;
         // If possible display the error message in the cell.
-        const controller = this.notebookControllerSelection.getSelected(this.notebookEditor.notebook);
+        const controller = this.controllerRegistration.getSelected(this.notebookEditor.notebook);
         const output = createOutputWithErrorMessageForDisplay(message);
         if (this.notebookEditor.notebook.cellCount === 0 || !controller || !output || !notebookCell) {
             const edit = new WorkspaceEdit();

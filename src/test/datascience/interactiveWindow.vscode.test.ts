@@ -40,7 +40,7 @@ import { isEqual } from '../../platform/vscode-path/resources';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands } from '../../platform/common/constants';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 suite(`Interactive window Execution @iw`, async function () {
     this.timeout(120_000);
@@ -169,7 +169,7 @@ suite(`Interactive window Execution @iw`, async function () {
             let notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
             )!;
-            const notebookControllerManager = api.serviceManager.get<IControllerSelection>(IControllerSelection);
+            const notebookControllerManager = api.serviceManager.get<IControllerRegistration>(IControllerRegistration);
             // Ensure we picked up the active interpreter for use as the kernel
 
             let controller = notebookDocument ? notebookControllerManager.getSelected(notebookDocument) : undefined;

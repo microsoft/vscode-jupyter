@@ -15,7 +15,7 @@ import { InteractiveWindowView, JupyterNotebookView } from '../../platform/commo
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { isPythonNotebook } from '../../kernels/helpers';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 /**
  * Tracks a lot of the context keys needed in the extension.
@@ -47,7 +47,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IControllerSelection) private readonly controllers: IControllerSelection
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
