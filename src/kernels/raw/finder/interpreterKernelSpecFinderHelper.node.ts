@@ -39,16 +39,13 @@ export class InterpreterKernelSpecFinderHelper {
     private readonly discoveredKernelSpecFiles = new Set<string>();
     private readonly disposables: IDisposable[] = [];
     private readonly kernelsPerInterpreter = new Map<string, Promise<IJupyterKernelSpec[]>>();
-    private static _id = 0;
     constructor(
         private readonly jupyterPaths: JupyterPaths,
         private readonly kernelSpecFinder: LocalKernelSpecFinder,
         private readonly interpreterService: IInterpreterService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly trustedKernels: ITrustedKernelPaths
-    ) {
-        InterpreterKernelSpecFinderHelper._id += 1;
-    }
+    ) {}
     public clear() {
         this.kernelsPerInterpreter.clear();
         this.discoveredKernelSpecFiles.clear();
@@ -60,7 +57,6 @@ export class InterpreterKernelSpecFinderHelper {
         kernelSpec: IJupyterKernelSpec,
         isGlobalKernelSpec: boolean
     ): Promise<PythonEnvironment | undefined> {
-        const id = `${InterpreterKernelSpecFinderHelper._id}`;
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? this.interpreterService.resolvedEnvironments
             : [];

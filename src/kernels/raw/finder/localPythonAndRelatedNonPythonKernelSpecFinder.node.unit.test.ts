@@ -31,7 +31,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPython
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 
-(['Stable'] as KernelPickerType[]).forEach((kernelPickerType) => {
+(['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
         let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder | LocalPythonAndRelatedNonPythonKernelSpecFinderOld;
         let interpreterService: IInterpreterService;
