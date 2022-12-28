@@ -68,6 +68,7 @@ export class InterpreterKernelSpecFinderHelper {
                     ? kernelSpec.argv[0]
                     : undefined;
             const kernelSpecLanguage = kernelSpec.language || '';
+            console.error('Step1.0', pathInArgv, kernelSpecLanguage, JSON.stringify(kernelSpec));
             const kernelSpecHash = kernelSpec.specFile ? await getTelemetrySafeHashedString(kernelSpec.specFile) : '';
             const isCreatedByUs = getKernelRegistrationInfo(kernelSpec) ? true : false;
             console.error('Step1.1', pathInArgv, kernelSpecLanguage, kernelSpecHash, isCreatedByUs);
