@@ -25,11 +25,8 @@ suite('Smoke Tests', () => {
         if (!IS_SMOKE_TEST()) {
             return this.skip();
         }
-        traceInfo(`Start Smoke tests1.`);
         api = await initialize();
-        traceInfo(`Start Smoke tests2.`);
         await setAutoSaveDelayInWorkspaceRoot(1);
-        traceInfo(`Start Smoke tests3.`);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
