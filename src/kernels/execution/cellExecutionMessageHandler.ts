@@ -28,7 +28,7 @@ import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../../platform/common/utils';
 import {
@@ -938,34 +938,50 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleUpdateDisplayDataMessage(msg: KernelMessage.IUpdateDisplayDataMsg) {
         const displayId = msg.content.transient.display_id;
         if (!displayId) {
+            traceWarning('Update display data message received, but no display id', msg.content);
             return;
         }
         const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!outputToBeUpdated) {
+            traceWarning('Update display data message received, but no output found to update', msg.content);
             return;
         }
-        const output = translateCellDisplayOutput(outputToBeUpdated);
+        if (outputToBeUpdated.cell.document.isClosed) {
+            traceWarning('Update display data message received, but output cell is closed', msg.content);
+            return;
+        }
+        const output = translateCellDisplayOutput(outputToBeUpdated.output);
         const newOutput = cellOutputToVSCCellOutput({
             ...output,
             data: msg.content.data,
             metadata: msg.content.metadata
         } as nbformat.IDisplayData);
         // If there was no output and still no output, then nothing to do.
-        if (outputToBeUpdated.items.length === 0 && newOutput.items.length === 0) {
+        if (outputToBeUpdated.output.items.length === 0 && newOutput.items.length === 0) {
+            traceVerbose('Update display data message received, but no output to update', msg.content);
             return;
         }
         // Compare each output item (at the end of the day everything is serializable).
         // Hence this is a safe comparison.
-        if (outputToBeUpdated.items.length === newOutput.items.length) {
+        if (outputToBeUpdated.output.items.length === newOutput.items.length) {
             let allAllOutputItemsSame = true;
-            for (let index = 0; index < outputToBeUpdated.items.length; index++) {
-                if (!fastDeepEqual(outputToBeUpdated.items[index], newOutput.items[index])) {
-                    allAllOutputItemsSame = false;
-                    break;
+            if (!fastDeepEqual(outputToBeUpdated.output.metadata || {}, newOutput.metadata || {})) {
+                allAllOutputItemsSame = false;
+            }
+            if (allAllOutputItemsSame) {
+                for (let index = 0; index < outputToBeUpdated.output.items.length; index++) {
+                    if (!fastDeepEqual(outputToBeUpdated.output.items[index], newOutput.items[index])) {
+                        allAllOutputItemsSame = false;
+                        break;
+                    }
                 }
             }
             if (allAllOutputItemsSame) {
                 // If everything is still the same, then there's nothing to update.
+                traceVerbose(
+                    'Update display data message received, but no output to update (data is the same)',
+                    msg.content
+                );
                 return;
             }
         }
@@ -974,7 +990,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
         traceCellMessage(this.cell, `Replace output items in display data ${newOutput.items.length}`);
-        task?.replaceOutputItems(newOutput.items, outputToBeUpdated).then(noop, noop);
+        task?.replaceOutput(newOutput, outputToBeUpdated.cell).then(noop, noop);
         this.endTemporaryTask();
     }
 }
