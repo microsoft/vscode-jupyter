@@ -1541,8 +1541,7 @@
                 "jupyter.askForKernelRestart": {
                     "type": "boolean",
                     "default": true,
-                    "description": "%jupyter.configuration.jupyter.askForKernelRestart.description%",
-                    "scope": "application"
+                    "description": "%jupyter.configuration.jupyter.askForKernelRestart.description%"
                 },
                 "jupyter.exportWithOutputEnabled": {
                     "type": "boolean",
@@ -1553,14 +1552,12 @@
                 "jupyter.jupyterLaunchTimeout": {
                     "type": "number",
                     "default": 60000,
-                    "description": "%jupyter.configuration.jupyter.jupyterLaunchTimeout.description%",
-                    "scope": "application"
+                    "description": "%jupyter.configuration.jupyter.jupyterLaunchTimeout.description%"
                 },
                 "jupyter.jupyterLaunchRetries": {
                     "type": "number",
                     "default": 3,
-                    "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%",
-                    "scope": "application"
+                    "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%"
                 },
                 "jupyter.jupyterCommandLineArguments": {
                     "type": "array",
@@ -1584,14 +1581,12 @@
                 "jupyter.useDefaultConfigForJupyter": {
                     "type": "boolean",
                     "default": true,
-                    "description": "%jupyter.configuration.jupyter.useDefaultConfigForJupyter.description%",
-                    "scope": "machine"
+                    "description": "%jupyter.configuration.jupyter.useDefaultConfigForJupyter.description%"
                 },
                 "jupyter.jupyterInterruptTimeout": {
                     "type": "number",
                     "default": 10000,
-                    "description": "%jupyter.configuration.jupyter.jupyterInterruptTimeout.description%",
-                    "scope": "application"
+                    "description": "%jupyter.configuration.jupyter.jupyterInterruptTimeout.description%"
                 },
                 "jupyter.showCellInputCode": {
                     "type": "boolean",
@@ -1844,8 +1839,7 @@
                 "jupyter.magicCommandsAsComments": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%jupyter.configuration.jupyter.magicCommandsAsComments.description%",
-                    "scope": "application"
+                    "description": "%jupyter.configuration.jupyter.magicCommandsAsComments.description%"
                 },
                 "jupyter.pythonExportMethod": {
                     "type": "string",
@@ -1873,8 +1867,7 @@
                 "jupyter.showOutlineButtonInNotebookToolbar": {
                     "type": "boolean",
                     "default": true,
-                    "description": "%jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description%",
-                    "scope": "application"
+                    "description": "%jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description%"
                 },
                 "jupyter.newCellOnRunLast": {
                     "type": "boolean",
