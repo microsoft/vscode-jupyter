@@ -854,7 +854,7 @@ jobs:
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
+    if: (success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'
     needs: [ts_tests, vscodeTests, smoke-tests]
     steps:
       - name: Checkout
