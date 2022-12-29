@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSyncActivationService } from '../activation/types';
 import { EnvironmentActivationService } from '../common/process/environmentActivationService.node';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
@@ -18,8 +18,8 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IPythonExtensionChecker>(IPythonExtensionChecker, PythonExtensionChecker);
     serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         InterpreterStatusBarVisibility
     );
     serviceManager.addSingleton<IEnvironmentActivationService>(

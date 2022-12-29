@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { languages, NotebookCellKind, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
@@ -20,13 +20,13 @@ import { IControllerRegistration, IVSCodeNotebookController } from '../controlle
  * This logic is applied only when all code cells in the notebook are empty.
  */
 @injectable()
-export class EmptyNotebookCellLanguageService implements IExtensionSingleActivationService {
+export class EmptyNotebookCellLanguageService implements IExtensionSyncActivationService {
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         this.controllerRegistration.onControllerSelected(this.onDidChangeNotebookController, this, this.disposables);
     }
 

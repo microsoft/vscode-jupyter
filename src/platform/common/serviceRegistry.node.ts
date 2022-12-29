@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSyncActivationService } from '../activation/types';
 import { IDataFrameScriptGenerator, IExperimentService, IHttpClient, IVariableScriptGenerator } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
@@ -78,16 +78,13 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        LanguageInitializer
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LanguageInitializer);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         ReloadVSCodeCommandHandler
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         RunInDedicatedExtensionHostCommandHandler
     );
     registerPlatformTypes(serviceManager);

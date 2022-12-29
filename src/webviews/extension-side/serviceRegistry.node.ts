@@ -43,8 +43,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDataViewerDependencyService,
         DataViewerDependencyService
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         DataViewerCommandRegistry
     );
 
@@ -56,8 +56,8 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     // Variable View
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         VariableViewActivationService
     );
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);

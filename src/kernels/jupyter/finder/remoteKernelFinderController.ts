@@ -23,7 +23,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import * as localize from '../../../platform/common/utils/localize';
@@ -190,7 +190,7 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
 
 // This class creates RemoteKernelFinders for all registered Jupyter Server URIs
 @injectable()
-export class RemoteKernelFinderController implements IExtensionSingleActivationService {
+export class RemoteKernelFinderController implements IExtensionSyncActivationService {
     private _strategy: IRemoteKernelFinderRegistrationStrategy;
     private _localDisposables: Disposable[] = [];
 
@@ -267,7 +267,7 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
         }
     }
 
-    async activate(): Promise<void> {
+    activate() {
         this._strategy.activate().then(noop, noop);
     }
 }

@@ -15,7 +15,7 @@ import {
     Uri
 } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -50,7 +50,7 @@ import { KernelDebugAdapter } from './kernelDebugAdapter';
 @injectable()
 export class DebuggingManager
     extends DebuggingManagerBase
-    implements IExtensionSingleActivationService, INotebookDebuggingManager
+    implements IExtensionSyncActivationService, INotebookDebuggingManager
 {
     private runByLineCells: ContextKey<Uri[]>;
     private runByLineDocuments: ContextKey<Uri[]>;
@@ -83,8 +83,8 @@ export class DebuggingManager
         this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);
     }
 
-    public override async activate() {
-        await super.activate();
+    public override activate() {
+        super.activate();
         this.disposables.push(
             // factory for kernel debug adapters
             debug.registerDebugAdapterDescriptorFactory(pythonKernelDebugAdapter, {

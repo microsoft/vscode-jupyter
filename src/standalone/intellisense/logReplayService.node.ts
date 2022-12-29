@@ -7,7 +7,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import * as lspConcat from '@vscode/lsp-notebook-concat';
 import * as protocol from 'vscode-languageserver-protocol';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR, Commands, EditorContexts } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
@@ -34,7 +34,7 @@ import { IFileSystem } from '../../platform/common/platform/types';
  * - Deleting tabs (seems to only delete a single space)
  */
 @injectable()
-export class LogReplayService implements IExtensionSingleActivationService {
+export class LogReplayService implements IExtensionSyncActivationService {
     private steps: protocol.DidChangeTextDocumentParams[] = [];
     private index = -1;
     private converter: lspConcat.NotebookConverter | undefined;
@@ -47,7 +47,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         this.disposableRegistry.push(
             this.commandService.registerCommand(Commands.ReplayPylanceLog, this.replayPylanceLog, this)
         );

@@ -5,7 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -50,7 +50,7 @@ export class JupyterInterpreterStateStore {
 }
 
 @injectable()
-export class MigrateJupyterInterpreterStateService implements IExtensionSingleActivationService {
+export class MigrateJupyterInterpreterStateService implements IExtensionSyncActivationService {
     private settingsMigrated?: boolean;
     constructor(
         @inject(IPythonApiProvider) private readonly api: IPythonApiProvider,
@@ -60,7 +60,7 @@ export class MigrateJupyterInterpreterStateService implements IExtensionSingleAc
     ) {}
 
     // Migrate the interpreter path selected for Jupyter server from the Python extension's globalState memento
-    public async activate() {
+    public activate() {
         this.activateBackground().catch(noop);
         this.api.onDidActivatePythonExtension(this.activateBackground, this, this.disposables);
     }

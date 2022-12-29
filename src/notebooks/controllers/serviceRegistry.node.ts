@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { ControllerDefaultService } from './controllerDefaultService';
 import { ControllerLoader } from './controllerLoader';
@@ -29,7 +29,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addSingleton<IControllerDefaultService>(IControllerDefaultService, ControllerDefaultService);
     serviceManager.addSingleton<IControllerLoader>(IControllerLoader, ControllerLoader);
-    serviceManager.addBinding(IControllerLoader, IExtensionSingleActivationService);
+    serviceManager.addBinding(IControllerLoader, IExtensionSyncActivationService);
     serviceManager.addSingleton<IControllerPreferredService>(IControllerPreferredService, ControllerPreferredService);
     serviceManager.addBinding(IControllerPreferredService, IExtensionSyncActivationService);
     serviceManager.addSingleton<ConnectionDisplayDataProvider>(
@@ -45,7 +45,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         KernelSourceCommandHandler
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSingleActivationService,
+        IExtensionSyncActivationService,
         ServerConnectionControllerCommands
     );
     registerWidgetTypes(serviceManager, isDevMode);

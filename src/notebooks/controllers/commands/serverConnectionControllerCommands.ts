@@ -5,7 +5,7 @@
 
 'use strict';
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
 import {
     Commands,
@@ -55,7 +55,7 @@ interface ControllerQuickPick extends QuickPickItem {
 // This service owns the commands that show up in the kernel picker to allow for switching
 // between local and remote kernels
 @injectable()
-export class ServerConnectionControllerCommands implements IExtensionSingleActivationService {
+export class ServerConnectionControllerCommands implements IExtensionSyncActivationService {
     private showingLocalOrWebEmptyContext: ContextKey;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -71,7 +71,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     ) {
         this.showingLocalOrWebEmptyContext = new ContextKey('jupyter.showingLocalOrWebEmpty', this.commandManager);
     }
-    public async activate(): Promise<void> {
+    public activate() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SwitchToRemoteKernels, this.switchToRemoteKernels, this)
         );
