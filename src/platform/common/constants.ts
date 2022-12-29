@@ -103,12 +103,13 @@ export namespace CodeSnippets {
     export const ChangeDirectory = [
         '{0}',
         '{1}',
-        'import os',
+        'import os as _VSCODE_os',
         'try:',
-        "\tos.chdir(os.path.join(os.getcwd(), '{2}'))",
-        '\tprint(os.getcwd())',
+        "\t_VSCODE_os.chdir(_VSCODE_os.path.join(_VSCODE_os.getcwd(), '{2}'))",
+        '\tprint(_VSCODE_os.getcwd())',
         'except:',
         '\tpass',
+        'del _VSCODE_os',
         ''
     ];
     export const ChangeDirectoryCommentIdentifier = '# ms-toolsai.jupyter added'; // Not translated so can compare.
@@ -116,7 +117,7 @@ export namespace CodeSnippets {
     export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n`;
     export const AppendSVGFigureFormat = `import matplotlib_inline.backend_inline\n${Identifiers.MatplotLibFigureFormats} = matplotlib_inline.backend_inline.InlineBackend.instance().figure_formats\n${Identifiers.MatplotLibFigureFormats}.add('svg')\nmatplotlib_inline.backend_inline.set_matplotlib_formats(*${Identifiers.MatplotLibFigureFormats})`;
     export const UpdateCWDAndPath =
-        'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
+        'import os as _VSCODE_os\nimport sys as _VSCODE_sys\n%cd "{0}"\nif _VSCODE_os.getcwd() not in _VSCODE_sys.path:\n    _VSCODE_sys.path.insert(0, _VSCODE_os.getcwd())\n\ndel _VSCODE_sys\ndel _VSCODE_os';
     export const DisableJedi = '%config Completer.use_jedi = False';
 }
 
