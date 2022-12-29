@@ -348,23 +348,15 @@ jobs:
         with:
           python-version: ${{matrix.pythonVersion}}
 
-      - name: Cache conda on linux
-        uses: actions/cache@v2
+      - name: Install Conda environment from environment.yml
+        uses: mamba-org/provision-with-micromamba@main
         if: matrix.python == 'conda'
         with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{
-            hashFiles('./build/conda-test-requirements.yml') }}
-
-      - name: Use Conda Python ${{matrix.pythonVersion}}
-        uses: conda-incubator/setup-miniconda@v2
-        if: matrix.python == 'conda'
-        with:
-          auto-update-conda: true
-          activate-environment: functional_test_env
-          channels: conda-forge,default
+          cache-downloads: true
+          environment-name: functional_test_env
           environment-file: ./build/conda-test-requirements.yml
-          python-version: ${{matrix.pythonVersion}}
+          extra-specs: |
+            python=${{matrix.pythonVersion}}
 
       - name: Set CI Path
         uses: ./.github/actions/set-python
@@ -483,13 +475,11 @@ jobs:
         shell: bash -l {0}
         if: matrix.python == 'conda'
         run: |
-          conda init bash
-          conda activate functional_test_env
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/conda-nonconda-test-requirements.txt
           python ./pythonFiles/install_debugpy.py
           beakerx_kernel_java install
-          conda install pytorch cpuonly -c pytorch
+          micromamba install pytorch cpuonly -c pytorch
 
       - name: Install pythreejs and matplotlib widgets into user and system paths
         if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory'
