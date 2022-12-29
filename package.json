@@ -1562,8 +1562,7 @@
                 "jupyter.jupyterCommandLineArguments": {
                     "type": "array",
                     "default": [],
-                    "description": "%jupyter.configuration.jupyter.jupyterCommandLineArguments.description%",
-                    "scope": "machine"
+                    "description": "%jupyter.configuration.jupyter.jupyterCommandLineArguments.description%"
                 },
                 "jupyter.notebookFileRoot": {
                     "type": "string",
