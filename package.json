@@ -1496,7 +1496,7 @@
                         "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.experiments.optOutFrom": {
                     "type": "array",
@@ -1505,7 +1505,7 @@
                         "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.allowImportFromNotebook": {
                     "type": "boolean",
