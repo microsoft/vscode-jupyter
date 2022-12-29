@@ -1,4 +1,7 @@
 # Functional requirements using a conda environment file
+channels:
+  - conda-forge
+  - defaults
 dependencies:
   - ipywidgets=7.7.2 # Pinned per ipywidget 8 support: https://github.com/microsoft/vscode-jupyter/issues/11598
   - pandas
