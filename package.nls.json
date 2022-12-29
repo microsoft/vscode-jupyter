@@ -325,7 +325,6 @@
     "jupyter.configuration.jupyter.textOutputLimit.description": "Limit the amount of text in Interactive cell text output to this value. 0 to allow any amount of characters.",
     "jupyter.configuration.jupyter.colorizeInputBox.deprecationMessage": "This setting is deprecated and will be removed in an upcoming release.",
     "jupyter.configuration.jupyter.colorizeInputBox.description": "Whether or not to use the theme's peek color as the background for the input box.",
-    "jupyter.configuration.jupyter.stopOnError.description": "Stop running cells if a cell throws an exception.",
     "jupyter.configuration.jupyter.addGotoCodeLenses.description": {
         "message": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
         "comment": ["{Locked='Goto'}"]

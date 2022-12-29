@@ -1742,12 +1742,6 @@
                     "description": "%jupyter.configuration.jupyter.colorizeInputBox.description%",
                     "scope": "resource"
                 },
-                "jupyter.stopOnError": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%jupyter.configuration.jupyter.stopOnError.description%",
-                    "scope": "application"
-                },
                 "jupyter.addGotoCodeLenses": {
                     "type": "boolean",
                     "default": true,
