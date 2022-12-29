@@ -7,11 +7,10 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, Uri, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
-import { isLocalConnection, RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
+import { RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
@@ -32,7 +31,6 @@ import {
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IDisposable } from '../../../platform/common/types';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
-import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNotebookEditor.vscode.common.test';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
@@ -41,7 +39,6 @@ suite('Remote Kernel Execution', function () {
     let jupyterServerSelector: JupyterServerSelector;
     let vscodeNotebook: IVSCodeNotebook;
     let ipynbFile: Uri;
-    let remoteKernelIdProvider: PreferredRemoteKernelIdProvider;
     let svcContainer: IServiceContainer;
     let interpreterService: IInterpreterService;
 
@@ -62,7 +59,6 @@ suite('Remote Kernel Execution', function () {
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         jupyterServerSelector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
         vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        remoteKernelIdProvider = serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider);
         svcContainer = serviceContainer;
         interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
     });
@@ -260,60 +256,5 @@ suite('Remote Kernel Execution', function () {
             waitForExecutionCompletedSuccessfully(cell2),
             waitForTextOutput(cell2, 'Hello World', 0, false)
         ]);
-    });
-    test('When switching from remote to local, then clear the preferred remote kernel @kernelPicker', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/10046
-        return this.skip();
-        await runCellAndVerifyUpdateOfPreferredRemoteKernelId(ipynbFile, svcContainer);
-
-        const nbEditor = vscodeNotebook.activeNotebookEditor!;
-        assert.isOk(nbEditor, 'No active notebook');
-        const controllerManager = svcContainer.get<IControllerRegistration>(IControllerRegistration);
-
-        // Verify we're connected to a remote kernel.
-        const remoteController = controllerManager.getSelected(nbEditor.notebook);
-        assert.strictEqual(isLocalConnection(remoteController!.connection), false, 'Should be a remote connection');
-
-        // Verify we have a preferred remote kernel stored.
-        assert.isNotEmpty(
-            await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri),
-            'Preferred remote kernel id cannot be empty'
-        );
-
-        // Switch to a local kernel.
-        const localKernelController = await waitForCondition(
-            () =>
-                controllerRegistration.registered.find(
-                    (item) =>
-                        item.connection.kind === 'startUsingLocalKernelSpec' ||
-                        item.connection.kind === 'startUsingPythonInterpreter'
-                ),
-            defaultNotebookTestTimeout,
-            'No local kernel controller found'
-        );
-        await commands.executeCommand('notebook.selectKernel', {
-            id: localKernelController?.id,
-            extension: JVSC_EXTENSION_ID
-        });
-
-        // Wait for the controller to get selected.
-        await waitForCondition(
-            async () => controllerManager.getSelected(nbEditor.notebook) === localKernelController,
-            5_000,
-            `Controller not switched to local kernel, instead it is ${
-                controllerManager.getSelected(nbEditor.notebook)?.id
-            }`
-        );
-
-        // Wait for the preferred remote kernel id to be cleared for this notebook.
-        let preferredKernelId = await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri);
-        await waitForCondition(
-            async () => {
-                preferredKernelId = await remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri);
-                return !preferredKernelId;
-            },
-            5_000,
-            () => `Remote Kernel is not empty, instead the value is ${preferredKernelId}`
-        );
     });
 });
