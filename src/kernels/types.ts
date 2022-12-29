@@ -511,6 +511,7 @@ export interface IJupyterConnection extends Disposable {
     readonly url: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getAuthHeader?(): any; // Snould be a json object
+    readonly workingDirectory?: string;
 }
 
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
