@@ -8,7 +8,7 @@ import { DebugConfiguration, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import {
     IApplicationShell,
@@ -33,7 +33,7 @@ import { DataViewerChecker } from './dataViewerChecker';
 import { IDataViewerDependencyService, IDataViewerFactory, IJupyterVariableDataProviderFactory } from './types';
 
 @injectable()
-export class DataViewerCommandRegistry implements IExtensionSingleActivationService {
+export class DataViewerCommandRegistry implements IExtensionSyncActivationService {
     private dataViewerChecker: DataViewerChecker;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -62,7 +62,7 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
     }
-    async activate(): Promise<void> {
+    activate() {
         this.registerCommandsIfTrusted();
     }
     private registerCommandsIfTrusted() {

@@ -6,15 +6,15 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../../platform/activation/types';
 import { CommandManager } from '../../../../platform/common/application/commandManager';
 import { ICommandManager } from '../../../../platform/common/application/types';
 import { IDisposableRegistry } from '../../../../platform/common/types';
 import { JupyterInterpreterSelectionCommand } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelectionCommand.node';
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { IExtensionSyncActivationService } from '../../../../platform/activation/types';
 
 suite('Jupyter Interpreter Command', () => {
-    let interpreterCommand: IExtensionSingleActivationService;
+    let interpreterCommand: IExtensionSyncActivationService;
     let disposableRegistry: IDisposableRegistry;
     let commandManager: ICommandManager;
     let interpreterService: JupyterInterpreterService;

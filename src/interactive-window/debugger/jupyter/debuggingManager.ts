@@ -22,7 +22,7 @@ import {
     KernelDebugMode
 } from '../../../notebooks/debugger/debuggingTypes';
 import { assertIsInteractiveWindowDebugConfig, IpykernelCheckResult } from '../../../notebooks/debugger/helper';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -50,7 +50,7 @@ import { RestartNotSupportedController } from './restartNotSupportedController';
 @injectable()
 export class InteractiveWindowDebuggingManager
     extends DebuggingManagerBase
-    implements IExtensionSingleActivationService, IInteractiveWindowDebuggingManager
+    implements IExtensionSyncActivationService, IInteractiveWindowDebuggingManager
 {
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
@@ -77,8 +77,8 @@ export class InteractiveWindowDebuggingManager
         );
     }
 
-    public override async activate(): Promise<void> {
-        await super.activate();
+    public override activate() {
+        super.activate();
         // factory for kernel debug adapters
         this.disposables.push(
             debug.registerDebugAdapterDescriptorFactory(pythonIWKernelDebugAdapter, {

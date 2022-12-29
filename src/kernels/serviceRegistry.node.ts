@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { Identifiers, isPreReleaseVersion } from '../platform/common/constants';
 import { IServiceManager } from '../platform/ioc/types';
@@ -55,8 +55,8 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './raw/finder/
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         PortAttributesProviders
@@ -108,8 +108,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper, IExtensionSyncActivationService);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         PreWarmActivatedJupyterEnvironmentVariables
     );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);

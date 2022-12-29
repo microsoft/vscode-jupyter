@@ -5,7 +5,7 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -17,7 +17,7 @@ import { generateCellRangesFromDocument } from './cellFactory';
  * Provides the lines that show up between cells in the editor.
  */
 @injectable()
-export class Decorator implements IExtensionSingleActivationService, IDisposable {
+export class Decorator implements IExtensionSyncActivationService, IDisposable {
     private currentCellTop: vscode.TextEditorDecorationType | undefined;
     private currentCellBottom: vscode.TextEditorDecorationType | undefined;
     private currentCellTopUnfocused: vscode.TextEditorDecorationType | undefined;
@@ -39,10 +39,9 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
         this.settingsChanged();
     }
 
-    public activate(): Promise<void> {
+    public activate() {
         // We don't need to do anything here as we already did all of our work in the
         // constructor.
-        return Promise.resolve();
     }
 
     public dispose() {

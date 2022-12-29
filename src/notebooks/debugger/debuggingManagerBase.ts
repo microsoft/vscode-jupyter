@@ -52,7 +52,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
         protected readonly serviceContainer: IServiceContainer
     ) {}
 
-    public async activate() {
+    public activate() {
         this.disposables.push(
             // track termination of debug sessions
             debug.onDidTerminateDebugSession(this.endSession.bind(this)),

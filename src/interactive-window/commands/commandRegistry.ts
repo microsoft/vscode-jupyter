@@ -47,7 +47,7 @@ import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integratio
 import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ExportFormat, IExportDialog, IFileConverter } from '../../notebooks/export/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
@@ -64,7 +64,7 @@ import { StatusProvider } from './statusProvider';
  * Class that registers command handlers for interactive window commands.
  */
 @injectable()
-export class CommandRegistry implements IDisposable, IExtensionSingleActivationService {
+export class CommandRegistry implements IDisposable, IExtensionSyncActivationService {
     private readonly statusProvider: StatusProvider;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -98,7 +98,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
     }
-    public async activate(): Promise<void> {
+    public activate() {
         this.registerCommandsIfTrusted();
         this.registerCommand(Commands.InsertCellBelowPosition, this.insertCellBelowPosition);
         this.registerCommand(Commands.InsertCellBelow, this.insertCellBelow);

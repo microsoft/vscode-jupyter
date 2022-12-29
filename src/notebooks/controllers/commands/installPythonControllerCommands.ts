@@ -12,7 +12,7 @@ import {
     window
 } from 'vscode';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { Commands, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
@@ -31,7 +31,7 @@ import { IControllerLoader } from '../types';
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
 @injectable()
-export class InstallPythonControllerCommands implements IExtensionSingleActivationService {
+export class InstallPythonControllerCommands implements IExtensionSyncActivationService {
     private showInstallPythonExtensionContext: ContextKey;
     private showInstallPythonContext: ContextKey;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
@@ -56,7 +56,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         );
         this.showInstallPythonContext = new ContextKey('jupyter.showInstallPythonCommand', this.commandManager);
     }
-    public async activate(): Promise<void> {
+    public activate() {
         this.disposables.push(
             notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this)
         );

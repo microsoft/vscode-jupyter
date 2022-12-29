@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../platform/activation/types';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { Telemetry } from '../platform/common/constants';
@@ -19,7 +19,7 @@ import { IRawNotebookSupportedService } from './raw/types';
  * Starts up a bunch of objects when running in a node environment.
  */
 @injectable()
-export class Activation implements IExtensionSingleActivationService {
+export class Activation implements IExtensionSyncActivationService {
     private notebookOpened = false;
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
@@ -28,7 +28,7 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IRawNotebookSupportedService) private readonly rawSupported: IRawNotebookSupportedService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         this.disposables.push(this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
     }
