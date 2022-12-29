@@ -1467,7 +1467,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "%jupyter.configuration.jupyter.experiments.enabled.description%",
-                    "scope": "application"
+                    "scope": "machine"
                 },
                 "jupyter.showVariableViewWhenDebugging": {
                     "type": "boolean",
@@ -1496,7 +1496,7 @@
                         "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
-                    "scope": "application"
+                    "scope": "machine"
                 },
                 "jupyter.experiments.optOutFrom": {
                     "type": "array",
@@ -1505,7 +1505,7 @@
                         "enum": []
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
-                    "scope": "application"
+                    "scope": "machine"
                 },
                 "jupyter.allowImportFromNotebook": {
                     "type": "boolean",
