@@ -22,6 +22,7 @@ import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector'
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
+import { IExtensionApi } from './standalone/api/api';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -3141,7 +3142,7 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry sent when an extension uses our 3rd party API.
+     * Telemetry sent when an extension uses our 3rd party Kernel API.
      */
     [Telemetry.JupyterKernelApiUsage]: TelemetryEventInfo<{
         /**
@@ -3152,6 +3153,33 @@ export class IEventNamePropertyMapping {
          * Name of the API member used.
          */
         pemUsed: keyof IExportedKernelService;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            pemUsed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Telemetry sent when an extension uses our 3rd party API.
+     */
+    [Telemetry.JupyterApiUsage]: TelemetryEventInfo<{
+        /**
+         * Extension Id that's attempting to use the API.
+         */
+        extensionId: string;
+        /**
+         * Name of the API member used.
+         */
+        pemUsed: keyof IExtensionApi;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',

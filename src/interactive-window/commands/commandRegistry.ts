@@ -36,13 +36,7 @@ import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../p
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
 import { capturePerfTelemetry, captureUsageTelemetry } from '../../telemetry';
-import {
-    Commands,
-    CommandSource,
-    JVSC_EXTENSION_ID,
-    PYTHON_LANGUAGE,
-    Telemetry
-} from '../../platform/common/constants';
+import { Commands, CommandSource, PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integration/types';
 import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
@@ -57,7 +51,6 @@ import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { IControllerPreferredService } from '../../notebooks/controllers/types';
 import { StatusProvider } from './statusProvider';
 
 /**
@@ -90,8 +83,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         @inject(IFileConverter) private fileConverter: IFileConverter,
         @inject(IExportDialog) private exportDialog: IExportDialog,
         @inject(IClipboard) private clipboard: IClipboard,
-        @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
-        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService
+        @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook
     ) {
         this.statusProvider = new StatusProvider(applicationShell);
         if (!this.workspace.isTrusted) {
@@ -704,16 +696,9 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                         getDisplayPath(file)
                     );
                     // Next open this notebook & execute it.
-                    const editor = await this.notebook
+                    await this.notebook
                         .openNotebookDocument(uri)
                         .then((document) => this.notebook.showNotebookDocument(document));
-                    const { controller } = await this.controllerPreferredService.computePreferred(editor.notebook);
-                    if (controller) {
-                        await this.commandManager.executeCommand('notebook.selectKernel', {
-                            id: controller.id,
-                            extension: JVSC_EXTENSION_ID
-                        });
-                    }
                     await this.commandManager.executeCommand('notebook.execute');
                     return uri;
                 }
