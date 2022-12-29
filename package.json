@@ -1571,7 +1571,8 @@
                 "jupyter.notebookFileRoot": {
                     "type": "string",
                     "default": "${fileDirname}",
-                    "description": "%jupyter.configuration.jupyter.notebookFileRoot.description%"
+                    "description": "%jupyter.configuration.jupyter.notebookFileRoot.description%",
+                    "scope": "resource"
                 },
                 "jupyter.searchForJupyter": {
                     "type": "boolean",
