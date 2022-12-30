@@ -2288,7 +2288,7 @@
         "expose-loader": "^3.1.0",
         "express": "^4.17.1",
         "fast-xml-parser": "^3.16.0",
-        "flat": "^4.0.0",
+        "flat": "^5.0.1",
         "fork-ts-checker-webpack-plugin": "^7.0.0",
         "get-port": "^3.2.0",
         "glob-parent": "^6.0.2",
