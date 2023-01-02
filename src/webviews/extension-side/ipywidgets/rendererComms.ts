@@ -88,10 +88,10 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         { editor, message }: { editor: NotebookEditor; message: QueryWidgetStateCommand }
     ) {
         if (message && typeof message === 'object' && message.command === 'query-widget-state') {
-            this.onQueryWidgetState(comms, editor, message);
+            this.queryWidgetState(comms, editor, message);
         }
     }
-    private onQueryWidgetState(
+    private queryWidgetState(
         comms: NotebookRendererMessaging,
         editor: NotebookEditor,
         message: QueryWidgetStateCommand
