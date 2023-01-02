@@ -94,7 +94,8 @@ export const activate: ActivationFunction = (context) => {
                 return disposeOutputFunc(id);
             }
         }
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
 };
 
 type AllOutputContainer = OutputItem & { _allOutputItems: [{ mime: string; getItem: () => Promise<OutputItem> }] };
