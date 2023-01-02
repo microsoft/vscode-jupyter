@@ -469,8 +469,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     'webview-side',
                     'ipywidgetsKernel',
                     'ipywidgetsKernel.js'
-                ),
-                Uri.joinPath(this.context.extensionUri, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
+                )
             ]
         );
         return scripts.map((uri) => new NotebookRendererScript(uri));

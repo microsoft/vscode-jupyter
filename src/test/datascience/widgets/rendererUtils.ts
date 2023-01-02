@@ -8,6 +8,7 @@
 */
 import type * as nbformat from '@jupyterlab/nbformat';
 import { RendererContext, OutputItem } from 'vscode-notebook-renderer';
+import { VSCodeEvent } from 'vscode-notebook-renderer/events';
 
 const outputsByCellIndex = new Map<number, HTMLElement>();
 let rendererContext: RendererContext<unknown>;
@@ -199,4 +200,13 @@ function hijackLogging() {
             logMessage(channel, args);
         };
     });
+}
+
+type KernelMessagingApi = {
+    onDidReceiveKernelMessage: VSCodeEvent<unknown>;
+    postKernelMessage: (data: unknown) => void;
+};
+// Has to be this form for VS code to load it correctly
+export function activate(_context?: KernelMessagingApi) {
+    // Main entry point (do not remove this function is it required by VS code).
 }
