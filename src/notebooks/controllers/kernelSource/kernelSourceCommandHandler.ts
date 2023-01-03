@@ -55,14 +55,14 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     provideNotebookKernelSourceActions: () => {
                         return [
                             {
-                                label: DataScience.localKernelSpecs(),
-                                detail: DataScience.pickLocalKernelSpecTitle(),
-                                command: 'jupyter.kernel.selectLocalKernelSpec'
-                            },
-                            {
                                 label: DataScience.localPythonEnvironments(),
                                 detail: DataScience.pickLocalKernelPythonEnvTitle(),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                            },
+                            {
+                                label: DataScience.localKernelSpecs(),
+                                detail: DataScience.pickLocalKernelSpecTitle(),
+                                command: 'jupyter.kernel.selectLocalKernelSpec'
                             }
                         ];
                     }
@@ -73,14 +73,14 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     provideNotebookKernelSourceActions: () => {
                         return [
                             {
-                                label: DataScience.localKernelSpecs(),
-                                detail: DataScience.pickLocalKernelSpecTitle(),
-                                command: 'jupyter.kernel.selectLocalKernelSpec'
-                            },
-                            {
                                 label: DataScience.localPythonEnvironments(),
                                 detail: DataScience.pickLocalKernelPythonEnvTitle(),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                            },
+                            {
+                                label: DataScience.localKernelSpecs(),
+                                detail: DataScience.pickLocalKernelSpecTitle(),
+                                command: 'jupyter.kernel.selectLocalKernelSpec'
                             }
                         ];
                     }
