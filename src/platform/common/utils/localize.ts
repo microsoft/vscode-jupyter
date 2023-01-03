@@ -1376,9 +1376,9 @@ export namespace DataScience {
             { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
             'Failed to install Pandas to use the Data Viewer.'
         );
-    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Kernel Specs...');
+    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Jupyter Kernel...');
     export const pickLocalKernelSpecTitle = () =>
-        localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Kernel spec`);
+        localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Jupyter Kernel`);
 
     export const localPythonEnvironments = () =>
         localize('DataScience.localPythonEnvironments', 'Local Python Environments...');
@@ -1399,7 +1399,7 @@ export namespace DataScience {
     export const kernelPickerSelectKernelTitle = () =>
         localize('DataScience.kernelPickerSelectKernelTitle', 'Select Kernel');
     export const kernelPickerSelectLocalKernelSpecTitle = () =>
-        localize('DataScience.kernelPickerSelectLocalKernelSpecTitle', 'Select a Local Kernel Spec');
+        localize('DataScience.kernelPickerSelectLocalKernelSpecTitle', 'Select a Local Jupyter Kernel');
     export const kernelPickerSelectPythonEnvironmentTitle = () =>
         localize('DataScience.kernelPickerSelectPythonEnvironmentTitle', 'Select a Local Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = () =>
