@@ -145,6 +145,45 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     private readonly associatedDocuments = new WeakMap<NotebookDocument, Promise<void>>();
+    public static create(
+        kernelConnection: KernelConnectionMetadata,
+        id: string,
+        _viewType: string,
+        notebookApi: IVSCodeNotebook,
+        commandManager: ICommandManager,
+        kernelProvider: IKernelProvider,
+        context: IExtensionContext,
+        disposableRegistry: IDisposableRegistry,
+        languageService: NotebookCellLanguageService,
+        workspace: IWorkspaceService,
+        configuration: IConfigurationService,
+        documentManager: IDocumentManager,
+        appShell: IApplicationShell,
+        browser: IBrowserService,
+        extensionChecker: IPythonExtensionChecker,
+        serviceContainer: IServiceContainer,
+        displayDataProvider: ConnectionDisplayDataProvider
+    ): IVSCodeNotebookController {
+        return new VSCodeNotebookController(
+            kernelConnection,
+            id,
+            _viewType,
+            notebookApi,
+            commandManager,
+            kernelProvider,
+            context,
+            disposableRegistry,
+            languageService,
+            workspace,
+            configuration,
+            documentManager,
+            appShell,
+            browser,
+            extensionChecker,
+            serviceContainer,
+            displayDataProvider
+        );
+    }
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,

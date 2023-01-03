@@ -26,7 +26,7 @@ import { traceError, traceVerbose } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getLanguageOfNotebookDocument } from '../../languages/helpers';
-import { IControllerLoader } from '../types';
+import { IControllerRegistration } from '../types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
@@ -43,7 +43,7 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
+        @inject(IControllerRegistration) private readonly controllerRegistry: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -189,7 +189,7 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                     } else {
                         // Trigger a load of our notebook controllers, we want to await it here so that any in
                         // progress executions get passed to the suggested controller
-                        await this.controllerLoader.loaded;
+                        await this.controllerRegistry.loaded;
                     }
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');

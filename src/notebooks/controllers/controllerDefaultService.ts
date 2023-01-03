@@ -14,12 +14,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../platform/logging';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { createActiveInterpreterController } from './helpers';
-import {
-    IControllerDefaultService,
-    IControllerLoader,
-    IControllerRegistration,
-    IVSCodeNotebookController
-} from './types';
+import { IControllerDefaultService, IControllerRegistration, IVSCodeNotebookController } from './types';
 
 /**
  * Determines the 'default' kernel for a notebook. Default is what kernel should be used if there's no metadata in a notebook.
@@ -31,7 +26,6 @@ export class ControllerDefaultService implements IControllerDefaultService {
     }
     constructor(
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IControllerLoader) private readonly loader: IControllerLoader,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
@@ -77,7 +71,7 @@ export class ControllerDefaultService implements IControllerDefaultService {
         const kernelName = metadata ? metadata.kernelspec?.name : undefined;
         if (this.featureManager.features.kernelPickerType === 'Stable') {
             // Get all remote kernels
-            await this.loader.loaded;
+            await this.registration.loaded;
         }
         const preferredRemoteKernelId =
             notebook && this.preferredRemoteFinder

@@ -49,6 +49,10 @@ export const IControllerRegistration = Symbol('IControllerRegistration');
 
 export interface IControllerRegistration {
     /**
+     * Promise resolved when controllers are done being loaded (refresh makes this promise update)
+     */
+    readonly loaded: Promise<void>;
+    /**
      * Gets the registered list of all of the controllers (the ones shown by VS code)
      */
     registered: IVSCodeNotebookController[];
@@ -71,16 +75,6 @@ export interface IControllerRegistration {
      * These are very special controllers, as they are created out of band even before kernel discovery completes.
      */
     trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]): void;
-    canControllerBeDisposed(controller: IVSCodeNotebookController): boolean;
-    /**
-     * Batch registers new controllers. Disposing a controller unregisters it.
-     * @param a list of metadatas
-     * @param types Types of notebooks to create the controller for
-     */
-    batchAdd(
-        metadatas: KernelConnectionMetadata[],
-        types: (typeof JupyterNotebookView | typeof InteractiveWindowView)[]
-    ): void;
     /**
      * Registers a new controller or updates one. Disposing a controller unregisters it.
      * @return Returns the added and updated controller(s)
@@ -155,15 +149,6 @@ export interface IControllerDefaultService {
         resource: Resource,
         viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): Promise<IVSCodeNotebookController | undefined>;
-}
-
-export const IControllerLoader = Symbol('IControllerLoader');
-
-export interface IControllerLoader {
-    /**
-     * Promise resolved when controllers are done being loaded (refresh makes this promise update)
-     */
-    readonly loaded: Promise<void>;
 }
 
 // Flag enum for the reason why a kernel was logged as an exact match

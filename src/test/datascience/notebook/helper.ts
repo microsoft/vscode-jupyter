@@ -71,7 +71,6 @@ import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cell
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 import {
-    IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
     InteractiveControllerIdSuffix,
@@ -119,7 +118,6 @@ export async function getServices() {
         controllerRegistration: api.serviceContainer.get<IControllerRegistration>(
             IControllerRegistration
         ) as IControllerRegistration,
-        controllerLoader: api.serviceContainer.get<IControllerLoader>(IControllerLoader),
         controllerPreferred: api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
         interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
