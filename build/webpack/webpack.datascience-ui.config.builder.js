@@ -121,42 +121,12 @@ function buildConfiguration(bundle) {
     // console.error(`Bundle = ${ bundle }`);
     // Folder inside `webviews/webview-side` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
-    const filesToCopy = [];
-    if (bundle === 'ipywidgetsRenderer') {
-        // Include files only for notebooks.
-        filesToCopy.push(
-            ...[
-                {
-                    from: 'node_modules/font-awesome/**/*',
-                    context: './',
-                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
-                },
-                {
-                    from: path.join(
-                        constants.ExtensionRootDir,
-                        'src',
-                        'notebooks',
-                        'controllers',
-                        'fontAwesomeLoader.js'
-                    ),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
-                }
-            ]
-        );
-    }
     const plugins = [
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 100
         }),
         ...getPlugins(bundle)
     ];
-    if (filesToCopy.length > 0) {
-        plugins.push(
-            new CopyWebpackPlugin({
-                patterns: [...filesToCopy]
-            })
-        );
-    }
     return {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),
