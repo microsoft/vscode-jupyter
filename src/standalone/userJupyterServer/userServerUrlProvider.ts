@@ -145,9 +145,15 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         return this._cachedServerInfoInitialized;
     }
 
-    getQuickPickEntryItems(): QuickPickItem[] {
+    getQuickPickEntryItems(): (QuickPickItem & {
+        /**
+         * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+         */
+        default?: boolean;
+    })[] {
         return [
             {
+                default: true,
                 label: DataScience.jupyterSelectURIPrompt(),
                 detail: DataScience.jupyterSelectURINewDetail()
             }
