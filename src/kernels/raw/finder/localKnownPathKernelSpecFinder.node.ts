@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Memento, RelativePattern, Uri } from 'vscode';
 import { getKernelId } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
@@ -18,6 +18,7 @@ import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { ResourceSet } from '../../../platform/vscode-path/map';
 
 const LocalKernelSpecsCacheKey = 'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10';
 
@@ -32,6 +33,7 @@ export class LocalKnownPathKernelSpecFinder
     implements IExtensionSyncActivationService
 {
     private readonly _kernels = new Map<string, LocalKernelSpecConnectionMetadata>();
+    private readonly monitoredPaths = new ResourceSet();
     constructor(
         @inject(IFileSystemNode) fs: IFileSystemNode,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
@@ -117,6 +119,18 @@ export class LocalKnownPathKernelSpecFinder
         this.promiseMonitor.push(promise);
         return promise;
     }
+    private monitorPath(kernelPath: Uri) {
+        if (this.monitoredPaths.has(kernelPath)) {
+            return;
+        }
+        this.monitoredPaths.add(kernelPath);
+        const pattern = new RelativePattern(kernelPath, '**/kernel.json');
+        this.workspaceService.createFileSystemWatcher(pattern).onDidChange(
+            () => this.refreshData().ignoreErrors(),
+            this,
+            this.disposables
+        );
+    }
     private async findKernelSpecs(cancelToken: CancellationToken): Promise<IJupyterKernelSpec[]> {
         let results: IJupyterKernelSpec[] = [];
 
@@ -125,6 +139,7 @@ export class LocalKnownPathKernelSpecFinder
         if (cancelToken.isCancellationRequested) {
             return [];
         }
+        paths.forEach((p) => this.monitorPath(p));
         const searchResults = await Promise.all(
             paths.map((kernelPath) => this.kernelSpecFinder.findKernelSpecsInPaths(kernelPath, cancelToken))
         );
