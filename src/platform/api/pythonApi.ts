@@ -694,7 +694,7 @@ export class InterpreterService implements IInterpreterService {
                 await Promise.all(
                     api.environments.known.map(async (item) => {
                         try {
-                            const env = await api.environments.resolveEnvironment(item.id);
+                            const env = await api.environments.resolveEnvironment(item);
                             const resolved = this.trackResolvedEnvironment(env, true);
                             traceVerbose(
                                 `Python environment for ${item.id} is ${
