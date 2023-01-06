@@ -45,15 +45,15 @@ class PythonEnvironment {
 
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         // prettier-ignore
-        const [args,] = internalPython.isModuleInstalled(moduleName);
+        const [args, parse] = internalPython.isModuleInstalled(moduleName);
         const info = this.getExecutionInfo(args);
         try {
-            await this.deps.exec(info.command, info.args, { throwOnStdErr: false });
+            const output = await this.deps.exec(info.command, info.args, { throwOnStdErr: false });
+            return parse(output.stdout);
         } catch (ex) {
             traceWarning(`Module ${moduleName} not installed in environment ${this.interpreter.id}`, ex);
             return false;
         }
-        return true;
     }
 }
 
