@@ -17,8 +17,8 @@ export abstract class BaseError extends Error {
  * Wraps an error with a custom error message, retaining the call stack information.
  */
 export class WrappedError extends BaseError {
-    constructor(message: string, public readonly originalException?: Error) {
-        super(getErrorCategory(originalException), message);
+    constructor(message: string, public readonly originalException?: Error, category?: ErrorCategory) {
+        super(category || getErrorCategory(originalException), message);
         if (originalException) {
             // Retain call stack that trapped the error and rethrows this error.
             // Also retain the call stack of the original error.
@@ -81,6 +81,7 @@ export type ErrorCategory =
     | 'localjupyterserverconnection'
     | 'remotejupyterserveruriprovider'
     | 'invalidremotejupyterserverurihandle'
+    | 'pythonExtension'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.
