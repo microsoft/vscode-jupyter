@@ -45,7 +45,7 @@ suite('VSCode semantic token tests @lsp', function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await startJupyterServer();
-        await createEmptyPythonNotebook(disposables, undefined, undefined, true);
+        await createEmptyPythonNotebook(disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {

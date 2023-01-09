@@ -31,7 +31,7 @@ suite('VSCode Notebook -', function () {
             diagnosticProvider = api.serviceContainer
                 .getAll<NotebookCellBangInstallDiagnosticsProvider>(IExtensionSyncActivationService)
                 .find((item) => item instanceof NotebookCellBangInstallDiagnosticsProvider)!;
-            await createEmptyPythonNotebook(disposables, undefined, undefined, true);
+            await createEmptyPythonNotebook(disposables);
             activeNotebook = vscodeNotebook.activeNotebookEditor!.notebook;
             assert.isOk(activeNotebook, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);

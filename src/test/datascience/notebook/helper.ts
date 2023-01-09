@@ -294,8 +294,7 @@ export async function createTemporaryNotebook(
 export async function createEmptyPythonNotebook(
     disposables: IDisposable[] = [],
     rootFolder?: Uri,
-    dontWaitForKernel?: boolean,
-    autoSelectDefaultKernel?: boolean
+    dontWaitForKernel?: boolean
 ) {
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
@@ -314,18 +313,6 @@ export async function createEmptyPythonNotebook(
     // Open a python notebook and use this for all tests in this test suite.
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-    if (autoSelectDefaultKernel) {
-        // Find the default remote Python kernel (we know that will have ipykernel, as we've set up CI as such).
-        const defaultPythonKernel = await serviceContainer
-            .get<IControllerDefaultService>(IControllerDefaultService)
-            .computeDefaultController(undefined, 'jupyter-notebook');
-        assert.ok(defaultPythonKernel, 'No default kernel');
-
-        await commands.executeCommand('notebook.selectKernel', {
-            id: defaultPythonKernel!.controller.id,
-            extension: JVSC_EXTENSION_ID_FOR_TESTS
-        });
-    }
     if (!dontWaitForKernel) {
         await waitForKernelToGetAutoSelected(
             vscodeNotebook.activeNotebookEditor!,
