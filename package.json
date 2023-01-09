@@ -1495,13 +1495,6 @@
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"
                 },
-                "jupyter.enableKeyboardShortcuts": {
-                    "type": "boolean",
-                    "default": true,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.enableKeyboardShortcuts.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.enableKeyboardShortcuts.description%",
-                    "scope": "application"
-                },
                 "jupyter.allowImportFromNotebook": {
                     "type": "boolean",
                     "default": true,
@@ -1525,7 +1518,7 @@
                     },
                     "uniqueItems": true,
                     "markdownDescription": "%jupyter.configuration.jupyter.widgetScriptSources.markdownDescription%",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.askForLargeDataFrames": {
                     "type": "boolean",
@@ -1536,8 +1529,7 @@
                 "jupyter.askForKernelRestart": {
                     "type": "boolean",
                     "default": true,
-                    "description": "%jupyter.configuration.jupyter.askForKernelRestart.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.askForKernelRestart.description%"
                 },
                 "jupyter.exportWithOutputEnabled": {
                     "type": "boolean",
@@ -1548,14 +1540,12 @@
                 "jupyter.jupyterLaunchTimeout": {
                     "type": "number",
                     "default": 60000,
-                    "description": "%jupyter.configuration.jupyter.jupyterLaunchTimeout.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.jupyterLaunchTimeout.description%"
                 },
                 "jupyter.jupyterLaunchRetries": {
                     "type": "number",
                     "default": 3,
-                    "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%"
                 },
                 "jupyter.notebookFileRoot": {
                     "type": "string",
@@ -1573,20 +1563,12 @@
                 "jupyter.useDefaultConfigForJupyter": {
                     "type": "boolean",
                     "default": true,
-                    "description": "%jupyter.configuration.jupyter.useDefaultConfigForJupyter.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.useDefaultConfigForJupyter.description%"
                 },
                 "jupyter.jupyterInterruptTimeout": {
                     "type": "number",
                     "default": 10000,
-                    "description": "%jupyter.configuration.jupyter.jupyterInterruptTimeout.description%",
-                    "scope": "resource"
-                },
-                "jupyter.allowInput": {
-                    "type": "boolean",
-                    "default": true,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.allowInput.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.allowInput.description%"
+                    "description": "%jupyter.configuration.jupyter.jupyterInterruptTimeout.description%"
                 },
                 "jupyter.showCellInputCode": {
                     "type": "boolean",
@@ -1600,13 +1582,6 @@
                     "default": true,
                     "description": "%jupyter.configuration.jupyter.collapseCellInputCodeByDefault.description%",
                     "markdownDeprecationMessage": "%jupyter.configuration.jupyter.collapseCellInputCodeByDefault.markdownDeprecationMessage%",
-                    "scope": "resource"
-                },
-                "jupyter.maxOutputSize": {
-                    "type": "number",
-                    "default": 400,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.maxOutputSize.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.maxOutputSize.description%",
                     "scope": "resource"
                 },
                 "jupyter.alwaysScrollOnNewCell": {
@@ -1653,32 +1628,16 @@
                     "description": "%jupyter.configuration.jupyter.markdownRegularExpression.description%",
                     "scope": "resource"
                 },
-                "jupyter.allowLiveShare": {
-                    "type": "boolean",
-                    "default": true,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.allowLiveShare.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.allowLiveShare.description%",
-                    "scope": "resource"
-                },
                 "jupyter.ignoreVscodeTheme": {
                     "type": "boolean",
                     "default": false,
                     "deprecationMessage": "%jupyter.configuration.jupyter.ignoreVscodeTheme.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.ignoreVscodeTheme.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.ignoreVscodeTheme.description%"
                 },
                 "jupyter.themeMatplotlibPlots": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%jupyter.configuration.jupyter.themeMatplotlibPlots.description%",
-                    "scope": "resource"
-                },
-                "jupyter.liveShareConnectionTimeout": {
-                    "type": "number",
-                    "default": 1000,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.liveShareConnectionTimeout.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.liveShareConnectionTimeout.description%",
-                    "scope": "application"
+                    "description": "%jupyter.configuration.jupyter.themeMatplotlibPlots.description%"
                 },
                 "jupyter.decorateCells": {
                     "type": "boolean",
@@ -1701,8 +1660,7 @@
                 "jupyter.allowUnauthorizedRemoteConnection": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%jupyter.configuration.jupyter.allowUnauthorizedRemoteConnection.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.allowUnauthorizedRemoteConnection.description%"
                 },
                 "jupyter.generateSVGPlots": {
                     "type": "boolean",
@@ -1745,8 +1703,7 @@
                 "jupyter.disableJupyterAutoStart": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%jupyter.configuration.jupyter.disableJupyterAutoStart.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.disableJupyterAutoStart.description%"
                 },
                 "jupyter.textOutputLimit": {
                     "type": "number",
@@ -1760,12 +1717,6 @@
                     "default": true,
                     "deprecationMessage": "%jupyter.configuration.jupyter.colorizeInputBox.deprecationMessage%",
                     "description": "%jupyter.configuration.jupyter.colorizeInputBox.description%",
-                    "scope": "resource"
-                },
-                "jupyter.stopOnError": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%jupyter.configuration.jupyter.stopOnError.description%",
                     "scope": "resource"
                 },
                 "jupyter.addGotoCodeLenses": {
@@ -1870,8 +1821,7 @@
                 "jupyter.magicCommandsAsComments": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%jupyter.configuration.jupyter.magicCommandsAsComments.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.magicCommandsAsComments.description%"
                 },
                 "jupyter.pythonExportMethod": {
                     "type": "string",
@@ -1899,8 +1849,7 @@
                 "jupyter.showOutlineButtonInNotebookToolbar": {
                     "type": "boolean",
                     "default": true,
-                    "description": "%jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description%",
-                    "scope": "resource"
+                    "description": "%jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description%"
                 },
                 "jupyter.newCellOnRunLast": {
                     "type": "boolean",
@@ -1912,7 +1861,7 @@
                     "type": "string",
                     "default": ".%'\"",
                     "description": "%jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description%",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.logKernelOutputSeparately": {
                     "type": "boolean",
@@ -1923,13 +1872,13 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.excludeUserSitePackages.description%",
-                    "scope": "machine"
+                    "scope": "application"
                 },
                 "jupyter.enableExtendedKernelCompletions": {
                     "type": "boolean",
                     "default": false,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription%",
-                    "scope": "machine"
+                    "scope": "application"
                 }
             }
         },
