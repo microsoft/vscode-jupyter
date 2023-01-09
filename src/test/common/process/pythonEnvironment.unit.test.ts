@@ -79,10 +79,10 @@ suite('PythonEnvironment', () => {
 
     test('isModuleInstalled should call processService.exec()', async () => {
         const moduleName = 'foo';
-        const argv = ['-c', `import ${moduleName}`];
+        const argv = ['-c', `import ${moduleName};print('6af208d0-cb9c-427f-b937-ff563e17efdf')`];
         processService
-            .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: true }))
-            .returns(() => Promise.resolve({ stdout: '' }))
+            .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: false }))
+            .returns(() => Promise.resolve({ stdout: '6af208d0-cb9c-427f-b937-ff563e17efdf' }))
             .verifiable(TypeMoq.Times.once());
         const env = createPythonEnv(
             { uri: pythonPath } as PythonEnvironment,
@@ -97,10 +97,10 @@ suite('PythonEnvironment', () => {
 
     test('isModuleInstalled should return true when processService.exec() succeeds', async () => {
         const moduleName = 'foo';
-        const argv = ['-c', `import ${moduleName}`];
+        const argv = ['-c', `import ${moduleName};print('6af208d0-cb9c-427f-b937-ff563e17efdf')`];
         processService
-            .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: true }))
-            .returns(() => Promise.resolve({ stdout: '' }));
+            .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: false }))
+            .returns(() => Promise.resolve({ stdout: '6af208d0-cb9c-427f-b937-ff563e17efdf' }));
         const env = createPythonEnv(
             { uri: pythonPath } as PythonEnvironment,
             processService.object,
@@ -114,9 +114,9 @@ suite('PythonEnvironment', () => {
 
     test('isModuleInstalled should return false when processService.exec() throws', async () => {
         const moduleName = 'foo';
-        const argv = ['-c', `import ${moduleName}`];
+        const argv = ['-c', `import ${moduleName};print('6af208d0-cb9c-427f-b937-ff563e17efdf')`];
         processService
-            .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: true }))
+            .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: false }))
             .returns(() => Promise.reject(new StdErrError('bar')));
         const env = createPythonEnv(
             { uri: pythonPath } as PythonEnvironment,
