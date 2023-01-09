@@ -18,7 +18,7 @@ import { isRemoteConnection, KernelConnectionMetadata } from '../../../kernels/t
 import { KernelFilterService } from './kernelFilterService';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../platform/common/constants';
-import { IControllerLoader, IControllerRegistration } from '../types';
+import { IControllerRegistration } from '../types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 
 function getKernelLabel(metadata: KernelConnectionMetadata): string {
@@ -36,7 +36,6 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposales: IDisposableRegistry,
@@ -62,7 +61,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         quickPick.busy = true;
         quickPick.enabled = false;
 
-        this.controllerLoader.loaded
+        this.controllers.loaded
             .then(() => {
                 if (quickPickHidden) {
                     return;

@@ -51,7 +51,6 @@ import { getLanguageOfNotebookDocument } from '../languages/helpers';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
 import {
     IControllerDefaultService,
-    IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
     IKernelRankingHelper,
@@ -73,7 +72,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     private disposables = new Set<IDisposable>();
     constructor(
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IControllerLoader) private readonly loader: IControllerLoader,
         @inject(IControllerDefaultService) private readonly defaultService: IControllerDefaultService,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
@@ -287,7 +285,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
                 if (this.featureManager.features.kernelPickerType === 'Stable') {
-                    await this.loader.loaded;
+                    await this.registration.loaded;
                 }
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
