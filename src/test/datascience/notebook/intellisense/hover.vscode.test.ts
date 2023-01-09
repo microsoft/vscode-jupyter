@@ -42,7 +42,7 @@ suite('VSCode Intellisense Notebook Hover @lsp', function () {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
-        await createEmptyPythonNotebook(disposables);
+        await createEmptyPythonNotebook(disposables, undefined, undefined, true);
         setIntellisenseTimeout(30000);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
