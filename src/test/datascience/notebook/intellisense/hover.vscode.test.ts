@@ -53,7 +53,8 @@ suite('VSCode Intellisense Notebook Hover @lsp', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Insert cell and get hover text', async () => {
+    test.skip('Insert cell and get hover text', async () => {
+        // https://github.com/microsoft/vscode-jupyter/issues/12503
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         const position = new Position(1, 2);

@@ -52,7 +52,8 @@ suite('VSCode Intellisense Notebook Diagnostics @lsp', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Add cells and make sure errors show up', async () => {
+    test.skip('Add cells and make sure errors show up', async () => {
+        // https://github.com/microsoft/vscode-jupyter/issues/12503
         await insertCodeCell('import system', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
