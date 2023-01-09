@@ -214,7 +214,6 @@ export namespace Commands {
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
     export const SelectNativeJupyterUriFromToolBar = 'jupyter.selectNativeJupyterUriFromToolBar';
-    export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
