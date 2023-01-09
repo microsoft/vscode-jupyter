@@ -396,7 +396,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             WebSocket: this.requestCreator.getWebsocketCtor(
                 cookieString,
                 allowUnauthorized,
-                connInfo.getAuthHeader
+                connInfo.getAuthHeader,
+                connInfo.getWebsocketProtocols?.bind(connInfo)
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any,
             fetch: this.requestCreator.getFetchMethod(),

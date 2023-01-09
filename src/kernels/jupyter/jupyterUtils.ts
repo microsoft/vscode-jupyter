@@ -129,6 +129,7 @@ export function createRemoteConnectionInfo(
         rootDirectory: Uri.file(''),
         workingDirectory: serverUri?.workingDirectory,
         getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined,
+        getWebsocketProtocols: serverUri ? () => getJupyterServerUri(uri)?.webSocketProtocols || [] : () => [],
         url: uri
     };
 }
