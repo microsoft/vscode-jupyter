@@ -1381,9 +1381,9 @@ export namespace DataScience {
         localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Jupyter Kernel`);
 
     export const localPythonEnvironments = () =>
-        localize('DataScience.localPythonEnvironments', 'Local Python Environments...');
+        localize('DataScience.localPythonEnvironments', 'Python Environments...');
     export const pickLocalKernelPythonEnvTitle = () =>
-        localize('DataScience.pickLocalKernelPythonEnvTitle', `Select a Local Python Environment`);
+        localize('DataScience.pickLocalKernelPythonEnvTitle', `Select a Python Environment`);
     export const UserJupyterServerUrlProviderDisplayName = () =>
         localize('DataScience.UserJupyterServerUrlProviderDisplayName', 'Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = () =>
