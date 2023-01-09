@@ -71,14 +71,13 @@ import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cell
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 import {
-    IControllerDefaultService,
     IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController
 } from '../../../notebooks/controllers/types';
-import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
+import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import uuid from 'uuid/v4';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
