@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -20,7 +20,7 @@ import { IControllerRegistration, IControllerPreferredService } from '../../note
  * Registers the export commands if in a trusted workspace.
  */
 @injectable()
-export class CommandRegistry implements IExtensionSingleActivationService {
+export class CommandRegistry implements IExtensionSyncActivationService {
     private exportCommand?: ExportCommands;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -51,7 +51,7 @@ export class CommandRegistry implements IExtensionSingleActivationService {
         }
     }
 
-    async activate(): Promise<void> {
+    activate() {
         this.registerCommandsIfTrusted();
     }
 

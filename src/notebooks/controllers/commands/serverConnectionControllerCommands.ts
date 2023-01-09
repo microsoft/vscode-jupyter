@@ -5,7 +5,7 @@
 
 'use strict';
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
 import {
     Commands,
@@ -16,7 +16,7 @@ import {
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { IControllerLoader, IControllerRegistration, IVSCodeNotebookController } from '../types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../types';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -55,7 +55,7 @@ interface ControllerQuickPick extends QuickPickItem {
 // This service owns the commands that show up in the kernel picker to allow for switching
 // between local and remote kernels
 @injectable()
-export class ServerConnectionControllerCommands implements IExtensionSingleActivationService {
+export class ServerConnectionControllerCommands implements IExtensionSyncActivationService {
     private showingLocalOrWebEmptyContext: ContextKey;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -63,7 +63,6 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -71,7 +70,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     ) {
         this.showingLocalOrWebEmptyContext = new ContextKey('jupyter.showingLocalOrWebEmpty', this.commandManager);
     }
-    public async activate(): Promise<void> {
+    public activate() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SwitchToRemoteKernels, this.switchToRemoteKernels, this)
         );
@@ -97,7 +96,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
             if (this.featuresManager.features.kernelPickerType === 'Stable') {
                 // Need to wait for controller to reupdate after
                 // switching local/remote
-                await this.controllerLoader.loaded;
+                await this.controllerRegistration.loaded;
             }
             this.commandManager
                 .executeCommand('notebook.selectKernel', { notebookEditor: activeEditor })

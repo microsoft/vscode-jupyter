@@ -366,14 +366,15 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 .join(',');
 
             // Insert into our delete snippet
-            const deleteFilesCode = `import os
+            const deleteFilesCode = `import os as _VSCODE_os
 _VSCODE_fileList = [${fileListString}]
 for file in _VSCODE_fileList:
     try:
-        os.remove(file)
+        _VSCODE_os.remove(file)
     except:
         pass
-del _VSCODE_fileList`;
+del _VSCODE_fileList
+del _VSCODE_os`;
 
             await executeSilently(this.jupyterSession, deleteFilesCode, {
                 traceErrors: true,

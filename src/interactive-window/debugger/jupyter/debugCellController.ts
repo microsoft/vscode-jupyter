@@ -5,7 +5,10 @@ import { NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { INotebookKernelExecution } from '../../../kernels/types';
 import { DebuggingTelemetry } from '../../../notebooks/debugger/constants';
-import { isJustMyCodeNotification } from '../../../notebooks/debugger/controllers/debugCellController';
+import {
+    isDebugpyAttachRequest,
+    isJustMyCodeNotification
+} from '../../../notebooks/debugger/controllers/debugCellController';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { cellDebugSetup } from '../../../notebooks/debugger/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
@@ -35,6 +38,11 @@ export class DebugCellController implements IDebuggingDelegate {
     }
 
     public async willSendEvent(msg: DebugProtocol.Event): Promise<boolean> {
+        if (isDebugpyAttachRequest(msg)) {
+            this.trace('intercept', 'debugpyAttach request for subprocess, not supported');
+            return true;
+        }
+
         if (msg.event === 'output') {
             if (isJustMyCodeNotification(msg.body.output)) {
                 this.trace('intercept', 'justMyCode notification');

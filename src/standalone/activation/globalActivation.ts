@@ -17,7 +17,7 @@ import {
 import { debounceAsync, swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { EditorContexts } from '../../platform/common/constants';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -27,7 +27,7 @@ import { sendTelemetryEvent } from '../../telemetry';
  * Could probably be broken up.
  */
 @injectable()
-export class GlobalActivation implements IExtensionSingleActivationService {
+export class GlobalActivation implements IExtensionSyncActivationService {
     public isDisposed: boolean = false;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();
@@ -48,7 +48,7 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         return this.startTime;
     }
 
-    public async activate(): Promise<void> {
+    public activate() {
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
         this.changeHandler = this.configuration.getSettings(undefined).onDidChange(this.onSettingsChanged.bind(this));

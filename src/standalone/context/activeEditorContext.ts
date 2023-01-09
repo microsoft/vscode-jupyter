@@ -5,7 +5,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
@@ -21,7 +21,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
  * Tracks a lot of the context keys needed in the extension.
  */
 @injectable()
-export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
+export class ActiveEditorContextService implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     private nativeContext: ContextKey;
     private interactiveContext: ContextKey;
@@ -92,7 +92,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
     }
-    public async activate(): Promise<void> {
+    public activate() {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
         this.kernelProvider.onKernelStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
         // Interactive provider might not be available

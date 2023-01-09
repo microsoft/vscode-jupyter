@@ -4,7 +4,6 @@
 'use strict';
 
 import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
-import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
 import { IJupyterExtensionBanner } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -32,10 +31,11 @@ import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from 
 import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
 import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldingProvider';
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
@@ -51,7 +51,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         PythonCellFoldingProvider
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Decorator);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         GeneratedCodeStorageManager
@@ -69,7 +69,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IInteractiveWindowDebuggingManager,
         InteractiveWindowDebuggingManager,
         undefined,
-        [IExtensionSingleActivationService]
+        [IExtensionSyncActivationService]
     );
     serviceManager.addSingleton<IJupyterExtensionBanner>(
         IJupyterExtensionBanner,

@@ -18,6 +18,7 @@ import {
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
 } from './dataviewer/types';
+import { IPyWidgetRendererComms } from './ipywidgets/rendererComms';
 import { PlotViewer } from './plotting/plotViewer.node';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
@@ -43,8 +44,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDataViewerDependencyService,
         DataViewerDependencyService
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         DataViewerCommandRegistry
     );
 
@@ -56,9 +57,13 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     // Variable View
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         VariableViewActivationService
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        IPyWidgetRendererComms
     );
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);

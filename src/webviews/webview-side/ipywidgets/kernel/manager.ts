@@ -45,7 +45,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     constructor(
         private readonly widgetContainer: HTMLElement,
         private readonly postOffice: PostOffice,
-        private readonly scriptLoader: ScriptLoader
+        private readonly scriptLoader: ScriptLoader,
+        private readonly JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor
     ) {
         this.postOffice.addHandler(this);
 
@@ -155,14 +156,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // Dispose any existing managers.
         this.manager?.dispose(); // NOSONAR
         try {
-            // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
-            if (!JupyterLabWidgetManager) {
-                throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
-            }
             // Create the real manager and point it at our proxy kernel.
-            this.manager = new JupyterLabWidgetManager(
+            this.manager = new this.JupyterLabWidgetManager(
                 this.proxyKernel,
                 this.widgetContainer,
                 this.scriptLoader,

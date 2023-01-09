@@ -4,7 +4,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
@@ -23,7 +23,7 @@ import { noop } from '../../platform/common/utils/misc';
  * it will force that live kernel as the selected controller.
  */
 @injectable()
-export class LiveKernelSwitcher implements IExtensionSingleActivationService {
+export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
@@ -32,7 +32,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         // Listen to notebook open events. If we open a notebook that had a remote kernel started on it, reset it
         this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebook, this, this.disposables);
 

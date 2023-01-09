@@ -29,6 +29,8 @@ import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 import { PromiseMonitor } from '../common/utils/promises';
+import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
+import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -201,7 +203,7 @@ export class PythonApiProvider implements IPythonApiProvider {
                 activated = true;
             } catch (ex) {
                 traceError(`Failed activating the python extension: `, ex);
-                this.api.reject(ex);
+                this.api.reject(new PythonExtensionActicationFailedError(ex));
                 return;
             }
         }
@@ -214,7 +216,7 @@ export class PythonApiProvider implements IPythonApiProvider {
         }
         if (!pythonExtension.exports?.jupyter) {
             traceError(`Python extension is not exporting the jupyter API`);
-            this.api.reject(new Error('Python extension is not exporting the jupyter API'));
+            this.api.reject(new PythonExtensionApiNotExportedError());
         } else {
             pythonExtension.exports.jupyter.registerHooks();
         }
@@ -694,7 +696,7 @@ export class InterpreterService implements IInterpreterService {
                 await Promise.all(
                     api.environments.known.map(async (item) => {
                         try {
-                            const env = await api.environments.resolveEnvironment(item.id);
+                            const env = await api.environments.resolveEnvironment(item);
                             const resolved = this.trackResolvedEnvironment(env, true);
                             traceVerbose(
                                 `Python environment for ${item.id} is ${

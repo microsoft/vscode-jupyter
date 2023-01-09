@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { StatusBarAlignment, StatusBarItem } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
     IDocumentManager,
     IVSCodeNotebook,
@@ -24,7 +24,7 @@ import { IControllerRegistration } from './types';
  * Implements the UI for the status bar that says 'Jupyter:Local' or 'Jupyter:Remote'
  */
 @injectable()
-export class RemoteSwitcher implements IExtensionSingleActivationService {
+export class RemoteSwitcher implements IExtensionSyncActivationService {
     private disposables: IDisposable[] = [];
     constructor(
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -43,7 +43,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
     }
-    public async activate(): Promise<void> {
+    public activate() {
         const updatePerFeature = () => {
             if (this.featuresManager.features.kernelPickerType === 'Insiders') {
                 this.disposables.forEach((item) => item.dispose());

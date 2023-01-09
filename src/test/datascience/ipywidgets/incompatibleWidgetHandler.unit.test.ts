@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../webviews/webview-side/ipywidgets/common/incompatibleWidgetHandler';
+import { warnAboutWidgetVersionsThatAreNotSupported } from '../../../webviews/webview-side/ipywidgets/kernel/incompatibleWidgetHandler';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('Incompatible Widgets', () => {

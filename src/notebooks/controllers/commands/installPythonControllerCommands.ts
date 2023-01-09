@@ -12,7 +12,7 @@ import {
     window
 } from 'vscode';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { Commands, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
@@ -26,12 +26,12 @@ import { traceError, traceVerbose } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getLanguageOfNotebookDocument } from '../../languages/helpers';
-import { IControllerLoader } from '../types';
+import { IControllerRegistration } from '../types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
 @injectable()
-export class InstallPythonControllerCommands implements IExtensionSingleActivationService {
+export class InstallPythonControllerCommands implements IExtensionSyncActivationService {
     private showInstallPythonExtensionContext: ContextKey;
     private showInstallPythonContext: ContextKey;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
@@ -43,7 +43,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
+        @inject(IControllerRegistration) private readonly controllerRegistry: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -56,7 +56,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         );
         this.showInstallPythonContext = new ContextKey('jupyter.showInstallPythonCommand', this.commandManager);
     }
-    public async activate(): Promise<void> {
+    public activate() {
         this.disposables.push(
             notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this)
         );
@@ -189,7 +189,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                     } else {
                         // Trigger a load of our notebook controllers, we want to await it here so that any in
                         // progress executions get passed to the suggested controller
-                        await this.controllerLoader.loaded;
+                        await this.controllerRegistry.loaded;
                     }
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');

@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
 import { IExtensions, IDisposableRegistry, InterpreterUri } from '../../platform/common/types';
 import { isResource, noop } from '../../platform/common/utils/misc';
@@ -18,7 +18,7 @@ import { IInterpreterPackages } from '../../platform/interpreter/types';
  * the packages in an interpreter.
  */
 @injectable()
-export class InterpreterPackageTracker implements IExtensionSingleActivationService {
+export class InterpreterPackageTracker implements IExtensionSyncActivationService {
     private activeInterpreterTrackedUponActivation?: boolean;
     constructor(
         @inject(IInterpreterPackages) private readonly packages: IInterpreterPackages,
@@ -30,7 +30,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IControllerRegistration) private readonly notebookControllerManager: IControllerRegistration
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         this.notebookControllerManager.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.trackPackagesOfActiveInterpreter, this, this.disposables);
         this.installer?.onInstalled(this.onDidInstallPackage, this, this.disposables); // Not supported in Web

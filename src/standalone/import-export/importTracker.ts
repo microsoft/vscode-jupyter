@@ -13,7 +13,7 @@ import {
     Uri
 } from 'vscode';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import '../../platform/common/extensions';
@@ -62,7 +62,7 @@ export interface IImportTracker {}
  * Sends hashed names of imported packages to telemetry. Hashes are updated on opening, closing, and saving of documents.
  */
 @injectable()
-export class ImportTracker implements IExtensionSingleActivationService, IDisposable {
+export class ImportTracker implements IExtensionSyncActivationService, IDisposable {
     private pendingChecks = new ResourceMap<NodeJS.Timer | number>();
     private disposables: IDisposable[] = [];
     private sentMatches = new Set<string>();
@@ -103,7 +103,7 @@ export class ImportTracker implements IExtensionSingleActivationService, IDispos
         this.pendingChecks.clear();
     }
 
-    public async activate(): Promise<void> {
+    public activate() {
         this.vscNotebook.notebookDocuments.forEach((e) => this.checkNotebookDocument(e, 'onOpenCloseOrSave'));
     }
 

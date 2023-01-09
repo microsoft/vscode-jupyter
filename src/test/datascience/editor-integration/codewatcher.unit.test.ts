@@ -126,7 +126,6 @@ suite('Code Watcher Unit Tests', () => {
             runStartupCommands: [],
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: [],
             widgetScriptSources: [],
             interactiveWindowMode: 'single',
             newCellOnRunLast: true

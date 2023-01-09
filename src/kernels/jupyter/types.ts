@@ -202,6 +202,7 @@ export interface IJupyterServerUri {
     authorizationHeader: any; // JSON object for authorization header.
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
+    workingDirectory?: string;
 }
 
 export type JupyterServerUriHandle = string;

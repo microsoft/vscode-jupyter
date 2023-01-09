@@ -1029,19 +1029,6 @@ export namespace DataScience {
             },
             'Output was trimmed for performance reasons.\nTo see the full output set the setting "jupyter.textOutputLimit" to 0.'
         );
-    export const jupyterCommandLineDefaultLabel = () =>
-        localize('DataScience.jupyterCommandLineDefaultLabel', 'Default');
-    export const jupyterCommandLineDefaultDetail = () =>
-        localize(
-            'DataScience.jupyterCommandLineDefaultDetail',
-            'The Python Extension will determine the appropriate command line for Jupyter'
-        );
-    export const jupyterCommandLineCustomLabel = () => localize('DataScience.jupyterCommandLineCustomLabel', 'Custom');
-    export const jupyterCommandLineCustomDetail = () =>
-        localize(
-            'DataScience.jupyterCommandLineCustomDetail',
-            'Customize the command line passed to Jupyter on startup'
-        );
     export const jupyterCommandLineReloadQuestion = () =>
         localize(
             'DataScience.jupyterCommandLineReloadQuestion',
@@ -1049,13 +1036,6 @@ export namespace DataScience {
         );
     export const jupyterCommandLineReloadAnswer = () =>
         localize('DataScience.jupyterCommandLineReloadAnswer', 'Reload');
-    export const jupyterCommandLineQuickPickPlaceholder = () =>
-        localize('DataScience.jupyterCommandLineQuickPickPlaceholder', 'Choose an option');
-    export const jupyterCommandLineQuickPickTitle = () =>
-        localize('DataScience.jupyterCommandLineQuickPickTitle', 'Pick command line for Jupyter');
-    export const jupyterCommandLinePrompt = () =>
-        localize('DataScience.jupyterCommandLinePrompt', 'Enter your custom command line for Jupyter');
-
     export const connectingToJupyterUri = () =>
         localize('DataScience.connectingToJupyterUri', 'Connecting to Jupyter server at {0}');
     export const createdNewNotebook = () => localize('DataScience.createdNewNotebook', '{0}: Creating new notebook ');
@@ -1376,9 +1356,9 @@ export namespace DataScience {
             { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
             'Failed to install Pandas to use the Data Viewer.'
         );
-    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Kernel Specs...');
+    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Jupyter Kernel...');
     export const pickLocalKernelSpecTitle = () =>
-        localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Kernel spec`);
+        localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Jupyter Kernel`);
 
     export const localPythonEnvironments = () =>
         localize('DataScience.localPythonEnvironments', 'Local Python Environments...');
@@ -1399,7 +1379,7 @@ export namespace DataScience {
     export const kernelPickerSelectKernelTitle = () =>
         localize('DataScience.kernelPickerSelectKernelTitle', 'Select Kernel');
     export const kernelPickerSelectLocalKernelSpecTitle = () =>
-        localize('DataScience.kernelPickerSelectLocalKernelSpecTitle', 'Select a Local Kernel Spec');
+        localize('DataScience.kernelPickerSelectLocalKernelSpecTitle', 'Select a Local Jupyter Kernel');
     export const kernelPickerSelectPythonEnvironmentTitle = () =>
         localize('DataScience.kernelPickerSelectPythonEnvironmentTitle', 'Select a Local Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = () =>

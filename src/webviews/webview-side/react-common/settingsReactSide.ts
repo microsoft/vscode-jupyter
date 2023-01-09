@@ -53,7 +53,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
-        jupyterCommandLineArguments: [],
         widgetScriptSources: []
     };
 

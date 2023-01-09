@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2023.1.100",
+    "version": "2023.1.200",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -65,7 +65,6 @@
         "onCommand:jupyter.exportfileasnotebook",
         "onCommand:jupyter.exportfileandoutputasnotebook",
         "onCommand:jupyter.selectJupyterInterpreter",
-        "onCommand:jupyter.selectjupytercommandline",
         "onCommand:jupyter.openVariableView",
         "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
         "onCommand:jupyter.clearSavedJupyterUris",
@@ -577,12 +576,6 @@
                 "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
-            },
-            {
-                "command": "jupyter.selectjupytercommandline",
-                "title": "%jupyter.command.jupyter.selectjupytercommandline.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
                 "command": "jupyter.importnotebook",
@@ -1372,11 +1365,6 @@
                     "when": "config.noExists"
                 },
                 {
-                    "command": "jupyter.selectjupytercommandline",
-                    "category": "Jupyter",
-                    "when": "!jupyter.zmqavailable"
-                },
-                {
                     "command": "jupyter.runfromline",
                     "category": "Jupyter",
                     "when": "config.noExists"
@@ -1558,11 +1546,6 @@
                     "type": "number",
                     "default": 3,
                     "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%"
-                },
-                "jupyter.jupyterCommandLineArguments": {
-                    "type": "array",
-                    "default": [],
-                    "description": "%jupyter.configuration.jupyter.jupyterCommandLineArguments.description%"
                 },
                 "jupyter.notebookFileRoot": {
                     "type": "string",
@@ -1922,7 +1905,7 @@
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
                 ],
-                "requiresMessaging": "optional"
+                "requiresMessaging": "always"
             },
             {
                 "id": "jupyter-error-renderer",
@@ -2236,7 +2219,7 @@
         "expose-loader": "^3.1.0",
         "express": "^4.17.1",
         "fast-xml-parser": "^3.16.0",
-        "flat": "^4.0.0",
+        "flat": "^5.0.1",
         "fork-ts-checker-webpack-plugin": "^7.0.0",
         "get-port": "^3.2.0",
         "glob-parent": "^6.0.2",
