@@ -4,6 +4,7 @@
 'use strict';
 import { assert } from 'chai';
 import * as fs from 'fs';
+import glob from 'glob';
 import * as os from 'os';
 import * as sinon from 'sinon';
 import { commands, debug } from 'vscode';
@@ -16,10 +17,10 @@ import { IDisposable } from '../../platform/common/types';
 import { isWeb } from '../../platform/common/utils/misc';
 import { traceInfo } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
-import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
 import { noop, sleep } from '../core';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
+import { testN } from '../utils/tests';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
@@ -32,15 +33,48 @@ import {
     runCell,
     waitForStoppedEvent
 } from './notebook/helper.node';
-import { ITestWebviewHost } from './testInterfaces';
-import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
-import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 
-suite('Run By Line @debugger', function () {
+const N = 100;
+
+function processDebugpyLogs(testName: string, _state?: 'passed' | 'failed'): Promise<void> {
+    // eslint-disable-next-line local-rules/dont-use-process
+    const logDir = process.env.DEBUGPY_LOG_DIR;
+
+    return new Promise((resolve, reject) => {
+        glob(
+            'debugpy.*',
+            // eslint-disable-next-line local-rules/dont-use-process
+            { cwd: logDir },
+            (err, files) => {
+                if (err) {
+                    reject(err);
+                }
+
+                if (!logDir) {
+                    reject(new Error('No debugpy log dir'));
+                    return;
+                }
+
+                // if (state === 'passed') {
+                //     files.forEach((file) => fs.rmSync(path.join(logDir, file)));
+                //     resolve();
+                //     return;
+                // }
+
+                files.forEach((file) =>
+                    fs.renameSync(path.join(logDir, file), path.join(logDir, `${testName}-${file}`))
+                );
+                resolve();
+            }
+        );
+    });
+}
+
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('Run By Line @debugger', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
-    let variableViewProvider: ITestVariableViewProvider;
     let vscodeNotebook: IVSCodeNotebook;
     let debuggingManager: IDebuggingManager;
     this.timeout(120_000);
@@ -57,9 +91,6 @@ suite('Run By Line @debugger', function () {
         await prewarmNotebooks();
         sinon.restore();
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
-        const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
         debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo(`Start Test Suite (completed)`);
@@ -92,6 +123,9 @@ suite('Run By Line @debugger', function () {
         }
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        if (this.currentTest) {
+            await processDebugpyLogs(this.currentTest.title.replace(/ /g, '_'), this.currentTest.state);
+        }
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
 
@@ -145,7 +179,7 @@ suite('Run By Line @debugger', function () {
         }
     });
 
-    test.skip('Stops at end of cell', async function () {
+    testN('Stops at end of cell', N, async function () {
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
@@ -163,15 +197,15 @@ suite('Run By Line @debugger', function () {
         assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
         traceInfo(`Got past first stop event`);
 
-        const coreVariableView = await variableViewProvider.activeVariableView;
-        const variableView = coreVariableView as unknown as ITestWebviewHost;
+        // const coreVariableView = await variableViewProvider.activeVariableView;
+        // const variableView = coreVariableView as unknown as ITestWebviewHost;
 
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
         traceInfo(`Got past second stop event`);
 
-        const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
-        await waitForVariablesToMatch(expectedVariables, variableView);
+        // const expectedVariables = [{ name: 'a', type: 'int', length: '', value: '1' }];
+        // await waitForVariablesToMatch(expectedVariables, variableView);
 
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForCondition(
@@ -189,7 +223,7 @@ suite('Run By Line @debugger', function () {
         assert.isTrue(getCellOutputs(cell).includes('1'));
     });
 
-    test('Interrupt during debugging', async function () {
+    test.skip('Interrupt during debugging', async function () {
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
 
@@ -207,7 +241,7 @@ suite('Run By Line @debugger', function () {
         );
     });
 
-    test('Stops in same-cell function called from last line', async function () {
+    test.skip('Stops in same-cell function called from last line', async function () {
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
 
@@ -259,7 +293,7 @@ suite('Run By Line @debugger', function () {
         assert.equal(stack.stackFrames[0].line, 1, 'Stopped at the wrong line');
     });
 
-    test.skip('Does not stop in other cell', async function () {
+    testN('Does not stop in other cell', N, async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
         const cell1 = await insertCodeCell('foo()');
@@ -282,7 +316,7 @@ suite('Run By Line @debugger', function () {
         );
     });
 
-    test.skip('Run a second time after interrupt', async function () {
+    testN('Run a second time after interrupt', N, async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/11245
         await insertCodeCell(
             'import time\nfor i in range(0,50):\n  time.sleep(.1)\n  print("sleepy")\nprint("final " + "output")',

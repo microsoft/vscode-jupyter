@@ -11,7 +11,7 @@ EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 DEBUGGER_PACKAGE = "debugpy"
 DEBUGGER_PYTHON_ABI_VERSIONS = ("cp37",)
-DEBUGGER_VERSION = "latest"  # can also be "latest"
+DEBUGGER_VERSION = "dev"  # can also be "latest"
 
 
 def _contains(s, parts=()):
@@ -34,7 +34,7 @@ def _get_debugger_wheel_urls(data, version):
     )
 
 
-def _download_and_extract(root, url, version):
+def _download_and_extract(root, url):
     root = os.getcwd() if root is None or root == "." else root
     builtins.print(url)
     with url_lib.urlopen(url) as response:
@@ -49,6 +49,11 @@ def _download_and_extract(root, url, version):
 
 
 def main(root):
+    if DEBUGGER_VERSION == "dev":
+        _download_and_extract(root, "https://github.com/microsoft/debugpy/archive/refs/heads/main.zip")
+        os.rename(os.path.join(root, "debugpy-main/src/debugpy"), os.path.join(root, "debugpy"))
+        return
+
     data = _get_package_data()
 
     if DEBUGGER_VERSION == "latest":
@@ -57,7 +62,7 @@ def main(root):
         use_version = DEBUGGER_VERSION
 
     for url in _get_debugger_wheel_urls(data, use_version):
-        _download_and_extract(root, url, use_version)
+        _download_and_extract(root, url)
 
 
 if __name__ == "__main__":

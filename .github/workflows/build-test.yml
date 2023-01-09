@@ -676,6 +676,14 @@ jobs:
           path: './logs/*'
           retention-days: 60
 
+      - name: Upload debugpy logs
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: debugpy-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          path: debugpyLogs/*
+          retention-days: 60
+
       - name: Verify there are no unhandled errors
         run: npm run verifyUnhandledErrors
 

@@ -143,6 +143,9 @@ async function start() {
     const userDataDirectory = await createSettings();
     const extensionsDir = await getExtensionsDir();
     await installPythonExtension(vscodeExecutablePath, extensionsDir, platform);
+    const debugpyLogDir = path.resolve(__dirname, '..', '..', 'debugpyLogs');
+    fs.mkdirpSync(debugpyLogDir);
+    console.log(`debugpy log dir: ${debugpyLogDir}`);
     await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath: extensionDevelopmentPath,
@@ -157,7 +160,7 @@ async function start() {
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
         version: channel,
-        extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
+        extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1', DEBUGPY_LOG_DIR: debugpyLogDir }
     });
 }
 start().catch((ex) => {
