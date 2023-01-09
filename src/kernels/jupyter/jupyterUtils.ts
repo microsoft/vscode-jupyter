@@ -16,6 +16,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
+import { traceError } from '../../platform/logging';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -148,10 +149,14 @@ export function generateUriFromRemoteProvider(id: string, result: JupyterServerU
 export function extractJupyterServerHandleAndId(
     uri: string
 ): { handle: JupyterServerUriHandle; id: string } | undefined {
-    const url: URL = new URL(uri);
+    try {
+        const url: URL = new URL(uri);
 
-    // Id has to be there too.
-    const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
-    const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-    return id && uriHandle ? { handle: uriHandle, id } : undefined;
+        // Id has to be there too.
+        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
+        const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
+        return id && uriHandle ? { handle: uriHandle, id } : undefined;
+    } catch (ex) {
+        traceError('Failed to parse remote URI', uri, ex);
+    }
 }
