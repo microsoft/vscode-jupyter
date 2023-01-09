@@ -7,7 +7,7 @@ import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
 import { sendKernelTelemetryEvent } from '../../../kernels/telemetry/sendKernelTelemetryEvent';
-import { KernelConnectionMetadata } from '../../../kernels/types';
+import { IKernelFinder, KernelConnectionMetadata } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -22,11 +22,13 @@ import { IControllerRegistration, INotebookKernelSourceSelector } from '../types
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
     private localDisposables: IDisposable[] = [];
     private readonly providerMappings = new Map<string, IDisposable[]>();
+    private kernelSpecsSourceRegistered = false;
     constructor(
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        @inject(IsWebExtension) private readonly isWebExtension: boolean,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {
         disposables.push(this);
     }
@@ -42,6 +44,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                 disposeAllDisposables(this.localDisposables);
                 this.localDisposables = [];
                 this.providerMappings.clear();
+                this.kernelSpecsSourceRegistered = false;
             }
         };
 
@@ -57,10 +60,6 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             {
                                 label: DataScience.localPythonEnvironments(),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                            },
-                            {
-                                label: DataScience.localKernelSpecs(),
-                                command: 'jupyter.kernel.selectLocalKernelSpec'
                             }
                         ];
                     }
@@ -73,15 +72,45 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             {
                                 label: DataScience.localPythonEnvironments(),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                            },
-                            {
-                                label: DataScience.localKernelSpecs(),
-                                command: 'jupyter.kernel.selectLocalKernelSpec'
                             }
                         ];
                     }
                 })
             );
+            const registerKernelSpecsSource = () => {
+                if (this.kernelSpecsSourceRegistered) {
+                    return;
+                }
+                if (this.kernelFinder.kernels.some((k) => k.kind === 'startUsingLocalKernelSpec')) {
+                    this.kernelSpecsSourceRegistered = true;
+                    this.localDisposables.push(
+                        notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
+                            provideNotebookKernelSourceActions: () => {
+                                return [
+                                    {
+                                        label: DataScience.localKernelSpecs(),
+                                        command: 'jupyter.kernel.selectLocalKernelSpec'
+                                    }
+                                ];
+                            }
+                        })
+                    );
+                    this.localDisposables.push(
+                        notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
+                            provideNotebookKernelSourceActions: () => {
+                                return [
+                                    {
+                                        label: DataScience.localKernelSpecs(),
+                                        command: 'jupyter.kernel.selectLocalKernelSpec'
+                                    }
+                                ];
+                            }
+                        })
+                    );
+                }
+            };
+            registerKernelSpecsSource();
+            this.kernelFinder.onDidChangeKernels(() => registerKernelSpecsSource(), this, this.localDisposables);
             this.localDisposables.push(
                 commands.registerCommand(
                     'jupyter.kernel.selectLocalKernelSpec',
