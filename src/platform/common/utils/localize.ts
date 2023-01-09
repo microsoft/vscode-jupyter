@@ -1377,13 +1377,9 @@ export namespace DataScience {
             'Failed to install Pandas to use the Data Viewer.'
         );
     export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Jupyter Kernel...');
-    export const pickLocalKernelSpecTitle = () =>
-        localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Jupyter Kernel`);
 
     export const localPythonEnvironments = () =>
         localize('DataScience.localPythonEnvironments', 'Local Python Environments...');
-    export const pickLocalKernelPythonEnvTitle = () =>
-        localize('DataScience.pickLocalKernelPythonEnvTitle', `Select a Local Python Environment`);
     export const UserJupyterServerUrlProviderDisplayName = () =>
         localize('DataScience.UserJupyterServerUrlProviderDisplayName', 'Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = () =>
