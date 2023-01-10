@@ -29,7 +29,13 @@ import { traceError, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
 
-import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource } from '../platform/common/types';
+import {
+    IConfigurationService,
+    IFeaturesManager,
+    InteractiveWindowMode,
+    IsWebExtension,
+    Resource
+} from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
@@ -903,7 +909,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
         if (kernel) {
-            await updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
+            await updateNotebookMetadata(
+                this.serviceContainer.get<IFeaturesManager>(IFeaturesManager),
+                metadata,
+                kernel.kernelConnectionMetadata
+            );
         }
 
         let defaultFileName;
