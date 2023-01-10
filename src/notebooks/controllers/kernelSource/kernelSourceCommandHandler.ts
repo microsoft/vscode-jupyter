@@ -153,7 +153,6 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             return [
                                 {
                                     label: provider.displayName ?? provider.id,
-                                    detail: provider.detail,
                                     command: {
                                         command: 'jupyter.kernel.selectJupyterServerKernel',
                                         arguments: [provider.id],
@@ -167,8 +166,9 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         provideNotebookKernelSourceActions: () => {
                             return [
                                 {
-                                    label: provider.displayName ?? provider.id,
-                                    detail: provider.detail,
+                                    label:
+                                        provider.displayName ??
+                                        (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
                                     command: {
                                         command: 'jupyter.kernel.selectJupyterServerKernel',
                                         arguments: [provider.id],
