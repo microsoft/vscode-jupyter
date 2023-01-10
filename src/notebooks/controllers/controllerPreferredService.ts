@@ -27,13 +27,7 @@ import {
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import {
-    IDisposable,
-    IDisposableRegistry,
-    IFeaturesManager,
-    IsWebExtension,
-    Resource
-} from '../../platform/common/types';
+import { IDisposable, IsWebExtension, Resource } from '../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -75,15 +69,11 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IControllerDefaultService) private readonly defaultService: IControllerDefaultService,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean,
-        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
-    ) {
-        disposables.push(this);
-    }
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
+    ) {}
     public activate() {
         // Sign up for document either opening or closing
         this.disposables.add(this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
@@ -284,9 +274,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             } else if (document.notebookType === InteractiveWindowView) {
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
-                if (this.featureManager.features.kernelPickerType === 'Stable') {
-                    await this.registration.loaded;
-                }
+                await this.registration.loaded;
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};

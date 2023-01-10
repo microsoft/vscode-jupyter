@@ -21,14 +21,19 @@ import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourc
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
 import { ServerConnectionControllerCommands } from './commands/serverConnectionControllerCommands';
+import { ControllerPreferredServiceWrapper } from './controllerPreferredServiceWrapper';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IKernelRankingHelper>(IKernelRankingHelper, KernelRankingHelper);
     serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addBinding(IControllerRegistration, IExtensionSyncActivationService);
     serviceManager.addSingleton<IControllerDefaultService>(IControllerDefaultService, ControllerDefaultService);
-    serviceManager.addSingleton<IControllerPreferredService>(IControllerPreferredService, ControllerPreferredService);
+    serviceManager.addSingleton<IControllerPreferredService>(
+        IControllerPreferredService,
+        ControllerPreferredServiceWrapper
+    );
     serviceManager.addBinding(IControllerPreferredService, IExtensionSyncActivationService);
+    serviceManager.add(ControllerPreferredService, ControllerPreferredService);
     serviceManager.addSingleton<ConnectionDisplayDataProvider>(
         ConnectionDisplayDataProvider,
         ConnectionDisplayDataProvider

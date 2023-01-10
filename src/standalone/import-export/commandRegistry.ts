@@ -11,10 +11,12 @@ import {
     IWorkspaceService
 } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { IDisposableRegistry } from '../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager } from '../../platform/common/types';
 import { IFileConverter } from '../../notebooks/export/types';
 import { ExportCommands } from './exportCommands';
 import { IControllerRegistration, IControllerPreferredService } from '../../notebooks/controllers/types';
+import { IKernelFinder } from '../../kernels/types';
+import { PreferredKernelConnectionService } from '../../notebooks/controllers/preferredKernelConnectionService';
 
 /**
  * Registers the export commands if in a trusted workspace.
@@ -34,7 +36,10 @@ export class CommandRegistry implements IExtensionSyncActivationService {
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         @inject(IControllerRegistration) readonly controllerSelection: IControllerRegistration,
-        @inject(IControllerPreferredService) readonly controllerPreferred: IControllerPreferredService
+        @inject(IControllerPreferredService) readonly controllerPreferred: IControllerPreferredService,
+        @inject(IKernelFinder) readonly kernelFinder: IKernelFinder,
+        @inject(PreferredKernelConnectionService) readonly preferredKernels: PreferredKernelConnectionService,
+        @inject(IFeaturesManager) readonly featureManager: IFeaturesManager
     ) {
         this.exportCommand = new ExportCommands(
             this.commandManager,
@@ -44,7 +49,10 @@ export class CommandRegistry implements IExtensionSyncActivationService {
             this.notebooks,
             this.interactiveProvider,
             controllerSelection,
-            controllerPreferred
+            controllerPreferred,
+            preferredKernels,
+            kernelFinder,
+            featureManager
         );
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
