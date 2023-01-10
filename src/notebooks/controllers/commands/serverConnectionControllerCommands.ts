@@ -16,7 +16,7 @@ import {
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { IControllerLoader, IControllerRegistration, IVSCodeNotebookController } from '../types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../types';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -63,7 +63,6 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -97,7 +96,7 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
             if (this.featuresManager.features.kernelPickerType === 'Stable') {
                 // Need to wait for controller to reupdate after
                 // switching local/remote
-                await this.controllerLoader.loaded;
+                await this.controllerRegistration.loaded;
             }
             this.commandManager
                 .executeCommand('notebook.selectKernel', { notebookEditor: activeEditor })

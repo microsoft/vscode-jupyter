@@ -33,7 +33,7 @@ import { traceInfo } from '../../platform/logging';
 import { ResourceSet } from '../../platform/vscode-path/map';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IControllerLoader, IControllerRegistration } from '../controllers/types';
+import { IControllerRegistration } from '../controllers/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
 import { DebugCellController } from './controllers/debugCellController';
 import { RestartController } from './controllers/restartController';
@@ -59,7 +59,6 @@ export class DebuggingManager
 
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(IControllerLoader) controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
@@ -69,15 +68,7 @@ export class DebuggingManager
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(
-            kernelProvider,
-            controllerLoader,
-            controllerRegistration,
-            commandManager,
-            appShell,
-            vscNotebook,
-            serviceContainer
-        );
+        super(kernelProvider, controllerRegistration, commandManager, appShell, vscNotebook, serviceContainer);
         this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells, commandManager);
         this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments, commandManager);
         this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);

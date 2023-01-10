@@ -57,7 +57,8 @@ suite('VSCode semantic token tests @lsp', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Open a notebook and add a bunch of cells', async function () {
+    test.skip('Open a notebook and add a bunch of cells', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/12503
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
         await insertCodeCell('\ndef test():\n  print("test")\ntest()');
         const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;

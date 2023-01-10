@@ -16,7 +16,6 @@ import {
 import { ControllerPreferredService } from '../../../../notebooks/controllers/controllerPreferredService';
 import {
     IControllerDefaultService,
-    IControllerLoader,
     IControllerRegistration,
     IKernelRankingHelper,
     IVSCodeNotebookController
@@ -33,7 +32,6 @@ suite('Preferred Controller', () => {
     let kernelRankHelper: IKernelRankingHelper;
     let preferredControllerService: ControllerPreferredService;
     let controllerRegistrations: IControllerRegistration;
-    let controllerLoader: IControllerLoader;
     let vscNotebook: IVSCodeNotebook;
     let extensionChecker: IPythonExtensionChecker;
     let uriStorage: IJupyterServerUriStorage;
@@ -41,7 +39,6 @@ suite('Preferred Controller', () => {
     let interpreters: IInterpreterService;
     setup(() => {
         controllerRegistrations = mock<IControllerRegistration>();
-        controllerLoader = mock<IControllerLoader>();
         vscNotebook = mock<IVSCodeNotebook>();
         extensionChecker = mock<IPythonExtensionChecker>();
         uriStorage = mock<IJupyterServerUriStorage>();
@@ -61,7 +58,6 @@ suite('Preferred Controller', () => {
         when(featureManager.features).thenReturn({ kernelPickerType: 'Stable' });
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
-            instance(controllerLoader),
             instance(defaultControllerService),
             instance(interpreters),
             instance(vscNotebook),
