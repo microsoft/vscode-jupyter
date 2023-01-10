@@ -1359,7 +1359,7 @@ export namespace DataScience {
     export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Jupyter Kernel...');
 
     export const localPythonEnvironments = () =>
-        localize('DataScience.localPythonEnvironments', 'Local Python Environments...');
+        localize('DataScience.localPythonEnvironments', 'Python Environments...');
     export const UserJupyterServerUrlProviderDisplayName = () =>
         localize('DataScience.UserJupyterServerUrlProviderDisplayName', 'Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = () =>
