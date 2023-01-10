@@ -56,12 +56,10 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         return [
                             {
                                 label: DataScience.localPythonEnvironments(),
-                                detail: DataScience.pickLocalKernelPythonEnvTitle(),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
                             },
                             {
                                 label: DataScience.localKernelSpecs(),
-                                detail: DataScience.pickLocalKernelSpecTitle(),
                                 command: 'jupyter.kernel.selectLocalKernelSpec'
                             }
                         ];
@@ -74,12 +72,10 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         return [
                             {
                                 label: DataScience.localPythonEnvironments(),
-                                detail: DataScience.pickLocalKernelPythonEnvTitle(),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
                             },
                             {
                                 label: DataScience.localKernelSpecs(),
-                                detail: DataScience.pickLocalKernelSpecTitle(),
                                 command: 'jupyter.kernel.selectLocalKernelSpec'
                             }
                         ];
@@ -128,9 +124,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             return [
                                 {
                                     label: provider.displayName ?? provider.id,
-                                    detail:
-                                        provider.detail ??
-                                        `Connect to Jupyter servers from ${provider.displayName ?? provider.id}`,
+                                    detail: provider.detail,
                                     command: {
                                         command: 'jupyter.kernel.selectJupyterServerKernel',
                                         arguments: [provider.id],
@@ -145,9 +139,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             return [
                                 {
                                     label: provider.displayName ?? provider.id,
-                                    detail:
-                                        provider.detail ??
-                                        `Connect to Jupyter servers from ${provider.displayName ?? provider.id}`,
+                                    detail: provider.detail,
                                     command: {
                                         command: 'jupyter.kernel.selectJupyterServerKernel',
                                         arguments: [provider.id],
