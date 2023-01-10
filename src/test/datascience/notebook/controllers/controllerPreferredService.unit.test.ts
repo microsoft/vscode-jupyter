@@ -24,7 +24,7 @@ import { IPythonExtensionChecker } from '../../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { JupyterNotebookView, InteractiveWindowView, PYTHON_LANGUAGE } from '../../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
-import { IDisposable, IFeaturesManager } from '../../../../platform/common/types';
+import { IDisposable } from '../../../../platform/common/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 
 suite('Preferred Controller', () => {
@@ -54,20 +54,17 @@ suite('Preferred Controller', () => {
         when(vscNotebook.notebookDocuments).thenReturn([]);
         when(controllerRegistrations.getSelected(anything())).thenReturn(undefined);
         when(interpreters.refreshInterpreters()).thenResolve();
-        const featureManager = mock<IFeaturesManager>();
-        when(featureManager.features).thenReturn({ kernelPickerType: 'Stable' });
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
             instance(defaultControllerService),
             instance(interpreters),
             instance(vscNotebook),
-            disposables,
             instance(extensionChecker),
             instance(uriStorage),
             instance(kernelRankHelper),
-            false,
-            instance(featureManager)
+            false
         );
+        disposables.push(preferredControllerService);
     });
     teardown(() => {
         disposeAllDisposables(disposables);

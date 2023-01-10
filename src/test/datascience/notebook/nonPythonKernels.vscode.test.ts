@@ -23,10 +23,11 @@ import {
     defaultNotebookTestTimeout
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IControllerPreferredService, IControllerRegistration } from '../../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { IKernelProvider } from '../../../kernels/types';
 import { noop } from '../../core';
+import { ControllerPreferredService } from '../../../notebooks/controllers/controllerPreferredService';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Non-Python Kernel @nonPython ', async function () {
@@ -45,7 +46,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
     let testJuliaNb: Uri;
     let testJavaNb: Uri;
     let testCSharpNb: Uri;
-    let controllerPreferred: IControllerPreferredService;
+    let controllerPreferred: ControllerPreferredService;
     let kernelProvider: IKernelProvider;
     let pythonChecker: IPythonExtensionChecker;
     let controllerRegistration: IControllerRegistration;
@@ -66,7 +67,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
         }
         sinon.restore();
         verifyPromptWasNotDisplayed();
-        controllerPreferred = api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
+        controllerPreferred = api.serviceContainer.get<ControllerPreferredService>(ControllerPreferredService);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
