@@ -38,7 +38,6 @@ export class CommandRegistry implements IExtensionSyncActivationService {
         @inject(IControllerRegistration) readonly controllerSelection: IControllerRegistration,
         @inject(IControllerPreferredService) readonly controllerPreferred: IControllerPreferredService,
         @inject(IKernelFinder) readonly kernelFinder: IKernelFinder,
-        @inject(PreferredKernelConnectionService) readonly preferredKernels: PreferredKernelConnectionService,
         @inject(IFeaturesManager) readonly featureManager: IFeaturesManager
     ) {
         this.exportCommand = new ExportCommands(
@@ -50,7 +49,7 @@ export class CommandRegistry implements IExtensionSyncActivationService {
             this.interactiveProvider,
             controllerSelection,
             controllerPreferred,
-            preferredKernels,
+            new PreferredKernelConnectionService(),
             kernelFinder,
             featureManager
         );
