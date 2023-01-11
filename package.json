@@ -1952,9 +1952,6 @@
                 "type": "Python Interactive Window Debug Adapter",
                 "label": "%jupyter.debuggers.interactive%"
             }
-        ],
-        "markdown.previewStyles": [
-            "resources/jupyter-markdown-style.css"
         ]
     },
     "enabledApiProposals": [
