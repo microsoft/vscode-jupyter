@@ -821,8 +821,35 @@
                 "title": "%DataScience.switchToRemoteKernelsTitle%"
             }
         ],
+        "submenus": [
+            {
+                "id": "editor.interactiveWindow.context",
+                "label": "Run in Interactive Window"
+            }
+        ],
         "menus": {
             "editor/context": [
+                {
+                    "submenu": "editor.interactiveWindow.context",
+                    "group": "Jupyter2"
+                },
+                {
+                    "when": "editorFocus && editorLangId == python && resourceExtname == .ipynb && !notebookEditorFocused && isWorkspaceTrusted",
+                    "command": "jupyter.importnotebook",
+                    "group": "Jupyter3@1"
+                },
+                {
+                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
+                    "command": "jupyter.exportfileasnotebook",
+                    "group": "Jupyter3@2"
+                },
+                {
+                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
+                    "command": "jupyter.exportfileandoutputasnotebook",
+                    "group": "Jupyter3@3"
+                }
+            ],
+            "editor.interactiveWindow.context": [
                 {
                     "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
                     "command": "jupyter.runallcells",
@@ -857,21 +884,6 @@
                     "command": "jupyter.execSelectionInteractive",
                     "group": "Jupyter2",
                     "when": "editorFocus && editorLangId == python && !notebookEditorFocused && isWorkspaceTrusted"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && resourceExtname == .ipynb && !notebookEditorFocused && isWorkspaceTrusted",
-                    "command": "jupyter.importnotebook",
-                    "group": "Jupyter3@1"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
-                    "command": "jupyter.exportfileasnotebook",
-                    "group": "Jupyter3@2"
-                },
-                {
-                    "when": "editorFocus && editorLangId == python && jupyter.hascodecells && !notebookEditorFocused && isWorkspaceTrusted",
-                    "command": "jupyter.exportfileandoutputasnotebook",
-                    "group": "Jupyter3@3"
                 }
             ],
             "editor/title": [
