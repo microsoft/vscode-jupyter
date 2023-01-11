@@ -62,19 +62,15 @@ export interface IJupyterSettings {
     readonly notebookFileRoot: string;
     readonly useDefaultConfigForJupyter: boolean;
     readonly searchForJupyter: boolean;
-    readonly allowInput: boolean;
     readonly showCellInputCode: boolean;
-    readonly maxOutputSize: number;
     readonly enableScrollingForCellOutputs: boolean;
     readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
-    readonly allowLiveShare: boolean;
     readonly errorBackgroundColor: string;
     readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
-    readonly liveShareConnectionTimeout: number;
     readonly decorateCells: boolean;
     readonly enableCellCodeLens: boolean;
     askForLargeDataFrames: boolean;
@@ -106,7 +102,6 @@ export interface IJupyterSettings {
     readonly interactiveWindowViewColumn: InteractiveWindowViewColumn;
     readonly disableZMQSupport: boolean;
     readonly forceIPyKernelDebugger?: boolean;
-    readonly disablePythonDaemon: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;

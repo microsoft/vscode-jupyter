@@ -60,6 +60,16 @@ import { DOMWindow, JSDOM } from 'jsdom';
 import { noop } from '../../platform/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
+    roundRect(
+        _x: number,
+        _y: number,
+        _w: number,
+        _h: number,
+        _radii?: number | DOMPointInit | (number | DOMPointInit)[] | undefined
+    ): void {
+        throw new Error('Method not implemented.');
+    }
+    fontKerning: CanvasFontKerning;
     public canvas!: HTMLCanvasElement;
     public getContextAttributes(): CanvasRenderingContext2DSettings {
         throw new Error('Method not implemented.');

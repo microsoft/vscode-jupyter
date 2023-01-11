@@ -27,7 +27,7 @@ import {
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposable, IDisposableRegistry, Resource } from '../../platform/common/types';
+import { IDisposable, IsWebExtension, Resource } from '../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -41,13 +41,12 @@ import {
 } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
+import { getLanguageOfNotebookDocument } from '../languages/helpers';
 import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
 import {
     IControllerDefaultService,
-    IControllerLoader,
     IControllerPreferredService,
     IControllerRegistration,
-    IControllerSelection,
     IKernelRankingHelper,
     IVSCodeNotebookController,
     PreferredKernelExactMatchReason
@@ -67,18 +66,14 @@ export class ControllerPreferredService implements IControllerPreferredService, 
     private disposables = new Set<IDisposable>();
     constructor(
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IControllerLoader) private readonly loader: IControllerLoader,
         @inject(IControllerDefaultService) private readonly defaultService: IControllerDefaultService,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
-        @inject(IControllerSelection) private readonly selection: IControllerSelection
-    ) {
-        disposables.push(this);
-    }
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
+    ) {}
     public activate() {
         // Sign up for document either opening or closing
         this.disposables.add(this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
@@ -94,7 +89,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             }, this)
         );
         this.disposables.add(
-            this.registration.onChanged(
+            this.registration.onDidChange(
                 ({ added }) =>
                     added.length
                         ? this.notebook.notebookDocuments.map((nb) => this.onDidOpenNotebookDocument(nb))
@@ -136,7 +131,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             // load all our controllers for interactive window
             const notebookMetadata = getNotebookMetadata(document);
             const resourceType = getResourceType(document.uri);
-            const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+            const isEmptyMetadata =
+                !notebookMetadata || (!notebookMetadata.kernelspec && !notebookMetadata.language_info);
+            const isPythonNotebookLanguage =
+                (getLanguageOfNotebookDocument(document) || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
+            const isPythonNbOrInteractiveWindow =
+                (isEmptyMetadata ? isPythonNotebookLanguage : isPythonNotebook(notebookMetadata)) ||
+                resourceType === 'interactive';
             if (document.notebookType === JupyterNotebookView && !this.isLocalLaunch && isPythonNbOrInteractiveWindow) {
                 const defaultPythonController = await this.defaultService.computeDefaultController(
                     document.uri,
@@ -273,7 +274,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             } else if (document.notebookType === InteractiveWindowView) {
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
-                await this.loader.loaded;
+                await this.registration.loaded;
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
@@ -403,37 +404,21 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         ) {
             return;
         }
-        if (this.selection.getSelected(document)) {
+        if (this.registration.getSelected(document)) {
             return;
         }
 
-        // This method can get called very frequently, hence compute the preferred once in 100ms
-        const cancellationToken = new CancellationTokenSource();
-        const timeout = setTimeout(async () => {
-            // Provide the preferred controller only after we've loaded all controllers
-            // This avoids the kernel status label from flickering (i.e. changing from one to another).
-            // E.g. connect to a remote jupyter server
-            // Open a notebook with a kernel spec in the metadata
-            // We might set active interpreter as preferred,
-            // then change it to the local kernel spec.
-            // Then change to remove kernel spec
-            // Then change to the remote kernel session (assuming its still running).
-            await this.loader.loaded.catch(noop);
-            if (cancellationToken.token.isCancellationRequested) {
-                return;
-            }
-            this.computePreferred(document, undefined, cancellationToken.token).catch(noop);
-        }, 100);
+        // This method can get called very frequently
         this.debouncedPreferredCompute.get(document)?.dispose();
-        this.debouncedPreferredCompute.set(document, new Disposable(() => clearTimeout(timeout)));
+        const cancellationToken = new CancellationTokenSource();
         this.debouncedPreferredCompute.set(
             document,
             new Disposable(() => {
-                clearTimeout(timeout);
                 cancellationToken.cancel();
                 cancellationToken.dispose();
             })
         );
+        this.computePreferred(document, undefined, cancellationToken.token).catch(noop);
     }
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match
@@ -473,6 +458,29 @@ export class ControllerPreferredService implements IControllerPreferredService, 
 
             // Are we an exact match based on metadata hash / name / ect...?
             const isExactMatch = await this.kernelRankHelper.isExactMatch(uri, potentialMatch, notebookMetadata);
+            if (cancelToken.isCancellationRequested) {
+                return;
+            }
+            if (
+                (!notebookMetadata ||
+                    (!notebookMetadata.kernelspec && !notebookMetadata.language_info) ||
+                    isPythonNotebook(notebookMetadata)) &&
+                !isExactMatch &&
+                this.extensionChecker.isPythonExtensionActive &&
+                !this.isWebExtension
+            ) {
+                // If we're looking for local kernel connections then wait for all interpreters have been loaded
+                // & then fallback to the old approach of providing a best match.
+                // We wait for all kernels to be discovered so that we can provide a good preferred kernel
+                // instead of providing any kernel.
+                // E.g. assume we have discovered one kernel, & we don't have an exact match,
+                // then we fallback to the first found.
+                // Later we find another, and this code runs again and we find that the new kernel is a better match
+                // now we change the preferred to the new kernel
+                // I.e. it could change a number of times, to avoid this we should wait for all kernels to be discovered
+                // when we provide a fallback (when we don't have an exact match).
+                await this.interpreters.refreshInterpreters();
+            }
             if (cancelToken.isCancellationRequested) {
                 return;
             }

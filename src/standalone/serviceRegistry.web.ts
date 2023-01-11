@@ -4,11 +4,7 @@
 'use strict';
 
 import { IServiceManager } from '../platform/ioc/types';
-import {
-    IExtensionActivationManager,
-    IExtensionSingleActivationService,
-    IExtensionSyncActivationService
-} from '../platform/activation/types';
+import { IExtensionActivationManager, IExtensionSyncActivationService } from '../platform/activation/types';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './context/activeEditorContext';
@@ -20,26 +16,26 @@ import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
-import { IExtensionContext, IFeaturesManager } from '../platform/common/types';
+import { IExtensionContext } from '../platform/common/types';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 import { ImportTracker } from './import-export/importTracker';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         ActiveEditorContextService
     );
 
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         ExportCommandRegistry
     );
 
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ImportTracker);
 
     // Activation Manager
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
@@ -64,12 +60,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     // Dev Tools
     registerDevToolTypes(context, isDevMode);
 
-    const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
-    if (featureManager.features.kernelPickerType === 'Insiders') {
-        // User jupyter server url provider
-        serviceManager.addSingleton<IExtensionSyncActivationService>(
-            IExtensionSyncActivationService,
-            UserJupyterServerUrlProvider
-        );
-    }
+    // User jupyter server url provider
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        UserJupyterServerUrlProvider
+    );
 }

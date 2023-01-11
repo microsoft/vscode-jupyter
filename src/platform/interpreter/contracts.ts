@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Event, Uri } from 'vscode';
+import { Event, Uri, CancellationToken } from 'vscode';
 import { PythonEnvironmentV2 } from '../api/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
@@ -14,9 +14,14 @@ export interface IInterpreterService {
      */
     readonly resolvedEnvironments: PythonEnvironment[];
     readonly environments: readonly PythonEnvironmentV2[];
-    waitForAllInterpretersToLoad(): Promise<void>;
+    /**
+     * Pause detection of Python environments until the token is cancelled.
+     * After the token is cancelled, detection will resume and pending events will be triggered.
+     */
+    pauseInterpreterDetection(cancelToken: CancellationToken): void;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreters: Event<void>;
+    onDidRemoveInterpreter: Event<{ id: string }>;
     refreshInterpreters(forceRefresh?: boolean): Promise<void>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
     /**

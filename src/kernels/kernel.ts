@@ -180,6 +180,11 @@ abstract class BaseKernel implements IBaseKernel {
         return disposable;
     }
     public async start(options?: IDisplayOptions): Promise<IKernelConnectionSession> {
+        // Possible this cancellation was cancelled previously.
+        if (this.startCancellation.token.isCancellationRequested) {
+            this.startCancellation.dispose();
+            this.startCancellation = new CancellationTokenSource();
+        }
         return this.startJupyterSession(options);
     }
     /**
@@ -263,6 +268,7 @@ abstract class BaseKernel implements IBaseKernel {
             try {
                 await Promise.all(promises);
             } finally {
+                this.startCancellation.dispose();
                 disposeAllDisposables(this.disposables);
             }
         };
@@ -277,13 +283,31 @@ abstract class BaseKernel implements IBaseKernel {
             );
             traceInfo(`Restart requested ${this.uri}`);
             this.startCancellation.cancel(); // Cancel any pending starts.
+            this.startCancellation.dispose();
             const stopWatch = new StopWatch();
             try {
-                // Try to restart the current session if possible.
-                const result = await this.restartCurrentSession();
-                if (result === 'currentSessionRestarted') {
-                    // This happens when we've been unable to stop the pending start.
-                    // Of the session has already been started.
+                // Check if the session was started already.
+                // Note, it could be empty if we were starting this and it got cancelled due to us
+                // cancelling the token earlier.
+                const session = this._jupyterSessionPromise
+                    ? await this._jupyterSessionPromise.catch(() => undefined)
+                    : undefined;
+
+                if (session) {
+                    // We already have a session, now try to restart that session instead of starting a whole new one.
+                    // Just use the internal session. Pending cells should have been canceled by the caller
+                    // Try to restart the current session if possible.
+                    if (!this._restartPromise) {
+                        // Just use the internal session. Pending cells should have been canceled by the caller
+                        this._restartPromise = session.restart();
+                        this._restartPromise
+                            // Done restarting, clear restart promise
+                            .finally(() => (this._restartPromise = undefined))
+                            .catch(noop);
+                    }
+                    await this._restartPromise;
+
+                    // Re-create the cancel token as we cancelled this earlier in this method.
                     this.startCancellation = new CancellationTokenSource();
                 } else {
                     // If the session died, then start a new session.
@@ -331,33 +355,6 @@ abstract class BaseKernel implements IBaseKernel {
             ).ignoreErrors();
         }
     }
-    /**
-     * Restarts the kernel
-     * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
-     */
-    private async restartCurrentSession(): Promise<'currentSessionRestarted' | 'noSessionToRestart'> {
-        const session = this._jupyterSessionPromise
-            ? await this._jupyterSessionPromise.catch(() => undefined)
-            : undefined;
-
-        if (!session) {
-            traceInfo('No kernel session to interrupt');
-            this._restartPromise = undefined;
-            return 'noSessionToRestart';
-        }
-
-        // Restart the active execution
-        if (!this._restartPromise) {
-            // Just use the internal session. Pending cells should have been canceled by the caller
-            this._restartPromise = session.restart();
-            this._restartPromise
-                // Done restarting, clear restart promise
-                .finally(() => (this._restartPromise = undefined))
-                .catch(noop);
-        }
-        await this._restartPromise;
-        return 'currentSessionRestarted';
-    }
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)
     ): Promise<IKernelConnectionSession> {
@@ -394,10 +391,6 @@ abstract class BaseKernel implements IBaseKernel {
             );
         }
         if (!this._jupyterSessionPromise) {
-            // Don't create a new one unnecessarily.
-            if (this.startCancellation.token.isCancellationRequested) {
-                this.startCancellation = new CancellationTokenSource();
-            }
             const stopWatch = new StopWatch();
             await trackKernelResourceInformation(this.resourceUri, {
                 kernelConnection: this.kernelConnectionMetadata,

@@ -202,6 +202,11 @@ export interface IJupyterServerUri {
     authorizationHeader: any; // JSON object for authorization header.
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
+    workingDirectory?: string;
+    /**
+     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
+     */
+    webSocketProtocols?: string[];
 }
 
 export type JupyterServerUriHandle = string;
@@ -214,7 +219,21 @@ export interface IJupyterUriProvider {
     readonly displayName?: string;
     readonly detail?: string;
     onDidChangeHandles?: Event<void>;
-    getQuickPickEntryItems?(): Promise<QuickPickItem[]> | QuickPickItem[];
+    getQuickPickEntryItems?():
+        | Promise<
+              (QuickPickItem & {
+                  /**
+                   * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+                   */
+                  default?: boolean;
+              })[]
+          >
+        | (QuickPickItem & {
+              /**
+               * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+               */
+              default?: boolean;
+          })[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
     /**
      * Given the handle, returns the Jupyter Server information.
@@ -236,7 +255,7 @@ export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
     getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
-    registerProvider(picker: IJupyterUriProvider): void;
+    registerProvider(picker: IJupyterUriProvider): IDisposable;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 
@@ -328,7 +347,8 @@ export interface IJupyterRequestCreator {
     getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,
-        getAuthHeaders?: () => any
+        getAuthHeaders?: () => any,
+        getWebSocketProtocols?: () => string | string[] | undefined
     ): ClassType<WebSocket>;
     getWebsocket(id: string): IKernelSocket | undefined;
     getRequestInit(): RequestInit;

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { Identifiers, isPreReleaseVersion } from '../platform/common/constants';
 import { IServiceManager } from '../platform/ioc/types';
@@ -11,7 +11,6 @@ import { registerInstallerTypes } from './installer/serviceRegistry.node';
 import { KernelDependencyService } from './kernelDependencyService.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsService.node';
 import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
@@ -42,7 +41,6 @@ import { ServerPreload } from './jupyter/launcher/serverPreload.node';
 import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
-import { DebugStartupCodeProvider } from './debuggerStartupCodeProvider';
 import { KernelWorkingFolder } from './kernelWorkingFolder.node';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.node';
 import { ITrustedKernelPaths } from './raw/finder/types';
@@ -52,10 +50,13 @@ import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarme
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         PortAttributesProviders
@@ -91,14 +92,24 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         LocalKnownPathKernelSpecFinder
     );
     serviceManager.addBinding(LocalKnownPathKernelSpecFinder, IExtensionSyncActivationService);
+
     serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
         LocalPythonAndRelatedNonPythonKernelSpecFinder,
         LocalPythonAndRelatedNonPythonKernelSpecFinder
     );
-    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinder, IExtensionSyncActivationService);
+    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinderOld>(
+        LocalPythonAndRelatedNonPythonKernelSpecFinderOld,
+        LocalPythonAndRelatedNonPythonKernelSpecFinderOld
+    );
+    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper>(
+        LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper,
+        LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper
+    );
+    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper, IExtensionSyncActivationService);
+
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         PreWarmActivatedJupyterEnvironmentVariables
     );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
@@ -151,7 +162,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
 
     serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, KernelStartupCodeProvider);
-    serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, DebugStartupCodeProvider);
     serviceManager.addSingleton<PythonKernelInterruptDaemon>(PythonKernelInterruptDaemon, PythonKernelInterruptDaemon);
     serviceManager.addSingleton(KernelWorkingFolder, KernelWorkingFolder);
 }

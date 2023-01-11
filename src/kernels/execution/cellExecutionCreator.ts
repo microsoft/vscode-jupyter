@@ -11,6 +11,7 @@ import {
     NotebookCellOutputItem,
     TextDocument
 } from 'vscode';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernelController } from '../types';
 
 /**
@@ -112,14 +113,19 @@ export class CellExecutionCreator {
     }
 
     private static create(key: TextDocument, cell: NotebookCell, controller: IKernelController) {
-        const result = new NotebookCellExecutionWrapper(
-            controller.createNotebookCellExecution(cell),
-            controller.id,
-            () => {
-                CellExecutionCreator._map.delete(key);
-            }
-        );
-        CellExecutionCreator._map.set(key, result);
-        return result;
+        try {
+            const result = new NotebookCellExecutionWrapper(
+                controller.createNotebookCellExecution(cell),
+                controller.id,
+                () => {
+                    CellExecutionCreator._map.delete(key);
+                }
+            );
+            CellExecutionCreator._map.set(key, result);
+            return result;
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.FailedToCreateNotebookCellExecution, undefined, undefined, ex);
+            throw ex;
+        }
     }
 }

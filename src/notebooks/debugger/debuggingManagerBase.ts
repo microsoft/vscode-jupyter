@@ -17,12 +17,12 @@ import {
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { IDisposable } from '../../platform/common/types';
+import { IDisposable, IFeaturesManager } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IControllerLoader, IControllerSelection } from '../controllers/types';
+import { IControllerRegistration } from '../controllers/types';
 import { DebuggingTelemetry } from './constants';
 import { Debugger } from './debugger';
 import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
@@ -44,15 +44,14 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
 
     public constructor(
         protected readonly kernelProvider: IKernelProvider,
-        private readonly notebookControllerLoader: IControllerLoader,
-        private readonly notebookControllerSelection: IControllerSelection,
+        private readonly controllerRegistration: IControllerRegistration,
         protected readonly commandManager: ICommandManager,
         protected readonly appShell: IApplicationShell,
         protected readonly vscNotebook: IVSCodeNotebook,
         protected readonly serviceContainer: IServiceContainer
     ) {}
 
-    public async activate() {
+    public activate() {
         this.disposables.push(
             // track termination of debug sessions
             debug.onDidTerminateDebugSession(this.endSession.bind(this)),
@@ -139,8 +138,10 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     }
 
     protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
-        await this.notebookControllerLoader.loaded;
-        const controller = this.notebookControllerSelection.getSelected(doc);
+        if (this.serviceContainer.get<IFeaturesManager>(IFeaturesManager).features.kernelPickerType === 'Stable') {
+            await this.controllerRegistration.loaded;
+        }
+        const controller = this.controllerRegistration.getSelected(doc);
         let kernel = this.kernelProvider.get(doc);
         if (controller && (!kernel || (kernel && kernel.status === 'unknown'))) {
             kernel = await KernelConnector.connectToNotebookKernel(
@@ -199,7 +200,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
         try {
             let kernel = this.kernelProvider.get(doc);
             if (!kernel) {
-                const controller = this.notebookControllerSelection.getSelected(doc);
+                const controller = this.controllerRegistration.getSelected(doc);
                 if (!controller) {
                     return IpykernelCheckResult.ControllerNotSelected;
                 }

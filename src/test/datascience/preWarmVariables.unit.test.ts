@@ -5,7 +5,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { PythonExtensionChecker } from '../../platform/api/pythonApi';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
@@ -18,7 +18,7 @@ import { sleep } from '../core';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 
 suite('PreWarm Env Vars', () => {
-    let activationService: IExtensionSingleActivationService;
+    let activationService: IExtensionSyncActivationService;
     let envActivationService: IEnvironmentActivationService;
     let jupyterInterpreter: JupyterInterpreterService;
     let onDidChangeInterpreter: EventEmitter<PythonEnvironment>;

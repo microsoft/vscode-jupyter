@@ -6,7 +6,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import {
@@ -27,7 +27,7 @@ export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUA
  * It should not always be `Python`, not all data scientists or users of notebooks use Python.
  */
 @injectable()
-export class NotebookCellLanguageService implements IExtensionSingleActivationService {
+export class NotebookCellLanguageService implements IExtensionSyncActivationService {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -49,7 +49,7 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
         // Note, what ever language is returned here, when the user selects a kernel, the cells (of blank documents) get updated based on that kernel selection.
         return translateKernelLanguageToMonaco(jupyterLanguage || defaultLanguage);
     }
-    public async activate() {
+    public activate() {
         this.vscNotebook.onDidSaveNotebookDocument(this.onDidSaveNotebookDocument, this, this.disposables);
     }
     public getSupportedLanguages(kernelConnection: KernelConnectionMetadata): string[] {

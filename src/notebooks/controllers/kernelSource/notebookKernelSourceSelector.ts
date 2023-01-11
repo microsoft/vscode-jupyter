@@ -9,7 +9,6 @@ import {
     CancellationToken,
     CancellationTokenSource,
     EventEmitter,
-    NotebookControllerAffinity,
     NotebookDocument,
     QuickPickItem,
     QuickPickItemKind,
@@ -44,8 +43,7 @@ import {
     MultiStepInput
 } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { traceWarning } from '../../../platform/logging';
-import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
+import { INotebookKernelSourceSelector } from '../types';
 import { CreateAndSelectItemFromQuickPick, KernelSelector } from './kernelSelector';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
@@ -64,9 +62,13 @@ interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
 }
 
 interface KernelProviderItemsQuickPickItem extends QuickPickItem {
+    /**
+     * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+     */
+    default?: boolean;
     type: KernelFinderEntityQuickPickType.UriProviderQuickPick;
     provider: IJupyterUriProvider;
-    originalItem: QuickPickItem;
+    originalItem: QuickPickItem & { default?: boolean };
 }
 
 // Provides the UI to select a Kernel Source for a given notebook document
@@ -77,7 +79,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
     constructor(
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IJupyterUriProviderRegistration)
         private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -111,7 +112,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 ),
                 state
             );
-            if (result === InputFlowAction.cancel) {
+            if (result === InputFlowAction.cancel || state.selection?.type === 'userPerformedSomeOtherAction') {
                 throw new CancellationError();
             }
             if (this.cancellationTokenSource.token.isCancellationRequested) {
@@ -120,9 +121,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             }
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
-            if (state.source && state.connection) {
-                await this.onKernelConnectionSelected(notebook, state.connection);
-                return state.connection as LocalKernelConnectionMetadata;
+            if (state.source && state.selection?.type === 'connection') {
+                return state.selection.connection as LocalKernelConnectionMetadata;
             }
         } finally {
             disposeAllDisposables(state.disposables);
@@ -154,7 +154,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 this.getRemoteServersFromProvider.bind(this, provider, this.cancellationTokenSource.token),
                 state
             );
-            if (result === InputFlowAction.cancel) {
+            if (result === InputFlowAction.cancel || state.selection?.type === 'userPerformedSomeOtherAction') {
                 throw new CancellationError();
             }
 
@@ -164,9 +164,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             }
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
-            if (state.source && state.connection) {
-                await this.onKernelConnectionSelected(notebook, state.connection);
-                return state.connection as RemoteKernelConnectionMetadata;
+            if (state.source && state.selection?.type === 'connection') {
+                return state.selection.connection as RemoteKernelConnectionMetadata;
             }
         } finally {
             disposeAllDisposables(state.disposables);
@@ -239,28 +238,31 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
 
         const onDidChangeItems = new EventEmitter<typeof items>();
-        const selectedSource = await multiStep.showQuickPick<
-            ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem,
-            IQuickPickParameters<
-                ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem
-            >
-        >({
-            items: items,
-            placeholder: '',
-            title: 'Select a Jupyter Server',
-            supportBackInFirstStep: true,
-            onDidTriggerItemButton: async (e) => {
-                if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
-                    if (provider.removeHandle) {
-                        await provider.removeHandle(e.item.idAndHandle.handle);
-                        // the serverUriStorage should be refreshed after the handle removal
-                        items.splice(items.indexOf(e.item), 1);
-                        onDidChangeItems.fire(items.concat([]));
-                    }
-                }
-            },
-            onDidChangeItems: onDidChangeItems.event
-        });
+        const defaultSelection = items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
+        const selectedSource = defaultSelection
+            ? defaultSelection
+            : await multiStep.showQuickPick<
+                  ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem,
+                  IQuickPickParameters<
+                      ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem
+                  >
+              >({
+                  items: items,
+                  placeholder: '',
+                  title: 'Select a Jupyter Server',
+                  supportBackInFirstStep: true,
+                  onDidTriggerItemButton: async (e) => {
+                      if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
+                          if (provider.removeHandle) {
+                              await provider.removeHandle(e.item.idAndHandle.handle);
+                              // the serverUriStorage should be refreshed after the handle removal
+                              items.splice(items.indexOf(e.item), 1);
+                              onDidChangeItems.fire(items.concat([]));
+                          }
+                      }
+                  },
+                  onDidChangeItems: onDidChangeItems.event
+              });
 
         if (token.isCancellationRequested) {
             return;
@@ -275,7 +277,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         const ret = await this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
                         return ret;
                     } catch (ex) {
-                        if (ex === InputFlowAction.back) {
+                        if (ex === InputFlowAction.back && !defaultSelection) {
                             return this.getRemoteServersFromProvider(provider, token, multiStep, state);
                         } else {
                             throw ex;
@@ -377,22 +379,17 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 matchOnDescription: true,
                 matchOnDetail: true,
                 supportBackInFirstStep: true,
-                activeItem: undefined
+                activeItem: undefined,
+                ignoreFocusOut: false
             });
             return { quickPick, selection: selection as Promise<ConnectionQuickPickItem | QuickPickItem> };
         };
-        state.connection = await selector.selectKernel(quickPickFactory);
-    }
-    private async onKernelConnectionSelected(notebook: NotebookDocument, connection: KernelConnectionMetadata) {
-        const controllers = this.controllerRegistration.addOrUpdate(connection, [
-            notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
-        ]);
-        if (!Array.isArray(controllers) || controllers.length === 0) {
-            traceWarning(`No controller created for selected kernel connection ${connection.kind}:${connection.id}`);
-            return;
+        const result = await selector.selectKernel(quickPickFactory);
+        if (result?.selection === 'controller') {
+            state.source = result.finder;
+            state.selection = { type: 'connection', connection: result.connection };
+        } else if (result?.selection === 'userPerformedSomeOtherAction') {
+            state.selection = { type: 'userPerformedSomeOtherAction' };
         }
-        controllers
-            .find((item) => item.viewType === notebook.notebookType)
-            ?.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity.Preferred);
     }
 }

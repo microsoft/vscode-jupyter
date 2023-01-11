@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { inject, named } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
-import { traceInfo, traceError, traceInfoIfCI } from '../../../../platform/logging';
+import { traceInfo, traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
 import {
     IAsyncDisposableRegistry,
     IOutputChannel,
@@ -68,9 +68,9 @@ export class HostJupyterServer implements INotebookServer {
     public async dispose(): Promise<void> {
         if (!this.disposed) {
             this.disposed = true;
-            traceInfo(`Disposing HostJupyterServer`);
+            traceVerbose(`Disposing HostJupyterServer`);
             await this.shutdown();
-            traceInfo(`Finished disposing HostJupyterServer`);
+            traceVerbose(`Finished disposing HostJupyterServer`);
         }
     }
 
@@ -195,10 +195,10 @@ export class HostJupyterServer implements INotebookServer {
                 this.connectionInfoDisconnectHandler = undefined;
             }
 
-            traceInfo('Shutting down notebooks');
+            traceVerbose('Shutting down notebooks');
             const session = await Promise.all([...this.sessions.values()]);
             await Promise.all(session.map((session) => session.dispose()));
-            traceInfo(`Shut down session manager : ${this.sessionManager ? 'existing' : 'undefined'}`);
+            traceVerbose(`Shut down session manager : ${this.sessionManager ? 'existing' : 'undefined'}`);
             if (this.sessionManager) {
                 // Session manager in remote case may take too long to shutdown. Don't wait that
                 // long.
@@ -210,7 +210,7 @@ export class HostJupyterServer implements INotebookServer {
 
             // After shutting down notebooks and session manager, kill the main process.
             if (this.connection && this.connection) {
-                traceInfo('Shutdown server - dispose conn info');
+                traceVerbose('Shutdown server - dispose conn info');
                 this.connection.dispose(); // This should kill the process that's running
             }
         } catch (e) {

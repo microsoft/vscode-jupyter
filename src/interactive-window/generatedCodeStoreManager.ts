@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IKernel, IKernelProvider } from '../kernels/types';
-import { IControllerSelection } from '../notebooks/controllers/types';
+import { IControllerRegistration } from '../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveWindowView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
@@ -22,7 +22,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(ICodeGeneratorFactory) private readonly codeGeneratorFactory: ICodeGeneratorFactory,
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
-        @inject(IControllerSelection) private readonly controllers: IControllerSelection
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration
     ) {
         disposables.push(this);
     }

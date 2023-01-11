@@ -267,7 +267,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             const result = kernel.session
                 ? await executeSilently(
                       kernel.session,
-                      `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`,
+                      `import sys as _VSCODE_sys\r\n_VSCODE_sys.path.extend([${debuggerPathList}])\r\n_VSCODE_sys.path\r\ndel _VSCODE_sys`,
                       {
                           traceErrors: true,
                           traceErrorsMessage: 'Execute_request failure appending debugger paths for IW',

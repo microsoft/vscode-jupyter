@@ -3,14 +3,13 @@
 
 'use strict';
 
-import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IDisposableRegistry } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { isTelemetryDisabled } from '../../telemetry';

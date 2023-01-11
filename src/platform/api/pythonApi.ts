@@ -29,6 +29,8 @@ import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 import { PromiseMonitor } from '../common/utils/promises';
+import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
+import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -78,7 +80,7 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
         }
     }
     if (!env.executable.uri) {
-        console.error(`Python environment ${env.id} excluded as Uri is undefined`);
+        traceWarning(`Python environment ${env.id} excluded as Uri is undefined`);
         return;
     }
 
@@ -201,7 +203,7 @@ export class PythonApiProvider implements IPythonApiProvider {
                 activated = true;
             } catch (ex) {
                 traceError(`Failed activating the python extension: `, ex);
-                this.api.reject(ex);
+                this.api.reject(new PythonExtensionActicationFailedError(ex));
                 return;
             }
         }
@@ -214,7 +216,7 @@ export class PythonApiProvider implements IPythonApiProvider {
         }
         if (!pythonExtension.exports?.jupyter) {
             traceError(`Python extension is not exporting the jupyter API`);
-            this.api.reject(new Error('Python extension is not exporting the jupyter API'));
+            this.api.reject(new PythonExtensionApiNotExportedError());
         } else {
             pythonExtension.exports.jupyter.registerHooks();
         }
@@ -336,6 +338,8 @@ export class InterpreterSelector implements IInterpreterSelector {
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<void>();
     private readonly didChangeInterpreters = new EventEmitter<void>();
+    private readonly _onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
+    public onDidRemoveInterpreter = this._onDidRemoveInterpreter.event;
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
@@ -354,7 +358,8 @@ export class InterpreterService implements IInterpreterService {
     private readonly _onDidChangeStatus = new EventEmitter<void>();
     public readonly onDidChangeStatus = this._onDidChangeStatus.event;
     private refreshPromises = new PromiseMonitor();
-
+    private pauseEnvDetection = false;
+    private readonly onResumeEnvDetection = new EventEmitter<void>();
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -380,6 +385,7 @@ export class InterpreterService implements IInterpreterService {
         this.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
         this.disposables.push(this._onDidChangeStatus);
         this.disposables.push(this.refreshPromises);
+        this.disposables.push(this.onResumeEnvDetection);
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
@@ -417,8 +423,19 @@ export class InterpreterService implements IInterpreterService {
         }
         return this.interpreterListCachePromise;
     }
-    public async waitForAllInterpretersToLoad(): Promise<void> {
-        await this.getInterpreters();
+    pauseInterpreterDetection(cancelToken: CancellationToken): void {
+        if (cancelToken.isCancellationRequested) {
+            return;
+        }
+        this.pauseEnvDetection = true;
+        cancelToken.onCancellationRequested(
+            () => {
+                this.pauseEnvDetection = false;
+                this.triggerPendingEvents();
+            },
+            this,
+            this.disposables
+        );
     }
     public async refreshInterpreters(forceRefresh: boolean = false) {
         const promise = (async () => {
@@ -591,11 +608,25 @@ export class InterpreterService implements IInterpreterService {
             ) {
                 this._interpreters.set(env.id, { resolved });
                 if (triggerChangeEvent) {
-                    this.didChangeInterpreters.fire();
+                    this.triggerEventIfAllowed(this.didChangeInterpreters);
                 }
             }
             return resolved;
         }
+    }
+    private pendingEventTriggers = new Set<EventEmitter<void>>();
+    private triggerEventIfAllowed(eventEmitter: EventEmitter<void>) {
+        if (!this.pauseEnvDetection) {
+            eventEmitter.fire();
+            this.pendingEventTriggers.delete(eventEmitter);
+            this.triggerPendingEvents();
+            return;
+        }
+        this.pendingEventTriggers.add(eventEmitter);
+    }
+    private triggerPendingEvents() {
+        Array.from(this.pendingEventTriggers).forEach((item) => item.fire());
+        this.pendingEventTriggers.clear();
     }
     private async getApi(): Promise<ProposedExtensionAPI | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
@@ -611,7 +642,10 @@ export class InterpreterService implements IInterpreterService {
     private onDidChangeWorkspaceFolders() {
         this.interpreterListCachePromise = undefined;
     }
-    private populateCachedListOfInterpreters() {
+    private populateCachedListOfInterpreters(clearCache?: boolean) {
+        if (clearCache) {
+            this.interpreterListCachePromise = undefined;
+        }
         const promise = this.getInterpreters().catch(noop);
         this.refreshPromises.push(promise);
         // Python extension might completely this promise, however this doesn't mean all of the
@@ -622,6 +656,7 @@ export class InterpreterService implements IInterpreterService {
         // This promise only improves the discovery of kernels, even without this things work,
         // but with this things work better as the kernel discovery knows that Python refresh has finished.
         this.refreshPromises.push(promise.then(() => sleep(1_000)));
+        return promise;
     }
     private async getInterpretersImpl(
         cancelToken: CancellationToken,
@@ -661,7 +696,7 @@ export class InterpreterService implements IInterpreterService {
                 await Promise.all(
                     api.environments.known.map(async (item) => {
                         try {
-                            const env = await api.environments.resolveEnvironment(item.id);
+                            const env = await api.environments.resolveEnvironment(item);
                             const resolved = this.trackResolvedEnvironment(env, true);
                             traceVerbose(
                                 `Python environment for ${item.id} is ${
@@ -714,7 +749,7 @@ export class InterpreterService implements IInterpreterService {
         // Get latest interpreter list in the background.
         if (this.extensionChecker.isPythonExtensionActive) {
             this.builtListOfInterpretersAtLeastOnce = true;
-            this.populateCachedListOfInterpreters();
+            this.populateCachedListOfInterpreters().catch(noop);
         }
         this.extensionChecker.onPythonExtensionInstallationStatusChanged(
             (e) => {
@@ -722,7 +757,7 @@ export class InterpreterService implements IInterpreterService {
                     return;
                 }
                 if (this.extensionChecker.isPythonExtensionActive) {
-                    this.populateCachedListOfInterpreters();
+                    this.populateCachedListOfInterpreters().catch(noop);
                 }
             },
             this,
@@ -744,7 +779,7 @@ export class InterpreterService implements IInterpreterService {
                             traceVerbose(`Detected change in Active Python environment via Python API`);
                             this.interpreterListCachePromise = undefined;
                             this.workspaceCachedActiveInterpreter.clear();
-                            this.didChangeInterpreter.fire();
+                            this.triggerEventIfAllowed(this.didChangeInterpreter);
                         },
                         this,
                         this.disposables
@@ -755,9 +790,16 @@ export class InterpreterService implements IInterpreterService {
                             if (e.type === 'remove') {
                                 this._interpreters.delete(e.env.id);
                             }
-                            traceVerbose(`Detected change in Python environments via Python API`);
-                            this.interpreterListCachePromise = undefined;
-                            this.populateCachedListOfInterpreters();
+                            traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}}'`);
+                            this.populateCachedListOfInterpreters(true).finally(() => {
+                                if (e.type === 'remove') {
+                                    if (this._interpreters.has(e.env.id)) {
+                                        this.triggerEventIfAllowed(this.didChangeInterpreter);
+                                        this.triggerEventIfAllowed(this.didChangeInterpreters);
+                                        this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                    }
+                                }
+                            });
                         },
                         this,
                         this.disposables

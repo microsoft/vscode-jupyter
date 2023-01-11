@@ -23,7 +23,7 @@ suite('Quick Pick Kernel Item Provider', () => {
             let provider: QuickPickKernelItemProvider;
             let finder: IContributedKernelFinder;
             let notebook: NotebookDocument;
-            let onDidChangeKernels: EventEmitter<void>;
+            let onDidChangeKernels: EventEmitter<{ added?: any[]; removed?: any[]; updated?: any[] }>;
             let onDidChangeStatus: EventEmitter<void>;
             const disposables: IDisposable[] = [];
             let clock: fakeTimers.InstalledClock;
@@ -33,7 +33,7 @@ suite('Quick Pick Kernel Item Provider', () => {
             const kernelConnection4 = instance(mock<KernelConnectionMetadata>());
             setup(() => {
                 finder = mock<IContributedKernelFinder>();
-                onDidChangeKernels = new EventEmitter<void>();
+                onDidChangeKernels = new EventEmitter<{ added: any[]; removed: any[]; updated: any[] }>();
                 onDidChangeStatus = new EventEmitter<void>();
                 disposables.push(onDidChangeKernels);
                 disposables.push(onDidChangeStatus);
@@ -51,7 +51,7 @@ suite('Quick Pick Kernel Item Provider', () => {
                         when(finder.displayName).thenReturn('Remote Server');
                         break;
                 }
-                when(finder.displayName).thenReturn();
+                when(finder.displayName).thenReturn('x');
                 when(finder.kernels).thenReturn([]);
                 when(finder.refresh()).thenResolve();
                 when(finder.status).thenReturn('idle');
@@ -71,17 +71,28 @@ suite('Quick Pick Kernel Item Provider', () => {
             test('Verify title and status', async () => {
                 createProvider();
 
-                assert.strictEqual(provider.kind, provider.kind);
+                assert.strictEqual(provider.kind, kind);
                 assert.strictEqual(provider.status, 'idle');
                 assert.deepEqual(provider.kernels, []);
                 assert.isUndefined(provider.recommended);
 
                 await clock.runAllAsync();
 
-                assert.strictEqual(
-                    provider.title,
-                    `${DataScience.kernelPickerSelectKernelTitle()} from ${instance(finder).displayName}`
-                );
+                let expectedTitle = '';
+                switch (kind) {
+                    case ContributedKernelFinderKind.LocalKernelSpec:
+                        expectedTitle = DataScience.kernelPickerSelectLocalKernelSpecTitle();
+                        break;
+                    case ContributedKernelFinderKind.LocalPythonEnvironment:
+                        expectedTitle = DataScience.kernelPickerSelectPythonEnvironmentTitle();
+                        break;
+                    default:
+                        expectedTitle = DataScience.kernelPickerSelectKernelFromRemoteTitle().format(
+                            instance(finder).displayName
+                        );
+                        break;
+                }
+                assert.strictEqual(provider.title, expectedTitle);
             });
             test('Verify status change and kernels listing', async () => {
                 when(finder.status).thenReturn('discovering');
@@ -96,7 +107,7 @@ suite('Quick Pick Kernel Item Provider', () => {
 
                 // Update kernels
                 when(finder.kernels).thenReturn([kernelConnection1, kernelConnection2]);
-                onDidChangeKernels.fire();
+                onDidChangeKernels.fire({});
 
                 assert.deepEqual(provider.status, 'discovering');
                 assert.deepEqual(provider.kernels, [kernelConnection1, kernelConnection2]);
@@ -109,7 +120,7 @@ suite('Quick Pick Kernel Item Provider', () => {
                     kernelConnection3,
                     kernelConnection4
                 ]);
-                onDidChangeKernels.fire();
+                onDidChangeKernels.fire({});
                 onDidChangeStatus.fire();
 
                 assert.deepEqual(provider.status, 'idle');
@@ -123,7 +134,7 @@ suite('Quick Pick Kernel Item Provider', () => {
                 // Remove items
                 when(finder.status).thenReturn('discovering');
                 when(finder.kernels).thenReturn([kernelConnection1, kernelConnection4]);
-                onDidChangeKernels.fire();
+                onDidChangeKernels.fire({});
                 onDidChangeStatus.fire();
 
                 assert.deepEqual(provider.status, 'discovering');

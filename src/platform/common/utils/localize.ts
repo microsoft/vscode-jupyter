@@ -249,7 +249,7 @@ export namespace DataScience {
     export const unknownServerUri = () =>
         localize(
             'DataScience.unknownServerUri',
-            'Server URI cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
+            'Server URL cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
         );
     export const uriProviderDescriptionFormat = () =>
         localize('DataScience.uriProviderDescriptionFormat', '{0} (From {1} extension)');
@@ -364,22 +364,22 @@ export namespace DataScience {
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = () =>
         localize(
             'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
-            "Running cells with '{0}' requires {1} package."
+            "Running cells with '{0}' requires the {1} package."
         );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = () =>
         localize(
             'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
-            "Running cells with '{0}' requires {1} package."
+            "Running cells with '{0}' requires the {1} package."
         );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate = () =>
         localize(
             'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate',
-            "Running cells with '{0}' requires {1} package installed or requires an update."
+            "Running cells with '{0}' requires the {1} package to be installed or requires an update."
         );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = () =>
         localize(
             'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
-            "Running cells with '{0}' requires {1} package."
+            "Running cells with '{0}' requires the {1} package."
         );
     export const installPackageInstructions = () =>
         localize(
@@ -617,9 +617,9 @@ export namespace DataScience {
     export const connectKernelHeader = () => localize('DataScience.connectKernelHeader', 'Connected to {0}');
 
     export const jupyterSelectURIPrompt = () =>
-        localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server');
+        localize('DataScience.jupyterSelectURIPrompt', 'Enter the URL of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitle = () =>
-        localize('DataScience.jupyterSelectURIQuickPickTitle', 'Enter the URI of the running Jupyter server');
+        localize('DataScience.jupyterSelectURIQuickPickTitle', 'Enter the URL of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitleOld = () =>
         localize('DataScience.jupyterSelectURIQuickPickTitleOld', 'Pick how to connect to Jupyter');
     export const jupyterSelectURIQuickPickPlaceholder = () =>
@@ -633,9 +633,9 @@ export namespace DataScience {
         localize('DataScience.jupyterSelectURIMRUDetail', 'Last Connection: {0}');
     export const jupyterSelectURINewLabel = () => localize('DataScience.jupyterSelectURINewLabel', 'Existing');
     export const jupyterSelectURINewDetail = () =>
-        localize('DataScience.jupyterSelectURINewDetail', 'Specify the URI of an existing server');
+        localize('DataScience.jupyterSelectURINewDetail', 'Specify the URL of an existing server');
     export const jupyterSelectURIInvalidURI = () =>
-        localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URI specified');
+        localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URL specified');
     export const jupyterSelectURIRunningDetailFormat = () =>
         localize('DataScience.jupyterSelectURIRunningDetailFormat', 'Last connection {0}. {1} existing connections.');
     export const jupyterSelectURINotRunningDetail = () =>
@@ -646,7 +646,7 @@ export namespace DataScience {
             'Enter your user name and password to connect to Jupyter Hub'
         );
     export const jupyterRenameServer = () =>
-        localize('DataScience.jupyterRenameServer', 'Change Server Display Name (Leave Blank To Use URI)');
+        localize('DataScience.jupyterRenameServer', 'Change Server Display Name (Leave Blank To Use URL)');
     export const jupyterSelectUserPrompt = () =>
         localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = () =>
@@ -698,7 +698,7 @@ export namespace DataScience {
     export const jupyterNotebookRemoteConnectFailedWeb = () =>
         localize(
             'DataScience.jupyterNotebookRemoteConnectFailedWeb',
-            'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
+            'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URL can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
         );
     export const changeRemoteJupyterConnectionButtonText = () =>
         localize('DataScience.changeRemoteJupyterConnectionButtonText', 'Manage Connections');
@@ -758,13 +758,13 @@ export namespace DataScience {
             { key: 'DataScience.pythonInterruptFailedHeader', comment: ['{Locked="kernel"}'] },
             'Keyboard interrupt crashed the kernel. Kernel restarted.'
         );
-    export const sysInfoURILabel = () => localize('DataScience.sysInfoURILabel', 'Jupyter Server URI: ');
+    export const sysInfoURILabel = () => localize('DataScience.sysInfoURILabel', 'Jupyter Server URL: ');
     export const executingCodeFailure = () =>
         localize('DataScience.executingCodeFailure', 'Executing code failed : {0}');
     export const inputWatermark = () =>
         localize('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
     export const liveShareConnectFailure = () =>
-        localize('DataScience.liveShareConnectFailure', 'Cannot connect to host Jupyter session. URI not found.');
+        localize('DataScience.liveShareConnectFailure', 'Cannot connect to host Jupyter session. URL not found.');
     export const liveShareCannotSpawnNotebooks = () =>
         localize(
             'DataScience.liveShareCannotSpawnNotebooks',
@@ -901,51 +901,6 @@ export namespace DataScience {
             'DataScience.jupyterDebuggerOutputParseError',
             'Unable to parse {0} output, please log an issue with https://github.com/microsoft/vscode-jupyter'
         );
-    export const jupyterDebuggerPortNotAvailableError = () =>
-        localize(
-            {
-                key: 'DataScience.jupyterDebuggerPortNotAvailableError',
-                comment: ["{Locked='remoteDebuggerPort'}"]
-            },
-            'Port {0} cannot be opened for debugging. Please specify a different port in the remoteDebuggerPort setting.'
-        );
-    export const jupyterDebuggerPortBlockedError = () =>
-        localize(
-            'DataScience.jupyterDebuggerPortBlockedError',
-            'Port {0} cannot be connected to for debugging. Please let port {0} through your firewall.'
-        );
-    export const jupyterDebuggerPortNotAvailableSearchError = () =>
-        localize(
-            'DataScience.jupyterDebuggerPortNotAvailableSearchError',
-            'Ports in the range {0}-{1} cannot be found for debugging. Please specify a port in the remoteDebuggerPort setting.'
-        );
-    export const jupyterDebuggerPortBlockedSearchError = () =>
-        localize(
-            'DataScience.jupyterDebuggerPortBlockedSearchError',
-            'A port cannot be connected to for debugging. Please let ports {0}-{1} through your firewall.'
-        );
-    export const jupyterDebuggerInstallNew = () =>
-        localize(
-            'DataScience.jupyterDebuggerInstallNew',
-            'Pip module {0} is required for debugging cells. Install {0} and continue to debug cell?'
-        );
-    export const jupyterDebuggerInstallNewRunByLine = () =>
-        localize(
-            'DataScience.jupyterDebuggerInstallNewRunByLine',
-            'Pip module {0} is required for running by line. Install {0} and continue to run by line?'
-        );
-    export const jupyterDebuggerInstallUpdate = () =>
-        localize(
-            'DataScience.jupyterDebuggerInstallUpdate',
-            'The version of {0} installed does not support debugging cells. Update {0} to newest version and continue to debug cell?'
-        );
-    export const jupyterDebuggerInstallUpdateRunByLine = () =>
-        localize(
-            'DataScience.jupyterDebuggerInstallUpdateRunByLine',
-            'The version of {0} installed does not support running by line. Update {0} to newest version and continue to run by line?'
-        );
-    export const jupyterDebuggerInstallYes = () => localize('DataScience.jupyterDebuggerInstallYes', 'Yes');
-    export const jupyterDebuggerInstallNo = () => localize('DataScience.jupyterDebuggerInstallNo', 'No');
     export const cellStopOnErrorMessage = () =>
         localize('DataScience.cellStopOnErrorMessage', 'Cell was canceled due to an error in a previous cell.');
     export const scrollToCellTitleFormatMessage = () =>
@@ -1074,19 +1029,6 @@ export namespace DataScience {
             },
             'Output was trimmed for performance reasons.\nTo see the full output set the setting "jupyter.textOutputLimit" to 0.'
         );
-    export const jupyterCommandLineDefaultLabel = () =>
-        localize('DataScience.jupyterCommandLineDefaultLabel', 'Default');
-    export const jupyterCommandLineDefaultDetail = () =>
-        localize(
-            'DataScience.jupyterCommandLineDefaultDetail',
-            'The Python Extension will determine the appropriate command line for Jupyter'
-        );
-    export const jupyterCommandLineCustomLabel = () => localize('DataScience.jupyterCommandLineCustomLabel', 'Custom');
-    export const jupyterCommandLineCustomDetail = () =>
-        localize(
-            'DataScience.jupyterCommandLineCustomDetail',
-            'Customize the command line passed to Jupyter on startup'
-        );
     export const jupyterCommandLineReloadQuestion = () =>
         localize(
             'DataScience.jupyterCommandLineReloadQuestion',
@@ -1094,13 +1036,6 @@ export namespace DataScience {
         );
     export const jupyterCommandLineReloadAnswer = () =>
         localize('DataScience.jupyterCommandLineReloadAnswer', 'Reload');
-    export const jupyterCommandLineQuickPickPlaceholder = () =>
-        localize('DataScience.jupyterCommandLineQuickPickPlaceholder', 'Choose an option');
-    export const jupyterCommandLineQuickPickTitle = () =>
-        localize('DataScience.jupyterCommandLineQuickPickTitle', 'Pick command line for Jupyter');
-    export const jupyterCommandLinePrompt = () =>
-        localize('DataScience.jupyterCommandLinePrompt', 'Enter your custom command line for Jupyter');
-
     export const connectingToJupyterUri = () =>
         localize('DataScience.connectingToJupyterUri', 'Connecting to Jupyter server at {0}');
     export const createdNewNotebook = () => localize('DataScience.createdNewNotebook', '{0}: Creating new notebook ');
@@ -1123,7 +1058,7 @@ export namespace DataScience {
     export const jupyterSelectURIQuickPickTitleRemoteOnly = () =>
         localize('DataScience.jupyterSelectURIQuickPickTitleRemoteOnly', 'Pick an already running Jupyter server');
     export const jupyterSelectURIRemoteDetail = () =>
-        localize('DataScience.jupyterSelectURIRemoteDetail', 'Specify the URI of an existing server');
+        localize('DataScience.jupyterSelectURIRemoteDetail', 'Specify the URL of an existing server');
     export const removeRemoteJupyterServerEntryInQuickPick = () =>
         localize('DataScience.removeRemoteJupyterServerEntryInQuickPick', 'Remove');
     export const specifyLocalOrRemoteJupyterServerForConnections = () =>
@@ -1421,16 +1356,12 @@ export namespace DataScience {
             { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
             'Failed to install Pandas to use the Data Viewer.'
         );
-    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Kernel Specs');
-    export const pickLocalKernelSpecTitle = () =>
-        localize('DataScience.pickLocalKernelSpecTitle', `Select a Local Kernel spec`);
+    export const localKernelSpecs = () => localize('DataScience.localKernelSpecs', 'Local Jupyter Kernel...');
 
     export const localPythonEnvironments = () =>
-        localize('DataScience.localPythonEnvironments', 'Local Python Environments');
-    export const pickLocalKernelPythonEnvTitle = () =>
-        localize('DataScience.pickLocalKernelPythonEnvTitle', `Select a Local Python Environment`);
+        localize('DataScience.localPythonEnvironments', 'Python Environments...');
     export const UserJupyterServerUrlProviderDisplayName = () =>
-        localize('DataScience.UserJupyterServerUrlProviderDisplayName', 'Existing Jupyter Server');
+        localize('DataScience.UserJupyterServerUrlProviderDisplayName', 'Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = () =>
         localize('DataScience.UserJupyterServerUrlProviderDetail', 'Connect to an existing Jupyter Server');
     export const UserJupyterServerUrlAlreadyExistError = () =>
@@ -1443,6 +1374,15 @@ export namespace DataScience {
         localize('DataScience.kernelPickerSelectSourceTitle', 'Select Another Jupyter Kernel...');
     export const kernelPickerSelectKernelTitle = () =>
         localize('DataScience.kernelPickerSelectKernelTitle', 'Select Kernel');
+    export const kernelPickerSelectLocalKernelSpecTitle = () =>
+        localize('DataScience.kernelPickerSelectLocalKernelSpecTitle', 'Select a Local Jupyter Kernel');
+    export const kernelPickerSelectPythonEnvironmentTitle = () =>
+        localize('DataScience.kernelPickerSelectPythonEnvironmentTitle', 'Select a Local Python Environment');
+    export const kernelPickerSelectKernelFromRemoteTitle = () =>
+        localize('DataScience.kernelPickerSelectKernelFromRemoteTitle', 'Select a Kernel from {0}');
+    export const installPythonExtensionViaKernelPickerTitle = () =>
+        localize('DataScience.installPythonExtensionViaKernelPickerTitle', 'Install Python Extension');
+    export const installPythonTitle = () => localize('DataScience.installPythonTitle', 'Install Python');
 }
 
 export namespace Deprecated {

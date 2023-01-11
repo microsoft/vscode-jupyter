@@ -72,7 +72,7 @@ suite('Run By Line @debugger', function () {
             const controller = await api.serviceContainer
                 .get<IControllerDefaultService>(IControllerDefaultService)
                 .computeDefaultController(undefined, 'jupyter-notebook'); // Create an editor to use for our tests
-            await createEmptyPythonNotebook(disposables, undefined, false);
+            await createEmptyPythonNotebook(disposables, undefined, true);
             await commands.executeCommand('notebook.selectKernel', {
                 id: controller!.id,
                 extension: JVSC_EXTENSION_ID
@@ -98,7 +98,7 @@ suite('Run By Line @debugger', function () {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Delete temp debugging files', async function () {
+    test('Delete temp debugging files @mandatory', async function () {
         let tempWatcher;
         let folderName;
         try {
@@ -236,7 +236,8 @@ suite('Run By Line @debugger', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
-    test('Restart while debugging', async function () {
+    test.skip('Restart while debugging', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/12188
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
 

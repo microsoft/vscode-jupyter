@@ -3,23 +3,29 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
-import { WidgetManager } from '../common/manager';
-import { ScriptManager } from '../common/scriptManager';
 import { OutputItem } from 'vscode-notebook-renderer';
 import { SharedMessages, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
 import { logErrorMessage, logMessage } from '../../react-common/logger';
+import { WidgetManager } from './manager';
+import { ScriptManager } from './scriptManager';
+import { IJupyterLabWidgetManagerCtor } from './types';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
     private widgetsCanLoadFromCDN: boolean = false;
-    constructor(private postOffice: PostOffice) {
+    constructor(private postOffice: PostOffice, JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
         this.scriptManager = new ScriptManager(postOffice);
         this.scriptManager.onWidgetLoadError(this.handleLoadError.bind(this));
         this.scriptManager.onWidgetLoadSuccess(this.handleLoadSuccess.bind(this));
         this.scriptManager.onWidgetVersionNotSupported(this.handleUnsupportedWidgetVersion.bind(this));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.widgetManager = new WidgetManager(undefined as any, postOffice, this.scriptManager.getScriptLoader());
+        this.widgetManager = new WidgetManager(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            undefined as any,
+            postOffice,
+            this.scriptManager.getScriptLoader(),
+            JupyterLabWidgetManager
+        );
 
         postOffice.addHandler({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,23 +88,21 @@ const renderedWidgets = new Map<string, { container: HTMLElement; widget?: { dis
  * This will be exposed as a public method on window for renderer to render output.
  */
 let stackOfWidgetsRenderStatusByOutputId: { outputId: string; container: HTMLElement; success?: boolean }[] = [];
-export function renderOutput(
+export async function renderOutput(
     outputItem: OutputItem,
+    model: nbformat.IMimeBundle & {
+        model_id: string;
+        version_major: number;
+        /**
+         * This property is only used & added in tests.
+         */
+        _vsc_test_cellIndex?: number;
+    },
     element: HTMLElement,
     logger: (message: string, category?: 'info' | 'error') => void
 ) {
     try {
         stackOfWidgetsRenderStatusByOutputId.push({ outputId: outputItem.id, container: element });
-        const output = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const model = output.data['application/vnd.jupyter.widget-view+json'] as any;
-        if (!model) {
-            logger(`Error: Model not found to render output ${outputItem.id}`, 'error');
-            // eslint-disable-next-line no-console
-            return console.error('Nothing to render');
-        }
-        /* eslint-disable no-console */
         renderIPyWidget(outputItem.id, model, element, logger);
     } catch (ex) {
         logger(`Error: render output ${outputItem.id} failed ${ex.toString()}`, 'error');
@@ -217,11 +221,12 @@ async function createWidgetView(
     }
 }
 
-function initialize(context?: KernelMessagingApi) {
+let capturedContext: KernelMessagingApi;
+function initialize(JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
     try {
         // Setup the widget manager
-        const postOffice = new PostOffice(context);
-        const mgr = new WidgetManagerComponent(postOffice);
+        const postOffice = new PostOffice(capturedContext);
+        const mgr = new WidgetManagerComponent(postOffice, JupyterLabWidgetManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any)._mgr = mgr;
     } catch (ex) {
@@ -231,21 +236,6 @@ function initialize(context?: KernelMessagingApi) {
     }
 }
 
-function convertVSCodeOutputToExecuteResultOrDisplayData(
-    outputItem: OutputItem
-): nbformat.IExecuteResult | nbformat.IDisplayData {
-    return {
-        data: {
-            [outputItem.mime]: outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : outputItem.text()
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        metadata: (outputItem.metadata as any) || {},
-        execution_count: null,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        output_type: (outputItem.metadata as any)?.outputType || 'execute_result'
-    };
-}
-
 // Create our window exports
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).ipywidgetsKernel = {
@@ -253,21 +243,27 @@ function convertVSCodeOutputToExecuteResultOrDisplayData(
     disposeOutput
 };
 
-let capturedContext: KernelMessagingApi | undefined;
 // To ensure we initialize after the other scripts, wait for them.
-function attemptInitialize(context?: KernelMessagingApi) {
-    capturedContext = capturedContext || context;
+function attemptInitialize(context: KernelMessagingApi) {
     logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
         logMessage('IPyWidget kernel initializing...');
-        initialize(capturedContext);
+        // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
+        if (!JupyterLabWidgetManager) {
+            throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
+        }
+        initialize(JupyterLabWidgetManager);
     } else {
         setTimeout(attemptInitialize, 100);
     }
 }
 
 // Has to be this form for VS code to load it correctly
-export function activate(context?: KernelMessagingApi) {
+export function activate(context: KernelMessagingApi) {
+    capturedContext = context;
     return attemptInitialize(context);
 }

@@ -3,6 +3,7 @@
 // Definitions by: Josh Baldwin <https://github.com/jbaldwin>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.3
+// @ts-nocheck
 
 /*
 SlickGrid-2.1.d.ts may be freely distributed under the MIT license.

@@ -8,18 +8,13 @@ import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferred
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager, IsWebExtension, Resource } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../platform/logging';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { createActiveInterpreterController } from './helpers';
-import {
-    IControllerDefaultService,
-    IControllerLoader,
-    IControllerRegistration,
-    IVSCodeNotebookController
-} from './types';
+import { IControllerDefaultService, IControllerRegistration, IVSCodeNotebookController } from './types';
 
 /**
  * Determines the 'default' kernel for a notebook. Default is what kernel should be used if there's no metadata in a notebook.
@@ -31,14 +26,14 @@ export class ControllerDefaultService implements IControllerDefaultService {
     }
     constructor(
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IControllerLoader) private readonly loader: IControllerLoader,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
-        @inject(IsWebExtension) private readonly isWeb: boolean
+        @inject(IsWebExtension) private readonly isWeb: boolean,
+        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {}
     public async computeDefaultController(
         resource: Resource,
@@ -74,8 +69,10 @@ export class ControllerDefaultService implements IControllerDefaultService {
                 ? PYTHON_LANGUAGE
                 : metadata.language_info.name;
         const kernelName = metadata ? metadata.kernelspec?.name : undefined;
-        // Get all remote kernels
-        await this.loader.loaded;
+        if (this.featureManager.features.kernelPickerType === 'Stable') {
+            // Get all remote kernels
+            await this.registration.loaded;
+        }
         const preferredRemoteKernelId =
             notebook && this.preferredRemoteFinder
                 ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook.uri)

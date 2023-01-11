@@ -16,9 +16,7 @@ import {
 import { ControllerPreferredService } from '../../../../notebooks/controllers/controllerPreferredService';
 import {
     IControllerDefaultService,
-    IControllerLoader,
     IControllerRegistration,
-    IControllerSelection,
     IKernelRankingHelper,
     IVSCodeNotebookController
 } from '../../../../notebooks/controllers/types';
@@ -34,7 +32,6 @@ suite('Preferred Controller', () => {
     let kernelRankHelper: IKernelRankingHelper;
     let preferredControllerService: ControllerPreferredService;
     let controllerRegistrations: IControllerRegistration;
-    let controllerLoader: IControllerLoader;
     let vscNotebook: IVSCodeNotebook;
     let extensionChecker: IPythonExtensionChecker;
     let uriStorage: IJupyterServerUriStorage;
@@ -42,7 +39,6 @@ suite('Preferred Controller', () => {
     let interpreters: IInterpreterService;
     setup(() => {
         controllerRegistrations = mock<IControllerRegistration>();
-        controllerLoader = mock<IControllerLoader>();
         vscNotebook = mock<IVSCodeNotebook>();
         extensionChecker = mock<IPythonExtensionChecker>();
         uriStorage = mock<IJupyterServerUriStorage>();
@@ -53,23 +49,22 @@ suite('Preferred Controller', () => {
         disposables.push(onDidOpenNotebookDocument);
         const onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
         disposables.push(onDidCloseNotebookDocument);
-        const selection = mock<IControllerSelection>();
         when(vscNotebook.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
         when(vscNotebook.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
         when(vscNotebook.notebookDocuments).thenReturn([]);
-        when(selection.getSelected(anything())).thenReturn(undefined);
+        when(controllerRegistrations.getSelected(anything())).thenReturn(undefined);
+        when(interpreters.refreshInterpreters()).thenResolve();
         preferredControllerService = new ControllerPreferredService(
             instance(controllerRegistrations),
-            instance(controllerLoader),
             instance(defaultControllerService),
             instance(interpreters),
             instance(vscNotebook),
-            disposables,
             instance(extensionChecker),
             instance(uriStorage),
             instance(kernelRankHelper),
-            instance(selection)
+            false
         );
+        disposables.push(preferredControllerService);
     });
     teardown(() => {
         disposeAllDisposables(disposables);

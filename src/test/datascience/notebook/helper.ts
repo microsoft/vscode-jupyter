@@ -71,10 +71,7 @@ import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cell
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 import {
-    IControllerLoader,
-    IControllerPreferredService,
     IControllerRegistration,
-    IControllerSelection,
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController
 } from '../../../notebooks/controllers/types';
@@ -106,6 +103,7 @@ import { DisplayOptions } from '../../../kernels/displayOptions';
 import { KernelAPI } from '@jupyterlab/services';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { ControllerPreferredService } from '../../../notebooks/controllers/controllerPreferredService';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -120,9 +118,7 @@ export async function getServices() {
         controllerRegistration: api.serviceContainer.get<IControllerRegistration>(
             IControllerRegistration
         ) as IControllerRegistration,
-        controllerLoader: api.serviceContainer.get<IControllerLoader>(IControllerLoader),
-        controllerSelection: api.serviceContainer.get<IControllerSelection>(IControllerSelection),
-        controllerPreferred: api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService),
+        controllerPreferred: api.serviceContainer.get<ControllerPreferredService>(ControllerPreferredService),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
         interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
         kernelFinder: api.serviceContainer.get<IKernelFinder>(IKernelFinder),
@@ -466,13 +462,10 @@ async function waitForKernelToChangeImpl(
     timeout = defaultNotebookTestTimeout,
     skipAutoSelection?: boolean
 ) {
-    const { controllerLoader, controllerRegistration, controllerSelection } = await getServices();
+    const { controllerRegistration } = await getServices();
 
     // Wait for the active editor to come up
     const editor = await waitForActiveNotebookEditor(notebookEditor);
-
-    // Get the list of NotebookControllers for this document
-    await controllerLoader.loaded;
 
     // Find the kernel id that matches the name we want
     let controller: IVSCodeNotebookController | undefined;
@@ -521,7 +514,7 @@ async function waitForKernelToChangeImpl(
                 .join(', ')}`
         );
 
-        const selectedController = controllerSelection.getSelected(editor.notebook);
+        const selectedController = controllerRegistration.getSelected(editor.notebook);
         if (!selectedController) {
             return false;
         }
@@ -605,7 +598,12 @@ async function getActiveInterpreterKernelConnection() {
                     areInterpreterPathsSame(item.interpreter.uri, interpreter.uri)
             ) as PythonKernelConnectionMetadata,
         defaultNotebookTestTimeout,
-        `Kernel Connection pointing to active interpreter not found.0`
+        () =>
+            `Kernel Connection pointing to active interpreter not found.0, active interpreter
+        ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels ${kernelFinder.kernels
+                .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
+                .join(', ')}`,
+        500
     );
 }
 async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
@@ -624,11 +622,11 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
             ) as RemoteKernelSpecConnectionMetadata,
         defaultNotebookTestTimeout,
         () =>
-            `Kernel Connection pointing to active interpreter not found.1, active interpreter ${getDisplayPath(
-                interpreter?.uri
-            )} for kernels ${kernelFinder.kernels
+            `Kernel Connection pointing to active interpreter not found.1, active interpreter
+            ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels ${kernelFinder.kernels
                 .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
-                .join(', ')}`
+                .join(', ')}`,
+        500
     );
 }
 export async function getDefaultKernelConnection() {
@@ -642,13 +640,10 @@ export function selectDefaultController(notebookEditor: NotebookEditor, timeout 
         : selectActiveInterpreterController(notebookEditor, timeout);
 }
 async function selectActiveInterpreterController(notebookEditor: NotebookEditor, timeout = defaultNotebookTestTimeout) {
-    const { controllerLoader, controllerRegistration, interpreterService, controllerSelection } = await getServices();
+    const { controllerRegistration, interpreterService } = await getServices();
 
     // Get the list of NotebookControllers for this document
-    const [interpreter] = await Promise.all([
-        interpreterService.getActiveInterpreter(notebookEditor.notebook.uri),
-        controllerLoader.loaded
-    ]);
+    const interpreter = await interpreterService.getActiveInterpreter(notebookEditor.notebook.uri);
 
     // Find the kernel id that matches the name we want
     const controller = await waitForCondition(
@@ -669,7 +664,7 @@ async function selectActiveInterpreterController(notebookEditor: NotebookEditor,
         extension: JVSC_EXTENSION_ID
     });
     await waitForCondition(
-        () => controllerSelection.getSelected(notebookEditor.notebook) === controller,
+        () => controllerRegistration.getSelected(notebookEditor.notebook) === controller,
         timeout,
         `Controller ${controller.id} not selected`
     );
@@ -678,7 +673,7 @@ async function selectPythonRemoteKernelConnectionForActiveInterpreter(
     notebookEditor: NotebookEditor,
     timeout = defaultNotebookTestTimeout
 ) {
-    const { controllerRegistration, controllerSelection } = await getServices();
+    const { controllerRegistration } = await getServices();
     const metadata = await getDefaultPythonRemoteKernelConnectionForActiveInterpreter();
 
     // Find the kernel id that matches the name we want
@@ -698,7 +693,7 @@ async function selectPythonRemoteKernelConnectionForActiveInterpreter(
         extension: JVSC_EXTENSION_ID
     });
     await waitForCondition(
-        () => controllerSelection.getSelected(notebookEditor.notebook) === controller,
+        () => controllerRegistration.getSelected(notebookEditor.notebook) === controller,
         timeout,
         `Controller ${controller.id} not selected`
     );
@@ -757,26 +752,17 @@ export async function waitForKernelToGetAutoSelectedImpl(
     skipAutoSelection: boolean = false
 ) {
     traceInfoIfCI('Wait for kernel to get auto selected');
-    const {
-        controllerLoader,
-        controllerRegistration,
-        controllerSelection,
-        controllerPreferred,
-        interpreterService,
-        isWebExtension
-    } = await getServices();
+    const { controllerRegistration, controllerPreferred, interpreterService, isWebExtension } = await getServices();
     const useRemoteKernelSpec = preferRemoteKernelSpec || isWebExtension; // Web is only remote
 
     // Wait for the active editor to come up
     notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
 
-    // Get the list of NotebookControllers for this document
-    await controllerLoader.loaded;
     traceInfoIfCI(`Wait for kernel - got notebook controllers`);
     const notebookControllers = controllerRegistration.registered;
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
-    if (controllerSelection.getSelected(notebookEditor.notebook)) {
+    if (controllerRegistration.getSelected(notebookEditor.notebook)) {
         return;
     }
 

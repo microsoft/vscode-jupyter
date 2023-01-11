@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, extensions } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../activation/types';
+import { IExtensionSyncActivationService } from '../../../activation/types';
 import { PythonExtension, PylanceExtension } from '../../constants';
 import { noop } from '../../utils/misc';
 import { ICommandManager, IWorkspaceService } from '../types';
@@ -14,12 +14,12 @@ import { ICommandManager, IWorkspaceService } from '../types';
  * Allows the jupyter extension to run in a different process than other extensions.
  */
 @injectable()
-export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSingleActivationService {
+export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSyncActivationService {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         this.commandManager.registerCommand('jupyter.runInDedicatedExtensionHost', this.updateAffinity, this);
     }
     private async updateAffinity() {

@@ -8,7 +8,7 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
-import { traceInfo } from '../../../platform/logging';
+import { traceWarning } from '../../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     IJupyterPasswordConnect,
@@ -54,7 +54,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         if (!result) {
             result = this.getNonCachedPasswordConnectionInfo(newUrl).then((value) => {
                 // If we fail to get a valid password connect info, don't save the value
-                traceInfo(`Password for ${newUrl} was invalid.`);
+                traceWarning(`Password for ${newUrl} was invalid.`);
                 if (!value) {
                     this.savedConnectInfo.delete(newUrl);
                 }

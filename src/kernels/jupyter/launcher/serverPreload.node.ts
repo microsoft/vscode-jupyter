@@ -4,7 +4,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
@@ -28,7 +28,7 @@ const LastNotebookCreatedKey = 'last-notebook-created';
  * Class used for preloading a kernel. Makes first run of a kernel faster as it loads as soon as the extension does.
  */
 @injectable()
-export class ServerPreload implements IExtensionSingleActivationService {
+export class ServerPreload implements IExtensionSyncActivationService {
     constructor(
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -41,7 +41,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
     ) {
         notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this), this, disposables);
     }
-    public activate(): Promise<void> {
+    public activate() {
         // This is the list of things that should cause us to start a local server
         // 1) Notebook is opened
         // 2) Notebook was opened in the past 7 days
@@ -51,9 +51,6 @@ export class ServerPreload implements IExtensionSingleActivationService {
         this.checkDateForServerStart();
 
         this.disposables.push(this.kernelProvider.onDidStartKernel(this.kernelStarted, this));
-
-        // Don't hold up activation though
-        return Promise.resolve();
     }
 
     private get lastNotebookCreated() {

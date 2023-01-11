@@ -79,7 +79,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
 
         try {
             const kernelConnectionProvided = !!kernelConnection;
-            traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);
+            traceVerbose(`Computing working directory for resource '${getDisplayPath(resource)}'`);
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;

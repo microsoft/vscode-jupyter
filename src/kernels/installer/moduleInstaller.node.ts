@@ -3,7 +3,7 @@
 
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { traceInfo } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
@@ -80,7 +80,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 }
                 try {
                     const results = await proc.shellExec(args.args.join(' '), { cwd: args.cwd });
-                    traceInfo(results.stdout);
+                    traceVerbose(results.stdout);
                     deferred.resolve();
                 } catch (ex) {
                     deferred.reject(ex);
@@ -113,15 +113,18 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 });
             }
             let lastStdErr: string | undefined;
+            const ticker = ['', '.', '..', '...'];
+            let counter = 0;
             if (observable) {
                 observable.out.subscribe({
                     next: (output) => {
+                        const suffix = ticker[counter % 4];
+                        const trimmedOutput = output.out.trim();
+                        counter += 1;
                         const message =
-                            output.out.length > 100
-                                ? `${output.out.substring(0, 50)}...${output.out.substring(output.out.length - 50)}`
-                                : output.out;
+                            trimmedOutput.length > 30 ? `${trimmedOutput.substring(0, 30)}${suffix}` : trimmedOutput;
                         progress.report({ message });
-                        traceInfo(output.out);
+                        traceVerbose(output.out);
                         if (output.source === 'stderr') {
                             lastStdErr = output.out;
                         }

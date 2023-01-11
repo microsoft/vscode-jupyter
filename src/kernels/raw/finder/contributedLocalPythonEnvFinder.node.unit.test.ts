@@ -7,18 +7,22 @@ import { instance, mock, when } from 'ts-mockito';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable, IExtensions } from '../../../platform/common/types';
+import { IDisposable, IExtensions, IFeaturesManager } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { createEventHandler } from '../../../test/common';
 import { KernelFinder } from '../../kernelFinder';
-import { LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
+import {
+    LocalKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../types';
 import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 
 suite('Contributed Python Kernel Finder', () => {
     let finder: ContributedLocalPythonEnvFinder;
     const disposables: IDisposable[] = [];
-    let pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
+    let pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>;
     let kernelFinder: KernelFinder;
     let extensionChecker: IPythonExtensionChecker;
     let interpreterService: IInterpreterService;
@@ -68,7 +72,7 @@ suite('Contributed Python Kernel Finder', () => {
         }
     });
     setup(() => {
-        pythonKernelFinder = mock<LocalPythonAndRelatedNonPythonKernelSpecFinder>();
+        pythonKernelFinder = mock<ILocalKernelFinder<LocalKernelConnectionMetadata>>();
         kernelFinder = mock<KernelFinder>();
         extensionChecker = mock<IPythonExtensionChecker>();
         interpreterService = mock<IInterpreterService>();
@@ -90,7 +94,8 @@ suite('Contributed Python Kernel Finder', () => {
         when(pythonKernelFinder.status).thenReturn('idle');
         when(pythonKernelFinder.onDidChangeKernels).thenReturn(onDidChangePythonKernels.event);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-
+        const featuresManager = mock<IFeaturesManager>();
+        when(featuresManager.features).thenReturn({ kernelPickerType: 'Insiders' });
         finder = new ContributedLocalPythonEnvFinder(
             instance(pythonKernelFinder),
             instance(kernelFinder),

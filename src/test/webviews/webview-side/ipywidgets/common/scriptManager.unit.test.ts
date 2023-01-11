@@ -9,10 +9,10 @@ import { Disposable } from 'vscode';
 import { disposeAllDisposables } from '../../../../../platform/common/helpers';
 import { IDisposable } from '../../../../../platform/common/types';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../../messageTypes';
-import { scriptsAlreadyRegisteredInRequireJs } from '../../../../../webviews/webview-side/ipywidgets/common/requirejsRegistry';
-import { ScriptManager } from '../../../../../webviews/webview-side/ipywidgets/common/scriptManager';
 import { IMessageHandler, PostOffice } from '../../../../../webviews/webview-side/react-common/postOffice';
 import { sleep } from '../../../../core';
+import { scriptsAlreadyRegisteredInRequireJs } from '../../../../../webviews/webview-side/ipywidgets/kernel/requirejsRegistry';
+import { ScriptManager } from '../../../../../webviews/webview-side/ipywidgets/kernel/scriptManager';
 
 suite('IPyWidget Script Manager', () => {
     let scriptManager: ScriptManager;

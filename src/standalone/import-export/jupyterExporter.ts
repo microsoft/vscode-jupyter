@@ -41,7 +41,7 @@ export class JupyterExporter implements INotebookExporter {
 
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const contents = JSON.stringify(notebook);
+            const contents = JSON.stringify(notebook, undefined, 1);
             await this.fileSystem.writeFile(Uri.file(file), contents);
             if (!showOpenPrompt) {
                 return;

@@ -4,7 +4,7 @@
 'use strict';
 
 import { injectable, inject, named } from 'inversify';
-import { Memento } from 'vscode';
+import { Disposable, Memento } from 'vscode';
 import { IKernelFinder, IKernelProvider, INotebookProvider } from '../../types';
 import {
     GLOBAL_MEMENTO,
@@ -23,7 +23,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import * as localize from '../../../platform/common/utils/localize';
@@ -190,8 +190,9 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
 
 // This class creates RemoteKernelFinders for all registered Jupyter Server URIs
 @injectable()
-export class RemoteKernelFinderController implements IExtensionSingleActivationService {
+export class RemoteKernelFinderController implements IExtensionSyncActivationService {
     private _strategy: IRemoteKernelFinderRegistrationStrategy;
+    private _localDisposables: Disposable[] = [];
 
     constructor(
         @inject(IJupyterSessionManagerFactory)
@@ -210,7 +211,28 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
     ) {
         this._strategy = this.getStrategy();
-        this.disposables.push(this._strategy);
+        this.disposables.push(this);
+
+        const updatePerFeature = (skipActivation: boolean) => {
+            this._strategy?.dispose();
+            this._localDisposables.forEach((d) => d.dispose());
+            this._localDisposables = [];
+
+            this._strategy = this.getStrategy();
+
+            if (!skipActivation) {
+                this._strategy.activate().then(noop, noop);
+            }
+        };
+
+        this.disposables.push(this.featuresManager.onDidChangeFeatures(() => updatePerFeature(false)));
+
+        updatePerFeature(true);
+    }
+
+    dispose() {
+        this._strategy?.dispose();
+        this._localDisposables.forEach((d) => d.dispose());
     }
 
     private getStrategy(): IRemoteKernelFinderRegistrationStrategy {
@@ -224,7 +246,7 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,
-                this.disposables,
+                this._localDisposables,
                 this.kernelProvider,
                 this.extensions
             );
@@ -238,14 +260,14 @@ export class RemoteKernelFinderController implements IExtensionSingleActivationS
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,
-                this.disposables,
+                this._localDisposables,
                 this.kernelProvider,
                 this.extensions
             );
         }
     }
 
-    async activate(): Promise<void> {
+    activate() {
         this._strategy.activate().then(noop, noop);
     }
 }

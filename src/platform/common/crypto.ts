@@ -17,16 +17,16 @@ const computedHashes: Record<string, string> = {};
 let stopStoringHashes = false;
 
 let cryptoProvider: Crypto;
-declare var importScripts: Function | undefined;
+declare var WorkerGlobalScope: Function | undefined;
 // Web
 if (typeof window === 'object') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cryptoProvider = (window as any).crypto;
 }
 // Web worker
-else if (typeof importScripts === 'function') {
+else if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    cryptoProvider = (importScripts as any).crypto;
+    cryptoProvider = self.crypto;
 }
 // Node
 else {

@@ -15,7 +15,7 @@ import {
     Uri
 } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -33,7 +33,7 @@ import { traceInfo } from '../../platform/logging';
 import { ResourceSet } from '../../platform/vscode-path/map';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IControllerLoader, IControllerSelection } from '../controllers/types';
+import { IControllerRegistration } from '../controllers/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
 import { DebugCellController } from './controllers/debugCellController';
 import { RestartController } from './controllers/restartController';
@@ -50,7 +50,7 @@ import { KernelDebugAdapter } from './kernelDebugAdapter';
 @injectable()
 export class DebuggingManager
     extends DebuggingManagerBase
-    implements IExtensionSingleActivationService, INotebookDebuggingManager
+    implements IExtensionSyncActivationService, INotebookDebuggingManager
 {
     private runByLineCells: ContextKey<Uri[]>;
     private runByLineDocuments: ContextKey<Uri[]>;
@@ -59,8 +59,7 @@ export class DebuggingManager
 
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(IControllerLoader) controllerLoader: IControllerLoader,
-        @inject(IControllerSelection) controllerSelection: IControllerSelection,
+        @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
@@ -69,22 +68,14 @@ export class DebuggingManager
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(
-            kernelProvider,
-            controllerLoader,
-            controllerSelection,
-            commandManager,
-            appShell,
-            vscNotebook,
-            serviceContainer
-        );
+        super(kernelProvider, controllerRegistration, commandManager, appShell, vscNotebook, serviceContainer);
         this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells, commandManager);
         this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments, commandManager);
         this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);
     }
 
-    public override async activate() {
-        await super.activate();
+    public override activate() {
+        super.activate();
         this.disposables.push(
             // factory for kernel debug adapters
             debug.registerDebugAdapterDescriptorFactory(pythonKernelDebugAdapter, {

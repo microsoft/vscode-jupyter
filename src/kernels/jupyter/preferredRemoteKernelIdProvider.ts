@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep from 'lodash/cloneDeep';
 import { Memento, Uri } from 'vscode';
-import { traceInfo, traceVerbose } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
@@ -36,7 +36,7 @@ export class PreferredRemoteKernelIdProvider {
             // Not using a map as we're only going to store the last 40 items.
             const fileHash = await this.crypto.createHash(uri.toString());
             const entry = list.find((l) => l.fileHash === fileHash);
-            traceInfo(`Preferred Remote kernel for ${getDisplayPath(uri)} is ${entry?.kernelId}`);
+            traceVerbose(`Preferred Remote kernel for ${getDisplayPath(uri)} is ${entry?.kernelId}`);
             return entry?.kernelId;
         }
     }

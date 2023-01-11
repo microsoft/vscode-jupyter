@@ -697,7 +697,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(
                 result,
                 [
-                    "Running cells with 'Hello (Some Path)' requires ipykernel package.",
+                    "Running cells with 'Hello (Some Path)' requires the ipykernel package.",
                     "Run the following command to install 'ipykernel' into the Python environment. ",
                     `Command: 'conda install -n condaEnv1 ipykernel --update-deps --force-reinstall'`
                 ].join('\n')
@@ -728,7 +728,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(
                 result,
                 [
-                    "Running cells with 'Hello (Some Path)' requires ipykernel package.",
+                    "Running cells with 'Hello (Some Path)' requires the ipykernel package.",
                     "Run the following command to install 'ipykernel' into the Python environment. ",
                     command
                 ].join('\n')

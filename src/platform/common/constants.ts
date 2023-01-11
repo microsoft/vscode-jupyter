@@ -103,12 +103,13 @@ export namespace CodeSnippets {
     export const ChangeDirectory = [
         '{0}',
         '{1}',
-        'import os',
+        'import os as _VSCODE_os',
         'try:',
-        "\tos.chdir(os.path.join(os.getcwd(), '{2}'))",
-        '\tprint(os.getcwd())',
+        "\t_VSCODE_os.chdir(_VSCODE_os.path.join(_VSCODE_os.getcwd(), '{2}'))",
+        '\tprint(_VSCODE_os.getcwd())',
         'except:',
         '\tpass',
+        'del _VSCODE_os',
         ''
     ];
     export const ChangeDirectoryCommentIdentifier = '# ms-toolsai.jupyter added'; // Not translated so can compare.
@@ -116,7 +117,7 @@ export namespace CodeSnippets {
     export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n`;
     export const AppendSVGFigureFormat = `import matplotlib_inline.backend_inline\n${Identifiers.MatplotLibFigureFormats} = matplotlib_inline.backend_inline.InlineBackend.instance().figure_formats\n${Identifiers.MatplotLibFigureFormats}.add('svg')\nmatplotlib_inline.backend_inline.set_matplotlib_formats(*${Identifiers.MatplotLibFigureFormats})`;
     export const UpdateCWDAndPath =
-        'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
+        'import os as _VSCODE_os\nimport sys as _VSCODE_sys\n%cd "{0}"\nif _VSCODE_os.getcwd() not in _VSCODE_sys.path:\n    _VSCODE_sys.path.insert(0, _VSCODE_os.getcwd())\n\ndel _VSCODE_sys\ndel _VSCODE_os';
     export const DisableJedi = '%config Completer.use_jedi = False';
 }
 
@@ -213,13 +214,10 @@ export namespace Commands {
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
     export const SelectNativeJupyterUriFromToolBar = 'jupyter.selectNativeJupyterUriFromToolBar';
-    export const SelectJupyterCommandLine = 'jupyter.selectjupytercommandline';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel';
-    export const NotebookEditorUndoCells = 'jupyter.notebookeditor.undocells';
-    export const NotebookEditorRedoCells = 'jupyter.notebookeditor.redocells';
     export const NotebookEditorRemoveAllCells = 'jupyter.notebookeditor.removeallcells';
     export const NotebookEditorRestartKernel = 'jupyter.notebookeditor.restartkernel';
     export const NotebookEditorRunAllCells = 'jupyter.notebookeditor.runallcells';
@@ -284,6 +282,7 @@ export namespace Commands {
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
+    export const SwitchToRemoteKernels = 'jupyter.switchToRemoteKernels';
 }
 
 export namespace CodeLensCommands {
@@ -297,13 +296,9 @@ export namespace CodeLensCommands {
 
 export namespace EditorContexts {
     export const HasCodeCells = 'jupyter.hascodecells';
-    export const HaveInteractiveCells = 'jupyter.haveinteractivecells';
-    export const HaveRedoableCells = 'jupyter.haveredoablecells';
-    export const HaveInteractive = 'jupyter.haveinteractive';
     export const IsInteractiveActive = 'jupyter.isinteractiveactive';
     export const OwnsSelection = 'jupyter.ownsSelection';
     export const HaveNativeCells = 'jupyter.havenativecells';
-    export const HaveNativeRedoableCells = 'jupyter.havenativeredoablecells';
     export const HaveNative = 'jupyter.havenative';
     export const IsNativeActive = 'jupyter.isnativeactive';
     export const IsInteractiveOrNativeActive = 'jupyter.isinteractiveornativeactive';
@@ -402,6 +397,7 @@ export enum Telemetry {
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
     FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
+    FailedToCreateNotebookCellExecution = 'DATASCIENCE.FAILED_TO_CREATE_CELL_EXECUTION',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     ConnectRemoteJupyterViaLocalHost = 'DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST',
@@ -451,8 +447,10 @@ export enum Telemetry {
     VariableExplorerFetchTime = 'DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME',
     FailedToUpdateKernelSpec = 'DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC',
     CellOutputMimeType = 'DS_INTERNAL.CELL_OUTPUT_MIME_TYPE',
+    JupyterApiUsage = 'DATASCIENCE.JUPYTER_API_USAGE',
     JupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_KERNEL_API_USAGE',
     JupyterKernelApiAccess = 'DATASCIENCE.JUPYTER_KERNEL_API_ACCESS',
+    JupyterKernelSpecEnumeration = 'DATASCIENCE.JUPYTER_KERNEL_SPEC_FETCH_FAILURE',
     JupyterKernelHiddenViaFilter = 'DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER',
     JupyterKernelFilterUsed = 'DATASCIENCE.JUPYTER_KERNEL_FILTER_USED',
     JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
@@ -470,6 +468,7 @@ export enum Telemetry {
     KernelSpecLanguage = 'DATASCIENCE.KERNEL_SPEC_LANGUAGE',
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
     KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
+    AmbiguousGlobalKernelSpec = 'GLOBAL_PYTHON_KERNELSPEC',
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
@@ -531,6 +530,7 @@ export enum Telemetry {
      */
     DataViewerSliceOperation = 'DATASCIENCE.DATA_VIEWER_SLICE_OPERATION',
     RecommendExtension = 'DATASCIENCE.RECOMMENT_EXTENSION',
+    CreatePythonEnvironment = 'DATASCIENCE.CREATE_PYTHON_ENVIRONMENT',
     // Sent when we get a jupyter execute_request error reply when running some part of our internal variable fetching code
     PythonVariableFetchingCodeFailure = 'DATASCIENCE.PYTHON_VARIABLE_FETCHING_CODE_FAILURE',
     // Sent when we get a jupyter execute_request error reply when running some part of interactive window debug setup code

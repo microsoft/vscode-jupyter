@@ -39,9 +39,21 @@ suite('Preferred Kernel Connection', () => {
     let notebook: NotebookDocument;
     let preferredRemoteKernelProvider: PreferredRemoteKernelIdProvider;
     let cancellation: CancellationTokenSource;
-    let onDidChangeRemoteKernels: EventEmitter<void>;
-    let onDidChangeLocalKernels: EventEmitter<void>;
-    let onDidChangePythonKernels: EventEmitter<void>;
+    let onDidChangeRemoteKernels: EventEmitter<{
+        added?: RemoteKernelConnectionMetadata[];
+        removed?: RemoteKernelConnectionMetadata[];
+        updated?: RemoteKernelConnectionMetadata[];
+    }>;
+    let onDidChangeLocalKernels: EventEmitter<{
+        added?: LocalKernelConnectionMetadata[];
+        removed?: LocalKernelConnectionMetadata[];
+        updated?: LocalKernelConnectionMetadata[];
+    }>;
+    let onDidChangePythonKernels: EventEmitter<{
+        added?: PythonKernelConnectionMetadata[];
+        removed?: PythonKernelConnectionMetadata[];
+        updated?: PythonKernelConnectionMetadata[];
+    }>;
     let interpreterService: IInterpreterService;
     const remoteLiveKernelConnection1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: '',
@@ -133,9 +145,21 @@ suite('Preferred Kernel Connection', () => {
         localPythonEnvFinder = mock<IContributedKernelFinder<PythonKernelConnectionMetadata>>();
         interpreterService = mock<IInterpreterService>();
 
-        onDidChangeRemoteKernels = new EventEmitter<void>();
-        onDidChangeLocalKernels = new EventEmitter<void>();
-        onDidChangePythonKernels = new EventEmitter<void>();
+        onDidChangeRemoteKernels = new EventEmitter<{
+            added?: RemoteKernelConnectionMetadata[];
+            removed?: RemoteKernelConnectionMetadata[];
+            updated?: RemoteKernelConnectionMetadata[];
+        }>();
+        onDidChangeLocalKernels = new EventEmitter<{
+            added?: LocalKernelConnectionMetadata[];
+            removed?: LocalKernelConnectionMetadata[];
+            updated?: LocalKernelConnectionMetadata[];
+        }>();
+        onDidChangePythonKernels = new EventEmitter<{
+            added?: PythonKernelConnectionMetadata[];
+            removed?: PythonKernelConnectionMetadata[];
+            updated?: PythonKernelConnectionMetadata[];
+        }>();
         disposables.push(onDidChangeRemoteKernels);
         disposables.push(onDidChangeLocalKernels);
         disposables.push(onDidChangePythonKernels);

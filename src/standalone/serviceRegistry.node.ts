@@ -25,14 +25,14 @@ import { ApiAccessService } from './api/apiAccessService';
 import { WorkspaceActivation } from './activation/workspaceActivation.node';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
-import { IExtensionContext, IFeaturesManager } from '../platform/common/types';
+import { IExtensionContext } from '../platform/common/types';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         WorkspaceActivation
@@ -41,30 +41,27 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         ExtensionRecommendationService
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         ActiveEditorContextService
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        AmlComputeContext
-    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, AmlComputeContext);
     serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ImportTracker);
 
     // Import/Export
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         ExportCommandRegistry
     );
 
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
 
     serviceManager.addSingleton<ISurveyBanner>(ISurveyBanner, DataScienceSurveyBanner);
-    serviceManager.addBinding(ISurveyBanner, IExtensionSingleActivationService);
+    serviceManager.addBinding(ISurveyBanner, IExtensionSyncActivationService);
     // Activation Manager
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
 
@@ -87,12 +84,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     // Dev Tools
     registerDevToolTypes(context, isDevMode);
 
-    const featureManager = serviceManager.get<IFeaturesManager>(IFeaturesManager);
-    if (featureManager.features.kernelPickerType === 'Insiders') {
-        // User jupyter server url provider
-        serviceManager.addSingleton<IExtensionSyncActivationService>(
-            IExtensionSyncActivationService,
-            UserJupyterServerUrlProvider
-        );
-    }
+    // User jupyter server url provider
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        UserJupyterServerUrlProvider
+    );
 }

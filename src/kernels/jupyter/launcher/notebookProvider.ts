@@ -18,6 +18,7 @@ import { Cancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
 import { IJupyterNotebookProvider, IJupyterServerUriStorage } from '../types';
+import { PythonExtensionNotInstalledError } from '../../../platform/errors/pythonExtNotInstalledError';
 
 /**
  * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
@@ -56,7 +57,7 @@ export class NotebookProvider implements INotebookProvider {
             if (!this.startupUi.disableUI) {
                 await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
             }
-            throw new Error('Python Extension is not installed');
+            throw new PythonExtensionNotInstalledError();
         }
     }
     public async create(options: NotebookCreationOptions): Promise<IKernelConnectionSession> {

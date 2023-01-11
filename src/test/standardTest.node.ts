@@ -153,6 +153,7 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
+            .concat(['--disable-extension', 'ms-python.isort']) // We don't need this, also has a lot of errors on CI and floods CI logs unnecessarily.
             .concat(['--extensions-dir', extensionsDir])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
