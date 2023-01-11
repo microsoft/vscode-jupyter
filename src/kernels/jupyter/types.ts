@@ -203,6 +203,10 @@ export interface IJupyterServerUri {
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
     workingDirectory?: string;
+    /**
+     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
+     */
+    webSocketProtocols?: string[];
 }
 
 export type JupyterServerUriHandle = string;
@@ -343,7 +347,8 @@ export interface IJupyterRequestCreator {
     getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,
-        getAuthHeaders?: () => any
+        getAuthHeaders?: () => any,
+        getWebSocketProtocols?: () => string | string[] | undefined
     ): ClassType<WebSocket>;
     getWebsocket(id: string): IKernelSocket | undefined;
     getRequestInit(): RequestInit;

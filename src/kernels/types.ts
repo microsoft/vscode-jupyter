@@ -511,6 +511,10 @@ export interface IJupyterConnection extends Disposable {
     readonly url: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getAuthHeader?(): any; // Snould be a json object
+    /**
+     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
+     */
+    getWebsocketProtocols?(): string[];
     readonly workingDirectory?: string;
 }
 
