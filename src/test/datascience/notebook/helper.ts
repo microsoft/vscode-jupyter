@@ -71,8 +71,6 @@ import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cell
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 import {
-    IControllerLoader,
-    IControllerPreferredService,
     IControllerRegistration,
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController
@@ -105,6 +103,7 @@ import { DisplayOptions } from '../../../kernels/displayOptions';
 import { KernelAPI } from '@jupyterlab/services';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { isWeb } from '../../../platform/common/utils/misc';
+import { ControllerPreferredService } from '../../../notebooks/controllers/controllerPreferredService';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -119,8 +118,7 @@ export async function getServices() {
         controllerRegistration: api.serviceContainer.get<IControllerRegistration>(
             IControllerRegistration
         ) as IControllerRegistration,
-        controllerLoader: api.serviceContainer.get<IControllerLoader>(IControllerLoader),
-        controllerPreferred: api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService),
+        controllerPreferred: api.serviceContainer.get<ControllerPreferredService>(ControllerPreferredService),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
         interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
         kernelFinder: api.serviceContainer.get<IKernelFinder>(IKernelFinder),

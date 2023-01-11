@@ -21,9 +21,7 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
         searchForJupyter: true,
-        allowInput: true,
         showCellInputCode: true,
-        maxOutputSize: 400,
         enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
@@ -55,7 +53,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
-        jupyterCommandLineArguments: [],
         widgetScriptSources: []
     };
 

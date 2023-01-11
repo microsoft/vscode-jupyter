@@ -58,8 +58,6 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         jupyterInterruptTimeout: 10000,
         searchForJupyter: true,
         showCellInputCode: true,
-        allowInput: true,
-        maxOutputSize: 400,
         enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,

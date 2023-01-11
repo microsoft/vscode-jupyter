@@ -62,9 +62,13 @@ interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
 }
 
 interface KernelProviderItemsQuickPickItem extends QuickPickItem {
+    /**
+     * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+     */
+    default?: boolean;
     type: KernelFinderEntityQuickPickType.UriProviderQuickPick;
     provider: IJupyterUriProvider;
-    originalItem: QuickPickItem;
+    originalItem: QuickPickItem & { default?: boolean };
 }
 
 // Provides the UI to select a Kernel Source for a given notebook document
@@ -234,28 +238,31 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
 
         const onDidChangeItems = new EventEmitter<typeof items>();
-        const selectedSource = await multiStep.showQuickPick<
-            ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem,
-            IQuickPickParameters<
-                ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem
-            >
-        >({
-            items: items,
-            placeholder: '',
-            title: 'Select a Jupyter Server',
-            supportBackInFirstStep: true,
-            onDidTriggerItemButton: async (e) => {
-                if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
-                    if (provider.removeHandle) {
-                        await provider.removeHandle(e.item.idAndHandle.handle);
-                        // the serverUriStorage should be refreshed after the handle removal
-                        items.splice(items.indexOf(e.item), 1);
-                        onDidChangeItems.fire(items.concat([]));
-                    }
-                }
-            },
-            onDidChangeItems: onDidChangeItems.event
-        });
+        const defaultSelection = items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
+        const selectedSource = defaultSelection
+            ? defaultSelection
+            : await multiStep.showQuickPick<
+                  ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem,
+                  IQuickPickParameters<
+                      ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem
+                  >
+              >({
+                  items: items,
+                  placeholder: '',
+                  title: 'Select a Jupyter Server',
+                  supportBackInFirstStep: true,
+                  onDidTriggerItemButton: async (e) => {
+                      if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
+                          if (provider.removeHandle) {
+                              await provider.removeHandle(e.item.idAndHandle.handle);
+                              // the serverUriStorage should be refreshed after the handle removal
+                              items.splice(items.indexOf(e.item), 1);
+                              onDidChangeItems.fire(items.concat([]));
+                          }
+                      }
+                  },
+                  onDidChangeItems: onDidChangeItems.event
+              });
 
         if (token.isCancellationRequested) {
             return;
@@ -270,7 +277,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         const ret = await this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
                         return ret;
                     } catch (ex) {
-                        if (ex === InputFlowAction.back) {
+                        if (ex === InputFlowAction.back && !defaultSelection) {
                             return this.getRemoteServersFromProvider(provider, token, multiStep, state);
                         } else {
                             throw ex;

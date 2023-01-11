@@ -20,7 +20,7 @@ class PythonEnvironment {
             getObservablePythonArgv(python: Uri): string[];
             isValidExecutable(python: Uri): Promise<boolean>;
             // from ProcessService:
-            exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
+            exec(file: string, args: string[], options?: SpawnOptions): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
         }
     ) {}
@@ -45,15 +45,15 @@ class PythonEnvironment {
 
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         // prettier-ignore
-        const [args,] = internalPython.isModuleInstalled(moduleName);
+        const [args, parse] = internalPython.isModuleInstalled(moduleName);
         const info = this.getExecutionInfo(args);
         try {
-            await this.deps.exec(info.command, info.args);
+            const output = await this.deps.exec(info.command, info.args, { throwOnStdErr: false });
+            return parse(output.stdout);
         } catch (ex) {
             traceWarning(`Module ${moduleName} not installed in environment ${this.interpreter.id}`, ex);
             return false;
         }
-        return true;
     }
 }
 
@@ -69,7 +69,8 @@ function createDeps(
         getPythonArgv: (python: Uri) => pythonArgv || [getFilePath(python)],
         getObservablePythonArgv: (python: Uri) => observablePythonArgv || [getFilePath(python)],
         isValidExecutable,
-        exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
+        exec: async (cmd: string, args: string[], options: SpawnOptions | undefined) =>
+            exec(cmd, args, Object.assign({ throwOnStdErr: true }, options || {})),
         shellExec: async (text: string, timeout: number) => shellExec(text, { timeout })
     };
 }

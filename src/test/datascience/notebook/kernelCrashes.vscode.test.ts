@@ -17,7 +17,13 @@ import {
     IWorkspaceService
 } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
-import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
+import {
+    IBrowserService,
+    IConfigurationService,
+    IDisposable,
+    IExtensionContext,
+    IFeaturesManager
+} from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import {
@@ -108,6 +114,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const uriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
             const browser = api.serviceContainer.get<IBrowserService>(IBrowserService);
             const platform = api.serviceContainer.get<IPlatformService>(IPlatformService);
+            const featureManager = api.serviceContainer.get<IFeaturesManager>(IFeaturesManager);
             kernelConnectionMetadata = await getDefaultKernelConnection();
             const displayDataProvider = new ConnectionDisplayDataProvider(
                 workspaceService,
@@ -161,7 +168,8 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 browser,
                 extensionChecker,
                 api.serviceContainer,
-                displayDataProvider
+                displayDataProvider,
+                featureManager
             );
             disposables.push(interpreterController);
 

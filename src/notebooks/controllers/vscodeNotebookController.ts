@@ -43,7 +43,8 @@ import {
     IDisplayOptions,
     IDisposable,
     IDisposableRegistry,
-    IExtensionContext
+    IExtensionContext,
+    IFeaturesManager
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
@@ -145,6 +146,47 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     private readonly associatedDocuments = new WeakMap<NotebookDocument, Promise<void>>();
+    public static create(
+        kernelConnection: KernelConnectionMetadata,
+        id: string,
+        _viewType: string,
+        notebookApi: IVSCodeNotebook,
+        commandManager: ICommandManager,
+        kernelProvider: IKernelProvider,
+        context: IExtensionContext,
+        disposableRegistry: IDisposableRegistry,
+        languageService: NotebookCellLanguageService,
+        workspace: IWorkspaceService,
+        configuration: IConfigurationService,
+        documentManager: IDocumentManager,
+        appShell: IApplicationShell,
+        browser: IBrowserService,
+        extensionChecker: IPythonExtensionChecker,
+        serviceContainer: IServiceContainer,
+        displayDataProvider: ConnectionDisplayDataProvider,
+        featureManager: IFeaturesManager
+    ): IVSCodeNotebookController {
+        return new VSCodeNotebookController(
+            kernelConnection,
+            id,
+            _viewType,
+            notebookApi,
+            commandManager,
+            kernelProvider,
+            context,
+            disposableRegistry,
+            languageService,
+            workspace,
+            configuration,
+            documentManager,
+            appShell,
+            browser,
+            extensionChecker,
+            serviceContainer,
+            displayDataProvider,
+            featureManager
+        );
+    }
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -162,7 +204,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: ConnectionDisplayDataProvider
+        private readonly displayDataProvider: ConnectionDisplayDataProvider,
+        private readonly featureManager: IFeaturesManager
     ) {
         disposableRegistry.push(this);
         displayDataProvider.onDidChange(
@@ -584,6 +627,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 return;
             }
             await updateNotebookDocumentMetadata(
+                this.featureManager,
                 doc,
                 this.documentManager,
                 kernel.kernelConnectionMetadata,
@@ -628,7 +672,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
 
         // Before we start the notebook, make sure the metadata is set to this new kernel.
-        await updateNotebookDocumentMetadata(document, this.documentManager, selectedKernelConnectionMetadata);
+        await updateNotebookDocumentMetadata(
+            this.featureManager,
+            document,
+            this.documentManager,
+            selectedKernelConnectionMetadata
+        );
 
         if (document.notebookType === InteractiveWindowView) {
             // Possible its an interactive window, in that case we'll create the kernel manually.
@@ -665,13 +714,14 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 }
 
 async function updateNotebookDocumentMetadata(
+    featureManager: IFeaturesManager,
     document: NotebookDocument,
     editManager: IDocumentManager,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
     let metadata = getNotebookMetadata(document) || { orig_nbformat: 3 };
-    const { changed } = await updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
+    const { changed } = await updateNotebookMetadata(featureManager, metadata, kernelConnection, kernelInfo);
     if (changed) {
         const edit = new WorkspaceEdit();
         // Create a clone.
