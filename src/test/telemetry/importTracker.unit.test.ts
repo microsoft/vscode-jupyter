@@ -118,7 +118,7 @@ suite('Import Tracker', async () => {
         setUnitTestExecution(false);
 
         rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         vscNb = mock<IVSCodeNotebook>();
         onDidOpenNbEvent = new EventEmitter<NotebookDocument>();

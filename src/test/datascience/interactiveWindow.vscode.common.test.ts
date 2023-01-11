@@ -446,8 +446,8 @@ ${actualCode}
         const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
         // Should be three hrefs for the two lines in the call stack
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
-        assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
+        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm)!;
+        assert.equal(hrefs.length, 4, '4 hrefs not found in traceback');
         assert.ok(hrefs[0].endsWith("line=3'"), `Wrong first ref line : ${hrefs[0]}`);
         assert.ok(hrefs[1].endsWith("line=4'"), `Wrong second ref line : ${hrefs[1]}`);
         assert.ok(hrefs[2].endsWith("line=1'"), `Wrong last ref line : ${hrefs[2]}`);
@@ -482,11 +482,11 @@ ${actualCode}
         const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
         // Should be more than 3 hrefs if ipython 8 or not
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
+        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm)!;
         if (ipythonVersion >= 8) {
-            assert.isAtLeast(hrefs?.length, 4, 'Wrong number of hrefs found in traceback for IPython 8');
+            assert.isAtLeast(hrefs.length, 4, 'Wrong number of hrefs found in traceback for IPython 8');
         } else {
-            assert.isAtLeast(hrefs?.length, 1, 'Wrong number of hrefs found in traceback for IPython 7 or earlier');
+            assert.isAtLeast(hrefs.length, 1, 'Wrong number of hrefs found in traceback for IPython 7 or earlier');
         }
     });
 

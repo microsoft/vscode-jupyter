@@ -58,7 +58,10 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: 'ts-loader'
+                        loader: 'ts-loader',
+                        options: {
+                            configFile: 'src/tsconfig.extension.node.json'
+                        }
                     }
                 ]
             },
@@ -162,6 +165,10 @@ const config = {
             util: require.resolve('util/')
         }
     },
+    // Uncomment this to not minify chunk file names to easily identify them
+    // optimization: {
+    //     chunkIds: 'named'
+    // },
     output: {
         filename: '[name].node.js',
         path: path.resolve(constants.ExtensionRootDir, 'out'),

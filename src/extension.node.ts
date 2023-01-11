@@ -3,13 +3,8 @@
 
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
-
-// This line should always be right on top.
-/* eslint-disable @typescript-eslint/no-explicit-any */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import './platform/ioc/reflectMetadata';
 
 // Initialize the logger first.
 import './platform/logging';

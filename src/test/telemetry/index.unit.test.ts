@@ -27,6 +27,7 @@ import {
     setUnitTestExecution
 } from '../../platform/common/constants';
 import { sleep } from '../core';
+import { waitForCondition } from '../common';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;
@@ -53,6 +54,26 @@ suite('Telemetry', () => {
             this.sendTelemetryEvent(eventName, properties, measures);
             Reporter.errorProps = errorProps;
         }
+    }
+
+    async function asyncAssertReporterState(
+        expectedEventName: string[],
+        expectedMeasures: any[],
+        expectedProperties: Record<string, string>[]
+    ): Promise<void> {
+        await waitForCondition(
+            async () => {
+                expect(Reporter.eventName).to.deep.equal(expectedEventName);
+                expect(Reporter.measures).to.deep.equal(expectedMeasures);
+                expect(Reporter.properties).to.deep.equal(expectedProperties);
+                return true;
+            },
+            1_000,
+            'Unexpected reporter state'
+        );
+        expect(Reporter.eventName).to.deep.equal(expectedEventName);
+        expect(Reporter.measures).to.deep.equal(expectedMeasures);
+        expect(Reporter.properties).to.deep.equal(expectedProperties);
     }
 
     setup(() => {
@@ -100,9 +121,9 @@ suite('Telemetry', () => {
         });
     });
 
-    test('Send Telemetry', () => {
+    test('Send Telemetry', async () => {
         rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
@@ -111,25 +132,21 @@ suite('Telemetry', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
-        expect(Reporter.eventName).to.deep.equal([eventName]);
-        expect(Reporter.measures).to.deep.equal([measures]);
-        expect(Reporter.properties).to.deep.equal([properties]);
+        await asyncAssertReporterState([eventName], [measures], [properties]);
     });
-    test('Send Telemetry with no properties', () => {
+    test('Send Telemetry with no properties', async () => {
         rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         const eventName = 'Testing';
 
         sendTelemetryEvent(eventName as any);
 
-        expect(Reporter.eventName).to.deep.equal([eventName]);
-        expect(Reporter.measures).to.deep.equal([undefined], 'Measures should be empty');
-        expect(Reporter.properties).to.deep.equal([{}], 'Properties should be empty');
+        await asyncAssertReporterState([eventName], [undefined], [{}]);
     });
-    test('Send Telemetry with shared properties', () => {
+    test('Send Telemetry with shared properties', async () => {
         rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
@@ -141,13 +158,11 @@ suite('Telemetry', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
-        expect(Reporter.eventName).to.deep.equal([eventName]);
-        expect(Reporter.measures).to.deep.equal([measures]);
-        expect(Reporter.properties).to.deep.equal([expectedProperties]);
+        await asyncAssertReporterState([eventName], [measures], [expectedProperties]);
     });
-    test('Shared properties will replace existing ones', () => {
+    test('Shared properties will replace existing ones', async () => {
         rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
@@ -159,14 +174,12 @@ suite('Telemetry', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         sendTelemetryEvent(eventName as any, measures, properties as any);
 
-        expect(Reporter.eventName).to.deep.equal([eventName]);
-        expect(Reporter.measures).to.deep.equal([measures]);
-        expect(Reporter.properties).to.deep.equal([expectedProperties]);
+        await asyncAssertReporterState([eventName], [measures], [expectedProperties]);
     });
     test('Send Error Telemetry', async () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
@@ -213,7 +226,7 @@ suite('Telemetry', () => {
             'at tryOnImmediate (timers.js:751:5)',
             'at processImmediate [as _immediateCallback] (timers.js:722:5)'
         ].join('\n\t');
-        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };

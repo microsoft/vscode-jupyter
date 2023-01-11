@@ -3,20 +3,17 @@
 
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
-
-// This line should always be right on top.
-/* eslint-disable @typescript-eslint/no-explicit-any */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import './platform/ioc/reflectMetadata';
 
 // Naive polyfill for setImmediate as it is required by @jupyterlab/services/lib/kernel/future.js
 // when running in a web worker as it selects either requestAnimationFrame or setImmediate, both of
 // which are not available in a worker in Safari.
 declare var self: {};
 if (typeof requestAnimationFrame === 'undefined' && typeof setImmediate === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (self as any).setImmediate = (cb: (...args: any[]) => any) => setTimeout(cb);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (self as any).clearImmediate = (id: any) => clearTimeout(id);
 }
 

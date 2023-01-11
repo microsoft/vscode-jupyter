@@ -4,14 +4,23 @@
         "baseUrl": "..",
         "rootDir": ".",
         "outDir": "out",
+        "module": "es2020",
+        "moduleResolution": "node",
 
         // Types
         "lib": ["es6", "es2018", "ES2019", "ES2020"],
+        "types": [
+            "webpack-env"
+        ],
     },
     "include": [
-        "./**/*"
+        "./**/*",
+
+        // Include all types outside the type roots manually
+        "../vscode.*"
     ],
     "exclude": [
+        "src/test",
         "webviews/webview-side",
         "**/*.web.ts"
     ]

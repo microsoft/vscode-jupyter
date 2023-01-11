@@ -94,7 +94,7 @@ suite('Telemetry validation @iw', function () {
             const api = await initialize();
             interactiveWindowProvider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
             setTestExecution(false);
-            originalTelemetryReporter = getTelemetryReporter();
+            originalTelemetryReporter = await getTelemetryReporter();
             setTelemetryReporter(testTelemetryReporter);
             traceInfo('Suite Setup (completed)');
         } catch (e) {

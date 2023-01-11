@@ -7,7 +7,6 @@ import * as fsextra from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
-import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
@@ -49,7 +48,6 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
     private static _usedPorts = new Set<number>();
-    private static getPorts = promisify(portfinder.getPorts);
     private portChain: Promise<number[]> | undefined;
     public static get usedPorts(): number[] {
         return Array.from(KernelLauncher._usedPorts);
@@ -279,7 +277,8 @@ export class KernelLauncher implements IKernelLauncher {
 
     static async findNextFreePort(port: number): Promise<number[]> {
         // Then get the next set starting at that point
-        const ports = await KernelLauncher.getPorts(5, { host: '127.0.0.1', port });
+        const getPorts = promisify((await import('portfinder')).getPorts);
+        const ports = await getPorts(5, { host: '127.0.0.1', port });
         if (ports.some((item) => KernelLauncher._usedPorts.has(item))) {
             const maxPort = Math.max(...KernelLauncher._usedPorts, ...ports);
             return KernelLauncher.findNextFreePort(maxPort);
