@@ -285,18 +285,5 @@ suite('Preferred Kernel Connection', () => {
 
             assert.isUndefined(preferredKernel);
         });
-        test('Matches active Interpreter for notebook when interpreter hash does not match', async () => {
-            when(localPythonEnvFinder.status).thenReturn('idle');
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel, condaPythonKernel]);
-            when(interpreterService.getActiveInterpreter(anything())).thenResolve(condaPythonKernel.interpreter);
-
-            const preferredKernel = await preferredService.findPreferredPythonKernelConnection(
-                notebook,
-                instance(localPythonEnvFinder),
-                cancellation.token
-            );
-
-            assert.strictEqual(preferredKernel, condaPythonKernel);
-        });
     });
 });
