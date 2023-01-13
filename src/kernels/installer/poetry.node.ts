@@ -11,7 +11,6 @@ import { StopWatch } from '../../platform/common/utils/stopWatch';
 import {
     getPythonSetting,
     shellExecute,
-    isParentPath,
     pathExistsSync,
     readFileSync,
     getEnvironmentDirFromPath,
@@ -19,6 +18,7 @@ import {
     pathExists
 } from '../../platform/common/platform/fileUtils.node';
 import { isTestExecution } from '../../platform/common/constants';
+import { isParentPath } from '../../platform/common/platform/fileUtils';
 
 /**
  * Global virtual env dir for a project is named as:
