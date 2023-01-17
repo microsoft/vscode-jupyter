@@ -790,10 +790,10 @@ export class InterpreterService implements IInterpreterService {
                             if (e.type === 'remove') {
                                 this._interpreters.delete(e.env.id);
                             }
-                            traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}}'`);
+                            traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             this.populateCachedListOfInterpreters(true).finally(() => {
                                 if (e.type === 'remove') {
-                                    if (this._interpreters.has(e.env.id)) {
+                                    if (!this._interpreters.has(e.env.id)) {
                                         this.triggerEventIfAllowed(this.didChangeInterpreter);
                                         this.triggerEventIfAllowed(this.didChangeInterpreters);
                                         this._onDidRemoveInterpreter.fire({ id: e.env.id });
