@@ -48,6 +48,7 @@ suite('Kernel Selector', () => {
     let onDidChangeProvider: EventEmitter<void>;
     let onDidChangeProviderStatus: EventEmitter<void>;
     let onDidChangeRecommended: EventEmitter<void>;
+    let onDidFailToListKernels: EventEmitter<Error>;
     const disposables: IDisposable[] = [];
     let cancellation: CancellationTokenSource;
     let notebook: NotebookDocument;
@@ -173,10 +174,12 @@ suite('Kernel Selector', () => {
         onDidChangeProviderStatus = new EventEmitter<void>();
         onDidChangeRecommended = new EventEmitter<void>();
         onDidTriggerQuickPickButton = new EventEmitter<QuickInputButton>();
+        onDidFailToListKernels = new EventEmitter<Error>();
         disposables.push(onDidChangeProvider);
         disposables.push(onDidChangeProviderStatus);
         disposables.push(onDidChangeRecommended);
         disposables.push(onDidTriggerQuickPickButton);
+        disposables.push(onDidFailToListKernels);
 
         quickPick = {
             title: '',
@@ -202,6 +205,7 @@ suite('Kernel Selector', () => {
         } as any;
 
         provider = {
+            onDidFailToListKernels: onDidFailToListKernels.event,
             title: '',
             kind: ContributedKernelFinderKind.LocalKernelSpec,
             onDidChange: onDidChangeProvider.event,

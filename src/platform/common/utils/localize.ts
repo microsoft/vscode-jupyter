@@ -661,6 +661,7 @@ export namespace DataScience {
         l10n.t('Select a Kernel from {0}', kernelProvider);
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');
     export const installPythonTitle = l10n.t('Install Python');
+    export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPick = l10n.t('Failed to fetch Kernels Specs');
 }
 export namespace WebViews {
     export const collapseSingle = l10n.t('Collapse');

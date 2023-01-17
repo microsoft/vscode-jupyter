@@ -23,11 +23,21 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
+import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
-import { CommandQuickPickItem, ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
-type CompoundQuickPickItem = CommandQuickPickItem | ConnectionQuickPickItem | QuickPickItem;
+import {
+    CommandQuickPickItem,
+    ConnectionQuickPickItem,
+    IQuickPickKernelItemProvider,
+    KernelListErrorQuickPickItem
+} from './types';
+type CompoundQuickPickItem =
+    | CommandQuickPickItem
+    | ConnectionQuickPickItem
+    | KernelListErrorQuickPickItem
+    | QuickPickItem;
 export function isKernelPickItem(item: CompoundQuickPickItem): item is ConnectionQuickPickItem {
     return 'connection' in item;
 }
@@ -263,6 +273,11 @@ export class KernelSelector implements IDisposable {
         this.updateRecommended(quickPick);
         this.updateQuickPickItems(quickPick);
         this.provider.onDidChangeRecommended(() => this.updateRecommended(quickPick), this, this.disposables);
+        this.provider.onDidFailToListKernels(
+            (error) => this.updateListWithError(quickPick, error),
+            this,
+            this.disposables
+        );
         this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, this.disposables);
 
         const result = await selection;
@@ -285,6 +300,8 @@ export class KernelSelector implements IDisposable {
         }
         if (result && 'connection' in result) {
             return { selection: 'controller', finder: this.provider.finder!, connection: result.connection };
+        } else if (result && 'error' in result) {
+            throw InputFlowAction.back;
         }
     }
     private onCreatePythonEnvironment() {
@@ -380,7 +397,14 @@ export class KernelSelector implements IDisposable {
         });
         this.rebuildQuickPickItems(quickPick);
     }
-    private rebuildQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>) {
+    private buildErrorQuickPickItem(error: Error): KernelListErrorQuickPickItem {
+        return {
+            error,
+            label: `$(error) ${DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPick}`,
+            detail: error.message || error.toString()
+        };
+    }
+    private rebuildQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>, error?: Error) {
         const recommendedItem = this.recommendedItems.find((item) => isKernelPickItem(item));
         const recommendedConnections = new Set(
             this.recommendedItems.filter(isKernelPickItem).map((item) => item.connection.id)
@@ -389,13 +413,15 @@ export class KernelSelector implements IDisposable {
         const connections = this.quickPickItems.filter(
             (item) => !isKernelPickItem(item) || !recommendedConnections.has(item.connection.id)
         );
+        const errorItems = error ? [this.buildErrorQuickPickItem(error)] : [];
         updateKernelQuickPickWithNewItems(
             quickPick,
             this.installPythonItems
                 .concat(this.installPythonExtItems)
                 .concat(this.createPythonItems)
                 .concat(this.recommendedItems)
-                .concat(connections),
+                .concat(connections)
+                .concat(errorItems),
             recommendedItem
         );
     }
@@ -425,6 +451,10 @@ export class KernelSelector implements IDisposable {
             this.quickPickItems = this.quickPickItems.filter((item) => !itemsRemoved.includes(item));
             this.rebuildQuickPickItems(quickPick);
         }
+    }
+
+    private updateListWithError(quickPick: QuickPick<CompoundQuickPickItem>, error: Error) {
+        this.rebuildQuickPickItems(quickPick, error);
     }
     private updateRecommended(quickPick: QuickPick<CompoundQuickPickItem>) {
         if (!this.provider.recommended) {
