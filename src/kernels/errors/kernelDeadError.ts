@@ -18,9 +18,7 @@ import { WrappedKernelError } from './types';
 export class KernelDeadError extends WrappedKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {
         super(
-            DataScience.kernelDiedWithoutError().format(
-                getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)
-            ),
+            DataScience.kernelDiedWithoutError(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
             undefined,
             kernelConnectionMetadata
         );

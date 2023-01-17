@@ -180,9 +180,9 @@ export class NotebookStarter implements INotebookStarter {
 
             // Something else went wrong. See if the local proc died or not.
             if (exitCode !== 0) {
-                throw new Error(DataScience.jupyterServerCrashed().format(exitCode.toString()));
+                throw new Error(DataScience.jupyterServerCrashed(exitCode));
             } else {
-                throw WrappedError.from(DataScience.jupyterNotebookFailure().format(err), err);
+                throw WrappedError.from(DataScience.jupyterNotebookFailure(err), err);
             }
         } finally {
             progress.dispose();

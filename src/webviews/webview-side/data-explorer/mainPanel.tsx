@@ -242,7 +242,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private renderGrid() {
-        const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter');
+        const filterRowsTooltip = getLocString('filterRowsTooltip', 'Click to filter');
         return (
             <ReactSlickGrid
                 ref={this.grid}

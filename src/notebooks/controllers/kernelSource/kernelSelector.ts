@@ -96,11 +96,11 @@ export class KernelSelector implements IDisposable {
             ServiceContainer.instance.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider);
         this.extensionChecker = ServiceContainer.instance.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         this.createPythonEnvQuickPickItem = {
-            label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`,
+            label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`,
             command: this.onCreatePythonEnvironment.bind(this)
         };
         this.installPythonItem = {
-            label: DataScience.installPythonTitle(),
+            label: DataScience.installPythonTitle,
             command: async () => {
                 // Timeout as we want the quick pick to close before we start this process.
                 setTimeout(() => commands.executeCommand(Commands.InstallPythonViaKernelPicker).then(noop, noop));
@@ -108,7 +108,7 @@ export class KernelSelector implements IDisposable {
             }
         };
         this.installPythonExtension = {
-            label: DataScience.installPythonExtensionViaKernelPickerTitle(),
+            label: DataScience.installPythonExtensionViaKernelPickerTitle,
             command: async () => {
                 // TODO: Once user installs Python wait here and refresh this UI so we display the Python Envs.
                 const installed = await commands.executeCommand(Commands.InstallPythonExtensionViaKernelPicker);
@@ -171,10 +171,10 @@ export class KernelSelector implements IDisposable {
             this.categories.set(item, new Set(items));
         });
 
-        const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh() };
+        const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh };
         const refreshingButton: QuickInputButton = {
             iconPath: new ThemeIcon('loading~spin'),
-            tooltip: Common.refreshing()
+            tooltip: Common.refreshing
         };
 
         if (
@@ -433,7 +433,7 @@ export class KernelSelector implements IDisposable {
         }
         if (!this.recommendedItems.length) {
             this.recommendedItems.push(<QuickPickItem>{
-                label: DataScience.recommendedKernelCategoryInQuickPick(),
+                label: DataScience.recommendedKernelCategoryInQuickPick,
                 kind: QuickPickItemKind.Separator
             });
         }

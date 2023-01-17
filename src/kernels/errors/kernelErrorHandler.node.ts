@@ -87,13 +87,11 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             if (fileLinks.length === 1) {
                 files = fileLinks[0];
             } else {
-                files = `${fileLinks.slice(0, -1).join(', ')} ${Common.and()} ${fileLinks.slice(-1)}`;
+                files = `${fileLinks.slice(0, -1).join(', ')} ${Common.and} ${fileLinks.slice(-1)}`;
             }
-            messages.push(
-                DataScience.filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting().format(files)
-            );
-            messages.push(DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed().format(files));
-            messages.push(Common.clickHereForMoreInfoWithHtml().format(JupyterKernelStartFailureOverrideReservedName));
+            messages.push(DataScience.filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting(files));
+            messages.push(DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed(files));
+            messages.push(Common.clickHereForMoreInfoWithHtml(JupyterKernelStartFailureOverrideReservedName));
         }
     }
     protected override async getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(

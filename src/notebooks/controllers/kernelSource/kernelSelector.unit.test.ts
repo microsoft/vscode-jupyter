@@ -299,7 +299,7 @@ suite('Kernel Selector', () => {
 
         assert.isUndefined(kernelConnection?.selection);
         assert.strictEqual(options.items.length, 4);
-        assert.strictEqual(options.items[0].label, DataScience.kernelCategoryForJupyterKernel());
+        assert.strictEqual(options.items[0].label, DataScience.kernelCategoryForJupyterKernel);
 
         const last3QuickPickItems = options.items.slice(1) as ConnectionQuickPickItem[];
         verifyExistenceOfConnectionsInQuickPick(last3QuickPickItems, provider.kernels);
@@ -322,9 +322,9 @@ suite('Kernel Selector', () => {
         );
 
         const nonConnectionItems = options.items.filter((item) => !isKernelPickItem(item));
-        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda());
-        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForVirtual());
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda);
+        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForVirtual);
 
         const connectionItems = options.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[];
         verifyExistenceOfConnectionsInQuickPick(connectionItems, provider.kernels);
@@ -340,8 +340,8 @@ suite('Kernel Selector', () => {
         await clock.runAllAsync();
 
         assert.strictEqual(quickPick.items.length, 3);
-        assert.strictEqual(quickPick.items[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(quickPick.items[1].label, DataScience.kernelCategoryForVirtual());
+        assert.strictEqual(quickPick.items[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(quickPick.items[1].label, DataScience.kernelCategoryForVirtual);
         verifyExistenceOfConnectionsInQuickPick(options.items.slice(2) as ConnectionQuickPickItem[], provider.kernels);
 
         // Update the items.
@@ -354,9 +354,9 @@ suite('Kernel Selector', () => {
         assert.strictEqual(quickPick.busy, true);
         let nonConnectionItems = quickPick.items.filter((item) => !isKernelPickItem(item));
         assert.strictEqual(nonConnectionItems.length, 3);
-        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda());
-        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForVirtual());
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda);
+        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForVirtual);
         verifyExistenceOfConnectionsInQuickPick(
             quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
             provider.kernels
@@ -371,10 +371,10 @@ suite('Kernel Selector', () => {
 
         nonConnectionItems = quickPick.items.filter((item) => !isKernelPickItem(item));
         assert.strictEqual(nonConnectionItems.length, 4);
-        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda());
-        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForGlobal());
-        assert.strictEqual(nonConnectionItems[3].label, DataScience.kernelCategoryForVirtual());
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda);
+        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForGlobal);
+        assert.strictEqual(nonConnectionItems[3].label, DataScience.kernelCategoryForVirtual);
         verifyExistenceOfConnectionsInQuickPick(
             quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
             provider.kernels
@@ -389,8 +389,8 @@ suite('Kernel Selector', () => {
 
         nonConnectionItems = quickPick.items.filter((item) => !isKernelPickItem(item));
         assert.strictEqual(nonConnectionItems.length, 2);
-        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForGlobal());
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForGlobal);
         verifyExistenceOfConnectionsInQuickPick(
             quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
             provider.kernels

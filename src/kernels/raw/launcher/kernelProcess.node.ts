@@ -319,7 +319,7 @@ export class KernelProcess implements IKernelProcess {
                     (stderrProc || stderr).substring(0, 100);
                 traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderrProc + '\n' + stderr + '\n');
                 throw new KernelDiedError(
-                    DataScience.kernelDied().format(errorMessage),
+                    DataScience.kernelDied(errorMessage),
                     // Include what ever we have as the stderr.
                     stderrProc + '\n' + stderr + '\n',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

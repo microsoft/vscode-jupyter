@@ -17,6 +17,6 @@ import { BaseKernelError } from './types';
  */
 export class KernelInterruptTimeoutError extends BaseKernelError {
     constructor(kernelConnection: KernelConnectionMetadata) {
-        super('kernelpromisetimeout', DataScience.interruptingKernelFailed(), kernelConnection);
+        super('kernelpromisetimeout', DataScience.interruptingKernelFailed, kernelConnection);
     }
 }

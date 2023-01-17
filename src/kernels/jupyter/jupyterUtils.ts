@@ -49,10 +49,10 @@ export async function handleSelfCertsError(
     message: string
 ): Promise<boolean> {
     // On a self cert error, warn the user and ask if they want to change the setting
-    const enableOption: string = DataScience.jupyterSelfCertEnable();
-    const closeOption: string = DataScience.jupyterSelfCertClose();
+    const enableOption: string = DataScience.jupyterSelfCertEnable;
+    const closeOption: string = DataScience.jupyterSelfCertClose;
     const value = await appShell.showErrorMessage(
-        DataScience.jupyterSelfCertFail().format(message),
+        DataScience.jupyterSelfCertFail(message),
         { modal: true },
         enableOption,
         closeOption
@@ -73,10 +73,10 @@ export async function handleExpiredCertsError(
     message: string
 ): Promise<boolean> {
     // On a self cert error, warn the user and ask if they want to change the setting
-    const enableOption: string = DataScience.jupyterSelfCertEnable();
-    const closeOption: string = DataScience.jupyterSelfCertClose();
+    const enableOption: string = DataScience.jupyterSelfCertEnable;
+    const closeOption: string = DataScience.jupyterSelfCertClose;
     const value = await appShell.showErrorMessage(
-        DataScience.jupyterExpiredCertFail().format(message),
+        DataScience.jupyterExpiredCertFail(message),
         { modal: true },
         enableOption,
         closeOption

@@ -80,7 +80,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
         await assert.isRejected(
             resultPromise,
-            DataScience.pandasTooOldForViewingFormat().format('0.20.', pandasMinimumVersionSupportedByVariableViewer),
+            DataScience.pandasTooOldForViewingFormat('0.20.', pandasMinimumVersionSupportedByVariableViewer),
             'Failed to identify too old pandas'
         );
         assert.deepEqual(
@@ -98,7 +98,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
         await assert.isRejected(
             resultPromise,
-            DataScience.pandasTooOldForViewingFormat().format('0.10.', pandasMinimumVersionSupportedByVariableViewer),
+            DataScience.pandasTooOldForViewingFormat('0.10.', pandasMinimumVersionSupportedByVariableViewer),
             'Failed to identify too old pandas'
         );
         assert.deepEqual(
@@ -112,7 +112,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: '' }]));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install() as any);
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install as any);
 
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
         assert.equal(await resultPromise, undefined);
@@ -131,7 +131,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
         await assert.isRejected(
             resultPromise,
-            DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer)
+            DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer)
         );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),

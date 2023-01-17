@@ -14,7 +14,7 @@ import { WrappedKernelError } from './types';
 export class KernelSpecNotTrustedError extends WrappedKernelError {
     constructor(kernelConnectionMetadata: LocalKernelConnectionMetadata) {
         super(
-            DataScience.failedToStartAnUntrustedKernelSpec().format(
+            DataScience.failedToStartAnUntrustedKernelSpec(
                 getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata),
                 kernelConnectionMetadata.kernelSpec.specFile
                     ? getDisplayPath(Uri.file(kernelConnectionMetadata.kernelSpec.specFile))

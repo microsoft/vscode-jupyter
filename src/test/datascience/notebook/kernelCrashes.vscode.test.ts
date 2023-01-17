@@ -219,7 +219,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const kernel = kernelProvider.get(notebook)!;
             const terminatingEventFired = createDeferred<boolean>();
             const deadEventFired = createDeferred<boolean>();
-            const expectedErrorMessage = DataScience.kernelDiedWithoutError().format(
+            const expectedErrorMessage = DataScience.kernelDiedWithoutError(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             );
             const prompt = await hijackPrompt(
@@ -269,7 +269,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             await runAndFailWithKernelCrash();
             const cell3 = await notebook.appendCodeCell('print("123412341234")');
             const kernel = kernelProvider.get(notebook)!;
-            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
+            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             );
             const restartPrompt = await hijackPrompt(
@@ -277,7 +277,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 {
                     exactMatch: expectedErrorMessage
                 },
-                { result: DataScience.restartKernel(), clickImmediately: true },
+                { result: DataScience.restartKernel, clickImmediately: true },
                 disposables
             );
             // Confirm we get a prompt to restart the kernel, and it gets restarted.
@@ -294,7 +294,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             await runAndFailWithKernelCrash();
             const cell3 = await notebook.appendCodeCell('print("123412341234")');
             const kernel = kernelProvider.get(notebook)!;
-            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
+            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             );
             const restartPrompt = await hijackPrompt(
@@ -314,7 +314,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             await runAndFailWithKernelCrash();
             await notebook.appendCodeCell('print("123412341234")');
             const kernel = kernelProvider.get(notebook)!;
-            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
+            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             );
             const restartPrompt = await hijackPrompt(
@@ -357,9 +357,9 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 EXTENSION_ROOT_DIR_FOR_TESTS,
                 'src/test/datascience/notebook/kernelFailures/overrideBuiltinModule/random.py'
             );
-            const expectedErrorMessage = `${DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+            const expectedErrorMessage = `${DataScience.fileSeemsToBeInterferingWithKernelStartup(
                 getDisplayPath(Uri.file(randomFile), workspace.workspaceFolders || [])
-            )} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
+            )} \n${DataScience.viewJupyterLogForFurtherInfo}`;
 
             const prompt = await hijackPrompt(
                 'showErrorMessage',

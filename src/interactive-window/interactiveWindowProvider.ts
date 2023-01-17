@@ -296,12 +296,12 @@ export class InteractiveWindowProvider
             // See if the first window was tied to a file or not.
             this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
             const questions = [
-                localize.DataScience.interactiveWindowModeBannerSwitchYes(),
-                localize.DataScience.interactiveWindowModeBannerSwitchNo()
+                localize.DataScience.interactiveWindowModeBannerSwitchYes,
+                localize.DataScience.interactiveWindowModeBannerSwitchNo
             ];
             // Ask user if they'd like to switch to per file or not.
             const response = await this.appShell.showInformationMessage(
-                localize.DataScience.interactiveWindowModeBannerTitle(),
+                localize.DataScience.interactiveWindowModeBannerTitle,
                 ...questions
             );
             if (response === questions[0]) {

@@ -55,7 +55,7 @@ export class KernelAutoRestartMonitor implements IExtensionSyncActivationService
             // Set our status
             const progress = KernelProgressReporter.createProgressReporter(
                 kernel.resourceUri,
-                DataScience.restartingKernelStatus().format(
+                DataScience.restartingKernelStatus(
                     getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
                 )
             );

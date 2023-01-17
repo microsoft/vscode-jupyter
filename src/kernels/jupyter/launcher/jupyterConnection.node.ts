@@ -62,9 +62,9 @@ export class JupyterConnectionWaiter implements IDisposable {
         }, jupyterLaunchTimeout);
 
         // Listen for crashes
-        let exitCode = '0';
+        let exitCode = 0;
         if (launchResult.proc) {
-            launchResult.proc.on('exit', (c) => (exitCode = c ? c.toString() : '0'));
+            launchResult.proc.on('exit', (c) => (exitCode = c ? c : 0));
         }
         let stderr = '';
         // Listen on stderr for its connection information
@@ -81,7 +81,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                 },
                 (e) => this.rejectStartPromise(e),
                 // If the process dies, we can't extract connection information.
-                () => this.rejectStartPromise(DataScience.jupyterServerCrashed().format(exitCode))
+                () => this.rejectStartPromise(DataScience.jupyterServerCrashed(exitCode))
             )
         );
     }
@@ -155,7 +155,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             } catch (err) {
                 traceError(`Failed to parse ${uriString}`, err);
                 // Failed to parse the url either via server infos or the string
-                this.rejectStartPromise(DataScience.jupyterLaunchNoURL());
+                this.rejectStartPromise(DataScience.jupyterLaunchNoURL);
                 return;
             }
 
@@ -189,7 +189,7 @@ export class JupyterConnectionWaiter implements IDisposable {
 
     private launchTimedOut = () => {
         if (!this.startPromise.completed) {
-            this.rejectStartPromise(DataScience.jupyterLaunchTimedOut());
+            this.rejectStartPromise(DataScience.jupyterLaunchTimedOut);
         }
     };
 

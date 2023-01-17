@@ -50,7 +50,7 @@ suite('Python Extension Restart Notification @kernelPicker', () => {
 
         // Hijack the info message prompt
         hijackedMessage = await hijackPrompt('showInformationMessage', {
-            contains: DataScience.pythonExtensionInstalled()
+            contains: DataScience.pythonExtensionInstalled
         });
 
         // Create an instance of the restart notification with the stubbed checker

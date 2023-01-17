@@ -317,7 +317,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                     .then(async (session) => {
                         if (session.kernel) {
                             this.logRemoteOutput(
-                                DataScience.createdNewKernel().format(this.connInfo.baseUrl, session?.kernel?.id || '')
+                                DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || '')
                             );
                             const sessionWithSocket = session as ISessionWithSocket;
 

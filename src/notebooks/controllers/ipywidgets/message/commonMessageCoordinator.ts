@@ -187,19 +187,13 @@ export class CommonMessageCoordinator {
             const cdnsEnabled = this.configService.getSettings(undefined).widgetScriptSources.length > 0;
             const key = `${payload.moduleName}:${payload.moduleVersion}`;
             if (!payload.isOnline) {
-                errorMessage = DataScience.loadClassFailedWithNoInternet().format(
-                    payload.moduleName,
-                    payload.moduleVersion
-                );
+                errorMessage = DataScience.loadClassFailedWithNoInternet(payload.moduleName, payload.moduleVersion);
                 this.appShell.showErrorMessage(errorMessage).then(noop, noop);
             } else if (!cdnsEnabled && !this.modulesForWhichWeHaveDisplayedWidgetErrorMessage.has(key)) {
                 this.modulesForWhichWeHaveDisplayedWidgetErrorMessage.add(key);
-                const moreInfo = Common.moreInfo();
-                const enableDownloads = DataScience.enableCDNForWidgetsButton();
-                errorMessage = DataScience.enableCDNForWidgetsSetting().format(
-                    payload.moduleName,
-                    payload.moduleVersion
-                );
+                const moreInfo = Common.moreInfo;
+                const enableDownloads = DataScience.enableCDNForWidgetsButton;
+                errorMessage = DataScience.enableCDNForWidgetsSetting(payload.moduleName, payload.moduleVersion);
                 this.appShell
                     .showErrorMessage(errorMessage, { modal: true }, ...[enableDownloads, moreInfo])
                     .then((selection) => {
@@ -264,7 +258,7 @@ export class CommonMessageCoordinator {
                 }
                 traceInfo(`Unhandled widget kernel message: ${msg.header.msg_type} ${msg.content}`);
                 this.jupyterOutput.appendLine(
-                    DataScience.unhandledMessage().format(msg.header.msg_type, JSON.stringify(msg.content))
+                    DataScience.unhandledMessage(msg.header.msg_type, JSON.stringify(msg.content))
                 );
                 sendTelemetryEvent(Telemetry.IPyWidgetUnhandledMessage, undefined, { msg_type: msg.header.msg_type });
             } catch {

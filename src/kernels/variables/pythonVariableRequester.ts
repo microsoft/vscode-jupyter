@@ -225,7 +225,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 if (resultString.includes('iopub_data_rate_limit')) {
                     throw new JupyterDataRateLimitError();
                 } else {
-                    const error = DataScience.jupyterGetVariablesExecutionError().format(resultString);
+                    const error = DataScience.jupyterGetVariablesExecutionError(resultString);
                     traceError(error);
                     throw new Error(error);
                 }
@@ -247,13 +247,13 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             ) {
                 const traceback: string[] = codeCellOutput.traceback as string[];
                 const stripped = traceback.map(stripAnsi).join('\r\n');
-                const error = DataScience.jupyterGetVariablesExecutionError().format(stripped);
+                const error = DataScience.jupyterGetVariablesExecutionError(stripped);
                 traceError(error);
                 throw new Error(error);
             }
         }
 
-        throw new Error(DataScience.jupyterGetVariablesBadResults());
+        throw new Error(DataScience.jupyterGetVariablesBadResults);
     }
 
     // Pull our text result out of the Jupyter cell

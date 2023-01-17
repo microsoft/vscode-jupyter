@@ -105,7 +105,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             if (rawSession.isConnected) {
                 sessionPromise.resolve(rawSession);
             } else {
-                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
+                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError));
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process

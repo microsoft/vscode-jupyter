@@ -17,6 +17,6 @@ import { BaseError } from './types';
  */
 export class JupyterDataRateLimitError extends BaseError {
     constructor() {
-        super('unknown', DataScience.jupyterDataRateExceeded());
+        super('unknown', DataScience.jupyterDataRateExceeded);
     }
 }

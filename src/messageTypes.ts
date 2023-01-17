@@ -124,6 +124,44 @@ export enum SharedMessages {
     LocInit = 'loc_init'
 }
 
+export type LocalizedMessages = {
+    collapseSingle: string;
+    expandSingle: string;
+    openExportFileYes: string;
+    openExportFileNo: string;
+    noRowsInDataViewer: string;
+    sliceIndexError: string;
+    sliceMismatchedAxesError: string;
+    filterRowsTooltip: string;
+    fetchingDataViewer: string;
+    dataViewerHideFilters: string;
+    dataViewerShowFilters: string;
+    refreshDataViewer: string;
+    clearFilters: string;
+    sliceSummaryTitle: string;
+    sliceData: string;
+    sliceSubmitButton: string;
+    sliceDropdownAxisLabel: string;
+    sliceDropdownIndexLabel: string;
+    variableExplorerNameColumn: string;
+    variableExplorerTypeColumn: string;
+    variableExplorerCountColumn: string;
+    variableExplorerValueColumn: string;
+    collapseVariableExplorerLabel: string;
+    variableLoadingValue: string;
+    showDataExplorerTooltip: string;
+    noRowsInVariableExplorer: string;
+    loadingRowsInVariableExplorer: string;
+    previousPlot: string;
+    nextPlot: string;
+    panPlot: string;
+    zoomInPlot: string;
+    zoomOutPlot: string;
+    exportPlot: string;
+    deletePlot: string;
+    selectedImageListLabel: string;
+    selectedImageLabel: string;
+};
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;

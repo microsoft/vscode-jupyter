@@ -111,8 +111,8 @@ suite('Kernel Crash Monitor', () => {
         execution.start();
 
         const expectedErrorMessage = Buffer.from(
-            createOutputWithErrorMessageForDisplay(DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell())
-                ?.items[0]!.data!
+            createOutputWithErrorMessageForDisplay(DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell)?.items[0]!
+                .data!
         ).toString();
 
         when(kernel.status).thenReturn('dead');
@@ -121,7 +121,7 @@ suite('Kernel Crash Monitor', () => {
 
         verify(
             appShell.showErrorMessage(
-                DataScience.kernelDiedWithoutError().format(getDisplayNameOrNameOfKernelConnection(localKernelSpec))
+                DataScience.kernelDiedWithoutError(getDisplayNameOrNameOfKernelConnection(localKernelSpec))
             )
         ).once();
 
@@ -141,8 +141,8 @@ suite('Kernel Crash Monitor', () => {
         execution.start();
 
         const expectedErrorMessage = Buffer.from(
-            createOutputWithErrorMessageForDisplay(DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell())
-                ?.items[0]!.data!
+            createOutputWithErrorMessageForDisplay(DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell)?.items[0]!
+                .data!
         ).toString();
 
         when(kernel.status).thenReturn('autorestarting');
@@ -152,7 +152,7 @@ suite('Kernel Crash Monitor', () => {
 
         verify(
             appShell.showErrorMessage(
-                DataScience.kernelDiedWithoutErrorAndAutoRestarting().format(
+                DataScience.kernelDiedWithoutErrorAndAutoRestarting(
                     getDisplayNameOrNameOfKernelConnection(remoteKernelSpec)
                 )
             )

@@ -38,16 +38,6 @@ const config = {
             {
                 test: /\.ts$/,
                 use: [
-                    ...(process.env.BUILD_WITH_VSCODE_NLS
-                        ? [
-                              {
-                                  loader: 'vscode-nls-dev/lib/webpack-loader',
-                                  options: {
-                                      base: constants.ExtensionRootDir
-                                  }
-                              }
-                          ]
-                        : []),
                     {
                         loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
                     }

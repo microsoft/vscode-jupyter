@@ -48,7 +48,7 @@ export class ContributedLocalKernelSpecFinder
 
     kind = ContributedKernelFinderKind.LocalKernelSpec;
     id: string = ContributedKernelFinderKind.LocalKernelSpec;
-    displayName: string = DataScience.localKernelSpecs();
+    displayName: string = DataScience.localKernelSpecs;
 
     private _onDidChangeKernels = new EventEmitter<{
         added?: LocalKernelConnectionMetadata[];

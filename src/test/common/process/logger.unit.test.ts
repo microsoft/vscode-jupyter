@@ -37,7 +37,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}\n`;
+        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory} ${options.cwd}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect - String built incorrectly');
 
         outputChannel.verify((o) => o.appendLine(TypeMoq.It.isAnyString()), TypeMoq.Times.exactly(2));
@@ -48,7 +48,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar', 'import test'], options);
 
-        const expectedResult = `> test --foo --bar "import test"\n${Logging.currentWorkingDirectory()} ${path.join(
+        const expectedResult = `> test --foo --bar "import test"\n${Logging.currentWorkingDirectory} ${path.join(
             'debug',
             'path'
         )}\n`;
@@ -60,7 +60,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar', "'import test'"], options);
 
-        const expectedResult = `> test --foo --bar \'import test\'\n${Logging.currentWorkingDirectory()} ${path.join(
+        const expectedResult = `> test --foo --bar \'import test\'\n${Logging.currentWorkingDirectory} ${path.join(
             'debug',
             'path'
         )}\n`;
@@ -72,7 +72,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${path.join(
+        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory} ${path.join(
             '~',
             'debug',
             'path'
@@ -85,7 +85,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess(path.join(homedir(), 'test'), ['--foo', '--bar'], options);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${
+        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory} ${
             options.cwd
         }\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');

@@ -43,7 +43,7 @@ export class KernelStatusProvider implements IExtensionSyncActivationService {
                 this.restartProgress.get(kernel)?.dispose();
                 const progress = KernelProgressReporter.createProgressReporter(
                     kernel.resourceUri,
-                    DataScience.restartingKernelStatus().format(
+                    DataScience.restartingKernelStatus(
                         `: ${getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)}`
                     )
                 );
@@ -66,7 +66,7 @@ export class KernelStatusProvider implements IExtensionSyncActivationService {
             async () => {
                 const progress = KernelProgressReporter.createProgressReporter(
                     kernel.resourceUri,
-                    DataScience.interruptKernelStatus()
+                    DataScience.interruptKernelStatus
                 );
                 this.interruptProgress.set(kernel, progress);
             },

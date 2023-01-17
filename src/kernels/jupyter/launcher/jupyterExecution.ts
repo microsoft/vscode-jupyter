@@ -83,7 +83,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public async getNotebookError(): Promise<string> {
         return this.jupyterInterpreterService
             ? this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported()
-            : DataScience.webNotSupported();
+            : DataScience.webNotSupported;
     }
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {

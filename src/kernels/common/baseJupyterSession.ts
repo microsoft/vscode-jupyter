@@ -332,7 +332,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 ? undefined
                 : KernelProgressReporter.reportProgress(
                       this.resource,
-                      localize.DataScience.waitingForJupyterSessionToBeIdle()
+                      localize.DataScience.waitingForJupyterSessionToBeIdle
                   );
             const disposables: IDisposable[] = [];
             if (progress) {

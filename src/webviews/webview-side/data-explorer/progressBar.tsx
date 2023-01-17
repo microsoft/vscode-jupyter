@@ -18,7 +18,7 @@ export const ProgressBar = (props: IEmptyRowsProps) => {
     const style: React.CSSProperties = {
         width: percentText
     };
-    const message = getLocString('DataScience.fetchingDataViewer', 'Fetching data ...');
+    const message = getLocString('fetchingDataViewer', 'Fetching data ...');
 
     return (
         <div className="progress-container">

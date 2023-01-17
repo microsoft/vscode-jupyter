@@ -151,7 +151,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         const options: ProgressOptions = {
             location: ProgressLocation.Notification,
             cancellable: true,
-            title: Products.installingModule().format(name)
+            title: Products.installingModule(name)
         };
         await shell.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
     }

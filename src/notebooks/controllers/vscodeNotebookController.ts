@@ -361,12 +361,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
             this.appShell
-                .showWarningMessage(
-                    DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion(),
-                    Common.learnMore()
-                )
+                .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
                 .then((selection) => {
-                    if (selection !== Common.learnMore()) {
+                    if (selection !== Common.learnMore) {
                         return;
                     }
                     return this.browser.launch('https://aka.ms/jupyterUnSupportedPythonKernelVersions');

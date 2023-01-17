@@ -23,7 +23,7 @@ export function generateBackingIPyNbFileName(resource: Resource) {
     const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
     return resource
         ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
-        : `${DataScience.defaultNotebookName()}${suffix}`;
+        : `${DataScience.defaultNotebookName}${suffix}`;
 }
 export class BaseBackingFileCreator implements IJupyterBackingFileCreator {
     public async createBackingFile(

@@ -59,12 +59,12 @@ export class InstallationChannelManager implements IInstallationChannelManager {
 
     public async showNoInstallersMessage(interpreter: PythonEnvironment): Promise<void> {
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const search = Installer.searchForHelp();
+        const search = Installer.searchForHelp;
         let result: string | undefined;
         if (interpreter.envType === EnvironmentType.Conda) {
-            result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp());
+            result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller, Installer.searchForHelp);
         } else {
-            result = await appShell.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp());
+            result = await appShell.showErrorMessage(Installer.noPipInstaller, Installer.searchForHelp);
         }
         if (result === search) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);

@@ -73,9 +73,7 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
         if (!this.serverFinderMapping.has(serverUri.serverId)) {
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverUri.serverId}`,
-                localize.DataScience.universalRemoteKernelFinderDisplayName().format(
-                    serverUri.displayName || serverUri.uri
-                ),
+                localize.DataScience.universalRemoteKernelFinderDisplayName(serverUri.displayName || serverUri.uri),
                 `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,
@@ -161,7 +159,7 @@ class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
         this._activeServerFinder?.finder.dispose();
         const finder = new RemoteKernelFinder(
             'currentremote',
-            localize.DataScience.remoteKernelFinderDisplayName(),
+            localize.DataScience.remoteKernelFinderDisplayName,
             RemoteKernelSpecsCacheKey,
             this.jupyterSessionManagerFactory,
             this.extensionChecker,

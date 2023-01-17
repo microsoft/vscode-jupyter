@@ -34,7 +34,7 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
             const version = await this._getVersion(executer, token);
             return typeof version === 'string' ? parseSemVer(version) : version;
         } catch (e) {
-            traceWarning(DataScience.failedToGetVersionOfPandas(), e.message);
+            traceWarning(DataScience.failedToGetVersionOfPandas, e.message);
             return;
         }
     }
@@ -49,14 +49,14 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
         version?: string
     ): Promise<void> {
         let message = version
-            ? DataScience.pandasTooOldForViewingFormat().format(version, pandasMinimumVersionSupportedByVariableViewer)
-            : DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer);
+            ? DataScience.pandasTooOldForViewingFormat(version, pandasMinimumVersionSupportedByVariableViewer)
+            : DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer);
 
         let selection = this.isCodeSpace
-            ? Common.install()
-            : await this.applicationShell.showErrorMessage(message, { modal: true }, Common.install());
+            ? Common.install
+            : await this.applicationShell.showErrorMessage(message, { modal: true }, Common.install);
 
-        if (selection === Common.install()) {
+        if (selection === Common.install) {
             await this._doInstall(executer, tokenSource);
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);

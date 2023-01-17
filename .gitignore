@@ -58,3 +58,4 @@ src/test/datascience/.venv*
 *.xlf
 *.nls.*.json
 *.i18n.json
+l10n/

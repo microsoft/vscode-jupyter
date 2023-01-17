@@ -53,7 +53,7 @@ export class ExportInterpreterFinder {
             }
         }
 
-        throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+        throw new Error(localize.DataScience.jupyterNbConvertNotSupported);
     }
 
     // For this specific interpreter associated with a notebook check to see if it supports import

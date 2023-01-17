@@ -18,7 +18,7 @@ import { BaseKernelError } from './types';
  */
 export class JupyterDebuggerNotInstalledError extends BaseKernelError {
     constructor(debuggerPkg: string, message: string | undefined, kernelConnectionMetadata: KernelConnectionMetadata) {
-        const errorMessage = message ? message : DataScience.jupyterDebuggerNotInstalledError().format(debuggerPkg);
+        const errorMessage = message ? message : DataScience.jupyterDebuggerNotInstalledError(debuggerPkg);
         super('notinstalled', errorMessage, kernelConnectionMetadata);
     }
 }

@@ -36,7 +36,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
         const outputs = await executeSilently(kernel.session, command);
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
-            traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
+            traceWarning(DataScience.failedToGetVersionOfPandas, error.message);
         }
         return outputs.map((item) => item.text?.toString());
     }
@@ -54,7 +54,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
             sendTelemetryEvent(Telemetry.UserInstalledPandas);
         } catch (e) {
             sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
-            throw new Error(DataScience.failedToInstallPandas());
+            throw new Error(DataScience.failedToInstallPandas);
         }
     }
 

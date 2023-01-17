@@ -86,7 +86,7 @@ async function getRemoteServerDisplayName(
         return targetConnection.displayName;
     }
 
-    return DataScience.kernelDefaultRemoteDisplayName();
+    return DataScience.kernelDefaultRemoteDisplayName;
 }
 
 async function getKernelConnectionCategory(
@@ -96,10 +96,10 @@ async function getKernelConnectionCategory(
     switch (kernelConnection.kind) {
         case 'connectToLiveRemoteKernel':
             const remoteDisplayNameSession = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
-            return DataScience.kernelCategoryForJupyterSession().format(remoteDisplayNameSession);
+            return DataScience.kernelCategoryForJupyterSession(remoteDisplayNameSession);
         case 'startUsingRemoteKernelSpec':
             const remoteDisplayNameSpec = await getRemoteServerDisplayName(kernelConnection, serverUriStorage);
-            return DataScience.kernelCategoryForRemoteJupyterKernel().format(remoteDisplayNameSpec);
+            return DataScience.kernelCategoryForRemoteJupyterKernel(remoteDisplayNameSpec);
         default:
             return getKernelConnectionCategorySync(kernelConnection);
     }
@@ -107,29 +107,29 @@ async function getKernelConnectionCategory(
 export function getKernelConnectionCategorySync(kernelConnection: KernelConnectionMetadata): string {
     switch (kernelConnection.kind) {
         case 'startUsingLocalKernelSpec':
-            return DataScience.kernelCategoryForJupyterKernel();
+            return DataScience.kernelCategoryForJupyterKernel;
         case 'startUsingPythonInterpreter': {
             if (
                 getKernelRegistrationInfo(kernelConnection.kernelSpec) ===
                 'registeredByNewVersionOfExtForCustomKernelSpec'
             ) {
-                return DataScience.kernelCategoryForJupyterKernel();
+                return DataScience.kernelCategoryForJupyterKernel;
             }
             switch (kernelConnection.interpreter.envType) {
                 case EnvironmentType.Conda:
-                    return DataScience.kernelCategoryForConda();
+                    return DataScience.kernelCategoryForConda;
                 case EnvironmentType.Pipenv:
-                    return DataScience.kernelCategoryForPipEnv();
+                    return DataScience.kernelCategoryForPipEnv;
                 case EnvironmentType.Poetry:
-                    return DataScience.kernelCategoryForPoetry();
+                    return DataScience.kernelCategoryForPoetry;
                 case EnvironmentType.Pyenv:
-                    return DataScience.kernelCategoryForPyEnv();
+                    return DataScience.kernelCategoryForPyEnv;
                 case EnvironmentType.Venv:
                 case EnvironmentType.VirtualEnv:
                 case EnvironmentType.VirtualEnvWrapper:
-                    return DataScience.kernelCategoryForVirtual();
+                    return DataScience.kernelCategoryForVirtual;
                 default:
-                    return DataScience.kernelCategoryForGlobal();
+                    return DataScience.kernelCategoryForGlobal;
             }
         }
         default:

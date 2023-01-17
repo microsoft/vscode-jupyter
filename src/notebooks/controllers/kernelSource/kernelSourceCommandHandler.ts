@@ -58,7 +58,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     provideNotebookKernelSourceActions: () => {
                         return [
                             {
-                                label: DataScience.localPythonEnvironments(),
+                                label: DataScience.localPythonEnvironments,
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
                             }
                         ];
@@ -70,7 +70,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     provideNotebookKernelSourceActions: () => {
                         return [
                             {
-                                label: DataScience.localPythonEnvironments(),
+                                label: DataScience.localPythonEnvironments,
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
                             }
                         ];
@@ -88,7 +88,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             provideNotebookKernelSourceActions: () => {
                                 return [
                                     {
-                                        label: DataScience.localKernelSpecs(),
+                                        label: DataScience.localKernelSpecs,
                                         command: 'jupyter.kernel.selectLocalKernelSpec'
                                     }
                                 ];
@@ -100,7 +100,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             provideNotebookKernelSourceActions: () => {
                                 return [
                                     {
-                                        label: DataScience.localKernelSpecs(),
+                                        label: DataScience.localKernelSpecs,
                                         command: 'jupyter.kernel.selectLocalKernelSpec'
                                     }
                                 ];

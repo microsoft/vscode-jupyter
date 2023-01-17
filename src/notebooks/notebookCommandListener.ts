@@ -182,9 +182,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             traceVerbose(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
-                const message = DataScience.restartKernelMessage();
-                const yes = DataScience.restartKernelMessageYes();
-                const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
+                const message = DataScience.restartKernelMessage;
+                const yes = DataScience.restartKernelMessageYes;
+                const dontAskAgain = DataScience.restartKernelMessageDontAskAgain;
 
                 const response = await this.applicationShell.showInformationMessage(
                     message,

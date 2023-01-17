@@ -240,7 +240,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             if (possibleDocuments && possibleDocuments.length === 1) {
                 return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
             } else if (possibleDocuments && possibleDocuments.length > 1) {
-                throw new Error(DataScience.documentMismatch().format(getFilePath(file)));
+                throw new Error(DataScience.documentMismatch(getFilePath(file)));
             }
         }
 
@@ -251,7 +251,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const previousValue = this.configService.getSettings().logging.level;
         if (previousValue !== 'debug') {
             await this.configService.updateSetting('logging.level', 'debug', undefined, ConfigurationTarget.Global);
-            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired()).then(noop, noop);
+            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
         }
     }
 
@@ -259,7 +259,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const previousValue = this.configService.getSettings().logging.level;
         if (previousValue !== 'error') {
             await this.configService.updateSetting('logging.level', 'error', undefined, ConfigurationTarget.Global);
-            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired()).then(noop, noop);
+            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
         }
     }
 
@@ -640,14 +640,14 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook, undefined, 1));
                             }
                         },
-                        DataScience.exportingFormat(),
+                        DataScience.exportingFormat,
                         getDisplayPath(file)
                     );
                     // When all done, show a notice that it completed.
                     if (uri && filePath) {
-                        const openQuestion1 = DataScience.exportOpenQuestion1();
+                        const openQuestion1 = DataScience.exportOpenQuestion1;
                         const selection = await this.applicationShell.showInformationMessage(
-                            DataScience.exportDialogComplete().format(getDisplayPath(file)),
+                            DataScience.exportDialogComplete(getDisplayPath(file)),
                             openQuestion1
                         );
                         if (selection === openQuestion1) {
@@ -692,7 +692,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook, undefined, 1));
                             }
                         },
-                        DataScience.exportingFormat(),
+                        DataScience.exportingFormat,
                         getDisplayPath(file)
                     );
                     // Next open this notebook & execute it.
@@ -705,9 +705,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             }
         } else {
             await this.dataScienceErrorHandler.handleError(
-                new JupyterInstallError(
-                    DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
-                )
+                new JupyterInstallError(DataScience.jupyterNotSupported(await this.jupyterExecution.getNotebookError()))
             );
         }
     }
@@ -756,22 +754,22 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
 
     private waitForStatus<T>(
         promise: () => Promise<T>,
-        format: string,
-        file?: string,
+        formatMessage: (arg1: string) => string,
+        file: string,
         canceled?: () => void
     ): Promise<T> {
-        const message = file ? format.format(file) : format;
+        const message = formatMessage(file || '');
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
 
     @captureUsageTelemetry(Telemetry.ImportNotebook, { scope: 'command' })
     private async importNotebook(): Promise<void> {
-        const filtersKey = DataScience.importDialogFilter();
+        const filtersKey = DataScience.importDialogFilter;
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
 
         const uris = await this.applicationShell.showOpenDialog({
-            openLabel: DataScience.importDialogTitle(),
+            openLabel: DataScience.importDialogTitle,
             filters: filtersObject
         });
 
@@ -781,7 +779,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 async () => {
                     await this.fileConverter.importIpynb(uris[0]);
                 },
-                DataScience.importingFormat(),
+                DataScience.importingFormat,
                 getDisplayPath(uris[0])
             );
         }
@@ -795,7 +793,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 async () => {
                     await this.fileConverter.importIpynb(file);
                 },
-                DataScience.importingFormat(),
+                DataScience.importingFormat,
                 getDisplayPath(file)
             );
         }

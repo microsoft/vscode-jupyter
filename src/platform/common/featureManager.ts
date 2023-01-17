@@ -20,19 +20,19 @@ import { Emitter } from 'vscode-jsonrpc';
 const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
-        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE(),
+        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE,
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/309',
         setting: { setting: 'formatting.formatOnSave', values: ['true', true] }
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
-        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE(),
+        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE,
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
         setting: { setting: 'linting.lintOnTextChange', values: ['true', true] }
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
-        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES(),
+        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES,
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/1704',
         setting: { setting: 'autoComplete.preloadModules' }
     }

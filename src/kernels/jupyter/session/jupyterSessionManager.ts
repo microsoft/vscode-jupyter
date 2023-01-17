@@ -373,7 +373,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
                 // Failed to get password info, notify the user
-                throw new Error(DataScience.passwordFailure());
+                throw new Error(DataScience.passwordFailure);
             }
         } else {
             serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
@@ -411,21 +411,21 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     // If connecting on HTTP without a token prompt the user that this connection may not be secure
     private async insecureServerWarningPrompt(): Promise<boolean> {
-        const insecureMessage = DataScience.insecureSessionMessage();
-        const insecureLabels = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
+        const insecureMessage = DataScience.insecureSessionMessage;
+        const insecureLabels = [Common.bannerLabelYes, Common.bannerLabelNo, Common.doNotShowAgain];
         const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
 
         switch (response) {
-            case Common.bannerLabelYes():
+            case Common.bannerLabelYes:
                 // On yes just proceed as normal
                 return true;
 
-            case Common.doNotShowAgain():
+            case Common.doNotShowAgain:
                 // For don't ask again turn on the global true
                 await this.userAllowsInsecureConnections.updateValue(true);
                 return true;
 
-            case Common.bannerLabelNo():
+            case Common.bannerLabelNo:
             default:
                 // No or for no choice return back false to block
                 return false;
@@ -455,7 +455,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
         // If our server is not secure, throw here to bail out on the process
         if (!(await serverSecurePromise)) {
-            throw new Error(DataScience.insecureSessionDenied());
+            throw new Error(DataScience.insecureSessionDenied);
         }
     }
 }

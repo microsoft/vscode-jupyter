@@ -58,6 +58,6 @@ export class Extensions implements IExtensions {
                 }
             }
         }
-        return { extensionId: DataScience.unknownPackage(), displayName: DataScience.unknownPackage() };
+        return { extensionId: DataScience.unknownPackage, displayName: DataScience.unknownPackage };
     }
 }

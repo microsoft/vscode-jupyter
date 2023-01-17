@@ -120,8 +120,8 @@ suite('Error Handler Unit Tests', () => {
         verify(
             applicationShell.showErrorMessage(
                 err.message,
-                DataScience.jupyterSelfCertEnable(),
-                DataScience.jupyterSelfCertClose()
+                DataScience.jupyterSelfCertEnable,
+                DataScience.jupyterSelfCertClose
             )
         ).never();
     });
@@ -130,11 +130,11 @@ suite('Error Handler Unit Tests', () => {
         when(
             applicationShell.showInformationMessage(
                 anything(),
-                DataScience.jupyterInstall(),
-                DataScience.notebookCheckForImportNo(),
+                DataScience.jupyterInstall,
+                DataScience.notebookCheckForImportNo,
                 anything()
             )
-        ).thenResolve(DataScience.jupyterInstall() as any);
+        ).thenResolve(DataScience.jupyterInstall as any);
 
         const err = new JupyterInstallError(message);
         await dataScienceErrorHandler.handleError(err);
@@ -145,9 +145,7 @@ suite('Error Handler Unit Tests', () => {
     suite('Kernel startup errors', () => {
         let kernelConnection: KernelConnectionMetadata;
         setup(() => {
-            when(applicationShell.showErrorMessage(anything(), Common.learnMore())).thenResolve(
-                Common.learnMore() as any
-            );
+            when(applicationShell.showErrorMessage(anything(), Common.learnMore)).thenResolve(Common.learnMore as any);
             kernelConnection = PythonKernelConnectionMetadata.create({
                 id: '',
                 interpreter: {
@@ -298,7 +296,7 @@ suite('Error Handler Unit Tests', () => {
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
+            const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile(
                 'Random',
                 'c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py'
             );
@@ -327,7 +325,7 @@ suite('Error Handler Unit Tests', () => {
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+            const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup(
                 getDisplayPath(
                     Uri.file('c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py'),
                     workspaceFolders
@@ -361,7 +359,7 @@ suite('Error Handler Unit Tests', () => {
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format('xml.py');
+            const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup('xml.py');
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresOverridingBuiltInModules');
         });
@@ -390,7 +388,7 @@ suite('Error Handler Unit Tests', () => {
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToMissingModule().format('xml.dom');
+            const expectedMessage = DataScience.failedToStartKernelDueToMissingModule('xml.dom');
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresMissingModule');
         });
@@ -419,7 +417,7 @@ suite('Error Handler Unit Tests', () => {
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToMissingModule().format('xml.dom');
+            const expectedMessage = DataScience.failedToStartKernelDueToMissingModule('xml.dom');
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresMissingModule');
         });
@@ -437,7 +435,7 @@ suite('Error Handler Unit Tests', () => {
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
+            const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile(
                 'Template',
                 '/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py' // Not using getDisplayPath under the covers
             );
@@ -470,7 +468,7 @@ suite('Error Handler Unit Tests', () => {
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+            const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup(
                 getDisplayPath(
                     Uri.file('/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py'),
                     workspaceFolders
@@ -496,7 +494,7 @@ ImportError: No module named 'win32api'
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToWin32APIFailure();
+            const expectedMessage = DataScience.failedToStartKernelDueToWin32APIFailure;
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresWin32Api');
         });
@@ -518,7 +516,7 @@ ImportError: No module named 'xyz'
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToImportFailure().format('xyz');
+            const expectedMessage = DataScience.failedToStartKernelDueToImportFailure('xyz');
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErr');
         });
@@ -536,7 +534,7 @@ ImportError: No module named 'xyz'
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToPyZmqFailure();
+            const expectedMessage = DataScience.failedToStartKernelDueToPyZmqFailure;
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresPyzmq');
         });
@@ -549,7 +547,7 @@ ImportError: No module named 'xyz'
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToUnknownDllLoadFailure();
+            const expectedMessage = DataScience.failedToStartKernelDueToUnknownDllLoadFailure;
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresDllLoad');
         });
@@ -562,7 +560,7 @@ ImportError: No module named 'xyz'
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToDllLoadFailure().format('XYZ');
+            const expectedMessage = DataScience.failedToStartKernelDueToDllLoadFailure('XYZ');
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresDllLoad');
         });
@@ -582,12 +580,12 @@ ImportError: No module named 'xyz'
         }
         test('Failure to start Jupyter Server (unable to extract python error message)', async () => {
             const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
-            const expectedMessage = DataScience.failedToStartJupyter().format(envDisplayName);
+            const expectedMessage = DataScience.failedToStartJupyter(envDisplayName);
             await verifyJupyterErrors('Kaboom', expectedMessage);
         });
         test('Failure to start Jupyter Server (unable to extract python error message), (without failure about jupyter error, without daemon)', async () => {
             const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
-            const expectedMessage = DataScience.failedToStartJupyter().format(envDisplayName);
+            const expectedMessage = DataScience.failedToStartJupyter(envDisplayName);
             await verifyJupyterErrors('kaboom', expectedMessage);
         });
         test('Failure to start Jupyter Server', async () => {
@@ -596,14 +594,14 @@ ImportError: No module named 'xyz'
 Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/crap" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
             const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = 'NotImplementedError: subclasses must implement __call__';
-            const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo().format(envDisplayName, pythonError);
+            const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo(envDisplayName, pythonError);
             await verifyJupyterErrors(stdError, expectedMessage);
         });
         test('Failure to start Jupyter Server (without failure about jupyter error, without daemon)', async () => {
             const stdError = stdErrorMessages.failureToStartJupyter;
             const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = 'NotImplementedError: subclasses must implement __call__';
-            const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo().format(envDisplayName, pythonError);
+            const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo(envDisplayName, pythonError);
             await verifyJupyterErrors(stdError, expectedMessage);
         });
         test('Failure to start Jupyter Server due to outdated traitlets', async () => {
@@ -612,10 +610,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
 Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/crap" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
             const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = "AttributeError: 'Namespace' object has no attribute '_flags'";
-            const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
-                envDisplayName,
-                pythonError
-            );
+            const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets(envDisplayName, pythonError);
 
             await verifyJupyterErrors(
                 stdError,
@@ -627,10 +622,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const stdError = stdErrorMessages.failureToStartJupyterDueToOutdatedTraitlets;
             const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = "AttributeError: 'Namespace' object has no attribute '_flags'";
-            const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
-                envDisplayName,
-                pythonError
-            );
+            const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets(envDisplayName, pythonError);
             await verifyJupyterErrors(
                 stdError,
                 expectedMessage,
@@ -810,11 +802,11 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
             verify(
                 applicationShell.showErrorMessage(
-                    DataScience.remoteJupyterConnectionFailedWithServer().format(error.baseUrl),
+                    DataScience.remoteJupyterConnectionFailedWithServer(error.baseUrl),
                     deepEqual({ detail: error.originalError.message || '', modal: true }),
-                    DataScience.removeRemoteJupyterConnectionButtonText(),
-                    DataScience.changeRemoteJupyterConnectionButtonText(),
-                    DataScience.selectDifferentKernel()
+                    DataScience.removeRemoteJupyterConnectionButtonText,
+                    DataScience.changeRemoteJupyterConnectionButtonText,
+                    DataScience.selectDifferentKernel
                 )
             ).once();
             verify(cmdManager.executeCommand(Commands.SelectJupyterURI, true, 'errorHandler', undefined)).never();
@@ -850,11 +842,11 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
             verify(
                 applicationShell.showErrorMessage(
-                    DataScience.remoteJupyterConnectionFailedWithServer().format('Hello Server'),
+                    DataScience.remoteJupyterConnectionFailedWithServer('Hello Server'),
                     deepEqual({ detail: error.originalError.message || '', modal: true }),
-                    DataScience.removeRemoteJupyterConnectionButtonText(),
-                    DataScience.changeRemoteJupyterConnectionButtonText(),
-                    DataScience.selectDifferentKernel()
+                    DataScience.removeRemoteJupyterConnectionButtonText,
+                    DataScience.changeRemoteJupyterConnectionButtonText,
+                    DataScience.selectDifferentKernel
                 )
             ).once();
             verify(cmdManager.executeCommand(Commands.SelectJupyterURI, true, 'errorHandler', undefined)).never();
@@ -877,7 +869,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
-            ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText() as any);
+            ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText as any);
             when(uriStorage.removeUri(anything())).thenResolve();
             when(uriStorage.getSavedUriList()).thenResolve([
                 { time: 1, serverId: 'foobar', uri: 'one' },
@@ -913,7 +905,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(uriStorage.getSavedUriList()).thenResolve([]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
-            ).thenResolve(DataScience.changeRemoteJupyterConnectionButtonText() as any);
+            ).thenResolve(DataScience.changeRemoteJupyterConnectionButtonText as any);
             when(cmdManager.executeCommand(anything(), anything(), anything(), anything())).thenResolve();
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
@@ -944,7 +936,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(uriStorage.getSavedUriList()).thenResolve([]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
-            ).thenResolve(DataScience.selectDifferentKernel() as any);
+            ).thenResolve(DataScience.selectDifferentKernel as any);
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -959,9 +951,9 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         function verifyErrorMessage(message: string, linkInfo?: string) {
             message = message.includes('command:jupyter.viewOutput')
                 ? message
-                : `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
+                : `${message} \n${DataScience.viewJupyterLogForFurtherInfo}`;
             if (linkInfo) {
-                verify(applicationShell.showErrorMessage(anything(), Common.learnMore())).once();
+                verify(applicationShell.showErrorMessage(anything(), Common.learnMore)).once;
             } else {
                 verify(applicationShell.showErrorMessage(anything())).once();
             }

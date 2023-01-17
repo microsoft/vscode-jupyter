@@ -80,7 +80,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         const checkForPackages = async () => {
             const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
                 resource,
-                DataScience.validatingKernelDependencies(),
+                DataScience.validatingKernelDependencies,
                 () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
             );
             if (alreadyInstalled) {
@@ -113,7 +113,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             });
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
-                DataScience.installingMissingDependencies(),
+                DataScience.installingMissingDependencies,
                 async () => {
                     if (installWithoutPrompting) {
                         const result = await checkForPackages();
@@ -234,12 +234,12 @@ export class KernelDependencyService implements IKernelDependencyService {
             return KernelInterpreterDependencyResponse.cancel;
         }
         const messageFormat = isModulePresent
-            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
-            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
+            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate
+            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter;
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
-        const message = messageFormat.format(
+        const message = messageFormat(
             interpreter.displayName || interpreter.uri.fsPath,
-            products.map((product) => ProductNames.get(product)!).join(` ${Common.and()} `)
+            products.map((product) => ProductNames.get(product)!).join(` ${Common.and} `)
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
@@ -258,9 +258,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         });
 
         // Build our set of prompt actions
-        const installOption = Common.install();
-        const selectKernelOption = DataScience.selectKernel();
-        const moreInfoOption = Common.moreInfo();
+        const installOption = Common.install;
+        const selectKernelOption = DataScience.selectKernel;
+        const moreInfoOption = Common.moreInfo;
         const options = [installOption];
         if (resource && !cannotChangeKernels) {
             // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.

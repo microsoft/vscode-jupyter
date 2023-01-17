@@ -22,8 +22,7 @@ resources:
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
-    locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
-    locBundleDestination: $(Build.SourcesDirectory)/out
+    l10nSourcePaths: ./src
     buildSteps:
       - script: npm i -g npm@8.15.1
         displayName: Install npm 8.15.1

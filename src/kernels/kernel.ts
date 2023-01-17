@@ -224,8 +224,8 @@ abstract class BaseKernel implements IBaseKernel {
 
         traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
         if (result === InterruptResult.TimedOut) {
-            const message = DataScience.restartKernelAfterInterruptMessage();
-            const yes = DataScience.restartKernelMessageYes();
+            const message = DataScience.restartKernelAfterInterruptMessage;
+            const yes = DataScience.restartKernelMessageYes;
             const v = await this.appShell.showInformationMessage(message, { modal: true }, yes);
             if (v === yes) {
                 await this.restart();
@@ -550,7 +550,7 @@ abstract class BaseKernel implements IBaseKernel {
                 throw ex;
             }
             // Provide a user friendly message in case `ex` is some error thats not throw by us.
-            const message = DataScience.sessionStartFailedWithKernel().format(
+            const message = DataScience.sessionStartFailedWithKernel(
                 getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
             );
             throw WrappedError.from(message + ' ' + ('message' in ex ? ex.message : ex.toString()), ex);
@@ -591,9 +591,7 @@ abstract class BaseKernel implements IBaseKernel {
         // create it and keep it hidden.
         const progressReporter = KernelProgressReporter.createProgressReporter(
             this.resourceUri,
-            DataScience.connectingToKernel().format(
-                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-            ),
+            DataScience.connectingToKernel(getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)),
             this.startupUI.disableUI
         );
         disposables.push(progressReporter);

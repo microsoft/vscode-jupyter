@@ -159,7 +159,7 @@ export class ExportCommands implements IDisposable {
 
         if (interpreter || (sourceDocument.metadata && isPythonNotebook(getNotebookMetadata(sourceDocument)))) {
             items.push({
-                label: DataScience.exportPythonQuickPickLabel(),
+                label: DataScience.exportPythonQuickPickLabel,
                 picked: true,
                 handler: () => {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
@@ -175,7 +175,7 @@ export class ExportCommands implements IDisposable {
         items.push(
             ...[
                 {
-                    label: DataScience.exportHTMLQuickPickLabel(),
+                    label: DataScience.exportHTMLQuickPickLabel,
                     picked: false,
                     handler: () => {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
@@ -187,7 +187,7 @@ export class ExportCommands implements IDisposable {
                     }
                 },
                 {
-                    label: DataScience.exportPDFQuickPickLabel(),
+                    label: DataScience.exportPDFQuickPickLabel,
                     picked: false,
                     handler: () => {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
@@ -215,7 +215,7 @@ export class ExportCommands implements IDisposable {
             ignoreFocusOut: false,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: localize.DataScience.exportAsQuickPickPlaceholder()
+            placeHolder: localize.DataScience.exportAsQuickPickPlaceholder
         };
 
         return this.applicationShell.showQuickPick(items, options);

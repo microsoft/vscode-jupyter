@@ -25,9 +25,9 @@ export class JupyterCommandLineSelector {
 
     private async onDidChangeConfiguration(e: ConfigurationChangeEvent) {
         if (e.affectsConfiguration('jupyter.jupyterCommandLineArguments')) {
-            const reload = DataScience.jupyterCommandLineReloadAnswer();
+            const reload = DataScience.jupyterCommandLineReloadAnswer;
             const item = await this.appShell.showInformationMessage(
-                DataScience.jupyterCommandLineReloadQuestion(),
+                DataScience.jupyterCommandLineReloadQuestion,
                 reload
             );
             if (item === reload) {

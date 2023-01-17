@@ -52,7 +52,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const title = DataScience.activatingPythonEnvironment().format(
+        const title = DataScience.activatingPythonEnvironment(
             interpreter.displayName || getDisplayPath(interpreter.uri)
         );
         return KernelProgressReporter.wrapAndReportProgress(resource, title, () =>

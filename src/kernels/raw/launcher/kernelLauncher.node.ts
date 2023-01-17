@@ -206,7 +206,7 @@ export class KernelLauncher implements IKernelLauncher {
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
         const outputChannel = jupyterSettings.logKernelOutputSeparately
-            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel().format(baseName))
+            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel(baseName))
             : undefined;
         outputChannel?.clear();
 

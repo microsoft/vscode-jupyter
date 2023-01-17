@@ -198,9 +198,10 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
     test('Test Install IPyKernel prompt message', async () => {
         // Confirm the message has not changed.
         assert.ok(
-            DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter()
-                .format('', ProductNames.get(Product.ipykernel)!)
-                .endsWith(`${expectedPromptMessageSuffix}.`),
+            DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter(
+                '',
+                ProductNames.get(Product.ipykernel)!
+            ).endsWith(`${expectedPromptMessageSuffix}.`),
             'Message has changed, please update this test'
         );
     });
@@ -337,7 +338,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Next, lets try to run again, but select a kernel that doesn't have ipykernel.
         // At this point we should get the prompt again for this new kernel.
         const promptOptions: WindowPromptStubButtonClickOptions = {
-            result: DataScience.selectKernel(),
+            result: DataScience.selectKernel,
             clickImmediately: true
         };
         prompt = await hijackPrompt(
@@ -412,7 +413,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Now install ipykernel and ensure we can run a cell & that it runs against the right environment.
         prompt.reset();
         promptOptions.dismissPrompt = false;
-        promptOptions.result = Common.install();
+        promptOptions.result = Common.install;
 
         await activeInteractiveWindow
             .addCode(`import sys${EOL}print(sys.executable)`, untitledPythonFile.uri, 0)
@@ -462,7 +463,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         await verifyIPyKernelPromptDisplayed(prompt, venvNoKernelPath.fsPath);
 
         // Now lets install, all cells should run successfully.
-        prompt.clickButton(Common.install());
+        prompt.clickButton(Common.install);
 
         // Wait for the 3 cells to run successfully.
         const [cell1, cell2, cell3] = notebookDocument!
@@ -644,7 +645,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         const prompt = await hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { result: DataScience.selectKernel(), clickImmediately: true },
+            { result: DataScience.selectKernel, clickImmediately: true },
             disposables
         );
 
@@ -752,7 +753,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         return hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { result: DataScience.selectKernel(), clickImmediately: true },
+            { result: DataScience.selectKernel, clickImmediately: true },
             disposables
         );
     }
@@ -760,7 +761,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         return hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { result: Common.install(), clickImmediately: true },
+            { result: Common.install, clickImmediately: true },
             disposables
         );
     }

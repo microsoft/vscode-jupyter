@@ -83,7 +83,7 @@ export class JupyterInterpreterSubCommandExecutionService
             if (!interpreter) {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
-                return DataScience.selectJupyterInterpreter();
+                return DataScience.selectJupyterInterpreter;
             }
         }
         const productsNotInstalled = await this.jupyterDependencyService.getDependenciesNotInstalled(
@@ -95,7 +95,7 @@ export class JupyterInterpreterSubCommandExecutionService
         }
 
         if (productsNotInstalled.length === 1 && productsNotInstalled[0] === Product.kernelspec) {
-            return DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.uri.fsPath);
+            return DataScience.jupyterKernelSpecModuleNotFound(interpreter.uri.fsPath);
         }
 
         return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter.displayName);
@@ -109,7 +109,7 @@ export class JupyterInterpreterSubCommandExecutionService
     ): Promise<ObservableExecutionResult<string>> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(options.token);
         this.jupyterOutputChannel.appendLine(
-            DataScience.startingJupyterLogMessage().format(getDisplayPath(interpreter.uri), notebookArgs.join(' '))
+            DataScience.startingJupyterLogMessage(getDisplayPath(interpreter.uri), notebookArgs.join(' '))
         );
         const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,

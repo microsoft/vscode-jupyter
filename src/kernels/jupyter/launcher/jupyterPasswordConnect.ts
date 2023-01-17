@@ -293,8 +293,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         state: { username: string; password: string }
     ) {
         state.username = await input.showInputBox({
-            title: DataScience.jupyterSelectUserAndPasswordTitle(),
-            prompt: DataScience.jupyterSelectUserPrompt(),
+            title: DataScience.jupyterSelectUserAndPasswordTitle,
+            prompt: DataScience.jupyterSelectUserPrompt,
             validate: this.validateUserNameOrPassword,
             value: ''
         });
@@ -312,8 +312,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         state: { username: string; password: string }
     ) {
         state.password = await input.showInputBox({
-            title: DataScience.jupyterSelectUserAndPasswordTitle(),
-            prompt: DataScience.jupyterSelectPasswordPrompt(),
+            title: DataScience.jupyterSelectUserAndPasswordTitle,
+            prompt: DataScience.jupyterSelectPasswordPrompt,
             validate: this.validateUserNameOrPassword,
             value: '',
             password: true
@@ -322,7 +322,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
     private async getUserPassword(): Promise<string | undefined> {
         return this.appShell.showInputBox({
-            prompt: DataScience.jupyterSelectPasswordPrompt(),
+            prompt: DataScience.jupyterSelectPasswordPrompt,
             ignoreFocusOut: true,
             password: true
         });
@@ -384,10 +384,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         } catch (e) {
             if (e.message.indexOf('reason: self signed certificate') >= 0) {
                 // Ask user to change setting and possibly try again.
-                const enableOption: string = DataScience.jupyterSelfCertEnable();
-                const closeOption: string = DataScience.jupyterSelfCertClose();
+                const enableOption: string = DataScience.jupyterSelfCertEnable;
+                const closeOption: string = DataScience.jupyterSelfCertClose;
                 const value = await this.appShell.showErrorMessage(
-                    DataScience.jupyterSelfCertFail().format(e.message),
+                    DataScience.jupyterSelfCertFail(e.message),
                     { modal: true },
                     enableOption,
                     closeOption

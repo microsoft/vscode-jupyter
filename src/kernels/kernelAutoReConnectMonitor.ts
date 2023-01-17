@@ -144,7 +144,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             }
         }
 
-        const message = DataScience.automaticallyReconnectingToAKernelProgressMessage().format(
+        const message = DataScience.automaticallyReconnectingToAKernelProgressMessage(
             getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
         );
         this.appShell
@@ -175,10 +175,8 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         }
 
         const message = isLocalConnection(kernel.kernelConnectionMetadata)
-            ? DataScience.kernelDisconnected().format(
-                  getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-              )
-            : DataScience.remoteJupyterConnectionFailedWithServer().format(kernel.kernelConnectionMetadata.baseUrl);
+            ? DataScience.kernelDisconnected(getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata))
+            : DataScience.remoteJupyterConnectionFailedWithServer(kernel.kernelConnectionMetadata.baseUrl);
 
         this.appShell.showErrorMessage(message).then(noop, noop);
 

@@ -133,9 +133,9 @@ suite('Extension Recommendation', () => {
                     verify(
                         appShell.showInformationMessage(
                             expectedMessage,
-                            Common.bannerLabelYes(),
-                            Common.bannerLabelNo(),
-                            Common.doNotShowAgain()
+                            Common.bannerLabelYes,
+                            Common.bannerLabelNo,
+                            Common.doNotShowAgain
                         )
                     ).once();
                 });
@@ -151,7 +151,7 @@ suite('Extension Recommendation', () => {
                 });
                 test(`Never show prompt again when opening a notebook in a new session`, async () => {
                     when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                        Common.doNotShowAgain() as any
+                        Common.doNotShowAgain as any
                     );
 
                     const nb = createNotebook(languageToBeTested);
@@ -167,7 +167,7 @@ suite('Extension Recommendation', () => {
                 });
                 test(`Open extension page to install the recommended extension`, async () => {
                     when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                        Common.bannerLabelYes() as any
+                        Common.bannerLabelYes as any
                     );
                     when(commandManager.executeCommand(anything(), anything())).thenResolve();
 
