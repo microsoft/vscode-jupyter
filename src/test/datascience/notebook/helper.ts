@@ -1587,10 +1587,10 @@ export async function clickOKForRestartPrompt() {
     const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
     const showInformationMessage = sinon.stub(appShell, 'showInformationMessage').callsFake(function (message: string) {
         traceInfo(`Step 2. ShowInformationMessage ${message}`);
-        if (message === DataScience.restartKernelMessage()) {
+        if (message === DataScience.restartKernelMessage) {
             traceInfo(`Step 3. ShowInformationMessage & yes to restart`);
             // User clicked ok to restart it.
-            return DataScience.restartKernelMessageYes();
+            return DataScience.restartKernelMessageYes;
         }
         return (appShell.showInformationMessage as any).wrappedMethod.apply(appShell, arguments);
     });

@@ -19,7 +19,7 @@ export class RemoteJupyterServerConnectionError extends BaseError {
     constructor(readonly url: string, public readonly serverId: string, public readonly originalError: Error) {
         super(
             'remotejupyterserverconnection',
-            DataScience.remoteJupyterConnectionFailedWithServerWithError().format(
+            DataScience.remoteJupyterConnectionFailedWithServerWithError(
                 getBaseUrl(url),
                 originalError.message || originalError.toString()
             )

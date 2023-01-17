@@ -115,8 +115,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Status depends upon if we're about to connect to existing server or not.
             progressReporter = (await jupyterExecution.getServer(serverOptions))
-                ? KernelProgressReporter.createProgressReporter(options.resource, DataScience.connectingToJupyter())
-                : KernelProgressReporter.createProgressReporter(options.resource, DataScience.startingJupyter());
+                ? KernelProgressReporter.createProgressReporter(options.resource, DataScience.connectingToJupyter)
+                : KernelProgressReporter.createProgressReporter(options.resource, DataScience.startingJupyter);
             disposables.push(progressReporter);
         };
         if (this.ui.disableUI) {
@@ -132,7 +132,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 traceVerbose('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
-                    DataScience.jupyterNotSupported().format(await jupyterExecution.getNotebookError())
+                    DataScience.jupyterNotSupported(await jupyterExecution.getNotebookError())
                 );
             }
             // Then actually start the server
@@ -172,12 +172,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 const displayName = activeInterpreter.displayName
                     ? activeInterpreter.displayName
                     : getFilePath(activeInterpreter.uri);
-                throw new Error(
-                    DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString())
-                );
+                throw new Error(DataScience.jupyterNotSupportedBecauseOfEnvironment(displayName, e.toString));
             } else {
                 throw new JupyterInstallError(
-                    DataScience.jupyterNotSupported().format(
+                    DataScience.jupyterNotSupported(
                         this.jupyterExecution ? await this.jupyterExecution.getNotebookError() : 'Error'
                     )
                 );

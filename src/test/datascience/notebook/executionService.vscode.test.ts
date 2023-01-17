@@ -85,7 +85,7 @@ suite('Kernel Execution @kernelCore', function () {
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
-                { result: Common.install(), clickImmediately: true },
+                { result: Common.install, clickImmediately: true },
                 disposables
             );
             if (!IS_REMOTE_NATIVE_TEST() && !isWeb()) {

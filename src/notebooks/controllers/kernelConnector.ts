@@ -74,21 +74,21 @@ export class KernelConnector {
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
 
         const selection = await appShell.showErrorMessage(
-            DataScience.cannotRunCellKernelIsDead().format(
+            DataScience.cannotRunCellKernelIsDead(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             ),
             { modal: true },
-            DataScience.showJupyterLogs(),
-            DataScience.restartKernel()
+            DataScience.showJupyterLogs,
+            DataScience.restartKernel
         );
         let restartedKernel = false;
         switch (selection) {
-            case DataScience.restartKernel(): {
+            case DataScience.restartKernel: {
                 await kernel.restart();
                 restartedKernel = true;
                 break;
             }
-            case DataScience.showJupyterLogs(): {
+            case DataScience.showJupyterLogs: {
                 commandManager.executeCommand(Commands.ViewJupyterOutput).then(noop, noop);
             }
         }

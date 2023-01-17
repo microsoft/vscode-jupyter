@@ -126,7 +126,7 @@ suite('Kernel Dependency Service', () => {
             });
             test('Prompt if if ipykernel is not installed', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showInformationMessage(anything(), anything())).thenResolve(Common.install() as any);
+                when(appShell.showInformationMessage(anything(), anything())).thenResolve(Common.install as any);
 
                 const result = await dependencyService.installMissingDependencies({
                     resource: Uri.file('one.ipynb'),
@@ -144,10 +144,10 @@ suite('Kernel Dependency Service', () => {
                     InstallerResponse.Installed
                 );
                 when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
-                    Common.install() as any
+                    Common.install as any
                 );
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.install() as any
+                    Common.install as any
                 );
 
                 await dependencyService.installMissingDependencies({
@@ -163,11 +163,11 @@ suite('Kernel Dependency Service', () => {
                 when(installer.install(Product.ipykernel, interpreter, anything(), true, anything())).thenResolve(
                     InstallerResponse.Installed
                 );
-                when(appShell.showInformationMessage(anything(), anything(), Common.install())).thenResolve(
-                    Common.install() as any
+                when(appShell.showInformationMessage(anything(), anything(), Common.install)).thenResolve(
+                    Common.install as any
                 );
-                when(appShell.showInformationMessage(anything(), anything(), Common.install(), anything())).thenResolve(
-                    Common.install() as any
+                when(appShell.showInformationMessage(anything(), anything(), Common.install, anything)).thenResolve(
+                    Common.install as any
                 );
 
                 await dependencyService.installMissingDependencies({
@@ -183,14 +183,14 @@ suite('Kernel Dependency Service', () => {
                     new Error('Install failed - kaboom')
                 );
                 when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
-                    Common.install() as any
+                    Common.install as any
                 );
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.install() as any
+                    Common.install as any
                 );
                 when(
                     appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
-                ).thenResolve(Common.install() as any);
+                ).thenResolve(Common.install as any);
 
                 const result = await dependencyService.installMissingDependencies({
                     resource,
@@ -210,7 +210,7 @@ suite('Kernel Dependency Service', () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(
                     appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
-                ).thenResolve(DataScience.selectKernel() as any);
+                ).thenResolve(DataScience.selectKernel as any);
 
                 const result = await dependencyService.installMissingDependencies({
                     resource,

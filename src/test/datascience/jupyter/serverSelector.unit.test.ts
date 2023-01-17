@@ -216,7 +216,7 @@ import { noop } from '../../../platform/common/utils/misc';
                     assert.equal(item.label, expected.uri, 'Wrong URI value in quick pick');
                     assert.equal(
                         item.detail,
-                        DataScience.jupyterSelectURIMRUDetail().format(expected.date.toLocaleString()),
+                        DataScience.jupyterSelectURIMRUDetail(expected.date),
                         'Wrong detail value in quick pick'
                     );
                 }

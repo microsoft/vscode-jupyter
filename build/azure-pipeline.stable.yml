@@ -18,8 +18,7 @@ extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
     publishExtension: true
-    locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
-    locBundleDestination: $(Build.SourcesDirectory)/out
+    l10nSourcePaths: ./src
     buildSteps:
       - script: npm i -g npm@8.15.1
         displayName: Install npm 8.15.1

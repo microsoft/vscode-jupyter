@@ -107,7 +107,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
             await debug.startDebugging(undefined, config, options);
         } catch (err) {
             traceError(`Can't start debugging (${err})`);
-            this.appShell.showErrorMessage(DataScience.cantStartDebugging()).then(noop, noop);
+            this.appShell.showErrorMessage(DataScience.cantStartDebugging).then(noop, noop);
         }
     }
 
@@ -171,7 +171,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     ): Promise<IpykernelCheckResult> {
         const editor = this.findEditorForCell(cell);
         if (!editor) {
-            this.appShell.showErrorMessage(DataScience.noNotebookToDebug()).then(noop, noop);
+            this.appShell.showErrorMessage(DataScience.noNotebookToDebug).then(noop, noop);
             return IpykernelCheckResult.Unknown;
         }
 
@@ -224,12 +224,12 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
 
     private async promptInstallIpykernel6() {
         const response = await this.appShell.showInformationMessage(
-            DataScience.needIpykernel6(),
+            DataScience.needIpykernel6,
             { modal: true },
-            DataScience.setup()
+            DataScience.setup
         );
 
-        if (response === DataScience.setup()) {
+        if (response === DataScience.setup) {
             sendTelemetryEvent(DebuggingTelemetry.clickedOnSetup);
             this.appShell.openUrl(
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'

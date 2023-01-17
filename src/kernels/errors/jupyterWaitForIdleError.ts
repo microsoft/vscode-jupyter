@@ -20,6 +20,6 @@ import { BaseKernelError } from './types';
  */
 export class JupyterWaitForIdleError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {
-        super('timeout', DataScience.jupyterLaunchTimedOut(), kernelConnectionMetadata);
+        super('timeout', DataScience.jupyterLaunchTimedOut, kernelConnectionMetadata);
     }
 }

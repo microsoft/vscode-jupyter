@@ -316,7 +316,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             );
         }
         throw new JupyterDebuggerNotInstalledError(
-            DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage),
+            DataScience.jupyterDebuggerOutputParseError(this.debuggerPackage),
             undefined,
             kernel.kernelConnectionMetadata
         );

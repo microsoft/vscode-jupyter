@@ -141,12 +141,12 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
     private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
         const selection = await this.appShell.showErrorMessage(
-            DataScience.pythonNotInstalled(),
+            DataScience.pythonNotInstalled,
             { modal: true },
-            Common.install()
+            Common.install
         );
 
-        if (selection === Common.install()) {
+        if (selection === Common.install) {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
             // Activate the python extension command to show how to install python
             await this.commandManager.executeCommand('python.installPython');
@@ -168,7 +168,7 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
 
             // Now start to indicate that we are performing the install and locating kernels
-            const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension());
+            const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension);
             try {
                 await this.extensionChecker.directlyInstallPythonExtension();
 
@@ -197,7 +197,7 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                         action: 'failed'
                     });
                     this.errorHandler
-                        .handleError(new Error(DataScience.failedToInstallPythonExtension()))
+                        .handleError(new Error(DataScience.failedToInstallPythonExtension))
                         .then(noop, noop);
                 }
             } finally {

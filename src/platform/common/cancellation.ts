@@ -18,7 +18,7 @@ export function isCancellationError(ex: Error, includeErrorsWithTheMessageCancel
     }
     if (
         includeErrorsWithTheMessageCanceled &&
-        (ex.message.includes('Canceled') || ex.message.includes(Common.canceled()))
+        (ex.message.includes('Canceled') || ex.message.includes(Common.canceled))
     ) {
         return true;
     }

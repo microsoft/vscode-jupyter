@@ -165,13 +165,13 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     request.variable,
                     this.notebookWatcher.activeKernel
                 );
-                const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
+                const title: string = `${localize.DataScience.dataExplorerTitle} - ${request.variable.name}`;
                 return await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
             }
         } catch (e) {
             traceError(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
-            this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail()).then(noop, noop);
+            this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail).then(noop, noop);
         }
     }
 

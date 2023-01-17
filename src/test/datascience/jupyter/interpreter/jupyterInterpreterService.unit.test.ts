@@ -132,7 +132,7 @@ suite('Jupyter Interpreter Service', () => {
             appShell.showErrorMessage(
                 'Kaboom',
                 deepEqual({ modal: true }),
-                DataScience.selectDifferentJupyterInterpreter()
+                DataScience.selectDifferentJupyterInterpreter
             )
         ).once();
         verify(interpreterSelector.selectInterpreter()).never();

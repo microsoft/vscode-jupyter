@@ -48,7 +48,7 @@ export class JupyterInterpreterSelector {
             matchOnDetail: true,
             matchOnDescription: true,
             placeHolder: currentPythonPath
-                ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder().format(currentPythonPath)
+                ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder(currentPythonPath)
                 : ''
         };
 

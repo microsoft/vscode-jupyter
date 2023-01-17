@@ -74,8 +74,8 @@ suite('Jupyter Interpreter Configuration', () => {
             appShell.showErrorMessage(
                 anything(),
                 deepEqual({ modal: true }),
-                DataScience.jupyterInstall(),
-                DataScience.selectDifferentJupyterInterpreter()
+                DataScience.jupyterInstall,
+                DataScience.selectDifferentJupyterInterpreter
             )
         ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
@@ -90,7 +90,7 @@ suite('Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.pip, pythonInterpreter)).thenResolve(true);
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            DataScience.jupyterInstall() as any
+            DataScience.jupyterInstall as any
         );
         when(command.exec(anything(), anything())).thenReject(new Error('Not found'));
         when(installer.install(anything(), anything(), anything(), anything())).thenResolve(
@@ -105,8 +105,8 @@ suite('Jupyter Interpreter Configuration', () => {
             appShell.showErrorMessage(
                 anything(),
                 deepEqual({ modal: true }),
-                DataScience.jupyterInstall(),
-                DataScience.selectDifferentJupyterInterpreter()
+                DataScience.jupyterInstall,
+                DataScience.selectDifferentJupyterInterpreter
             )
         ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
@@ -120,7 +120,7 @@ suite('Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            DataScience.jupyterInstall() as any
+            DataScience.jupyterInstall as any
         );
         when(installer.install(anything(), anything(), anything(), anything(), anything())).thenResolve(
             installerResponse
@@ -140,7 +140,7 @@ suite('Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(false);
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            DataScience.jupyterInstall() as any
+            DataScience.jupyterInstall as any
         );
         when(installer.install(Product.jupyter, anything(), anything(), anything(), anything())).thenResolve(
             jupyterInstallerResponse

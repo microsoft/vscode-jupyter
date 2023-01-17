@@ -237,7 +237,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         } else {
             traceWarning('No controller selected for Interactive Window');
             if (this.isWebExtension) {
-                this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
+                this.insertInfoMessage(DataScience.noKernelsSpecifyRemote).ignoreErrors;
             }
         }
         this.initialized = true;
@@ -381,11 +381,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
         return reason === SysInfoReason.Restart
             ? displayName
-                ? DataScience.restartingKernelCustomHeader().format(displayName)
-                : DataScience.restartingKernelHeader()
+                ? DataScience.restartingKernelCustomHeader(displayName)
+                : DataScience.restartingKernelHeader
             : displayName
-            ? DataScience.startingNewKernelCustomHeader().format(displayName)
-            : DataScience.startingNewKernelHeader();
+            ? DataScience.startingNewKernelCustomHeader(displayName)
+            : DataScience.startingNewKernelHeader;
     }
 
     private async insertSysInfoMessage(
@@ -466,8 +466,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const kernelName = 'info' in kernel ? kernel.kernelConnectionMetadata.interpreter?.displayName : '';
         const kernelInfo = 'info' in kernel && kernel.info?.status === 'ok' ? kernel.info : undefined;
         const banner = kernelInfo ? kernelInfo.banner.split('\n').join('  \n') : kernel.toString();
-        const message =
-            reason == SysInfoReason.Restart ? DataScience.restartedKernelHeader().format(kernelName || '') : banner;
+        const message = reason == SysInfoReason.Restart ? DataScience.restartedKernelHeader(kernelName || '') : banner;
         this.updateSysInfoMessage(message, true, cellPromise);
     }
 
@@ -651,7 +650,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                         notebookCellPromise
                             .then((cell) => {
                                 if (ex.cell !== cell) {
-                                    this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell).then(noop, noop);
+                                    this.addErrorMessage(DataScience.cellStopOnErrorMessage, cell).then(noop, noop);
                                 }
                             })
                             .catch(noop);

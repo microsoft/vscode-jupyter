@@ -230,7 +230,7 @@ suite('Remote Kernel Execution', function () {
         const prompt = await hijackPrompt(
             'showErrorMessage',
             { contains: 'certificate' },
-            { result: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
+            { result: DataScience.jupyterSelfCertEnable, clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
 

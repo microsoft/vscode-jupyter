@@ -123,9 +123,9 @@ export class JupyterInterpreterService {
                     const selection = await this.appShell.showErrorMessage(
                         err.message,
                         { modal: true },
-                        DataScience.selectDifferentJupyterInterpreter()
+                        DataScience.selectDifferentJupyterInterpreter
                     );
-                    if (selection !== DataScience.selectDifferentJupyterInterpreter()) {
+                    if (selection !== DataScience.selectDifferentJupyterInterpreter) {
                         return JupyterInterpreterDependencyResponse.cancel;
                     }
                 }

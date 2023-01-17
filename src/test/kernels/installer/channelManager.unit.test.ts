@@ -169,7 +169,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             sysPrefix: ''
         };
         appShell
-            .setup((a) => a.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp()))
+            .setup((a) => a.showErrorMessage(Installer.noCondaOrPipInstaller, Installer.searchForHelp))
             .verifiable(TypeMoq.Times.once());
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
         await installChannelManager.showNoInstallersMessage(activeInterpreter);
@@ -185,7 +185,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             sysPrefix: ''
         };
         appShell
-            .setup((a) => a.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp()))
+            .setup((a) => a.showErrorMessage(Installer.noPipInstaller, Installer.searchForHelp))
             .verifiable(TypeMoq.Times.once());
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
         await installChannelManager.showNoInstallersMessage(activeInterpreter);
@@ -233,8 +233,8 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                 platformService.setup((p) => p.isWindows).returns(() => testParams.isWindows);
                 platformService.setup((p) => p.isMac).returns(() => testParams.isMac);
                 appShell
-                    .setup((a) => a.showErrorMessage(TypeMoq.It.isAny(), Installer.searchForHelp()))
-                    .returns(() => Promise.resolve(Installer.searchForHelp()))
+                    .setup((a) => a.showErrorMessage(TypeMoq.It.isAny(), Installer.searchForHelp))
+                    .returns(() => Promise.resolve(Installer.searchForHelp))
                     .verifiable(TypeMoq.Times.once());
                 appShell
                     .setup((a) => a.openUrl(expectedURL))
@@ -261,7 +261,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             .verifiable(TypeMoq.Times.never());
         platformService.setup((p) => p.isWindows).returns(() => true);
         appShell
-            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), Installer.searchForHelp()))
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), Installer.searchForHelp))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         appShell

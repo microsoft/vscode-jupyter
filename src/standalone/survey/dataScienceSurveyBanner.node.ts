@@ -92,8 +92,8 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
 
     private disabledInCurrentSession: boolean = false;
     private bannerLabels: string[] = [
-        localize.DataScienceSurveyBanner.bannerLabelYes(),
-        localize.DataScienceSurveyBanner.bannerLabelNo()
+        localize.DataScienceSurveyBanner.bannerLabelYes,
+        localize.DataScienceSurveyBanner.bannerLabelNo
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
     private static surveyDelay = false;
@@ -234,7 +234,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
             case BannerType.ExperimentNotebookSurvey:
-                return localize.InsidersNativeNotebooksSurveyBanner.bannerMessage();
+                return localize.InsidersNativeNotebooksSurveyBanner.bannerMessage;
             default:
                 traceError('Invalid Banner type');
                 return '';

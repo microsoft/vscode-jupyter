@@ -33,9 +33,7 @@ export class RestartNotSupportedController implements IDebuggingDelegate {
     public async willSendRequest(request: DebugProtocol.Request): Promise<undefined | DebugProtocol.Response> {
         if (request.command === 'restart') {
             this.trace('restart', 'Showing warning for unsupported restart request');
-            this.applicationShell
-                .showWarningMessage(DataScience.restartNotSupported(), { modal: true })
-                .then(noop, noop);
+            this.applicationShell.showWarningMessage(DataScience.restartNotSupported, { modal: true }).then(noop, noop);
             return {
                 command: request.command,
                 request_seq: request.seq,

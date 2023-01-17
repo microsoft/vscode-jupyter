@@ -274,10 +274,10 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
         PythonExtensionChecker.promptDisplayed = true;
         // Ask user if they want to install and then wait for them to actually install it.
-        const yes = localize.Common.bannerLabelYes();
+        const yes = localize.Common.bannerLabelYes;
         sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
         const answer = await this.appShell.showInformationMessage(
-            localize.DataScience.pythonExtensionRequired(),
+            localize.DataScience.pythonExtensionRequired,
             { modal: true },
             yes
         );

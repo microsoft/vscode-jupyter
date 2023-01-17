@@ -92,7 +92,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             (c, v, d) => new DataViewerMessageListener(c, v, d),
             dataExplorerDir,
             [joinPath(dataExplorerDir, 'dataExplorer.js')],
-            localize.DataScience.dataExplorerTitle(),
+            localize.DataScience.dataExplorerTitle,
             globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One
         );
         this.onDidDispose(this.dataViewerDisposed, this);
@@ -298,9 +298,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         } catch (e) {
             if (e instanceof JupyterDataRateLimitError) {
                 traceError(e.message);
-                const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
+                const actionTitle = localize.DataScience.pythonInteractiveHelpLink;
                 this.applicationShell
-                    .showErrorMessage(localize.DataScience.jupyterDataRateExceeded(), actionTitle)
+                    .showErrorMessage(localize.DataScience.jupyterDataRateExceeded, actionTitle)
                     .then((v) => {
                         // User clicked on the link, open it.
                         if (v === actionTitle) {

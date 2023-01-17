@@ -131,7 +131,7 @@ suite('JupyterConnection', () => {
 
         const promise = waiter.waitForConnection();
 
-        await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut());
+        await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut);
     });
     test('Throw crashed error', async () => {
         const exitCode = 999;
@@ -141,6 +141,6 @@ suite('JupyterConnection', () => {
         childProc.emit('exit', exitCode);
         observableOutput.complete();
 
-        await assert.isRejected(promise, DataScience.jupyterServerCrashed().format(exitCode.toString()));
+        await assert.isRejected(promise, DataScience.jupyterServerCrashed(exitCode));
     });
 });

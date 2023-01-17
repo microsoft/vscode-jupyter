@@ -28,8 +28,8 @@ enum InteractiveShiftEnterLabelIndex {
 export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
     private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
-    private bannerMessage: string = localize.InteractiveShiftEnterBanner.bannerMessage();
-    private bannerLabels: string[] = [localize.Common.bannerLabelYes(), localize.Common.bannerLabelNo()];
+    private bannerMessage: string = localize.InteractiveShiftEnterBanner.bannerMessage;
+    private bannerLabels: string[] = [localize.Common.bannerLabelYes, localize.Common.bannerLabelNo];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,

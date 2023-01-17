@@ -42,7 +42,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         this.refresh = async () => {
             this.refreshInvoked = true;
         };
-        this.title = DataScience.kernelPickerSelectKernelTitle();
+        this.title = DataScience.kernelPickerSelectKernelTitle;
         this.kind = kind;
         this.disposables.push(this._onDidRefresh);
         if (isPromise(finderPromise)) {
@@ -68,13 +68,13 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         }
         switch (finder.kind) {
             case ContributedKernelFinderKind.LocalKernelSpec:
-                this.title = DataScience.kernelPickerSelectLocalKernelSpecTitle();
+                this.title = DataScience.kernelPickerSelectLocalKernelSpecTitle;
                 break;
             case ContributedKernelFinderKind.LocalPythonEnvironment:
-                this.title = DataScience.kernelPickerSelectPythonEnvironmentTitle();
+                this.title = DataScience.kernelPickerSelectPythonEnvironmentTitle;
                 break;
             default:
-                this.title = DataScience.kernelPickerSelectKernelFromRemoteTitle().format(finder.displayName);
+                this.title = DataScience.kernelPickerSelectKernelFromRemoteTitle(finder.displayName);
                 break;
         }
         finder.onDidChangeKernels(

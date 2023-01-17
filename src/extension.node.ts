@@ -197,7 +197,7 @@ async function activateUnsafe(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function displayProgress(promise: Promise<any>) {
-    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
+    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension };
     window.withProgress(progressOptions, () => promise).then(noop, noop);
 }
 
@@ -205,7 +205,7 @@ function displayProgress(promise: Promise<any>) {
 // error handling
 
 async function handleError(ex: Error, startupDurations: typeof durations) {
-    notifyUser(Common.handleExtensionActivationError());
+    notifyUser(Common.handleExtensionActivationError);
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);
@@ -248,7 +248,7 @@ function addConsoleLogger() {
 }
 
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter);
     registerLogger(new OutputChannelLogger(standardOutputChannel));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(

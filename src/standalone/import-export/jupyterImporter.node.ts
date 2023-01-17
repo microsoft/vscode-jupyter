@@ -84,7 +84,7 @@ export class JupyterImporter implements INotebookImporter {
             return this.addInstructionComments(fileOutput);
         }
 
-        throw new Error(DataScience.jupyterNbConvertNotSupported());
+        throw new Error(DataScience.jupyterNbConvertNotSupported);
     }
 
     public dispose = () => {
@@ -92,7 +92,7 @@ export class JupyterImporter implements INotebookImporter {
     };
 
     private addInstructionComments = (pythonOutput: string): string => {
-        const comments = DataScience.instructionComments().format(this.defaultCellMarker);
+        const comments = DataScience.instructionComments(this.defaultCellMarker);
         return comments.concat(pythonOutput);
     };
 

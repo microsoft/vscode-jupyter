@@ -13,10 +13,10 @@ export class DataViewerChecker {
 
     public async isRequestedColumnSizeAllowed(columnSize: number, owningResource?: Resource): Promise<boolean> {
         if (columnSize > ColumnWarningSize && (await this.shouldAskForLargeData(owningResource))) {
-            const message = DataScience.tooManyColumnsMessage();
-            const yes = DataScience.tooManyColumnsYes();
-            const no = DataScience.tooManyColumnsNo();
-            const dontAskAgain = DataScience.tooManyColumnsDontAskAgain();
+            const message = DataScience.tooManyColumnsMessage;
+            const yes = DataScience.tooManyColumnsYes;
+            const no = DataScience.tooManyColumnsNo;
+            const dontAskAgain = DataScience.tooManyColumnsDontAskAgain;
 
             const result = await this.applicationShell.showWarningMessage(message, yes, no, dontAskAgain);
             if (result === dontAskAgain) {

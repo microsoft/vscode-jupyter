@@ -256,7 +256,7 @@ export class DebuggingManager
 
             return new DebugAdapterInlineImplementation(adapter);
         } else {
-            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted()).then(noop, noop);
+            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted).then(noop, noop);
         }
 
         return;

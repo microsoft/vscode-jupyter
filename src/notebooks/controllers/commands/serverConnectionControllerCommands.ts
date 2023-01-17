@@ -147,8 +147,8 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
     ): Promise<InputStep<{}> | void> {
         try {
             await this.showKernelPicker(
-                DataScience.pickRemoteKernelTitle(),
-                DataScience.pickRemoteKernelPlaceholder(),
+                DataScience.pickRemoteKernelTitle,
+                DataScience.pickRemoteKernelPlaceholder,
                 false,
                 activeNotebookType,
                 input

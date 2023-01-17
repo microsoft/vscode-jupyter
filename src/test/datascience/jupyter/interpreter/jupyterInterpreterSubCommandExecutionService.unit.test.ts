@@ -107,10 +107,10 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             const reason = await jupyterInterpreterExecutionService.getReasonForJupyterNotebookNotBeingSupported(
                 undefined
             );
-            assert.equal(reason, DataScience.selectJupyterInterpreter());
+            assert.equal(reason, DataScience.selectJupyterInterpreter);
         });
         test('Jupyter cannot be started because jupyter is not installed', async () => {
-            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
                 activePythonInterpreter.displayName!,
                 ProductNames.get(Product.jupyter)!
             );
@@ -123,7 +123,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             assert.equal(reason, expectedReason);
         });
         test('Jupyter cannot be started because notebook is not installed', async () => {
-            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
                 activePythonInterpreter.displayName!,
                 ProductNames.get(Product.notebook)!
             );
@@ -142,7 +142,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             ]);
 
             await expect(promise).to.eventually.be.rejectedWith(
-                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
                     activePythonInterpreter.displayName!,
                     ProductNames.get(Product.notebook)!
                 )
@@ -155,7 +155,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             ]);
 
             await expect(promise).to.eventually.be.rejectedWith(
-                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
                     activePythonInterpreter.displayName!,
                     ProductNames.get(Product.notebook)!
                 )
@@ -193,7 +193,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             assert.isOk(isSupported);
         });
         test('Jupyter cannot be started because jupyter is not installed', async () => {
-            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
                 selectedJupyterInterpreter.displayName!,
                 ProductNames.get(Product.jupyter)!
             );
@@ -208,7 +208,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
             assert.equal(reason, expectedReason);
         });
         test('Jupyter cannot be started because notebook is not installed', async () => {
-            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter(
                 selectedJupyterInterpreter.displayName!,
                 ProductNames.get(Product.notebook)!
             );
@@ -231,10 +231,7 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
                 undefined
             );
 
-            assert.equal(
-                reason,
-                DataScience.jupyterKernelSpecModuleNotFound().format(selectedJupyterInterpreter.uri.fsPath)
-            );
+            assert.equal(reason, DataScience.jupyterKernelSpecModuleNotFound(selectedJupyterInterpreter.uri.fsPath));
         });
         test('Can start jupyer notebook', async () => {
             const output = await jupyterInterpreterExecutionService.startNotebook([], {});

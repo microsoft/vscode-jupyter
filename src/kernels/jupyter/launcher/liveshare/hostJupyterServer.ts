@@ -57,7 +57,7 @@ export class HostJupyterServer implements INotebookServer {
         this.connectionInfoDisconnectHandler = this.connection.disconnected((c) => {
             try {
                 this.serverExitCode = c;
-                traceError(DataScience.jupyterServerCrashed().format(c.toString()));
+                traceError(DataScience.jupyterServerCrashed(c));
                 this.shutdown().ignoreErrors();
             } catch {
                 noop();
@@ -178,7 +178,7 @@ export class HostJupyterServer implements INotebookServer {
         );
         this.throwIfDisposedOrCancelled(cancelToken);
         const baseUrl = this.connection?.baseUrl || '';
-        this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
+        this.logRemoteOutput(DataScience.createdNewNotebook(baseUrl));
         return session;
     }
 
@@ -234,7 +234,7 @@ export class HostJupyterServer implements INotebookServer {
     public getDisposedError(): Error {
         // We may have been disposed because of a crash. See if our connection info is indicating shutdown
         if (this.serverExitCode) {
-            return new Error(DataScience.jupyterServerCrashed().format(this.serverExitCode.toString()));
+            return new Error(DataScience.jupyterServerCrashed(this.serverExitCode));
         }
 
         // Default is just say session was disposed

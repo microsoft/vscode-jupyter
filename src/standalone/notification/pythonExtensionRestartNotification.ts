@@ -34,7 +34,7 @@ export class PythonExtensionRestartNotification implements IExtensionSyncActivat
         if (status === 'installed' && this.anyKernelsAreActive()) {
             // Restart required notification message
             this.applicationShell
-                .showInformationMessage(localize.DataScience.pythonExtensionInstalled(), localize.Common.ok())
+                .showInformationMessage(localize.DataScience.pythonExtensionInstalled, localize.Common.ok)
                 .then(noop, noop);
         }
     }

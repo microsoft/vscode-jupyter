@@ -147,8 +147,9 @@ export abstract class Webview implements IWebview {
                     this.postLoad(this.webviewHost);
                 } else {
                     // Indicate that we can't load the file path
-                    const badPanelString = localize.DataScience.badWebPanelFormatString();
-                    this.webviewHost.webview.html = badPanelString.format(this.options.scripts.join(', '));
+                    this.webviewHost.webview.html = localize.DataScience.badWebPanelFormatString(
+                        this.options.scripts.join(', ')
+                    );
                 }
             }
         } catch (error) {

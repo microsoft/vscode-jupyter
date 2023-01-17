@@ -61,10 +61,7 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
             return {
                 ...q,
                 // Add the package name onto the description
-                description: localize.DataScience.uriProviderDescriptionFormat().format(
-                    q.description || '',
-                    this.packageName
-                ),
+                description: localize.DataScience.uriProviderDescriptionFormat(q.description || '', this.packageName),
                 original: q
             };
         });

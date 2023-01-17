@@ -131,11 +131,11 @@ export class ExperimentService implements IExperimentService {
         experiments.features.forEach((exp) => {
             // Filter out experiments groups that are not from the Python extension.
             if (exp.toLowerCase().startsWith('jupyter')) {
-                this.output.appendLine(Experiments.inGroup().format(exp));
+                this.output.appendLine(Experiments.inGroup(exp));
             }
         });
         this.getExperimentsUserHasManuallyOptedInto().forEach((exp) => {
-            this.output.appendLine(Experiments.inGroup().format(exp.toString()));
+            this.output.appendLine(Experiments.inGroup(exp.toString()));
         });
     }
     private getOptInOptOutStatus(experiment: ExperimentGroups): 'optOut' | 'optIn' | undefined {

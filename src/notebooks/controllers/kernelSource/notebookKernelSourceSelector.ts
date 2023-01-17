@@ -203,12 +203,12 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         serverUri: savedURI.uri,
                         idAndHandle: idAndHandle,
                         label: server.displayName,
-                        detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
+                        detail: DataScience.jupyterSelectURIMRUDetail(uriDate),
                         buttons: provider.removeHandle
                             ? [
                                   {
                                       iconPath: new ThemeIcon('trash'),
-                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick()
+                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
                                   }
                               ]
                             : []

@@ -151,7 +151,7 @@ export class InteractiveWindowDebuggingManager
     ): Promise<DebugAdapterDescriptor | undefined> {
         const kernel = await this.ensureKernelIsRunning(notebook);
         if (!kernel?.session) {
-            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted()).then(noop, noop);
+            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted).then(noop, noop);
             return;
         }
         const adapter = new KernelDebugAdapter(

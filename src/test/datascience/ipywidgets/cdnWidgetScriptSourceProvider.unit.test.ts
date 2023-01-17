@@ -75,11 +75,11 @@ suite('ipywidget - CDN', () => {
 
         verify(
             appShell.showInformationMessage(
-                DataScience.useCDNForWidgetsNoInformation(),
+                DataScience.useCDNForWidgetsNoInformation,
                 deepEqual({ modal: true }),
-                Common.ok(),
-                Common.doNotShowAgain(),
-                Common.moreInfo()
+                Common.ok,
+                Common.doNotShowAgain,
+                Common.moreInfo
             )
         ).once();
     });
@@ -92,13 +92,13 @@ suite('ipywidget - CDN', () => {
 
         verify(
             appShell.showWarningMessage(
-                DataScience.cdnWidgetScriptNotAccessibleWarningMessage().format(
+                DataScience.cdnWidgetScriptNotAccessibleWarningMessage(
                     'Hello World',
                     JSON.stringify(settings.widgetScriptSources)
                 ),
-                Common.ok(),
-                Common.doNotShowAgain(),
-                Common.moreInfo()
+                Common.ok,
+                Common.doNotShowAgain,
+                Common.moreInfo
             )
         ).once();
     });
@@ -111,20 +111,20 @@ suite('ipywidget - CDN', () => {
 
         verify(
             appShell.showWarningMessage(
-                DataScience.cdnWidgetScriptNotAccessibleWarningMessage().format(
+                DataScience.cdnWidgetScriptNotAccessibleWarningMessage(
                     'Hello World',
                     JSON.stringify(settings.widgetScriptSources)
                 ),
-                Common.ok(),
-                Common.doNotShowAgain(),
-                Common.moreInfo()
+                Common.ok,
+                Common.doNotShowAgain,
+                Common.moreInfo
             )
         ).never();
     });
     test('Verify we track the fact that we should not warn again if there is no network access', async () => {
         settings.widgetScriptSources = ['jsdelivr.com'];
         when(appShell.showWarningMessage(anything(), anything(), anything(), anything())).thenResolve(
-            Common.doNotShowAgain() as any
+            Common.doNotShowAgain as any
         );
         when(memento.get(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, anything())).thenReturn(false);
 
@@ -132,13 +132,13 @@ suite('ipywidget - CDN', () => {
 
         verify(
             appShell.showWarningMessage(
-                DataScience.cdnWidgetScriptNotAccessibleWarningMessage().format(
+                DataScience.cdnWidgetScriptNotAccessibleWarningMessage(
                     'Hello World',
                     JSON.stringify(settings.widgetScriptSources)
                 ),
-                Common.ok(),
-                Common.doNotShowAgain(),
-                Common.moreInfo()
+                Common.ok,
+                Common.doNotShowAgain,
+                Common.moreInfo
             )
         ).once();
         verify(memento.update(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, true)).once();
@@ -151,11 +151,11 @@ suite('ipywidget - CDN', () => {
 
         verify(
             appShell.showInformationMessage(
-                DataScience.useCDNForWidgetsNoInformation(),
+                DataScience.useCDNForWidgetsNoInformation,
                 deepEqual({ modal: true }),
-                Common.ok(),
-                Common.doNotShowAgain(),
-                Common.moreInfo()
+                Common.ok,
+                Common.doNotShowAgain,
+                Common.moreInfo
             )
         ).never();
     });
@@ -170,11 +170,11 @@ suite('ipywidget - CDN', () => {
         // Confirm message was displayed.
         verify(
             appShell.showInformationMessage(
-                DataScience.useCDNForWidgetsNoInformation(),
+                DataScience.useCDNForWidgetsNoInformation,
                 anything(),
-                Common.ok(),
-                Common.doNotShowAgain(),
-                Common.moreInfo()
+                Common.ok,
+                Common.doNotShowAgain,
+                Common.moreInfo
             )
         ).once();
 
@@ -193,7 +193,7 @@ suite('ipywidget - CDN', () => {
     });
     test('Do not update settings if Cancel is clicked in prompt', async () => {
         when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
-            Common.cancel() as any
+            Common.cancel as any
         );
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
@@ -203,7 +203,7 @@ suite('ipywidget - CDN', () => {
     });
     test('Update settings to not use CDN if `Do Not Show Again` is clicked in prompt', async () => {
         when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
-            Common.doNotShowAgain() as any
+            Common.doNotShowAgain as any
         );
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
@@ -213,7 +213,7 @@ suite('ipywidget - CDN', () => {
     });
     test('Update settings to use CDN based on prompt', async () => {
         when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve(
-            Common.ok() as any
+            Common.ok as any
         );
 
         await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
@@ -221,11 +221,11 @@ suite('ipywidget - CDN', () => {
         // Confirm message was displayed.
         verify(
             appShell.showInformationMessage(
-                DataScience.useCDNForWidgetsNoInformation(),
+                DataScience.useCDNForWidgetsNoInformation,
                 anything(),
-                Common.ok(),
-                Common.doNotShowAgain(),
-                Common.moreInfo()
+                Common.ok,
+                Common.doNotShowAgain,
+                Common.moreInfo
             )
         ).once();
         // Confirm settings were updated.
@@ -245,7 +245,7 @@ suite('ipywidget - CDN', () => {
         let values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
 
         assert.deepEqual(values, { moduleName: 'module1' });
-        const expectedMessage = DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
+        const expectedMessage = DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork(
             'module1',
             '1',
             JSON.stringify((<any>settings).widgetScriptSources)

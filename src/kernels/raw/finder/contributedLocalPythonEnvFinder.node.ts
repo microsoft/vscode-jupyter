@@ -45,7 +45,7 @@ export class ContributedLocalPythonEnvFinder
     private readonly promiseMonitor = new PromiseMonitor();
     kind = ContributedKernelFinderKind.LocalPythonEnvironment;
     id: string = ContributedKernelFinderKind.LocalPythonEnvironment;
-    displayName: string = localize.DataScience.localPythonEnvironments();
+    displayName: string = localize.DataScience.localPythonEnvironments;
 
     private _onDidChangeKernels = new EventEmitter<{
         added?: PythonKernelConnectionMetadata[];
