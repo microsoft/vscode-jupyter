@@ -8,9 +8,9 @@ import * as path from '../../../platform/vscode-path/path';
 import { Event, Extension, extensions, Uri } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
-import * as stacktrace from 'stack-trace';
 import { EXTENSION_ROOT_DIR } from '../../constants.node';
 import { IFileSystem } from '../platform/types';
+import { parseStack } from '../../errors';
 
 /**
  * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
@@ -49,7 +49,8 @@ export class Extensions implements IExtensions {
                         (ext) => item!.includes(ext.extensionUri.path) || item!.includes(ext.extensionUri.fsPath)
                     )
                 ) as string[];
-            stacktrace.parse.call(stacktrace, new Error('Ex')).forEach((item) => {
+            // Work around for https://github.com/microsoft/vscode-jupyter/issues/12550
+            parseStack(new Error('Ex')).forEach((item) => {
                 const fileName = item.getFileName();
                 if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
                     frames.push(fileName);
