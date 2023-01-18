@@ -53,6 +53,7 @@ import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { RemoteJupyterServerMruUpdate } from './remoteJupyterServerMruUpdate';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -83,6 +84,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ContributedLocalPythonEnvFinder
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        RemoteJupyterServerMruUpdate
     );
 
     serviceManager.addSingleton<JupyterPaths>(JupyterPaths, JupyterPaths);

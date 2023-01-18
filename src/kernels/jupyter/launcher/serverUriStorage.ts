@@ -81,6 +81,21 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         // Cache our current state so we don't keep asking for it from the encrypted storage
         this.getUri().ignoreErrors();
     }
+    public async addServerToUriList(serverId: string, time: number) {
+        // Start with saved list.
+        const uriList = await this.getSavedUriList();
+
+        // Check if we have already found a display name for this server
+        const existingEntry = uriList.find((entry) => {
+            return entry.serverId === serverId;
+        });
+
+        if (!existingEntry) {
+            throw new Error(`Uri not found for Server Id ${serverId}`);
+        }
+
+        await this.addToUriList(existingEntry.uri, time, existingEntry.displayName || '');
+    }
     public async addToUriList(uri: string, time: number, displayName: string) {
         // Uri list is saved partially in the global memento and partially in encrypted storage
 

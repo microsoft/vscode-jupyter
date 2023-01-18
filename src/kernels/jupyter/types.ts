@@ -294,6 +294,12 @@ export interface IJupyterServerUriStorage {
     readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
     readonly onDidAddUri: Event<IJupyterServerUriEntry>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
+    /**
+     * Adds a server to the MRU list.
+     * Similar to `addToUriList` however one does not need to pass the `Uri` nor the `displayName`.
+     * As Uri could contain sensitive information and `displayName` would have already been setup.
+     */
+    addServerToUriList(serverId: string, time: number): Promise<void>;
     getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
