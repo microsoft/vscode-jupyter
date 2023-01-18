@@ -43,7 +43,7 @@ export class Extensions implements IExtensions {
                 // Since this is web, look for paths that start with http (which also includes https).
                 .filter((item) => item && item.toLowerCase().startsWith('http'))
                 .filter((item) => item && !item.toLowerCase().startsWith(jupyterExtRoot)) as string[];
-                stacktrace.parse.call(stacktrace, new Error('Ex')).forEach((item) => {
+            stacktrace.parse.call(stacktrace, new Error('Ex')).forEach((item) => {
                 const fileName = item.getFileName();
                 if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
                     frames.push(fileName);

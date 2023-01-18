@@ -49,7 +49,7 @@ export class Extensions implements IExtensions {
                         (ext) => item!.includes(ext.extensionUri.path) || item!.includes(ext.extensionUri.fsPath)
                     )
                 ) as string[];
-                stacktrace.parse.call(stacktrace, new Error('Ex')).forEach((item) => {
+            stacktrace.parse.call(stacktrace, new Error('Ex')).forEach((item) => {
                 const fileName = item.getFileName();
                 if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
                     frames.push(fileName);
