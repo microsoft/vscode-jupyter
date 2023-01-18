@@ -2051,7 +2051,7 @@
         "@lumino/widgets": "^1.28.0",
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.6.2",
-        "@vscode/jupyter-ipywidgets7": "^1.0.1",
+        "@vscode/jupyter-ipywidgets7": "^1.0.2",
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
