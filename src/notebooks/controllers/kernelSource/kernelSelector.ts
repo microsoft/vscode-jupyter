@@ -397,12 +397,20 @@ export class KernelSelector implements IDisposable {
         });
         this.rebuildQuickPickItems(quickPick);
     }
-    private buildErrorQuickPickItem(error: Error): KernelListErrorQuickPickItem {
-        return {
-            error,
-            label: `$(error) ${DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPick}`,
-            detail: error.message || error.toString()
-        };
+    private buildErrorQuickPickItem(error?: Error): KernelListErrorQuickPickItem[] {
+        if (this.provider.kind === ContributedKernelFinderKind.Remote && error) {
+            this.provider.finder?.displayName;
+            return [
+                {
+                    error,
+                    label: DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPickLabel,
+                    detail: DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail
+                }
+            ];
+        }
+        // This is an unlikely scenario, and we don't want to display an messages here.
+        // The only other providers are local kernels pecs and local python environments.
+        return [];
     }
     private rebuildQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>, error?: Error) {
         const recommendedItem = this.recommendedItems.find((item) => isKernelPickItem(item));
@@ -413,7 +421,7 @@ export class KernelSelector implements IDisposable {
         const connections = this.quickPickItems.filter(
             (item) => !isKernelPickItem(item) || !recommendedConnections.has(item.connection.id)
         );
-        const errorItems = error ? [this.buildErrorQuickPickItem(error)] : [];
+        const errorItems = this.buildErrorQuickPickItem(error);
         updateKernelQuickPickWithNewItems(
             quickPick,
             this.installPythonItems
