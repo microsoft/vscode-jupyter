@@ -40,6 +40,7 @@ import { Commands } from '../../platform/common/constants';
 import { RemoteJupyterServerUriProviderError } from '../../kernels/errors/remoteJupyterServerUriProviderError';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from '../../kernels/errors/kernelErrorHandler.node';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -55,6 +56,7 @@ suite('Error Handler Unit Tests', () => {
     let cmdManager: ICommandManager;
     let extensions: IExtensions;
     let reservedPythonNames: IReservedPythonNamedProvider;
+    let fs: IFileSystem;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         uri: Uri.file('Some Path'),
@@ -74,11 +76,13 @@ suite('Error Handler Unit Tests', () => {
         jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         extensions = mock<IExtensions>();
         extensions = mock<IExtensions>();
+        fs = mock<IFileSystem>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         when(extensions.getExtension(anything())).thenReturn({ packageJSON: { displayName: '' } } as any);
+        when(fs.exists(anything())).thenResolve(true);
         reservedPythonNames = mock<IReservedPythonNamedProvider>();
         when(reservedPythonNames.isReserved(anything())).thenResolve(false);
         dataScienceErrorHandler = new DataScienceErrorHandlerNode(
@@ -93,7 +97,8 @@ suite('Error Handler Unit Tests', () => {
             false,
             instance(extensions),
             instance(jupyterUriProviderRegistration),
-            instance(reservedPythonNames)
+            instance(reservedPythonNames),
+            instance(fs)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
