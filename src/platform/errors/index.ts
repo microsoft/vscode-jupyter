@@ -52,9 +52,9 @@ function parseStack(ex: Error) {
     // Work around bug in stackTrace when ex has an array already
     if (ex.stack && Array.isArray(ex.stack)) {
         const concatenated = { ...ex, stack: ex.stack.join('\n') };
-        return stackTrace.parse(concatenated);
+        return stackTrace.parse.call(stackTrace, concatenated);
     }
-    return stackTrace.parse(ex);
+    return stackTrace.parse.call(stackTrace, ex);
 }
 
 function serializeStackTrace(ex: Error): string {
