@@ -613,6 +613,11 @@ export namespace DataScience {
     export const failedToStartKernelDueToOldIPyKernel = l10n.t(
         'The kernel failed to start due to an outdated version of IPyKernel. Consider updating this module to the latest version.'
     );
+    export const failedToStartKernelDueToMissingPythonEnv = (pythonEnvName: string) =>
+        l10n.t(
+            `The kernel failed to start as the Python Environment '{0}' is no longer available. Consider selecting another kernel or refreshing the list of Python Environments.`,
+            pythonEnvName
+        );
     export const matplotlibWidgetInsteadOfOther = l10n.t("'%matplotlib' widget works best inside of VS Code");
     export const matplotlibWidgetCodeActionTitle = l10n.t('More info');
     export const allowExtensionToUseJupyterKernelApi = (extensionLink: string, prompt: string) =>

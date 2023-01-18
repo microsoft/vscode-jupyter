@@ -56,7 +56,7 @@ import {
     handleExpiredCertsError,
     handleSelfCertsError
 } from '../jupyter/jupyterUtils';
-import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterExpiredCertsError } from '../../platform/errors/jupyterExpiredCertsError';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
@@ -64,6 +64,7 @@ import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriPro
 import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
 import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from './types';
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 /***
  * Common code for handling errors.
@@ -85,7 +86,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
     private handledErrors = new WeakSet<Error>();
     private handledKernelErrors = new WeakSet<Error>();
@@ -149,6 +151,18 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         } else if (isCancellationError(error)) {
             // Don't show the message for cancellation errors
             return '';
+        } else if (
+            (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
+            (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
+                error.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') &&
+            error.kernelConnectionMetadata.interpreter &&
+            !(await this.fs.exists(error.kernelConnectionMetadata.interpreter.uri))
+        ) {
+            return DataScience.failedToStartKernelDueToMissingPythonEnv(
+                error.kernelConnectionMetadata.interpreter.displayName ||
+                    error.kernelConnectionMetadata.interpreter.envName ||
+                    getDisplayPath(error.kernelConnectionMetadata.interpreter.uri)
+            );
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
             (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
@@ -420,6 +434,22 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                         sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
                     }
                 })
+                .then(noop, noop);
+            return KernelInterpreterDependencyResponse.failed;
+        } else if (
+            (errorContext === 'start' || errorContext === 'restart') &&
+            kernelConnection.kind === 'startUsingPythonInterpreter' &&
+            !(await this.fs.exists(kernelConnection.interpreter.uri))
+        ) {
+            this.sendKernelTelemetry(err, errorContext, resource, KernelFailureReason.pythonEnvironmentMissing);
+            this.applicationShell
+                .showErrorMessage(
+                    DataScience.failedToStartKernelDueToMissingPythonEnv(
+                        kernelConnection.interpreter.displayName ||
+                            kernelConnection.interpreter.envName ||
+                            getDisplayPath(kernelConnection.interpreter.uri)
+                    )
+                )
                 .then(noop, noop);
             return KernelInterpreterDependencyResponse.failed;
         } else if (

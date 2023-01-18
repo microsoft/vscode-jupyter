@@ -170,7 +170,11 @@ export enum KernelFailureReason {
     /**
      * Failure to start Jupyter due to outdated traitlets.
      */
-    jupyterStartFailureOutdatedTraitlets = 'jupyterStartFailureOutdatedTraitlets'
+    jupyterStartFailureOutdatedTraitlets = 'jupyterStartFailureOutdatedTraitlets',
+    /**
+     *  Python environment is missing (probably been deleted).
+     */
+    pythonEnvironmentMissing = 'pythonEnvironmentMissing'
 }
 type BaseFailure<Reason extends KernelFailureReason, ExtraData = {}> = {
     reason: Reason;
