@@ -661,7 +661,13 @@ export namespace DataScience {
         l10n.t('Select a Kernel from {0}', kernelProvider);
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');
     export const installPythonTitle = l10n.t('Install Python');
-    export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPick = l10n.t('Failed to fetch Kernels Specs');
+    export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPickLabel = l10n.t({
+        message: '$(error) Unable to connect to the remote server',
+        comment: 'Do not translate the string $(error) as that is a VS Code icon.'
+    });
+    export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail = l10n.t(
+        'Ensure the server is running and reachable.'
+    );
 }
 export namespace WebViews {
     export const collapseSingle = l10n.t('Collapse');
