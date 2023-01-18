@@ -499,6 +499,8 @@ abstract class BaseKernel implements IBaseKernel {
     private async createJupyterSession(): Promise<IKernelConnectionSession> {
         let disposables: Disposable[] = [];
         try {
+            await Promise.all(Array.from(this.hooks.get('willStart') || new Set<Hook>()).map((h) => h()));
+
             // No need to block kernel startup on UI updates.
             let pythonInfo = '';
             if (this.kernelConnectionMetadata.interpreter) {

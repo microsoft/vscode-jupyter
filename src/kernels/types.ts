@@ -319,7 +319,8 @@ export type KernelHooks =
     | 'restartCompleted'
     | 'interruptCompleted'
     | 'didStart'
-    | 'willCancel';
+    | 'willCancel'
+    | 'willStart';
 export interface IBaseKernel extends IAsyncDisposable {
     readonly uri: Uri;
     /**
@@ -374,7 +375,7 @@ export interface IBaseKernel extends IAsyncDisposable {
         disposables?: IDisposable[]
     ): IDisposable;
     addHook(
-        event: 'willInterrupt' | 'restartCompleted' | 'interruptCompleted' | 'didStart' | 'willCancel',
+        event: 'willInterrupt' | 'restartCompleted' | 'interruptCompleted' | 'didStart' | 'willCancel' | 'willStart',
         hook: () => Promise<void>,
         thisArgs?: unknown,
         disposables?: IDisposable[]

@@ -792,13 +792,13 @@ export class InterpreterService implements IInterpreterService {
                             }
                             traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             this.populateCachedListOfInterpreters(true).finally(() => {
-                                if (e.type === 'remove') {
-                                    if (!this._interpreters.has(e.env.id)) {
-                                        this.triggerEventIfAllowed(this.didChangeInterpreter);
-                                        this.triggerEventIfAllowed(this.didChangeInterpreters);
-                                        this._onDidRemoveInterpreter.fire({ id: e.env.id });
-                                    }
-                                }
+                                // if (e.type === 'remove') {
+                                //     if (!this._interpreters.has(e.env.id)) {
+                                //         this.triggerEventIfAllowed(this.didChangeInterpreter);
+                                //         this.triggerEventIfAllowed(this.didChangeInterpreters);
+                                //         this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                //     }
+                                // }
                             });
                         },
                         this,
