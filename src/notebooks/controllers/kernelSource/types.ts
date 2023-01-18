@@ -11,6 +11,9 @@ export interface ConnectionQuickPickItem extends QuickPickItem {
     connection: KernelConnectionMetadata;
     isRecommended?: boolean;
 }
+export interface KernelListErrorQuickPickItem extends QuickPickItem {
+    error: Error;
+}
 export interface CommandQuickPickItem extends QuickPickItem {
     command: () => Promise<PythonKernelConnectionMetadata | undefined>;
 }
@@ -25,6 +28,7 @@ export interface IQuickPickKernelItemProvider {
     readonly title: string;
     readonly kind: ContributedKernelFinderKind;
     readonly onDidChange: Event<void>;
+    readonly onDidFailToListKernels: Event<Error>;
     readonly kernels: KernelConnectionMetadata[];
     onDidChangeStatus: Event<void>;
     onDidChangeRecommended: Event<void>;

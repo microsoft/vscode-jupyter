@@ -25,6 +25,8 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
     onDidChangeStatus = this._onDidChangeStatus.event;
     private readonly _onDidChangeRecommended = new EventEmitter<void>();
     onDidChangeRecommended = this._onDidChangeRecommended.event;
+    private readonly _onDidFailToListKernels = new EventEmitter<Error>();
+    onDidFailToListKernels = this._onDidFailToListKernels.event;
     status: 'discovering' | 'idle' = 'idle';
     refresh: () => Promise<void>;
     recommended: KernelConnectionMetadata | undefined;
@@ -65,6 +67,14 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         }
         if (this.refreshInvoked) {
             finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
+        } else if (
+            // If we're dealing with remote and we are idle and there are no kernels,
+            // then trigger a refresh.
+            finder.kind === ContributedKernelFinderKind.Remote &&
+            finder.status === 'idle' &&
+            finder.kernels.length === 0
+        ) {
+            finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
         }
         switch (finder.kind) {
             case ContributedKernelFinderKind.LocalKernelSpec:
@@ -89,6 +99,13 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         finder.onDidChangeStatus(() => {
             this.status = finder.status;
             this._onDidChangeStatus.fire();
+
+            if (this.status === 'idle' && finder.lastError && finder.kernels.length === 0) {
+                // Ok we have an error and there are no kernels to be displayed.
+                // Notify the user about this error.
+                this.kernels.length = 0;
+                this._onDidFailToListKernels.fire(finder.lastError);
+            }
         });
         this.kernels.length = 0;
         this.kernels.push(...finder.kernels);
