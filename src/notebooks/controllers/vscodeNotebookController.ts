@@ -56,7 +56,6 @@ import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../messageTypes';
 import {
-    getRemoteKernelSessionInformation,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
     areKernelConnectionsEqual
@@ -256,9 +255,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
     }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
-        if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
-            this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
-        } else {
+        if (kernelConnection.kind !== 'connectToLiveRemoteKernel') {
             this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
         }
     }
@@ -313,7 +310,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         const displayData = this.displayDataProvider.getDisplayData(this.connection);
         this.controller.label = displayData.label;
         this.controller.description = displayData.description;
-        this.controller.detail = displayData.detail;
         this.controller.kind = displayData.category;
     }
     // Handle the execution of notebook cell
