@@ -658,7 +658,7 @@
                 "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter",
                 "icon": "$(debug-disconnect)",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension && config.notebook.kernelPicker.type != mru"
             },
             {
                 "command": "jupyter.notebookeditor.addcellbelow",
@@ -916,7 +916,7 @@
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "group": "overflow@1000",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true && config.notebook.kernelPicker.type != mru"
                 }
             ],
             "notebook/toolbar": [
@@ -1450,6 +1450,11 @@
                 {
                     "command": "jupyter.switchToRemoteKernels",
                     "when": "false"
+                },
+                {
+                    "command": "jupyter.selectjupyteruri",
+                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                    "when": "isWorkspaceTrusted && config.notebook.kernelPicker.type != mru"
                 }
             ],
             "debug/variables/context": [
