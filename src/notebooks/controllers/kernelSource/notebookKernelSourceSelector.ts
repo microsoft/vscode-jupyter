@@ -10,6 +10,7 @@ import {
     CancellationTokenSource,
     EventEmitter,
     NotebookDocument,
+    QuickPick,
     QuickPickItem,
     QuickPickItemKind,
     ThemeIcon
@@ -239,30 +240,45 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
         const onDidChangeItems = new EventEmitter<typeof items>();
         const defaultSelection = items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
-        const selectedSource = defaultSelection
-            ? defaultSelection
-            : await multiStep.showQuickPick<
-                  ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem,
-                  IQuickPickParameters<
-                      ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem
-                  >
-              >({
-                  items: items,
-                  placeholder: '',
-                  title: 'Select a Jupyter Server',
-                  supportBackInFirstStep: true,
-                  onDidTriggerItemButton: async (e) => {
-                      if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
-                          if (provider.removeHandle) {
-                              await provider.removeHandle(e.item.idAndHandle.handle);
-                              // the serverUriStorage should be refreshed after the handle removal
-                              items.splice(items.indexOf(e.item), 1);
-                              onDidChangeItems.fire(items.concat([]));
-                          }
-                      }
-                  },
-                  onDidChangeItems: onDidChangeItems.event
-              });
+        let lazyQuickPick:
+            | QuickPick<ContributedKernelFinderQuickPickItem | QuickPickItem | KernelProviderItemsQuickPickItem>
+            | undefined;
+        let selectedSource:
+            | ContributedKernelFinderQuickPickItem
+            | KernelProviderItemsQuickPickItem
+            | QuickPickItem
+            | undefined;
+        if (defaultSelection) {
+            selectedSource = defaultSelection;
+        } else {
+            const { quickPick, selection } = multiStep.showLazyLoadQuickPick<
+                ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem,
+                IQuickPickParameters<
+                    ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem
+                >
+            >({
+                items: items,
+                placeholder: '',
+                title: 'Select a Jupyter Server',
+                supportBackInFirstStep: true,
+                onDidTriggerItemButton: async (e) => {
+                    if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
+                        if (provider.removeHandle) {
+                            quickPick.busy = true;
+                            await provider.removeHandle(e.item.idAndHandle.handle);
+                            quickPick.busy = false;
+                            // the serverUriStorage should be refreshed after the handle removal
+                            items.splice(items.indexOf(e.item), 1);
+                            onDidChangeItems.fire(items.concat([]));
+                        }
+                    }
+                },
+                onDidChangeItems: onDidChangeItems.event
+            });
+
+            lazyQuickPick = quickPick;
+            selectedSource = await selection;
+        }
 
         if (token.isCancellationRequested) {
             return;
@@ -274,7 +290,13 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                     return this.selectKernelFromKernelFinder.bind(this, selectedSource.kernelFinderInfo, token);
                 case KernelFinderEntityQuickPickType.UriProviderQuickPick:
                     try {
+                        if (lazyQuickPick) {
+                            lazyQuickPick.busy = true;
+                        }
                         const ret = await this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
+                        if (lazyQuickPick) {
+                            lazyQuickPick.busy = false;
+                        }
                         return ret;
                     } catch (ex) {
                         if (ex === InputFlowAction.back && !defaultSelection) {
@@ -305,6 +327,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         if (handle === 'back') {
             throw InputFlowAction.back;
         }
+
         const finderPromise = (async () => {
             const uri = generateUriFromRemoteProvider(selectedSource.provider.id, handle);
             if (token.isCancellationRequested) {
