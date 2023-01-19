@@ -6,7 +6,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, QuickPick, QuickPickItem, ThemeIcon, Uri } from 'vscode';
+import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
 import { IApplicationShell, IClipboard, IWorkspaceService } from '../../platform/common/application/types';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
