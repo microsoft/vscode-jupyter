@@ -6,7 +6,6 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
-import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
@@ -312,10 +311,9 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
 
     private async onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         // Remove any connections that are no longer available.
-        const serverIds = await Promise.all(uriEntries.map((entry) => entry.uri).map(computeServerId));
-        serverIds.forEach((serverId) => {
+        uriEntries.forEach((item) => {
             this.registered.forEach((c) => {
-                if (isRemoteConnection(c.connection) && serverId === c.connection.serverId) {
+                if (isRemoteConnection(c.connection) && c.connection.serverId === item.serverId) {
                     traceWarning(
                         `Deleting controller ${c.id} as it is associated with a connection that has been removed`
                     );
