@@ -651,7 +651,7 @@ export namespace DataScience {
         l10n.t('File(s): {0} might need to be renamed.', files);
     export const failedToGetVersionOfPandas = l10n.t('Failed to get version of Pandas to use the Data Viewer.');
     export const failedToInstallPandas = l10n.t('Failed to install Pandas to use the Data Viewer.');
-    export const localKernelSpecs = l10n.t('Local Jupyter Kernel...');
+    export const localKernelSpecs = l10n.t('Jupyter Kernel...');
 
     export const localPythonEnvironments = l10n.t('Python Environments...');
     export const UserJupyterServerUrlProviderDisplayName = l10n.t('Existing Jupyter Server...');
@@ -660,8 +660,8 @@ export namespace DataScience {
     export const universalRemoteKernelFinderDisplayName = (serverName: string) => l10n.t('Remote - {0}', serverName);
     export const remoteKernelFinderDisplayName = l10n.t('Current Remote');
     export const kernelPickerSelectKernelTitle = l10n.t('Select Kernel');
-    export const kernelPickerSelectLocalKernelSpecTitle = l10n.t('Select a Local Jupyter Kernel');
-    export const kernelPickerSelectPythonEnvironmentTitle = l10n.t('Select a Local Python Environment');
+    export const kernelPickerSelectLocalKernelSpecTitle = l10n.t('Select a Jupyter Kernel');
+    export const kernelPickerSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = (kernelProvider: string) =>
         l10n.t('Select a Kernel from {0}', kernelProvider);
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');
