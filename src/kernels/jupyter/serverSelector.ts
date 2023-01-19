@@ -553,7 +553,10 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
 
         // Get the list of items and show what the current value is
         const remoteUri = await this.serverUriStorage.getRemoteUri();
-        const items = await this.getUriPickList(allowLocal, remoteUri);
+        // filter out the builtin providers which are only now used in the MRU quick pick.
+        const items = (await this.getUriPickList(allowLocal, remoteUri)).filter(
+            (item) => !item.provider?.id.startsWith('_builtin')
+        );
         const activeItem = items.find((i) => i.url === remoteUri || (i.label === this.localLabel && !remoteUri));
         const currentValue = !remoteUri ? DataScience.jupyterSelectURINoneLabel : activeItem?.label;
         const placeholder = currentValue // This will show at the top (current value really)
