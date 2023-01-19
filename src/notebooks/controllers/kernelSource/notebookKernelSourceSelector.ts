@@ -240,10 +240,16 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
         const onDidChangeItems = new EventEmitter<typeof items>();
         const defaultSelection = items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
-        let lazyQuickPick: QuickPick<ContributedKernelFinderQuickPickItem | QuickPickItem | KernelProviderItemsQuickPickItem> | undefined;
-        let selectedSource: ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem | undefined;
+        let lazyQuickPick:
+            | QuickPick<ContributedKernelFinderQuickPickItem | QuickPickItem | KernelProviderItemsQuickPickItem>
+            | undefined;
+        let selectedSource:
+            | ContributedKernelFinderQuickPickItem
+            | KernelProviderItemsQuickPickItem
+            | QuickPickItem
+            | undefined;
         if (defaultSelection) {
-            selectedSource = defaultSelection; 
+            selectedSource = defaultSelection;
         } else {
             const { quickPick, selection } = multiStep.showLazyLoadQuickPick<
                 ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem,
