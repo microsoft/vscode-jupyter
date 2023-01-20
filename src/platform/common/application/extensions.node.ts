@@ -11,6 +11,8 @@ import { DataScience } from '../utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants.node';
 import { IFileSystem } from '../platform/types';
 import { parseStack } from '../../errors';
+import { unknownExtensionId } from '../constants';
+import { traceError } from '../../logging';
 
 /**
  * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
@@ -75,7 +77,8 @@ export class Extensions implements IExtensions {
                     dirName = path.dirname(dirName);
                 }
             }
+            traceError(`Unable to determine the caller of the extension API for trace stack.`, stack);
         }
-        return { extensionId: DataScience.unknownPackage, displayName: DataScience.unknownPackage };
+        return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
     }
 }
