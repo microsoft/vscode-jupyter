@@ -113,10 +113,6 @@ async function start() {
     const options: SpawnOptions = { cwd: process.cwd(), env: process.env, detached: false, stdio: 'inherit' };
     console.log(`Spawning ${process.execPath} : ${testFile}`);
     proc = spawn(process.execPath, [testFile], options);
-    proc.on('data', (d) => {
-        const str = d.toString();
-        console.log(str);
-    });
     proc.once('close', end);
 }
 
