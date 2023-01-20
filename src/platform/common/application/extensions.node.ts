@@ -68,7 +68,10 @@ export class Extensions implements IExtensions {
                         const text = await this.fs.readFile(possiblePackageJson);
                         try {
                             const json = JSON.parse(text);
-                            return { extensionId: `${json.publisher}.${json.name}`, displayName: json.displayName };
+                            // Possible we have another package.json file. Make sure it has an extension id
+                            if (json.publisher && json.name && json.displayName) {
+                                return { extensionId: `${json.publisher}.${json.name}`, displayName: json.displayName };
+                            }
                         } catch {
                             // If parse fails, then not the extension
                         }
