@@ -452,7 +452,7 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                     traceVerbose(
                         `Hiding default kernel spec '${kernelSpec.display_name}', '${
                             kernelSpec.name
-                        }', ${getDisplayPathFromLocalFile(kernelSpec.argv[0])}`
+                        }', ${getDisplayPathFromLocalFile(kernelSpec.argv[0])} for ${kernelSpec.interpreterPath}`
                     );
                     return false;
                 }
@@ -480,6 +480,8 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                         interpreter: matchingInterpreter,
                         id: getKernelId(k, matchingInterpreter)
                     });
+                    traceVerbose(`Kernel for matching interpreter ${matchingInterpreter.id} is ${result.id}`);
+
                     // Hide the interpreters from list of kernels unless the user created this kernel spec.
                     // Users can create their own kernels with custom environment variables, in such cases, we should list that
                     // kernel as well as the interpreter (so they can use both).
@@ -488,7 +490,16 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                         kernelSpecKind === 'registeredByNewVersionOfExt' ||
                         kernelSpecKind === 'registeredByOldVersionOfExt'
                     ) {
-                        filteredInterpreters = filteredInterpreters.filter((i) => matchingInterpreter.id !== i.id);
+                        filteredInterpreters = filteredInterpreters.filter((i) => {
+                            if (matchingInterpreter.id !== i.id) {
+                                return true;
+                            } else {
+                                traceVerbose(
+                                    `Hiding interpreter ${i.id} as it matches kernel spec ${k.name} and matching interpreter is ${matchingInterpreter.id}`
+                                );
+                                return false;
+                            }
+                        });
                     }
 
                     // Return our metadata that uses an interpreter to start
@@ -564,6 +575,7 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                 }
 
                 const kernelSpec = await item;
+                traceVerbose(`Found kernel spec at end of discovery ${kernelSpec?.id}`);
                 // Check if we have already seen this.
                 if (kernelSpec && !distinctKernelMetadata.has(kernelSpec.id)) {
                     distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
@@ -583,6 +595,7 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                 interpreter: i,
                 id: getKernelId(spec, i)
             });
+            traceVerbose(`Kernel for interpreter ${i.id} is ${result.id}`);
             if (!distinctKernelMetadata.has(result.id)) {
                 distinctKernelMetadata.set(result.id, result);
             }

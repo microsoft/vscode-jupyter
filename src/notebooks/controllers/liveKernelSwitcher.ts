@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
@@ -89,7 +89,7 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     }
 
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
-        traceInfo(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
+        traceVerbose(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
         // Do this in a loop as it may fail
         const success = await waitForCondition(
             async () => {

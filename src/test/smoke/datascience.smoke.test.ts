@@ -19,9 +19,11 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize.no
 import { captureScreenShot } from '../common';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
-suite('Smoke Tests', () => {
+suite('Smoke Tests', function () {
     let api: IExtensionTestApi;
+    this.timeout(timeoutForCellToRun);
     suiteSetup(async function () {
+        this.timeout(timeoutForCellToRun);
         if (!IS_SMOKE_TEST()) {
             return this.skip();
         }
@@ -92,14 +94,21 @@ suite('Smoke Tests', () => {
 
         // Wait for 15 seconds for notebook to launch.
         // Unfortunately there's no way to know for sure it has completely loaded.
-        await sleep(15_000);
+        await sleep(60_000);
 
         let controllerId = '';
         let pythonPath = PYTHON_PATH;
-        if (os.platform() !== 'darwin' && os.platform() !== 'linux') {
+        let hash = await getInterpreterHash(vscode.Uri.file(pythonPath));
+        traceInfo(`Hash of old path ${pythonPath} is ${hash}`);
+        if (os.platform() === 'darwin' || os.platform() === 'linux') {
+            if (pythonPath.endsWith('/bin/python')) {
+                // have a look at the code in getNormalizedInterpreterPath
+                pythonPath = pythonPath.replace('/bin/python', '/python');
+            }
+        } else {
             pythonPath = `${PYTHON_PATH.substring(0, 1).toLowerCase()}${PYTHON_PATH.substring(1)}`;
         }
-        const hash = await getInterpreterHash(vscode.Uri.file(pythonPath));
+        hash = await getInterpreterHash(vscode.Uri.file(pythonPath));
         controllerId = `.jvsc74a57bd0${hash}.${pythonPath}.${pythonPath}.-m#ipykernel_launcher`;
         traceVerbose(`Before selected kernel ${controllerId}`);
         await vscode.commands.executeCommand('notebook.selectKernel', {

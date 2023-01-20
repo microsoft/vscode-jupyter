@@ -29,6 +29,7 @@ import { isLocalConnection } from '../../../kernels/types';
 import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { traceVerbose } from '../../../platform/logging';
 
 export function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
     const result: T[][] = [];
@@ -260,6 +261,7 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
         if (result && result.label && (result as any).controller) {
             // We have selected this controller so switch to it.
             const controller = (result as any).controller;
+            traceVerbose(`Switching to kernel ${controller.label} ${controller.id}`);
             await this.commandManager.executeCommand('notebook.selectKernel', {
                 id: controller.id,
                 extension: JVSC_EXTENSION_ID
