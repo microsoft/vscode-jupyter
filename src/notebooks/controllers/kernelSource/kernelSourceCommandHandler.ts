@@ -2,7 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { commands, NotebookControllerAffinity, NotebookDocument, notebooks, window } from 'vscode';
+import {
+    commands,
+    EventEmitter,
+    NotebookControllerAffinity,
+    NotebookDocument,
+    NotebookKernelSourceAction,
+    notebooks,
+    window
+} from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
@@ -77,38 +85,45 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     }
                 })
             );
+
+            let kernelSpecActions: NotebookKernelSourceAction[] = [];
+            const kernelSpecActionChangeEmitter = new EventEmitter<void>();
+            this.localDisposables.push(
+                notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
+                    onDidChangeNotebookKernelSourceActions: kernelSpecActionChangeEmitter.event,
+                    provideNotebookKernelSourceActions: () => {
+                        return kernelSpecActions;
+                    }
+                })
+            );
+
+            this.localDisposables.push(
+                notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
+                    onDidChangeNotebookKernelSourceActions: kernelSpecActionChangeEmitter.event,
+                    provideNotebookKernelSourceActions: () => {
+                        return kernelSpecActions;
+                    }
+                })
+            );
+
             const registerKernelSpecsSource = () => {
                 if (this.kernelSpecsSourceRegistered) {
                     return;
                 }
+
                 if (this.kernelFinder.kernels.some((k) => k.kind === 'startUsingLocalKernelSpec')) {
                     this.kernelSpecsSourceRegistered = true;
-                    this.localDisposables.push(
-                        notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
-                            provideNotebookKernelSourceActions: () => {
-                                return [
-                                    {
-                                        label: DataScience.localKernelSpecs,
-                                        command: 'jupyter.kernel.selectLocalKernelSpec'
-                                    }
-                                ];
-                            }
-                        })
-                    );
-                    this.localDisposables.push(
-                        notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
-                            provideNotebookKernelSourceActions: () => {
-                                return [
-                                    {
-                                        label: DataScience.localKernelSpecs,
-                                        command: 'jupyter.kernel.selectLocalKernelSpec'
-                                    }
-                                ];
-                            }
-                        })
-                    );
+                    kernelSpecActions = [
+                        {
+                            label: DataScience.localKernelSpecs,
+                            command: 'jupyter.kernel.selectLocalKernelSpec'
+                        }
+                    ];
+
+                    kernelSpecActionChangeEmitter.fire();
                 }
             };
+
             registerKernelSpecsSource();
             this.kernelFinder.onDidChangeKernels(() => registerKernelSpecsSource(), this, this.localDisposables);
             this.localDisposables.push(
