@@ -65,10 +65,9 @@ class TestRunner {
             };
             const proc = spawn('node', [path.join(__dirname, 'standardTest.node.js')], {
                 cwd: EXTENSION_ROOT_DIR_FOR_TESTS,
-                env
+                env,
+                stdio: 'inherit'
             });
-            proc.stdout.pipe(process.stdout);
-            proc.stderr.pipe(process.stderr);
             proc.on('error', reject);
             proc.on('exit', (code) => {
                 console.log(`Tests Exited with code ${code}`);

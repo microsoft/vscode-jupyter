@@ -282,7 +282,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             ? this.interpreterService.resolvedEnvironments
             : [];
 
-        traceInfoIfCI(`Listing kernels for ${interpreters.length} interpreters`);
+        traceInfoIfCI(
+            `Listing kernels for ${interpreters.length} interpreters (${interpreters.map((i) => i.id).join(', ')})`
+        );
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
         if (this.extensionChecker.isPythonExtensionInstalled) {
@@ -300,6 +302,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     if (cancelToken.isCancellationRequested) {
                         return [];
                     }
+                    traceVerbose(
+                        `Kernels for interpreter ${interpreter.id} are ${kernels.map((k) => k.id).join(', ')}`
+                    );
                     await this.appendNewKernels(kernels);
                 })
             );
