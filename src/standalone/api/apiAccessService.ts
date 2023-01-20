@@ -41,8 +41,9 @@ export class ApiAccessService {
         extensionId: string;
         displayName: string;
     }): Promise<{ extensionId: string; accessAllowed: boolean }> {
-        const publisherId = info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
-        if (this.context.extensionMode === ExtensionMode.Test || publisherId.length === 0) {
+        const publisherId =
+            !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
+        if (this.context.extensionMode === ExtensionMode.Test || !publisherId) {
             traceError(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
                 this.appShell
