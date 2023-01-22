@@ -55,8 +55,8 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
                 this._impl.end(success, endTime);
                 traceVerbose(
                     `End cell ${this.cell.index} execution @ ${endTime}, started @ ${this._startTime}, elapsed time = ${
-                        (endTime || 0) - (this._startTime || 0)
-                    }`
+                        ((endTime || 0) - (this._startTime || 0)) / 1000
+                    }s`
                 );
             } finally {
                 this._endCallback();
