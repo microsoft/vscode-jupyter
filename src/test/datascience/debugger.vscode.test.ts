@@ -13,7 +13,7 @@ import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/de
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
-import { traceInfo } from '../../platform/logging';
+import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
@@ -45,24 +45,35 @@ suite('Run By Line @debugger', function () {
     let debuggingManager: IDebuggingManager;
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo(`Start Test Suite`);
-        this.timeout(120_000);
-        // Don't run if we can't use the native notebook interface
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
+        traceInfo(`Start Test Suite - Run By Line @debugger`);
+        try {
+            this.timeout(120_000);
+            // Don't run if we can't use the native notebook interface
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
 
-        api = await initialize();
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-        await prewarmNotebooks();
-        sinon.restore();
-        commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
-        const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
-        debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        traceInfo(`Start Test Suite (completed)`);
+            api = await initialize();
+            traceVerbose('Step1');
+            await closeNotebooksAndCleanUpAfterTests(disposables);
+            traceVerbose('Step2');
+            await prewarmNotebooks();
+            traceVerbose('Step3');
+            sinon.restore();
+            traceVerbose('Step4');
+            commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+            const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            traceVerbose('Step5');
+            variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
+            debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
+            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        } catch (ex) {
+            traceError('Failed to setup suite for Run By Line @debugger', ex);
+            throw ex;
+        } finally {
+            traceInfo(`Start Test Suite (completed) - Run By Line @debugger`);
+        }
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
