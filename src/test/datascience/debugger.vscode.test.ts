@@ -8,12 +8,11 @@ import * as os from 'os';
 import * as sinon from 'sinon';
 import { commands, debug } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IControllerDefaultService } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
-import { isWeb } from '../../platform/common/utils/misc';
 import { traceInfo } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
@@ -27,6 +26,7 @@ import {
     defaultNotebookTestTimeout,
     getCellOutputs,
     getDebugSessionAndAdapter,
+    getDefaultKernelConnection,
     insertCodeCell,
     prewarmNotebooks,
     runCell,
@@ -67,20 +67,22 @@ suite('Run By Line @debugger', function () {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
+        const metadata = await getDefaultKernelConnection();
+        const controllerRegistry = await api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
 
-        if (!isWeb() && !IS_REMOTE_NATIVE_TEST()) {
-            const controller = await api.serviceContainer
-                .get<IControllerDefaultService>(IControllerDefaultService)
-                .computeDefaultController(undefined, 'jupyter-notebook'); // Create an editor to use for our tests
-            await createEmptyPythonNotebook(disposables, undefined, true);
-            await commands.executeCommand('notebook.selectKernel', {
-                id: controller!.id,
-                extension: JVSC_EXTENSION_ID
-            });
-        } else {
-            // Create an editor to use for our tests
-            await createEmptyPythonNotebook(disposables);
-        }
+        const controller = await waitForCondition(
+            () =>
+                controllerRegistry.registered.find(
+                    (item) => item.viewType === 'jupyter-notebook' && item.connection.id === metadata.id
+                ),
+            defaultNotebookTestTimeout,
+            `Controller not found for connection ${metadata.id}`
+        );
+        await createEmptyPythonNotebook(disposables, undefined, true);
+        await commands.executeCommand('notebook.selectKernel', {
+            id: controller!.id,
+            extension: JVSC_EXTENSION_ID
+        });
 
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
