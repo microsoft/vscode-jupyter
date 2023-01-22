@@ -72,7 +72,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
 
-    private _onDidChangeKernels = new EventEmitter<{}>();
+    private _onDidChangeKernels = new EventEmitter<{
+        added?: RemoteKernelConnectionMetadata[];
+        updated?: RemoteKernelConnectionMetadata[];
+        removed?: RemoteKernelConnectionMetadata[];
+    }>();
     onDidChangeKernels = this._onDidChangeKernels.event;
 
     private readonly disposables: IDisposable[] = [];
