@@ -19,6 +19,16 @@ function convertVSCodeOutputToExecuteResultOrDisplayData(outputItem: OutputItem)
     return outputItem.mime.toLowerCase().includes('json') ? outputItem.json() : outputItem.text();
 }
 
+/**
+ * Error to be throw to to notify VS Code that it should render the output with the next available mime type.
+ */
+class FallbackRenderer extends Error {
+    constructor() {
+        super();
+        this.name = 'vscode.fallbackToNextRenderer';
+    }
+}
+
 export const activate: ActivationFunction = (context) => {
     const logger = (message: string, category?: 'info' | 'error') => {
         if (context.postMessage) {
@@ -57,7 +67,7 @@ export const activate: ActivationFunction = (context) => {
         return deferred.promise;
     }
     return {
-        async renderOutputItem(outputItem: OutputItem, element: HTMLElement, signal: AbortController) {
+        async renderOutputItem(outputItem: OutputItem, element: HTMLElement, _signal: AbortController) {
             logger(`Got item for Rendering ${outputItem.id}}`);
             try {
                 const renderOutputFunc =
@@ -74,13 +84,13 @@ export const activate: ActivationFunction = (context) => {
                             `Info: Model not found in Kernel state to render output ${outputItem.id}, rendering a fallback mime type`,
                             'info'
                         );
-                        return renderFallbackMimeType(context, outputItem, element, signal, logger);
+                        throw new FallbackRenderer();
                     }
                     element.className = (element.className || '') + ' cell-output-ipywidget-background';
                     return renderOutputFunc(outputItem, widgetModel, element, logger, doesKernelHaveWidgetState);
                 }
-                // console.error('Rendering widgets on notebook open is not supported.');
-                return renderFallbackMimeType(context, outputItem, element, signal, logger);
+                logger(`Error: renderOutputFunc not defined, not rendering output ${outputItem.id}`, 'error');
+                throw new FallbackRenderer();
             } finally {
                 sendRenderOutputItem(context, outputItem, element);
             }
@@ -98,52 +108,6 @@ export const activate: ActivationFunction = (context) => {
     } as any;
 };
 
-type AllOutputContainer = OutputItem & { _allOutputItems: [{ mime: string; getItem: () => Promise<OutputItem> }] };
-
-async function renderFallbackMimeType(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    context: RendererContext<any>,
-    outputItem: OutputItem,
-    element: HTMLElement,
-    signal: AbortController,
-    logger: (message: string, category?: 'info' | 'error') => void
-) {
-    const fallbackEntry = (outputItem as AllOutputContainer)._allOutputItems.find(
-        (item) => item.mime !== outputItem.mime
-    );
-    if (!fallbackEntry) {
-        logger(
-            `Error: Fallback mime type not found to render output ${outputItem.id}, rendering a fallback mime type`,
-            'error'
-        );
-        return;
-    }
-    try {
-        const [fallbackOutputItem, renderer] = await Promise.all([
-            fallbackEntry.getItem(),
-            context.getRenderer('vscode.builtin-renderer')
-        ]);
-        if (!fallbackOutputItem) {
-            logger(
-                `Error: Output Item of Fallback mime type not found ${outputItem.id}, fallback mime ${fallbackEntry.mime}, rendering a fallback mime type`,
-                'error'
-            );
-            return;
-        }
-        if (!renderer) {
-            logger(
-                `Error: Fallback mime for ${outputItem.id} cannot be rendered as built in renderer is not available.`,
-                'error'
-            );
-            return;
-        }
-        logger(`Info: Rendering fallback mime for ${outputItem.id}, ${fallbackEntry.mime}`, 'error');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (renderer.renderOutputItem as any)(fallbackOutputItem, element, signal);
-    } catch (ex) {
-        console.error(ex);
-    }
-}
 function hookupTestScripts(context: RendererContext<unknown>) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anyWindow = window as any;
