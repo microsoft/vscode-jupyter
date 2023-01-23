@@ -7,7 +7,11 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Memento, Position, Uri, window } from 'vscode';
-import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
+import {
+    IApplicationEnvironment,
+    IEncryptedStorage,
+    IVSCodeNotebook
+} from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, initialize, startJupyterServer, waitForCondition } from '../../common';
@@ -35,13 +39,15 @@ import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonK
 import {
     IControllerDefaultService,
     IControllerLoader,
-    IControllerRegistration
+    IControllerRegistration,
+    IControllerSelection
 } from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Remote Execution', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
+    let app: IApplicationEnvironment;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let ipynbFile: Uri;
@@ -67,6 +73,7 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
         controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         controllerDefault = api.serviceContainer.get<IControllerDefaultService>(IControllerDefaultService);
+        app = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -157,6 +164,15 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
+
+        if (app.channel === 'insiders') {
+            // Ensure the kernel points to a live connection.
+            const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
+            assert.strictEqual(
+                controllerSelection.getSelected(vscodeNotebook.activeNotebookEditor!.notebook!)?.connection.kind,
+                'connectToLiveRemoteKernel'
+            );
+        }
     });
 
     test('Remote kernels support completions', async function () {

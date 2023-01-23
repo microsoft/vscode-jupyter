@@ -3,7 +3,7 @@
 
 'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
-import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookController, NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -15,8 +15,11 @@ import {
     IKernel,
     KernelOptions,
     IThirdPartyKernelProvider,
-    ThirdPartyKernelOptions
+    ThirdPartyKernelOptions,
+    KernelConnectionMetadata
 } from './types';
+import { NotebookControllerWrapper } from './notebookControllerWrapper';
+import { KernelConnectionMetadataProxy } from './kernelConnectionMetadataWrapper';
 
 /**
  * Provides kernels to the system. Generally backed by a URI or a notebook object.
@@ -136,6 +139,26 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 .catch(noop);
         }
         this.kernelsByNotebook.delete(notebook);
+    }
+    updateKernel(kernel: IKernel, metadata: KernelConnectionMetadata, controller: NotebookController): void {
+        const controllerWrapper = kernel.controller;
+        if (NotebookControllerWrapper.isWrapped(controllerWrapper)) {
+            controllerWrapper.update(controller);
+        } else {
+            throw new Error('IKernel instantiated without passing a NotebookControllerWrapper');
+        }
+        const metadataWrapper = kernel.kernelConnectionMetadata;
+        if (KernelConnectionMetadataProxy.isWrapped(metadataWrapper)) {
+            metadataWrapper.update(metadata);
+        } else {
+            throw new Error('IKernel instantiated without passing a KernelConnectionMetadataWrapper');
+        }
+
+        const info = this.kernelsByNotebook.get(kernel.notebook);
+        if (info) {
+            info.options.controller = controller;
+            info.options.metadata = metadata;
+        }
     }
 }
 

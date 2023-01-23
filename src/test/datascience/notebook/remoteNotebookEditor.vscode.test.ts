@@ -168,17 +168,16 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         await changeShowOnlyOneTypeOfKernel(true);
         await controllerLoader.loadControllers();
         const controllers = controllerRegistration.registered;
-        assert.ok(
-            controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
-            'Should have at least one remote kernelspec'
-        );
 
         await waitForCondition(
             async () => {
                 return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
             },
             defaultNotebookTestTimeout,
-            () => `Should have at least one remote kernelspec`
+            () =>
+                `Should have at least one remote kernelspec, kernelspecs = ${controllers
+                    .map((item) => item.connection.kind)
+                    .join(',')}`
         );
 
         assert.notOk(

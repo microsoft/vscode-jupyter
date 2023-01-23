@@ -32,6 +32,7 @@ import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource 
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
+    IKernelProvider,
     isLocalConnection,
     KernelAction,
     KernelConnectionMetadata,
@@ -41,7 +42,6 @@ import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
 import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
-import { IServiceContainer } from '../platform/ioc/types';
 import { SysInfoReason } from '../messageTypes';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
@@ -54,15 +54,13 @@ import {
     IInteractiveWindowDebuggingManager,
     InteractiveTab
 } from './types';
-import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
+import { generateInteractiveCode, getInteractiveCellMetadata, isInteractiveInputTab } from './helpers';
 import {
     IControllerRegistration,
     IControllerSelection,
     IVSCodeNotebookController
 } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
-import { getInteractiveCellMetadata } from './helpers';
-import { KernelConnector } from '../notebooks/controllers/kernelConnector';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
     ICodeGeneratorFactory,
@@ -75,6 +73,7 @@ import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
+import { IServiceContainer } from '../platform/ioc/types';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -110,7 +109,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private kernelDisposables: Disposable[] = [];
     private _insertSysInfoPromise: Promise<NotebookCell> | undefined;
     private currentKernelInfo: {
-        kernel?: Deferred<IKernel>;
+        kernelStarted?: Deferred<void>;
+        kernel?: IKernel;
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
@@ -140,6 +140,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private readonly debuggingManager: IInteractiveWindowDebuggingManager;
     private readonly isWebExtension: boolean;
     private readonly commandManager: ICommandManager;
+    private readonly kernelProvider: IKernelProvider;
     private readonly controllerRegistration: IControllerRegistration;
     constructor(
         private readonly serviceContainer: IServiceContainer,
@@ -162,6 +163,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
         this.codeGeneratorFactory = this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory);
         this.storageFactory = this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory);
+        this.kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
         this.debuggingManager = this.serviceContainer.get<IInteractiveWindowDebuggingManager>(
             IInteractiveWindowDebuggingManager
         );
@@ -248,25 +250,32 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // This cannot happen, but we need to make typescript happy.
             throw new Error('Controller not selected');
         }
-        if (this.currentKernelInfo.kernel) {
-            return this.currentKernelInfo.kernel.promise;
+        if (this.currentKernelInfo.kernelStarted) {
+            await this.currentKernelInfo.kernelStarted.promise;
+            return this.currentKernelInfo.kernel!;
         }
-        const kernelPromise = createDeferred<IKernel>();
-        kernelPromise.promise.catch(noop);
-        this.currentKernelInfo = { controller, metadata, kernel: kernelPromise };
+        const vscController = this.controllerRegistration.registered.find(
+            (item) => item.controller.id === controller.id
+        );
+        if (!vscController) {
+            // This cannot happen, but we need to make typescript happy.
+            throw new Error('VSCController not available');
+        }
+        const kernelStarted = createDeferred<void>();
+        kernelStarted.promise.catch(noop);
+        this.currentKernelInfo = { controller, metadata, kernelStarted };
 
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
         try {
             // Try creating a kernel
             await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
 
-            const onStartKernel = (action: KernelAction, k: IKernel) => {
+            const onKernelStarted = async (action: KernelAction, k: IKernel) => {
                 if (action !== 'start' && action !== 'restart') {
                     return;
                 }
                 // Id may be different if the user switched controllers
-                this.currentKernelInfo.controller = k.controller;
-                this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
+                this.currentKernelInfo.kernel = k;
                 !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
                 this.updateSysInfoMessage(
                     this.getSysInfoMessage(k.kernelConnectionMetadata, SysInfoReason.Start),
@@ -274,16 +283,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     sysInfoCell
                 );
             };
+            const onKernelStartCompleted = async (action: KernelAction, _: unknown, k: IKernel) => {
+                if (action !== 'start' && action !== 'restart') {
+                    return;
+                }
+                // Id may be different if the user switched controllers
+                this.currentKernelInfo.controller = k.controller;
+                this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
+            };
             // When connecting, we need to update the sys info message
             this.updateSysInfoMessage(this.getSysInfoMessage(metadata, SysInfoReason.Start), false, sysInfoCell);
-            const kernel = await KernelConnector.connectToNotebookKernel(
-                metadata,
-                this.serviceContainer,
-                { resource: this.owner, notebook: this.notebookDocument, controller },
+            const kernel = await vscController.connectToKernel(
+                { resource: this.owner, notebook: this.notebookDocument },
                 new DisplayOptions(false),
-                this.internalDisposables,
-                'jupyterExtension',
-                onStartKernel
+                onKernelStarted,
+                onKernelStartCompleted
             );
             this.currentKernelInfo.controller = kernel.controller;
             this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
@@ -323,10 +337,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.fileInKernel = undefined;
             await this.runInitialization(kernel, this.owner);
             this.finishSysInfoMessage(kernel, sysInfoCell, SysInfoReason.Start);
-            kernelPromise.resolve(kernel);
+            kernelStarted.resolve();
             return kernel;
         } catch (ex) {
-            kernelPromise.reject(ex);
+            kernelStarted.reject(ex);
+            this.currentKernelInfo.kernelStarted = undefined;
             this.currentKernelInfo.kernel = undefined;
             this.disconnectKernel();
             if (this.owner) {
@@ -442,6 +457,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         message = message.split('\n').join('  \n');
         this.updateSysInfoMessage(message, true, cellPromise);
     }
+
     private listenForControllerSelection() {
         // Ensure we hear about any controller changes so we can update our cached promises
         this.notebookControllerSelection.onControllerSelected(
@@ -451,7 +467,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 }
 
                 // Clear cached kernel when the selected controller for this document changes
-                if (e.controller.id !== this.currentKernelInfo.controller?.id) {
+                const kernel = this.kernelProvider.get(this.notebookDocument.uri);
+                const isControllerAttachedToTheSameKernel =
+                    kernel && this.currentKernelInfo.kernel && kernel === this.currentKernelInfo.kernel;
+                if (
+                    e.controller.connection.id !== this.currentKernelInfo.kernel?.kernelConnectionMetadata.id &&
+                    !isControllerAttachedToTheSameKernel
+                ) {
                     this.disconnectKernel();
                     this.startKernel(e.controller.controller, e.controller.connection).ignoreErrors();
                 }
@@ -620,6 +642,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private disconnectKernel() {
         this.kernelDisposables.forEach((d) => d.dispose());
         this.kernelDisposables = [];
+        this.currentKernelInfo.kernelStarted = undefined;
         this.currentKernelInfo.kernel = undefined;
     }
 

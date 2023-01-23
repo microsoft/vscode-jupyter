@@ -130,6 +130,7 @@ export const DefaultTheme = 'Default Light+';
 
 export const PythonExtension = 'ms-python.python';
 export const PylanceExtension = 'ms-python.vscode-pylance';
+export const IPyWidgetRendererId = 'jupyter-ipywidget-renderer';
 
 export const LanguagesSupportedByPythonkernel = [
     'python',

@@ -155,7 +155,9 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
         // If we have any out of date connections, dispose of them
         disposedControllers.forEach((controller) => {
-            traceInfoIfCI(`Disposing controller ${controller.id}`);
+            traceInfoIfCI(
+                `Disposing controller ${controller.id}, associated with connection ${controller.connection.id}`
+            );
             controller.dispose(); // This should remove it from the registered list
         });
 

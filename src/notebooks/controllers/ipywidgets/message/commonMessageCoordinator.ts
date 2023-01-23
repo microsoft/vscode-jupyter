@@ -4,9 +4,9 @@
 'use strict';
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
+import { Event, EventEmitter, NotebookDocument, notebooks } from 'vscode';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { Commands, IPyWidgetRendererId, STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
 import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
@@ -28,7 +28,6 @@ import {
 import { IServiceContainer } from '../../../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
-import { Commands } from '../../../../platform/common/constants';
 import { IKernelProvider } from '../../../../kernels/types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../scriptSourceProvider/ipyWidgetScriptSource';
@@ -65,7 +64,9 @@ export class CommonMessageCoordinator {
     private readonly configService: IConfigurationService;
     private webview: IWebviewCommunication | undefined;
     private modulesForWhichWeHaveDisplayedWidgetErrorMessage = new Set<string>();
-
+    private kernelProvider: IKernelProvider;
+    private queuedMessages: { type: string; payload: unknown }[] = [];
+    private readyMessageReceived?: boolean;
     public constructor(
         private readonly document: NotebookDocument,
         private readonly serviceContainer: IServiceContainer
@@ -75,6 +76,7 @@ export class CommonMessageCoordinator {
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell, IApplicationShell);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
     }
 
     public dispose() {
@@ -103,6 +105,12 @@ export class CommonMessageCoordinator {
                             response: webview.asWebviewUri(e.payload)
                         });
                     } else {
+                        if (!webview.isReady || !this.readyMessageReceived) {
+                            // Web view is not yet ready to receive messages, hence queue these to be sent later.
+                            this.queuedMessages.push({ type: e.message, payload: e.payload });
+                            return;
+                        }
+                        this.sendPendingWebViewMessages();
                         webview.postMessage({ type: e.message, payload: e.payload }).then(noop, noop);
                     }
                 },
@@ -113,10 +121,55 @@ export class CommonMessageCoordinator {
                 (m) => {
                     traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
                     this.onMessage(m.type, m.payload);
-
+                    const kernel = this.kernelProvider.get(this.document.uri);
                     // Special case the WidgetManager loaded message. It means we're ready
                     // to use a kernel. (IPyWidget Dispatcher uses this too)
                     if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
+                        if (kernel?.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec') {
+                            traceInfoIfCI(
+                                'Web view is not ready to receive widget messages (kernel points to remote kernel spec)'
+                            );
+                            const nbEditor = this.serviceContainer
+                                .get<IVSCodeNotebook>(IVSCodeNotebook)
+                                .notebookEditors.find((item) => item.notebook === this.document);
+                            // With remote kernel specs, once the kernel is ready we create a live kernel controller and
+                            // switch to that. At that point the webview also changes, hence
+                            // there's no need to render anything while were in this state.
+                            notebooks
+                                .createRendererMessaging(IPyWidgetRendererId)
+                                .postMessage({ type: IPyWidgetMessages.IPyWidgets_DoNotRenderWidgets }, nbEditor)
+                                .then(noop, noop);
+                            return;
+                        }
+                        if (!webview.isReady) {
+                            traceInfoIfCI('Web view is not ready to receive widget messages');
+                            return;
+                        }
+                        traceInfoIfCI('Web view is ready to receive widget messages');
+                        this.readyMessageReceived = true;
+                        this.sendPendingWebViewMessages();
+                        // At this point, we know the kernels are ready, and the webview is ready to receive messages.
+                        // Its possible the webview was initially unable to render some widgets, but now that everything is ready we
+                        // should be able to render them now.
+                        // E.g assume we're dealing with remote kernel specs,
+                        // Then we start a kernel, next we create a controller that points to the live kernel & change the controller.
+                        // What happens now is the, webview is re-loaded (as theres a change in the controllers).
+                        // However if the user were to run a cell, then the output would get displayed and it could end up,
+                        // being displayed in the old webview & when the webview is re-loaded, it would be displayed in the new webview.
+                        // However its possble the kernel is not yet ready at that point in time.
+                        // We could solve this issue easily by not executing cells, until the webview is ready,
+                        // however that would have significant performance implications.
+                        // Hence for ipywidgets, once the webview has completely been initialized, we can attempt to re-render the widgets.
+                        const nbEditor = this.serviceContainer
+                            .get<IVSCodeNotebook>(IVSCodeNotebook)
+                            .notebookEditors.find((item) => item.notebook === this.document);
+                        if (nbEditor) {
+                            traceInfoIfCI('Re-rendering widgets');
+                            notebooks
+                                .createRendererMessaging(IPyWidgetRendererId)
+                                .postMessage({ type: IPyWidgetMessages.IPyWidgets_ReRenderWidgets }, nbEditor)
+                                .then(noop, noop);
+                        }
                         promise.resolve();
                     }
                 },
@@ -155,6 +208,14 @@ export class CommonMessageCoordinator {
         this.getIPyWidgetScriptSource().onMessage(message, payload);
     }
 
+    private sendPendingWebViewMessages() {
+        if (!this.webview || !this.webview.isReady || !this.readyMessageReceived) {
+            return;
+        }
+        while (this.queuedMessages.length) {
+            this.webview.postMessage(this.queuedMessages.shift()!).then(noop, noop);
+        }
+    }
     private initialize() {
         traceVerbose('initialize CommonMessageCoordinator');
         // First hook up the widget script source that will listen to messages even before we start sending messages.

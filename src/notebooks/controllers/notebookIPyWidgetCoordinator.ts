@@ -22,6 +22,7 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IWebviewCommunication } from '../../platform/webviews/types';
+import { IKernelProvider } from '../../kernels/types';
 import { CommonMessageCoordinator } from './ipywidgets/message/commonMessageCoordinator';
 
 /**
@@ -33,22 +34,59 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
     private pendingMessages: any[] = [];
     private readonly disposables: IDisposable[] = [];
     private controllerMessageHandler?: IDisposable;
-    private controller?: IVSCodeNotebookController;
+    private _controller?: IVSCodeNotebookController;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly _onDidReceiveMessage = new EventEmitter<any>();
-    constructor(public readonly editor: NotebookEditor, controller: IVSCodeNotebookController) {
-        this.changeController(controller);
+    public get controller() {
+        return this._controller!.controller!;
+    }
+    constructor(
+        public readonly editor: NotebookEditor,
+        private readonly controllerSelection: IControllerSelection,
+        private readonly kernelProvider: IKernelProvider
+    ) {
+        this.changeController(controllerSelection.getSelected(editor.notebook)!);
+    }
+    public get isReady() {
+        const kernel = this.kernelProvider.get(this.editor.notebook.uri);
+        if (!kernel) {
+            return false;
+        }
+        switch (kernel.kernelConnectionMetadata.kind) {
+            case 'startUsingRemoteKernelSpec':
+                // If user is initially connected to a kernel spec, then when they start the kernel,
+                // we create a live kernel and change the controller to point to that.
+                // However the kernel here is still pointing to the kernel spec, hence
+                // we need to wait for the kernel connection to change & point to the live kernel.
+                // The reason we need to wait is, when the controller changes, the webview gets re-loaded,
+                // hence the webview isn't ready, until its reloaded in this case (i.e. controller changes from kernelspec to live kernel).
+                return false;
+            case 'connectToLiveRemoteKernel':
+                const currentController = this.controllerSelection.getSelected(this.editor.notebook);
+                if (currentController?.connection.id !== kernel.kernelConnectionMetadata.id) {
+                    // Possible we've created the controller, however it hasn't been selected just yet.
+                    // In such a case we need to wait for out code to detect the change from kernel spec controller to live kernel controller.
+                    return false;
+                }
+                if (currentController.id !== this.controller.id) {
+                    // Wait till this class also detects the change to the controller (i.e. change from kernelspec to live kernel)
+                    return false;
+                }
+                return true;
+            default:
+                return true;
+        }
     }
     public changeController(controller: IVSCodeNotebookController) {
-        if (this.controller?.id === controller.id) {
+        if (this._controller?.id === controller.id) {
             return;
         }
         this.controllerMessageHandler?.dispose();
-        this.controller = controller;
+        this._controller = controller;
         this.controllerMessageHandler = controller.onDidReceiveMessage(
             (e) => {
                 // Handle messages from this only if its still the active controller.
-                if (e.editor === this.editor && this.controller?.id === controller.id) {
+                if (e.editor === this.editor && this._controller?.id === controller.id) {
                     // If the listeners haven't been hooked up, then dont fire the event (nothing listening).
                     // Instead buffer the messages and fire the events later.
                     if (this.eventHandlerListening) {
@@ -97,18 +135,15 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
 export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationService {
     private readonly messageCoordinators = new WeakMap<NotebookDocument, Promise<CommonMessageCoordinator>>();
     private readonly notebookDisposables = new WeakMap<NotebookDocument, Disposable[]>();
-    /**
-     * Public for testing purposes
-     */
-    public readonly notebookCommunications = new WeakMap<NotebookEditor, NotebookCommunication>();
-    private readonly notebookEditors = new WeakMap<NotebookDocument, NotebookEditor[]>();
+    private readonly notebookCommunications = new WeakMap<NotebookEditor, NotebookCommunication>();
+    private controllerManager: IControllerSelection;
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IControllerSelection) private readonly controllerManager: IControllerSelection
+        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook
     ) {}
     public activate(): void {
+        this.controllerManager = this.serviceContainer.get<IControllerSelection>(IControllerSelection);
         this.notebook.onDidChangeVisibleNotebookEditors(
             this.onDidChangeVisibleNotebookEditors,
             this,
@@ -126,20 +161,15 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
                 .filter((editor) => editor.notebook === e.notebook)
                 .forEach((editor) => {
                     const comms = this.notebookCommunications.get(editor);
-                    this.notebookCommunications.delete(editor);
-                    if (comms) {
-                        comms.dispose();
+                    if (comms && comms.controller !== e.controller.controller) {
+                        this.notebookCommunications.delete(editor);
+                        if (comms) {
+                            comms.dispose();
+                        }
                     }
                 });
             previousCoordinators.then((item) => item.dispose()).catch(noop);
         }
-        // Swap the controller in the communication objects (if we have any).
-        const editors = this.notebookEditors.get(e.notebook) || [];
-        const notebookComms = editors
-            .filter((editor) => this.notebookCommunications.has(editor))
-            .map((editor) => this.notebookCommunications.get(editor)!);
-        notebookComms.forEach((comm) => comm.changeController(e.controller));
-
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
         this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor, e.controller));
     }
@@ -159,8 +189,9 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
             );
             return;
         }
-        traceVerbose(`Intiailize notebook communications for editor ${getDisplayPath(editor.notebook.uri)}`);
-        const comms = new NotebookCommunication(editor, controller);
+        traceVerbose(`Initialize notebook communications for editor ${getDisplayPath(editor.notebook.uri)}`);
+        const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        const comms = new NotebookCommunication(editor, this.controllerManager, kernelProvider);
         this.addNotebookDisposables(notebook, [comms]);
         this.notebookCommunications.set(editor, comms);
         const { token } = new CancellationTokenSource();
@@ -198,10 +229,6 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         });
     }
     private onDidCloseNotebookDocument(notebook: NotebookDocument) {
-        const editors = this.notebookEditors.get(notebook) || [];
-        disposeAllDisposables(this.notebookDisposables.get(notebook) || []);
-        editors.forEach((editor) => this.notebookCommunications.get(editor)?.dispose());
-
         const coordinator = this.messageCoordinators.get(notebook);
         coordinator?.then((c) => c.dispose()).catch(noop);
         this.messageCoordinators.delete(notebook);

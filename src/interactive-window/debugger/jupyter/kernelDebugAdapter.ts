@@ -15,6 +15,7 @@ import { getInteractiveCellMetadata } from '../../../interactive-window/helpers'
 import { KernelDebugAdapterBase } from '../../../notebooks/debugger/kernelDebugAdapterBase';
 import { InteractiveCellMetadata } from '../../editor-integration/types';
 import { IDebugService } from '../../../platform/common/application/types';
+import { noop } from '../../../platform/common/utils/misc';
 /**
  * KernelDebugAdapter listens to debug messages in order to translate file requests into real files
  * (Interactive Window generally executes against a real file)
@@ -75,7 +76,11 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         if (message.type === 'response' && this.debugLocationTracker?.onDidSendMessage) {
             this.debugLocationTracker.onDidSendMessage(message);
         }
-        return super.handleMessage(message);
+        const promise = super.handleMessage(message);
+        // The VS Code debugger class does not support an async `handleMessage`, its supposed to be sync.
+        // As a result, any errors here will not be handled and they'll be treated as unhandled errors.
+        promise.catch(noop);
+        return promise;
     }
 
     // Dump content of given cell into a tmp file and return path to file.
