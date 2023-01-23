@@ -250,48 +250,52 @@ export class JupyterKernelService implements IJupyterKernelService {
             if (!(await this.fs.exists(Uri.file(kernelSpecFilePath)))) {
                 return;
             }
-
-            // Read spec from the file.
-            let specModel: ReadWrite<KernelSpec.ISpecModel> = JSON.parse(
-                await this.fs.readFile(Uri.file(kernelSpecFilePath))
-            );
-            if (Cancellation.isCanceled(cancelToken)) {
-                return;
-            }
-
-            // Make sure the specmodel has an interpreter or already in the metadata or we
-            // may overwrite a kernel created by the user
-            if (specModel.metadata?.interpreter) {
-                // Ensure we use a fully qualified path to the python interpreter in `argv`.
-                if (specModel.argv[0].toLowerCase() === 'conda') {
-                    // If conda is the first word, its possible its a conda activation command.
-                    traceInfo(`Spec argv[0], not updated as it is using conda.`);
-                } else {
-                    traceInfo(
-                        `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(interpreter.uri)}'`
-                    );
-                    specModel.argv[0] = interpreter.uri.fsPath;
-                }
-
-                // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
-                // We'll need information such as interpreter type, display name, path, etc...
-                // Its just a JSON file, and the information is small, hence might as well store everything.
-                specModel.metadata = specModel.metadata || {};
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                specModel.metadata.interpreter = interpreter as any;
-            }
-
-            specModel.env = await this.kernelEnvVars.getEnvironmentVariables(resource, interpreter, specedKernel);
-
-            // Scrub the environment of the specmodel to make sure it has allowed values (they all must be strings)
-            // See this issue here: https://github.com/microsoft/vscode-python/issues/11749
-            specModel = cleanEnvironment(specModel);
-
-            // Update the kernel.json with our new stuff.
             const uri = Uri.file(kernelSpecFilePath);
             try {
+                // Read spec from the file.
+                let specModel: ReadWrite<KernelSpec.ISpecModel> = JSON.parse(await this.fs.readFile(uri));
+                if (Cancellation.isCanceled(cancelToken)) {
+                    return;
+                }
+
+                // Make sure the specmodel has an interpreter or already in the metadata or we
+                // may overwrite a kernel created by the user
+                if (specModel.metadata?.interpreter) {
+                    // Ensure we use a fully qualified path to the python interpreter in `argv`.
+                    if (specModel.argv[0].toLowerCase() === 'conda') {
+                        // If conda is the first word, its possible its a conda activation command.
+                        traceInfo(`Spec argv[0], not updated as it is using conda.`);
+                    } else {
+                        traceInfo(
+                            `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(interpreter.uri)}'`
+                        );
+                        specModel.argv[0] = interpreter.uri.fsPath;
+                    }
+
+                    // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
+                    // We'll need information such as interpreter type, display name, path, etc...
+                    // Its just a JSON file, and the information is small, hence might as well store everything.
+                    specModel.metadata = specModel.metadata || {};
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    specModel.metadata.interpreter = interpreter as any;
+                }
+
+                specModel.env = await this.kernelEnvVars.getEnvironmentVariables(resource, interpreter, specedKernel);
+
+                // Scrub the environment of the specmodel to make sure it has allowed values (they all must be strings)
+                // See this issue here: https://github.com/microsoft/vscode-python/issues/11749
+                specModel = cleanEnvironment(specModel);
+
+                // Update the kernel.json with our new stuff.
                 await this.fs.writeFile(uri, JSON.stringify(specModel, undefined, 2));
                 traceVerbose(`Updated kernel spec with environment variables for ${getDisplayPath(uri)}`);
+
+                if (Cancellation.isCanceled(cancelToken)) {
+                    return;
+                }
+
+                // Always update the metadata for the original kernel.
+                specedKernel.metadata = specModel.metadata;
             } catch (ex) {
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
@@ -301,13 +305,6 @@ export class JupyterKernelService implements IJupyterKernelService {
                 traceError(`Failed to update kernel spec with environment variables for ${getDisplayPath(uri)}`, ex);
                 throw ex;
             }
-
-            if (Cancellation.isCanceled(cancelToken)) {
-                return;
-            }
-
-            // Always update the metadata for the original kernel.
-            specedKernel.metadata = specModel.metadata;
         }
     }
 }

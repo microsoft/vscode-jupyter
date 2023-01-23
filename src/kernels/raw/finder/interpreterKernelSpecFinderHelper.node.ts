@@ -452,7 +452,9 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                     traceVerbose(
                         `Hiding default kernel spec '${kernelSpec.display_name}', '${
                             kernelSpec.name
-                        }', ${getDisplayPathFromLocalFile(kernelSpec.argv[0])} for ${kernelSpec.interpreterPath}`
+                        }', ${getDisplayPathFromLocalFile(kernelSpec.argv[0])} for interpreter ${
+                            kernelSpec.interpreterPath
+                        } and spec ${kernelSpec.specFile}`
                     );
                     return false;
                 }
