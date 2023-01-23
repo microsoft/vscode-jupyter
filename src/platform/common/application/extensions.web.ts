@@ -7,8 +7,9 @@ import { injectable } from 'inversify';
 import { Event, Extension, extensions } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
-import { JVSC_EXTENSION_ID } from '../constants';
+import { JVSC_EXTENSION_ID, unknownExtensionId } from '../constants';
 import { parseStack } from '../../errors';
+import { traceError } from '../../logging';
 
 /**
  * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
@@ -57,7 +58,8 @@ export class Extensions implements IExtensions {
                     return { extensionId: matchingExt.id, displayName: matchingExt.packageJSON.displayName };
                 }
             }
+            traceError(`Unable to determine the caller of the extension API for trace stack.`, stack);
         }
-        return { extensionId: DataScience.unknownPackage, displayName: DataScience.unknownPackage };
+        return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
     }
 }

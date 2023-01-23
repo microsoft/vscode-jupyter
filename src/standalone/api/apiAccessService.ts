@@ -4,7 +4,7 @@
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../../platform/common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
 import { Common, DataScience } from '../../platform/common/utils/localize';
@@ -41,8 +41,10 @@ export class ApiAccessService {
         extensionId: string;
         displayName: string;
     }): Promise<{ extensionId: string; accessAllowed: boolean }> {
-        const publisherId = info.extensionId.split('.')[0];
-        if (this.context.extensionMode === ExtensionMode.Test) {
+        const publisherId =
+            !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
+        if (this.context.extensionMode === ExtensionMode.Test || !publisherId) {
+            traceError(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
                 this.appShell
                     .showInformationMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs)
