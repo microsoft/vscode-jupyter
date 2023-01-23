@@ -6,7 +6,6 @@
 import { IServiceManager } from '../platform/ioc/types';
 import { IExtensionActivationManager, IExtensionSyncActivationService } from '../platform/activation/types';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
-import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { GlobalActivation } from './activation/globalActivation';
 import { INotebookExporter } from '../kernels/jupyter/types';
@@ -34,7 +33,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         ExportCommandRegistry
     );
 
-    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ImportTracker);
 
     // Activation Manager

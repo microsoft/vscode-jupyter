@@ -713,6 +713,13 @@ export namespace WebViews {
     export const deletePlot = l10n.t('Remove');
     export const selectedImageListLabel = l10n.t('Selected Image');
     export const selectedImageLabel = l10n.t('Image');
+    export const errorOutputExceedsLinkToOpenFormatString = l10n.t({
+        message:
+            'Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>',
+        comment: [
+            'Do not translate the the Hyperlink text "<a href={0}>size limit</a>" and "<a href={1}>in a text editor</a>". However the text inside those tags can be translated'
+        ]
+    });
 }
 
 export namespace Deprecated {

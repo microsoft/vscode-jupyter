@@ -3,6 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { EventEmitter, Memento } from 'vscode';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../../platform/common/types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
@@ -112,9 +113,11 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         provider: IJupyterUriProvider,
         localDisposables: IDisposable[]
     ): Promise<JupyterUriProviderWrapper> {
-        const info = await this.extensions.determineExtensionFromCallStack();
-        this.updateRegistrationInfo(provider.id, info.extensionId).catch(noop);
-        return new JupyterUriProviderWrapper(provider, info.extensionId, localDisposables);
+        const extensionId = provider.id.startsWith('_builtin')
+            ? JVSC_EXTENSION_ID
+            : (await this.extensions.determineExtensionFromCallStack()).extensionId;
+        this.updateRegistrationInfo(provider.id, extensionId).catch(noop);
+        return new JupyterUriProviderWrapper(provider, extensionId, localDisposables);
     }
     @swallowExceptions()
     private async updateRegistrationInfo(providerId: string, extensionId: string): Promise<void> {

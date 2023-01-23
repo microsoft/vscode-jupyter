@@ -227,3 +227,11 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
     public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
 }
+
+export const enum ErrorRendererMessageType {
+    RequestLoadLoc = 2,
+    ResponseLoadLoc = 3
+}
+export type Localizations = {
+    errorOutputExceedsLinkToOpenFormatString: string;
+};
