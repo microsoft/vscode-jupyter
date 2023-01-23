@@ -50,7 +50,7 @@ suite('Export File Opener', () => {
     test('HTML File opened if yes button pressed', async () => {
         const uri = Uri.file('test.html');
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('DataScience.openExportFileYes', 'Yes'))
+            Promise.resolve(getLocString('openExportFileYes', 'Yes'))
         );
 
         await fileOpener.openFile(ExportFormat.html, uri);
@@ -60,7 +60,7 @@ suite('Export File Opener', () => {
     test('HTML File not opened if no button button pressed', async () => {
         const uri = Uri.file('test.html');
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('DataScience.openExportFileNo', 'No'))
+            Promise.resolve(getLocString('openExportFileNo', 'No'))
         );
 
         await fileOpener.openFile(ExportFormat.html, uri);
@@ -70,7 +70,7 @@ suite('Export File Opener', () => {
     test('PDF File opened if yes button pressed', async () => {
         const uri = Uri.file('test.pdf');
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('DataScience.openExportFileYes', 'Yes'))
+            Promise.resolve(getLocString('openExportFileYes', 'Yes'))
         );
 
         await fileOpener.openFile(ExportFormat.pdf, uri);
@@ -80,7 +80,7 @@ suite('Export File Opener', () => {
     test('PDF File not opened if no button button pressed', async () => {
         const uri = Uri.file('test.pdf');
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('DataScience.openExportFileNo', 'No'))
+            Promise.resolve(getLocString('openExportFileNo', 'No'))
         );
 
         await fileOpener.openFile(ExportFormat.pdf, uri);

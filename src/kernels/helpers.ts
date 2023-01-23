@@ -10,7 +10,7 @@ import * as uriPath from '../platform/vscode-path/resources';
 import * as nbformat from '@jupyterlab/nbformat';
 import type { Kernel, KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
+import cloneDeep from 'lodash/cloneDeep';
 import url from 'url-parse';
 import {
     KernelConnectionMetadata,
@@ -381,9 +381,9 @@ export function getRemoteKernelSessionInformation(
     defaultValue: string = ''
 ): string {
     if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
-        return DataScience.jupyterSelectURIRunningDetailFormat().format(
-            kernelConnection.kernelModel.lastActivityTime.toLocaleString(),
-            kernelConnection.kernelModel.numberOfConnections.toString()
+        return DataScience.jupyterSelectURIRunningDetailFormat(
+            kernelConnection.kernelModel.lastActivityTime,
+            kernelConnection.kernelModel.numberOfConnections
         );
     }
     return defaultValue;

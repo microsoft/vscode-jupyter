@@ -18,7 +18,7 @@ export function getJupyterOutputChannel(
         return defaultOutputChannel;
     }
     const jupyterServerOutputChannel = window.createOutputChannel(
-        localize.DataScience.jupyterServerConsoleOutputChannel()
+        localize.DataScience.jupyterServerConsoleOutputChannel
     );
     disposables.push(jupyterServerOutputChannel);
     const handler: ProxyHandler<IOutputChannel> = {

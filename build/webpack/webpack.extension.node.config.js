@@ -38,16 +38,6 @@ const config = {
             {
                 test: /\.ts$/,
                 use: [
-                    ...(process.env.BUILD_WITH_VSCODE_NLS
-                        ? [
-                              {
-                                  loader: 'vscode-nls-dev/lib/webpack-loader',
-                                  options: {
-                                      base: constants.ExtensionRootDir
-                                  }
-                              }
-                          ]
-                        : []),
                     {
                         loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
                     }
@@ -58,7 +48,10 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: 'ts-loader'
+                        loader: 'ts-loader',
+                        options: {
+                            configFile: 'src/tsconfig.extension.node.json'
+                        }
                     }
                 ]
             },
@@ -105,7 +98,7 @@ const config = {
         'commonjs',
         'electron',
         './node_modules/zeromq',
-        './node_modules/@vscode/jupyter-ipywidgets',
+        './node_modules/@vscode/jupyter-ipywidgets7',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
         'applicationinsights-native-metrics'
@@ -136,7 +129,7 @@ const config = {
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets/dist/*.js' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets7/dist/*.js' }] }),
         new webpack.IgnorePlugin({
             resourceRegExp: /^\.\/locale$/,
             contextRegExp: /moment$/
@@ -162,6 +155,10 @@ const config = {
             util: require.resolve('util/')
         }
     },
+    // Uncomment this to not minify chunk file names to easily identify them
+    // optimization: {
+    //     chunkIds: 'named'
+    // },
     output: {
         filename: '[name].node.js',
         path: path.resolve(constants.ExtensionRootDir, 'out'),

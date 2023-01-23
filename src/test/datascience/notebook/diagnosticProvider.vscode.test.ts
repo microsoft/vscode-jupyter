@@ -55,7 +55,7 @@ suite('VSCode Notebook -', function () {
             'No problems detected'
         );
         const problem = diagnosticProvider.problems.get(cell.document.uri)![0];
-        assert.equal(problem.message, DataScience.percentPipCondaInstallInsteadOfBang().format('pip'));
+        assert.equal(problem.message, DataScience.percentPipCondaInstallInsteadOfBang('pip'));
         assert.isTrue(
             problem.range.isEqual(new Range(0, 0, 0, 12)),
             `Range is not as expected ${problem.range.toString()}`
@@ -71,7 +71,7 @@ suite('VSCode Notebook -', function () {
             'No problems detected'
         );
         const problem = diagnosticProvider.problems.get(cell.document.uri)![0];
-        assert.equal(problem.message, DataScience.percentPipCondaInstallInsteadOfBang().format('conda'));
+        assert.equal(problem.message, DataScience.percentPipCondaInstallInsteadOfBang('conda'));
         assert.isTrue(
             problem.range.isEqual(new Range(0, 0, 0, 14)),
             `Range is not as expected ${problem.range.toString()}`

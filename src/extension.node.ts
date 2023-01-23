@@ -3,13 +3,8 @@
 
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
-
-// This line should always be right on top.
-/* eslint-disable @typescript-eslint/no-explicit-any */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import './platform/ioc/reflectMetadata';
 
 // Initialize the logger first.
 import './platform/logging';
@@ -202,7 +197,7 @@ async function activateUnsafe(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function displayProgress(promise: Promise<any>) {
-    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
+    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension };
     window.withProgress(progressOptions, () => promise).then(noop, noop);
 }
 
@@ -210,7 +205,7 @@ function displayProgress(promise: Promise<any>) {
 // error handling
 
 async function handleError(ex: Error, startupDurations: typeof durations) {
-    notifyUser(Common.handleExtensionActivationError());
+    notifyUser(Common.handleExtensionActivationError);
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);
@@ -253,7 +248,7 @@ function addConsoleLogger() {
 }
 
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter);
     registerLogger(new OutputChannelLogger(standardOutputChannel));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(

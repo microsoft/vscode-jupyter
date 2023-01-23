@@ -90,7 +90,37 @@ export function initialize() {
         return originalLoad.apply(this, arguments);
     };
 }
-
+mockedVSCode.l10n = {
+    bundle: undefined,
+    t: (
+        arg1: string | { message: string; args?: string[] | Record<string, string> },
+        ...restOfArguments: unknown[]
+    ) => {
+        if (typeof arg1 === 'string') {
+            if (restOfArguments.length === 0) {
+                return arg1;
+            }
+            if (typeof restOfArguments === 'object' && !Array.isArray(restOfArguments)) {
+                throw new Error('Records for l10n.t() are not supported in the mock');
+            }
+            return arg1.format(...restOfArguments);
+        }
+        if (typeof arg1 === 'object') {
+            const message = arg1.message;
+            const args = arg1.args || [];
+            if (typeof args === 'object' && !Array.isArray(args)) {
+                throw new Error('Records for l10n.t() are not supported in the mock');
+            }
+            if (args.length === 0) {
+                return message;
+            }
+            return message.format(...args);
+        }
+        return arg1;
+    },
+    uri: undefined
+} as any;
+mockedVSCode.MarkdownString = vscodeMocks.vscMock.MarkdownString;
 mockedVSCode.MarkdownString = vscodeMocks.vscMock.MarkdownString;
 mockedVSCode.Hover = vscodeMocks.vscMock.Hover;
 mockedVSCode.Disposable = vscodeMocks.vscMock.Disposable as any;

@@ -12,26 +12,26 @@ import {
     window
 } from 'vscode';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { Commands, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceError, traceInfo } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getLanguageOfNotebookDocument } from '../../languages/helpers';
-import { IControllerLoader } from '../types';
+import { IControllerRegistration } from '../types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
 @injectable()
-export class InstallPythonControllerCommands implements IExtensionSingleActivationService {
+export class InstallPythonControllerCommands implements IExtensionSyncActivationService {
     private showInstallPythonExtensionContext: ContextKey;
     private showInstallPythonContext: ContextKey;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
@@ -43,10 +43,11 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
+        @inject(IControllerRegistration) private readonly controllerRegistry: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {
         // Context keys to control when these commands are shown
         this.showInstallPythonExtensionContext = new ContextKey(
@@ -55,7 +56,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         );
         this.showInstallPythonContext = new ContextKey('jupyter.showInstallPythonCommand', this.commandManager);
     }
-    public async activate(): Promise<void> {
+    public activate() {
         this.disposables.push(
             notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this)
         );
@@ -109,7 +110,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                 // Python extension is installed, let's wait for interpreters to be detected
                 if (this.interpreterService.environments.length === 0) {
-                    await this.interpreterService.waitForAllInterpretersToLoad();
+                    await this.interpreterService.refreshInterpreters();
                 }
 
                 if (this.interpreterService.environments.length === 0) {
@@ -140,12 +141,12 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
     private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
         const selection = await this.appShell.showErrorMessage(
-            DataScience.pythonNotInstalled(),
+            DataScience.pythonNotInstalled,
             { modal: true },
-            Common.install()
+            Common.install
         );
 
-        if (selection === Common.install()) {
+        if (selection === Common.install) {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
             // Activate the python extension command to show how to install python
             await this.commandManager.executeCommand('python.installPython');
@@ -154,16 +155,20 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         }
     }
 
-    // Called when we select the command to install the python extension via the kernel picker
-    // If new controllers are added before this fully resolves any in progress executions will be
-    // passed on, so we can trigger with the run button, install, get a controller and not have to
-    // click run again
-    private async installPythonExtensionViaKernelPicker(): Promise<void> {
+    /**
+     * Called when we select the command to install the python extension via the kernel picker
+     * If new controllers are added before this fully resolves any in progress executions will be
+     * passed on, so we can trigger with the run button, install, get a controller and not have to
+     * click run again
+     *
+     * @return {*}  {Promise<boolean>} `true` if Python extension was installed, else not installed.
+     */
+    private async installPythonExtensionViaKernelPicker(): Promise<boolean | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
 
             // Now start to indicate that we are performing the install and locating kernels
-            const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension());
+            const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension);
             try {
                 await this.extensionChecker.directlyInstallPythonExtension();
 
@@ -174,21 +179,25 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                 // Make sure that we didn't timeout waiting for the hook
                 if (this.extensionChecker.isPythonExtensionInstalled && typeof hookResult !== 'number') {
-                    traceInfo('Python Extension installed via Kernel Picker command');
+                    traceVerbose('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
                     });
 
-                    // Trigger a load of our notebook controllers, we want to await it here so that any in
-                    // progress executions get passed to the suggested controller
-                    await this.controllerLoader.loaded;
+                    if (this.featureManager.features.kernelPickerType === 'Insiders') {
+                        return true;
+                    } else {
+                        // Trigger a load of our notebook controllers, we want to await it here so that any in
+                        // progress executions get passed to the suggested controller
+                        await this.controllerRegistry.loaded;
+                    }
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'failed'
                     });
                     this.errorHandler
-                        .handleError(new Error(DataScience.failedToInstallPythonExtension()))
+                        .handleError(new Error(DataScience.failedToInstallPythonExtension))
                         .then(noop, noop);
                 }
             } finally {

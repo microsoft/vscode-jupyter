@@ -6,8 +6,6 @@ import { IFileSystem, TemporaryFile } from './types';
 
 //===========================
 // filesystem operations
-
-export type ReadStream = fs.ReadStream;
 export type WriteStream = fs.WriteStream;
 
 export const IFileSystemNode = Symbol('IFileSystemNode');

@@ -11,6 +11,8 @@ import {
     NotebookCellOutputItem,
     TextDocument
 } from 'vscode';
+import { traceVerbose } from '../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernelController } from '../types';
 
 /**
@@ -20,6 +22,7 @@ import { IKernelController } from '../types';
  */
 export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     public started: boolean = false;
+    private _startTime?: number;
     constructor(
         private readonly _impl: NotebookCellExecution,
         public controllerId: string,
@@ -42,12 +45,19 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         if (!this.started) {
             this.started = true;
             this._impl.start(startTime);
+            this._startTime = startTime;
+            traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime}`);
         }
     }
     end(success: boolean | undefined, endTime?: number): void {
         if (this._endCallback) {
             try {
                 this._impl.end(success, endTime);
+                traceVerbose(
+                    `End cell ${this.cell.index} execution @ ${endTime}, started @ ${this._startTime}, elapsed time = ${
+                        ((endTime || 0) - (this._startTime || 0)) / 1000
+                    }s`
+                );
             } finally {
                 this._endCallback();
                 this._endCallback = undefined;
@@ -112,14 +122,19 @@ export class CellExecutionCreator {
     }
 
     private static create(key: TextDocument, cell: NotebookCell, controller: IKernelController) {
-        const result = new NotebookCellExecutionWrapper(
-            controller.createNotebookCellExecution(cell),
-            controller.id,
-            () => {
-                CellExecutionCreator._map.delete(key);
-            }
-        );
-        CellExecutionCreator._map.set(key, result);
-        return result;
+        try {
+            const result = new NotebookCellExecutionWrapper(
+                controller.createNotebookCellExecution(cell),
+                controller.id,
+                () => {
+                    CellExecutionCreator._map.delete(key);
+                }
+            );
+            CellExecutionCreator._map.set(key, result);
+            return result;
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.FailedToCreateNotebookCellExecution, undefined, undefined, ex);
+            throw ex;
+        }
     }
 }

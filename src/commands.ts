@@ -43,8 +43,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CreateNewInteractive]: [];
     [DSCommands.InterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
     [DSCommands.RestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
-    [DSCommands.NotebookEditorUndoCells]: [];
-    [DSCommands.NotebookEditorRedoCells]: [];
     [DSCommands.NotebookEditorRemoveAllCells]: [];
     [DSCommands.NotebookEditorRestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined | Uri];
     [DSCommands.NotebookEditorRunAllCells]: [];
@@ -180,7 +178,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportToPDF]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.Export]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.NativeNotebookExport]: [Uri | undefined | { notebookEditor: { notebookUri: Uri } }];
-    [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
@@ -202,4 +199,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
     [DSCommands.InstallPythonViaKernelPicker]: [];
+    [DSCommands.SwitchToRemoteKernels]: [];
 }

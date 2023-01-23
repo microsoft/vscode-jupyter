@@ -133,15 +133,7 @@ const config = {
             fs: './fs-empty.js'
         },
         fallback: {
-            // Webpack 5 no longer polyfills Node.js core modules automatically.
-            // see https://webpack.js.org/configuration/resolve/#resolvefallback
-            // for the list of Node.js core module polyfills.
-            assert: require.resolve('assert'),
-            buffer: require.resolve('buffer'),
-            stream: require.resolve('stream-browserify'),
-            os: require.resolve('os-browserify'),
-            path: require.resolve('path-browserify'),
-            fs: false
+            os: require.resolve('os-browserify')
         }
     },
     output: {

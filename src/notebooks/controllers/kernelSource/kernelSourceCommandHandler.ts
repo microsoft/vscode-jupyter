@@ -2,25 +2,33 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { commands, NotebookDocument, notebooks, window } from 'vscode';
+import { commands, NotebookControllerAffinity, NotebookDocument, notebooks, window } from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
+import { sendKernelTelemetryEvent } from '../../../kernels/telemetry/sendKernelTelemetryEvent';
+import { IKernelFinder, KernelConnectionMetadata } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { traceError } from '../../../platform/logging';
-import { INotebookKernelSourceSelector } from '../types';
+import { traceError, traceWarning } from '../../../platform/logging';
+import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
     private localDisposables: IDisposable[] = [];
     private readonly providerMappings = new Map<string, IDisposable[]>();
+    private kernelSpecsSourceRegistered = false;
     constructor(
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {
         disposables.push(this);
     }
@@ -36,6 +44,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                 disposeAllDisposables(this.localDisposables);
                 this.localDisposables = [];
                 this.providerMappings.clear();
+                this.kernelSpecsSourceRegistered = false;
             }
         };
 
@@ -43,63 +52,87 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         updatePerFeature();
     }
     private _activate() {
-        this.localDisposables.push(
-            notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
-                provideNotebookKernelSourceActions: () => {
-                    return [
-                        {
-                            label: DataScience.localKernelSpecs(),
-                            detail: DataScience.pickLocalKernelSpecTitle(),
-                            command: 'jupyter.kernel.selectLocalKernelSpec'
-                        },
-                        {
-                            label: DataScience.localPythonEnvironments(),
-                            detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                        }
-                    ];
+        if (!this.isWebExtension) {
+            this.localDisposables.push(
+                notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
+                    provideNotebookKernelSourceActions: () => {
+                        return [
+                            {
+                                label: DataScience.localPythonEnvironments,
+                                command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                            }
+                        ];
+                    }
+                })
+            );
+            this.localDisposables.push(
+                notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
+                    provideNotebookKernelSourceActions: () => {
+                        return [
+                            {
+                                label: DataScience.localPythonEnvironments,
+                                command: 'jupyter.kernel.selectLocalPythonEnvironment'
+                            }
+                        ];
+                    }
+                })
+            );
+            const registerKernelSpecsSource = () => {
+                if (this.kernelSpecsSourceRegistered) {
+                    return;
                 }
-            })
-        );
-        this.localDisposables.push(
-            notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
-                provideNotebookKernelSourceActions: () => {
-                    return [
-                        {
-                            label: DataScience.localKernelSpecs(),
-                            detail: DataScience.pickLocalKernelSpecTitle(),
-                            command: 'jupyter.kernel.selectLocalKernelSpec'
-                        },
-                        {
-                            label: DataScience.localPythonEnvironments(),
-                            detail: DataScience.pickLocalKernelPythonEnvTitle(),
-                            command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                        }
-                    ];
+                if (this.kernelFinder.kernels.some((k) => k.kind === 'startUsingLocalKernelSpec')) {
+                    this.kernelSpecsSourceRegistered = true;
+                    this.localDisposables.push(
+                        notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
+                            provideNotebookKernelSourceActions: () => {
+                                return [
+                                    {
+                                        label: DataScience.localKernelSpecs,
+                                        command: 'jupyter.kernel.selectLocalKernelSpec'
+                                    }
+                                ];
+                            }
+                        })
+                    );
+                    this.localDisposables.push(
+                        notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
+                            provideNotebookKernelSourceActions: () => {
+                                return [
+                                    {
+                                        label: DataScience.localKernelSpecs,
+                                        command: 'jupyter.kernel.selectLocalKernelSpec'
+                                    }
+                                ];
+                            }
+                        })
+                    );
                 }
-            })
-        );
-        this.localDisposables.push(
-            commands.registerCommand(
-                'jupyter.kernel.selectLocalKernelSpec',
-                this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalKernelSpec),
-                this
-            )
-        );
-        this.localDisposables.push(
-            commands.registerCommand(
-                'jupyter.kernel.selectLocalPythonEnvironment',
-                this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalPythonEnvironment),
-                this
-            )
-        );
+            };
+            registerKernelSpecsSource();
+            this.kernelFinder.onDidChangeKernels(() => registerKernelSpecsSource(), this, this.localDisposables);
+            this.localDisposables.push(
+                commands.registerCommand(
+                    'jupyter.kernel.selectLocalKernelSpec',
+                    this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalKernelSpec),
+                    this
+                )
+            );
+            this.localDisposables.push(
+                commands.registerCommand(
+                    'jupyter.kernel.selectLocalPythonEnvironment',
+                    this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalPythonEnvironment),
+                    this
+                )
+            );
+        }
         this.localDisposables.push(
             commands.registerCommand('jupyter.kernel.selectJupyterServerKernel', this.onSelectRemoteKernel, this)
         );
         const uriRegistration = ServiceContainer.instance.get<IJupyterUriProviderRegistration>(
             IJupyterUriProviderRegistration
         );
-        uriRegistration.onDidChangeProviders(() => this.registerUriCommands, this, this.localDisposables);
+        uriRegistration.onDidChangeProviders(this.registerUriCommands, this, this.localDisposables);
         this.registerUriCommands();
     }
     private registerUriCommands() {
@@ -120,9 +153,6 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             return [
                                 {
                                     label: provider.displayName ?? provider.id,
-                                    detail:
-                                        provider.detail ??
-                                        `Connect to Jupyter servers from ${provider.displayName ?? provider.id}`,
                                     command: {
                                         command: 'jupyter.kernel.selectJupyterServerKernel',
                                         arguments: [provider.id],
@@ -136,10 +166,9 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         provideNotebookKernelSourceActions: () => {
                             return [
                                 {
-                                    label: provider.displayName ?? provider.id,
-                                    detail:
-                                        provider.detail ??
-                                        `Connect to Jupyter servers from ${provider.displayName ?? provider.id}`,
+                                    label:
+                                        provider.displayName ??
+                                        (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
                                     command: {
                                         command: 'jupyter.kernel.selectJupyterServerKernel',
                                         arguments: [provider.id],
@@ -172,7 +201,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         }
         const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
         const kernel = await selector.selectLocalKernel(notebook, kind);
-        return kernel?.id;
+        return kernel ? this.getSelectedController(notebook, kernel)?.id : undefined;
     }
     private async onSelectRemoteKernel(providerId: string, notebook?: NotebookDocument) {
         notebook = notebook || window.activeNotebookEditor?.notebook;
@@ -181,6 +210,24 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         }
         const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
         const kernel = await selector.selectRemoteKernel(notebook, providerId);
-        return kernel?.id;
+        return kernel ? this.getSelectedController(notebook, kernel)?.id : undefined;
+    }
+    private getSelectedController(notebook: NotebookDocument, kernel: KernelConnectionMetadata) {
+        const controllers = this.controllerRegistration.addOrUpdate(kernel, [
+            notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
+        ]);
+        if (!Array.isArray(controllers) || controllers.length === 0) {
+            traceWarning(`No controller created for selected kernel connection ${kernel.kind}:${kernel.id}`);
+            return;
+        }
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, kernel)
+            .finally(() =>
+                sendKernelTelemetryEvent(notebook.uri, Telemetry.SwitchKernel, undefined, { newKernelPicker: true })
+            )
+            .catch(noop);
+        controllers
+            .find((item) => item.viewType === notebook.notebookType)
+            ?.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity.Preferred);
+        return controllers[0].controller;
     }
 }

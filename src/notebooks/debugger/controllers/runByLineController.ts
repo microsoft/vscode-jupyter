@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { NotebookCell } from 'vscode';
+import { NotebookCell, Position } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { INotebookKernelExecution } from '../../../kernels/types';
 import { ICommandManager } from '../../../platform/common/application/types';
@@ -22,6 +22,7 @@ import { isJustMyCodeNotification } from './debugCellController';
  */
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
+    private lastPausePosition: Position | undefined;
 
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
@@ -99,6 +100,14 @@ export class RunByLineController implements IDebuggingDelegate {
 
         if (stResponse && stResponse.stackFrames[0]) {
             const sf = stResponse.stackFrames[0];
+            const pausePos = new Position(sf.line, sf.column);
+            if (this.lastPausePosition?.isEqual(pausePos)) {
+                // This is a workaround for https://github.com/microsoft/debugpy/issues/1104
+                this.trace('intercept', 'working around duplicate stop event');
+                return true;
+            }
+
+            this.lastPausePosition = pausePos;
             return !!sf.source && sf.source.path !== this.debugCell.document.uri.toString();
         }
 
@@ -142,7 +151,7 @@ export class RunByLineController implements IDebuggingDelegate {
             });
 
             // Open variables view
-            const settings = this.settings.getSettings();
+            const settings = this.settings.getSettings(this.debugCell.notebook.uri);
             if (settings.showVariableViewWhenDebugging) {
                 this.commandManager.executeCommand(Commands.OpenVariableView).then(noop, noop);
             }

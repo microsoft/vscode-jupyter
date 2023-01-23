@@ -48,7 +48,7 @@ export class ContributedLocalKernelSpecFinder
 
     kind = ContributedKernelFinderKind.LocalKernelSpec;
     id: string = ContributedKernelFinderKind.LocalKernelSpec;
-    displayName: string = DataScience.localKernelSpecs();
+    displayName: string = DataScience.localKernelSpecs;
 
     private _onDidChangeKernels = new EventEmitter<{
         added?: LocalKernelConnectionMetadata[];
@@ -152,6 +152,8 @@ export class ContributedLocalKernelSpecFinder
             let kernels: LocalKernelConnectionMetadata[] = [];
             // Exclude python kernel specs (we'll get that from the pythonKernelFinder)
             const kernelSpecs = this.nonPythonKernelFinder.kernels.filter((item) => {
+                // Remove this condition.
+                // https://github.com/microsoft/vscode-jupyter/issues/12278
                 if (this.extensionChecker.isPythonExtensionInstalled) {
                     return item.kernelSpec.language !== PYTHON_LANGUAGE;
                 }
@@ -233,17 +235,19 @@ export class ContributedLocalKernelSpecFinder
                 this._onDidChangeKernels.fire({ added, updated, removed });
             }
 
-            traceVerbose(
-                `Updating cache with Local kernels ${values
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Added = ${added
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Updated = ${updated
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Removed = ${removed
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}`
-            );
+            if (values.length) {
+                traceVerbose(
+                    `Updating cache with Local kernels ${values
+                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                        .join(', ')}, Added = ${added
+                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                        .join(', ')}, Updated = ${updated
+                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                        .join(', ')}, Removed = ${removed
+                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                        .join(', ')}`
+                );
+            }
         } catch (ex) {
             traceError('LocalKernelFinder: Failed to write to cache', ex);
         }

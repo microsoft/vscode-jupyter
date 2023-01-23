@@ -37,9 +37,9 @@ import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 type CellUri = string;
 type CellVersion = number;
 
-const pipMessage = DataScience.percentPipCondaInstallInsteadOfBang().format('pip');
-const condaMessage = DataScience.percentPipCondaInstallInsteadOfBang().format('conda');
-const matplotlibMessage = DataScience.matplotlibWidgetInsteadOfOther();
+const pipMessage = DataScience.percentPipCondaInstallInsteadOfBang('pip');
+const condaMessage = DataScience.percentPipCondaInstallInsteadOfBang('conda');
+const matplotlibMessage = DataScience.matplotlibWidgetInsteadOfOther;
 const diagnosticSource = 'Jupyter';
 
 /**
@@ -129,7 +129,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
         }
         const installer = diagnostic.message === pipMessage ? 'pip' : 'conda';
         return new Hover(
-            DataScience.pipCondaInstallHoverWarning().format(installer, 'https://aka.ms/jupyterCellMagicBangInstall'),
+            DataScience.pipCondaInstallHoverWarning(installer, 'https://aka.ms/jupyterCellMagicBangInstall'),
             diagnostic.range
         );
     }
@@ -169,11 +169,8 @@ export class NotebookCellBangInstallDiagnosticsProvider
         });
         return codeActions;
     }
-    private createReplaceCodeAction(document: TextDocument, type: string, d: Diagnostic) {
-        const codeAction = new CodeAction(
-            DataScience.replacePipCondaInstallCodeAction().format(type),
-            CodeActionKind.QuickFix
-        );
+    private createReplaceCodeAction(document: TextDocument, type: 'pip' | 'conda', d: Diagnostic) {
+        const codeAction = new CodeAction(DataScience.replacePipCondaInstallCodeAction(type), CodeActionKind.QuickFix);
         codeAction.isPreferred = true;
         codeAction.diagnostics = [d];
         const edit = new WorkspaceEdit();
@@ -186,11 +183,11 @@ export class NotebookCellBangInstallDiagnosticsProvider
         return codeAction;
     }
     private createGotoWikiAction(_document: TextDocument, uri: Uri, d: Diagnostic) {
-        const codeAction = new CodeAction(DataScience.matplotlibWidgetCodeActionTitle(), CodeActionKind.QuickFix);
+        const codeAction = new CodeAction(DataScience.matplotlibWidgetCodeActionTitle, CodeActionKind.QuickFix);
         codeAction.isPreferred = true;
         codeAction.diagnostics = [d];
         codeAction.command = {
-            title: DataScience.matplotlibWidgetCodeActionTitle(),
+            title: DataScience.matplotlibWidgetCodeActionTitle,
             command: 'vscode.open',
             arguments: [uri]
         };

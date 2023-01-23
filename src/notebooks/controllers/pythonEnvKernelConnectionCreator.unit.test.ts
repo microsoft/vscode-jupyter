@@ -23,7 +23,7 @@ import { sleep } from '../../test/core';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
 import { PythonEnvKernelConnectionCreator } from './pythonEnvKernelConnectionCreator';
-import { IControllerSelection, IVSCodeNotebookController } from './types';
+import { IControllerRegistration, IVSCodeNotebookController } from './types';
 
 suite('Python Environment Kernel Connection Creator', () => {
     let pythonEnvKernelConnectionCreator: PythonEnvKernelConnectionCreator;
@@ -38,7 +38,7 @@ suite('Python Environment Kernel Connection Creator', () => {
     }>;
     const disposables: IDisposable[] = [];
     let notebook: NotebookDocument;
-    let controllerSelection: IControllerSelection;
+    let controllerRegistration: IControllerRegistration;
     let onControllerSelected: EventEmitter<{ notebook: NotebookDocument; controller: IVSCodeNotebookController }>;
     let cancellation: CancellationTokenSource;
     const venvPythonKernel = PythonKernelConnectionMetadata.create({
@@ -81,7 +81,7 @@ suite('Python Environment Kernel Connection Creator', () => {
         cancellation = new CancellationTokenSource();
         disposables.push(cancellation);
         notebook = new TestNotebookDocument(undefined, 'jupyter-notebook');
-        controllerSelection = mock<IControllerSelection>();
+        controllerRegistration = mock<IControllerRegistration>();
         kernelFinder = mock<IKernelFinder>();
         localPythonEnvFinder = mock<IContributedKernelFinder<PythonKernelConnectionMetadata>>();
         interpreterService = mock<IInterpreterService>();
@@ -97,11 +97,11 @@ suite('Python Environment Kernel Connection Creator', () => {
         }>();
         disposables.push(onDidChangePythonKernels);
         disposables.push(onControllerSelected);
-        when(controllerSelection.onControllerSelected).thenReturn(onControllerSelected.event);
+        when(controllerRegistration.onControllerSelected).thenReturn(onControllerSelected.event);
         when(serviceContainer.get<IKernelFinder>(IKernelFinder)).thenReturn(instance(kernelFinder));
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
-        when(serviceContainer.get<IControllerSelection>(IControllerSelection)).thenReturn(
-            instance(controllerSelection)
+        when(serviceContainer.get<IControllerRegistration>(IControllerRegistration)).thenReturn(
+            instance(controllerRegistration)
         );
         when(serviceContainer.get<IKernelDependencyService>(IKernelDependencyService)).thenReturn(
             instance(kernelDependencyService)

@@ -53,14 +53,38 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
         return AuthorizingRequest;
     }
 
-    public getWebsocketCtor(_cookieString?: string, _allowUnauthorized?: boolean, _getAuthHeaders?: () => any) {
+    public getWebsocketCtor(
+        _cookieString?: string,
+        _allowUnauthorized?: boolean,
+        _getAuthHeaders?: () => any,
+        getWebSocketProtocols?: () => string | string[] | undefined
+    ) {
+        const getProtocols = (protocols?: string | string[]): string | string[] | undefined => {
+            const authProtocols = getWebSocketProtocols ? getWebSocketProtocols() : undefined;
+            if (!authProtocols && !protocols) {
+                return;
+            }
+            if (!protocols && authProtocols) {
+                return authProtocols;
+            }
+            if (protocols && !authProtocols) {
+                return protocols;
+            }
+            protocols = !protocols ? [] : typeof protocols === 'string' ? [protocols] : protocols;
+            if (Array.isArray(authProtocols)) {
+                protocols.push(...authProtocols);
+            } else if (typeof authProtocols === 'string') {
+                protocols.push(authProtocols);
+            }
+            return protocols;
+        };
         class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
             private kernelId: string | undefined;
             private timer: NodeJS.Timeout | number = 0;
             private boundOpenHandler = this.openHandler.bind(this);
 
             constructor(url: string, protocols?: string | string[] | undefined) {
-                super(url, protocols);
+                super(url, getProtocols(protocols));
                 let timer: NodeJS.Timeout | undefined = undefined;
                 // Parse the url for the kernel id
                 const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);

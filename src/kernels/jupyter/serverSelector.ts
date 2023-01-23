@@ -83,12 +83,12 @@ export async function validateSelectJupyterURI(
     try {
         new URL(inputText);
     } catch {
-        return DataScience.jupyterSelectURIInvalidURI();
+        return DataScience.jupyterSelectURIInvalidURI;
     }
 
     // Double check http
     if (!inputText.toLowerCase().startsWith('http')) {
-        return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps();
+        return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps;
     }
     // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
     try {
@@ -99,26 +99,24 @@ export async function validateSelectJupyterURI(
             sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
             const handled = await handleSelfCertsError(applicationShell, configService, err.message);
             if (!handled) {
-                return DataScience.jupyterSelfCertFailErrorMessageOnly();
+                return DataScience.jupyterSelfCertFailErrorMessageOnly;
             }
         } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
             sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
             const handled = await handleExpiredCertsError(applicationShell, configService, err.message);
             if (!handled) {
-                return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
+                return DataScience.jupyterSelfCertExpiredErrorMessageOnly;
             }
         } else {
             // Notify the user of web extension specific connection help
             if (isWebExtension) {
                 applicationShell
-                    .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension())
+                    .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension)
                     .then(noop, noop);
             }
 
             // Return the general connection error to show in the validation box
-            return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(
-                err.message || err.toString()
-            );
+            return DataScience.remoteJupyterConnectionFailedWithoutServerWithError(err.message || err.toString);
         }
     }
 }
@@ -209,9 +207,9 @@ export class JupyterServerSelector {
  * Original version of the JupyterServerSelector. This class will hopefully be fully deletable when the experiment is proven.
  */
 class JupyterServerSelector_Original implements IJupyterServerSelector {
-    private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURINoneLabel()}`;
-    private readonly newLabel = `$(server) ${DataScience.jupyterSelectURINewLabel()}`;
-    private readonly remoteLabel = `$(server) ${DataScience.jupyterSelectURIRemoteLabel()}`;
+    private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURINoneLabel}`;
+    private readonly newLabel = `$(server) ${DataScience.jupyterSelectURINewLabel}`;
+    private readonly remoteLabel = `$(server) ${DataScience.jupyterSelectURIRemoteLabel}`;
     constructor(
         private readonly clipboard: IClipboard,
         private readonly multiStepFactory: IMultiStepInputFactory,
@@ -295,10 +293,10 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         const remoteUri = await this.serverUriStorage.getRemoteUri();
         const items = await this.getUriPickList(allowLocal, remoteUri);
         const activeItem = items.find((i) => i.url === remoteUri || (i.label === this.localLabel && !remoteUri));
-        const currentValue = !remoteUri ? DataScience.jupyterSelectURINoneLabel() : activeItem?.label;
+        const currentValue = !remoteUri ? DataScience.jupyterSelectURINoneLabel : activeItem?.label;
         const placeholder = currentValue // This will show at the top (current value really)
-            ? DataScience.jupyterSelectURIQuickPickCurrent().format(currentValue)
-            : DataScience.jupyterSelectURIQuickPickPlaceholder();
+            ? DataScience.jupyterSelectURIQuickPickCurrent(currentValue)
+            : DataScience.jupyterSelectURIQuickPickPlaceholder;
 
         let pendingUpdatesToUri = Promise.resolve();
         const onDidChangeItems = new EventEmitter<typeof items>();
@@ -307,11 +305,11 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
             items,
             activeItem,
             title: allowLocal
-                ? DataScience.jupyterSelectURIQuickPickTitleOld()
-                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly(),
+                ? DataScience.jupyterSelectURIQuickPickTitleOld
+                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly,
             onDidTriggerItemButton: (e) => {
                 const url = e.item.url;
-                if (url && e.button.tooltip === DataScience.removeRemoteJupyterServerEntryInQuickPick()) {
+                if (url && e.button.tooltip === DataScience.removeRemoteJupyterServerEntryInQuickPick) {
                     pendingUpdatesToUri = pendingUpdatesToUri.then(() =>
                         this.serverUriStorage.removeUri(url).catch((ex) => traceError('Failed to update Uri list', ex))
                     );
@@ -368,7 +366,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         }
         // Ask the user to enter a URI to connect to.
         const uri = await input.showInputBox({
-            title: DataScience.jupyterSelectURIPrompt(),
+            title: DataScience.jupyterSelectURIPrompt,
             value: initialValue || defaultUri,
             validate: validateSelectJupyterURI.bind(
                 this,
@@ -383,7 +381,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         // Offer the user a chance to pick a display name for the server
         // Leaving it blank will use the URI as the display name
         const newDisplayName = await this.applicationShell.showInputBox({
-            title: DataScience.jupyterRenameServer()
+            title: DataScience.jupyterRenameServer
         });
 
         if (uri) {
@@ -413,14 +411,14 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
         // Always have 'local' and 'add new'
         let items: ISelectUriQuickPickItem[] = [];
         if (allowLocal) {
-            items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURINoneDetail(), newChoice: false });
+            items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURINoneDetail, newChoice: false });
             items = items.concat(providerItems);
-            items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail(), newChoice: true });
+            items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail, newChoice: true });
         } else {
             items = items.concat(providerItems);
             items.push({
                 label: this.remoteLabel,
-                detail: DataScience.jupyterSelectURIRemoteDetail(),
+                detail: DataScience.jupyterSelectURIRemoteDetail,
                 newChoice: true
             });
         }
@@ -433,7 +431,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
                 const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
                     label: uriItem.displayName || uriItem.uri,
-                    detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
+                    detail: DataScience.jupyterSelectURIMRUDetail(uriDate),
                     // If our display name is not the same as the URI, render the uri as description
                     description: uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
                     newChoice: false,
@@ -443,7 +441,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
                         : [
                               {
                                   iconPath: new ThemeIcon('trash'),
-                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick()
+                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
                               }
                           ]
                 });
@@ -458,9 +456,9 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
  * Inisders version of the JupyterServerSelector.
  */
 class JupyterServerSelector_Insiders implements IJupyterServerSelector {
-    private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURINoneLabel()}`;
-    private readonly newLabel = `$(server) ${DataScience.jupyterSelectURINewLabel()}`;
-    private readonly remoteLabel = `$(server) ${DataScience.jupyterSelectURIRemoteLabel()}`;
+    private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURINoneLabel}`;
+    private readonly newLabel = `$(server) ${DataScience.jupyterSelectURINewLabel}`;
+    private readonly remoteLabel = `$(server) ${DataScience.jupyterSelectURIRemoteLabel}`;
     constructor(
         private readonly clipboard: IClipboard,
         private readonly multiStepFactory: IMultiStepInputFactory,
@@ -543,12 +541,15 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
 
         // Get the list of items and show what the current value is
         const remoteUri = await this.serverUriStorage.getRemoteUri();
-        const items = await this.getUriPickList(allowLocal, remoteUri);
+        // filter out the builtin providers which are only now used in the MRU quick pick.
+        const items = (await this.getUriPickList(allowLocal, remoteUri)).filter(
+            (item) => !item.provider?.id.startsWith('_builtin')
+        );
         const activeItem = items.find((i) => i.url === remoteUri || (i.label === this.localLabel && !remoteUri));
-        const currentValue = !remoteUri ? DataScience.jupyterSelectURINoneLabel() : activeItem?.label;
+        const currentValue = !remoteUri ? DataScience.jupyterSelectURINoneLabel : activeItem?.label;
         const placeholder = currentValue // This will show at the top (current value really)
-            ? DataScience.jupyterSelectURIQuickPickCurrent().format(currentValue)
-            : DataScience.jupyterSelectURIQuickPickPlaceholder();
+            ? DataScience.jupyterSelectURIQuickPickCurrent(currentValue)
+            : DataScience.jupyterSelectURIQuickPickPlaceholder;
 
         let pendingUpdatesToUri = Promise.resolve();
         const onDidChangeItems = new EventEmitter<typeof items>();
@@ -557,11 +558,11 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
             items,
             activeItem,
             title: allowLocal
-                ? DataScience.jupyterSelectURIQuickPickTitleOld()
-                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly(),
+                ? DataScience.jupyterSelectURIQuickPickTitleOld
+                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly,
             onDidTriggerItemButton: (e) => {
                 const url = e.item.url;
-                if (url && e.button.tooltip === DataScience.removeRemoteJupyterServerEntryInQuickPick()) {
+                if (url && e.button.tooltip === DataScience.removeRemoteJupyterServerEntryInQuickPick) {
                     pendingUpdatesToUri = pendingUpdatesToUri.then(() =>
                         this.serverUriStorage.removeUri(url).catch((ex) => traceError('Failed to update Uri list', ex))
                     );
@@ -618,7 +619,7 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         }
         // Ask the user to enter a URI to connect to.
         const uri = await input.showInputBox({
-            title: DataScience.jupyterSelectURIPrompt(),
+            title: DataScience.jupyterSelectURIPrompt,
             value: initialValue || defaultUri,
             validate: this.validateSelectJupyterURI,
             prompt: ''
@@ -627,7 +628,7 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         // Offer the user a change to pick a display name for the server
         // Leaving it blank will use the URI as the display name
         const newDisplayName = await this.applicationShell.showInputBox({
-            title: DataScience.jupyterRenameServer()
+            title: DataScience.jupyterRenameServer
         });
 
         if (uri) {
@@ -640,12 +641,12 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         try {
             new URL(inputText);
         } catch {
-            return DataScience.jupyterSelectURIInvalidURI();
+            return DataScience.jupyterSelectURIInvalidURI;
         }
 
         // Double check http
         if (!inputText.toLowerCase().startsWith('http')) {
-            return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps();
+            return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps;
         }
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
@@ -656,26 +657,24 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                 const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
-                    return DataScience.jupyterSelfCertFailErrorMessageOnly();
+                    return DataScience.jupyterSelfCertFailErrorMessageOnly;
                 }
             } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                 const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
-                    return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
+                    return DataScience.jupyterSelfCertExpiredErrorMessageOnly;
                 }
             } else {
                 // Notify the user of web extension specific connection help
                 if (this.isWebExtension) {
                     this.applicationShell
-                        .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension())
+                        .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension)
                         .then(noop, noop);
                 }
 
                 // Return the general connection error to show in the validation box
-                return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(
-                    err.message || err.toString()
-                );
+                return DataScience.remoteJupyterConnectionFailedWithoutServerWithError(err.message || err.toString);
             }
         }
     };
@@ -702,14 +701,14 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         // Always have 'local' and 'add new'
         let items: ISelectUriQuickPickItem[] = [];
         if (allowLocal) {
-            items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURINoneDetail(), newChoice: false });
+            items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURINoneDetail, newChoice: false });
             items = items.concat(providerItems);
-            items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail(), newChoice: true });
+            items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail, newChoice: true });
         } else {
             items = items.concat(providerItems);
             items.push({
                 label: this.remoteLabel,
-                detail: DataScience.jupyterSelectURIRemoteDetail(),
+                detail: DataScience.jupyterSelectURIRemoteDetail,
                 newChoice: true
             });
         }
@@ -722,7 +721,7 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
                 const isSelected = currentRemoteUri?.uri === uriItem.uri;
                 items.push({
                     label: uriItem.displayName || uriItem.uri,
-                    detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
+                    detail: DataScience.jupyterSelectURIMRUDetail(uriDate),
                     // If our display name is not the same as the URI, render the uri as description
                     description: uriItem.displayName !== uriItem.uri ? uriItem.uri : undefined,
                     newChoice: false,
@@ -732,7 +731,7 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
                         : [
                               {
                                   iconPath: new ThemeIcon('trash'),
-                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick()
+                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
                               }
                           ]
                 });

@@ -4,15 +4,18 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
-import { traceError, traceInfo } from '../../platform/logging';
+import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { waitForCondition } from '../../platform/common/utils/async';
-import { IControllerLoader, IControllerRegistration, IControllerSelection } from './types';
+import { IControllerRegistration } from './types';
+import { swallowExceptions } from '../../platform/common/utils/decorators';
+import { isJupyterNotebook } from '../../platform/common/utils';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * This class listens tracks notebook controller selection. When a notebook runs
@@ -20,18 +23,16 @@ import { IControllerLoader, IControllerRegistration, IControllerSelection } from
  * it will force that live kernel as the selected controller.
  */
 @injectable()
-export class LiveKernelSwitcher implements IExtensionSingleActivationService {
+export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IControllerSelection) private readonly controllerSelection: IControllerSelection,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         // Listen to notebook open events. If we open a notebook that had a remote kernel started on it, reset it
         this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebook, this, this.disposables);
 
@@ -39,26 +40,56 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
         this.vscNotebook.notebookDocuments.forEach((d) => this.onDidOpenNotebook(d));
     }
 
-    private onDidOpenNotebook(n: NotebookDocument) {
-        // When all controllers are loaded, see if one matches
-        this.controllerLoader.loaded
-            .then(async () => {
-                const active = this.controllerSelection.getSelected(n);
-                const preferredRemote = await this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(n.uri);
-                const matching = preferredRemote
-                    ? this.controllerRegistration.registered.find((l) => l.id === preferredRemote)
-                    : undefined;
-                if (matching && active?.id !== matching.id) {
-                    traceInfo(`Switching remote kernel to ${preferredRemote} for ${n.uri}`);
-                    // This controller is the one we want, but it's not currently set.
-                    await this.switchKernel(n, matching.connection);
+    @swallowExceptions()
+    private async onDidOpenNotebook(notebook: NotebookDocument) {
+        if (!isJupyterNotebook(notebook)) {
+            return;
+        }
+        const preferredRemote = await this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(notebook.uri);
+        if (!preferredRemote) {
+            return;
+        }
+        const findAndSelectRemoteController = () => {
+            const active = this.controllerRegistration.getSelected(notebook);
+            const matching = this.controllerRegistration.registered.find((l) => l.id === preferredRemote);
+            if (matching && active?.id !== matching.id) {
+                // This controller is the one we want, but it's not currently set.
+                this.switchKernel(notebook, matching.connection).catch(noop);
+                return true;
+            }
+            return false;
+        };
+        if (findAndSelectRemoteController()) {
+            return;
+        }
+
+        const disposable = this.controllerRegistration.onDidChange(
+            (e) => {
+                if (!e.added.length) {
+                    return;
                 }
-            })
-            .catch((e) => traceError(e));
+
+                if (findAndSelectRemoteController()) {
+                    disposable.dispose();
+                }
+            },
+            this,
+            this.disposables
+        );
+        this.controllerRegistration.onControllerSelected(
+            (e) => {
+                if (e.notebook === notebook) {
+                    // controller selected, stop attempting to change this our selves.
+                    disposable.dispose();
+                }
+            },
+            this,
+            this.disposables
+        );
     }
 
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
-        traceInfo(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
+        traceVerbose(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
         // Do this in a loop as it may fail
         const success = await waitForCondition(
             async () => {
@@ -67,7 +98,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
                         id: kernel.id,
                         extension: JVSC_EXTENSION_ID
                     });
-                    const selected = this.controllerSelection.getSelected(n);
+                    const selected = this.controllerRegistration.getSelected(n);
                     return selected?.connection.id === kernel.id;
                 }
                 return false;

@@ -37,13 +37,13 @@ export class PlotViewer extends PlotViewerBase {
     protected override async exportPlot(payload: IExportPlotRequest): Promise<void> {
         traceInfo('exporting plot...');
         const filtersObject: Record<string, string[]> = {};
-        filtersObject[localize.DataScience.pdfFilter()] = ['pdf'];
-        filtersObject[localize.DataScience.pngFilter()] = ['png'];
-        filtersObject[localize.DataScience.svgFilter()] = ['svg'];
+        filtersObject[localize.DataScience.pdfFilter] = ['pdf'];
+        filtersObject[localize.DataScience.pngFilter] = ['png'];
+        filtersObject[localize.DataScience.svgFilter] = ['svg'];
 
         // Ask the user what file to save to
         const file = await this.applicationShell.showSaveDialog({
-            saveLabel: localize.DataScience.exportPlotTitle(),
+            saveLabel: localize.DataScience.exportPlotTitle,
             filters: filtersObject
         });
         try {
@@ -68,7 +68,7 @@ export class PlotViewer extends PlotViewerBase {
             }
         } catch (e) {
             traceError(e);
-            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e)).then(noop, noop);
+            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed(e)).then(noop, noop);
         }
     }
 }
@@ -76,8 +76,7 @@ export class PlotViewer extends PlotViewerBase {
 export async function saveSvgToPdf(svg: string, fs: IFileSystemNode, file: Uri) {
     traceInfo('Attempting pdf write...');
     // Import here since pdfkit is so huge.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const SVGtoPDF = require('svg-to-pdfkit');
+    const SVGtoPDF = (await import('svg-to-pdfkit')).default;
     const deferred = createDeferred<void>();
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');

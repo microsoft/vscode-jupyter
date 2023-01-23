@@ -79,7 +79,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
 
         try {
             const kernelConnectionProvided = !!kernelConnection;
-            traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);
+            traceVerbose(`Computing working directory for resource '${getDisplayPath(resource)}'`);
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
@@ -105,7 +105,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             if (rawSession.isConnected) {
                 sessionPromise.resolve(rawSession);
             } else {
-                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
+                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError));
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process

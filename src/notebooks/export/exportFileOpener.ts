@@ -63,12 +63,12 @@ export class ExportFileOpener {
     }
 
     private async askOpenFile(uri: Uri, openDirectly: boolean): Promise<boolean> {
-        const yes = localize.DataScience.openExportFileYes();
-        const no = localize.DataScience.openExportFileNo();
+        const yes = localize.DataScience.openExportFileYes;
+        const no = localize.DataScience.openExportFileNo;
         const items = [yes, no];
 
         const selected = await this.applicationShell
-            .showInformationMessage(localize.DataScience.openExportedFileMessage(), ...items)
+            .showInformationMessage(localize.DataScience.openExportedFileMessage, ...items)
             .then((item) => item);
 
         if (selected === yes) {

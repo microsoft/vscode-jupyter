@@ -115,8 +115,6 @@ suite('Code Watcher Unit Tests', () => {
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
             showCellInputCode: true,
-            allowInput: true,
-            maxOutputSize: 400,
             enableScrollingForCellOutputs: true,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
@@ -128,7 +126,6 @@ suite('Code Watcher Unit Tests', () => {
             runStartupCommands: [],
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: [],
             widgetScriptSources: [],
             interactiveWindowMode: 'single',
             newCellOnRunLast: true

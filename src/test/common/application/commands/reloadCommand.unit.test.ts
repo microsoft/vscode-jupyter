@@ -33,29 +33,29 @@ suite('Common Commands ReloadCommand', () => {
 
         await commandHandler.call(reloadCommandHandler, message);
 
-        verify(appShell.showInformationMessage(message, Common.reload())).once();
+        verify(appShell.showInformationMessage(message, Common.reload)).once;
     });
     test('Do not reload VS Code if user selects `Reload` option', async () => {
         const message = 'Hello World!';
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(appShell.showInformationMessage(message, Common.reload())).thenResolve(Common.reload() as any);
+        when(appShell.showInformationMessage(message, Common.reload)).thenResolve(Common.reload as any);
 
         await commandHandler.call(reloadCommandHandler, message);
 
-        verify(appShell.showInformationMessage(message, Common.reload())).once();
+        verify(appShell.showInformationMessage(message, Common.reload)).once;
         verify(cmdManager.executeCommand('workbench.action.reloadWindow')).once();
     });
     test('Do not reload VS Code if user does not select `Reload` option', async () => {
         const message = 'Hello World!';
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const commandHandler = capture(cmdManager.registerCommand as any).first()[1] as Function;
-        when(appShell.showInformationMessage(message, Common.reload())).thenResolve();
+        when(appShell.showInformationMessage(message, Common.reload)).thenResolve;
 
         await commandHandler.call(reloadCommandHandler, message);
 
-        verify(appShell.showInformationMessage(message, Common.reload())).once();
+        verify(appShell.showInformationMessage(message, Common.reload)).once;
         verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
     });
 });

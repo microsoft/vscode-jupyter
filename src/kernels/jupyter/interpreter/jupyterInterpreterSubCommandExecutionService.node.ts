@@ -11,8 +11,7 @@ import { traceWarning } from '../../../platform/logging';
 import {
     IPythonExecutionFactory,
     SpawnOptions,
-    ObservableExecutionResult,
-    IPythonDaemonExecutionService
+    ObservableExecutionResult
 } from '../../../platform/common/process/types.node';
 import { IOutputChannel } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -36,7 +35,7 @@ import {
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
-import { JupyterDaemonModule, JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
+import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.
@@ -84,7 +83,7 @@ export class JupyterInterpreterSubCommandExecutionService
             if (!interpreter) {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
-                return DataScience.selectJupyterInterpreter();
+                return DataScience.selectJupyterInterpreter;
             }
         }
         const productsNotInstalled = await this.jupyterDependencyService.getDependenciesNotInstalled(
@@ -96,7 +95,7 @@ export class JupyterInterpreterSubCommandExecutionService
         }
 
         if (productsNotInstalled.length === 1 && productsNotInstalled[0] === Product.kernelspec) {
-            return DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.uri.fsPath);
+            return DataScience.jupyterKernelSpecModuleNotFound(interpreter.uri.fsPath);
         }
 
         return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter.displayName);
@@ -110,10 +109,10 @@ export class JupyterInterpreterSubCommandExecutionService
     ): Promise<ObservableExecutionResult<string>> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(options.token);
         this.jupyterOutputChannel.appendLine(
-            DataScience.startingJupyterLogMessage().format(getDisplayPath(interpreter.uri), notebookArgs.join(' '))
+            DataScience.startingJupyterLogMessage(getDisplayPath(interpreter.uri), notebookArgs.join(' '))
         );
-        const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-            daemonModule: JupyterDaemonModule,
+        const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
+            allowEnvironmentFetchExceptions: true,
             interpreter: interpreter
         });
         // We should never set token for long running processes.
@@ -136,8 +135,8 @@ export class JupyterInterpreterSubCommandExecutionService
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-            daemonModule: JupyterDaemonModule,
+        const daemon = await this.pythonExecutionFactory.createActivatedEnvironment({
+            allowEnvironmentFetchExceptions: true,
             interpreter: interpreter
         });
 

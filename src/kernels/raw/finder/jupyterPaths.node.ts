@@ -9,7 +9,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { ignoreLogging, traceError, traceWarning } from '../../../platform/logging';
+import { ignoreLogging, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -79,32 +79,31 @@ export class JupyterPaths {
      * This should return a WRITABLE place that jupyter will look for a kernel as documented
      * here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
-    @traceDecoratorVerbose('Getting Jupyter KernelSpec Root Path')
     public async getKernelSpecRootPath(): Promise<Uri | undefined> {
-        this.cachedKernelSpecRootPath =
-            this.cachedKernelSpecRootPath ||
-            (async () => {
-                const userHomeDir = this.platformService.homeDir;
-                if (userHomeDir) {
-                    if (this.platformService.isWindows) {
-                        // On windows the path is not correct if we combine those variables.
-                        // It won't point to a path that you can actually read from.
-                        return tryGetRealPath(uriPath.joinPath(userHomeDir, winJupyterPath));
-                    } else if (this.platformService.isMac) {
-                        return uriPath.joinPath(userHomeDir, macJupyterPath);
-                    } else {
-                        return uriPath.joinPath(userHomeDir, linuxJupyterPath);
-                    }
+        const cachedRootPath = this.getCachedRootPath();
+        if (cachedRootPath || this.cachedKernelSpecRootPath) {
+            return cachedRootPath || this.cachedKernelSpecRootPath;
+        }
+        this.cachedKernelSpecRootPath = (async () => {
+            const userHomeDir = this.platformService.homeDir;
+            if (userHomeDir) {
+                if (this.platformService.isWindows) {
+                    // On windows the path is not correct if we combine those variables.
+                    // It won't point to a path that you can actually read from.
+                    return tryGetRealPath(uriPath.joinPath(userHomeDir, winJupyterPath));
+                } else if (this.platformService.isMac) {
+                    return uriPath.joinPath(userHomeDir, macJupyterPath);
+                } else {
+                    return uriPath.joinPath(userHomeDir, linuxJupyterPath);
                 }
-            })();
+            }
+        })();
         this.cachedKernelSpecRootPath
             .then((value) => {
-                return this.updateCachedRootPath(value);
+                traceVerbose(`Getting Jupyter KernelSpec Root Path ${value?.toString()}`);
+                this.updateCachedRootPath(value);
             })
-            .ignoreErrors();
-        if (this.getCachedRootPath()) {
-            return this.getCachedRootPath();
-        }
+            .catch(noop);
         return this.cachedKernelSpecRootPath;
     }
     /**

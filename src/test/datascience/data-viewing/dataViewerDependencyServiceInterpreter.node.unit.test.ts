@@ -75,7 +75,7 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
 
         await assert.isRejected(
             promise,
-            DataScience.pandasTooOldForViewingFormat().format('0.20.', pandasMinimumVersionSupportedByVariableViewer)
+            DataScience.pandasTooOldForViewingFormat('0.20.', pandasMinimumVersionSupportedByVariableViewer)
         );
     });
     test('Throw exception if pandas is installed and version is < 0.20', async () => {
@@ -87,7 +87,7 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
 
         await assert.isRejected(
             promise,
-            DataScience.pandasTooOldForViewingFormat().format('0.10.', pandasMinimumVersionSupportedByVariableViewer)
+            DataScience.pandasTooOldForViewingFormat('0.10.', pandasMinimumVersionSupportedByVariableViewer)
         );
     });
     test('Prompt to install pandas and install pandas', async () => {
@@ -95,16 +95,16 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenReject(new Error('Not Found'));
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install() as any);
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install as any);
         when(installer.install(Product.pandas, interpreter, anything())).thenResolve();
 
         await dependencyService.checkAndInstallMissingDependencies(interpreter);
 
         verify(
             appShell.showErrorMessage(
-                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer),
+                DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer),
                 deepEqual({ modal: true }),
-                Common.install()
+                Common.install
             )
         ).once();
         verify(installer.install(Product.pandas, interpreter, anything())).once();
@@ -119,13 +119,13 @@ suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
 
         await assert.isRejected(
             promise,
-            DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer)
+            DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer)
         );
         verify(
             appShell.showErrorMessage(
-                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer),
+                DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer),
                 deepEqual({ modal: true }),
-                Common.install()
+                Common.install
             )
         ).once();
         verify(installer.install(anything(), anything(), anything())).never();

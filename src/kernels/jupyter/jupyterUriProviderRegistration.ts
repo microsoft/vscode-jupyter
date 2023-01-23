@@ -85,7 +85,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
             }
             return provider.getServerUri(handle);
         }
-        throw new Error(localize.DataScience.unknownServerUri());
+        throw new Error(localize.DataScience.unknownServerUri);
     }
 
     private checkOtherExtensions(): Promise<void> {

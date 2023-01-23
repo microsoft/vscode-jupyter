@@ -127,8 +127,6 @@ export const __ = '';
 //             jupyterInterruptTimeout: 10000,
 //             searchForJupyter: true,
 //             showCellInputCode: true,
-//             allowInput: true,
-//             maxOutputSize: 400,
 //             enableScrollingForCellOutputs: true,
 //             errorBackgroundColor: '#FFFFFF',
 //             sendSelectionToInteractiveWindow: false,
@@ -244,7 +242,7 @@ export const __ = '';
 //         await commandManager.executeCommand(Commands.ExportFileAsNotebook, Uri.file('bar.ipynb'), undefined);
 
 //         assert.ok(lastFileContents, 'Export file was not written to');
-//         verify(applicationShell.showInformationMessage(anything(), localize.DataScience.exportOpenQuestion1())).once();
+//         verify(applicationShell.showInformationMessage(anything(), localize.DataScience.exportOpenQuestion1())).once;
 //     });
 //     test('Export File and output', async () => {
 //         createCommandListener();
@@ -278,7 +276,7 @@ export const __ = '';
 //         await commandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('bar.ipynb'));
 
 //         assert.ok(lastFileContents, 'Export file was not written to');
-//         verify(applicationShell.showInformationMessage(anything(), localize.DataScience.exportOpenQuestion1())).once();
+//         verify(applicationShell.showInformationMessage(anything(), localize.DataScience.exportOpenQuestion1())).once;
 //     });
 //     test('Export skipped on no file', async () => {
 //         createCommandListener();

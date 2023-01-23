@@ -6,15 +6,6 @@
 import { Uri } from 'vscode';
 import { PythonVersion } from './pythonVersion';
 
-type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
-
-/**
- * The components of a Python version.
- *
- * These match the elements of `sys.version_info`.
- */
-export type PythonVersionInfo = [number, number, number, ReleaseLevel];
-
 /**
  * The supported Python environment types.
  */

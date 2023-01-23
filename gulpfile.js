@@ -281,19 +281,19 @@ async function buildWebPack(webpackConfigName, args, env) {
         env
     );
     const stdOutLines = stdOut
-        .split(os.EOL)
-        .map((item) => item.trim())
+        .split('\n')
+        .map((item) => stripVTControlCharacters(item).trim())
         .filter((item) => item.length > 0);
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines
-        .filter((item) => stripVTControlCharacters(item).startsWith('WARNING in '))
+        .filter((item) => item.startsWith('WARNING in '))
         .filter(
             (item) =>
                 allowedWarnings.findIndex((allowedWarning) =>
-                    stripVTControlCharacters(item).toLowerCase().startsWith(allowedWarning.toLowerCase())
+                    item.toLowerCase().startsWith(allowedWarning.toLowerCase())
                 ) == -1
         );
-    const errors = stdOutLines.some((item) => stripVTControlCharacters(item).startsWith('ERROR in'));
+    const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
     if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
@@ -410,33 +410,21 @@ function hasNativeDependencies() {
     return false;
 }
 
-async function generateTelemetryMD() {
+async function generateTelemetry() {
     const generator = require('./out/telemetryGenerator.node');
     await generator.default();
 }
-gulp.task('generateTelemetryMd', async () => {
-    return generateTelemetryMD();
+gulp.task('generateTelemetry', async () => {
+    return generateTelemetry();
 });
 
 gulp.task('validateTelemetry', async () => {
-    const telemetryMD = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
-    const telemetryCSV = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
     const gdprTS = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
-    await generateTelemetryMD();
+    await generateTelemetry();
     const gdprTS2 = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
     if (gdprTS2.trim() !== gdprTS.trim()) {
         console.error('src/gdpr.ts is not valid, please re-run `npm run generateTelemetry`');
         throw new Error('src/gdpr.ts is not valid, please re-run `npm run generateTelemetry`');
-    }
-    const telemetryMD2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
-    if (telemetryMD2.trim() !== telemetryMD.trim()) {
-        console.error('Telemetry.md is not valid, please re-run `npm run generateTelemetry`');
-        throw new Error('Telemetry.md is not valid, please re-run `npm run generateTelemetry`');
-    }
-    const telemetryCSV2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
-    if (telemetryCSV2.trim() !== telemetryCSV.trim()) {
-        console.error('Telemetry.csv is not valid, please re-run `npm run generateTelemetry`');
-        throw new Error('Telemetry.csv is not valid, please re-run `npm run generateTelemetry`');
     }
 });
 

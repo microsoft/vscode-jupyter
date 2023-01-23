@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import { IDisposableRegistry } from '../../platform/common/types';
@@ -17,7 +17,7 @@ import { IRawNotebookSupportedService } from '../raw/types';
  * Computes interpreter environment variables when starting up.
  */
 @injectable()
-export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSingleActivationService {
+export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSyncActivationService {
     constructor(
         @inject(IEnvironmentActivationService) private readonly activationService: IEnvironmentActivationService,
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
@@ -27,7 +27,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(CondaService) private readonly condaService: CondaService
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         // Don't prewarm global interpreter if running with ZMQ
         if (!this.rawNotebookSupported.isSupported) {
             this.disposables.push(

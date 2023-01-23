@@ -4,7 +4,7 @@
 'use strict';
 
 import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
@@ -31,7 +31,7 @@ import { CodeLensProviderActivator } from './editor-integration/codelensProvider
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(
@@ -46,7 +46,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         PythonCellFoldingProvider
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Decorator);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         GeneratedCodeStorageManager
@@ -63,7 +63,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IInteractiveWindowDebuggingManager,
         InteractiveWindowDebuggingManager,
         undefined,
-        [IExtensionSingleActivationService]
+        [IExtensionSyncActivationService]
     );
     serviceManager.addSingleton<IStartupCodeProvider>(
         IStartupCodeProvider,

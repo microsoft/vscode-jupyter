@@ -153,7 +153,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.unhandledMessageHandler = (_s, m) => {
-            traceInfo(`Unhandled message found: ${m.header.msg_type}`);
+            traceWarning(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
     public isServerSession(): this is IJupyterKernelConnectionSession {
@@ -332,7 +332,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 ? undefined
                 : KernelProgressReporter.reportProgress(
                       this.resource,
-                      localize.DataScience.waitingForJupyterSessionToBeIdle()
+                      localize.DataScience.waitingForJupyterSessionToBeIdle
                   );
             const disposables: IDisposable[] = [];
             if (progress) {

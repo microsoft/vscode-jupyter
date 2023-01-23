@@ -51,7 +51,7 @@ import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/exec
 import dedent from 'dedent';
 import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
 import { Commands } from '../../platform/common/constants';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 
@@ -82,47 +82,8 @@ suite(`Interactive window execution @iw`, async function () {
         await settings.update('interactiveWindowMode', 'multiple');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    test.skip('Execute cell from Python file @mandatory', async () => {
-        // #11917
-        const source = 'print(42)';
-        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);
-        const notebookDocument = vscode.workspace.notebookDocuments.find(
-            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
-        );
-        const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
-
-        // Ensure we picked up the active interpreter for use as the kernel
-        const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
-
-        // Give it a bit to warm up
-        await sleep(500);
-
-        const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
-        if (!IS_REMOTE_NATIVE_TEST()) {
-            const activeInterpreter = await interpreterService.getActiveInterpreter();
-            assert.ok(
-                areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-                `Controller does not match active interpreter for ${getDisplayPath(
-                    notebookDocument?.uri
-                )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
-                    controller?.id
-                } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
-            );
-        }
-
-        // Verify sys info cell
-        const firstCell = notebookDocument?.cellAt(0);
-        assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
-        assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
-
-        // Verify executed cell input and output
-        const secondCell = notebookDocument?.cellAt(1);
-        const actualSource = secondCell?.document.getText();
-        assert.equal(actualSource, source, `Executed cell has unexpected source code`);
-        await waitForExecutionCompletedSuccessfully(secondCell!);
-        await waitForTextOutput(secondCell!, '42');
-    });
-    test('__file__ exists even after restarting a kernel', async function () {
+    test.skip('__file__ exists even after restarting a kernel', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/12251
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
@@ -135,14 +96,14 @@ suite(`Interactive window execution @iw`, async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
-        const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
+        const controllerRegistration = api.serviceManager.get<IControllerRegistration>(IControllerRegistration);
         // Ensure we picked up the active interpreter for use as the kernel
         const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
 
         // Give it a bit to warm up
         await sleep(500);
 
-        const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
+        const controller = notebookDocument ? controllerRegistration.getSelected(notebookDocument) : undefined;
         if (!IS_REMOTE_NATIVE_TEST()) {
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             assert.ok(
@@ -385,23 +346,46 @@ ${actualCode}
     });
 
     test('Run current file in interactive window (without cells)', async () => {
+        const source = 'a=1\nprint(a)';
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             'a=1\nprint(a)',
             disposables
         );
 
-        await waitForLastCellToComplete(activeInteractiveWindow);
+        await waitForLastCellToComplete(activeInteractiveWindow, 1);
 
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
 
-        // Should have two cells in the interactive window
-        assert.equal(notebookDocument?.cellCount, 2, `Running a file should use one cell`);
+        // Ensure we picked up the active interpreter for use as the kernel
+        if (!IS_REMOTE_NATIVE_TEST()) {
+            const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
+            const controllerSelection = api.serviceManager.get<IControllerRegistration>(IControllerRegistration);
+            const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
+            const activeInterpreter = await interpreterService.getActiveInterpreter();
+            assert.ok(
+                areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
+                `Controller does not match active interpreter for ${getDisplayPath(
+                    notebookDocument?.uri
+                )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
+                    controller?.id
+                } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
+            );
+        }
 
-        // Wait for output to appear
-        await waitForTextOutput(notebookDocument!.cellAt(1), '1', 0, false);
+        // Verify sys info cell
+        const firstCell = notebookDocument?.cellAt(0);
+        assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
+        assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
+
+        // Verify executed cell input and output
+        const secondCell = notebookDocument?.cellAt(1);
+        const actualSource = secondCell?.document.getText();
+        assert.equal(actualSource, source, `Executed cell has unexpected source code`);
+        await waitForExecutionCompletedSuccessfully(secondCell!);
+        await waitForTextOutput(secondCell!, '1');
     });
 
     test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
@@ -462,8 +446,8 @@ ${actualCode}
         const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
         // Should be three hrefs for the two lines in the call stack
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
-        assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
+        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm)!;
+        assert.equal(hrefs.length, 4, '4 hrefs not found in traceback');
         assert.ok(hrefs[0].endsWith("line=3'"), `Wrong first ref line : ${hrefs[0]}`);
         assert.ok(hrefs[1].endsWith("line=4'"), `Wrong second ref line : ${hrefs[1]}`);
         assert.ok(hrefs[2].endsWith("line=1'"), `Wrong last ref line : ${hrefs[2]}`);
@@ -498,11 +482,11 @@ ${actualCode}
         const html = converter.toHtml(errorOutput.traceback.join('\n'));
 
         // Should be more than 3 hrefs if ipython 8 or not
-        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
+        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm)!;
         if (ipythonVersion >= 8) {
-            assert.isAtLeast(hrefs?.length, 4, 'Wrong number of hrefs found in traceback for IPython 8');
+            assert.isAtLeast(hrefs.length, 4, 'Wrong number of hrefs found in traceback for IPython 8');
         } else {
-            assert.isAtLeast(hrefs?.length, 1, 'Wrong number of hrefs found in traceback for IPython 7 or earlier');
+            assert.isAtLeast(hrefs.length, 1, 'Wrong number of hrefs found in traceback for IPython 7 or earlier');
         }
     });
 

@@ -65,10 +65,3 @@ export function isNumber(obj: any): obj is number {
 
     return false;
 }
-
-/**
- * @returns whether the provided parameter is a JavaScript Function or not.
- */
-export function isFunction(obj: any): obj is Function {
-    return typeof obj === _typeof.function;
-}

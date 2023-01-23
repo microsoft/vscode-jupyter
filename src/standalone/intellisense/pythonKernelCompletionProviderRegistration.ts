@@ -4,7 +4,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { languages } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { NOTEBOOK_SELECTOR } from '../../platform/common/constants';
 import { IDisposableRegistry, IConfigurationService } from '../../platform/common/types';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
@@ -17,13 +17,13 @@ const DefaultTriggerCharacters = ['.', '%'];
  * I.e. this is where we integrate our stuff with VS Code via their extension endpoints.
  */
 @injectable()
-export class PythonKernelCompletionProviderRegistration implements IExtensionSingleActivationService {
+export class PythonKernelCompletionProviderRegistration implements IExtensionSyncActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly config: IConfigurationService,
         @inject(PythonKernelCompletionProvider) private readonly completionProvider: PythonKernelCompletionProvider
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         let triggerChars =
             this.config.getSettings().pythonCompletionTriggerCharacters?.split('') || DefaultTriggerCharacters;
 

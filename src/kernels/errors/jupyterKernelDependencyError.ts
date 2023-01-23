@@ -24,7 +24,7 @@ export class JupyterKernelDependencyError extends BaseKernelError {
     ) {
         super(
             'noipykernel',
-            DataScience.kernelInvalid().format(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
+            DataScience.kernelInvalid(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
             kernelConnectionMetadata
         );
     }

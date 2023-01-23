@@ -59,6 +59,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
     private readonly _onDidChangeStatus = new EventEmitter<void>();
     public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+    private _lastError?: Error;
+    public get lastError() {
+        return this._lastError;
+    }
     private readonly promiseMonitor = new PromiseMonitor();
     /**
      * List of ids of kernels that should be hidden from the kernel picker.
@@ -68,7 +72,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
 
-    private _onDidChangeKernels = new EventEmitter<{}>();
+    private _onDidChangeKernels = new EventEmitter<{
+        added?: RemoteKernelConnectionMetadata[];
+        updated?: RemoteKernelConnectionMetadata[];
+        removed?: RemoteKernelConnectionMetadata[];
+    }>();
     onDidChangeKernels = this._onDidChangeKernels.event;
 
     private readonly disposables: IDisposable[] = [];
@@ -185,6 +193,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 kernels = kernelsFromCache;
                 // kick off a cache update request
                 this.updateCache().then(noop, noop);
+                // It is however still possible that the cache is old and the connection is outdated
+                // In this case users might end up getting old outdated data which would be incorrect.
+                // I.e. server could be dead and user is able to select a dead kernel.
+                // To avoid such cases we should always refresh the list of kernels.
+                this.loadCache(true).then(noop, noop);
             } else {
                 try {
                     const kernelsWithoutCachePromise = (async () => {
@@ -193,8 +206,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     })();
 
                     kernels = await kernelsWithoutCachePromise;
+                    this._lastError = undefined;
                 } catch (ex) {
                     traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
+                    this._lastError = ex;
                 }
             }
 

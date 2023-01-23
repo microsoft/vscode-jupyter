@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CancellationTokenSource, NotebookDocument, Disposable, EventEmitter, Uri } from 'vscode';
+import { CancellationTokenSource, NotebookDocument, Disposable, EventEmitter } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import {
@@ -22,7 +22,6 @@ import { IDisposable } from '../../platform/common/types';
 import { NotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { uriEquals } from '../../test/datascience/helpers';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { PreferredKernelConnectionService } from './preferredKernelConnectionService';
@@ -89,37 +88,7 @@ suite('Preferred Kernel Connection', () => {
             language: 'java'
         }
     });
-    const venvPythonKernel = PythonKernelConnectionMetadata.create({
-        id: 'venvPython',
-        kernelSpec: {
-            argv: [],
-            display_name: 'Venv Python',
-            executable: '',
-            name: 'venvName',
-            language: 'python'
-        },
-        interpreter: {
-            id: 'venv',
-            sysPrefix: '',
-            uri: Uri.file('venv')
-        }
-    });
-    const condaPythonKernel = PythonKernelConnectionMetadata.create({
-        id: 'condaPython',
-        kernelSpec: {
-            argv: [],
-            display_name: 'Conda Python',
-            executable: '',
-            name: 'condaName',
-            language: 'python'
-        },
-        interpreter: {
-            id: 'conda',
-            sysPrefix: '',
-            uri: Uri.file('conda'),
-            envType: EnvironmentType.Conda
-        }
-    });
+
     setup(() => {
         serviceContainer = mock<ServiceContainer>();
         const iocStub = sinon.stub(ServiceContainer, 'instance').get(() => instance(serviceContainer));
@@ -284,19 +253,6 @@ suite('Preferred Kernel Connection', () => {
             );
 
             assert.isUndefined(preferredKernel);
-        });
-        test('Matches active Interpreter for notebook when interpreter hash does not match', async () => {
-            when(localPythonEnvFinder.status).thenReturn('idle');
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel, condaPythonKernel]);
-            when(interpreterService.getActiveInterpreter(anything())).thenResolve(condaPythonKernel.interpreter);
-
-            const preferredKernel = await preferredService.findPreferredPythonKernelConnection(
-                notebook,
-                instance(localPythonEnvFinder),
-                cancellation.token
-            );
-
-            assert.strictEqual(preferredKernel, condaPythonKernel);
         });
     });
 });

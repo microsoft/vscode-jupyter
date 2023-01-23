@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, extensions, Uri, workspace } from 'vscode';
+import { Disposable, extensions, Uri, workspace, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider } from '../../platform/api/types';
@@ -13,7 +13,8 @@ import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../../platform/logging';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { isInteractiveInputTab } from '../../interactive-window/helpers';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -29,7 +30,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         if (!this._isPylanceExtensionInstalled()) {
@@ -126,7 +127,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             return undefined;
         }
 
-        const controller = this.notebookControllerSelection.getSelected(notebook);
+        const controller = this.controllerRegistration.getSelected(notebook);
         const interpreter = controller
             ? controller.connection.interpreter
             : await this.interpreterService.getActiveInterpreter(uri);
@@ -150,6 +151,18 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
 
         const notebookPath = `${textDocumentUri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
         const notebookUri = textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
-        return notebookUri;
+        let result: string | undefined = undefined;
+        window.tabGroups.all.find((group) => {
+            group.tabs.find((tab) => {
+                if (isInteractiveInputTab(tab)) {
+                    const tabUri = tab.input.uri.toString();
+                    // the interactive resource URI was altered to start with `/`, this will account for both URI formats
+                    if (tab.input.uri.toString().endsWith(notebookUri.toString())) {
+                        result = tabUri;
+                    }
+                }
+            });
+        });
+        return result;
     }
 }

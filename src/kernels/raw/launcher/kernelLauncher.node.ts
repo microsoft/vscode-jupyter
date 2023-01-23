@@ -7,14 +7,13 @@ import * as fsextra from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
-import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceDecoratorVerbose, traceInfo, traceWarning } from '../../../platform/logging';
+import { traceDecoratorVerbose, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
@@ -49,7 +48,6 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
     private static _usedPorts = new Set<number>();
-    private static getPorts = promisify(portfinder.getPorts);
     private portChain: Promise<number[]> | undefined;
     public static get usedPorts(): number[] {
         return Array.from(KernelLauncher._usedPorts);
@@ -72,13 +70,13 @@ export class KernelLauncher implements IKernelLauncher {
         try {
             // Destroy the file
             const port = await KernelLauncher.startPortPromise;
-            traceInfo(`Cleaning up port start file : ${port}`);
+            traceVerbose(`Cleaning up port start file : ${port}`);
 
             const filePath = path.join(os.tmpdir(), PortFormatString.format(port.toString()));
             await fsextra.remove(filePath);
         } catch (exc) {
             // If it fails it doesn't really matter. Just a temp file
-            traceInfo(`Kernel port mutex failed to cleanup: `, exc);
+            traceWarning(`Kernel port mutex failed to cleanup: `, exc);
         }
     }
 
@@ -100,7 +98,7 @@ export class KernelLauncher implements IKernelLauncher {
                     portStart += 1_000;
                 }
             }
-            traceInfo(`Computed port start for KernelLauncher is : ${result}`);
+            traceVerbose(`Computed port start for KernelLauncher is : ${result}`);
 
             return result;
         } else {
@@ -208,7 +206,7 @@ export class KernelLauncher implements IKernelLauncher {
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
         const outputChannel = jupyterSettings.logKernelOutputSeparately
-            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel().format(baseName))
+            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel(baseName))
             : undefined;
         outputChannel?.clear();
 
@@ -279,7 +277,8 @@ export class KernelLauncher implements IKernelLauncher {
 
     static async findNextFreePort(port: number): Promise<number[]> {
         // Then get the next set starting at that point
-        const ports = await KernelLauncher.getPorts(5, { host: '127.0.0.1', port });
+        const getPorts = promisify((await import('portfinder')).getPorts);
+        const ports = await getPorts(5, { host: '127.0.0.1', port });
         if (ports.some((item) => KernelLauncher._usedPorts.has(item))) {
             const maxPort = Math.max(...KernelLauncher._usedPorts, ...ports);
             return KernelLauncher.findNextFreePort(maxPort);

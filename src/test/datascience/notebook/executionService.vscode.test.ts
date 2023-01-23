@@ -25,7 +25,7 @@ import {
 import { Common } from '../../../platform/common/utils/localize';
 import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition, testMandatory } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -85,7 +85,7 @@ suite('Kernel Execution @kernelCore', function () {
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
-                { result: Common.install(), clickImmediately: true },
+                { result: Common.install, clickImmediately: true },
                 disposables
             );
             if (!IS_REMOTE_NATIVE_TEST() && !isWeb()) {
@@ -124,7 +124,7 @@ suite('Kernel Execution @kernelCore', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell using VSCode Kernel @mandatory', async () => {
+    testMandatory('Execute cell using VSCode Kernel', async () => {
         const cell = await notebook.appendCodeCell('print("123412341234")');
         await kernelExecution.executeCell(cell);
 

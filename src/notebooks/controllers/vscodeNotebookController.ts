@@ -43,7 +43,8 @@ import {
     IDisplayOptions,
     IDisposable,
     IDisposableRegistry,
-    IExtensionContext
+    IExtensionContext,
+    IFeaturesManager
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
@@ -55,7 +56,6 @@ import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../messageTypes';
 import {
-    getRemoteKernelSessionInformation,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
     areKernelConnectionsEqual
@@ -145,6 +145,47 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     private readonly associatedDocuments = new WeakMap<NotebookDocument, Promise<void>>();
+    public static create(
+        kernelConnection: KernelConnectionMetadata,
+        id: string,
+        _viewType: string,
+        notebookApi: IVSCodeNotebook,
+        commandManager: ICommandManager,
+        kernelProvider: IKernelProvider,
+        context: IExtensionContext,
+        disposableRegistry: IDisposableRegistry,
+        languageService: NotebookCellLanguageService,
+        workspace: IWorkspaceService,
+        configuration: IConfigurationService,
+        documentManager: IDocumentManager,
+        appShell: IApplicationShell,
+        browser: IBrowserService,
+        extensionChecker: IPythonExtensionChecker,
+        serviceContainer: IServiceContainer,
+        displayDataProvider: ConnectionDisplayDataProvider,
+        featureManager: IFeaturesManager
+    ): IVSCodeNotebookController {
+        return new VSCodeNotebookController(
+            kernelConnection,
+            id,
+            _viewType,
+            notebookApi,
+            commandManager,
+            kernelProvider,
+            context,
+            disposableRegistry,
+            languageService,
+            workspace,
+            configuration,
+            documentManager,
+            appShell,
+            browser,
+            extensionChecker,
+            serviceContainer,
+            displayDataProvider,
+            featureManager
+        );
+    }
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -162,7 +203,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: ConnectionDisplayDataProvider
+        private readonly displayDataProvider: ConnectionDisplayDataProvider,
+        private readonly featureManager: IFeaturesManager
     ) {
         disposableRegistry.push(this);
         displayDataProvider.onDidChange(
@@ -213,9 +255,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
     }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
-        if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
-            this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
-        } else {
+        if (kernelConnection.kind !== 'connectToLiveRemoteKernel') {
             this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
         }
     }
@@ -270,7 +310,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         const displayData = this.displayDataProvider.getDisplayData(this.connection);
         this.controller.label = displayData.label;
         this.controller.description = displayData.description;
-        this.controller.detail = displayData.detail;
         this.controller.kind = displayData.category;
     }
     // Handle the execution of notebook cell
@@ -318,12 +357,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
             this.appShell
-                .showWarningMessage(
-                    DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion(),
-                    Common.learnMore()
-                )
+                .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
                 .then((selection) => {
-                    if (selection !== Common.learnMore()) {
+                    if (selection !== Common.learnMore) {
                         return;
                     }
                     return this.browser.launch('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
@@ -441,7 +477,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     this.context.extensionUri,
                     'node_modules',
                     '@vscode',
-                    'jupyter-ipywidgets',
+                    'jupyter-ipywidgets7',
                     'dist',
                     'ipywidgets.js'
                 )
@@ -454,7 +490,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     'out',
                     'node_modules',
                     '@vscode',
-                    'jupyter-ipywidgets',
+                    'jupyter-ipywidgets7',
                     'dist',
                     'ipywidgets.js'
                 )
@@ -469,8 +505,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     'webview-side',
                     'ipywidgetsKernel',
                     'ipywidgetsKernel.js'
-                ),
-                Uri.joinPath(this.context.extensionUri, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
+                )
             ]
         );
         return scripts.map((uri) => new NotebookRendererScript(uri));
@@ -585,6 +620,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 return;
             }
             await updateNotebookDocumentMetadata(
+                this.featureManager,
                 doc,
                 this.documentManager,
                 kernel.kernelConnectionMetadata,
@@ -629,7 +665,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
 
         // Before we start the notebook, make sure the metadata is set to this new kernel.
-        await updateNotebookDocumentMetadata(document, this.documentManager, selectedKernelConnectionMetadata);
+        await updateNotebookDocumentMetadata(
+            this.featureManager,
+            document,
+            this.documentManager,
+            selectedKernelConnectionMetadata
+        );
 
         if (document.notebookType === InteractiveWindowView) {
             // Possible its an interactive window, in that case we'll create the kernel manually.
@@ -666,13 +707,14 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 }
 
 async function updateNotebookDocumentMetadata(
+    featureManager: IFeaturesManager,
     document: NotebookDocument,
     editManager: IDocumentManager,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
     let metadata = getNotebookMetadata(document) || { orig_nbformat: 3 };
-    const { changed } = await updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
+    const { changed } = await updateNotebookMetadata(featureManager, metadata, kernelConnection, kernelInfo);
     if (changed) {
         const edit = new WorkspaceEdit();
         // Create a clone.

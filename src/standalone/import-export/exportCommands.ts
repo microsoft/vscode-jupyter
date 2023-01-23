@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import { CancellationTokenSource, NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
 import { ICommandNameArgumentTypeMapping } from '../../commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
-import { IDisposable } from '../../platform/common/types';
+import { IDisposable, IFeaturesManager } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -19,7 +19,10 @@ import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { isPythonNotebook } from '../../kernels/helpers';
-import { IControllerSelection, IControllerPreferredService } from '../../notebooks/controllers/types';
+import { IControllerRegistration, IControllerPreferredService } from '../../notebooks/controllers/types';
+import { PreferredKernelConnectionService } from '../../notebooks/controllers/preferredKernelConnectionService';
+import { IKernelFinder } from '../../kernels/types';
+import { ContributedKernelFinderKind } from '../../kernels/internalTypes';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
@@ -37,8 +40,11 @@ export class ExportCommands implements IDisposable {
         private readonly fs: IFileSystem,
         private readonly notebooks: IVSCodeNotebook,
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        private readonly controllerSelection: IControllerSelection,
-        private readonly controllerPreferred: IControllerPreferredService
+        private readonly controllerRegistration: IControllerRegistration,
+        private readonly controllerPreferred: IControllerPreferredService,
+        private readonly preferredKernel: PreferredKernelConnectionService,
+        private readonly kernelFinder: IKernelFinder,
+        private readonly featureManager: IFeaturesManager
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (sourceDocument, interpreter?) =>
@@ -76,9 +82,26 @@ export class ExportCommands implements IDisposable {
             : this.notebooks.activeNotebookEditor?.notebook;
 
         if (document) {
+            let preferredInterpreter: PythonEnvironment | undefined;
+            if (this.featureManager.features.kernelPickerType === 'Insiders') {
+                const pythonEnvFinder = this.kernelFinder.registered.find(
+                    (item) => item.kind === ContributedKernelFinderKind.LocalPythonEnvironment
+                );
+                const token = new CancellationTokenSource();
+                try {
+                    preferredInterpreter = pythonEnvFinder
+                        ? await this.preferredKernel
+                              .findPreferredLocalKernelSpecConnection(document, pythonEnvFinder, token.token)
+                              .then((k) => k?.interpreter)
+                        : undefined;
+                } finally {
+                    token.dispose();
+                }
+            } else {
+                preferredInterpreter = this.controllerPreferred.getPreferred(document)?.connection.interpreter;
+            }
             const interpreter =
-                this.controllerSelection.getSelected(document)?.connection.interpreter ||
-                this.controllerPreferred.getPreferred(document)?.connection.interpreter;
+                this.controllerRegistration.getSelected(document)?.connection.interpreter || preferredInterpreter;
             return this.export(document, undefined, undefined, interpreter);
         } else {
             return this.export(undefined, undefined, undefined, undefined);
@@ -105,7 +128,7 @@ export class ExportCommands implements IDisposable {
             // At this point also see if the active editor has a candidate interpreter to use
             interpreter =
                 interpreter ||
-                this.controllerSelection.getSelected(sourceDocument)?.connection.interpreter ||
+                this.controllerRegistration.getSelected(sourceDocument)?.connection.interpreter ||
                 this.controllerPreferred.getPreferred(sourceDocument)?.connection.interpreter;
             if (exportMethod) {
                 sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
@@ -136,7 +159,7 @@ export class ExportCommands implements IDisposable {
 
         if (interpreter || (sourceDocument.metadata && isPythonNotebook(getNotebookMetadata(sourceDocument)))) {
             items.push({
-                label: DataScience.exportPythonQuickPickLabel(),
+                label: DataScience.exportPythonQuickPickLabel,
                 picked: true,
                 handler: () => {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
@@ -152,7 +175,7 @@ export class ExportCommands implements IDisposable {
         items.push(
             ...[
                 {
-                    label: DataScience.exportHTMLQuickPickLabel(),
+                    label: DataScience.exportHTMLQuickPickLabel,
                     picked: false,
                     handler: () => {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
@@ -164,7 +187,7 @@ export class ExportCommands implements IDisposable {
                     }
                 },
                 {
-                    label: DataScience.exportPDFQuickPickLabel(),
+                    label: DataScience.exportPDFQuickPickLabel,
                     picked: false,
                     handler: () => {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
@@ -192,7 +215,7 @@ export class ExportCommands implements IDisposable {
             ignoreFocusOut: false,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: localize.DataScience.exportAsQuickPickPlaceholder()
+            placeHolder: localize.DataScience.exportAsQuickPickPlaceholder
         };
 
         return this.applicationShell.showQuickPick(items, options);

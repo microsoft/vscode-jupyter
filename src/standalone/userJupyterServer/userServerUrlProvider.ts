@@ -39,8 +39,8 @@ const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.ur
 @injectable()
 export class UserJupyterServerUrlProvider implements IExtensionSyncActivationService, IDisposable, IJupyterUriProvider {
     readonly id: string = '_builtin.jupyterServerUrlProvider';
-    readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName();
-    readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail();
+    readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName;
+    readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail;
     private _onDidChangeHandles = new EventEmitter<void>();
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
     private _servers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
@@ -145,18 +145,24 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         return this._cachedServerInfoInitialized;
     }
 
-    getQuickPickEntryItems(): QuickPickItem[] {
+    getQuickPickEntryItems(): (QuickPickItem & {
+        /**
+         * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+         */
+        default?: boolean;
+    })[] {
         return [
             {
-                label: DataScience.jupyterSelectURIPrompt(),
-                detail: DataScience.jupyterSelectURINewDetail()
+                default: true,
+                label: DataScience.jupyterSelectURIPrompt,
+                detail: DataScience.jupyterSelectURINewDetail
             }
         ];
     }
 
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
         await this._cachedServerInfoInitialized;
-        if (item.label !== DataScience.jupyterSelectURIPrompt()) {
+        if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
         }
 
@@ -174,7 +180,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
 
         // Ask the user to enter a URI to connect to.
         const input = window.createInputBox();
-        input.title = DataScience.jupyterSelectURIPrompt();
+        input.title = DataScience.jupyterSelectURIPrompt;
         input.value = initialValue;
         input.ignoreFocusOut = true;
 
@@ -200,7 +206,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         for (let server of this._servers) {
                             if (server.uri === uri) {
                                 // already exist
-                                input.validationMessage = DataScience.UserJupyterServerUrlAlreadyExistError();
+                                input.validationMessage = DataScience.UserJupyterServerUrlAlreadyExistError;
                                 return;
                             }
                         }

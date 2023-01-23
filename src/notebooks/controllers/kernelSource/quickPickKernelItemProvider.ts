@@ -25,6 +25,8 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
     onDidChangeStatus = this._onDidChangeStatus.event;
     private readonly _onDidChangeRecommended = new EventEmitter<void>();
     onDidChangeRecommended = this._onDidChangeRecommended.event;
+    private readonly _onDidFailToListKernels = new EventEmitter<Error>();
+    onDidFailToListKernels = this._onDidFailToListKernels.event;
     status: 'discovering' | 'idle' = 'idle';
     refresh: () => Promise<void>;
     recommended: KernelConnectionMetadata | undefined;
@@ -42,7 +44,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         this.refresh = async () => {
             this.refreshInvoked = true;
         };
-        this.title = DataScience.kernelPickerSelectKernelTitle();
+        this.title = DataScience.kernelPickerSelectKernelTitle;
         this.kind = kind;
         this.disposables.push(this._onDidRefresh);
         if (isPromise(finderPromise)) {
@@ -65,16 +67,24 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         }
         if (this.refreshInvoked) {
             finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
+        } else if (
+            // If we're dealing with remote and we are idle and there are no kernels,
+            // then trigger a refresh.
+            finder.kind === ContributedKernelFinderKind.Remote &&
+            finder.status === 'idle' &&
+            finder.kernels.length === 0
+        ) {
+            finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
         }
         switch (finder.kind) {
             case ContributedKernelFinderKind.LocalKernelSpec:
-                this.title = DataScience.kernelPickerSelectLocalKernelSpecTitle();
+                this.title = DataScience.kernelPickerSelectLocalKernelSpecTitle;
                 break;
             case ContributedKernelFinderKind.LocalPythonEnvironment:
-                this.title = DataScience.kernelPickerSelectPythonEnvironmentTitle();
+                this.title = DataScience.kernelPickerSelectPythonEnvironmentTitle;
                 break;
             default:
-                this.title = DataScience.kernelPickerSelectKernelFromRemoteTitle().format(finder.displayName);
+                this.title = DataScience.kernelPickerSelectKernelFromRemoteTitle(finder.displayName);
                 break;
         }
         finder.onDidChangeKernels(
@@ -89,6 +99,13 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         finder.onDidChangeStatus(() => {
             this.status = finder.status;
             this._onDidChangeStatus.fire();
+
+            if (this.status === 'idle' && finder.lastError && finder.kernels.length === 0) {
+                // Ok we have an error and there are no kernels to be displayed.
+                // Notify the user about this error.
+                this.kernels.length = 0;
+                this._onDidFailToListKernels.fire(finder.lastError);
+            }
         });
         this.kernels.length = 0;
         this.kernels.push(...finder.kernels);
@@ -127,6 +144,10 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         cancelToken: CancellationToken
     ) {
         const computePreferred = () => {
+            // Check if the preferred kernel is in the list of kernels
+            if (this.recommended && !this.kernels.find((k) => k.id === this.recommended?.id)) {
+                this.recommended = undefined;
+            }
             if (this.recommended) {
                 return;
             }

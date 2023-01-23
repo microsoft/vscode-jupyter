@@ -41,14 +41,14 @@ export class JupyterExporter implements INotebookExporter {
 
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const contents = JSON.stringify(notebook);
+            const contents = JSON.stringify(notebook, undefined, 1);
             await this.fileSystem.writeFile(Uri.file(file), contents);
             if (!showOpenPrompt) {
                 return;
             }
-            const openQuestion1 = DataScience.exportOpenQuestion1();
+            const openQuestion1 = DataScience.exportOpenQuestion1;
             this.applicationShell
-                .showInformationMessage(DataScience.exportDialogComplete().format(file), openQuestion1)
+                .showInformationMessage(DataScience.exportDialogComplete(file), openQuestion1)
                 .then(async (str: string | undefined) => {
                     try {
                         if (str === openQuestion1) {
@@ -64,7 +64,7 @@ export class JupyterExporter implements INotebookExporter {
             this.applicationShell
                 .showInformationMessage(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    DataScience.exportDialogFailed().format(exc as any)
+                    DataScience.exportDialogFailed(exc as any)
                 )
                 .then(noop, noop);
         }

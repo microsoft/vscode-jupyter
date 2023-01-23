@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerWeb } from '../errors/kernelErrorHandler.web';
 import { IDataScienceErrorHandler } from '../errors/types';
 import { INotebookProvider } from '../types';
-import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
-import { CommandRegistry } from './commands/commandRegistry';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterKernelService } from './jupyterKernelService.web';
 import { JupyterRemoteCachedKernelValidator } from './jupyterRemoteCachedKernelValidator';
@@ -61,12 +59,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
-    serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(
-        JupyterCommandLineSelectorCommand,
-        JupyterCommandLineSelectorCommand
-    );
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
@@ -85,8 +78,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSyncActivationService,
         CellOutputMimeTypeTracker
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         RemoteKernelFinderController
     );
 }

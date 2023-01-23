@@ -42,10 +42,10 @@ suite('Quick Pick Kernel Item Provider', () => {
                 when(finder.kind).thenReturn(kind);
                 switch (kind) {
                     case ContributedKernelFinderKind.LocalKernelSpec:
-                        when(finder.displayName).thenReturn(DataScience.localKernelSpecs());
+                        when(finder.displayName).thenReturn(DataScience.localKernelSpecs);
                         break;
                     case ContributedKernelFinderKind.LocalPythonEnvironment:
-                        when(finder.displayName).thenReturn(DataScience.localPythonEnvironments());
+                        when(finder.displayName).thenReturn(DataScience.localPythonEnvironments);
                         break;
                     case ContributedKernelFinderKind.Remote:
                         when(finder.displayName).thenReturn('Remote Server');
@@ -81,13 +81,13 @@ suite('Quick Pick Kernel Item Provider', () => {
                 let expectedTitle = '';
                 switch (kind) {
                     case ContributedKernelFinderKind.LocalKernelSpec:
-                        expectedTitle = DataScience.kernelPickerSelectLocalKernelSpecTitle();
+                        expectedTitle = DataScience.kernelPickerSelectLocalKernelSpecTitle;
                         break;
                     case ContributedKernelFinderKind.LocalPythonEnvironment:
-                        expectedTitle = DataScience.kernelPickerSelectPythonEnvironmentTitle();
+                        expectedTitle = DataScience.kernelPickerSelectPythonEnvironmentTitle;
                         break;
                     default:
-                        expectedTitle = DataScience.kernelPickerSelectKernelFromRemoteTitle().format(
+                        expectedTitle = DataScience.kernelPickerSelectKernelFromRemoteTitle(
                             instance(finder).displayName
                         );
                         break;

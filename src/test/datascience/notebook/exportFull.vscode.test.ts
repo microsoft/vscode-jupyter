@@ -66,7 +66,7 @@ suite('Export @export', function () {
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
-                { result: Common.install(), clickImmediately: true },
+                { result: Common.install, clickImmediately: true },
                 disposables
             );
 
@@ -222,7 +222,7 @@ suite('Export @export', function () {
         ]);
 
         // Verify text content
-        const prefix = DataScience.instructionComments().format(defaultCellMarker);
+        const prefix = DataScience.instructionComments(defaultCellMarker);
         let expectedContents = output.stdout;
         if (expectedContents.includes('get_ipython')) {
             expectedContents = CodeSnippets.ImportIPython.format(defaultCellMarker, expectedContents);

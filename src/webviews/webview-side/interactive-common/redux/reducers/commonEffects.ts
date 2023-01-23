@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { InteractiveWindowMessages } from '../../../../../messageTypes';
+import { InteractiveWindowMessages, LocalizedMessages } from '../../../../../messageTypes';
 import { IMainState } from '../../../interactive-common/mainState';
 import { storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';
@@ -15,7 +15,7 @@ export namespace CommonEffects {
 
     export function handleLocInit(arg: CommonReducerArg<CommonActionType, string>): IMainState {
         // Read in the loc strings
-        const locJSON = JSON.parse(arg.payload.data);
+        const locJSON: LocalizedMessages = JSON.parse(arg.payload.data);
         storeLocStrings(locJSON);
         return arg.prevState;
     }

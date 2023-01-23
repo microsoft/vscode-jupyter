@@ -44,35 +44,6 @@ export function readFileSync(filePath: string): string {
 export const untildify: (value: string) => string = (value) => untilidfyCommon(value, homedir());
 
 /**
- * Returns true if given file path exists within the given parent directory, false otherwise.
- * @param filePath File path to check for
- * @param parentPath The potential parent path to check for
- */
-export function isParentPath(filePath: string, parentPath: string): boolean {
-    if (!parentPath.endsWith(path.sep)) {
-        parentPath += path.sep;
-    }
-    if (!filePath.endsWith(path.sep)) {
-        filePath += path.sep;
-    }
-    return normCasePath(filePath).startsWith(normCasePath(parentPath));
-}
-
-export async function resolveSymbolicLink(absPath: string): Promise<string> {
-    const stats = await fsapi.lstat(absPath);
-    if (stats.isSymbolicLink()) {
-        const link = await fsapi.readlink(absPath);
-        // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
-        // /usr/local/bin/python3.9 -> ../../../Library/Frameworks/Python.framework/Versions/3.9/bin/python3.9
-        //
-        // The resultant path is reported relative to the symlink directory we resolve. Convert that to absolute path.
-        const absLinkPath = path.isAbsolute(link) ? link : path.resolve(path.dirname(absPath), link);
-        return resolveSymbolicLink(absLinkPath);
-    }
-    return absPath;
-}
-
-/**
  * Returns the value for setting `python.<name>`.
  * @param name The name of the setting.
  */

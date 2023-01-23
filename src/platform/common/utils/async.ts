@@ -125,16 +125,6 @@ export function createDeferred<T>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
 
-export function createDeferredFrom<T>(promise: Promise<T>): Deferred<T> {
-    const deferred = createDeferred<T>();
-    promise
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .then(deferred.resolve.bind(deferred) as any)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .catch(deferred.reject.bind(deferred) as any);
-
-    return deferred;
-}
 export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
     const deferred = createDeferred<T>();
     promise.then(deferred.resolve.bind(deferred)).catch(deferred.reject.bind(deferred));
@@ -143,14 +133,6 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
 
 //================================
 // iterators
-
-/**
- * An iterator that yields nothing.
- */
-export function iterEmpty<T>(): AsyncIterator<T, void> {
-    // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    return (async function* () {})() as unknown as AsyncIterator<T, void>;
-}
 
 type NextResult<T> = { index: number } & (
     | { result: IteratorResult<T, T | void>; err: null }
@@ -209,43 +191,6 @@ export async function* chain<T>(
             yield result!.value as T;
         }
     }
-}
-
-/**
- * Map the async function onto the items and yield the results.
- *
- * @param items - the items to map onto and iterate
- * @param func - the async function to apply for each item
- * @param race - if `true` (the default) then results are yielded
- *               potentially out of order, as soon as each is ready
- */
-export async function* mapToIterator<T, R = T>(
-    items: T[],
-    func: (item: T) => Promise<R>,
-    race = true
-): AsyncIterator<R, void> {
-    if (race) {
-        const iterators = items.map((item) => {
-            async function* generator() {
-                yield func(item);
-            }
-            return generator();
-        });
-        yield* iterable(chain(iterators));
-    } else {
-        yield* items.map(func);
-    }
-}
-
-/**
- * Convert an iterator into an iterable, if it isn't one already.
- */
-export function iterable<T>(iterator: AsyncIterator<T, void>): AsyncIterableIterator<T> {
-    const it = iterator as AsyncIterableIterator<T>;
-    if (it[Symbol.asyncIterator] === undefined) {
-        it[Symbol.asyncIterator] = () => it;
-    }
-    return it;
 }
 
 /**

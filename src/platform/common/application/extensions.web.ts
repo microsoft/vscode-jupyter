@@ -7,8 +7,9 @@ import { injectable } from 'inversify';
 import { Event, Extension, extensions } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
-import * as stacktrace from 'stack-trace';
-import { JVSC_EXTENSION_ID } from '../constants';
+import { JVSC_EXTENSION_ID, unknownExtensionId } from '../constants';
+import { parseStack } from '../../errors';
+import { traceError } from '../../logging';
 
 /**
  * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
@@ -43,7 +44,7 @@ export class Extensions implements IExtensions {
                 // Since this is web, look for paths that start with http (which also includes https).
                 .filter((item) => item && item.toLowerCase().startsWith('http'))
                 .filter((item) => item && !item.toLowerCase().startsWith(jupyterExtRoot)) as string[];
-            stacktrace.parse(new Error('Ex')).forEach((item) => {
+            parseStack(new Error('Ex')).forEach((item) => {
                 const fileName = item.getFileName();
                 if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
                     frames.push(fileName);
@@ -57,7 +58,8 @@ export class Extensions implements IExtensions {
                     return { extensionId: matchingExt.id, displayName: matchingExt.packageJSON.displayName };
                 }
             }
+            traceError(`Unable to determine the caller of the extension API for trace stack.`, stack);
         }
-        return { extensionId: DataScience.unknownPackage(), displayName: DataScience.unknownPackage() };
+        return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
     }
 }

@@ -212,7 +212,7 @@ suite('kernel Process', () => {
 
         await kernelProcess.launch('', 0, token.token);
 
-        verify(pythonExecFactory.createDaemon(anything())).never();
+        verify(pythonExecFactory.createActivatedEnvironment(anything())).never();
         verify(pythonProcess.execObservable(anything(), anything())).never();
         assert.strictEqual(capture(processService.execObservable).first()[0], 'dotnet');
         assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', `"${tempFile}"`]);
@@ -304,7 +304,7 @@ suite('kernel Process', () => {
         });
         when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(expectedConnectionFile).fsPath);
         when(jupyterPaths.getRuntimeDir()).thenResolve(jupyterRuntimeDir);
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
+        when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [
@@ -350,7 +350,7 @@ suite('kernel Process', () => {
         });
         when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(tempFile).fsPath);
         when(jupyterPaths.getRuntimeDir()).thenResolve();
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
+        when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [
@@ -389,7 +389,7 @@ suite('kernel Process', () => {
             name: 'Python3',
             executable: 'python'
         };
-        when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
+        when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [

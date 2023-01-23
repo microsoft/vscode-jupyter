@@ -53,18 +53,14 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public notebookFileRoot: string = '';
     public useDefaultConfigForJupyter: boolean = false;
     public searchForJupyter: boolean = false;
-    public allowInput: boolean = false;
     public showCellInputCode: boolean = false;
-    public maxOutputSize: number = -1;
     public enableScrollingForCellOutputs: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
-    public allowLiveShare: boolean = false;
     public errorBackgroundColor: string = '';
     public ignoreVscodeTheme: boolean = false;
     public variableExplorerExclude: string = '';
-    public liveShareConnectionTimeout: number = 0;
     public decorateCells: boolean = false;
     public enableCellCodeLens: boolean = false;
     public askForLargeDataFrames: boolean = false;
@@ -98,8 +94,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public disableZMQSupport: boolean = false;
     // Hidden settings not surfaced in package.json
     public forceIPyKernelDebugger: boolean = false;
-    // Hidden settings not surfaced in package.json
-    public disablePythonDaemon: boolean = false;
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;

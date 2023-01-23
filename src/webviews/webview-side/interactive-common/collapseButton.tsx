@@ -22,8 +22,8 @@ export class CollapseButton extends React.Component<ICollapseButtonProps> {
         } collapse-input-svg-${this.props.theme}`;
         const collapseInputClassNames = `collapse-input remove-style ${this.props.visible ? '' : ' invisible'}`;
         const tooltip = this.props.open
-            ? getLocString('DataScience.collapseSingle', 'Collapse')
-            : getLocString('DataScience.expandSingle', 'Expand');
+            ? getLocString('collapseSingle', 'Collapse')
+            : getLocString('expandSingle', 'Expand');
         const ariaExpanded = this.props.open ? 'true' : 'false';
         // https://reactjs.org/docs/conditional-rendering.html#inline-if-with-logical--operator
         // Comment here just because the (boolean && statement) was new to me

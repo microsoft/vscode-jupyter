@@ -6,6 +6,7 @@
         "outDir": "out",
 
         // Types
+        "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"],
         "paths": {
             "*": ["types/*"]
         },
@@ -13,10 +14,8 @@
             "./node_modules/@types",
         ],
         "types": [
-            // "vscode-notebook-renderer",
             "webpack-env"
         ],
-        "lib": ["es6", "es2018", "dom", "ES2019", "ES2020"]
     },
     "include": [
         "./**/*",
@@ -26,7 +25,7 @@
         "../vscode.*"
     ],
     "exclude": [
-        "test/datascience/extensionapi",
+        "src/test",
         "*.node.ts",
         "**/*.node.ts"
     ]

@@ -328,7 +328,7 @@ suite('JupyterSession', () => {
 
                 const promise = jupyterSession.waitForIdle(100, token.token);
 
-                await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut());
+                await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut);
             });
             test('Will succeed', async () => {
                 when(kernel.status).thenReturn('idle');

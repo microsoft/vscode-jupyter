@@ -15,18 +15,15 @@ import { PythonKernelCompletionProviderRegistration } from './pythonKernelComple
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     if (isDevMode) {
-        serviceManager.addSingleton<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService,
-            LogReplayService
-        );
+        serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LogReplayService);
     }
 
     serviceManager.addSingleton<PythonKernelCompletionProvider>(
         PythonKernelCompletionProvider,
         PythonKernelCompletionProvider
     ); // Used in tests
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         PythonKernelCompletionProviderRegistration
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(

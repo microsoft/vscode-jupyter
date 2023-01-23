@@ -106,12 +106,12 @@ export class ExperimentService implements IExperimentService {
                 return false;
             }
             case 'optIn': {
-                await this.experimentationService.isCachedFlightEnabled(experiment);
+                await this.experimentationService.isCachedFlightEnabled(experiment.toString());
                 return true;
             }
 
             default:
-                return this.experimentationService.isCachedFlightEnabled(experiment);
+                return this.experimentationService.isCachedFlightEnabled(experiment.toString());
         }
     }
 
@@ -131,11 +131,11 @@ export class ExperimentService implements IExperimentService {
         experiments.features.forEach((exp) => {
             // Filter out experiments groups that are not from the Python extension.
             if (exp.toLowerCase().startsWith('jupyter')) {
-                this.output.appendLine(Experiments.inGroup().format(exp));
+                this.output.appendLine(Experiments.inGroup(exp));
             }
         });
         this.getExperimentsUserHasManuallyOptedInto().forEach((exp) => {
-            this.output.appendLine(Experiments.inGroup().format(exp));
+            this.output.appendLine(Experiments.inGroup(exp.toString()));
         });
     }
     private getOptInOptOutStatus(experiment: ExperimentGroups): 'optOut' | 'optIn' | undefined {
@@ -145,17 +145,17 @@ export class ExperimentService implements IExperimentService {
 
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
-        if (this._optOutFrom.includes(experiment)) {
+        if (this._optOutFrom.includes(experiment.toString())) {
             return 'optOut';
         }
 
-        if (this._optInto.includes(experiment)) {
+        if (this._optInto.includes(experiment.toString())) {
             return 'optIn';
         }
     }
     private getExperimentsUserHasManuallyOptedInto(): ExperimentGroups[] {
         return Object.values(ExperimentGroups).filter(
-            (experiment) => this.getOptInOptOutStatus(experiment) === 'optIn'
-        );
+            (experiment) => this.getOptInOptOutStatus(experiment as unknown as ExperimentGroups) === 'optIn'
+        ) as unknown as ExperimentGroups[];
     }
 }

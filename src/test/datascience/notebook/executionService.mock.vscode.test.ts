@@ -70,7 +70,7 @@
 // //         await hijackPrompt(
 //             'showErrorMessage',
 //             { endsWith: expectedPromptMessageSuffix },
-//             { text: Common.install(), clickImmediately: true },
+//             { text: Common.install, clickImmediately: true },
 //             disposables
 //         );
 

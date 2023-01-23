@@ -29,7 +29,13 @@ import { traceError, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
 
-import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource } from '../platform/common/types';
+import {
+    IConfigurationService,
+    IFeaturesManager,
+    InteractiveWindowMode,
+    IsWebExtension,
+    Resource
+} from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
@@ -57,11 +63,7 @@ import {
     InteractiveTab
 } from './types';
 import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
-import {
-    IControllerRegistration,
-    IControllerSelection,
-    IVSCodeNotebookController
-} from '../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
 import { KernelConnector } from '../notebooks/controllers/kernelConnector';
@@ -132,7 +134,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private readonly jupyterExporter: INotebookExporter;
     private readonly workspaceService: IWorkspaceService;
     private readonly exportDialog: IExportDialog;
-    private readonly notebookControllerSelection: IControllerSelection;
     private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined;
     private readonly errorHandler: IDataScienceErrorHandler;
     private readonly codeGeneratorFactory: ICodeGeneratorFactory;
@@ -157,7 +158,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this.jupyterExporter = this.serviceContainer.get<INotebookExporter>(INotebookExporter);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.exportDialog = this.serviceContainer.get<IExportDialog>(IExportDialog);
-        this.notebookControllerSelection = this.serviceContainer.get<IControllerSelection>(IControllerSelection);
         this.interactiveWindowDebugger =
             this.serviceContainer.tryGet<IInteractiveWindowDebugger>(IInteractiveWindowDebugger);
         this.errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
@@ -237,7 +237,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         } else {
             traceWarning('No controller selected for Interactive Window');
             if (this.isWebExtension) {
-                this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
+                this.insertInfoMessage(DataScience.noKernelsSpecifyRemote).ignoreErrors;
             }
         }
         this.initialized = true;
@@ -381,11 +381,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
         return reason === SysInfoReason.Restart
             ? displayName
-                ? DataScience.restartingKernelCustomHeader().format(displayName)
-                : DataScience.restartingKernelHeader()
+                ? DataScience.restartingKernelCustomHeader(displayName)
+                : DataScience.restartingKernelHeader
             : displayName
-            ? DataScience.startingNewKernelCustomHeader().format(displayName)
-            : DataScience.startingNewKernelHeader();
+            ? DataScience.startingNewKernelCustomHeader(displayName)
+            : DataScience.startingNewKernelHeader;
     }
 
     private async insertSysInfoMessage(
@@ -466,8 +466,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const kernelName = 'info' in kernel ? kernel.kernelConnectionMetadata.interpreter?.displayName : '';
         const kernelInfo = 'info' in kernel && kernel.info?.status === 'ok' ? kernel.info : undefined;
         const banner = kernelInfo ? kernelInfo.banner.split('\n').join('  \n') : kernel.toString();
-        const message =
-            reason == SysInfoReason.Restart ? DataScience.restartedKernelHeader().format(kernelName || '') : banner;
+        const message = reason == SysInfoReason.Restart ? DataScience.restartedKernelHeader(kernelName || '') : banner;
         this.updateSysInfoMessage(message, true, cellPromise);
     }
 
@@ -479,7 +478,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
     private listenForControllerSelection() {
         // Ensure we hear about any controller changes so we can update our cached promises
-        this.notebookControllerSelection.onControllerSelected(
+        this.controllerRegistration.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
                 if (e.notebook.uri.toString() !== this.notebookUri.toString()) {
                     return;
@@ -525,7 +524,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const insertionIndex =
             notebookCell && notebookCell.index >= 0 ? notebookCell.index : this.notebookEditor.notebook.cellCount;
         // If possible display the error message in the cell.
-        const controller = this.notebookControllerSelection.getSelected(this.notebookEditor.notebook);
+        const controller = this.controllerRegistration.getSelected(this.notebookEditor.notebook);
         const output = createOutputWithErrorMessageForDisplay(message);
         if (this.notebookEditor.notebook.cellCount === 0 || !controller || !output || !notebookCell) {
             const edit = new WorkspaceEdit();
@@ -556,11 +555,19 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this.submitCodeImpl(code, file, line, false);
     }
 
+    private useNewDebugMode(): boolean {
+        const settings = this.configuration.getSettings(this.owner);
+        return !!(
+            settings.forceIPyKernelDebugger ||
+            (this.currentKernelInfo.metadata && !isLocalConnection(this.currentKernelInfo.metadata))
+        );
+    }
+
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
         const doc = this.documentManager.textDocuments.find((d) => this.fs.arePathsSame(d.uri, fileUri));
-        if (doc && doc.isUntitled) {
+        if (!this.useNewDebugMode() && doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
 
@@ -571,7 +578,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             if (saved) {
                 const diff = this.documentManager.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
-                    fileUri = diff[0].uri;
+                    // The interactive window often opens at the same time. Avoid picking that one.
+                    // Another unrelated window could open at the same time too.
+                    const savedFileEditor =
+                        diff.find((doc) => doc.languageId === 'python') ||
+                        diff.find((doc) => !doc.fileName.endsWith('.interactive')) ||
+                        diff[0];
+                    fileUri = savedFileEditor.uri;
 
                     // Open the new document
                     await this.documentManager.openTextDocument(fileUri);
@@ -637,7 +650,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                         notebookCellPromise
                             .then((cell) => {
                                 if (ex.cell !== cell) {
-                                    this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell).then(noop, noop);
+                                    this.addErrorMessage(DataScience.cellStopOnErrorMessage, cell).then(noop, noop);
                                 }
                             })
                             .catch(noop);
@@ -680,9 +693,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let detachKernel = async () => noop();
         try {
             const kernel = await kernelPromise;
-            const settings = this.configuration.getSettings(this.owner);
             await this.generateCodeAndAddMetadata(cell, isDebug, kernel);
-            if (isDebug && (settings.forceIPyKernelDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
+            if (isDebug && this.useNewDebugMode()) {
                 // New ipykernel 7 debugger using the Jupyter protocol.
                 await this.debuggingManager.start(this.notebookEditor, cell);
             } else if (
@@ -896,7 +908,11 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
         if (kernel) {
-            await updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
+            await updateNotebookMetadata(
+                this.serviceContainer.get<IFeaturesManager>(IFeaturesManager),
+                metadata,
+                kernel.kernelConnectionMetadata
+            );
         }
 
         let defaultFileName;

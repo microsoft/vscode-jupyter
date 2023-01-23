@@ -53,7 +53,7 @@ export class ExportDialog implements IExportDialog {
 
             case ExportFormat.ipynb:
                 extension = '.ipynb';
-                const filtersKey = localize.DataScience.exportDialogFilter();
+                const filtersKey = localize.DataScience.exportDialogFilter;
                 fileExtensions[filtersKey] = ['ipynb'];
                 break;
 
@@ -68,7 +68,7 @@ export class ExportDialog implements IExportDialog {
 
         const options: SaveDialogOptions = {
             defaultUri: await this.getDefaultUri(source, targetFileName),
-            saveLabel: localize.DataScience.exportButtonTitle(),
+            saveLabel: localize.DataScience.exportButtonTitle,
             filters: fileExtensions
         };
 

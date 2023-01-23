@@ -30,7 +30,7 @@ export class HostJupyterServerFactory implements INotebookServerFactory {
 
         // Indicate we have a new session on the output channel
         if (!connection.localLaunch) {
-            this.jupyterOutputChannel.appendLine(DataScience.connectingToJupyterUri().format(connection.baseUrl));
+            this.jupyterOutputChannel.appendLine(DataScience.connectingToJupyterUri(connection.baseUrl));
         }
         // Create our session manager
         const sessionManager = (await this.sessionManagerFactory.create(connection)) as JupyterSessionManager;

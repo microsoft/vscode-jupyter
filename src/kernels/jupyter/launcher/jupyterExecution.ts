@@ -7,7 +7,7 @@ import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { traceInfo } from '../../../platform/logging';
+import { traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
@@ -83,7 +83,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public async getNotebookError(): Promise<string> {
         return this.jupyterInterpreterService
             ? this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported()
-            : DataScience.webNotSupported();
+            : DataScience.webNotSupported;
     }
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
@@ -122,17 +122,17 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
                     }
                     // eslint-disable-next-line no-constant-condition
-                    traceInfo(`Connecting to process server`);
+                    traceVerbose(`Connecting to process server`);
 
                     // Create a server tha  t we will then attempt to connect to.
                     result = await this.notebookServerFactory.createNotebookServer(connection);
-                    traceInfo(`Connection complete server`);
+                    traceVerbose(`Connection complete server`);
                     return result;
                 } catch (err) {
                     lastTryError = err;
                     // Cleanup after ourselves. server may be running partially.
                     if (result) {
-                        traceInfo(`Killing server because of error ${err}`);
+                        traceWarning(`Killing server because of error ${err}`);
                         await result.dispose();
                     }
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
