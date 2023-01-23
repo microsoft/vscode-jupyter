@@ -527,6 +527,7 @@
             {
                 "command": "jupyter.runFileInteractive",
                 "title": "%jupyter.command.jupyter.runFileInteractive.title%",
+                "icon": "$(play)",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },
@@ -1462,6 +1463,13 @@
                     "command": "jupyter.showDataViewer",
                     "group": "1_view",
                     "when": "debugProtocolVariableMenuContext == 'viewableInDataViewer'"
+                }
+            ],
+            "editor/title/run": [
+                {
+                    "command": "jupyter.runFileInteractive",
+                    "group": "jupyter",
+                    "when": "resourceLangId == python && !isInDiffEditor && !notebookEditorFocused && isWorkspaceTrusted"
                 }
             ]
         },
