@@ -9,6 +9,7 @@ import {
     NotebookDocument,
     NotebookKernelSourceAction,
     notebooks,
+    Uri,
     window
 } from 'vscode';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
@@ -67,6 +68,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         return [
                             {
                                 label: DataScience.localPythonEnvironments,
+                                documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerPythonEnv'),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
                             }
                         ];
@@ -79,6 +81,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         return [
                             {
                                 label: DataScience.localPythonEnvironments,
+                                documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerPythonEnv'),
                                 command: 'jupyter.kernel.selectLocalPythonEnvironment'
                             }
                         ];
@@ -116,6 +119,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     kernelSpecActions = [
                         {
                             label: DataScience.localKernelSpecs,
+                            documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerJupyterKernels'),
                             command: 'jupyter.kernel.selectLocalKernelSpec'
                         }
                     ];
@@ -167,7 +171,12 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                         provideNotebookKernelSourceActions: () => {
                             return [
                                 {
-                                    label: provider.displayName ?? provider.id,
+                                    label:
+                                        provider.displayName ??
+                                        (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
+                                    documentation: provider.id.startsWith('_builtin')
+                                        ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
+                                        : undefined,
                                     command: {
                                         command: 'jupyter.kernel.selectJupyterServerKernel',
                                         arguments: [provider.id],
@@ -184,6 +193,9 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                     label:
                                         provider.displayName ??
                                         (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
+                                    documentation: provider.id.startsWith('_builtin')
+                                        ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
+                                        : undefined,
                                     command: {
                                         command: 'jupyter.kernel.selectJupyterServerKernel',
                                         arguments: [provider.id],
