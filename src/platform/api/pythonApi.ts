@@ -27,10 +27,11 @@ import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { TraceOptions } from '../logging/types';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
+import { Environment, KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
+import { IFileSystem } from '../common/platform/types';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -365,7 +366,8 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -764,6 +766,18 @@ export class InterpreterService implements IInterpreterService {
             this.disposables
         );
     }
+    private async isPythonEnvValid(api: ProposedExtensionAPI, env: Environment): Promise<boolean> {
+        const pythonFileExists = env.executable.uri
+            ? this.fs.exists(env.executable.uri)
+            : new Promise<boolean>(() => noop());
+        pythonFileExists.catch(noop);
+        const pythonEnvInfo = api.environments
+            .resolveEnvironment(env)
+            .then((e) => (e ? true : false))
+            .catch(() => false);
+        pythonEnvInfo.catch(noop);
+        return Promise.race([pythonFileExists, pythonEnvInfo]);
+    }
     private hookupOnDidChangeInterpreterEvent() {
         // Only do this once.
         if (this.eventHandlerAdded) {
@@ -785,14 +799,16 @@ export class InterpreterService implements IInterpreterService {
                         this.disposables
                     );
                     api.environments.onDidChangeEnvironments(
-                        (e) => {
+                        async (e) => {
+                            const ignoreRemovePythonEnvStillExists =
+                                e.type === 'remove' ? await this.isPythonEnvValid(api, e.env) : false;
                             // Remove items that are no longer valid.
-                            if (e.type === 'remove') {
+                            if (e.type === 'remove' && !ignoreRemovePythonEnvStillExists) {
                                 this._interpreters.delete(e.env.id);
                             }
                             traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             this.populateCachedListOfInterpreters(true).finally(() => {
-                                if (e.type === 'remove') {
+                                if (e.type === 'remove' && !ignoreRemovePythonEnvStillExists) {
                                     if (!this._interpreters.has(e.env.id)) {
                                         this.triggerEventIfAllowed(this.didChangeInterpreter);
                                         this.triggerEventIfAllowed(this.didChangeInterpreters);
