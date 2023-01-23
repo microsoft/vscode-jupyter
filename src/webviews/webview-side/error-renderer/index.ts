@@ -175,7 +175,6 @@ export const activate: ActivationFunction = (context) => {
             if (e.type === ErrorRendererMessageType.ResponseLoadLoc) {
                 Object.assign(localizations, e.payload as Localizations);
                 loadLocalization.resolve();
-                console.error('Loaded Loc', JSON.stringify(e.payload));
             }
         });
     } else {
