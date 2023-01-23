@@ -3,7 +3,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import { CancellationToken, CancellationTokenSource, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, env, Uri } from 'vscode';
 import {
     createInterpreterKernelSpec,
     getKernelId,
@@ -34,7 +34,10 @@ import { createPromiseFromCancellation } from '../../../platform/common/cancella
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 
-export const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2023_3';
+export function localPythonKernelsCacheKey() {
+    const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2023_3';
+    return `${LocalPythonKernelsCacheKey}:${env.appHost}:${env.remoteName || ''}`;
+}
 
 export class InterpreterKernelSpecFinderHelper {
     private readonly discoveredKernelSpecFiles = new Set<string>();
