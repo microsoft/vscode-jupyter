@@ -651,6 +651,8 @@ async function selectActiveInterpreterController(notebookEditor: NotebookEditor,
             controllerRegistration.registered.find(
                 (k) =>
                     k.connection.kind === 'startUsingPythonInterpreter' &&
+                    (k.connection.kernelSpec.language || PYTHON_LANGUAGE).toLowerCase() ===
+                        PYTHON_LANGUAGE.toLowerCase() &&
                     areInterpreterPathsSame(k.connection.interpreter.uri, interpreter?.uri)
             ),
         timeout,
