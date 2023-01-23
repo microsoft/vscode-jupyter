@@ -977,15 +977,15 @@
             "notebook/kernelSource": [
                 {
                     "command": "jupyter.installPythonExtensionViaKernelPicker",
-                    "when": "jupyter.showInstallPythonExtensionCommand"
+                    "when": "jupyter.showInstallPythonExtensionCommand && config.notebook.kernelPicker.type != mru"
                 },
                 {
                     "command": "jupyter.installPythonViaKernelPicker",
-                    "when": "jupyter.showInstallPythonCommand"
+                    "when": "jupyter.showInstallPythonCommand && config.notebook.kernelPicker.type != mru"
                 },
                 {
                     "command": "jupyter.switchToRemoteKernels",
-                    "when": "jupyter.showingLocalOrWebEmpty"
+                    "when": "jupyter.showingLocalOrWebEmpty && config.notebook.kernelPicker.type != mru"
                 }
             ],
             "interactive/toolbar": [
