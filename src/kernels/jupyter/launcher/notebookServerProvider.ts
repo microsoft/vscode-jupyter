@@ -114,7 +114,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 return;
             }
             // Status depends upon if we're about to connect to existing server or not.
-            progressReporter = (await jupyterExecution.getServer(serverOptions))
+            progressReporter = !serverOptions.localJupyter
                 ? KernelProgressReporter.createProgressReporter(options.resource, DataScience.connectingToJupyter)
                 : KernelProgressReporter.createProgressReporter(options.resource, DataScience.startingJupyter);
             disposables.push(progressReporter);

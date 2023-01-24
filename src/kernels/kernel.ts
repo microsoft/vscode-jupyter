@@ -586,7 +586,7 @@ abstract class BaseKernel implements IBaseKernel {
         });
     }
 
-    protected createProgressIndicator(disposables: IDisposable[]) {
+    private createProgressIndicator(disposables: IDisposable[]) {
         // Even if we're not supposed to display the progress indicator,
         // create it and keep it hidden.
         const progressReporter = KernelProgressReporter.createProgressReporter(
