@@ -68,6 +68,8 @@ export enum IPyWidgetMessages {
     IPyWidgets_AttemptToDownloadFailedWidgetsAgain = 'IPyWidgets_AttemptToDownloadFailedWidgetsAgain',
     IPyWidgets_IsOnline = 'IPyWidgets_IsOnline',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
+    IPyWidgets_Request_Widget_Script_Url = 'IPyWidgets_Request_Widget_Script_Url',
+    IPyWidgets_Reply_Widget_Script_Url = 'IPyWidgets_Reply_Widget_Script_Url',
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
     IPyWidgets_onKernelChanged = 'IPyWidgets_onKernelChanged',
     /**

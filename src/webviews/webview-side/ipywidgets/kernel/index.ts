@@ -4,7 +4,12 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
 import { OutputItem } from 'vscode-notebook-renderer';
-import { SharedMessages, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
+import {
+    SharedMessages,
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
+    IPyWidgetMessages
+} from '../../../../messageTypes';
 import { logErrorMessage, logMessage } from '../../react-common/logger';
 import { WidgetManager } from './manager';
 import { ScriptManager } from './scriptManager';
@@ -243,22 +248,42 @@ function initialize(JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
     disposeOutput
 };
 
+function initializeWidgetManager(_context: KernelMessagingApi) {
+    logMessage('IPyWidget kernel initializing...');
+    // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
+    if (!JupyterLabWidgetManager) {
+        throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
+    }
+    initialize(JupyterLabWidgetManager);
+}
 // To ensure we initialize after the other scripts, wait for them.
 function attemptInitialize(context: KernelMessagingApi) {
     logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
-        logMessage('IPyWidget kernel initializing...');
-        // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
-        if (!JupyterLabWidgetManager) {
-            throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
-        }
-        initialize(JupyterLabWidgetManager);
+        initializeWidgetManager(context);
     } else {
-        setTimeout(attemptInitialize, 100);
+        context.onDidReceiveKernelMessage((e) => {
+            if (
+                typeof e === 'object' &&
+                e &&
+                'type' in e &&
+                e.type === IPyWidgetMessages.IPyWidgets_Reply_Widget_Script_Url &&
+                'payload' in e &&
+                typeof e.payload === 'string'
+            ) {
+                const url = decodeURIComponent(e.payload);
+                logMessage(`Loading IPyWidget URL ${url}`);
+                import(/* webpackIgnore: true */ url).then(
+                    () => initializeWidgetManager(context),
+                    (ex) => logErrorMessage(`Failed to load IPyWidget URL ${url}, ${ex}`)
+                );
+            }
+        });
+        context.postKernelMessage({ type: IPyWidgetMessages.IPyWidgets_Request_Widget_Script_Url });
     }
 }
 

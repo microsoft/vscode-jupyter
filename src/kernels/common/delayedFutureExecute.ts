@@ -6,6 +6,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { traceInfoIfCI } from '../../platform/logging';
 import { createDeferred } from '../../platform/common/utils/async';
 import { CancellationError } from 'vscode';
+import { noop } from '../../platform/common/utils/misc';
 
 // Wraps a future so that a requestExecute on a session will wait for the previous future to finish before actually executing
 export class DelayedFutureExecute
@@ -39,6 +40,8 @@ export class DelayedFutureExecute
         private disposeOnDone?: boolean,
         private metadata?: JSONObject
     ) {
+        // Ensure we don't have any unhandled promises.
+        this.doneDeferred.promise.catch(noop);
         // Setup our request based on the previous link finishing
         previousLink.done.then(() => this.requestExecute()).catch((e) => this.doneDeferred.reject(e));
 
