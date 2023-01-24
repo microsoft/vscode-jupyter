@@ -58,8 +58,8 @@ export function assertIsInteractiveWindowDebugConfig(thing: unknown): asserts th
 export function getMessageSourceAndHookIt(
     msg: DebugProtocol.ProtocolMessage,
     sourceHook: (
-        source: DebugProtocol.Source | undefined,
-        lines?: { line?: number; endLine?: number; lines?: number[] }
+        location: { source?: DebugProtocol.Source; line?: number; endLine?: number },
+        source?: DebugProtocol.Source
     ) => void
 ): void {
     switch (msg.type) {
@@ -67,22 +67,13 @@ export function getMessageSourceAndHookIt(
             const event = msg as DebugProtocol.Event;
             switch (event.event) {
                 case 'output':
-                    sourceHook(
-                        (event as DebugProtocol.OutputEvent).body.source,
-                        (event as DebugProtocol.OutputEvent).body
-                    );
+                    sourceHook((event as DebugProtocol.OutputEvent).body);
                     break;
                 case 'loadedSource':
-                    sourceHook(
-                        (event as DebugProtocol.LoadedSourceEvent).body.source,
-                        (event as DebugProtocol.OutputEvent).body
-                    );
+                    sourceHook((event as DebugProtocol.LoadedSourceEvent).body);
                     break;
                 case 'breakpoint':
-                    sourceHook(
-                        (event as DebugProtocol.BreakpointEvent).body.breakpoint.source,
-                        (event as DebugProtocol.OutputEvent).body
-                    );
+                    sourceHook((event as DebugProtocol.BreakpointEvent).body.breakpoint);
                     break;
                 default:
                     break;
@@ -92,28 +83,27 @@ export function getMessageSourceAndHookIt(
             const request = msg as DebugProtocol.Request;
             switch (request.command) {
                 case 'setBreakpoints':
-                    // Keep track of the original source to be passed for other hooks.
-                    const originalSource = { ...(request.arguments as DebugProtocol.SetBreakpointsArguments).source };
-                    sourceHook((request.arguments as DebugProtocol.SetBreakpointsArguments).source, request.arguments);
-                    const breakpoints = (request.arguments as DebugProtocol.SetBreakpointsArguments).breakpoints;
-                    if (breakpoints && Array.isArray(breakpoints)) {
-                        breakpoints.forEach((bk) => {
-                            // Pass the original source to the hook (without the translation).
-                            sourceHook({ ...originalSource }, bk);
+                    const args = request.arguments as DebugProtocol.SetBreakpointsArguments;
+                    const breakpoints = args.breakpoints;
+                    if (breakpoints && breakpoints.length) {
+                        const originalLine = breakpoints[0].line;
+                        breakpoints.forEach((bp) => {
+                            sourceHook(bp, { ...args.source });
                         });
+                        const objForSource = { source: args.source, line: originalLine };
+                        sourceHook(objForSource);
+                        args.source = objForSource.source;
                     }
                     break;
                 case 'breakpointLocations':
-                    sourceHook(
-                        (request.arguments as DebugProtocol.BreakpointLocationsArguments).source,
-                        request.arguments
-                    );
+                    // TODO this technically would have to be mapped to two different sources, in reality, I don't think that will happen in vscode
+                    sourceHook(request.arguments as DebugProtocol.BreakpointLocationsArguments);
                     break;
                 case 'source':
-                    sourceHook((request.arguments as DebugProtocol.SourceArguments).source);
+                    sourceHook(request.arguments as DebugProtocol.SourceArguments);
                     break;
                 case 'gotoTargets':
-                    sourceHook((request.arguments as DebugProtocol.GotoTargetsArguments).source, request.arguments);
+                    sourceHook(request.arguments as DebugProtocol.GotoTargetsArguments);
                     break;
                 default:
                     break;
@@ -125,27 +115,29 @@ export function getMessageSourceAndHookIt(
                 switch (response.command) {
                     case 'stackTrace':
                         (response as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((frame) => {
-                            sourceHook(frame.source, frame);
+                            sourceHook(frame);
                         });
                         break;
                     case 'loadedSources':
-                        (response as DebugProtocol.LoadedSourcesResponse).body.sources.forEach((source) =>
-                            sourceHook(source)
-                        );
+                        (response as DebugProtocol.LoadedSourcesResponse).body.sources.forEach((source) => {
+                            const fakeObj = { source };
+                            sourceHook(fakeObj);
+                            source.path = fakeObj.source.path;
+                        });
                         break;
                     case 'scopes':
                         (response as DebugProtocol.ScopesResponse).body.scopes.forEach((scope) => {
-                            sourceHook(scope.source, scope);
+                            sourceHook(scope);
                         });
                         break;
                     case 'setFunctionBreakpoints':
                         (response as DebugProtocol.SetFunctionBreakpointsResponse).body.breakpoints.forEach((bp) => {
-                            sourceHook(bp.source, bp);
+                            sourceHook(bp);
                         });
                         break;
                     case 'setBreakpoints':
                         (response as DebugProtocol.SetBreakpointsResponse).body.breakpoints.forEach((bp) => {
-                            sourceHook(bp.source, bp);
+                            sourceHook(bp);
                         });
                         break;
                     default:
