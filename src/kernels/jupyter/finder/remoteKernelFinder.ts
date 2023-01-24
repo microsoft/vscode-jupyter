@@ -178,6 +178,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     public async refresh(): Promise<void> {
+        // Display a progress indicator only when user refreshes the list.
         await this.loadCache(true, true);
     }
 
