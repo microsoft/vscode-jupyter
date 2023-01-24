@@ -196,7 +196,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 }
             }
 
-            await this.sendRequestToJupyterSession(message);
+            await this.sendMessageToJupyterSession(message);
         } catch (e) {
             traceError(`KernelDebugAdapter::handleMessage failure: ${e}`);
         }
@@ -284,41 +284,20 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         return undefined;
     }
 
-    protected async sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
+    protected async sendMessageToJupyterSession(message: DebugProtocol.ProtocolMessage) {
         if (this.jupyterSession.disposed || this.jupyterSession.status === 'dead') {
             traceInfo(`Skipping sending message ${message.type} because session is disposed`);
             return;
         }
 
-        // map Source paths from VS Code to Ipykernel temp files
-        getMessageSourceAndHookIt(message, this.translateRealFileToDebuggerFile.bind(this));
-
         this.trace('to kernel', JSON.stringify(message));
         if (message.type === 'request') {
-            const request = message as DebugProtocol.Request;
-            const control = this.jupyterSession.requestDebug(
-                {
-                    seq: request.seq,
-                    type: 'request',
-                    command: request.command,
-                    arguments: request.arguments
-                },
-                true
-            );
-
-            control.onReply = async (msg) => {
-                const message = msg.content as DebugProtocol.Response;
-                getMessageSourceAndHookIt(message, this.translateDebuggerFileToRealFile.bind(this));
-
-                for (const d of this.delegates ?? []) {
-                    await d?.willSendResponse?.(message);
-                }
-
-                this.trace('response', JSON.stringify(message));
-                this.sendMessage.fire(message);
-            };
-            return control.done;
+            const response = await this.sendRequestToJupyterSession(message);
+            if (response) {
+                this.sendMessage.fire(response);
+            }
         } else if (message.type === 'response') {
+            getMessageSourceAndHookIt(message, this.translateRealLocationToDebuggerLocation.bind(this));
             // responses of reverse requests
             const response = message as DebugProtocol.Response;
             const control = this.jupyterSession.requestDebug(
@@ -335,10 +314,44 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             traceError(`Unknown message type to send ${message.type}`);
         }
     }
-    protected translateDebuggerFileToRealFile(
-        source: DebugProtocol.Source | undefined,
-        _lines?: { line?: number; endLine?: number; lines?: number[] }
+
+    protected async sendRequestToJupyterSession(
+        message: DebugProtocol.ProtocolMessage
+    ): Promise<DebugProtocol.Response> {
+        getMessageSourceAndHookIt(message, this.translateRealLocationToDebuggerLocation.bind(this));
+
+        this.trace('to kernel, mapped', JSON.stringify(message));
+        const request = message as DebugProtocol.Request;
+        const control = this.jupyterSession.requestDebug(
+            {
+                seq: request.seq,
+                type: 'request',
+                command: request.command,
+                arguments: request.arguments
+            },
+            true
+        );
+        const msg = await control.done;
+        const response = msg.content as DebugProtocol.Response;
+        getMessageSourceAndHookIt(response, this.translateDebuggerLocationToRealLocation.bind(this));
+
+        for (const d of this.delegates ?? []) {
+            await d?.willSendResponse?.(response);
+        }
+
+        this.trace('response', JSON.stringify(response));
+        return response;
+    }
+
+    protected translateDebuggerLocationToRealLocation(
+        location: {
+            source?: DebugProtocol.Source;
+            line?: number;
+            endLine?: number;
+        },
+        source?: DebugProtocol.Source
     ) {
+        source = location?.source ?? source;
         if (source && source.path) {
             const mapping = this.fileToCell.get(source.path) ?? this.lookupCellByLongName(source.path);
             if (mapping) {
@@ -347,9 +360,14 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             }
         }
     }
-    protected abstract translateRealFileToDebuggerFile(
-        source: DebugProtocol.Source | undefined,
-        _lines?: { line?: number; endLine?: number; lines?: number[] }
+
+    protected abstract translateRealLocationToDebuggerLocation(
+        location: {
+            source?: DebugProtocol.Source;
+            line?: number;
+            endLine?: number;
+        },
+        source?: DebugProtocol.Source
     ): void;
 
     protected abstract getDumpFilesForDeletion(): string[];

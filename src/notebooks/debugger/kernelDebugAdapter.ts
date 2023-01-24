@@ -3,11 +3,11 @@
 
 'use strict';
 
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { traceError } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';
 import { IDumpCellResponse } from './debuggingTypes';
-import { traceError } from '../../platform/logging';
 import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
-import { DebugProtocol } from 'vscode-debugprotocol';
 
 /**
  * Concrete implementation of the KernelDebugAdapterBase class that will dump cells
@@ -29,10 +29,12 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             traceError(err);
         }
     }
-    protected translateRealFileToDebuggerFile(
-        source: DebugProtocol.Source | undefined,
-        _lines?: { line?: number; endLine?: number; lines?: number[] }
-    ) {
+    protected translateRealLocationToDebuggerLocation(location: {
+        source?: DebugProtocol.Source;
+        line?: number;
+        endLine?: number;
+    }): void {
+        const source = location.source;
         if (source && source.path) {
             const mapping = this.cellToFile.get(source.path);
             if (mapping) {
