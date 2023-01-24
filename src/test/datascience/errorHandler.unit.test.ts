@@ -41,6 +41,7 @@ import { RemoteJupyterServerUriProviderError } from '../../kernels/errors/remote
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from '../../kernels/errors/kernelErrorHandler.node';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 
 suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -57,6 +58,7 @@ suite('Error Handler Unit Tests', () => {
     let extensions: IExtensions;
     let reservedPythonNames: IReservedPythonNamedProvider;
     let fs: IFileSystem;
+    let interpreterService: IInterpreterService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         uri: Uri.file('Some Path'),
@@ -76,6 +78,7 @@ suite('Error Handler Unit Tests', () => {
         jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         extensions = mock<IExtensions>();
         extensions = mock<IExtensions>();
+        interpreterService = mock<IInterpreterService>();
         fs = mock<IFileSystem>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
@@ -85,6 +88,7 @@ suite('Error Handler Unit Tests', () => {
         when(fs.exists(anything())).thenResolve(true);
         reservedPythonNames = mock<IReservedPythonNamedProvider>();
         when(reservedPythonNames.isReserved(anything())).thenResolve(false);
+        when(interpreterService.refreshInterpreters(anything())).thenResolve();
         dataScienceErrorHandler = new DataScienceErrorHandlerNode(
             instance(applicationShell),
             instance(dependencyManager),
@@ -98,7 +102,8 @@ suite('Error Handler Unit Tests', () => {
             instance(extensions),
             instance(jupyterUriProviderRegistration),
             instance(reservedPythonNames),
-            instance(fs)
+            instance(fs),
+            instance(interpreterService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
