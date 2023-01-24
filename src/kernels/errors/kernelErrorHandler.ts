@@ -65,6 +65,7 @@ import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyter
 import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from './types';
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 
 /***
  * Common code for handling errors.
@@ -87,7 +88,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
     private handledErrors = new WeakSet<Error>();
     private handledKernelErrors = new WeakSet<Error>();
@@ -451,6 +453,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     )
                 )
                 .then(noop, noop);
+            this.interpreterService.refreshInterpreters(true).catch(noop);
             return KernelInterpreterDependencyResponse.failed;
         } else if (
             (errorContext === 'start' || errorContext === 'restart') &&

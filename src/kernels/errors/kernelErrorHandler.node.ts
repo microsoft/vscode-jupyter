@@ -24,6 +24,7 @@ import { JupyterKernelStartFailureOverrideReservedName } from '../../platform/in
 import { DataScienceErrorHandler } from './kernelErrorHandler';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 
 /**
  * Common code for handling errors. This one is node specific.
@@ -47,7 +48,8 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
         @inject(IExtensions) extensions: IExtensions,
         @inject(IJupyterUriProviderRegistration) jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IReservedPythonNamedProvider) private readonly reservedPythonNames: IReservedPythonNamedProvider,
-        @inject(IFileSystem) fs: IFileSystem
+        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IInterpreterService) interpreterService: IInterpreterService
     ) {
         super(
             applicationShell,
@@ -61,7 +63,8 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             commandManager,
             isWebExtension,
             extensions,
-            fs
+            fs,
+            interpreterService
         );
     }
     protected override async addErrorMessageIfPythonArePossiblyOverridingPythonModules(
