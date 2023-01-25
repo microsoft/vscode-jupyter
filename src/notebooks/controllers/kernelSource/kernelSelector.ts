@@ -194,24 +194,34 @@ export class KernelSelector implements IDisposable {
             this.installPythonExtItems.push(this.installPythonExtension);
         }
 
+        let quickPickToBeUpdated: QuickPick<CompoundQuickPickItem> | undefined;
         if (
             this.extensionChecker.isPythonExtensionInstalled &&
             this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
         ) {
-            if (this.provider.kernels.length === 0) {
+            if (this.provider.kernels.length === 0 && this.provider.status === 'idle') {
                 // Python extension cannot create envs if there are no python environments.
                 this.installPythonItems.push(this.installPythonItem);
             } else {
-                this.provider.onDidChange(
-                    () => {
-                        // If we discovered python envs, then hide the install python item.
-                        if (this.provider.kernels.length > 0) {
-                            this.installPythonItems.length = 0;
+                const updatePythonItems = () => {
+                    if (
+                        this.provider.kernels.length === 0 &&
+                        this.installPythonItems.length === 0 &&
+                        this.provider.status === 'idle'
+                    ) {
+                        this.installPythonItems.push(this.installPythonItem);
+                        if (quickPickToBeUpdated) {
+                            this.updateQuickPickItems(quickPickToBeUpdated);
                         }
-                    },
-                    this,
-                    this.disposables
-                );
+                    } else if (this.provider.kernels.length) {
+                        this.installPythonItems.length = 0;
+                        if (quickPickToBeUpdated) {
+                            this.updateQuickPickItems(quickPickToBeUpdated);
+                        }
+                    }
+                };
+                this.provider.onDidChangeStatus(updatePythonItems, this, this.disposables);
+                this.provider.onDidChange(updatePythonItems, this, this.disposables);
             }
         }
         if (
@@ -249,6 +259,7 @@ export class KernelSelector implements IDisposable {
                 }
             }
         });
+        quickPickToBeUpdated = quickPick;
         if (this.provider.status === 'discovering') {
             quickPick.busy = true;
         }
