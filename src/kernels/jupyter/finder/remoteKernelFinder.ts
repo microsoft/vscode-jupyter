@@ -178,10 +178,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     public async refresh(): Promise<void> {
-        await this.loadCache(true);
+        // Display a progress indicator only when user refreshes the list.
+        await this.loadCache(true, true);
     }
 
-    public async loadCache(ignoreCache: boolean = false) {
+    public async loadCache(ignoreCache: boolean = false, displayProgress: boolean = false): Promise<void> {
         traceInfoIfCI(`Remote Kernel Finder load cache Server: ${this.id}`);
         const promise = (async () => {
             const kernelsFromCache = ignoreCache ? [] : await this.getFromCache();
@@ -201,7 +202,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             } else {
                 try {
                     const kernelsWithoutCachePromise = (async () => {
-                        const connInfo = await this.getRemoteConnectionInfo();
+                        const connInfo = await this.getRemoteConnectionInfo(undefined, displayProgress);
                         return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
                     })();
 
@@ -228,7 +229,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
             try {
                 const kernelsWithoutCachePromise = (async () => {
-                    const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token);
+                    const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token, false);
                     return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
                 })();
 
@@ -262,9 +263,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     private async getRemoteConnectionInfo(
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        displayProgress: boolean = true
     ): Promise<INotebookProviderConnection | undefined> {
-        const ui = new DisplayOptions(false);
+        const ui = new DisplayOptions(!displayProgress);
         return this.notebookProvider.connect({
             resource: undefined,
             ui,
