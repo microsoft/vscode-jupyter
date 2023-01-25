@@ -1456,6 +1456,11 @@
                     "command": "jupyter.selectjupyteruri",
                     "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "when": "isWorkspaceTrusted && config.notebook.kernelPicker.type != mru"
+                },
+                {
+                    "command": "jupyter.clearSavedJupyterUris",
+                    "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
+                    "when": "config.notebook.kernelPicker.type != mru"
                 }
             ],
             "debug/variables/context": [
