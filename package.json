@@ -35,14 +35,11 @@
     "keywords": [
         "jupyter",
         "notebook",
-        "ipynb",
         "notebookKernelJupyterNotebook",
         "multi-root ready",
         "python"
     ],
     "categories": [
-        "Programming Languages",
-        "Other",
         "Extension Packs",
         "Data Science",
         "Machine Learning",
