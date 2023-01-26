@@ -35,7 +35,6 @@
     "keywords": [
         "jupyter",
         "notebook",
-        "ipynb",
         "notebookKernelJupyterNotebook",
         "multi-root ready",
         "python"
@@ -44,6 +43,7 @@
         "Extension Packs",
         "Data Science",
         "Machine Learning",
+        "Notebooks",
         "Visualization"
     ],
     "activationEvents": [
