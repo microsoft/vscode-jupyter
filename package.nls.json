@@ -51,10 +51,7 @@
         "message": "Checking if \"import\" is supported",
         "comment": ["{Locked='import'}"]
     },
-    "DataScience.validatingKernelDependencies": {
-        "message": "Validating kernel dependencies",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.validatingKernelDependencies": "Validating kernel dependencies",
     "DataScience.installingMissingDependencies": "Installing missing dependencies",
     "DataScience.exportNotebookToPython": {
         "message": "Exporting Notebook to Python",
@@ -77,15 +74,9 @@
     "DataScience.insecureSessionMessage": "Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?",
     "DataScience.insecureSessionDenied": "Denied connection to insecure server.",
     "DataScience.pythonNotInstalled": "Python is not installed. \nPlease download and install Python in order to execute cells in this notebook.",
-    "DataScience.installKernel": {
-        "message": "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook.",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.installKernel": "The Jupyter Kernel '{0}' could not be found and needs to be installed in order to execute cells in this notebook.",
     "DataScience.customizeLayout": "Customize Layout",
-    "DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion": {
-        "message": "The version of Python associated with the selected kernel is no longer supported. Please consider selecting a different kernel.",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion": "The version of Python associated with the selected kernel is no longer supported. Please consider selecting a different kernel.",
     "DataScience.activatingPythonEnvironment": "Activating Python Environment '{0}'",
     "jupyter.kernel.percentPipCondaInstallInsteadOfBang": {
         "message": "Use '%{0} install' instead of '!{0} install'",
@@ -99,22 +90,11 @@
         "message": "Replace with '%{0} install'",
         "comment": ["{Locked='{0} install'}"]
     },
-    "jupyter.kernel.filter.placeholder": {
-        "message": "Choose the kernels that are available in the kernel picker.",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "jupyter.kernel.filter.placeholder": "Choose the kernels that are available in the kernel picker.",
     "jupyter.kernel.category.jupyterSession": "({0}) Jupyter Session",
-    "jupyter.kernel.category.jupyterKernel": {
-        "message": "Jupyter Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "jupyter.kernel.category.jupyterRemoteKernel": {
-        "message": "({0}) Jupyter Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.kernelDefaultRemoteDisplayName": {
-        "message": "Remote"
-    },
+    "jupyter.kernel.category.jupyterKernel": "Jupyter Kernel",
+    "jupyter.kernel.category.jupyterRemoteKernel": "({0}) Jupyter Kernel",
+    "DataScience.kernelDefaultRemoteDisplayName": "Remote",
     "jupyter.kernel.category.conda": "Conda Env",
     "jupyter.kernel.category.poetry": {
         "message": "Poetry Env",
@@ -217,19 +197,10 @@
     },
     "jupyter.command.jupyter.notebookeditor.keybind.undo.title": "Undo",
     "jupyter.command.jupyter.notebookeditor.keybind.save.title": "Save",
-    "jupyter.command.jupyter.interruptkernel.title": {
-        "message": "Interrupt Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "jupyter.command.jupyter.interruptkernel.title": "Interrupt Kernel",
     "jupyter.command.jupyter.interruptkernel.shorttitle": "Interrupt",
-    "DataScience.restartKernel": {
-        "message": "Restart Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "jupyter.command.jupyter.restartkernel.title": {
-        "message": "Restart Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.restartKernel": "Restart Kernel",
+    "jupyter.command.jupyter.restartkernel.title": "Restart Kernel",
     "jupyter.command.jupyter.restartkernel.shorttitle": "Restart",
     "jupyter.command.jupyter.expandallcells.title": "Expand All Interactive Cells",
     "jupyter.command.jupyter.collapseallcells.title": "Collapse All Interactive Cells",
@@ -338,9 +309,7 @@
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
         "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
     },
-    "jupyter.configuration.jupyter.pythonCellFolding.description": {
-        "message": "Enable folding regions for code cells in Python files. This setting requires a reload of VS Code."
-    },
+    "jupyter.configuration.jupyter.pythonCellFolding.description": "Enable folding regions for code cells in Python files. This setting requires a reload of VS Code.",
     "jupyter.configuration.jupyter.interactiveWindowViewColumn.description": {
         "message": "Where to open an Interactive Window that is not associated with a python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
         "comment": ["{Locked='beside'}", "{Locked=\"'active'\"}", "{Locked=\"'secondGroup'\"}"]
@@ -378,14 +347,8 @@
         "comment": ["{Locked='body'}"]
     },
     "DataScience.sessionDisposed": "Cannot execute code, session has been disposed.",
-    "DataScience.rawKernelProcessNotStarted": {
-        "message": "Raw kernel process was not able to start.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.rawKernelProcessExitBeforeConnect": {
-        "message": "Raw kernel process exited before connecting.",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.rawKernelProcessNotStarted": "Raw kernel process was not able to start.",
+    "DataScience.rawKernelProcessExitBeforeConnect": "Raw kernel process exited before connecting.",
     "DataScience.passwordFailure": "Failed to connect to password protected server. Check that password is correct.",
     "DataScience.exportDialogTitle": {
         "message": "Export to Jupyter Notebook",
@@ -409,15 +372,9 @@
     "DataScience.exportAsQuickPickPlaceholder": "Export As...",
     "DataScience.exportPythonQuickPickLabel": "Python Script",
     "DataScience.collapseInputTooltip": "Collapse input block",
-    "DataScience.collapseVariableExplorerTooltip": {
-        "message": "Hide variables active in Jupyter kernel",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.collapseVariableExplorerTooltip": "Hide variables active in Jupyter kernel",
     "DataScience.collapseVariableExplorerLabel": "Variables",
-    "DataScience.expandVariableExplorerTooltip": {
-        "message": "Show variables active in Jupyter kernel",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.expandVariableExplorerTooltip": "Show variables active in Jupyter kernel",
     "DataScience.close": "Close",
     "DataScience.interactiveCopyCell": "Copy Cell",
     "DataScience.runInDedicatedExtensionHost": "Run in Dedicated Extension Host",
@@ -452,23 +409,14 @@
     "DataScience.jupyterSelfCertEnable": "Yes, connect anyways",
     "DataScience.jupyterSelfCertClose": "No, close the connection",
     "DataScience.jupyterServerCrashed": "Jupyter server crashed. Unable to connect. \r\nError code from Jupyter: {0}",
-    "DataScience.rawConnectionDisplayName": {
-        "message": "Direct kernel connection",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.rawConnectionBrokenError": {
-        "message": "Direct kernel connection broken",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.rawConnectionDisplayName": "Direct kernel connection",
+    "DataScience.rawConnectionBrokenError": "Direct kernel connection broken",
     "DataScience.pythonInteractiveHelpLink": "Get more help",
     "DataScience.markdownHelpInstallingMissingDependencies": "See [https://aka.ms/pyaiinstall](https://aka.ms/pyaiinstall) for help on installing Jupyter and related dependencies.",
     "DataScience.importingFormat": "Importing {0}",
     "DataScience.startingJupyter": "Starting Jupyter server",
     "DataScience.connectingToJupyter": "Connecting to Jupyter server",
-    "DataScience.connectingToKernel": {
-        "message": "Connecting to kernel: {0}",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.connectingToKernel": "Connecting to kernel: {0}",
     "DataScience.connectedToKernel": "Connected.",
     "DataScience.connected": "Connected",
     "DataScience.disconnected": "Disconnected",
@@ -489,10 +437,7 @@
         "comment": ["{Locked='Issue'}"]
     },
     "GitHubIssue.askForIssueTitle": "Please provide a descriptive title summarizing your issue.",
-    "GitHubIssue.titlePlaceholder": {
-        "message": "E.g.: Unable to start a local kernel session",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "GitHubIssue.titlePlaceholder": "E.g.: Unable to start a local kernel session",
     "DataScience.allowExtensionToUseJupyterKernelApi": {
         "message": "Do you want to give the extension '{0}' access to the Jupyter Kernels? Clicking '{1}' would allow this extension to execute code against the Jupyter Kernels.",
         "comment": ["{Locked='Kernels'}"]
@@ -523,56 +468,29 @@
     "ExtensionSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "ExtensionSurveyBanner.bannerLabelNo": "No, thanks",
     "ExtensionSurveyBanner.maybeLater": "Maybe later",
-    "DataScience.restartKernelMessage": {
-        "message": "Do you want to restart the Jupyter kernel? All variables will be lost.",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.restartKernelMessage": "Do you want to restart the Jupyter kernel? All variables will be lost.",
     "DataScience.restartKernelMessageYes": "Yes",
-    "DataScience.restartingKernelFailed": {
-        "message": "Kernel restart failed. Jupyter server is hung. Please reload VS Code.",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.interruptingKernelFailed": {
-        "message": "Kernel interrupt failed. Jupyter server is hung. Please reload VS Code.",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.restartingKernelFailed": "Kernel restart failed. Jupyter server is hung. Please reload VS Code.",
+    "DataScience.interruptingKernelFailed": "Kernel interrupt failed. Jupyter server is hung. Please reload VS Code.",
     "DataScienceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Data Science features are working for you?",
     "DataScienceSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "DataScienceSurveyBanner.bannerLabelNo": "No, thanks",
     "InteractiveShiftEnterBanner.bannerMessage": "Would you like to run code in the 'Interactive' window (an IPython console) for 'shift-enter'? Select 'No' to continue to run code in the Python Terminal. This can be changed later in settings.",
     "DataScience.automaticallyReconnectingToAKernelProgressMessage": "Reconnecting to the kernel {0}",
-    "DataScience.restartingKernelStatus": {
-        "message": "Restarting Kernel {0}",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.restartingKernelStatus": "Restarting Kernel {0}",
     "DataScience.executingCode": "Executing Cell",
     "DataScience.collapseAll": "Collapse all cell inputs",
     "DataScience.expandAll": "Expand all cell inputs",
     "DataScience.export": "Export as Jupyter notebook",
-    "DataScience.restartServer": {
-        "message": "Restart Jupyter kernel",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.restartServer": "Restart Jupyter kernel",
     "DataScience.undo": "Undo",
     "DataScience.redo": "Redo",
     "DataScience.clearAll": "Remove all cells",
-    "DataScience.restartedKernelHeader": {
-        "message": "Restarted '{0}' kernel",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.restartedKernelHeader": "Restarted '{0}' kernel",
     "DataScience.restartingKernelCustomHeader": "_Restarting {0}..._",
-    "DataScience.restartingKernelHeader": {
-        "message": "_Restarting kernel..._",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.startedNewKernelHeader": {
-        "message": "Started '{0}' kernel",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.connectKernelHeader": {
-        "message": "Connected to '{0}' kernel",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.restartingKernelHeader": "_Restarting kernel..._",
+    "DataScience.startedNewKernelHeader": "Started '{0}' kernel",
+    "DataScience.connectKernelHeader": "Connected to '{0}' kernel",
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
     "DataScience.inputWatermark": "Type code here and press shift-enter to run",
     "DataScience.gotoCodeButtonTooltip": "Go to code",
@@ -607,10 +525,7 @@
         "message": "Jupyter Notebook Version: {0}",
         "comment": ["{Locked='Notebook'}"]
     },
-    "DataScience.jupyterKernelSpecNotFound": {
-        "message": "Cannot create a Jupyter kernel spec and none are available for use",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.jupyterKernelSpecNotFound": "Cannot create a Jupyter kernel spec and none are available for use",
     "DataScience.jupyterKernelSpecModuleNotFound": {
         "message": "'Kernelspec' module not installed in the selected interpreter ({0}).\n Please re-install or update 'jupyter'.",
         "comment": ["{Locked='Kernelspec'}"]
@@ -624,28 +539,16 @@
     "DataScience.liveShareServiceFailure": "Failure starting '{0}' service during live share connection.",
     "DataScience.documentMismatch": "Cannot run cells, duplicate documents for {0} found.",
     "DataScience.pythonInteractiveCreateFailed": "Failure to create a 'Interactive' window. Try reinstalling the Jupyter Extension.",
-    "DataScience.interruptKernel": {
-        "message": "Interrupt Jupyter kernel",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.interruptKernel": "Interrupt Jupyter kernel",
     "DataScience.clearAllOutput": "Clear All Output",
     "DataScience.exportingFormat": "Exporting {0}",
     "DataScience.exportCancel": "Cancel",
     "Common.canceled": "Canceled",
     "Common.cancel": "Cancel",
     "Common.yesPlease": "Yes, please",
-    "DataScience.interruptKernelStatus": {
-        "message": "Interrupting Jupyter Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.restartKernelAfterInterruptMessage": {
-        "message": "Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.pythonInterruptFailedHeader": {
-        "message": "Keyboard interrupt crashed the kernel. Kernel restarted.",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.interruptKernelStatus": "Interrupting Jupyter Kernel",
+    "DataScience.restartKernelAfterInterruptMessage": "Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.",
+    "DataScience.pythonInterruptFailedHeader": "Keyboard interrupt crashed the kernel. Kernel restarted.",
     "DataScience.sysInfoURILabel": "Jupyter Server URL: ",
     "DataScience.jupyterStartTimedout": "Starting Jupyter has timed out. Please check the 'Jupyter' output panel for further details.",
     "DataScience.startingJupyterLogMessage": "Starting Jupyter from {0} with command line {1}",
@@ -664,10 +567,7 @@
     "DataScience.fetchingDataViewer": "Fetching data ...",
     "DataScience.noRowsInDataViewer": "No rows match current filter",
     "DataScience.jupyterServer": "Jupyter Server",
-    "DataScience.noKernel": {
-        "message": "No Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.noKernel": "No Kernel",
     "DataScience.serverNotStarted": "Not Started",
     "DataScience.localJupyterServer": "local",
     "DataScience.pandasTooOldForViewingFormat": "Python package 'pandas' is version {0}. Version {1} or greater is required for viewing data.",
@@ -790,48 +690,21 @@
     "DataScience.jupyterSelectURIMRUDetail": "Last Connection: {0}",
     "DataScience.jupyterSelectURIRunningDetailFormat": "Last connection {0}. {1} existing connections.",
     "DataScience.jupyterSelectURINotRunningDetail": "Cannot connect at this time. Status unknown.",
-    "DataScience.fallbackToUseActiveInterpreterAsKernel": {
-        "message": "Couldn't find kernel '{0}' that the notebook was created with. Using the current interpreter.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.fallBackToRegisterAndUseActiveInterpreterAsKernel": {
-        "message": "Couldn't find kernel '{0}' that the notebook was created with. Registering a new kernel using the current interpreter.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel": {
-        "message": "Couldn't find kernel '{0}' that the notebook was created with.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.selectKernel": {
-        "message": "Change Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.selectDifferentKernel": {
-        "message": "Select a different Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.fallbackToUseActiveInterpreterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Using the current interpreter.",
+    "DataScience.fallBackToRegisterAndUseActiveInterpreterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Registering a new kernel using the current interpreter.",
+    "DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel": "Couldn't find kernel '{0}' that the notebook was created with.",
+    "DataScience.selectKernel": "Change Kernel",
+    "DataScience.selectDifferentKernel": "Select a different Kernel",
     "DataScience.selectDifferentJupyterInterpreter": "Change Interpreter",
     "DataScience.selectJupyterInterpreter": "Select an Interpreter to start Jupyter",
-    "DataScience.switchingKernelProgress": {
-        "message": "Switching kernel to '{0}'",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.switchingKernelProgress": "Switching kernel to '{0}'",
     "DataScience.sessionStartFailedWithKernel": {
         "message": "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
         "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}"]
     },
-    "DataScience.failedToStartKernel": {
-        "message": "Failed to start the Kernel.",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.failedToRestartKernel": {
-        "message": "Failed to restart the Kernel.",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.failedToInterruptKernel": {
-        "message": "Failed to interrupt the Kernel.",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.failedToStartKernel": "Failed to start the Kernel.",
+    "DataScience.failedToRestartKernel": "Failed to restart the Kernel.",
+    "DataScience.failedToInterruptKernel": "Failed to interrupt the Kernel.",
     "DataScience.failedToStartAnUntrustedKernelSpec": "The kernel '{0}' was not started as it is located in an insecure location '{1}'.  \nClick [here](https://aka.ms/JupyterTrustedKernelPaths) for further details, optionally update the setting [jupyter.kernels.trusted](command:workbench.action.openSettings?[\"jupyter.kernels.trusted\"]) to trust the kernel.",
     "jupyter.configuration.jupyter.kernels.trusted.markdownDescription": "Enter fully qualified paths to Kernel specification files that are to be trusted. E.g. 'C:\\Program Data\\Jupyter\\kernels\\python3\\kernel.json'.  \n**Note**: Kernels can execute code with user privileges. Click [here](https://aka.ms/JupyterTrustedKernelPaths) for further details.",
     "DataScience.kernelDied": {
@@ -851,50 +724,17 @@
         "message": "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
         "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}", "{Locked='vscodeJupyterKernelCrash'}"]
     },
-    "DataScience.fileSeemsToBeInterferingWithKernelStartup": {
-        "message": "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.DataScience.moduleSeemsToBeInterferingWithKernelStartup": {
-        "message": "The module '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the folder and starting the kernel again.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToMissingModule": {
-        "message": "The kernel failed to start due to the missing module '{0}'. Consider installing this module.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToImportFailure": {
-        "message": "The kernel failed to start as the module '{0}' could not be imported.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToImportFromFileFailure": {
-        "message": "The kernel failed to start as '{0}' could not be imported from '{1}'.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToUnknownDllLoadFailure": {
-        "message": "The kernel failed to start as a dll could not be loaded.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToDllLoadFailure": {
-        "message": "The kernel failed to start as the dll '{0}' could not be loaded.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToWin32APIFailure": {
-        "message": "The kernel failed to start due to an error with the Win32api module. Consider (re) installing this module.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToPyZmqFailure": {
-        "message": "The kernel failed to start due to an error with the 'pyzmq' module. Consider re-installing this module.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToOldIPython": {
-        "message": "The kernel failed to start due to an outdated version of IPython. Consider updating this module to the latest version.",
-        "comment": ["{Locked='kernel'}"]
-    },
-    "DataScience.failedToStartKernelDueToOldIPyKernel": {
-        "message": "The kernel failed to start due to an outdated version of IPyKernel. Consider updating this module to the latest version.",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.fileSeemsToBeInterferingWithKernelStartup": "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.",
+    "DataScience.DataScience.moduleSeemsToBeInterferingWithKernelStartup": "The module '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the folder and starting the kernel again.",
+    "DataScience.failedToStartKernelDueToMissingModule": "The kernel failed to start due to the missing module '{0}'. Consider installing this module.",
+    "DataScience.failedToStartKernelDueToImportFailure": "The kernel failed to start as the module '{0}' could not be imported.",
+    "DataScience.failedToStartKernelDueToImportFromFileFailure": "The kernel failed to start as '{0}' could not be imported from '{1}'.",
+    "DataScience.failedToStartKernelDueToUnknownDllLoadFailure": "The kernel failed to start as a dll could not be loaded.",
+    "DataScience.failedToStartKernelDueToDllLoadFailure": "The kernel failed to start as the dll '{0}' could not be loaded.",
+    "DataScience.failedToStartKernelDueToWin32APIFailure": "The kernel failed to start due to an error with the Win32api module. Consider (re) installing this module.",
+    "DataScience.failedToStartKernelDueToPyZmqFailure": "The kernel failed to start due to an error with the 'pyzmq' module. Consider re-installing this module.",
+    "DataScience.failedToStartKernelDueToOldIPython": "The kernel failed to start due to an outdated version of IPython. Consider updating this module to the latest version.",
+    "DataScience.failedToStartKernelDueToOldIPyKernel": "The kernel failed to start due to an outdated version of IPyKernel. Consider updating this module to the latest version.",
     "DataScience.failedToStartJupyter": {
         "message": "Failed to start Jupyter in the environment '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
         "comment": ["{Locked='command:jupyter.viewOutput'}"]
@@ -908,10 +748,7 @@
         "comment": ["{Locked='command:jupyter.viewOutput'}", "{Locked='traitlets'}"]
     },
     "DataScience.installPackageInstructions": "Run the following command to install '{0}' into the Python environment. \nCommand: '{1}'",
-    "DataScience.cannotRunCellKernelIsDead": {
-        "message": "Cannot run cells, as the kernel '{0}' is dead.",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.cannotRunCellKernelIsDead": "Cannot run cells, as the kernel '{0}' is dead.",
     "DataScience.waitingForJupyterSessionToBeIdle": "Waiting for Jupyter Session to be idle",
     "DataScience.gettingListOfKernelsForLocalConnection": {
         "message": "Fetching Kernels",
@@ -921,32 +758,20 @@
         "message": "Fetching Kernels",
         "comment": ["{Locked='Kernels'}"]
     },
-    "DataScience.gettingListOfKernelSpecs": {
-        "message": "Fetching Kernel specs",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.gettingListOfKernelSpecs": "Fetching Kernel specs",
     "DataScience.startingJupyterNotebook": {
         "message": "Starting Jupyter Notebook",
         "comment": ["{Locked='Notebook'}"]
     },
-    "DataScience.registeringKernel": {
-        "message": "Registering Kernel",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.registeringKernel": "Registering Kernel",
     "DataScience.trimmedOutput": {
         "message": "Output was trimmed for performance reasons.\nTo see the full output set the setting \"jupyter.textOutputLimit\" to 0.",
         "comment": ["{Locked='textOutputLimit'}"]
     },
     "DataScience.connectingToJupyterUri": "Connecting to Jupyter server at {0}",
     "DataScience.createdNewNotebook": "{0}: Creating new notebook ",
-    "DataScience.createdNewKernel": {
-        "message": "{0}: Kernel started: {1}",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.kernelInvalid": {
-        "message": "Kernel {0} is not usable. Check the Jupyter output tab for more information.",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.createdNewKernel": "{0}: Kernel started: {1}",
+    "DataScience.kernelInvalid": "Kernel {0} is not usable. Check the Jupyter output tab for more information.",
     "DataScience.nativeDependencyFail": "We cannot launch a Jupyter server because your OS is not supported. Select an already running server if you wish to continue. {0}",
     "DataScience.selectNewServer": "Pick Running Server",
     "DataScience.jupyterSelectURIRemoteLabel": "Existing",
@@ -961,33 +786,21 @@
     "DataScience.enableCDNForWidgetsButton": "Enable Downloads",
     "DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork": "Unable to find widget '{0}' version '{1}' from configured widget sources {2}. Expected behavior may be affected. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
     "DataScience.cdnWidgetScriptNotAccessibleWarningMessage": "Unable to download widget '{0}' from 3rd party website {1}, due to network access. Expected behavior may be affected. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
-    "DataScience.unhandledMessage": {
-        "message": "Unhandled kernel message from a widget: {0} : {1}",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.unhandledMessage": "Unhandled kernel message from a widget: {0} : {1}",
     "DataScience.qgridWidgetScriptVersionCompatibilityWarning": "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1.",
-    "DataScience.kernelStarting": {
-        "message": "_Connecting to kernel..._",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.kernelStarting": "_Connecting to kernel..._",
     "DataScience.kernelStartingCustom": "_Connecting to {0}..._",
     "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "Running cells with '{0}' requires the {1} package.",
     "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate": "Running cells with '{0}' requires the {1} package to be installed or requires an update.",
     "DataScience.runByLine": "Run by line (F10)",
     "DataScience.stopRunByLine": "Stop",
     "DataScience.couldNotInstallLibrary": "Could not install {0} package. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.",
-    "DataScience.rawKernelSessionFailed": {
-        "message": "Unable to start session for kernel {0}. Select another kernel to launch with.",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.rawKernelSessionFailed": "Unable to start session for kernel {0}. Select another kernel to launch with.",
     "DataScience.rawKernelStartFailedDueToTimeout": {
         "message": "Unable to start Kernel '{0}' due to connection timeout. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
         "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}"]
     },
-    "DataScience.rawKernelConnectingSession": {
-        "message": "Connecting to kernel {0}",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.rawKernelConnectingSession": "Connecting to kernel {0}",
     "DataScience.reloadCustomEditor": "Please reload VS Code to use the custom editor API",
     "DataScience.reloadVSCodeNotebookEditor": {
         "message": "Please reload VS Code to use the Notebook Editor",
@@ -1031,18 +844,9 @@
         "message": "No kernel available for cell execution, please [specify a Jupyter server for connections](command:jupyter.selectjupyteruri)",
         "comment": ["{Locked='kernel'}", "{Locked='command:jupyter.selectjupyteruri'}"]
     },
-    "DataScience.ipykernelNotInstalled": {
-        "message": "IPyKernel not installed into interpreter {0}",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.ipykernelNotInstalledBecauseCanceled": {
-        "message": "IPyKernel not installed into interpreter. Installation canceled.",
-        "comment": ["{Locked='Kernel'}"]
-    },
-    "DataScience.needIpykernel6": {
-        "message": "Ipykernel setup required for this feature",
-        "comment": ["{Locked='kernel'}"]
-    },
+    "DataScience.ipykernelNotInstalled": "IPyKernel not installed into interpreter {0}",
+    "DataScience.ipykernelNotInstalledBecauseCanceled": "IPyKernel not installed into interpreter. Installation canceled.",
+    "DataScience.needIpykernel6": "Ipykernel setup required for this feature",
     "DataScience.setup": "Setup",
     "DataScience.startingRunByLine": "Starting Run by Line",
     "DataScience.illegalEditorConfig": {
@@ -1071,10 +875,7 @@
     "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targeting the language '{1}'",
     "DataScience.interactiveClearAllCells": "Clear All",
     "DataScience.interactiveGoToCode": "Go to code",
-    "DataScience.kernelWasNotStarted": {
-        "message": "Kernel was not started. A kernel session is needed to start debugging.",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.kernelWasNotStarted": "Kernel was not started. A kernel session is needed to start debugging.",
     "DataScience.noNotebookToDebug": "No active notebook document to debug.",
     "DataScience.cantStartDebugging": "Can't start debugging.",
     "DataScience.customEditorBanner": {
@@ -1087,10 +888,7 @@
     "DataScience.matplotlibWidgetCodeActionTitle": "More information",
     "DataScience.cellAtFormat": "{0} Cell {1}'",
     "DataScience.jupyterServerConsoleOutputChannel": "Jupyter Server Console",
-    "DataScience.kernelConsoleOutputChannel": {
-        "message": "{0} Kernel Console Output",
-        "comment": ["{Locked='Kernel'}"]
-    },
+    "DataScience.kernelConsoleOutputChannel": "{0} Kernel Console Output",
     "Installer.noCondaOrPipInstaller": "There is no Conda or Pip installer available in the selected environment.",
     "Installer.noPipInstaller": "There is no Pip installer available in the selected environment.",
     "Installer.searchForHelp": "Search for help",
