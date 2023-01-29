@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import type { JSONObject } from '@lumino/coreutils';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';

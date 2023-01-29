@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as fsextra from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';

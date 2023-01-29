@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
 import { IApplicationShell, IClipboard, IWorkspaceService } from '../../platform/common/application/types';

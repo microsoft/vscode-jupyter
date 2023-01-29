@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Uri } from 'vscode';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 

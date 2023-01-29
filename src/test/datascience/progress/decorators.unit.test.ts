@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { anything, deepEqual, instance, mock, verify } from 'ts-mockito';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { reportAction, registerReporter, disposeRegisteredReporters } from '../../../platform/progress/decorator';

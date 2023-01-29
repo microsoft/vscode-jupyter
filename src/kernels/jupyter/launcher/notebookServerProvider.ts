@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, optional } from 'inversify';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceVerbose } from '../../../platform/logging';

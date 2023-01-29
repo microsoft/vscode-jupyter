@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 export const __ = '';
 // /* eslint-disable @typescript-eslint/no-explicit-any,  */
 

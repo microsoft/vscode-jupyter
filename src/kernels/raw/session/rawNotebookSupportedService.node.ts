@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import { traceVerbose, traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';

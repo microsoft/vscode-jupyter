@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 suite('Dummy7', () => {
     test('dummy7', () => {
         //

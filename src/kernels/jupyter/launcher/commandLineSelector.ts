@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 // eslint-disable-next-line
 import { ConfigurationChangeEvent } from 'vscode';

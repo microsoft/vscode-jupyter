@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // See the comment on convertCompletionItemKind below
 // Here's the monaco enum:
 enum monacoCompletionItemKind {

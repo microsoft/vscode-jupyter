@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import * as fs from 'fs-extra';
 import { AddressInfo, createServer, Server } from 'net';

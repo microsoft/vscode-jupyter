@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IServiceManager } from '../../platform/ioc/types';
 import { InstallationChannelManager } from './channelManager.node';
 import { CondaInstaller } from './condaInstaller.node';

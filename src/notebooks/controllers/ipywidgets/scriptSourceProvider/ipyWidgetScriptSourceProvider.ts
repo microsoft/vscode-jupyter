@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import '../../../../platform/common/extensions';
 import { traceError, traceInfo } from '../../../../platform/logging';
 import { WidgetCDNs, IConfigurationService, IHttpClient, IDisposable } from '../../../../platform/common/types';

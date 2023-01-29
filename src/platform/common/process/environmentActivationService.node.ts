@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import '../extensions';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

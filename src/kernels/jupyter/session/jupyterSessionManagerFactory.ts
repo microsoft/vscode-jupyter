@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, named, optional } from 'inversify';
 import { JupyterSessionManager } from './jupyterSessionManager';
 import { IApplicationShell } from '../../../platform/common/application/types';

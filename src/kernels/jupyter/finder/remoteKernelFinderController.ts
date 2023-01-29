@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { injectable, inject, named } from 'inversify';
 import { Disposable, Memento } from 'vscode';
 import { IKernelFinder, IKernelProvider, INotebookProvider } from '../../types';

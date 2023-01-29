@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* Generate a RegExp from a "verbose" pattern.
  *
  * All whitespace in the pattern is removed, including newlines.  This

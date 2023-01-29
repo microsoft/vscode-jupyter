@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { InteractiveWindowMessages } from '../../../../../messageTypes';
 import { IMainState } from '../../mainState';
 import { postActionToExtension } from '../helpers';

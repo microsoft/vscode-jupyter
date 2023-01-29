@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 export const __ = '';
 // import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 // import { EventEmitter } from 'vscode';

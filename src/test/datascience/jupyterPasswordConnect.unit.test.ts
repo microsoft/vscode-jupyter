@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import assert from 'assert';
 import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';

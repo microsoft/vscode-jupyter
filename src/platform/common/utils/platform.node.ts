@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Uri } from 'vscode';
 import * as os from 'os';
 import { EnvironmentVariables } from '../variables/types';

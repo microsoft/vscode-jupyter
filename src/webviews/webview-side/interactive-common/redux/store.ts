@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 import { InteractiveWindowMessages } from '../../../../messageTypes';

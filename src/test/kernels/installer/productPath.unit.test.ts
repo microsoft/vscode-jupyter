@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';

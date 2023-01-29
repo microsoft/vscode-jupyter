@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { assert } from 'chai';
 import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher';
 import { IJupyterSettings } from '../../platform/common/types';

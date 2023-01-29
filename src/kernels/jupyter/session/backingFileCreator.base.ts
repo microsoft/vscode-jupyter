@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { Contents, ContentsManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { traceError } from '../../../platform/logging';

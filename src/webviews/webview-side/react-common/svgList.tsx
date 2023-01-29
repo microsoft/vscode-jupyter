@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import * as React from 'react';
 import { SvgLoader } from 'react-svgmt';
 import { getLocString } from '../react-common/locReactSide';

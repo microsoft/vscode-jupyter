@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { DataScience } from '../common/utils/localize';
 import { ReportableAction } from './types';
 

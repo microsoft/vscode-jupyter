@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as path from '../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';

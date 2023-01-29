@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 suite('Dummy11', () => {
     test('dummy11', () => {
         //
@@ -9,8 +8,7 @@ suite('Dummy11', () => {
 });
 // // Copyright (c) Microsoft Corporation.
 // // Licensed under the MIT License.
-// 'use strict';
-// import { ReactWrapper } from 'enzyme';
+// // import { ReactWrapper } from 'enzyme';
 // import * as React from 'react';
 // import * as AdazzleReactDataGrid from 'react-data-grid';
 // import { Disposable } from 'vscode';

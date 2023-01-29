@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';

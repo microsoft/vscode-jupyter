@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IServiceManager } from '../platform/ioc/types';
 import { IExtensionActivationManager, IExtensionSyncActivationService } from '../platform/activation/types';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';

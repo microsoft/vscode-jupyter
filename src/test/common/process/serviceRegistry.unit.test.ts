@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { instance, mock, verify } from 'ts-mockito';
 import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
 import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';

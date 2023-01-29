@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import fastDeepEqual from 'fast-deep-equal';
 import { assert } from 'chai';
 import { waitForCondition } from '../../common';

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { KeyCodes } from '../react-common/constants';

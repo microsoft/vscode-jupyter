@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { injectable, inject } from 'inversify';
 import {

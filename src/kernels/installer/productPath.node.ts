@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { injectable, inject } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import { Uri } from 'vscode';

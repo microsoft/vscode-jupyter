@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Position } from 'vscode';
 import { isNumber } from './sysTypes';
 
