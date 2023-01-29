@@ -2062,7 +2062,6 @@
         "decompress-response": "^4.2.0",
         "encoding": "^0.1.13",
         "fast-deep-equal": "^2.0.1",
-        "font-awesome": "^4.7.0",
         "format-util": "^1.0.5",
         "fs-extra": "^4.0.3",
         "glob": "^7.1.2",
