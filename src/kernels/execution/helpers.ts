@@ -32,6 +32,7 @@ import {
     getKernelRegistrationInfo
 } from '../helpers';
 import { IFeaturesManager } from '../../platform/common/types';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -147,12 +148,21 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
  * This class is used to track state of cells, used in logging & tests.
  */
 export class NotebookCellStateTracker {
-    private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
+    private static cellStates = new WeakMap<
+        NotebookCell,
+        { stateTransition: string[]; state: NotebookCellExecutionState; start: StopWatch }
+    >();
     public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
-        return NotebookCellStateTracker.cellStates.get(cell);
+        return NotebookCellStateTracker.cellStates.get(cell)?.state;
+    }
+    public static getCellStatus(cell: NotebookCell): string {
+        return (NotebookCellStateTracker.cellStates.get(cell)?.stateTransition || []).join(', ') || '';
     }
     public static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
-        NotebookCellStateTracker.cellStates.set(cell, state);
+        const stopWatch = NotebookCellStateTracker.cellStates.get(cell)?.start || new StopWatch();
+        const previousState = NotebookCellStateTracker.cellStates.get(cell)?.stateTransition || [];
+        previousState.push(`${state} (${previousState.length === 0 ? '@ start' : `After ${stopWatch.elapsedTime}`}`);
+        NotebookCellStateTracker.cellStates.set(cell, { stateTransition: previousState, state, start: stopWatch });
     }
 }
 
@@ -160,7 +170,7 @@ export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfoIfCI(
         `Cell Index:${cell.index}, of document ${uriPath.basename(
             cell.notebook.uri
-        )} with state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+        )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${
             cell.executionSummary?.executionOrder
         }. ${message}.`
     );
