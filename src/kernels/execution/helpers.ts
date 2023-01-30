@@ -161,7 +161,7 @@ export class NotebookCellStateTracker {
     public static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
         const stopWatch = NotebookCellStateTracker.cellStates.get(cell)?.start || new StopWatch();
         const previousState = NotebookCellStateTracker.cellStates.get(cell)?.stateTransition || [];
-        previousState.push(`${state} (${previousState.length === 0 ? '@ start' : `After ${stopWatch.elapsedTime}`})`);
+        previousState.push(`${state} ${previousState.length === 0 ? '@ start' : `After ${stopWatch.elapsedTime}ms`}`);
         NotebookCellStateTracker.cellStates.set(cell, { stateTransition: previousState, state, start: stopWatch });
     }
 }
