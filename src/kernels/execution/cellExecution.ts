@@ -301,7 +301,7 @@ export class CellExecution implements IDisposable {
 
     private canExecuteCell() {
         // Raw cells cannot be executed.
-        if (isPythonKernelConnection(this.kernelConnection) && this.cell.document.languageId === 'raw') {
+        if (this.cell.document.languageId === 'raw') {
             return false;
         }
 
