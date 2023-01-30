@@ -46,6 +46,7 @@ export function getResourceType(uri?: Uri): 'notebook' | 'interactive' {
     if (!uri) {
         return 'interactive';
     }
+    // this returns `interactive` for any resource that isn't *.ipynb - that seems wrong
     return uriPath.extname(uri).toLowerCase().endsWith('ipynb') ? 'notebook' : 'interactive';
 }
 

@@ -100,7 +100,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return this._submitters;
     }
     public get notebookDocument(): NotebookDocument {
-        return this.notebookEditor?.notebook;
+        return this.notebookDocument;
     }
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
@@ -122,9 +122,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         metadata?: KernelConnectionMetadata;
     } = {};
     private _notebookEditor: NotebookEditor;
-    public get notebookEditor(): NotebookEditor {
-        return this._notebookEditor;
-    }
 
     public readonly notebookUri: Uri;
 

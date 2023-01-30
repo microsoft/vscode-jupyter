@@ -59,7 +59,6 @@ export interface IInteractiveBase extends Disposable {
 
 export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
-    readonly notebookEditor: NotebookEditor | undefined;
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly notebookUri?: Uri;
