@@ -1717,6 +1717,8 @@
 /* __GDPR__
    "DS_INTERNAL.SELECT_JUPYTER_INTERPRETER" : {
      "result": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the value or `result` is empty this means we displayed the message to the user and user hasn't made a choice yet.  The result of the selection. notSelected - No interpreter was selected. selected - An interpreter was selected (and configured to have jupyter and notebook). installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter. selectAnotherInterpreter - Selected another interpreter.","owner":"donjayamanne"},
+     "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the Python environment.","owner":"donjayamanne"},
+     "envVersion": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Python version. (only contains the numbers, no letters and empty if version is not available)","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
