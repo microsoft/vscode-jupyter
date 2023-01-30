@@ -23,7 +23,6 @@ COPY requirements.txt /tmp/pip-tmp/
 COPY build/venv-test-requirements.txt /tmp/venv-tmp/
 RUN python -m pip install jupyter notebook ipykernel ipython nbconvert nbformat --upgrade
 RUN python -m pip --disable-pip-version-check install -r /tmp/venv-tmp/venv-test-requirements.txt --upgrade && rm -rf /tmp/pip-tmp
-RUN python -m pip install python-jsonrpc-server
 # Install nbconvert globally: https://github.com/jupyter/nbconvert/issues/1661
 RUN sudo python -m pip install nbconvert
 
