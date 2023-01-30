@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
 import { injectable } from 'inversify';

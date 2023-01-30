@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { KernelSpec } from '@jupyterlab/services';
 import { PythonEnvironment_PythonApi } from '../../platform/api/types';
 import { IJupyterKernelSpec } from '../types';

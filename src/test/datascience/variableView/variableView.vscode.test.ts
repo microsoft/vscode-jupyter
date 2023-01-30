@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';

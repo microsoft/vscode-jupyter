@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IDisposable, IDisposableRegistry } from '../../../../platform/common/types';

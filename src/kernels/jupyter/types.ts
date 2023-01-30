@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionContext, IHttpClient } from '../types';

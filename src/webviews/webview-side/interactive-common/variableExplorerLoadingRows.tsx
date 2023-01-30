@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import './variableExplorerEmptyRows.css'; // Use same CSS as variableExplorerEmptyRows.tsx
 
 import * as React from 'react';

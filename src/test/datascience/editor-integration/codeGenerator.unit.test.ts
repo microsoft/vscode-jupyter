@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { assert } from 'chai';
 import { NotebookDocument, Position, Range, Uri } from 'vscode';
 

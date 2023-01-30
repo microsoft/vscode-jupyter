@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import * as React from 'react';
 import { Tool } from 'react-svg-pan-zoom';
 import { Image, ImageName } from '../react-common/image';

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as sinon from 'sinon';
 import * as path from '../../../platform/vscode-path/path';
 import assert from 'assert';

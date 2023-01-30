@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as jupyterlab from '@jupyter-widgets/base/lib';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';

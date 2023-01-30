@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Memento } from 'vscode';
 import { noop } from '../../platform/common/utils/misc';
 

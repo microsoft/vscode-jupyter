@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { Identifiers, isPreReleaseVersion } from '../platform/common/constants';

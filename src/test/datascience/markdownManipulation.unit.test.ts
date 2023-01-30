@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 export const __ = '';
 // import { expect } from 'chai';
 // import { fixMarkdown } from '../../webviews/webview-side/interactive-common/markdownManipulation';

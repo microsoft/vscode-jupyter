@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';

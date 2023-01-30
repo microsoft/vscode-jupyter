@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { generateCells } from '../../interactive-window/editor-integration/cellFactory';

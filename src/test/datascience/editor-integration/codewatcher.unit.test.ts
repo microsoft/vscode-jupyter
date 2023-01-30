@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 /* eslint-disable , no-trailing-spaces, no-multi-str, , @typescript-eslint/no-unused-expressions */
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ChildProcess } from 'child_process';
 import { kill } from 'process';
 import * as fs from 'fs-extra';

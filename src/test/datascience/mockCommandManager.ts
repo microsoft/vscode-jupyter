@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 
 import { ICommandNameArgumentTypeMapping } from '../../commands';

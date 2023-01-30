@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { IKernel } from '../../../kernels/types';

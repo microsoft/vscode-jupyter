@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { NotebookCell } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';

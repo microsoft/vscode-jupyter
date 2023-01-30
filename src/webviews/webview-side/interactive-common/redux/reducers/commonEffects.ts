@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { InteractiveWindowMessages, LocalizedMessages } from '../../../../../messageTypes';
 import { IMainState } from '../../../interactive-common/mainState';
 import { storeLocStrings } from '../../../react-common/locReactSide';

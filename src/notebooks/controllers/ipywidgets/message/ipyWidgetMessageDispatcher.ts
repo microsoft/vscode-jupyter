@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type { KernelMessage } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';

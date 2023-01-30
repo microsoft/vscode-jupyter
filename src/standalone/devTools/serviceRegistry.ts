@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IExtensionContext } from '../../platform/common/types';
 import { addClearCacheCommand } from './clearCache';
 

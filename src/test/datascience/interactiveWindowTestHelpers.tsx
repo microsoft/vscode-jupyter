@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 export const __ = '';
 // import assert from 'assert';
 // import { ReactWrapper } from 'enzyme';

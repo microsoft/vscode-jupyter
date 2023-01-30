@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { JSONObject } from '@lumino/coreutils';

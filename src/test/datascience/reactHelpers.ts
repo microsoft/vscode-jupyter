@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // Note: Don't change this to a tsx file as it loads in the unit tests. That will mess up mocha
 
 // Custom module loader so we can skip loading the 'canvas' module which won't load

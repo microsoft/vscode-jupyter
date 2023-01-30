@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';

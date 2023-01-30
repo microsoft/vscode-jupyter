@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { LocalizedMessages } from '../../../messageTypes';
 
 // The react code can't use the localize.ts module because it reads from

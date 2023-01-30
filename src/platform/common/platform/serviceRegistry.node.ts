@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IServiceContainer, IServiceManager } from '../../ioc/types';
 import { initializeExternalDependencies } from './fileUtils.node';
 import { PlatformService } from './platformService.node';

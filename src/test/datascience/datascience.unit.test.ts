@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import * as sinon from 'sinon';

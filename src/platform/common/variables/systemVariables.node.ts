@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
 import * as path from '../../vscode-path/path';
 import { Uri, Range } from 'vscode';
 import { IWorkspaceService, IDocumentManager } from '../application/types';

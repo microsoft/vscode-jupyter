@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../../platform/common/application/types';

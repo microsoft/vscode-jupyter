@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {

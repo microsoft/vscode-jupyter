@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IServiceManager } from '../platform/ioc/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';

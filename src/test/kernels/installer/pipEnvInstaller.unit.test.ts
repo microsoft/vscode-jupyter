@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';

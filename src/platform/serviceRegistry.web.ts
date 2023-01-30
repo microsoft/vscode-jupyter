@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ApplicationEnvironment } from './common/application/applicationEnvironment.web';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';

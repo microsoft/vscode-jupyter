@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // Custom mocha reporter
 import './common/exitCIAfterTestReporter';
 

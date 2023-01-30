@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 import type { Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when, verify } from 'ts-mockito';

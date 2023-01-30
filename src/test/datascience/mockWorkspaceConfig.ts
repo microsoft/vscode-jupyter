@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
 
 export class MockWorkspaceConfiguration implements WorkspaceConfiguration {

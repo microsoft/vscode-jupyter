@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';

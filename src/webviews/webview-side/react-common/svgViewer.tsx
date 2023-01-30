@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import * as React from 'react';
 import { POSITION_TOP, ReactSVGPanZoom, Tool, Value } from 'react-svg-pan-zoom';
 import { SvgLoader } from 'react-svgmt';

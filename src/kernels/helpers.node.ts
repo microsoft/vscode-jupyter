@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as nbformat from '@jupyterlab/nbformat';
 import { IKernelConnectionSession, KernelConnectionMetadata } from './types';
 import { Uri } from 'vscode';

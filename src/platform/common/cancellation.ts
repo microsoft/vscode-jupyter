@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { CancellationError, CancellationToken, CancellationTokenSource } from 'vscode';
 import { disposeAllDisposables } from './helpers';
 import { IDisposable } from './types';

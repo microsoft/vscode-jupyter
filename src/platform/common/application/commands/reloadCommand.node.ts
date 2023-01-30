@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { Common } from '../../utils/localize';

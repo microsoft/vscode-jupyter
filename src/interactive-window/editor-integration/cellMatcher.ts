@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { RegExpValues } from '../../platform/common/constants';
 import '../../platform/common/extensions';
 import { IJupyterSettings } from '../../platform/common/types';

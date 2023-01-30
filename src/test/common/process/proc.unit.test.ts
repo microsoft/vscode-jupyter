@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-invalid-this, max-classes-per-file */
 
 import { expect } from 'chai';

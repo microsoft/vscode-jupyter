@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named } from 'inversify';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceInfo } from '../../logging';

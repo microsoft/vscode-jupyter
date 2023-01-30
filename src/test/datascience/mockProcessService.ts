@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { Observable } from 'rxjs/Observable';
 
 import { Cancellation, isCancellationError } from '../../platform/common/cancellation';

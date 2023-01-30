@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as fsExtra from 'fs-extra';
 import { Uri } from 'vscode';
 import { getOSType, OSType } from './utils/platform';

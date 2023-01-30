@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { WidgetScriptSource } from '../../../../notebooks/controllers/ipywidgets/types';
 import { logMessage } from '../../react-common/logger';
 

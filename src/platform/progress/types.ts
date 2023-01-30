@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 export type Progress = { action: ReportableAction; phase: 'started' | 'completed' };
 export interface IProgressReporter {
     report(progress: Progress): void;

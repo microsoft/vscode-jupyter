@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';

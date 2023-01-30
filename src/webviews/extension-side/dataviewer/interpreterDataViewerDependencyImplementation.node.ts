@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IInstaller, Product, InstallerResponse } from '../../../kernels/installer/types';
 import { IApplicationShell } from '../../../platform/common/application/types';

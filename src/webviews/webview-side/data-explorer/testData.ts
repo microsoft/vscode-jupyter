@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 export interface ITestData {
     columns: { id: string; name: string; type: string }[];
     primaryKeys: string[];

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';

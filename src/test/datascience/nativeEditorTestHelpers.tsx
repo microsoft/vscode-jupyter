@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function runMountedTest(name: string, testFunc: (this: Mocha.Context, context: Mocha.Context) => Promise<void>) {
     test(name, async function () {

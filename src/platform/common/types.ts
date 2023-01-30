@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';

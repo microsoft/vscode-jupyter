@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
 import { IJupyterExtensionBanner } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';

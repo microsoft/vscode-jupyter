@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IExperimentationTelemetry } from 'vscode-tas-client';
 import { sendTelemetryEvent, setSharedProperty } from '../../../telemetry';
 

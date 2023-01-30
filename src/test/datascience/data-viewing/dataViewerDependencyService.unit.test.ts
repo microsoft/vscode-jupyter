@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';

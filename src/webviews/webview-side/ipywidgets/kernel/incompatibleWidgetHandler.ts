@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as semver from 'semver';
 import { WidgetScriptSource } from '../../../../notebooks/controllers/ipywidgets/types';
 const supportedVersionOfQgrid = '1.1.1';

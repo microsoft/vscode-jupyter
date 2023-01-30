@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 export const __ = '';
 // import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 // import { assert } from 'chai';

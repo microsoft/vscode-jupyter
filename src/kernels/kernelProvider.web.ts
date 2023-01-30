@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, multiInject } from 'inversify';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
 import { InteractiveWindowView } from '../platform/common/constants';

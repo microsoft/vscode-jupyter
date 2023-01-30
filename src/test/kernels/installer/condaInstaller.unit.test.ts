@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import assert from 'assert';
 import { instance, mock, when } from 'ts-mockito';
 import { JupyterSettings } from '../../../platform/common/configSettings';

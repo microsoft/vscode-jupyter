@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';

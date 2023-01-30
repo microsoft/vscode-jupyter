@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // Interfaces here to expose specific private functionality to test code
 export interface ITestWebviewHost {
     getHTMLById(id: string): Promise<string>;

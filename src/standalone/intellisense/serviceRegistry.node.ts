@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { INotebookCompletionProvider } from '../../notebooks/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';

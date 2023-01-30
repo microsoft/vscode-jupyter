@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
