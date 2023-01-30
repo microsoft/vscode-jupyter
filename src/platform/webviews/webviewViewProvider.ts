@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
 import { IWebviewView, IWebviewViewOptions, IWebviewViewProvider } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import { Webview } from './webview';
 
 class WebviewView extends Webview implements IWebviewView {
@@ -23,11 +23,10 @@ class WebviewView extends Webview implements IWebviewView {
     constructor(
         fs: IFileSystem,
         disposableRegistry: IDisposableRegistry,
-        context: IExtensionContext,
         private panelOptions: IWebviewViewOptions,
         additionalRootPaths: Uri[] = []
     ) {
-        super(fs, disposableRegistry, context, panelOptions, additionalRootPaths);
+        super(fs, disposableRegistry, panelOptions, additionalRootPaths);
     }
 
     protected createWebview(_webviewOptions: WebviewOptions): vscodeWebviewView {
@@ -65,11 +64,10 @@ class WebviewView extends Webview implements IWebviewView {
 export class WebviewViewProvider implements IWebviewViewProvider {
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
 
     public async create(options: IWebviewViewOptions): Promise<IWebviewView> {
-        return new WebviewView(this.fs, this.disposableRegistry, this.context, options);
+        return new WebviewView(this.fs, this.disposableRegistry, options);
     }
 }

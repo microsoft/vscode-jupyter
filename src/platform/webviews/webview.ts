@@ -15,9 +15,8 @@ import { IWebview, IWebviewOptions, WebviewMessage } from '../common/application
 import { traceError } from '../logging';
 import { Identifiers } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { joinPath } from '../vscode-path/resources';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export abstract class Webview implements IWebview {
@@ -31,7 +30,6 @@ export abstract class Webview implements IWebview {
     constructor(
         protected fs: IFileSystem,
         protected disposableRegistry: IDisposableRegistry,
-        private readonly context: IExtensionContext,
         protected options: IWebviewOptions,
         additionalRootPaths: Uri[] = []
     ) {
@@ -79,19 +77,6 @@ export abstract class Webview implements IWebview {
         const uris = this.options.scripts.map((script) => this.webviewHost!.webview!.asWebviewUri(script));
 
         const rootPath = this.webviewHost.webview.asWebviewUri(this.options.rootPath).toString();
-        const fontAwesomePath = this.webviewHost.webview
-            .asWebviewUri(
-                joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'fontAwesome',
-                    'node_modules',
-                    'font-awesome',
-                    'css',
-                    'font-awesome.min.css'
-                )
-            )
-            .toString();
 
         // Change to `true` to force on Test middleware for our react code
         const forceTestMiddleware = 'false';
@@ -109,7 +94,6 @@ export abstract class Webview implements IWebview {
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>VS Code Python React UI</title>
                 <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
-                <link rel="stylesheet" href="${fontAwesomePath}">
                 </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>
