@@ -31,7 +31,7 @@ You can also install the [Jupyter PowerToys](https://marketplace.visualstudio.co
 
 -   **Step 1.** Install [VS Code](https://code.visualstudio.com/)
 -   **Step 2.** Install [Anaconda](https://docs.anaconda.com/anaconda/install/index.html)/[Miniconda](https://docs.conda.io/en/latest/miniconda.html) or another Python environment in which you've installed the Jupyter package
--   Since not working with Python, make sure to have a Jupyter kernelspec that corresponds to the language you would like to use installed on your machine.
+-   Since not working with Python, make sure to have a [Jupyter Kernel](https://docs.jupyter.org/en/latest/install/kernels.html) that corresponds to the language you would like to use installed on your machine.
 -   **Step 3.** Install the [Jupyter Extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) and the [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 -   **Step 4.** Open or create a notebook file by opening the Command Palette (`Ctrl+Shift+P`) and select `Jupyter: Create New Jupyter Notebook`.<br><img src="https://code.visualstudio.com/assets/docs/datascience/data-science-tutorial/create-notebook.png">
 -   **Step 5.** Select your kernel by clicking on the kernel picker in the top right of the notebook or by invoking the `Notebook: Select Notebook Kernel` command and start coding!<br><img src="https://code.visualstudio.com/assets/docs/datascience/data-science-tutorial/select-kernel.png">
