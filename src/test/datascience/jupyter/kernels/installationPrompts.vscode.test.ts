@@ -354,7 +354,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
             promptOptions.dismissPrompt = true;
             delete promptOptions.result;
             // In tests, things hang as the IW isn't focused.
-            activeInteractiveWindow.show(false).then(noop, noop);
+            activeInteractiveWindow.showInteractiveEditor().then(noop, noop);
             await waitForKernelToChange(
                 { interpreterPath: venvNoRegPath, isInteractiveController: true },
                 activeInteractiveWindow.notebookEditor

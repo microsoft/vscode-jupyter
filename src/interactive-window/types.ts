@@ -99,6 +99,6 @@ export interface IInteractiveWindowLoadable extends IInteractiveWindow {
 
 export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');
 export interface IInteractiveWindowDebuggingManager extends IDebuggingManager {
-    start(editor: NotebookEditor, cell: NotebookCell): Promise<void>;
+    start(notebook: NotebookDocument, cell: NotebookCell): Promise<void>;
     updateSourceMaps(editor: NotebookEditor, generatedCodes: IFileGeneratedCodes[]): Promise<void>;
 }

@@ -186,7 +186,7 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
     private updateSelectedKernelContext() {
         const document =
             this.vscNotebook.activeNotebookEditor?.notebook ||
-            this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookEditor?.notebook;
+            this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookDocument;
         if (document && isJupyterNotebook(document) && this.controllers.getSelected(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
@@ -194,7 +194,7 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         }
     }
     private updateContextOfActiveInteractiveWindowKernel() {
-        const notebook = this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookEditor?.notebook;
+        const notebook = this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookDocument;
         const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
