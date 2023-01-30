@@ -1555,6 +1555,12 @@
                     "default": 3,
                     "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%"
                 },
+                "jupyter.jupyterCommandLineArguments": {
+                    "type": "array",
+                    "default": [],
+                    "description": "%jupyter.configuration.jupyter.jupyterCommandLineArguments.description%",
+                    "scope": "resource"
+                },
                 "jupyter.notebookFileRoot": {
                     "type": "string",
                     "default": "${fileDirname}",
