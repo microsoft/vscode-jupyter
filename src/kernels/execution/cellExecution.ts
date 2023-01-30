@@ -22,7 +22,7 @@ import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { noop } from '../../platform/common/utils/misc';
-import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
