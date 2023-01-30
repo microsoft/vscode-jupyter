@@ -162,7 +162,8 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         // Update hash in notebook metadata.
-        fs.writeFileSync(nbFile.fsPath, fs.readFileSync(nbFile.fsPath).toString('utf8').replace('<id>', env!.id));
+        const id = Uri.parse(env!.id).toString();
+        fs.writeFileSync(nbFile.fsPath, fs.readFileSync(nbFile.fsPath).toString('utf8').replace('<id>', id));
         await Promise.all([
             installIPyKernel(venvKernelPath.fsPath),
             uninstallIPyKernel(venvNoKernelPath.fsPath),
