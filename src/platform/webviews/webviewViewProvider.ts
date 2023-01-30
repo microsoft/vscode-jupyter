@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
 import { IWebviewView, IWebviewViewOptions, IWebviewViewProvider } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import { Webview } from './webview';
 
 class WebviewView extends Webview implements IWebviewView {
