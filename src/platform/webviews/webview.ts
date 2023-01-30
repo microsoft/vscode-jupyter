@@ -16,9 +16,8 @@ import { IWebview, IWebviewOptions, WebviewMessage } from '../common/application
 import { traceError } from '../logging';
 import { Identifiers } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import * as localize from '../common/utils/localize';
-import { joinPath } from '../vscode-path/resources';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export abstract class Webview implements IWebview {
@@ -32,7 +31,6 @@ export abstract class Webview implements IWebview {
     constructor(
         protected fs: IFileSystem,
         protected disposableRegistry: IDisposableRegistry,
-        private readonly context: IExtensionContext,
         protected options: IWebviewOptions,
         additionalRootPaths: Uri[] = []
     ) {
