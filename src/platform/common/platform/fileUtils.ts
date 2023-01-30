@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { getOSType, OSType } from '../utils/platform';
 import * as path from '../../../platform/vscode-path/path';
 

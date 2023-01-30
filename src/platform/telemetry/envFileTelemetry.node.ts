@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IWorkspaceService } from '../common/application/types';
 import { Resource } from '../common/types';
 import { SystemVariables } from '../common/variables/systemVariables.node';

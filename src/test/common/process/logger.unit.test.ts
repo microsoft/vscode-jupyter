@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { expect } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
 import * as TypeMoq from 'typemoq';

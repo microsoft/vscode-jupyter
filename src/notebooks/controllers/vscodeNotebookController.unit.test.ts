@@ -4,8 +4,6 @@
 /* eslint-disable no-void */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as fakeTimers from '@sinonjs/fake-timers';

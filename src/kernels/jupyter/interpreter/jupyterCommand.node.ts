@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';

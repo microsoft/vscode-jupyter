@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 

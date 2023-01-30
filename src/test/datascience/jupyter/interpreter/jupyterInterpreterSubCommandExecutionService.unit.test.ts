@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { assert, expect, use } from 'chai';
 import chaiPromise from 'chai-as-promised';
 import * as path from '../../../../platform/vscode-path/path';

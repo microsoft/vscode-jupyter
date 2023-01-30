@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { Debugger } from '../../../notebooks/debugger/debugger';
 import { createDeferred } from '../../../platform/common/utils/async';
 

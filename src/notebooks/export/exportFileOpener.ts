@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { Position, TextEditor, Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import './variableExplorerCellFormatter.css';
 
 import * as React from 'react';

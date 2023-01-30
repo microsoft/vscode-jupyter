@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IndentAction, LanguageConfiguration } from 'vscode';
 import { verboseRegExp } from '../common/utils/regexp';
 

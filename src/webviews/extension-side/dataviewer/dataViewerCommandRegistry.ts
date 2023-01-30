@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named, optional } from 'inversify';
 import { DebugConfiguration, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /**
  * Serialize ArrayBuffer and ArrayBufferView into a format such that they are json serializable.
  *

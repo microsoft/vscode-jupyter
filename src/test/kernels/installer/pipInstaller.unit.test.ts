@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 import { assert, expect } from 'chai';
 import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../../platform/common/process/types.node';
 import { IServiceContainer } from '../../../platform/ioc/types';

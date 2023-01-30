@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // File without any dependencies on VS Code.
 
 export async function sleep(milliseconds: number) {

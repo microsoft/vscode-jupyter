@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable , , @typescript-eslint/no-explicit-any */
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';

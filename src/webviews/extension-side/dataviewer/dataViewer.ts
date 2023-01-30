@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import '../../../platform/common/extensions';
 
 import { inject, injectable, named } from 'inversify';

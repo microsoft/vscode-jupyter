@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../platform/common/application/types';

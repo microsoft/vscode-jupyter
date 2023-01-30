@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /*
 This file exists for the sole purpose of ensuring jQuery and slickgrid load in the right sequence.
 We need to first load jquery into window.jQuery.

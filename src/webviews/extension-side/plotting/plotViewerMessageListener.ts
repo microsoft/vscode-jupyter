@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { IWebviewPanelMessageListener, IWebviewPanel } from '../../../platform/common/application/types';
 import '../../../platform/common/extensions';
 

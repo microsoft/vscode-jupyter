@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as path from '../../platform/vscode-path/path';
 import { traceVerbose, traceError } from '../../platform/logging';
 import { cache } from '../../platform/common/utils/decorators';

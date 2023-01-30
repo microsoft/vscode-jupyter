@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 import { assert } from 'chai';
 import * as path from '../../platform/vscode-path/path';
 import * as sinon from 'sinon';

@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2023.1.200",
+    "version": "2023.2.100",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -49,29 +49,9 @@
     "activationEvents": [
         "onLanguage:python",
         "onLanguage:jupyter",
-        "onCommand:jupyter.viewOutput",
-        "onCommand:jupyter.export",
-        "onCommand:jupyter.exportAsPythonScript",
-        "onCommand:jupyter.exportToHTML",
-        "onCommand:jupyter.exportToPDF",
-        "onCommand:jupyter.notebookeditor.export",
-        "onCommand:jupyter.createnewnotebook",
-        "onCommand:jupyter.createnewinteractive",
-        "onCommand:jupyter.importnotebook",
-        "onCommand:jupyter.importnotebookfile",
-        "onCommand:jupyter.selectjupyteruri",
-        "onCommand:jupyter.exportfileasnotebook",
-        "onCommand:jupyter.exportfileandoutputasnotebook",
-        "onCommand:jupyter.selectJupyterInterpreter",
-        "onCommand:jupyter.openVariableView",
-        "onCommand:jupyter.selectNativeJupyterUriFromToolBar",
-        "onCommand:jupyter.clearSavedJupyterUris",
-        "onCommand:jupyter.filterKernels",
-        "onCommand:jupyter.runInDedicatedExtensionHost",
         "onWalkthrough:jupyterWelcome",
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive",
-        "onView:jupyterViewVariables",
         "onWebviewPanel:jupyter-variables",
         "onWebviewPanel:jupyter"
     ],
@@ -1575,6 +1555,12 @@
                     "default": 3,
                     "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%"
                 },
+                "jupyter.jupyterCommandLineArguments": {
+                    "type": "array",
+                    "default": [],
+                    "description": "%jupyter.configuration.jupyter.jupyterCommandLineArguments.description%",
+                    "scope": "resource"
+                },
                 "jupyter.notebookFileRoot": {
                     "type": "string",
                     "default": "${fileDirname}",
@@ -2076,7 +2062,6 @@
         "decompress-response": "^4.2.0",
         "encoding": "^0.1.13",
         "fast-deep-equal": "^2.0.1",
-        "font-awesome": "^4.7.0",
         "format-util": "^1.0.5",
         "fs-extra": "^4.0.3",
         "glob": "^7.1.2",

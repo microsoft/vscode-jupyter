@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as cp from 'child_process';
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';

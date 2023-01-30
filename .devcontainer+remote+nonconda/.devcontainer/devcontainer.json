@@ -21,7 +21,7 @@
         "python.languageServer": "Pylance",
 	},
 
-	"extensions": ["ms-python.vscode-pylance", "ms-python.python", "ms-vscode.vscode-typescript-tslint-plugin"],
+	"extensions": ["ms-python.vscode-pylance", "ms-python.python"],
 	"postCreateCommand": "python --version && python -c \"import sys;print(sys.executable)\" && python ./pythonFiles/install_debugpy.py",
 
 	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust

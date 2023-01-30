@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';

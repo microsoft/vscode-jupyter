@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 export const LineQueryRegex = /line=(\d+)/;
 
 // The following list of commands represent those that can be executed

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // IP = * format is a bit different from localhost format
 export function getIPConnectionInfo(output: string): string | undefined {
     // String format: http://(NAME or IP):PORT/

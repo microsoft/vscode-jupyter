@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import { clearCache, InMemoryCache } from '../../../platform/common/utils/cacheUtils';

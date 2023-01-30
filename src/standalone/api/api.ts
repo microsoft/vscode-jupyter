@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ExtensionMode, NotebookController, NotebookDocument } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';

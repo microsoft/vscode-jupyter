@@ -161,9 +161,42 @@ function fixUIFabricForTS49() {
     });
 }
 
+/**
+ * Ensures that moment is not used by any other npm package other than @jupyterlab/coreutils.
+ * See comments here build/webpack/moment.js
+ */
+function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
+    const packageLock = require(path.join(__dirname, '..', '..', 'package-lock.json'));
+    const packagesAllowedToUseMoment = ['node_modules/@jupyterlab/coreutils', '@jupyterlab/coreutils'];
+    const otherPackagesUsingMoment = [];
+    ['packages', 'dependencies'].forEach((key) => {
+        if (!(key in packageLock)) {
+            throw new Error(`Invalid package-lock.json, as it does not contain the key '${key}'`);
+        }
+        const packages = packageLock[key];
+        Object.keys(packages).forEach((packageName) => {
+            if (packagesAllowedToUseMoment.includes(packageName)) {
+                return;
+            }
+            ['dependencies', 'requires'].forEach((dependencyKey) => {
+                if (dependencyKey in packages[packageName]) {
+                    const dependenciesOfPackage = packages[packageName][dependencyKey];
+                    if ('moment' in dependenciesOfPackage) {
+                        otherPackagesUsingMoment.push(`${key}.${dependencyKey}.${packageName}`);
+                    }
+                }
+            });
+        });
+    });
+    if (otherPackagesUsingMoment.length > 0) {
+        throw new Error(`Moment is being used by another package (${otherPackagesUsingMoment.join(', ')}).`);
+    }
+}
+
 fixUIFabricForTS49();
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
 fixStripComments();
+verifyMomentIsOnlyUsedByJupyterLabCoreUtils();

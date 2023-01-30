@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import { PostOffice } from '../../react-common/postOffice';

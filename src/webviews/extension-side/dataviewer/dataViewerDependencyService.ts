@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { IKernel } from '../../../kernels/types';
 import { IApplicationShell } from '../../../platform/common/application/types';

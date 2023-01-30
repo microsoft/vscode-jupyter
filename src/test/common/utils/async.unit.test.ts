@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import assert from 'assert';
 import { chain, createDeferred, flattenIterator } from '../../../platform/common/utils/async';
 

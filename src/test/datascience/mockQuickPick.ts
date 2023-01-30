@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { Event, EventEmitter, QuickInputButton, QuickPick, QuickPickItem, QuickPickItemButtonEvent } from 'vscode';
 
 export class MockQuickPick implements QuickPick<QuickPickItem> {

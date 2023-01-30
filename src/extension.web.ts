@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // reflect-metadata is needed by inversify, this must come before any inversify references
 import './platform/ioc/reflectMetadata';
 

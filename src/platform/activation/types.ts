@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IDisposable } from '../common/types';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');

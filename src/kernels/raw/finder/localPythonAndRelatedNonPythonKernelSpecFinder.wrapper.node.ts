@@ -4,8 +4,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { IDisposable, IDisposableRegistry, IFeaturesManager, KernelPickerType } from '../../../platform/common/types';

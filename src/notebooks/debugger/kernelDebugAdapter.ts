@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceError } from '../../platform/logging';
 import * as path from '../../platform/vscode-path/path';

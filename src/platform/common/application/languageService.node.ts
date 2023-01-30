@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { injectable } from 'inversify';
 import { CompletionItemProvider, DocumentSelector, languages } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-explicit-any, jsdoc/check-alignment, jsdoc/check-indentation, jsdoc/newline-after-description, no-restricted-syntax, prefer-const */
 
 const _typeof = {
