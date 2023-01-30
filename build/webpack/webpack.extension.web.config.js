@@ -114,10 +114,6 @@ const config = {
             )
         }),
         new CleanTerminalPlugin(),
-        new webpack.IgnorePlugin({
-            resourceRegExp: /^\.\/locale$/,
-            contextRegExp: /moment$/
-        }),
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 1
         })
@@ -130,7 +126,8 @@ const config = {
         ],
         alias: {
             // provides alternate implementation for node module and source files
-            fs: './fs-empty.js'
+            fs: './fs-empty.js',
+            moment: path.join(__dirname, 'moment.js')
         },
         fallback: {
             os: require.resolve('os-browserify')
