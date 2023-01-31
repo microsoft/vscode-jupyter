@@ -99,8 +99,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get submitters(): Uri[] {
         return this._submitters;
     }
+    // todo: undefined if not initialized
     public get notebookDocument(): NotebookDocument {
-        return this.notebookDocument;
+        return workspace.notebookDocuments.find((nb) => nb.uri.toString() === this.notebookUri.toString())!;
     }
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
@@ -121,7 +122,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
-    private _notebookEditor: NotebookEditor;
 
     public readonly notebookUri: Uri;
 
@@ -170,10 +170,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             ? notebookEditorOrTab.input.uri
             : notebookEditorOrTab.notebook.uri;
 
-        if (!isInteractiveInputTab(notebookEditorOrTab)) {
-            this._notebookEditor = notebookEditorOrTab;
-        }
-
         if (preferredController) {
             this.currentKernelInfo = {
                 controller: preferredController.controller,
@@ -210,8 +206,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async ensureInitialized() {
-        if (!this._notebookEditor) {
-            this._notebookEditor = await this.showInteractiveEditor();
+        if (!this.initialized) {
+            await this.showInteractiveEditor();
 
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
