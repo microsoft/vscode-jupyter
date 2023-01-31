@@ -57,7 +57,7 @@ import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import {
-    IInteractiveWindowLoadable,
+    IInteractiveWindow,
     IInteractiveWindowDebugger,
     IInteractiveWindowDebuggingManager,
     InteractiveTab
@@ -86,7 +86,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
  * ViewModel for an interactive window from the Jupyter extension's point of view.
  * Methods for talking to an Interactive Window are exposed here, but the actual UI is part of VS code core.
  */
-export class InteractiveWindow implements IInteractiveWindowLoadable {
+export class InteractiveWindow implements IInteractiveWindow {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }

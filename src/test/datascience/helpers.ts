@@ -112,7 +112,7 @@ export async function insertIntoInputEditor(source: string, interactiveWindow?: 
         if (!inputBox) {
             traceError(
                 `couldn't find input box ${interactiveWindow.inputUri.path} in visible text editors ${JSON.stringify(
-                    vscode.window.visibleTextEditors
+                    vscode.window.visibleTextEditors.map((e) => e.document.uri.path)
                 )}`
             );
         }

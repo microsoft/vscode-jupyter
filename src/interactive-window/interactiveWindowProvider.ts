@@ -213,6 +213,9 @@ export class InteractiveWindowProvider
                     NotebookControllerAffinity.Preferred
                 );
             }
+            traceVerbose(
+                `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
+            );
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 resource,
