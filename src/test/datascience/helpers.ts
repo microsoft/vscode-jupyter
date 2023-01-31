@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -109,8 +109,16 @@ export async function insertIntoInputEditor(source: string, interactiveWindow?: 
         inputBox = vscode.window.visibleTextEditors.find(
             (e) => e.document.uri.path === interactiveWindow.inputUri.path
         );
+        if (!inputBox) {
+            traceError(
+                `couldn't find input box ${interactiveWindow.inputUri.path} in visible text editors ${JSON.stringify(
+                    vscode.window.visibleTextEditors
+                )}`
+            );
+        }
     }
     if (!inputBox) {
+        await vscode.commands.executeCommand('interactive.input.focus');
         inputBox = vscode.window.activeTextEditor;
     }
 
