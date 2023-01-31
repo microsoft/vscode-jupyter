@@ -25,7 +25,7 @@ import {
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
-import { traceError, traceInfoIfCI, traceWarning } from '../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
 
@@ -495,11 +495,18 @@ export class InteractiveWindow implements IInteractiveWindow {
             });
         });
 
-        const document = await workspace.openNotebookDocument(this.notebookUri);
-        return await window.showNotebookDocument(document, {
+        const notebook = this.notebookDocument || this.openNotebookDocument();
+        const editor = await window.showNotebookDocument(notebook, {
             preserveFocus: true,
             viewColumn: currentTab?.group.viewColumn
         });
+
+        return editor;
+    }
+
+    private async openNotebookDocument(): Promise<NotebookDocument> {
+        traceVerbose(`Opening notebook document ${this.notebookUri}`);
+        return await workspace.openNotebookDocument(this.notebookUri);
     }
 
     public dispose() {
