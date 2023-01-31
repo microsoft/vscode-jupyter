@@ -961,7 +961,7 @@ export async function waitForOutputs(
         async () => cell.outputs.length === expectedNumberOfOutputs,
         timeout,
         () =>
-            `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
+            `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
                 cell
             )}`
     );
@@ -976,7 +976,7 @@ export async function waitForExecutionCompletedSuccessfully(
             async () => assertHasExecutionCompletedSuccessfully(cell),
             timeout,
             () =>
-                `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellState(
+                `Cell ${cell.index + 1} did not complete successfully, State = ${NotebookCellStateTracker.getCellStatus(
                     cell
                 )}`
         ),
@@ -1043,7 +1043,7 @@ export async function waitForQueuedForExecution(cell: NotebookCell, timeout: num
         },
         timeout,
         () =>
-            `Cell ${cell.index + 1} not queued for execution, current state is ${NotebookCellStateTracker.getCellState(
+            `Cell ${cell.index + 1} not queued for execution, current state is ${NotebookCellStateTracker.getCellStatus(
                 cell
             )}`
     );
@@ -1063,7 +1063,7 @@ export async function waitForQueuedForExecutionOrExecuting(
         () =>
             `Cell ${
                 cell.index + 1
-            } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellState(
+            } not queued for execution nor already executing, current state is ${NotebookCellStateTracker.getCellStatus(
                 cell
             )}`
     );
@@ -1078,7 +1078,7 @@ export async function waitForExecutionCompletedWithoutChangesToExecutionCount(
             (NotebookCellStateTracker.getCellState(cell) ?? NotebookCellExecutionState.Idle) ===
                 NotebookCellExecutionState.Idle,
         timeout,
-        () => `Cell ${cell.index + 1} did not complete, State = ${NotebookCellStateTracker.getCellState(cell)}`
+        () => `Cell ${cell.index + 1} did not complete, State = ${NotebookCellStateTracker.getCellStatus(cell)}`
     );
 }
 export async function waitForExecutionCompletedWithErrors(
@@ -1089,7 +1089,8 @@ export async function waitForExecutionCompletedWithErrors(
     await waitForCondition(
         async () => assertHasExecutionCompletedWithErrors(cell, executionOderShouldChange),
         timeout,
-        () => `Cell ${cell.index + 1} did not fail as expected, State =  ${NotebookCellStateTracker.getCellState(cell)}`
+        () =>
+            `Cell ${cell.index + 1} did not fail as expected, State =  ${NotebookCellStateTracker.getCellStatus(cell)}`
     );
     if (executionOderShouldChange) {
         await waitForCellExecutionToComplete(cell);
