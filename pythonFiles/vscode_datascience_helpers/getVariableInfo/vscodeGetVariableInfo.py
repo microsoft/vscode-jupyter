@@ -1,5 +1,4 @@
 def _VSCODE_getVariable(what_to_get, is_debugging, *args):
-
     # Query Jupyter server for the info about a dataframe
     import json as _VSCODE_json
     import builtins as _VSCODE_builtins
