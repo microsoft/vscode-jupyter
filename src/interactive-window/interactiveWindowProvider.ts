@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../platform/common/application/types';
-import { traceInfo, traceVerbose } from '../platform/logging';
+import { traceInfo, traceInfoIfCI, traceVerbose } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 
 import {
@@ -76,7 +76,10 @@ export class InteractiveWindowProvider
     // returns the active Editor if it is an Interactive Window that we are tracking
     public get activeWindow(): IInteractiveWindow | undefined {
         const notebookUri = window.activeNotebookEditor?.notebook.uri.toString();
-        return notebookUri ? this._windows.find((win) => win.notebookUri?.toString() === notebookUri) : undefined;
+        const iw = notebookUri ? this._windows.find((win) => win.notebookUri?.toString() === notebookUri) : undefined;
+        //this will be noisy, don't check in
+        traceInfoIfCI(`active notebook editor: ${notebookUri?.toString()} iw notebook: ${iw?.notebookUri.toString()}`);
+        return iw;
     }
 
     public get windows(): ReadonlyArray<IInteractiveWindow> {
