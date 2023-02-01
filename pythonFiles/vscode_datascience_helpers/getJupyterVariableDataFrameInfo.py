@@ -14,6 +14,7 @@ _VSCode_supportsDataExplorer = (
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
 _VSCODE_targetVariable = _VSCODE_json.loads("""_VSCode_JupyterTestValue""")
 
+
 # Function to compute row count for a value
 def _VSCODE_getRowCount(var):
     if hasattr(var, "shape"):
