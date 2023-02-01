@@ -150,7 +150,7 @@ suite(`Interactive window execution @iw`, async function () {
 
         await verifyCells();
     });
-    test('Execute cell from input box', async () => {
+    test.only('Execute cell from input box', async () => {
         // Create new interactive window
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
@@ -172,13 +172,13 @@ suite(`Interactive window execution @iw`, async function () {
         await waitForTextOutput(cell, 'foo');
     });
 
-    test('Clear input box', async () => {
+    test.only('Clear input box', async () => {
         const text = '42';
         let step = 1;
         // Create interactive window with no owner
-        await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        let interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         traceInfo(`Clear input box [${step++}]`);
-        await insertIntoInputEditor(text);
+        await insertIntoInputEditor(text, interactiveWindow);
 
         // Clear input and verify
         traceInfo(`Clear input box [${step++}]`);

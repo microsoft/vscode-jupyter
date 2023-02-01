@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -242,11 +242,19 @@ export async function waitForInteractiveWindow(
             notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === interactiveWindow?.notebookUri?.toString()
             );
-            return notebookDocument !== undefined;
+            let inputBox = vscode.window.visibleTextEditors.find(
+                (e) => e.document.uri.path === interactiveWindow?.inputUri?.path
+            );
+            traceVerbose(
+                `Waiting for Interactive Window '${interactiveWindow.notebookUri?.toString()}',`,
+                `found notebook '${notebookDocument?.uri.toString()}' and input '${inputBox?.document.uri.toString()}'`
+            );
+            return !!notebookDocument && !!inputBox;
         },
         defaultNotebookTestTimeout,
         'Interactive window notebook document not found'
     );
+
     return notebookDocument!;
 }
 
