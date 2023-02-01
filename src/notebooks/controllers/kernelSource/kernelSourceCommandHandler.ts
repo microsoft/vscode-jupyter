@@ -215,8 +215,12 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             return;
         }
         const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
-        const kernel = await selector.selectLocalKernel(notebook, kind);
-        return kernel ? this.getSelectedController(notebook, kernel)?.id : undefined;
+        try {
+            const kernel = await selector.selectLocalKernel(notebook, kind);
+            return kernel ? this.getSelectedController(notebook, kernel)?.id : undefined;
+        } catch (ex) {
+            throw ex;
+        }
     }
     private async onSelectRemoteKernel(providerId: string, notebook?: NotebookDocument) {
         notebook = notebook || window.activeNotebookEditor?.notebook;
