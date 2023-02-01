@@ -270,8 +270,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 // At this point wait for the specs to change
                 const disposables: IDisposable[] = [];
                 const promise = createDeferred();
-                specsManager.specsChanged.connect(promise.resolve);
-                disposables.push(new Disposable(() => specsManager.specsChanged.disconnect(promise.resolve)));
+                const resolve = promise.resolve.bind(promise);
+                specsManager.specsChanged.connect(resolve);
+                disposables.push(new Disposable(() => specsManager.specsChanged.disconnect(resolve)));
                 const allPromises = Promise.all([
                     promise.promise,
                     specsManager.ready,
