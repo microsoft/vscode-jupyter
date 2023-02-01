@@ -9,6 +9,7 @@ import requests
 authtoken = sys.argv[1]
 print("Using authtoken with prefix: " + authtoken[:4])
 
+
 # %%
 def getRuns(createdDate):
     runsResponse = requests.get(
