@@ -206,7 +206,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public async ensureInitialized() {
-        if (!this.initialized) {
+        if (this.notebookDocument && !this.codeGeneratorFactory.get(this.notebookDocument)) {
             await this.showInteractiveEditor();
 
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
