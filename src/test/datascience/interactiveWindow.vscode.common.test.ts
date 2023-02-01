@@ -150,7 +150,7 @@ suite(`Interactive window execution @iw`, async function () {
 
         await verifyCells();
     });
-    test.only('Execute cell from input box', async () => {
+    test('Execute cell from input box', async () => {
         // Create new interactive window
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
@@ -172,24 +172,19 @@ suite(`Interactive window execution @iw`, async function () {
         await waitForTextOutput(cell, 'foo');
     });
 
-    test.only('Clear input box', async () => {
+    test('Clear input box', async () => {
         const text = '42';
-        let step = 1;
         // Create interactive window with no owner
         let interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-        traceInfo(`Clear input box [${step++}]`);
         await insertIntoInputEditor(text, interactiveWindow);
 
         // Clear input and verify
-        traceInfo(`Clear input box [${step++}]`);
         assert.ok(vscode.window.activeTextEditor?.document.getText() === text, 'Text not inserted into input editor');
         await vscode.commands.executeCommand('interactive.input.clear');
         assert.ok(vscode.window.activeTextEditor?.document.getText() === '', 'Text not cleared from input editor');
-        traceInfo(`Clear input box [${step++}]`);
         // Undo
         await vscode.commands.executeCommand('undo');
 
-        traceInfo(`Clear input box [${step++}]`);
         // Verify input box contents were restored
         assert.ok(
             vscode.window.activeTextEditor?.document.getText() === text,
