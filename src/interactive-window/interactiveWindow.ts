@@ -207,8 +207,8 @@ export class InteractiveWindow implements IInteractiveWindow {
 
     public async ensureInitialized() {
         if (!this.notebookDocument || !this.codeGeneratorFactory.get(this.notebookDocument)) {
+            traceVerbose(`Showing Interactive editor to initialize codeGenerator from notebook document`);
             await this.showInteractiveEditor();
-
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
 

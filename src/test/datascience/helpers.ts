@@ -211,7 +211,7 @@ export async function runNewPythonFile(
 }
 
 export async function runCurrentFile(interactiveWindowProvider: IInteractiveWindowProvider, file: vscode.TextDocument) {
-    await vscode.window.showTextDocument(file);
+    await vscode.window.showTextDocument(file, vscode.ViewColumn.One);
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(file.uri)) as InteractiveWindow;
     await waitForInteractiveWindow(activeInteractiveWindow);
     await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows, file.uri);
