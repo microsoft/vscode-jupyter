@@ -94,7 +94,7 @@ suite('Custom Environment Variables Provider', () => {
             disposables,
             instance(workspace),
             pythonExtChecker,
-            instance(pythonApiProvider),
+            // instance(pythonApiProvider),
             cacheDuration
         );
     }
