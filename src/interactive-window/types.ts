@@ -25,10 +25,6 @@ export interface IInteractiveWindowProvider {
      */
     readonly activeWindow: IInteractiveWindow | undefined;
     /**
-     * List of open interactive windows
-     */
-    readonly windows: ReadonlyArray<IInteractiveWindow>;
-    /**
      * Event fired when the active interactive window changes
      */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
@@ -51,6 +47,14 @@ export interface IInteractiveWindowProvider {
      * The active interactive window if it has the focus, or the interactive window associated with current active text editor
      */
     getActiveOrAssociatedInteractiveWindow(): IInteractiveWindow | undefined;
+    /**
+     * Find an interactive window that contains the given notebook
+     */
+    getInteractiveWindowWithNotebook(notebookUri: Uri | undefined): IInteractiveWindow | undefined;
+    /**
+     * Find all interactive windows to which the file has submitted code
+     */
+    getInteractiveWindowsWithSubmitter(file: Uri): IInteractiveWindow[];
 }
 
 export interface IInteractiveBase extends Disposable {

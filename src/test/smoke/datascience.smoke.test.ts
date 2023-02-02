@@ -7,7 +7,6 @@ import * as os from 'os';
 import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
-import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IExtensionTestApi, PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
@@ -128,8 +127,7 @@ suite('Smoke Tests', function () {
 
         // Make an interactive window
         await vscode.commands.executeCommand<void>('jupyter.createnewinteractive');
-        const provider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        assert.ok(provider.windows.length === 1, 'Unexpected number of interactive windows created');
+        assert.ok(vscode.workspace.notebookDocuments.length === 1, 'Unexpected number of notebook documents created');
         // const currentWindow = provider.windows[0];
         // const interpreterForCurrentWindow = currentWindow.notebook?.getMatchingInterpreter();
         // assert.ok(interpreterForCurrentWindow !== undefined, 'Unable to get matching interpreter for current window');

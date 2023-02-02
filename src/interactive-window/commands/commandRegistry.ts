@@ -420,7 +420,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession && this.interactiveWindowProvider) {
             // Attempt to get the interactive window for this file
-            const iw = this.interactiveWindowProvider.windows.find((w) => w.owner?.toString() == uri.toString());
+            const iw = this.interactiveWindowProvider.get(uri);
             if (iw && iw.notebookDocument) {
                 const kernel = this.kernelProvider.get(iw.notebookDocument);
                 if (kernel) {
@@ -709,7 +709,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private async expandAllCells(uri?: Uri) {
-        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         traceInfo(`Expanding all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
             await interactiveWindow.expandAllCells();
@@ -717,7 +717,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private async collapseAllCells(uri?: Uri) {
-        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         traceInfo(`Collapsing all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
             await interactiveWindow.collapseAllCells();
@@ -732,14 +732,14 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private exportAs(uri?: Uri) {
-        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         if (interactiveWindow) {
             interactiveWindow.exportAs();
         }
     }
 
     private export(uri?: Uri) {
-        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         if (interactiveWindow) {
             interactiveWindow.export();
         }
@@ -800,9 +800,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     private async scrollToCell(file: Uri, id: string): Promise<void> {
         if (id && file) {
             // Find the interactive windows that have this file as a submitter
-            const possibles = this.interactiveWindowProvider.windows.filter(
-                (w) => w.submitters.findIndex((s) => this.fileSystem.arePathsSame(s, file)) >= 0
-            );
+            const possibles = this.interactiveWindowProvider.getInteractiveWindowsWithSubmitter(file);
 
             // Scroll to cell in the one that has the cell. We need this so
             // we don't activate all of them.
@@ -817,7 +815,10 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
-        const uri = this.getTargetInteractiveWindow(context?.notebookEditor?.notebookUri)?.notebookUri;
+        const uri = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(
+            context?.notebookEditor?.notebookUri
+        )?.notebookUri;
+
         if (!uri) {
             return;
         }
@@ -860,17 +861,5 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             ].join('\n');
             await this.clipboard.writeText(source);
         }
-    }
-
-    private getTargetInteractiveWindow(notebookUri: Uri | undefined) {
-        let targetInteractiveWindow;
-        if (notebookUri !== undefined) {
-            targetInteractiveWindow = this.interactiveWindowProvider.windows.find(
-                (w) => w.notebookUri?.toString() === notebookUri.toString()
-            );
-        } else {
-            targetInteractiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
-        }
-        return targetInteractiveWindow;
     }
 }

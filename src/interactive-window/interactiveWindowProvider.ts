@@ -79,9 +79,6 @@ export class InteractiveWindowProvider
         return notebookUri ? this._windows.find((win) => win.notebookUri?.toString() === notebookUri) : undefined;
     }
 
-    public get windows(): ReadonlyArray<IInteractiveWindow> {
-        return this._windows;
-    }
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
@@ -407,8 +404,22 @@ export class InteractiveWindowProvider
     }
 
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined {
-        const interactiveWindow = this.windows.find((w) => w.inputUri?.toString() === uri.toString());
+        const interactiveWindow = this._windows.find((w) => w.inputUri?.toString() === uri.toString());
         let notebook = interactiveWindow?.notebookDocument;
         return notebook;
+    }
+
+    getInteractiveWindowWithNotebook(notebookUri: Uri | undefined) {
+        let targetInteractiveWindow;
+        if (notebookUri !== undefined) {
+            targetInteractiveWindow = this._windows.find((w) => w.notebookUri?.toString() === notebookUri.toString());
+        } else {
+            targetInteractiveWindow = this.getActiveOrAssociatedInteractiveWindow();
+        }
+        return targetInteractiveWindow;
+    }
+
+    getInteractiveWindowsWithSubmitter(file: Uri): IInteractiveWindow[] {
+        return this._windows.filter((w) => w.submitters.find((s) => this.fs.arePathsSame(file, s)));
     }
 }
