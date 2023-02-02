@@ -78,7 +78,7 @@ suite('Kernel Environment Variables Service', () => {
     });
     teardown(() => Object.assign(process.env, originalEnvVars));
 
-    test('Interpreter path trumps process', async () => {
+    test('Python Interpreter path trumps process', async () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
@@ -87,7 +87,7 @@ suite('Kernel Environment Variables Service', () => {
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
         assert.isOk(processPath);
-        assert.strictEqual(vars![processPath!], `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}foobar`);
+        assert.strictEqual(vars![processPath!], `foobar`);
     });
     test('Interpreter env variable trumps process', async () => {
         process.env['HELLO_VAR'] = 'process';
@@ -106,7 +106,7 @@ suite('Kernel Environment Variables Service', () => {
         );
     });
 
-    test('Custom env variable trumps process and interpreter envs', async () => {
+    test('Custom env variable will not be merged manually, rely on Python extension to return them trumps process and interpreter envs', async () => {
         process.env['HELLO_VAR'] = 'process';
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             HELLO_VAR: 'interpreter'
@@ -117,12 +117,9 @@ suite('Kernel Environment Variables Service', () => {
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
-        assert.strictEqual(vars['HELLO_VAR'], 'new');
+        assert.strictEqual(vars['HELLO_VAR'], 'interpreter');
         // Compare ignoring the PATH variable.
-        assert.deepEqual(
-            Object.assign(vars, { PATH: '', Path: '' }),
-            Object.assign({}, processEnv, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
-        );
+        assert.deepEqual(vars, Object.assign({}, processEnv, { HELLO_VAR: 'interpreter' }));
     });
 
     test('Custom env variable trumps process (non-python)', async () => {
@@ -169,7 +166,7 @@ suite('Kernel Environment Variables Service', () => {
         );
     });
 
-    test('Paths are merged', async () => {
+    test('Paths are left unaltered if Python returns the Interpreter Info', async () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
@@ -179,10 +176,7 @@ suite('Kernel Environment Variables Service', () => {
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
         assert.isOk(processPath);
-        assert.strictEqual(
-            vars![processPath!],
-            `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}foobar${path.delimiter}foobaz`
-        );
+        assert.strictEqual(vars![processPath!], `foobar`);
     });
 
     test('Upper case is used on windows', async function () {
@@ -220,12 +214,7 @@ suite('Kernel Environment Variables Service', () => {
         // undefined for interpreter here, interpreterPath from the spec should be used
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
         assert.isOk(processPath);
-        assert.strictEqual(
-            vars![processPath!],
-            `${path.dirname(Uri.joinPath(Uri.file('env'), 'foopath').fsPath)}${path.delimiter}pathInInterpreterEnv${
-                path.delimiter
-            }foobaz`
-        );
+        assert.strictEqual(vars![processPath!], `pathInInterpreterEnv`);
     });
 
     async function testPYTHONNOUSERSITE(envType: EnvironmentType, shouldBeSet: boolean) {

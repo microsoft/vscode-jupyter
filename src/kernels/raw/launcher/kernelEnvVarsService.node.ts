@@ -98,7 +98,7 @@ export class KernelEnvironmentVariablesService {
 
         if (isPythonKernel || interpreter) {
             // Merge the env variables with that of the kernel env.
-            interpreterEnv = interpreterEnv || {};
+            interpreterEnv = interpreterEnv || customEnvVars;
 
             if (this.configService.getSettings(resource).useOldKernelResolve) {
                 this.envVarsService.mergeVariables(interpreterEnv, mergedVars); // interpreter vars win over proc.
@@ -140,6 +140,15 @@ export class KernelEnvironmentVariablesService {
                 }
             } else {
                 Object.assign(mergedVars, interpreterEnv, kernelEnv); // kernels vars win over interpreter.
+                if (interpreter && Object.keys(interpreterEnv).length === 0) {
+                    // Possible Python extension fails to get the activated Python env variables,
+                    // Regardless, we need to ensure the Python executable is always at the beginning of the path.
+
+                    // This way all executables from that env are used.
+                    // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+                    // Also applies to `!java` where java could be an executable in the conda bin directory.
+                    this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.uri.fsPath));
+                }
             }
 
             // If user asks us to, set PYTHONNOUSERSITE

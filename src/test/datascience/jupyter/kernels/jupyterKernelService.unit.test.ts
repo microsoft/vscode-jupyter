@@ -492,11 +492,7 @@ suite('JupyterKernelService', () => {
         assert.strictEqual(kernelJson.env['foo'], 'bar');
         // Preserve kernelspec env variables.
         assert.strictEqual(kernelJson.env['SOME_ENV_VARIABLE'], 'Hello World');
-        // Python path must be the first in PATH env variable.
-        assert.strictEqual(
-            kernelJson.env[pathVariable],
-            `${path.dirname(spec.interpreter!.uri.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
-        );
+        assert.strictEqual(kernelJson.env[pathVariable], `Path1${path.delimiter}Path2`);
     });
     test('Kernel environment preserves env variables from original non-python kernelspec', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '13')!;
@@ -515,11 +511,7 @@ suite('JupyterKernelService', () => {
         assert.strictEqual(kernelJson.env['foo'], 'bar');
         // Preserve kernelspec env variables.
         assert.strictEqual(kernelJson.env['SOME_ENV_VARIABLE'], 'Hello World');
-        // Python path must be the first in PATH env variable.
-        assert.strictEqual(
-            kernelJson.env[pathVariable],
-            `${path.dirname(spec.interpreter!.uri.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
-        );
+        assert.strictEqual(kernelJson.env[pathVariable], `Path1${path.delimiter}Path2`);
     });
     test('Verify registration of the kernelspec', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
@@ -543,10 +535,7 @@ suite('JupyterKernelService', () => {
         // Preserve kernelspec env variables.
         assert.strictEqual(kernelJson.env['SOME_ENV_VARIABLE'], 'Hello World');
         // Python path must be the first in PATH env variable.
-        assert.strictEqual(
-            kernelJson.env[pathVariable],
-            `${path.dirname(spec.interpreter!.uri.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
-        );
+        assert.strictEqual(kernelJson.env[pathVariable], `Path1${path.delimiter}Path2`);
         // capture(fs.localFileExists)
     });
     test('Verify registration of the kernelspec and value PYTHONNOUSERSITE should be true', async () => {
@@ -572,10 +561,7 @@ suite('JupyterKernelService', () => {
         // Preserve kernelspec env variables.
         assert.strictEqual(kernelJson.env['SOME_ENV_VARIABLE'], 'Hello World');
         // Python path must be the first in PATH env variable.
-        assert.strictEqual(
-            kernelJson.env[pathVariable],
-            `${path.dirname(spec.interpreter!.uri.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
-        );
+        assert.strictEqual(kernelJson.env[pathVariable], `Path1${path.delimiter}Path2`);
         // capture(fs.localFileExists)
     });
     test('Kernel environment should be updated even when there is no interpreter', async () => {
