@@ -110,33 +110,20 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             | 'failedToGetActivatedEnvVariablesFromPython'
             | 'failedToGetCustomEnvVariables' = 'emptyVariables';
         let failureEx: Error | undefined;
-        let [env, customEnvVars] = await Promise.all([
-            this.apiProvider.getApi().then((api) =>
-                api
-                    .getActivatedEnvironmentVariables(resource, serializePythonEnvironment(interpreter)!, false)
-                    .catch((ex) => {
-                        traceError(
-                            `Failed to get activated env variables from Python Extension for ${getDisplayPath(
-                                interpreter.uri
-                            )}`,
-                            ex
-                        );
-                        reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
-                        return undefined;
-                    })
-            ),
-            this.envVarsService.getCustomEnvironmentVariables(resource, 'RunPythonCode').catch((ex) => {
-                traceError(
-                    `Failed to get activated env variables from Python Extension for ${getDisplayPath(
-                        interpreter.uri
-                    )}`,
-                    ex
-                );
-                reasonForFailure = 'failedToGetCustomEnvVariables';
-                failureEx = ex;
-                return undefined;
-            })
-        ]);
+        const env = await this.apiProvider.getApi().then((api) =>
+            api
+                .getActivatedEnvironmentVariables(resource, serializePythonEnvironment(interpreter)!, false)
+                .catch((ex) => {
+                    traceError(
+                        `Failed to get activated env variables from Python Extension for ${getDisplayPath(
+                            interpreter.uri
+                        )}`,
+                        ex
+                    );
+                    reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
+                    return undefined;
+                })
+        );
 
         const envType = interpreter.envType;
         sendTelemetryEvent(
@@ -162,7 +149,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceVerbose(
                 `Got env vars with python ${getDisplayPath(interpreter?.uri)}, with env var count ${
                     Object.keys(env || {}).length
-                } and custom env var count ${Object.keys(customEnvVars || {}).length} in ${stopWatch.elapsedTime}ms`
+                } in ${stopWatch.elapsedTime}ms`
             );
         } else {
             traceVerbose(
@@ -170,12 +157,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             );
         }
 
-        if (env && customEnvVars) {
-            env = {
-                ...env,
-                ...customEnvVars
-            };
-        }
         return env;
     }
 }
