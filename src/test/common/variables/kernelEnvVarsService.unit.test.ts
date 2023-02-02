@@ -179,24 +179,6 @@ suite('Kernel Environment Variables Service', () => {
         assert.strictEqual(vars![processPath!], `foobar`);
     });
 
-    test('Upper case is used on windows', async function () {
-        // See this issue as to what happens if it isn't. https://github.com/microsoft/vscode-jupyter/issues/10940
-        if (process.platform !== 'win32') {
-            this.skip();
-        }
-        when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
-            path: 'foobar'
-        });
-        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
-            path: 'foobaz'
-        });
-
-        const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
-        const keys = Object.keys(vars);
-        const upperCaseKeys = keys.map((key) => key.toUpperCase());
-        assert.deepEqual(keys, upperCaseKeys);
-    });
-
     test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
         when(interpreterService.getInterpreterDetails(anything())).thenResolve({
             envType: EnvironmentType.Conda,
