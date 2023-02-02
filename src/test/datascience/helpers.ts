@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -109,8 +109,16 @@ export async function insertIntoInputEditor(source: string, interactiveWindow?: 
         inputBox = vscode.window.visibleTextEditors.find(
             (e) => e.document.uri.path === interactiveWindow.inputUri.path
         );
+        if (!inputBox) {
+            traceError(
+                `couldn't find input box ${interactiveWindow.inputUri.path} in visible text editors ${JSON.stringify(
+                    vscode.window.visibleTextEditors.map((e) => e.document.uri.path)
+                )}`
+            );
+        }
     }
     if (!inputBox) {
+        await vscode.commands.executeCommand('interactive.input.focus');
         inputBox = vscode.window.activeTextEditor;
     }
 
@@ -203,7 +211,7 @@ export async function runNewPythonFile(
 }
 
 export async function runCurrentFile(interactiveWindowProvider: IInteractiveWindowProvider, file: vscode.TextDocument) {
-    await vscode.window.showTextDocument(file);
+    await vscode.window.showTextDocument(file, vscode.ViewColumn.One);
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(file.uri)) as InteractiveWindow;
     await waitForInteractiveWindow(activeInteractiveWindow);
     await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows, file.uri);
@@ -234,11 +242,19 @@ export async function waitForInteractiveWindow(
             notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === interactiveWindow?.notebookUri?.toString()
             );
-            return notebookDocument !== undefined;
+            let inputBox = vscode.window.visibleTextEditors.find(
+                (e) => e.document.uri.path === interactiveWindow?.inputUri?.path
+            );
+            traceVerbose(
+                `Waiting for Interactive Window '${interactiveWindow.notebookUri?.toString()}',`,
+                `found notebook '${notebookDocument?.uri.toString()}' and input '${inputBox?.document.uri.toString()}'`
+            );
+            return !!notebookDocument && !!inputBox;
         },
         defaultNotebookTestTimeout,
         'Interactive window notebook document not found'
     );
+
     return notebookDocument!;
 }
 

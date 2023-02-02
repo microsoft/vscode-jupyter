@@ -59,7 +59,6 @@ export interface IInteractiveBase extends Disposable {
 
 export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
-    readonly notebookEditor: NotebookEditor | undefined;
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly notebookUri?: Uri;
@@ -75,6 +74,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     scrollToCell(id: string): void;
     exportAs(cells?: ICell[]): void;
     export(cells?: ICell[]): void;
+    changeMode(newMode: InteractiveWindowMode): void;
 }
 
 export interface IInteractiveWindowCache {
@@ -91,10 +91,6 @@ export interface TabInputInteractiveWindow {
 
 export interface InteractiveTab extends Tab {
     readonly input: TabInputInteractiveWindow;
-}
-
-export interface IInteractiveWindowLoadable extends IInteractiveWindow {
-    changeMode(newMode: InteractiveWindowMode): void;
 }
 
 export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');

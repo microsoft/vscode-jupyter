@@ -88,7 +88,6 @@ suite('Kernel Dependency Service', () => {
                     when(notebooks.activeNotebookEditor).thenReturn(instance(editor));
                     when(notebooks.notebookDocuments).thenReturn([instance(document)]);
                 } else {
-                    when(activeInteractiveWindow.notebookEditor).thenReturn(instance(editor));
                     when(interactiveWindowProvider.activeWindow).thenReturn(instance(activeInteractiveWindow));
                     when(serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider)).thenReturn(
                         instance(interactiveWindowProvider)

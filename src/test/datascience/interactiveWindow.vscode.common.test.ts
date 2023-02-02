@@ -175,14 +175,13 @@ suite(`Interactive window execution @iw`, async function () {
     test('Clear input box', async () => {
         const text = '42';
         // Create interactive window with no owner
-        await createStandaloneInteractiveWindow(interactiveWindowProvider);
-        await insertIntoInputEditor(text);
+        let interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        await insertIntoInputEditor(text, interactiveWindow);
 
         // Clear input and verify
         assert.ok(vscode.window.activeTextEditor?.document.getText() === text, 'Text not inserted into input editor');
         await vscode.commands.executeCommand('interactive.input.clear');
         assert.ok(vscode.window.activeTextEditor?.document.getText() === '', 'Text not cleared from input editor');
-
         // Undo
         await vscode.commands.executeCommand('undo');
 

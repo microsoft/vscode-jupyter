@@ -52,8 +52,8 @@ import {
     IControllerRegistration,
     IVSCodeNotebookController
 } from '../notebooks/controllers/types';
-import { getResourceType } from '../platform/common/utils';
 import { isInteractiveInputTab } from './helpers';
+import { Schemas } from '../platform/vscode-path/utils';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -72,13 +72,13 @@ export class InteractiveWindowProvider
     public get onDidCreateInteractiveWindow(): Event<IInteractiveWindow> {
         return this._onDidCreateInteractiveWindow.event;
     }
+
+    // returns the active Editor if it is an Interactive Window that we are tracking
     public get activeWindow(): IInteractiveWindow | undefined {
-        return this._windows.find(
-            (win) =>
-                window.activeNotebookEditor !== undefined &&
-                win.notebookUri?.toString() === window.activeNotebookEditor?.notebook.uri.toString()
-        );
+        const notebookUri = window.activeNotebookEditor?.notebook.uri.toString();
+        return notebookUri ? this._windows.find((win) => win.notebookUri?.toString() === notebookUri) : undefined;
     }
+
     public get windows(): ReadonlyArray<IInteractiveWindow> {
         return this._windows;
     }
@@ -164,7 +164,7 @@ export class InteractiveWindowProvider
         }
 
         // See if we already have a match
-        let result = this.getExisting(resource, mode, connection) as IInteractiveWindow;
+        let result = this.getExisting(resource, mode, connection);
         if (!result) {
             // No match. Create a new item.
             result = await this.create(resource, mode, connection);
@@ -213,6 +213,9 @@ export class InteractiveWindowProvider
                     NotebookControllerAffinity.Preferred
                 );
             }
+            traceVerbose(
+                `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
+            );
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 resource,
@@ -392,14 +395,15 @@ export class InteractiveWindowProvider
     }
 
     findNotebookEditor(resource: Resource): NotebookEditor | undefined {
-        const targetInteractiveNotebookEditor =
-            resource && getResourceType(resource) === 'interactive' ? this.get(resource)?.notebookEditor : undefined;
-        const activeInteractiveNotebookEditor =
-            getResourceType(resource) === 'interactive'
-                ? this.getActiveOrAssociatedInteractiveWindow()?.notebookEditor
-                : undefined;
+        let notebook: NotebookDocument | undefined;
+        if (resource && resource.scheme === Schemas.vscodeInteractive) {
+            notebook = this.get(resource)?.notebookDocument;
+        } else {
+            const mode = this.configService.getSettings(resource).interactiveWindowMode;
+            notebook = this.getExisting(resource, mode)?.notebookDocument;
+        }
 
-        return targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
+        return notebook ? window.visibleNotebookEditors.find((editor) => editor.notebook === notebook) : undefined;
     }
 
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined {

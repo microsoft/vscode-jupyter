@@ -25,7 +25,7 @@ import {
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
-import { traceError, traceInfoIfCI, traceWarning } from '../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
 
@@ -57,7 +57,7 @@ import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import {
-    IInteractiveWindowLoadable,
+    IInteractiveWindow,
     IInteractiveWindowDebugger,
     IInteractiveWindowDebuggingManager,
     InteractiveTab
@@ -86,7 +86,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
  * ViewModel for an interactive window from the Jupyter extension's point of view.
  * Methods for talking to an Interactive Window are exposed here, but the actual UI is part of VS code core.
  */
-export class InteractiveWindow implements IInteractiveWindowLoadable {
+export class InteractiveWindow implements IInteractiveWindow {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -99,8 +99,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get submitters(): Uri[] {
         return this._submitters;
     }
+    // todo: undefined if not initialized
     public get notebookDocument(): NotebookDocument {
-        return this.notebookEditor?.notebook;
+        return workspace.notebookDocuments.find((nb) => nb.uri.toString() === this.notebookUri.toString())!;
     }
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.currentKernelInfo.metadata;
@@ -121,10 +122,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
-    private _notebookEditor: NotebookEditor;
-    public get notebookEditor(): NotebookEditor {
-        return this._notebookEditor;
-    }
 
     public readonly notebookUri: Uri;
 
@@ -173,10 +170,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             ? notebookEditorOrTab.input.uri
             : notebookEditorOrTab.notebook.uri;
 
-        if (!isInteractiveInputTab(notebookEditorOrTab)) {
-            this._notebookEditor = notebookEditorOrTab;
-        }
-
         if (preferredController) {
             this.currentKernelInfo = {
                 controller: preferredController.controller,
@@ -213,9 +206,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     public async ensureInitialized() {
-        if (!this._notebookEditor) {
-            this._notebookEditor = await this.showInteractiveEditor();
-
+        if (!this.notebookDocument || !this.codeGeneratorFactory.get(this.notebookDocument)) {
+            traceVerbose(`Showing Interactive editor to initialize codeGenerator from notebook document`);
+            await this.showInteractiveEditor();
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
 
@@ -502,11 +495,18 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             });
         });
 
-        const document = await workspace.openNotebookDocument(this.notebookUri);
-        return await window.showNotebookDocument(document, {
+        const notebook = this.notebookDocument || this.openNotebookDocument();
+        const editor = await window.showNotebookDocument(notebook, {
             preserveFocus: true,
             viewColumn: currentTab?.group.viewColumn
         });
+
+        return editor;
+    }
+
+    private async openNotebookDocument(): Promise<NotebookDocument> {
+        traceVerbose(`Opening notebook document ${this.notebookUri}`);
+        return await workspace.openNotebookDocument(this.notebookUri);
     }
 
     public dispose() {
