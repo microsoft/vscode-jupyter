@@ -253,40 +253,30 @@ function initializeWidgetManager(context: KernelMessagingApi) {
     }
     initialize(JupyterLabWidgetManager, context);
 }
-// To ensure we initialize after the other scripts, wait for them.
-function attemptInitialize(context: KernelMessagingApi) {
+
+export function activate(context: KernelMessagingApi) {
     logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).vscIPyWidgets) {
-        initializeWidgetManager(context);
-    } else {
-        context.onDidReceiveKernelMessage((e) => {
-            if (
-                typeof e === 'object' &&
-                e &&
-                'type' in e &&
-                e.type === IPyWidgetMessages.IPyWidgets_Reply_Widget_Script_Url &&
-                'payload' in e &&
-                typeof e.payload === 'string'
-            ) {
-                const url = decodeURIComponent(e.payload);
-                logMessage(`Loading IPyWidget URL ${url}`);
-                import(/* webpackIgnore: true */ url).then(
-                    (a) => {
-                        // The main module in the ipywidgets npm module will expose an `activate` function that accepts the `KernelMessagingApi`.
-                        a.activate(context);
-                        initializeWidgetManager(context);
-                    },
-                    (ex) => logErrorMessage(`Failed to load IPyWidget URL ${url}, ${ex}`)
-                );
-            }
-        });
-        context.postKernelMessage({ type: IPyWidgetMessages.IPyWidgets_Request_Widget_Script_Url });
-    }
-}
-
-// Has to be this form for VS code to load it correctly
-export function activate(context: KernelMessagingApi) {
-    return attemptInitialize(context);
+    context.onDidReceiveKernelMessage((e) => {
+        if (
+            typeof e === 'object' &&
+            e &&
+            'type' in e &&
+            e.type === IPyWidgetMessages.IPyWidgets_Reply_Widget_Script_Url &&
+            'payload' in e &&
+            typeof e.payload === 'string'
+        ) {
+            const url = decodeURIComponent(e.payload);
+            logMessage(`Loading IPyWidget URL ${url}`);
+            import(/* webpackIgnore: true */ url).then(
+                (a) => {
+                    // The main module in the ipywidgets npm module will expose an `activate` function that accepts the `KernelMessagingApi`.
+                    a.activate(context);
+                    initializeWidgetManager(context);
+                },
+                (ex) => logErrorMessage(`Failed to load IPyWidget URL ${url}, ${ex}`)
+            );
+        }
+    });
+    context.postKernelMessage({ type: IPyWidgetMessages.IPyWidgets_Request_Widget_Script_Url });
 }
