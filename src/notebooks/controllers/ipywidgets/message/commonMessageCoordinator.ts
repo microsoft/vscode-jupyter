@@ -150,7 +150,7 @@ export class CommonMessageCoordinator {
                             deferred.resolve(kernel.ipywidgetsVersion);
                         } else {
                             traceVerbose('Waiting for IPyWidgets version');
-                            kernel.onIPyWidgetsVersionChanged(
+                            kernel.onIPyWidgetVersionResolved(
                                 () => {
                                     if (kernel.ipywidgetsVersion) {
                                         deferred.resolve(kernel.ipywidgetsVersion);

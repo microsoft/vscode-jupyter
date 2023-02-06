@@ -558,6 +558,7 @@ export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
 export const defaultNotebookFormat = { major: 4, minor: 2 };
 
 export const WIDGET_MIMETYPE = 'application/vnd.jupyter.widget-view+json';
+export const WIDGET_STATE_MIMETYPE = 'application/vnd.jupyter.widget-state+json';
 
 /**
  * Used as a fallback when determinining the extension id that calls into the Jupyter extension API fails.

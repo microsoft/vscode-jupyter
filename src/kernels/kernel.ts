@@ -83,9 +83,9 @@ abstract class BaseKernel implements IBaseKernel {
     public get ipywidgetsVersion() {
         return this._ipywidgetsVersion;
     }
-    private _onIPyWidgetsVersionChanged = new EventEmitter<7 | 8>();
-    public get onIPyWidgetsVersionChanged() {
-        return this._onIPyWidgetsVersionChanged.event;
+    private _onIPyWidgetVersionResolved = new EventEmitter<7 | 8 | undefined>();
+    public get onIPyWidgetVersionResolved() {
+        return this._onIPyWidgetVersionResolved.event;
     }
 
     get onStatusChanged(): Event<KernelMessage.Status> {
@@ -170,7 +170,7 @@ abstract class BaseKernel implements IBaseKernel {
         this.disposables.push(this._onRestarted);
         this.disposables.push(this._onStarted);
         this.disposables.push(this._onDisposed);
-        this.disposables.push(this._onIPyWidgetsVersionChanged);
+        this.disposables.push(this._onIPyWidgetVersionResolved);
         this.disposables.push({ dispose: () => this._kernelSocket.unsubscribe() });
         trackKernelResourceInformation(this.resourceUri, {
             kernelConnection: this.kernelConnectionMetadata,
@@ -761,13 +761,10 @@ abstract class BaseKernel implements IBaseKernel {
                     (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}7.`)
                 );
 
-                const oldVersion = this._ipywidgetsVersion;
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                if (oldVersion !== newVersion && newVersion) {
-                    traceError('Determined IPyKernel Version and event fired', JSON.stringify(newVersion));
-                    // If user does not have ipywidgets installed, then this event will never get fired.
-                    this._onIPyWidgetsVersionChanged.fire(newVersion);
-                }
+                traceError('Determined IPyKernel Version and event fired', JSON.stringify(newVersion));
+                // If user does not have ipywidgets installed, then this event will never get fired.
+                this._onIPyWidgetVersionResolved.fire(newVersion);
             }
         };
         await determineVersionImpl();
