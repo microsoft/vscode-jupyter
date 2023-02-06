@@ -38,6 +38,9 @@ export const activate: ActivationFunction = (context) => {
                 category
             });
         }
+        if (category === 'error') {
+            console.error(message);
+        }
     };
 
     logger('Jupyter IPyWidget Renderer Activated');

@@ -685,7 +685,7 @@ abstract class BaseKernel implements IBaseKernel {
         // Restart sessions and retries might make this hard to do correctly otherwise.
         session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-        await this.determineVersionOfIPyWidgets();
+        await this.determineVersionOfIPyWidgets(session);
         // Gather all of the startup code at one time and execute as one cell
         const startupCode = await this.gatherInternalStartupCode();
         await this.executeSilently(session, startupCode, {
@@ -738,13 +738,8 @@ abstract class BaseKernel implements IBaseKernel {
             traceVerbose('End running kernel initialization, session is idle');
         }
     }
-    private async determineVersionOfIPyWidgets() {
+    private async determineVersionOfIPyWidgets(session: IKernelConnectionSession) {
         const determineVersionImpl = async () => {
-            const session = this.session;
-            if (!session) {
-                traceVerbose('No session to determine version of ipywidgets');
-                return;
-            }
             const codeToDetermineIPyWidgetsVersion = dedent`
         try:
             import ipywidgets as _VSCODE_ipywidgets

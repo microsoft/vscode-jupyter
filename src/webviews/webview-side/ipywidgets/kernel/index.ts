@@ -111,7 +111,6 @@ export async function renderOutput(
         renderIPyWidget(outputItem.id, model, element, logger);
     } catch (ex) {
         logger(`Error: render output ${outputItem.id} failed ${ex.toString()}`, 'error');
-        console.error(`Failed to render ipywidget type`, ex);
         throw ex;
     }
 }
@@ -182,7 +181,6 @@ function renderIPyWidget(
         })
         .catch((ex) => {
             logger(`Error: Failed to render ${outputId}, ${ex.toString()}`, 'error');
-            console.error('Failed to render', ex);
         });
 }
 
@@ -221,22 +219,19 @@ async function createWidgetView(
         return await wm?.renderWidget(widgetData, element);
     } catch (ex) {
         // eslint-disable-next-line no-console
-        console.error(`Failed to render widget ${widgetData.model_id}`, ex);
         logErrorMessage(`Error: Failed to render widget ${widgetData.model_id}, ${ex.toString()}`);
     }
 }
 
-let capturedContext: KernelMessagingApi;
-function initialize(JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
+function initialize(JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor, context: KernelMessagingApi) {
     try {
         // Setup the widget manager
-        const postOffice = new PostOffice(capturedContext);
+        const postOffice = new PostOffice(context);
         const mgr = new WidgetManagerComponent(postOffice, JupyterLabWidgetManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any)._mgr = mgr;
     } catch (ex) {
         // eslint-disable-next-line no-console
-        console.error('Exception initializing WidgetManager', ex);
         logErrorMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
     }
 }
@@ -248,7 +243,7 @@ function initialize(JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
     disposeOutput
 };
 
-function initializeWidgetManager(_context: KernelMessagingApi) {
+function initializeWidgetManager(context: KernelMessagingApi) {
     logMessage('IPyWidget kernel initializing...');
     // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -256,7 +251,7 @@ function initializeWidgetManager(_context: KernelMessagingApi) {
     if (!JupyterLabWidgetManager) {
         throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
     }
-    initialize(JupyterLabWidgetManager);
+    initialize(JupyterLabWidgetManager, context);
 }
 // To ensure we initialize after the other scripts, wait for them.
 function attemptInitialize(context: KernelMessagingApi) {
@@ -278,7 +273,11 @@ function attemptInitialize(context: KernelMessagingApi) {
                 const url = decodeURIComponent(e.payload);
                 logMessage(`Loading IPyWidget URL ${url}`);
                 import(/* webpackIgnore: true */ url).then(
-                    () => initializeWidgetManager(context),
+                    (a) => {
+                        // The main module in the ipywidgets npm module will expose an `activate` function that accepts the `KernelMessagingApi`.
+                        a.activate(context);
+                        initializeWidgetManager(context);
+                    },
                     (ex) => logErrorMessage(`Failed to load IPyWidget URL ${url}, ${ex}`)
                 );
             }
@@ -289,6 +288,5 @@ function attemptInitialize(context: KernelMessagingApi) {
 
 // Has to be this form for VS code to load it correctly
 export function activate(context: KernelMessagingApi) {
-    capturedContext = context;
     return attemptInitialize(context);
 }
