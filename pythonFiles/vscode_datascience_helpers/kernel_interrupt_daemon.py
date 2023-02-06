@@ -275,6 +275,7 @@ class PythonKernelInterrupter:
 
         Return the dupe interrupt handle for the parent process.
         """
+
         # Create a security attributes struct that permits inheritance of the
         # handle by new processes.
         # FIXME: We can clean up this mess by requiring pywin32 for IPython.

@@ -3,6 +3,7 @@ import locale as VC_locale
 
 VC_IS_PY2 = VC_sys.version_info < (3,)
 
+
 # SafeRepr based on the pydevd implementation
 # https://github.com/microsoft/ptvsd/blob/master/src/ptvsd/_vendored/pydevd/_pydevd_bundle/pydevd_safe_repr.py
 class VC_SafeRepr(object):
