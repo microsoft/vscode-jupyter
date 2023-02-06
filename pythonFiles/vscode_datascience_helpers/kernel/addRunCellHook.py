@@ -6,6 +6,7 @@ from IPython import get_ipython
 # Variable that prevent wrapping from happing more than_once
 __VSCODE_wrapped_run_cell = False
 
+
 # This function computes the hash for the code. It must follow the same algorithm as in use here:
 # https://github.com/microsoft/vscode-jupyter/blob/312511f3cbd8b2bb5bc70fa9b771429e22d0c258/src/client/datascience/editor-integration/cellhashprovider.ts#L181
 def __VSCODE_compute_hash(code, number=0):
