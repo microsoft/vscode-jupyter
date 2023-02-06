@@ -13,11 +13,18 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { logMessage, setLogger } from '../../react-common/logger';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
 import { create as createKernel } from './kernel';
-import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, ScriptLoader } from './types';
+import {
+    IIPyWidgetManager,
+    IJupyterLabWidgetManager,
+    IJupyterLabWidgetManagerCtor,
+    INotebookModel,
+    ScriptLoader
+} from './types';
 import { KernelSocketOptions } from '../../../../kernels/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { IInteractiveWindowMapping, IPyWidgetMessages, InteractiveWindowMessages } from '../../../../messageTypes';
-import { WIDGET_MIMETYPE } from '../../../../platform/common/constants';
+import { WIDGET_MIMETYPE, WIDGET_STATE_MIMETYPE } from '../../../../platform/common/constants';
+import { NotebookMetadata } from '../../../../platform/common/utils';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -44,7 +51,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         private readonly widgetContainer: HTMLElement,
         private readonly postOffice: PostOffice,
         private readonly scriptLoader: ScriptLoader,
-        private readonly JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor
+        private readonly JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor,
+        widgetState?: NotebookMetadata['widgets']
     ) {
         this.postOffice.addHandler(this);
 
@@ -59,6 +67,20 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
                 console.error(message);
             }
         });
+        if (widgetState) {
+            this.initializeKernelAndWidgetManager(
+                {
+                    clientId: '',
+                    id: '',
+                    model: {
+                        id: '',
+                        name: ''
+                    },
+                    userName: ''
+                },
+                widgetState
+            );
+        }
     }
     public dispose(): void {
         this.proxyKernel?.dispose(); // NOSONAR
@@ -88,6 +110,39 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.pendingMessages.push({ message, payload });
         }
         return true;
+    }
+
+    /**
+     * Restore widgets from kernel and saved state.
+     * (for now loading state from kernel is not supported).
+     */
+    public async restoreWidgets(
+        notebook: INotebookModel,
+        options?: {
+            loadKernel: false;
+            loadNotebook: boolean;
+        }
+    ): Promise<void> {
+        if (!notebook) {
+            return;
+        }
+        if (!options?.loadNotebook) {
+            return;
+        }
+        if (!this.manager) {
+            throw new Error('DS IPyWidgetManager not initialized.');
+        }
+
+        await this.manager.restoreWidgets(notebook, options);
+        const state = notebook.metadata.get('widgets') as NotebookMetadata['widgets'];
+        const widgetState = state && state[WIDGET_STATE_MIMETYPE] ? state[WIDGET_STATE_MIMETYPE] : undefined;
+        if (widgetState) {
+            const deferred = createDeferred<void>();
+            deferred.resolve();
+            Object.keys(widgetState.state).forEach((modelId) => {
+                this.modelIdsToBeDisplayed.set(modelId, deferred);
+            });
+        }
     }
 
     /**
@@ -145,7 +200,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return this.manager.display_view(data, view, { node: ele });
     }
-    private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
+    private initializeKernelAndWidgetManager(options: KernelSocketOptions, widgetState?: NotebookMetadata['widgets']) {
         if (this.manager && this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }
@@ -162,7 +217,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
                 this.proxyKernel,
                 this.widgetContainer,
                 this.scriptLoader,
-                logMessage
+                logMessage,
+                widgetState
             );
 
             // Listen for display data messages so we can prime the model for a display data

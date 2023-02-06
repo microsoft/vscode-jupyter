@@ -5,6 +5,8 @@ import './styles.css';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
+import { WIDGET_STATE_MIMETYPE } from '../../../../platform/common/constants';
+import { NotebookMetadata } from '../../../../platform/common/utils';
 
 function convertVSCodeOutputToExecuteResultOrDisplayData(outputItem: OutputItem):
     | (nbformat.IMimeBundle & {
@@ -46,11 +48,29 @@ export const activate: ActivationFunction = (context) => {
     logger('Jupyter IPyWidget Renderer Activated');
     hookupTestScripts(context);
     const modelAvailabilityResponse = new Map<string, Deferred<boolean>>();
+    const rendererInitPromise = createDeferred<{
+        version?: 7 | 8;
+        widgetState?: NotebookMetadata['widgets'];
+        widgetStateLoaded: boolean;
+    }>();
+    if (context.postMessage) {
+        context.postMessage({ command: 'ipywidget-renderer-loaded' });
+    }
     if (context.onDidReceiveMessage) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        context.onDidReceiveMessage((e: any) => {
+        context.onDidReceiveMessage(async (e: any) => {
             if (e.command === 'query-widget-state' && e.model_id) {
                 modelAvailabilityResponse.get(e.model_id)?.resolve(e.available);
+            }
+            if (e.command === 'ipywidget-renderer-init') {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const ipywidgetsKernel = (window as any).ipywidgetsKernel;
+                if (e.widgetState && ipywidgetsKernel) {
+                    await ipywidgetsKernel.restoreWidgets(e.widgetState);
+                    rendererInitPromise.resolve(Object.assign({}, e, { widgetStateLoaded: true }));
+                } else {
+                    rendererInitPromise.resolve(Object.assign({}, e, { widgetStateLoaded: false }));
+                }
             }
         });
     }
@@ -82,7 +102,10 @@ export const activate: ActivationFunction = (context) => {
                     if (!widgetModel) {
                         return logger(`Error: Model not found to render output ${outputItem.id}`, 'error');
                     }
-                    if (!(await doesKernelHaveWidgetState(widgetModel.model_id))) {
+                    const info = await rendererInitPromise.promise;
+                    console.error('Renderer Info', info, WIDGET_STATE_MIMETYPE);
+                    debugger;
+                    if (!info.widgetStateLoaded && !(await doesKernelHaveWidgetState(widgetModel.model_id))) {
                         logger(
                             `Info: Model not found in Kernel state to render output ${outputItem.id}, rendering a fallback mime type`,
                             'info'
