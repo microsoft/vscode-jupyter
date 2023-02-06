@@ -15,7 +15,7 @@ import { SystemVariables } from './systemVariables.node';
 import { disposeAllDisposables } from '../helpers';
 import { IPythonExtensionChecker } from '../../api/types';
 
-const CACHE_DURATION = 60 * 60 * 1000;
+const CACHE_DURATION = 60 * 1000;
 /**
  * Given a URI, computes the environment variables needed to launch an interpreter. Takes into account the .env file or the python.envFile setting.
  */
