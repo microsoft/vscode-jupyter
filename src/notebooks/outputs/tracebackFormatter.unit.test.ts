@@ -26,6 +26,15 @@ suite(`Notebook trace formatter`, function () {
 
     test('ipython: 8.3.0, ipykernel: 6.13.0', function () {
         const formatter = new NotebookTracebackFormatter();
+        /**
+         * To generate the traceback, install a specific version of ipykernel and ipython.
+         * Then run following code in a cell:
+         * ```
+         * 1
+         * x
+         * ```
+         * This will generate the traceback below.
+         */
         const traceback = [
             '[0;31m---------------------------------------------------------------------------[0m',
             '[0;31mNameError[0m                                 Traceback (most recent call last)',
