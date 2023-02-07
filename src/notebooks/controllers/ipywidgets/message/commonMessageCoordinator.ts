@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { KernelMessage } from '@jupyterlab/services';
-import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
 import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../../platform/logging';
@@ -12,7 +12,6 @@ import {
     IConfigurationService,
     IHttpClient,
     IsWebExtension,
-    IExtensionContext,
     IDisposable
 } from '../../../../platform/common/types';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
