@@ -2110,6 +2110,34 @@ export class IEventNamePropertyMapping {
         feature: ['InteractiveWindow'],
         source: 'N/A'
     };
+    [Telemetry.CreateInteractiveWindow]: TelemetryEventInfo<{
+        hasKernel: boolean;
+        hasOwner: boolean;
+        mode: string;
+        restored: boolean;
+    }> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        properties: {
+            hasKernel: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            hasOwner: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            mode: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            restored: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
     /**
      * Telemetry event sent with name of a Widget that is used.
      * Helps determine which widgets are used the most, and which are not.
