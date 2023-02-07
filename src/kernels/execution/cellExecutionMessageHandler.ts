@@ -954,6 +954,15 @@ export class CellExecutionMessageHandler implements IDisposable {
             data: msg.content.data,
             metadata: msg.content.metadata
         } as nbformat.IDisplayData);
+        const newOutputs = outputToBeUpdated.cell.outputs.map((o) => {
+            if (
+                o.items.length === outputToBeUpdated.output.items.length &&
+                o.items.every((item, index) => fastDeepEqual(item, outputToBeUpdated.output.items[index]))
+            ) {
+                return newOutput;
+            }
+            return o;
+        });
         // If there was no output and still no output, then nothing to do.
         if (outputToBeUpdated.output.items.length === 0 && newOutput.items.length === 0) {
             traceVerbose('Update display data message received, but no output to update', msg.content);
@@ -988,7 +997,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
         traceCellMessage(this.cell, `Replace output items in display data ${newOutput.items.length}`);
-        task?.replaceOutput(newOutput, outputToBeUpdated.cell).then(noop, noop);
+        task?.replaceOutput(newOutputs, outputToBeUpdated.cell).then(noop, noop);
         this.endTemporaryTask();
     }
 }
