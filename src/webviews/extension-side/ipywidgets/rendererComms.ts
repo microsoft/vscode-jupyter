@@ -140,8 +140,6 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
                 `IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion} and in widget state is ${versionInWidgetState}.}`
             );
         }
-        if (version || widgetState) {
-            comms.postMessage({ command: 'ipywidget-renderer-init', version, widgetState }, editor).then(noop, noop);
-        }
+        comms.postMessage({ command: 'ipywidget-renderer-init', version, widgetState }, editor).then(noop, noop);
     }
 }
