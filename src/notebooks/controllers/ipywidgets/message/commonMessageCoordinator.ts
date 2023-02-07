@@ -169,20 +169,10 @@ export class CommonMessageCoordinator {
                     // IPyWidgets scripts will not be loaded if we're unable to determine the version of IPyWidgets.
                     const version = await deferred.promise;
                     traceVerbose(`Version of IPyWidgets ${version} determined after ${stopWatch.elapsedTime / 1000}s`);
-                    const context = this.serviceContainer.get<IExtensionContext>(IExtensionContext);
-                    const scriptPath = Uri.joinPath(
-                        context.extensionUri,
-                        'node_modules',
-                        '@vscode',
-                        version === 7 ? 'jupyter-ipywidgets7' : 'jupyter-ipywidgets8',
-                        'dist',
-                        'ipywidgets.js'
-                    );
-                    const url = webview.asWebviewUri(scriptPath);
                     webview
                         .postMessage({
                             type: IPyWidgetMessages.IPyWidgets_Reply_Widget_Script_Url,
-                            payload: url.toString()
+                            payload: version
                         })
                         .then(noop, noop);
                 }

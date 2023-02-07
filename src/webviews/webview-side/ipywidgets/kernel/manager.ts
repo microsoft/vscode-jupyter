@@ -47,6 +47,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
      * @memberof WidgetManager
      */
     private modelIdsToBeDisplayed = new Map<string, Deferred<void>>();
+    private offlineModelIds = new Set<string>();
     constructor(
         private readonly widgetContainer: HTMLElement,
         private readonly postOffice: PostOffice,
@@ -141,6 +142,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             deferred.resolve();
             Object.keys(widgetState.state).forEach((modelId) => {
                 this.modelIdsToBeDisplayed.set(modelId, deferred);
+                this.offlineModelIds.add(modelId);
             });
         }
     }
@@ -196,7 +198,12 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         // That 3rd party library may not be available and may have to be downloaded.
         // Hence the promise to wait until it has been created.
         const model = await modelPromise;
+        if (this.offlineModelIds.has(modelId)) {
+            model.comm_live = false;
+        }
         const view = await this.manager.create_view(model, { el: ele });
+        debugger;
+        view.initialize({ model, el: ele, options: {} });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return this.manager.display_view(data, view, { node: ele });
     }

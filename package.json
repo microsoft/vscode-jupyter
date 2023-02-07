@@ -1914,6 +1914,14 @@
         "notebookPreload": [
             {
                 "type": "jupyter-notebook",
+                "entrypoint": "./node_modules/@vscode/jupyter-ipywidgets7/dist/ipywidgets.js"
+            },
+            {
+                "type": "interactive",
+                "entrypoint": "./node_modules/@vscode/jupyter-ipywidgets7/dist/ipywidgets.js"
+            },
+            {
+                "type": "jupyter-notebook",
                 "entrypoint": "./node_modules/@vscode/jupyter-ipywidgets8/dist/ipywidgets.js"
             },
             {

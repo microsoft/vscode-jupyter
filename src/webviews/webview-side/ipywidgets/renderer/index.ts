@@ -65,7 +65,58 @@ export const activate: ActivationFunction = (context) => {
             if (e.command === 'ipywidget-renderer-init') {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const ipywidgetsKernel = (window as any).ipywidgetsKernel;
-                if (e.widgetState && ipywidgetsKernel) {
+                if (e.version) {
+                    // Load the specific version of the widget scripts
+                    const widgets7Promise = new Promise<void>((resolve) => {
+                        const checkIfLoaded = () => {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            if ((window as any).vscIPyWidgets7) {
+                                return resolve();
+                            }
+                            setTimeout(checkIfLoaded, 500);
+                        };
+                        setTimeout(checkIfLoaded, 500);
+                    });
+                    const widgets8Promise = new Promise<void>((resolve) => {
+                        const checkIfLoaded = () => {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            if ((window as any).vscIPyWidgets8) {
+                                return resolve();
+                            }
+                            setTimeout(checkIfLoaded, 500);
+                        };
+                        setTimeout(checkIfLoaded, 500);
+                    });
+                    await Promise.all([widgets7Promise, widgets8Promise]);
+                    const unloadWidgets8 = () => {
+                        try {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (window as any).vscIPyWidgets8.unload();
+                        } catch {
+                            //
+                        }
+                    };
+                    const unloadWidgets7 = () => {
+                        try {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (window as any).vscIPyWidgets7.unload();
+                        } catch {
+                            //
+                        }
+                    };
+                    if (e.version === 7) {
+                        unloadWidgets8();
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (window as any).vscIPyWidgets7.load();
+                        logger('Loaded IPYWidgets 7.x', 'info');
+                    } else if (e.version === 8) {
+                        unloadWidgets7();
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (window as any).vscIPyWidgets8.load();
+                        logger('Loaded IPYWidgets 8.x', 'info');
+                    }
+                }
+                if (e.widgetState && ipywidgetsKernel && e.version) {
                     await ipywidgetsKernel.restoreWidgets(e.widgetState);
                     rendererInitPromise.resolve(Object.assign({}, e, { widgetStateLoaded: true }));
                 } else {

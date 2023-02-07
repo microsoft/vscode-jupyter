@@ -351,26 +351,73 @@ export function activate(context: KernelMessagingApi) {
         context.postKernelMessage
     );
 
-    context.onDidReceiveKernelMessage((e) => {
+    context.onDidReceiveKernelMessage(async (e) => {
         if (
             typeof e === 'object' &&
             e &&
             'type' in e &&
             e.type === IPyWidgetMessages.IPyWidgets_Reply_Widget_Script_Url &&
             'payload' in e &&
-            typeof e.payload === 'string'
+            typeof e.payload === 'number'
         ) {
-            const url = decodeURIComponent(e.payload);
-            logMessage(`Loading IPyWidget URL ${url}`);
-            console.error(`Loading IPyWidget URL ${url}`);
-            import(/* webpackIgnore: true */ url).then(
-                (a) => {
-                    // The main module in the ipywidgets npm module will expose an `activate` function that accepts the `KernelMessagingApi`.
-                    a.activate(context);
-                    initializeWidgetManager();
-                },
-                (ex) => logErrorMessage(`Failed to load IPyWidget URL ${url}, ${ex}`)
-            );
+            try {
+                const version = e.payload;
+                logMessage(`Loading IPyWidget Version ${version}`);
+                console.error(`Loading IPyWidget Version ${version}`);
+                // Load the specific version of the widget scripts
+                const widgets7Promise = new Promise<void>((resolve) => {
+                    const checkIfLoaded = () => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        if ((window as any).vscIPyWidgets7) {
+                            return resolve();
+                        }
+                        setTimeout(checkIfLoaded, 500);
+                    };
+                    setTimeout(checkIfLoaded, 500);
+                });
+                const widgets8Promise = new Promise<void>((resolve) => {
+                    const checkIfLoaded = () => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        if ((window as any).vscIPyWidgets8) {
+                            return resolve();
+                        }
+                        setTimeout(checkIfLoaded, 500);
+                    };
+                    setTimeout(checkIfLoaded, 500);
+                });
+                await Promise.all([widgets7Promise, widgets8Promise]);
+                const unloadWidgets8 = () => {
+                    try {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (window as any).vscIPyWidgets8.unload();
+                    } catch {
+                        //
+                    }
+                };
+                const unloadWidgets7 = () => {
+                    try {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (window as any).vscIPyWidgets7.unload();
+                    } catch {
+                        //
+                    }
+                };
+                if (version === 7) {
+                    unloadWidgets8();
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (window as any).vscIPyWidgets7.load();
+                    logMessage('Loaded IPYWidgets 7.x from Kernel');
+                } else if (version === 8) {
+                    unloadWidgets7();
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (window as any).vscIPyWidgets8.load();
+                    logMessage('Loaded IPYWidgets 8.x from Kernel');
+                }
+
+                initializeWidgetManager();
+            } catch (ex) {
+                logErrorMessage(`Failed to load IPyWidget Version ${e.payload}, ${ex}`);
+            }
         }
     });
     context.postKernelMessage({ type: IPyWidgetMessages.IPyWidgets_Request_Widget_Script_Url });
