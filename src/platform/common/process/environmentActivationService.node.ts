@@ -137,13 +137,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             },
             failureEx
         );
-        // We must get activated env variables for Conda env, if not running stuff against conda will not work.
-        // Hence we must log these as errors (so we can see them in jupyter logs).
-        if (!env && envType === EnvironmentType.Conda) {
-            traceError(
-                `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}`
-            );
-        }
 
         if (env) {
             traceVerbose(
@@ -151,9 +144,17 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     Object.keys(env || {}).length
                 } in ${stopWatch.elapsedTime}ms. \n PATH value is ${env.PATH} and Path value is ${env.Path}`
             );
+        } else if (envType === EnvironmentType.Conda) {
+            // We must get activated env variables for Conda env, if not running stuff against conda will not work.
+            // Hence we must log these as errors (so we can see them in jupyter logs).
+            traceError(
+                `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}`
+            );
         } else {
             traceWarning(
-                `Failed to get env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
+                `Failed to get activated env vars with python ${getDisplayPath(interpreter?.uri)} in ${
+                    stopWatch.elapsedTime
+                }ms`
             );
         }
 
