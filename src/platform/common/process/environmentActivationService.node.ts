@@ -20,7 +20,7 @@ import { swallowExceptions } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
-import { logValue, traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
+import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
 import { noop } from '../utils/misc';
@@ -152,8 +152,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 } in ${stopWatch.elapsedTime}ms. \n PATH value is ${env.PATH} and Path value is ${env.Path}`
             );
         } else {
-            traceVerbose(
-                `Got empty env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
+            traceWarning(
+                `Failed to get env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
             );
         }
 
