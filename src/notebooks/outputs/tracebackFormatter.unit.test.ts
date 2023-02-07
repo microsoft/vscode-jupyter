@@ -19,7 +19,7 @@ suite(`Notebook trace formatter`, function () {
         when(cell.index).thenReturn(0);
         when(cell.notebook).thenReturn(instance(notebook));
         document = mock<TextDocument>();
-        const uri = Uri.parse('vscode-notebook-cell:/Users/USR/notebooks/error.ipynb#W0sZmlsZQ==');
+        const uri = Uri.parse('vscode-notebook-cell:error.ipynb#W0sZmlsZQ==');
         when(document.uri).thenReturn(uri);
         when(cell.document).thenReturn(instance(document));
     });
@@ -46,7 +46,7 @@ suite(`Notebook trace formatter`, function () {
         const expected = [
             '[0;31m---------------------------------------------------------------------------[0m',
             '[0;31mNameError[0m                                 Traceback (most recent call last)',
-            "[1;32m/Users/USR/notebooks/error.ipynb Cell 1[0m in [0;36m<cell line: 2>[0;34m()[0m\n[1;32m      <a href='vscode-notebook-cell:/Users/USR/notebooks/error.ipynb#W0sZmlsZQ%3D%3D?line=0'>1</a>[0m [39m1[39m\n[0;32m----> <a href='vscode-notebook-cell:/Users/USR/notebooks/error.ipynb#W0sZmlsZQ%3D%3D?line=1'>2</a>[0m x\n",
+            "[1;32merror.ipynb Cell 1[0m in [0;36m<cell line: 2>[0;34m()[0m\n[1;32m      <a href='vscode-notebook-cell:error.ipynb#W0sZmlsZQ%3D%3D?line=0'>1</a>[0m [39m1[39m\n[0;32m----> <a href='vscode-notebook-cell:error.ipynb#W0sZmlsZQ%3D%3D?line=1'>2</a>[0m x\n",
             "[0;31mNameError[0m: name 'x' is not defined"
         ];
 
@@ -66,7 +66,7 @@ suite(`Notebook trace formatter`, function () {
         const expected = [
             '[0;31m---------------------------------------------------------------------------[0m',
             '[0;31mNameError[0m                                 Traceback (most recent call last)',
-            "[1;32m/Users/USR/notebooks/error.ipynb Cell 1[0m in [0;36m2\n[1;32m      <a href='vscode-notebook-cell:/Users/USR/notebooks/error.ipynb#W0sZmlsZQ%3D%3D?line=0'>1</a>[0m [39m1[39m\n[0;32m----> <a href='vscode-notebook-cell:/Users/USR/notebooks/error.ipynb#W0sZmlsZQ%3D%3D?line=1'>2</a>[0m x\n",
+            "[1;32merror.ipynb Cell 1[0m in [0;36m2\n[1;32m      <a href='vscode-notebook-cell:error.ipynb#W0sZmlsZQ%3D%3D?line=0'>1</a>[0m [39m1[39m\n[0;32m----> <a href='vscode-notebook-cell:error.ipynb#W0sZmlsZQ%3D%3D?line=1'>2</a>[0m x\n",
             "[0;31mNameError[0m: name 'x' is not defined"
         ];
 
