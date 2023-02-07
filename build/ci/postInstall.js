@@ -177,7 +177,7 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
         Object.keys(packages).forEach((packageName) => {
             if (
                 packagesAllowedToUseMoment.includes(packageName) ||
-                packagesAllowedToUseMoment.some((p) => p.endsWith(packageName))
+                packagesAllowedToUseMoment.some((p) => packageName.endsWith(p))
             ) {
                 return;
             }
