@@ -5,7 +5,12 @@ import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
-import { InteractiveWindowView, jupyterLanguageToMonacoLanguageMapping, JupyterNotebookView } from './constants';
+import {
+    InteractiveWindowView,
+    jupyterLanguageToMonacoLanguageMapping,
+    JupyterNotebookView,
+    WIDGET_STATE_MIMETYPE
+} from './constants';
 import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
@@ -177,6 +182,21 @@ export type NotebookMetadata = nbformat.INotebookMetadata & {
              * Hash of the interpreter executable path.
              */
             hash?: string;
+        };
+    };
+    widgets?: {
+        [WIDGET_STATE_MIMETYPE]?: {
+            state: Record<
+                string,
+                {
+                    model_module: '@jupyter-widgets/base' | '@jupyter-widgets/controls' | string;
+                    model_module_version: string;
+                    model_name: string;
+                    state: {};
+                }
+            >;
+            version_major: number;
+            version_minor: number;
         };
     };
 };

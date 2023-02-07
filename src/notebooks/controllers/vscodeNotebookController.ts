@@ -470,31 +470,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                     'widgetTester.js'
                 )
             );
-
-            // In development mode, ipywidgets is not under the 'out' folder.
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'node_modules',
-                    '@vscode',
-                    'jupyter-ipywidgets7',
-                    'dist',
-                    'ipywidgets.js'
-                )
-            );
-        } else {
-            // Normal package mode, ipywidgets ends up next to extension.ts
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'node_modules',
-                    '@vscode',
-                    'jupyter-ipywidgets7',
-                    'dist',
-                    'ipywidgets.js'
-                )
-            );
         }
         scripts.push(
             ...[

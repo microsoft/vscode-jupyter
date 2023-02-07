@@ -1911,6 +1911,32 @@
                 ]
             }
         ],
+        "notebookPreload": [
+            {
+                "type": "jupyter-notebook",
+                "entrypoint": "./node_modules/@vscode/jupyter-ipywidgets7/dist/ipywidgets.js"
+            },
+            {
+                "type": "interactive",
+                "entrypoint": "./node_modules/@vscode/jupyter-ipywidgets7/dist/ipywidgets.js"
+            },
+            {
+                "type": "jupyter-notebook",
+                "entrypoint": "./node_modules/@vscode/jupyter-ipywidgets8/dist/ipywidgets.js"
+            },
+            {
+                "type": "interactive",
+                "entrypoint": "./node_modules/@vscode/jupyter-ipywidgets8/dist/ipywidgets.js"
+            },
+            {
+                "type": "jupyter-notebook",
+                "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
+            },
+            {
+                "type": "interactive",
+                "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
+            }
+        ],
         "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",

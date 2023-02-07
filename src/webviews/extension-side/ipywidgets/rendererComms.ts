@@ -8,16 +8,19 @@ import { injectable, inject } from 'inversify';
 import { Disposable, NotebookDocument, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { WIDGET_MIMETYPE } from '../../../platform/common/constants';
+import { WIDGET_MIMETYPE, WIDGET_STATE_MIMETYPE } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
+import { getNotebookMetadata } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
+import { traceVerbose, traceWarning } from '../../../platform/logging';
 
 type WidgetData = {
     model_id: string;
 };
 
 type QueryWidgetStateCommand = { command: 'query-widget-state'; model_id: string };
+type RendererLoadedCommand = { command: 'ipywidget-renderer-loaded' };
 
 @injectable()
 export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
@@ -85,10 +88,13 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
     }
     private onDidReceiveMessage(
         comms: NotebookRendererMessaging,
-        { editor, message }: { editor: NotebookEditor; message: QueryWidgetStateCommand }
+        { editor, message }: { editor: NotebookEditor; message: QueryWidgetStateCommand | RendererLoadedCommand }
     ) {
         if (message && typeof message === 'object' && message.command === 'query-widget-state') {
             this.queryWidgetState(comms, editor, message);
+        }
+        if (message && typeof message === 'object' && message.command === 'ipywidget-renderer-loaded') {
+            this.sendWidgetVersionAndState(comms, editor);
         }
     }
     private queryWidgetState(
@@ -100,6 +106,45 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         const available = !!availableModels?.has(message.model_id);
         comms
             .postMessage({ command: 'query-widget-state', model_id: message.model_id, available }, editor)
+            .then(noop, noop);
+    }
+    private sendWidgetVersionAndState(comms: NotebookRendererMessaging, editor: NotebookEditor) {
+        // Support for loading Widget state from ipynb files.
+        // Temporarily disabled. See https://github.com/microsoft/vscode-jupyter/issues/11117
+        // const metadata = getNotebookMetadata(editor.notebook);
+        // const widgetState = metadata?.widgets;
+
+        const kernel = this.kernelProvider.get(editor.notebook);
+        // const state =
+        //     widgetState && widgetState[WIDGET_STATE_MIMETYPE]
+        //         ? widgetState && widgetState[WIDGET_STATE_MIMETYPE].state
+        //         : undefined;
+        // let versionInWidgetState: 7 | 8 | undefined = undefined;
+        // if (state) {
+        //     const findModuleWithVersion = Object.keys(state).find((key) =>
+        //         ['@jupyter-widgets/base', '@jupyter-widgets/controls'].includes(state[key].model_module)
+        //     );
+        //     versionInWidgetState =
+        //         findModuleWithVersion && state[findModuleWithVersion].model_module_version
+        //             ? state[findModuleWithVersion].model_module_version.startsWith('2.')
+        //                 ? 8
+        //                 : 7
+        //             : undefined;
+        // }
+        const version = kernel?.ipywidgetsVersion; // || versionInWidgetState;
+        if (kernel?.ipywidgetsVersion) {
+            traceVerbose(`IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion}.`);
+        }
+        // if (versionInWidgetState) {
+        //     traceVerbose(`IPyWidget version in Kernel is ${versionInWidgetState}.`);
+        // }
+        // if (kernel?.ipywidgetsVersion && versionInWidgetState) {
+        //     traceWarning(
+        //         `IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion} and in widget state is ${versionInWidgetState}.}`
+        //     );
+        // }
+        comms
+            .postMessage({ command: 'ipywidget-renderer-init', version, widgetState: undefined }, editor)
             .then(noop, noop);
     }
 }
