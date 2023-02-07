@@ -751,10 +751,11 @@ abstract class BaseKernel implements IBaseKernel {
      * For Python we just run a block of Python code to determine the version.
      */
     private async determineVersionOfIPyWidgets(session: IKernelConnectionSession) {
-        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
+        if (!isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // For all other kernels, assume we are using the older version of IPyWidgets.
             // There are very few kernels that support IPyWidgets, however IPyWidgets 8 is very new
             // & it is unlikely that others have supported this new version.
+            this._ipywidgetsVersion == WIDGET_VERSION_NON_PYTHON_KERNELS;
             this._onIPyWidgetVersionResolved.fire(WIDGET_VERSION_NON_PYTHON_KERNELS);
             return;
         }
@@ -783,6 +784,7 @@ abstract class BaseKernel implements IBaseKernel {
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
                 traceError('Determined IPyKernel Version and event fired', JSON.stringify(newVersion));
                 // If user does not have ipywidgets installed, then this event will never get fired.
+                this._ipywidgetsVersion == newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
             }
         };

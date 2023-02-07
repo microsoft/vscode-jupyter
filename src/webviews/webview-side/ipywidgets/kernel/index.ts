@@ -308,7 +308,6 @@ function initializeWidgetManager(widgetState?: NotebookMetadata['widgets']) {
 export function activate(context: KernelMessagingApi) {
     capturedContext = context;
     logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
-
     context.onDidReceiveKernelMessage(async (e) => {
         if (
             typeof e === 'object' &&

@@ -5,7 +5,6 @@ import './styles.css';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
-import { WIDGET_STATE_MIMETYPE } from '../../../../platform/common/constants';
 import { NotebookMetadata } from '../../../../platform/common/utils';
 import { logErrorMessage } from '../../react-common/logger';
 
@@ -155,8 +154,6 @@ export const activate: ActivationFunction = (context) => {
                         return logger(`Error: Model not found to render output ${outputItem.id}`, 'error');
                     }
                     const info = await rendererInitPromise.promise;
-                    console.error('Renderer Info', info, WIDGET_STATE_MIMETYPE);
-                    debugger;
                     if (!info.widgetStateLoaded && !(await doesKernelHaveWidgetState(widgetModel.model_id))) {
                         logger(
                             `Info: Model not found in Kernel state to render output ${outputItem.id}, rendering a fallback mime type`,
