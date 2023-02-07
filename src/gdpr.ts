@@ -1131,6 +1131,19 @@
      ]
    }
  */
+//Telemetry.CreateInteractiveWindow
+/* __GDPR__
+   "DS_INTERNAL.CREATED_INTERACTIVE_WINDOW" : {
+     "hasKernel": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
+     "hasOwner": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
+     "mode": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
+     "restored": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.DocumentWithCodeCells
 /* __GDPR__
    "DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS" : {
