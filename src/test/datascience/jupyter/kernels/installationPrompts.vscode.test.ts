@@ -561,7 +561,8 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
-    test('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
+    // https://github.com/microsoft/vscode-jupyter/issues/12766
+    test.skip('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
