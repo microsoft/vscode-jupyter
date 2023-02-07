@@ -149,7 +149,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceVerbose(
                 `Got env vars with python ${getDisplayPath(interpreter?.uri)}, with env var count ${
                     Object.keys(env || {}).length
-                } in ${stopWatch.elapsedTime}ms`
+                } in ${stopWatch.elapsedTime}ms. \n PATH value is ${env.PATH} and Path value is ${env.Path}`
             );
         } else {
             traceVerbose(
