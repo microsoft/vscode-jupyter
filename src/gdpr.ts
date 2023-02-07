@@ -39,15 +39,6 @@
      ]
    }
  */
-//Telemetry.CreateNewInteractive
-/* __GDPR__
-   "DATASCIENCE.CREATE_NEW_INTERACTIVE" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.CreatePythonEnvironment
 /* __GDPR__
    "DATASCIENCE.CREATE_PYTHON_ENVIRONMENT" : {
@@ -1134,10 +1125,10 @@
 //Telemetry.CreateInteractiveWindow
 /* __GDPR__
    "DS_INTERNAL.CREATED_INTERACTIVE_WINDOW" : {
-     "hasKernel": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
-     "hasOwner": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
-     "mode": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
-     "restored": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"amunger"},
+     "hasKernel": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the kernel was known at the time of creation","owner":"amunger"},
+     "hasOwner": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the window was created for a text file","owner":"amunger"},
+     "mode": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Creation mode: multiple, perfile or single","owner":"amunger"},
+     "restored": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the window restored from a previous session","owner":"amunger"},
      "${include}": [
        "${F1}"
 

@@ -745,7 +745,6 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         }
     }
 
-    @captureUsageTelemetry(Telemetry.CreateNewInteractive)
     private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
         await this.interactiveWindowProvider?.getOrCreate(undefined, connection);
     }
