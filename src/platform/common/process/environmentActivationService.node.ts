@@ -5,10 +5,10 @@ import '../extensions';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { inject, injectable } from 'inversify';
-
+import * as path from '../../../platform/vscode-path/path';
 import { IWorkspaceService } from '../application/types';
 import { IDisposable, Resource } from '../types';
-import { ICustomEnvironmentVariablesProvider } from '../variables/types';
+import { ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
@@ -33,11 +33,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(ICustomEnvironmentVariablesProvider)
-        private readonly envVarsService: ICustomEnvironmentVariablesProvider,
+        private readonly customEnvVarsService: ICustomEnvironmentVariablesProvider,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService
     ) {
-        this.envVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
+        this.customEnvVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
     }
     public clearCache() {
@@ -102,7 +103,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             : undefined;
         const stopWatch = new StopWatch();
         // We'll need this later.
-        this.envVarsService.getEnvironmentVariables(resource, 'RunPythonCode').catch(noop);
+        this.customEnvVarsService.getEnvironmentVariables(resource, 'RunPythonCode').catch(noop);
 
         // Check cache.
         let reasonForFailure:
@@ -110,7 +111,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             | 'failedToGetActivatedEnvVariablesFromPython'
             | 'failedToGetCustomEnvVariables' = 'emptyVariables';
         let failureEx: Error | undefined;
-        const env = await this.apiProvider.getApi().then((api) =>
+        let env = await this.apiProvider.getApi().then((api) =>
             api
                 .getActivatedEnvironmentVariables(resource, serializePythonEnvironment(interpreter)!, false)
                 .catch((ex) => {
@@ -157,7 +158,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 }ms`
             );
         }
-
+        if (!env) {
+            env = Object.assign({}, process.env);
+            // This way all executables from that env are used.
+            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+            // Also applies to `!java` where java could be an executable in the conda bin directory.
+            this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
+        }
         return env;
     }
 }
