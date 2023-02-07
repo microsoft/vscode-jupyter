@@ -8,12 +8,11 @@ import { injectable, inject } from 'inversify';
 import { Disposable, NotebookDocument, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { WIDGET_MIMETYPE, WIDGET_STATE_MIMETYPE } from '../../../platform/common/constants';
+import { WIDGET_MIMETYPE } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
-import { getNotebookMetadata } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceVerbose, traceWarning } from '../../../platform/logging';
+import { traceVerbose } from '../../../platform/logging';
 
 type WidgetData = {
     model_id: string;
