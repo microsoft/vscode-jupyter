@@ -109,11 +109,10 @@ export function serializePythonEnvironment(
     jupyterVersion: PythonEnvironment | undefined
 ): PythonEnvironment_PythonApi | undefined {
     if (jupyterVersion) {
-        const result = {
-            ...jupyterVersion,
+        const result = Object.assign({}, jupyterVersion, {
             path: getFilePath(jupyterVersion.uri),
             envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined
-        };
+        });
         // Cleanup stuff that shouldn't be there.
         delete (result as any).uri;
         return result;
