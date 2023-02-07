@@ -1920,15 +1920,6 @@
                     "application/vnd.jupyter.widget-view+json"
                 ],
                 "requiresMessaging": "always"
-            },
-            {
-                "id": "jupyter-error-renderer",
-                "entrypoint": "./out/webviews/webview-side/errorRenderer/errorRenderer.js",
-                "displayName": "%jupyter.notebookRenderer.Error.displayName%",
-                "requiresMessaging": "always",
-                "mimeTypes": [
-                    "application/vnd.code.notebook.error"
-                ]
             }
         ],
         "viewsContainers": {
