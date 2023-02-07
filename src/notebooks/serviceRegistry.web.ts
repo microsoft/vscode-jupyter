@@ -41,7 +41,7 @@ import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
-import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
+// import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { JupyterServerSelectorCommand } from './serverSelectorCommand';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
@@ -103,10 +103,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
 
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        ErrorRendererCommunicationHandler
-    );
+    // serviceManager.addSingleton<IExtensionSyncActivationService>(
+    //     IExtensionSyncActivationService,
+    //     ErrorRendererCommunicationHandler
+    // );
 
     serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
     serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);

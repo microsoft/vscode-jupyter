@@ -28,7 +28,7 @@ import { PlotViewHandler } from './plotView/plotViewHandler';
 import { RendererCommunication } from './plotView/rendererCommunication';
 import { IPlotSaveHandler } from './plotView/types';
 import { IPyWidgetRendererComms } from './ipywidgets/rendererComms';
-import { ExtensionSideRenderer } from './error-renderer';
+// import { ExtensionSideRenderer } from './error-renderer';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -60,10 +60,10 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         VariableViewActivationService
     );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        ExtensionSideRenderer
-    );
+    // serviceManager.addSingleton<IExtensionSyncActivationService>(
+    //     IExtensionSyncActivationService,
+    //     ExtensionSideRenderer
+    // );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         IPyWidgetRendererComms
