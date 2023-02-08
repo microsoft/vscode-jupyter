@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import * as vscode from 'vscode';
 import { ErrorRendererMessageType, Localizations } from '../../../messageTypes';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -13,7 +13,7 @@ import { noop } from '../../../platform/common/utils/misc';
 /**
  * Responsible for sending loc data to renderers
  */
-@injectable()
+// @injectable()
 export class ExtensionSideRenderer implements IDisposable, IExtensionSyncActivationService {
     private disposables: IDisposable[] = [];
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
