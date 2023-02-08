@@ -285,15 +285,22 @@ function initialize(
     }
 }
 
+let capturedContext: KernelMessagingApi;
+
 // Create our window exports
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).ipywidgetsKernel = {
     renderOutput,
     disposeOutput,
-    restoreWidgets
+    restoreWidgets,
+    initialize: () => {
+        requestWidgetVersion(capturedContext);
+    }
 };
 
-let capturedContext: KernelMessagingApi;
+function requestWidgetVersion(context: KernelMessagingApi) {
+    context.postKernelMessage({ type: IPyWidgetMessages.IPyWidgets_Request_Widget_Version });
+}
 function initializeWidgetManager(widgetState?: NotebookMetadata['widgets']) {
     logMessage('IPyWidget kernel initializing...');
     // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
@@ -376,5 +383,5 @@ export function activate(context: KernelMessagingApi) {
             }
         }
     });
-    context.postKernelMessage({ type: IPyWidgetMessages.IPyWidgets_Request_Widget_Version });
+    requestWidgetVersion(context);
 }

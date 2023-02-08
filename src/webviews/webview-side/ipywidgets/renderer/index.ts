@@ -42,6 +42,8 @@ async function getRendererFunction() {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
             if (renderOutputFunc) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (window as any).ipywidgetsKernel.initialize();
                 resolve(renderOutputFunc);
             } else {
                 setTimeout(getRendererFuncImpl, 100);
