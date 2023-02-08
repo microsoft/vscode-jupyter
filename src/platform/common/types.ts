@@ -53,15 +53,12 @@ export interface IJupyterSettings {
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
-    readonly allowImportFromNotebook: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
     readonly notebookFileRoot: string;
     readonly useDefaultConfigForJupyter: boolean;
     readonly searchForJupyter: boolean;
-    readonly showCellInputCode: boolean;
-    readonly enableScrollingForCellOutputs: boolean;
     readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly markdownRegularExpression: string;
@@ -79,12 +76,10 @@ export interface IJupyterSettings {
     readonly debugCodeLenses: string;
     readonly debugpyDistPath: string;
     readonly stopOnFirstLineWhileDebugging: boolean;
-    readonly textOutputLimit: number;
     readonly magicCommandsAsComments: boolean;
     readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
     readonly stopOnError: boolean;
     readonly remoteDebuggerPort: number;
-    readonly colorizeInputBox: boolean;
     readonly addGotoCodeLenses: boolean;
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;

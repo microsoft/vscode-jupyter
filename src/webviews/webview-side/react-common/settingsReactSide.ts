@@ -11,7 +11,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         logging: {
             level: 'off'
         },
-        allowImportFromNotebook: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         // eslint-disable-next-line no-template-curly-in-string
@@ -19,8 +18,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
         searchForJupyter: true,
-        showCellInputCode: true,
-        enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',

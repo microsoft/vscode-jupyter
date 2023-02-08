@@ -49,7 +49,6 @@ export function defaultDataScienceSettings(): IJupyterSettings {
             optOutFrom: [],
             optInto: []
         },
-        allowImportFromNotebook: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         // eslint-disable-next-line no-template-curly-in-string
@@ -57,8 +56,6 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
         searchForJupyter: true,
-        showCellInputCode: true,
-        enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         variableExplorerExclude: 'module;function;builtin_function_or_method',

@@ -163,8 +163,6 @@
     "jupyter.configuration.jupyter.logging.level.description": "The logging level the extension logs at.",
     "jupyter.configuration.jupyter.experiments.optInto.markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
     "jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
-    "jupyter.configuration.jupyter.allowImportFromNotebook.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-    "jupyter.configuration.jupyter.allowImportFromNotebook.description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
     "jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0": "Loads widget (javascript) scripts from https://www.jsdelivr.com/",
     "jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1": "Loads widget (javascript) scripts from https://unpkg.com/",
     "jupyter.configuration.jupyter.widgetScriptSources.markdownDescription": "Defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or function correctly. See [here](https://aka.ms/PVSCIPyWidgets) for more information. Once updated you will need to restart the Kernel.",
@@ -179,24 +177,6 @@
     "jupyter.configuration.jupyter.searchForJupyter.description": "Search all installed Python interpreters for a Jupyter installation when starting the Interactive window",
     "jupyter.configuration.jupyter.useDefaultConfigForJupyter.description": "When running Jupyter locally, create a default empty Jupyter config for the Interactive window",
     "jupyter.configuration.jupyter.jupyterInterruptTimeout.description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
-    "jupyter.configuration.jupyter.showCellInputCode.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-    "jupyter.configuration.jupyter.showCellInputCode.description": "Show cell input code.",
-    "jupyter.configuration.jupyter.collapseCellInputCodeByDefault.description": "Collapse cell input code by default.",
-    "jupyter.configuration.jupyter.collapseCellInputCodeByDefault.markdownDeprecationMessage": {
-        "message": "This setting has been deprecated, please use `#interactiveWindow.collapseCellInputCode#` instead.",
-        "comment": [
-            "{Locked='interactiveWindow.collapseCellInputCode'}"
-        ]
-    },
-    "jupyter.configuration.jupyter.alwaysScrollOnNewCell.description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
-    "jupyter.configuration.jupyter.alwaysScrollOnNewCell.deprecationMessage": {
-        "message": "This setting is obsolete. Use the 'interactiveWindow.alwaysScrollOnNewCell' setting instead.",
-        "comment": [
-            "{Locked='interactiveWindow.alwaysScrollOnNewCell'}"
-        ]
-    },
-    "jupyter.configuration.jupyter.enableScrollingForCellOutputs.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-    "jupyter.configuration.jupyter.enableScrollingForCellOutputs.description": "Enables scrolling for large cell outputs in the Notebook Editor. This setting does not apply to the Interactive Window.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
     "jupyter.configuration.jupyter.variableExplorerExclude.description": "Types to exclude from showing in the Interactive variable explorer",
     "jupyter.configuration.jupyter.codeRegularExpression.description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell.",
@@ -218,15 +198,6 @@
     "jupyter.configuration.jupyter.remoteDebuggerPort.description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
     "jupyter.configuration.jupyter.remoteDebuggerPort.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
     "jupyter.configuration.jupyter.disableJupyterAutoStart.description": "When true, disables Jupyter from being automatically started for you. You must instead run a cell to start Jupyter.",
-    "jupyter.configuration.jupyter.textOutputLimit.deprecationMessage": {
-        "message": "This setting is deprecated in favor of `notebook.output.textLineLimit`. This setting will be removed in an upcoming release.",
-        "comment": [
-            "{Locked='notebook.output.textLineLimit'}"
-        ]
-    },
-    "jupyter.configuration.jupyter.textOutputLimit.description": "Limit the amount of text in Interactive cell text output to this value. 0 to allow any amount of characters.",
-    "jupyter.configuration.jupyter.colorizeInputBox.deprecationMessage": "This setting is deprecated and will be removed in an upcoming release.",
-    "jupyter.configuration.jupyter.colorizeInputBox.description": "Whether or not to use the theme's peek color as the background for the input box.",
     "jupyter.configuration.jupyter.addGotoCodeLenses.description": {
         "message": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
         "comment": [
