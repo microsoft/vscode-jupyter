@@ -46,7 +46,6 @@ import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
-// import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { JupyterServerSelectorCommand } from './serverSelectorCommand';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
@@ -60,10 +59,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LiveKernelSwitcher);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
-    // serviceManager.addSingleton<IExtensionSyncActivationService>(
-    //     IExtensionSyncActivationService,
-    //     ErrorRendererCommunicationHandler
-    // );
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
     serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
