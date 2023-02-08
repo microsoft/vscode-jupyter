@@ -16,7 +16,6 @@ import {
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
 } from './dataviewer/types';
-import { ExtensionSideRenderer } from './error-renderer';
 import { IPyWidgetRendererComms } from './ipywidgets/rendererComms';
 import { PlotViewer } from './plotting/plotViewer.node';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
@@ -59,10 +58,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         VariableViewActivationService
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        ExtensionSideRenderer
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
