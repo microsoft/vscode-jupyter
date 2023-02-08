@@ -1805,14 +1805,6 @@ export class IEventNamePropertyMapping {
         source: 'User Action'
     };
     /**
-     * Command to create a new Interactive Window.
-     */
-    [Telemetry.CreateNewInteractive]: TelemetryEventInfo<never | undefined> = {
-        owner: 'amunger',
-        feature: ['InteractiveWindow'],
-        source: 'N/A'
-    };
-    /**
      * Time taken to start the Jupyter server.
      */
     [Telemetry.StartJupyter]: TelemetryEventInfo<DurationMeasurement> = {
@@ -2109,6 +2101,38 @@ export class IEventNamePropertyMapping {
         owner: 'amunger',
         feature: ['InteractiveWindow'],
         source: 'N/A'
+    };
+    [Telemetry.CreateInteractiveWindow]: TelemetryEventInfo<{
+        hasKernel: boolean;
+        hasOwner: boolean;
+        mode: string;
+        restored: boolean;
+    }> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        properties: {
+            hasKernel: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'If the kernel was known at the time of creation'
+            },
+            hasOwner: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'If the window was created for a text file'
+            },
+            mode: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Creation mode: multiple, perfile or single'
+            },
+            restored: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Was the window restored from a previous session'
+            }
+        }
     };
     /**
      * Telemetry event sent with name of a Widget that is used.

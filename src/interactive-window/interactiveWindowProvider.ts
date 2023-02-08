@@ -36,7 +36,7 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from '../notebooks/types';
 import { InteractiveWindow } from './interactiveWindow';
-import { InteractiveWindowView, JVSC_EXTENSION_ID, NotebookCellScheme } from '../platform/common/constants';
+import { InteractiveWindowView, JVSC_EXTENSION_ID, NotebookCellScheme, Telemetry } from '../platform/common/constants';
 import {
     IInteractiveWindow,
     IInteractiveWindowCache,
@@ -54,6 +54,7 @@ import {
 } from '../notebooks/controllers/types';
 import { isInteractiveInputTab } from './helpers';
 import { Schemas } from '../platform/vscode-path/utils';
+import { sendTelemetryEvent } from '../telemetry';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -135,6 +136,12 @@ export class InteractiveWindowProvider
                 tab,
                 Uri.parse(iw.inputBoxUriString)
             );
+            sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
+                hasKernel: false,
+                hasOwner: !!iw.owner,
+                mode: iw.mode,
+                restored: true
+            });
             this._windows.push(result);
 
             const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
@@ -221,6 +228,12 @@ export class InteractiveWindowProvider
                 editor,
                 inputUri
             );
+            sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
+                hasKernel: !!preferredController,
+                hasOwner: !!resource,
+                mode: mode,
+                restored: false
+            });
             this._windows.push(result);
             this._updateWindowCache();
 
