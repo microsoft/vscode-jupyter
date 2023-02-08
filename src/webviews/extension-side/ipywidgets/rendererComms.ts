@@ -7,6 +7,7 @@ import { IIOPubMessage, IOPubMessageType } from '@jupyterlab/services/lib/kernel
 import { injectable, inject } from 'inversify';
 import { Disposable, NotebookDocument, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { WIDGET_MIMETYPE } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -24,7 +25,10 @@ type RendererLoadedCommand = { command: 'ipywidget-renderer-loaded' };
 @injectable()
 export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
-    constructor(@inject(IKernelProvider) private readonly kernelProvider: IKernelProvider) {}
+    constructor(
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration
+    ) {}
     private readonly widgetOutputsPerNotebook = new WeakMap<NotebookDocument, Set<string>>();
     public dispose() {
         disposeAllDisposables(this.disposables);
@@ -142,8 +146,12 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         //         `IPyWidget version in Kernel is ${kernel?.ipywidgetsVersion} and in widget state is ${versionInWidgetState}.}`
         //     );
         // }
+        const kernelSelected = !!this.controllers.getSelected(editor.notebook);
         comms
-            .postMessage({ command: 'ipywidget-renderer-init', version, widgetState: undefined }, editor)
+            .postMessage(
+                { command: 'ipywidget-renderer-init', version, widgetState: undefined, kernelSelected },
+                editor
+            )
             .then(noop, noop);
     }
 }

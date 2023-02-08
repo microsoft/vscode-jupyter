@@ -31,6 +31,26 @@ class FallbackRenderer extends Error {
     }
 }
 
+/**
+ * Gets the renderer function exposed by the Kernel script.
+ * Call this only if we know that a kernel has been selected.
+ */
+async function getRendererFunction() {
+    const promise = new Promise<Function>((resolve) => {
+        const getRendererFuncImpl = () => {
+            const renderOutputFunc =
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
+            if (renderOutputFunc) {
+                resolve(renderOutputFunc);
+            } else {
+                setTimeout(getRendererFuncImpl, 100);
+            }
+        };
+        getRendererFuncImpl();
+    });
+    return promise;
+}
 export const activate: ActivationFunction = (context) => {
     const logger = (message: string, category?: 'info' | 'error') => {
         if (context.postMessage) {
@@ -52,6 +72,7 @@ export const activate: ActivationFunction = (context) => {
         version?: 7 | 8;
         widgetState?: NotebookMetadata['widgets'];
         widgetStateLoaded: boolean;
+        kernelSelected: boolean;
     }>();
     if (context.postMessage) {
         context.postMessage({ command: 'ipywidget-renderer-loaded' });
@@ -144,16 +165,15 @@ export const activate: ActivationFunction = (context) => {
         async renderOutputItem(outputItem: OutputItem, element: HTMLElement, _signal: AbortController) {
             logger(`Got item for Rendering ${outputItem.id}}`);
             try {
-                const renderOutputFunc =
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
+                const widgetModel = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
+                if (!widgetModel) {
+                    logger(`Error: Model not found to render output ${outputItem.id}`, 'error');
+                    throw new FallbackRenderer();
+                }
+                const info = await rendererInitPromise.promise;
+                const renderOutputFunc = info.kernelSelected ? await getRendererFunction() : undefined;
                 if (renderOutputFunc) {
                     logger(`Rendering ${outputItem.id} widget renderer found *************`);
-                    const widgetModel = convertVSCodeOutputToExecuteResultOrDisplayData(outputItem);
-                    if (!widgetModel) {
-                        return logger(`Error: Model not found to render output ${outputItem.id}`, 'error');
-                    }
-                    const info = await rendererInitPromise.promise;
                     if (!info.widgetStateLoaded && !(await doesKernelHaveWidgetState(widgetModel.model_id))) {
                         logger(
                             `Info: Model not found in Kernel state to render output ${outputItem.id}, rendering a fallback mime type`,
@@ -164,7 +184,7 @@ export const activate: ActivationFunction = (context) => {
                     element.className = (element.className || '') + ' cell-output-ipywidget-background';
                     return renderOutputFunc(outputItem, widgetModel, element, logger, doesKernelHaveWidgetState);
                 }
-                logger(`Error: renderOutputFunc not defined, not rendering output ${outputItem.id}`, 'error');
+                logger(`No Kernel selected, hence not rendering widget output ${outputItem.id}`, 'info');
                 throw new FallbackRenderer();
             } catch (ex) {
                 logErrorMessage(`Failed to render output ${outputItem.id}, ${ex}`);

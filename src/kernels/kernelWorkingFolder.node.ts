@@ -36,7 +36,11 @@ export class KernelWorkingFolder {
         let suggestedDir = await this.calculateWorkingDirectory(kernel.resourceUri);
         if (suggestedDir && (await this.fs.exists(suggestedDir))) {
             return suggestedDir;
-        } else if (kernel.resourceUri && (await this.fs.exists(kernel.resourceUri))) {
+        } else if (
+            kernel.resourceUri &&
+            kernel.resourceUri.scheme !== 'untitled' &&
+            (await this.fs.exists(kernel.resourceUri))
+        ) {
             // Combine the working directory with this file if possible.
             suggestedDir = Uri.file(
                 expandWorkingDir(
