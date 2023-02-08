@@ -1,0 +1,26 @@
+pytest < 6.0.0; python_version > '2.7' # Tests do not support pytest 6 yet.
+# Python 2.7 compatibility (pytest)
+pytest==7.2.1; python_version == '2.7'
+# Requirements needed to run install_debugpy.py
+packaging
+# List of requirements for ipython tests
+numpy
+pandas
+# Install jupyter itself so we end up with a kernel
+jupyter
+# List of requirements for conda environments that cannot be installed using conda
+livelossplot
+versioneer
+pythreejs
+ipywidgets
+ipysheet==0.5.0
+ipyvolume
+beakerx
+beakerx_kernel_java
+py4j
+bqplot
+K3D
+ipyleaflet
+jinja2==3.1.2 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039
+matplotlib
+ipympl
