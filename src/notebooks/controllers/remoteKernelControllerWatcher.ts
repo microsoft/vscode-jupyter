@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
+import { extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
     IJupyterUriProvider,
@@ -10,9 +10,10 @@ import {
 } from '../../kernels/jupyter/types';
 import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { Settings } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { traceWarning } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import { IControllerRegistration } from './types';
 
 /**
@@ -49,8 +50,12 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         }
         const [handles, uris] = await Promise.all([provider.getHandles(), this.uriStorage.getSavedUriList()]);
         const serverJupyterProviderMap = new Map<string, { uri: string; providerId: string; handle: string }>();
+        const registeredHandles: string[] = [];
         await Promise.all(
             uris.map(async (item) => {
+                if (item.uri === Settings.JupyterServerLocalLaunch) {
+                    return;
+                }
                 // Check if this url is associated with a provider.
                 const info = extractJupyterServerHandleAndId(item.uri);
                 if (!info || info.id !== provider.id) {
@@ -62,6 +67,10 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                     handle: info.handle
                 });
 
+                if (handles.includes(info.handle)) {
+                    registeredHandles.push(info.handle);
+                }
+
                 // Check if this handle is still valid.
                 // If not then remove this uri from the list.
                 if (!handles.includes(info.handle)) {
@@ -72,6 +81,21 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 }
             })
         );
+
+        // find unregistered handles
+        const unregisteredHandles = handles.filter((h) => !registeredHandles.includes(h));
+        await Promise.all(
+            unregisteredHandles.map(async (handle) => {
+                try {
+                    const serverUri = await provider.getServerUri(handle);
+                    const uri = generateUriFromRemoteProvider(provider.id, handle);
+                    await this.uriStorage.setUriToRemote(uri, serverUri.displayName);
+                } catch (ex) {
+                    traceError(`Failed to get server uri and add it to uri Storage for handle ${handle}`, ex);
+                }
+            })
+        );
+
         const controllers = this.controllers.registered;
         controllers.forEach((controller) => {
             const connection = controller.connection;

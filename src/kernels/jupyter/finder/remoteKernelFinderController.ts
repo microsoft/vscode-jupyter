@@ -26,6 +26,7 @@ import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import * as localize from '../../../platform/common/utils/localize';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
+import { Settings } from '../../../platform/common/constants';
 
 /** Strategy design */
 interface IRemoteKernelFinderRegistrationStrategy {
@@ -65,6 +66,11 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
     createRemoteKernelFinder(serverUri: IJupyterServerUriEntry) {
         if (!serverUri.isValidated) {
             // when server uri is validated, an `onDidAddUri` event will be fired.
+            return;
+        }
+
+        if (serverUri.uri === Settings.JupyterServerLocalLaunch) {
+            // 'local' uri is not a remote server.
             return;
         }
 
