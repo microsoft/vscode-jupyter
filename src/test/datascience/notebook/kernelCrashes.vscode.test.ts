@@ -118,6 +118,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 workspaceService,
                 platform,
                 uriStorage,
+                featureManager,
                 disposables
             );
             const createNbController = sinon.stub(vscodeNotebook, 'createNotebookController');

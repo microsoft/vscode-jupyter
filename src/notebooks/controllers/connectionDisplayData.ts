@@ -13,7 +13,7 @@ import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { KernelConnectionMetadata, RemoteKernelConnectionMetadata } from '../../kernels/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
-import { IDisposableRegistry, ReadWrite } from '../../platform/common/types';
+import { IDisposableRegistry, IFeaturesManager, ReadWrite } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
@@ -24,6 +24,7 @@ export type ConnectionDisplayData = {
     readonly description: string | undefined;
     readonly detail: string;
     readonly category: string;
+    readonly serverDisplayName?: string;
 };
 
 @injectable()
@@ -35,6 +36,7 @@ export class ConnectionDisplayDataProvider {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this._onDidChange);
@@ -59,6 +61,22 @@ export class ConnectionDisplayDataProvider {
         details.detail = detail;
         details.category = category || details.category;
         this.details.set(connection.id, details);
+
+        if (
+            this.featuresManager.features.kernelPickerType === 'Insiders' &&
+            (connection.kind === 'connectToLiveRemoteKernel' || connection.kind === 'startUsingRemoteKernelSpec')
+        ) {
+            getRemoteServerDisplayName(connection, this.serverUriStorage)
+                .then((displayName) => {
+                    if (details.serverDisplayName !== displayName) {
+                        details.serverDisplayName = displayName;
+
+                        this._onDidChange.fire(details);
+                        return;
+                    }
+                })
+                .catch(noop);
+        }
 
         getKernelConnectionCategory(connection, this.serverUriStorage)
             .then((kind) => {

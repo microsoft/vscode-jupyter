@@ -309,7 +309,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private updateDisplayData() {
         const displayData = this.displayDataProvider.getDisplayData(this.connection);
         this.controller.label = displayData.label;
-        this.controller.description = displayData.description;
+        if (this.featureManager.features.kernelPickerType === 'Insiders' && displayData.serverDisplayName) {
+            // MRU kernel picker doesn't show controller kind/category, so add server name to description
+            this.controller.description = displayData.description
+                ? `${displayData.description} (${displayData.serverDisplayName})`
+                : displayData.serverDisplayName;
+        }
         this.controller.kind = displayData.category;
     }
     // Handle the execution of notebook cell
