@@ -15,8 +15,14 @@ import {
     window
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
+import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
 import { validateSelectJupyterURI } from '../../kernels/jupyter/serverSelector';
-import { IJupyterServerUri, IJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import {
+    IJupyterServerUri,
+    IJupyterServerUriStorage,
+    IJupyterUriProvider,
+    IJupyterUriProviderRegistration
+} from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
 import { Settings } from '../../platform/common/constants';
@@ -30,6 +36,7 @@ import {
     IsWebExtension
 } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
 import { traceError } from '../../platform/logging';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
@@ -54,6 +61,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
@@ -91,6 +99,43 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 this._onDidChangeHandles.fire();
             })
         );
+
+        this._initializeCachedServerInfo()
+            .then(async () => {
+                // once cache is initialized, check if we should do migration
+                const existingServers = await this.serverUriStorage.getSavedUriList();
+                const migratedServers = [];
+                for (const server of existingServers) {
+                    // server.uri is never 'local'
+                    // we should check if the server is from uri provider
+                    if (server.uri === Settings.JupyterServerLocalLaunch) {
+                        continue;
+                    }
+
+                    const info = extractJupyterServerHandleAndId(server.uri);
+                    if (info) {
+                        continue;
+                    }
+
+                    if (this._servers.find((s) => s.uri === server.uri)) {
+                        // already exist
+                        continue;
+                    }
+
+                    const serverInfo = this.parseUri(server.uri);
+                    if (serverInfo) {
+                        migratedServers.push({
+                            handle: uuid(),
+                            uri: server.uri,
+                            serverInfo: serverInfo
+                        });
+                    }
+                }
+
+                this._servers.push(...migratedServers);
+                this._onDidChangeHandles.fire();
+            })
+            .catch(noop);
     }
 
     private async _initializeCachedServerInfo(): Promise<void> {
