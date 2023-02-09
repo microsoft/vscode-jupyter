@@ -153,14 +153,14 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 UserJupyterServerUriListKey
             );
 
-            if (!cache || !serverList) {
+            if (!cache || !serverList || serverList.length === 0) {
                 resolve();
                 return;
             }
 
             const encryptedList = cache.split(Settings.JupyterServerRemoteLaunchUriSeparator);
 
-            if (encryptedList.length === 0) {
+            if (encryptedList.length === 0 || encryptedList.length !== serverList.length) {
                 traceError('Invalid server list, unable to retrieve server info');
                 resolve();
                 return;
