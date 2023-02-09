@@ -116,7 +116,6 @@ export const __ = '';
 
 //         // Setup default settings
 //         pythonSettings.assign({
-//             allowImportFromNotebook: true,
 //             jupyterLaunchTimeout: 10,
 //             jupyterLaunchRetries: 3,
 //             changeDirOnImportExport: false,
@@ -125,8 +124,6 @@ export const __ = '';
 //             useDefaultConfigForJupyter: true,
 //             jupyterInterruptTimeout: 10000,
 //             searchForJupyter: true,
-//             showCellInputCode: true,
-//             enableScrollingForCellOutputs: true,
 //             errorBackgroundColor: '#FFFFFF',
 //             sendSelectionToInteractiveWindow: false,
 //             variableExplorerExclude: 'module;function;builtin_function_or_method',

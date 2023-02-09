@@ -106,15 +106,12 @@ suite('Code Watcher Unit Tests', () => {
         // Setup default settings
         jupyterSettings = new MockJupyterSettings(undefined, SystemVariables, 'node', instance(workspace));
         jupyterSettings.assign({
-            allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
             notebookFileRoot: 'WORKSPACE',
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
-            showCellInputCode: true,
-            enableScrollingForCellOutputs: true,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             variableExplorerExclude: 'module;function;builtin_function_or_method',

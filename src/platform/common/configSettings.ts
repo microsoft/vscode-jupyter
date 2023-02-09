@@ -43,7 +43,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
     public logging: ILoggingSettings = { level: 'error' };
-    public allowImportFromNotebook: boolean = false;
     public allowUnauthorizedRemoteConnection: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
@@ -51,8 +50,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public notebookFileRoot: string = '';
     public useDefaultConfigForJupyter: boolean = false;
     public searchForJupyter: boolean = false;
-    public showCellInputCode: boolean = false;
-    public enableScrollingForCellOutputs: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
@@ -69,12 +66,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public debugCodeLenses: string = '';
     public debugpyDistPath: string = '';
     public stopOnFirstLineWhileDebugging: boolean = false;
-    public textOutputLimit: number = 0;
     public magicCommandsAsComments: boolean = false;
     public pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert' = 'direct';
     public stopOnError: boolean = false;
     public remoteDebuggerPort: number = 0;
-    public colorizeInputBox: boolean = false;
     public addGotoCodeLenses: boolean = false;
     public runStartupCommands: string | string[] = [];
     public debugJustMyCode: boolean = false;

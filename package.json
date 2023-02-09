@@ -49,7 +49,6 @@
     "activationEvents": [
         "onLanguage:python",
         "onLanguage:jupyter",
-        "onWalkthrough:jupyterWelcome",
         "onNotebook:jupyter-notebook",
         "onNotebook:interactive",
         "onWebviewPanel:jupyter-variables",
@@ -1503,13 +1502,6 @@
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"
                 },
-                "jupyter.allowImportFromNotebook": {
-                    "type": "boolean",
-                    "default": true,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.allowImportFromNotebook.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.allowImportFromNotebook.description%",
-                    "scope": "resource"
-                },
                 "jupyter.widgetScriptSources": {
                     "type": "array",
                     "default": [],
@@ -1583,34 +1575,6 @@
                     "type": "number",
                     "default": 10000,
                     "description": "%jupyter.configuration.jupyter.jupyterInterruptTimeout.description%"
-                },
-                "jupyter.showCellInputCode": {
-                    "type": "boolean",
-                    "default": true,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.showCellInputCode.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.showCellInputCode.description%",
-                    "scope": "resource"
-                },
-                "jupyter.collapseCellInputCodeByDefault": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "%jupyter.configuration.jupyter.collapseCellInputCodeByDefault.description%",
-                    "markdownDeprecationMessage": "%jupyter.configuration.jupyter.collapseCellInputCodeByDefault.markdownDeprecationMessage%",
-                    "scope": "resource"
-                },
-                "jupyter.alwaysScrollOnNewCell": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "%jupyter.configuration.jupyter.alwaysScrollOnNewCell.description%",
-                    "scope": "resource",
-                    "deprecationMessage": "%jupyter.configuration.jupyter.alwaysScrollOnNewCell.deprecationMessage%"
-                },
-                "jupyter.enableScrollingForCellOutputs": {
-                    "type": "boolean",
-                    "default": true,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.enableScrollingForCellOutputs.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.enableScrollingForCellOutputs.description%",
-                    "scope": "resource"
                 },
                 "jupyter.sendSelectionToInteractiveWindow": {
                     "type": "boolean",
@@ -1718,20 +1682,6 @@
                     "type": "boolean",
                     "default": false,
                     "description": "%jupyter.configuration.jupyter.disableJupyterAutoStart.description%"
-                },
-                "jupyter.textOutputLimit": {
-                    "type": "number",
-                    "default": 20000,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.textOutputLimit.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.textOutputLimit.description%",
-                    "scope": "resource"
-                },
-                "jupyter.colorizeInputBox": {
-                    "type": "boolean",
-                    "default": true,
-                    "deprecationMessage": "%jupyter.configuration.jupyter.colorizeInputBox.deprecationMessage%",
-                    "description": "%jupyter.configuration.jupyter.colorizeInputBox.description%",
-                    "scope": "resource"
                 },
                 "jupyter.addGotoCodeLenses": {
                     "type": "boolean",
