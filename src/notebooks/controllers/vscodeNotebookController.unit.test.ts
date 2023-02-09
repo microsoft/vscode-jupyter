@@ -140,6 +140,7 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData';
                 instance(workspace),
                 instance(platform),
                 instance(jupyterUriStorage),
+                instance(featureManager),
                 disposables
             );
         });
