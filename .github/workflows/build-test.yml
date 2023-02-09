@@ -519,6 +519,7 @@ jobs:
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
+          python -m pip install ipywidgets -U
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
           python ./pythonFiles/install_debugpy.py
