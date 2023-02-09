@@ -231,6 +231,8 @@ export class ScriptManager extends EventEmitter {
         } catch (ex) {
             // eslint-disable-next-line no-console
             console.error(`Failed to load Widget Script from Extension for ${moduleName}, ${moduleVersion}`, ex);
+            // TODO: https://github.com/microsoft/vscode-jupyter/issues/12786
+            // throw ex;
         }
     }
 

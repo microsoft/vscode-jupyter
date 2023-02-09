@@ -1861,6 +1861,32 @@
                 ]
             }
         ],
+        "notebookPreload": [
+            {
+                "type": "jupyter-notebook",
+                "entrypoint": "./out/node_modules/@vscode/jupyter-ipywidgets7/dist/ipywidgets.js"
+            },
+            {
+                "type": "interactive",
+                "entrypoint": "./out/node_modules/@vscode/jupyter-ipywidgets7/dist/ipywidgets.js"
+            },
+            {
+                "type": "jupyter-notebook",
+                "entrypoint": "./out/node_modules/@vscode/jupyter-ipywidgets8/dist/ipywidgets.js"
+            },
+            {
+                "type": "interactive",
+                "entrypoint": "./out/node_modules/@vscode/jupyter-ipywidgets8/dist/ipywidgets.js"
+            },
+            {
+                "type": "jupyter-notebook",
+                "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
+            },
+            {
+                "type": "interactive",
+                "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
+            }
+        ],
         "notebookRenderer": [
             {
                 "id": "jupyter-ipywidget-renderer",
@@ -1993,7 +2019,8 @@
         "@lumino/widgets": "^1.28.0",
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.6.2",
-        "@vscode/jupyter-ipywidgets7": "^1.0.3",
+        "@vscode/jupyter-ipywidgets7": "^2.0.0",
+        "@vscode/jupyter-ipywidgets8": "^1.0.0",
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",

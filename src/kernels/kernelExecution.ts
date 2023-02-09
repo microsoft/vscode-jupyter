@@ -25,6 +25,9 @@ import {
     NotebookCellRunState
 } from './types';
 
+/**
+ * Everything in this classes gets disposed via the `onWillCancel` hook.
+ */
 export class NotebookKernelExecution implements INotebookKernelExecution {
     private readonly disposables: IDisposable[] = [];
     get executionCount(): number {

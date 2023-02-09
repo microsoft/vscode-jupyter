@@ -4,17 +4,27 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
 import { OutputItem } from 'vscode-notebook-renderer';
-import { SharedMessages, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
+import {
+    SharedMessages,
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
+    IPyWidgetMessages
+} from '../../../../messageTypes';
 import { logErrorMessage, logMessage } from '../../react-common/logger';
 import { WidgetManager } from './manager';
 import { ScriptManager } from './scriptManager';
-import { IJupyterLabWidgetManagerCtor } from './types';
+import { IJupyterLabWidgetManagerCtor, INotebookModel } from './types';
+import { NotebookMetadata } from '../../../../platform/common/utils';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
     private readonly scriptManager: ScriptManager;
     private widgetsCanLoadFromCDN: boolean = false;
-    constructor(private postOffice: PostOffice, JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
+    constructor(
+        private postOffice: PostOffice,
+        JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor,
+        widgetState?: NotebookMetadata['widgets']
+    ) {
         this.scriptManager = new ScriptManager(postOffice);
         this.scriptManager.onWidgetLoadError(this.handleLoadError.bind(this));
         this.scriptManager.onWidgetLoadSuccess(this.handleLoadSuccess.bind(this));
@@ -24,7 +34,8 @@ class WidgetManagerComponent {
             undefined as any,
             postOffice,
             this.scriptManager.getScriptLoader(),
-            JupyterLabWidgetManager
+            JupyterLabWidgetManager,
+            widgetState
         );
 
         postOffice.addHandler({
@@ -106,7 +117,6 @@ export async function renderOutput(
         renderIPyWidget(outputItem.id, model, element, logger);
     } catch (ex) {
         logger(`Error: render output ${outputItem.id} failed ${ex.toString()}`, 'error');
-        console.error(`Failed to render ipywidget type`, ex);
         throw ex;
     }
 }
@@ -177,7 +187,6 @@ function renderIPyWidget(
         })
         .catch((ex) => {
             logger(`Error: Failed to render ${outputId}, ${ex.toString()}`, 'error');
-            console.error('Failed to render', ex);
         });
 }
 
@@ -216,54 +225,163 @@ async function createWidgetView(
         return await wm?.renderWidget(widgetData, element);
     } catch (ex) {
         // eslint-disable-next-line no-console
-        console.error(`Failed to render widget ${widgetData.model_id}`, ex);
         logErrorMessage(`Error: Failed to render widget ${widgetData.model_id}, ${ex.toString()}`);
+    }
+}
+/**
+ * Provides the ability to restore widget state from ipynb files.
+ *
+ * @param {NotebookMetadata['widgets']} widgetState
+ * @return {*}
+ */
+async function restoreWidgets(widgetState: NotebookMetadata['widgets']) {
+    await new Promise<void>((resolve) => {
+        const tryAgain = () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((window as any).vscIPyWidgets) {
+                return resolve();
+            }
+            setTimeout(tryAgain, 1_000);
+        };
+        setTimeout(tryAgain, 1_000);
+    });
+    try {
+        initializeWidgetManager(widgetState);
+        const wm = await getWidgetManager();
+        const model: INotebookModel = {
+            metadata: {
+                get: (_: unknown) => {
+                    return widgetState!;
+                }
+            }
+        };
+        return await wm?.restoreWidgets(model, { loadKernel: false, loadNotebook: true });
+    } catch (ex) {
+        // eslint-disable-next-line no-console
+        logErrorMessage(`Error: Failed to render widget state ${widgetState}, ${ex.toString()}`);
+    }
+}
+
+let initialized = false;
+function initialize(
+    JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor,
+    context: KernelMessagingApi,
+    widgetState?: NotebookMetadata['widgets']
+) {
+    if (initialized) {
+        logErrorMessage(`Error: WidgetManager already initialized`);
+        return;
+    }
+    try {
+        // Setup the widget manager
+        const postOffice = new PostOffice(context);
+        const mgr = new WidgetManagerComponent(postOffice, JupyterLabWidgetManager, widgetState);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (window as any)._mgr = mgr;
+        initialized = true;
+    } catch (ex) {
+        // eslint-disable-next-line no-console
+        logErrorMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
     }
 }
 
 let capturedContext: KernelMessagingApi;
-function initialize(JupyterLabWidgetManager: IJupyterLabWidgetManagerCtor) {
-    try {
-        // Setup the widget manager
-        const postOffice = new PostOffice(capturedContext);
-        const mgr = new WidgetManagerComponent(postOffice, JupyterLabWidgetManager);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any)._mgr = mgr;
-    } catch (ex) {
-        // eslint-disable-next-line no-console
-        console.error('Exception initializing WidgetManager', ex);
-        logErrorMessage(`Error: Exception initializing WidgetManager, ${ex.toString()}`);
-    }
-}
 
 // Create our window exports
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (window as any).ipywidgetsKernel = {
     renderOutput,
-    disposeOutput
+    disposeOutput,
+    restoreWidgets,
+    initialize: () => {
+        requestWidgetVersion(capturedContext);
+    }
 };
 
-// To ensure we initialize after the other scripts, wait for them.
-function attemptInitialize(context: KernelMessagingApi) {
-    logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
-
+function requestWidgetVersion(context: KernelMessagingApi) {
+    context.postKernelMessage({ type: IPyWidgetMessages.IPyWidgets_Request_Widget_Version });
+}
+function initializeWidgetManager(widgetState?: NotebookMetadata['widgets']) {
+    logMessage('IPyWidget kernel initializing...');
+    // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).vscIPyWidgets) {
-        logMessage('IPyWidget kernel initializing...');
-        // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
-        if (!JupyterLabWidgetManager) {
-            throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
-        }
-        initialize(JupyterLabWidgetManager);
-    } else {
-        setTimeout(attemptInitialize, 100);
+    const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
+    if (!JupyterLabWidgetManager) {
+        throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
     }
+    initialize(JupyterLabWidgetManager, capturedContext, widgetState);
 }
 
-// Has to be this form for VS code to load it correctly
 export function activate(context: KernelMessagingApi) {
     capturedContext = context;
-    return attemptInitialize(context);
+    logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
+    context.onDidReceiveKernelMessage(async (e) => {
+        if (
+            typeof e === 'object' &&
+            e &&
+            'type' in e &&
+            e.type === IPyWidgetMessages.IPyWidgets_Reply_Widget_Version &&
+            'payload' in e &&
+            typeof e.payload === 'number'
+        ) {
+            try {
+                const version = e.payload;
+                logMessage(`Loading IPyWidget Version ${version}`);
+                // Load the specific version of the widget scripts
+                const widgets7Promise = new Promise<void>((resolve) => {
+                    const checkIfLoaded = () => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        if ((window as any).vscIPyWidgets7) {
+                            return resolve();
+                        }
+                        setTimeout(checkIfLoaded, 500);
+                    };
+                    setTimeout(checkIfLoaded, 500);
+                });
+                const widgets8Promise = new Promise<void>((resolve) => {
+                    const checkIfLoaded = () => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        if ((window as any).vscIPyWidgets8) {
+                            return resolve();
+                        }
+                        setTimeout(checkIfLoaded, 500);
+                    };
+                    setTimeout(checkIfLoaded, 500);
+                });
+                await Promise.all([widgets7Promise, widgets8Promise]);
+                const unloadWidgets8 = () => {
+                    try {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (window as any).vscIPyWidgets8.unload();
+                    } catch {
+                        //
+                    }
+                };
+                const unloadWidgets7 = () => {
+                    try {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (window as any).vscIPyWidgets7.unload();
+                    } catch {
+                        //
+                    }
+                };
+                if (version === 7) {
+                    unloadWidgets8();
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (window as any).vscIPyWidgets7.load();
+                    logMessage('Loaded IPYWidgets 7.x from Kernel');
+                } else if (version === 8) {
+                    unloadWidgets7();
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (window as any).vscIPyWidgets8.load();
+                    logMessage('Loaded IPYWidgets 8.x from Kernel');
+                }
+
+                initializeWidgetManager();
+            } catch (ex) {
+                logErrorMessage(`Failed to load IPyWidget Version ${e.payload}, ${ex}`);
+            }
+        }
+    });
+    requestWidgetVersion(context);
 }

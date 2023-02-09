@@ -175,7 +175,10 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
         }
         const packages = packageLock[key];
         Object.keys(packages).forEach((packageName) => {
-            if (packagesAllowedToUseMoment.includes(packageName)) {
+            if (
+                packagesAllowedToUseMoment.includes(packageName) ||
+                packagesAllowedToUseMoment.some((p) => packageName.endsWith(p))
+            ) {
                 return;
             }
             ['dependencies', 'requires'].forEach((dependencyKey) => {
@@ -189,7 +192,10 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
         });
     });
     if (otherPackagesUsingMoment.length > 0) {
-        throw new Error(`Moment is being used by another package (${otherPackagesUsingMoment.join(', ')}).`);
+        // Verify how the other packages are using moment.
+        // If its still the same as jupyter lab coreutils, then we can ignore them
+        // Else we might have to either polyfill that to ensure moment usage works or just bring in moment back again.
+        throw new Error(`Moment is being used by other packages (${otherPackagesUsingMoment.join(', ')}).`);
     }
 }
 
