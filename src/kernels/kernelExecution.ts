@@ -26,6 +26,9 @@ import {
     NotebookCellRunState
 } from './types';
 
+/**
+ * Everything in this classes gets disposed via the `onWillCancel` hook.
+ */
 export class NotebookKernelExecution implements INotebookKernelExecution {
     private readonly disposables: IDisposable[] = [];
     get executionCount(): number {
@@ -71,9 +74,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         kernel.addHook('willCancel', this.onWillCancel, this, this.disposables);
         kernel.addHook('willRestart', (sessionPromise) => this.onWillRestart(sessionPromise), this, this.disposables);
         this.disposables.push(this._onPreExecute);
-    }
-    public dispose() {
-        disposeAllDisposables(this.disposables);
     }
     public get pendingCells(): readonly NotebookCell[] {
         return this.documentExecutions.get(this.notebook)?.queue || [];

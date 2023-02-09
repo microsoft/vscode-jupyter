@@ -5,7 +5,7 @@ inputs:
   IPyWidgetVersion:
      description: 'Version of IPyWidgets'
      required: false
-     default: '7.7.2'
+     default: '7'
 
 outputs:
   path:
@@ -22,7 +22,7 @@ runs:
     # Ensure this is registered as a kernel.
     # Use specific version of Jedi https://github.com/ipython/ipython/issues/12740
     - name: Create virtual environment without ipykernel
-      if: inputs.IPyWidgetVersion == '7.7.2'
+      if: inputs.IPyWidgetVersion == '7'
       run: |
         python -m venv .venvnoreg
 

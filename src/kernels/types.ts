@@ -393,7 +393,7 @@ export interface IKernel extends IBaseKernel {
     readonly creator: 'jupyterExtension';
 }
 
-export interface INotebookKernelExecution extends IDisposable {
+export interface INotebookKernelExecution {
     /**
      * Total execution count on this kernel
      */
