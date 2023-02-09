@@ -398,30 +398,57 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v3
-        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on linux
+        uses: actions/cache@v3
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on mac
         uses: actions/cache@v3
-        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on mac
+        uses: actions/cache@v3
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on windows
         uses: actions/cache@v3
-        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on windows
+        uses: actions/cache@v3
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
@@ -470,7 +497,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '7'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
