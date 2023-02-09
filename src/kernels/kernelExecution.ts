@@ -5,7 +5,6 @@ import { IOutput } from '@jupyterlab/nbformat';
 import { NotebookCell, EventEmitter, notebooks, NotebookCellExecutionState, NotebookDocument, workspace } from 'vscode';
 import { NotebookCellKind } from 'vscode-languageserver-protocol';
 import { IApplicationShell } from '../platform/common/application/types';
-import { disposeAllDisposables } from '../platform/common/helpers';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
 import { traceInfo, traceVerbose } from '../platform/logging';
