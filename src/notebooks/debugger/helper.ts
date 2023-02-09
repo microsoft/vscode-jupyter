@@ -25,10 +25,18 @@ import ipykernel
 builtins.print(ipykernel.__version__)`;
     const output = await execution.executeHidden(code);
 
-    if (output[0].text) {
-        const version = output[0].text.toString().split('.');
-        const majorVersion = Number(version[0]);
-        return majorVersion >= 6 ? IpykernelCheckResult.Ok : IpykernelCheckResult.Outdated;
+    const versionRegex = /^\d+\.\d+\.\d+$/;
+
+    // It is necessary to traverse all the output to determine the version of ipykernel, some jupyter servers may return extra status metadata
+    for (const line of output) {
+        const lineText = line.text?.toString();
+        if (lineText && versionRegex.test(lineText)) {
+            const [majorVersion] = lineText.split('.').map(Number);
+            if (majorVersion >= 6) {
+                return IpykernelCheckResult.Ok;
+            }
+            return IpykernelCheckResult.Outdated;
+        }
     }
 
     return IpykernelCheckResult.Unknown;
