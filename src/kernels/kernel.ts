@@ -689,10 +689,12 @@ abstract class BaseKernel implements IBaseKernel {
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
         session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
         // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
         // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
         // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
         await this.determineVersionOfIPyWidgets(session);
+
         // Gather all of the startup code at one time and execute as one cell
         const startupCode = await this.gatherInternalStartupCode();
         await this.executeSilently(session, startupCode, {
