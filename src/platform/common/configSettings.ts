@@ -28,6 +28,7 @@ import {
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { ISystemVariables, ISystemVariablesConstructor } from './variables/types';
+import { ConfigMigration } from './configMigration';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
@@ -119,7 +120,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             this.disableJupyterAutoStart = true;
         }
     }
-    // eslint-disable-next-line
+
     public static getInstance(
         resource: Uri | undefined,
         systemVariablesCtor: ISystemVariablesConstructor,
@@ -142,7 +143,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         return settings;
     }
 
-    // eslint-disable-next-line @typescript-eslint/member-delimiter-style
     public static getSettingsUriAndTarget(
         resource: Uri | undefined,
         workspace: IWorkspaceService
@@ -158,17 +158,14 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         return { uri: workspaceFolderUri, target };
     }
 
-    // eslint-disable-next-line
     public static dispose() {
         if (!isTestExecution()) {
             throw new Error('Dispose can only be called from unit tests');
         }
-        // eslint-disable-next-line no-void
         JupyterSettings.jupyterSettings.forEach((item) => item && item.dispose());
         JupyterSettings.jupyterSettings.clear();
     }
     public dispose() {
-        // eslint-disable-next-line
         this._disposables.forEach((disposable) => disposable && disposable.dispose());
         this._disposables = [];
     }
@@ -187,8 +184,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         allowedKeys.forEach((k) => (result[k] = (<any>this)[k]));
         return result;
     }
-    // eslint-disable-next-line complexity,
-    protected update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
+
+    private update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
         const systemVariables = this.createSystemVariables(undefined);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -236,7 +233,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         }
     }
 
-    protected onWorkspaceFoldersChanged() {
+    private onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
         const workspaceKeys = this._workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.path);
         const activatedWkspcKeys = Array.from(JupyterSettings.jupyterSettings.keys());
@@ -247,7 +244,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             }
         }
     }
-    protected initialize(): void {
+
+    private initialize(): void {
         const onDidChange = () => {
             const currentConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
             const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
@@ -270,13 +268,70 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         );
 
         const initialConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
+        await this.migrateSettings(initialConfig);
         const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
         if (initialConfig) {
             this.update(initialConfig, pythonConfig);
         }
     }
+
+    private async migrateSettings(config: WorkspaceConfiguration) {
+        const configMigration = new ConfigMigration(config);
+
+        await configMigration.migrateSetting('jupyter.interactiveWindowMode', 'jupyter.interactiveWindow.creationMode');
+
+        await configMigration.migrateSetting(
+            'jupyter.sendSelectionToInteractiveWindow',
+            'jupyter.interactiveWindow.textEditor.executeSelection'
+        );
+        await configMigration.migrateSetting(
+            'jupyter.magicCommandsAsComments',
+            'jupyter.interactiveWindow.textEditor.magicCommandsAsComments'
+        );
+        await configMigration.migrateSetting(
+            'jupyter.enableAutoMoveToNextCell',
+            'jupyter.interactiveWindow.textEditor.autoMoveToNextCell'
+        );
+        await configMigration.migrateSetting(
+            'jupyter.newCellOnRunLast',
+            'jupyter.interactiveWindow.textEditor.autoAddNewCell'
+        );
+        await configMigration.migrateSetting(
+            'jupyter.pythonCellFolding',
+            'jupyter.interactiveWindow.textEditor.cellFolding'
+        );
+
+        await configMigration.migrateSetting('jupyter.enableCellCodeLens', 'jupyter.interactiveWindow.codeLens.enable');
+        await configMigration.migrateSetting(
+            'jupyter.addGotoCodeLenses',
+            'jupyter.interactiveWindow.codeLens.enableGotoCell'
+        );
+        await configMigration.migrateSetting('jupyter.codeLenses', 'jupyter.interactiveWindow.codeLens.commands');
+        await configMigration.migrateSetting(
+            'jupyter.debugCodeLenses',
+            'jupyter.interactiveWindow.codeLes.debugCommands'
+        );
+
+        await configMigration.migrateSetting(
+            'jupyter.codeRegularExpression',
+            'jupyter.interactiveWindow.cellMarker.codeRegex'
+        );
+        await configMigration.migrateSetting(
+            'jupyter.markdownRegularExpression',
+            'jupyter.interactiveWindow.cellMarker.markdownRegex'
+        );
+        await configMigration.migrateSetting(
+            'jupyter.decorateCells',
+            'jupyter.interactiveWindow.cellMarker.decorateCells'
+        );
+        await configMigration.migrateSetting(
+            'jupyter.defaultCellMarker',
+            'jupyter.interactiveWindow.cellMarker.default'
+        );
+    }
+
     @debounceSync(1)
-    protected debounceChangeNotification() {
+    private debounceChangeNotification() {
         this._changeEmitter.fire();
     }
 

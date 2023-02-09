@@ -175,7 +175,7 @@
     "jupyter.configuration.jupyter.notebookFileRoot.description": "Set the root directory for running notebooks and the Interactive window.",
     "jupyter.configuration.jupyter.searchForJupyter.deprecationMessage": "This setting is deprecated and will be removed in a future release.",
     "jupyter.configuration.jupyter.searchForJupyter.description": "Search all installed Python interpreters for a Jupyter installation when starting the Interactive window",
-    "jupyter.configuration.jupyter.useDefaultConfigForJupyter.description": "When running Jupyter locally, create a default empty Jupyter config for the Interactive window",
+    "jupyter.configuration.jupyter.useDefaultConfigForJupyter.description": "When running Jupyter locally, create a default empty Jupyter config",
     "jupyter.configuration.jupyter.jupyterInterruptTimeout.description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
     "jupyter.configuration.jupyter.variableExplorerExclude.description": "Types to exclude from showing in the Interactive variable explorer",
