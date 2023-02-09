@@ -607,7 +607,7 @@ jobs:
         uses: ./.github/actions/create-venv-for-tests
         if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8'
         with:
-          IPYWIDGET_VERSION: '8'
+          IPyWidgetVersion: '8'
 
       - name: Create temp folder for user data dir
         run: |
