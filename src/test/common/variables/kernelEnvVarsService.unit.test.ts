@@ -156,14 +156,7 @@ suite('Kernel Environment Variables Service', () => {
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
         // Compare ignoring the PATH variable.
-        assert.deepEqual(
-            Object.assign({}, vars, { PATH: '', Path: '' }),
-            Object.assign({}, processEnv, { PATH: '', Path: '' })
-        );
-        assert.strictEqual(
-            vars![processPath!],
-            `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}${processEnv[processPath!]}`
-        );
+        assert.deepEqual(vars, process.env);
     });
 
     test('Paths are left unaltered if Python returns the Interpreter Info', async () => {
