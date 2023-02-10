@@ -23,6 +23,7 @@ import {
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, ReadWrite } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
@@ -52,6 +53,7 @@ suite('Kernel Selector', () => {
     const disposables: IDisposable[] = [];
     let cancellation: CancellationTokenSource;
     let notebook: NotebookDocument;
+    let workspaceService: IWorkspaceService;
     let displayDataProvider: ConnectionDisplayDataProvider;
     let pythonChecker: IPythonExtensionChecker;
     let provider: ReadWrite<IQuickPickKernelItemProvider>;
@@ -169,7 +171,7 @@ suite('Kernel Selector', () => {
         pythonChecker = mock<IPythonExtensionChecker>();
         kernelFinder = mock<IContributedKernelFinder<KernelConnectionMetadata>>();
         displayDataProvider = mock<ConnectionDisplayDataProvider>();
-
+        workspaceService = mock<IWorkspaceService>();
         onDidChangeProvider = new EventEmitter<void>();
         onDidChangeProviderStatus = new EventEmitter<void>();
         onDidChangeRecommended = new EventEmitter<void>();
@@ -216,7 +218,7 @@ suite('Kernel Selector', () => {
             refresh: async () => noop(),
             recommended: undefined
         };
-
+        when(workspaceService.isTrusted).thenReturn(true);
         when(serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)).thenReturn(
             instance(displayDataProvider)
         );
@@ -246,7 +248,12 @@ suite('Kernel Selector', () => {
             };
         };
 
-        kernelSelector = new KernelSelector(instance(notebook), provider, cancellation.token);
+        kernelSelector = new KernelSelector(
+            instance(workspaceService),
+            instance(notebook),
+            provider,
+            cancellation.token
+        );
         disposables.push(kernelSelector);
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));

@@ -16,6 +16,7 @@ import {
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
 import { Commands } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
@@ -96,6 +97,7 @@ export class KernelSelector implements IDisposable {
     private readonly installPythonItem: CommandQuickPickItem;
     private readonly createPythonEnvQuickPickItem: CommandQuickPickItem;
     constructor(
+        private readonly workspace: IWorkspaceService,
         private readonly notebook: NotebookDocument,
         private readonly provider: IQuickPickKernelItemProvider,
         private readonly token: CancellationToken
@@ -198,8 +200,10 @@ export class KernelSelector implements IDisposable {
             this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
         ) {
             if (this.provider.kernels.length === 0 && this.provider.status === 'idle') {
-                // Python extension cannot create envs if there are no python environments.
-                this.installPythonItems.push(this.installPythonItem);
+                if (this.workspace.isTrusted) {
+                    // Python extension cannot create envs if there are no python environments.
+                    this.installPythonItems.push(this.installPythonItem);
+                }
             } else {
                 const updatePythonItems = () => {
                     if (
@@ -207,9 +211,11 @@ export class KernelSelector implements IDisposable {
                         this.installPythonItems.length === 0 &&
                         this.provider.status === 'idle'
                     ) {
-                        this.installPythonItems.push(this.installPythonItem);
-                        if (quickPickToBeUpdated) {
-                            this.updateQuickPickItems(quickPickToBeUpdated);
+                        if (this.workspace.isTrusted) {
+                            this.installPythonItems.push(this.installPythonItem);
+                            if (quickPickToBeUpdated) {
+                                this.updateQuickPickItems(quickPickToBeUpdated);
+                            }
                         }
                     } else if (this.provider.kernels.length) {
                         this.installPythonItems.length = 0;

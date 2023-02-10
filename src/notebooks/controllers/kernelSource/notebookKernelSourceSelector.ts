@@ -28,7 +28,7 @@ import {
     LocalKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../../../kernels/types';
-import { IApplicationShell } from '../../../platform/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
@@ -81,7 +81,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         @inject(IJupyterUriProviderRegistration)
         private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector
+        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
     public async selectLocalKernel(
         notebook: NotebookDocument,
@@ -391,7 +392,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         if (token.isCancellationRequested) {
             return;
         }
-        const selector = new KernelSelector(state.notebook, provider, token);
+        const selector = new KernelSelector(this.workspace, state.notebook, provider, token);
         state.disposables.push(selector);
         const quickPickFactory: CreateAndSelectItemFromQuickPick = (options) => {
             const { quickPick, selection } = multiStep.showLazyLoadQuickPick({
