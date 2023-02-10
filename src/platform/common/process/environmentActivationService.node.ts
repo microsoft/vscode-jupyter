@@ -103,7 +103,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             : undefined;
         const stopWatch = new StopWatch();
         // We'll need this later.
-        this.customEnvVarsService.getEnvironmentVariables(resource, 'RunPythonCode').catch(noop);
+        const customEnvVarsPromise = this.customEnvVarsService
+            .getEnvironmentVariables(resource, 'RunPythonCode')
+            .catch(() => undefined);
 
         // Check cache.
         let reasonForFailure:
@@ -160,9 +162,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         if (!env) {
             // Temporary work around until https://github.com/microsoft/vscode-python/issues/20663
-            const customEnvVars = await this.customEnvVarsService
-                .getEnvironmentVariables(resource, 'RunPythonCode')
-                .catch(noop);
+            const customEnvVars = await customEnvVarsPromise;
             env = {};
             this.envVarsService.mergeVariables(process.env, env); // Copy current proc vars into new obj.
             this.envVarsService.mergeVariables(customEnvVars!, env); // Copy custom vars over into obj.
