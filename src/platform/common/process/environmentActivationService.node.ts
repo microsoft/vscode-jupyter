@@ -159,7 +159,25 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             );
         }
         if (!env) {
-            env = Object.assign({}, process.env);
+            // Temporary work around until https://github.com/microsoft/vscode-python/issues/20663
+            const customEnvVars = await this.customEnvVarsService
+                .getEnvironmentVariables(resource, 'RunPythonCode')
+                .catch(noop);
+            env = {};
+            this.envVarsService.mergeVariables(process.env, env); // Copy current proc vars into new obj.
+            this.envVarsService.mergeVariables(customEnvVars!, env); // Copy custom vars over into obj.
+            this.envVarsService.mergePaths(process.env, env);
+            if (process.env.PYTHONPATH) {
+                env.PYTHONPATH = process.env.PYTHONPATH;
+            }
+            let pathKey = customEnvVars ? Object.keys(customEnvVars).find((k) => k.toLowerCase() == 'path') : undefined;
+            if (pathKey && customEnvVars![pathKey]) {
+                this.envVarsService.appendPath(env, customEnvVars![pathKey]!);
+            }
+            if (customEnvVars!.PYTHONPATH) {
+                this.envVarsService.appendPythonPath(env, customEnvVars!.PYTHONPATH);
+            }
+
             // This way all executables from that env are used.
             // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
             // Also applies to `!java` where java could be an executable in the conda bin directory.
