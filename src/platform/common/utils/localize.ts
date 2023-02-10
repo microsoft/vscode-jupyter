@@ -61,6 +61,12 @@ export namespace DataScience {
     export const pythonExtensionRequired = l10n.t(
         'The Python Extension is required to perform that task. Click Yes to open Python Extension installation page.'
     );
+    export const rendererExtensionRequired = l10n.t(
+        'The Renderer Extension is required to view IPyWidgets. Click Yes to open Jupyter Notebook Renderer Extension installation page.'
+    );
+    export const rendererExtension1015Required = l10n.t(
+        'The installed version of the Renderer Extension is outdated and requires and update to view IPyWidgets. Click Yes to open Jupyter Notebook Renderer Extension installation page.'
+    );
 
     export const pythonExtensionInstalled = l10n.t(
         'Python Extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'

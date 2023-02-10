@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import * as tmp from 'tmp';
-import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
+import { PythonExtension, PylanceExtension, setTestExecution, RendererExtension } from '../platform/common/constants';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
@@ -84,6 +84,17 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
     spawnSync(
         cliPath,
         ['--install-extension', PylanceExtension, '--extensions-dir', extensionsDir, '--disable-telemetry'],
+        {
+            encoding: 'utf-8',
+            stdio: 'inherit'
+        }
+    );
+
+    // Make sure renderers is there too as we'll use it for widget tests
+    console.info(`Installing Renderer Extension to ${extensionsDir}`);
+    spawnSync(
+        cliPath,
+        ['--install-extension', RendererExtension, '--extensions-dir', extensionsDir, '--disable-telemetry'],
         {
             encoding: 'utf-8',
             stdio: 'inherit'

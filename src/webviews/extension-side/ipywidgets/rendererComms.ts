@@ -106,9 +106,13 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
         message: QueryWidgetStateCommand
     ) {
         const availableModels = this.widgetOutputsPerNotebook.get(editor.notebook);
-        const available = !!availableModels?.has(message.model_id);
+        const kernelSelected = !!this.controllers.getSelected(editor.notebook);
+        const hasWidgetState = !!availableModels?.has(message.model_id);
         comms
-            .postMessage({ command: 'query-widget-state', model_id: message.model_id, available }, editor)
+            .postMessage(
+                { command: 'query-widget-state', model_id: message.model_id, hasWidgetState, kernelSelected },
+                editor
+            )
             .then(noop, noop);
     }
     private sendWidgetVersionAndState(comms: NotebookRendererMessaging, editor: NotebookEditor) {
