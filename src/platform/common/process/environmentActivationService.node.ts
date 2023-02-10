@@ -182,6 +182,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // Also applies to `!java` where java could be an executable in the conda bin directory.
             this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
         }
+
+        traceVerbose(`Activated Env Variables, PATH value is ${env.PATH} and Path value is ${env.Path}`);
         return env;
     }
 }
