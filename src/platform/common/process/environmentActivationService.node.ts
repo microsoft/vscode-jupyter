@@ -23,6 +23,8 @@ import { Telemetry } from '../constants';
 import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
+import { IPlatformService } from '../platform/types';
+import { OSType } from '../utils/platform';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -35,7 +37,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         private readonly customEnvVarsService: ICustomEnvironmentVariablesProvider,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService
+        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
+        @inject(IPlatformService) private readonly platform: IPlatformService
     ) {
         this.customEnvVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
@@ -184,6 +187,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
 
         traceVerbose(`Activated Env Variables, PATH value is ${env.PATH} and Path value is ${env.Path}`);
+        if (this.platform.osType !== OSType.Windows && !env.PATH && env.Path) {
+            env.PATH = env.Path;
+        }
         return env;
     }
 }
