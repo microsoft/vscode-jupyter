@@ -23,7 +23,6 @@ import { Telemetry } from '../constants';
 import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
-import { noop } from '../utils/misc';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
