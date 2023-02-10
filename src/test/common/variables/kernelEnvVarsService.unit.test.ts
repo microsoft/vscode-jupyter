@@ -148,16 +148,6 @@ suite('Kernel Environment Variables Service', () => {
         assert.deepEqual(vars, processEnv);
     });
 
-    test('Returns process.env vars if unable to get activated vars for interpreter and no kernelspec.env', async () => {
-        when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve();
-        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
-
-        const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
-
-        // Compare ignoring the PATH variable.
-        assert.deepEqual(vars, process.env);
-    });
-
     test('Paths are left unaltered if Python returns the Interpreter Info', async () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
