@@ -56,7 +56,7 @@ export class BaseKernelConnectionMetadata {
             | ReadWrite<RemoteKernelSpecConnectionMetadata>
             | ReadWrite<PythonKernelConnectionMetadata>
     ) {
-        const clone = JSON.parse(JSON.stringify(json));
+        const clone = Object.assign(json, {});
         if (clone.interpreter) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clone.interpreter = deserializePythonEnvironment(clone.interpreter as any, '')!;
