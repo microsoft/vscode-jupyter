@@ -184,12 +184,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
             // Also applies to `!java` where java could be an executable in the conda bin directory.
             this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
+
+            // Seems to be required on windows,
+            // Without this, in Python, the PATH variable inherits the process env variables and not what we give it.
+            // Probably because Python uses PATH on windows as well , even if Path is provided.
+            if (!env.PATH && env.Path) {
+                env.PATH = env.Path;
+            }
         }
 
         traceVerbose(`Activated Env Variables, PATH value is ${env.PATH} and Path value is ${env.Path}`);
-        if (!env.PATH && env.Path) {
-            env.PATH = env.Path;
-        }
         return env;
     }
 }
