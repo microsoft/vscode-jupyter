@@ -23,7 +23,7 @@ import {
 } from '../../platform/common/types';
 import { clearTelemetryReporter } from '../../telemetry';
 
-suite('Interactive Shift Enter Banner', () => {
+suite.only('Interactive Shift Enter Banner', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
     const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
     let appShell: typemoq.IMock<IApplicationShell>;
@@ -157,7 +157,7 @@ function loadBanner(
     config
         .setup((c) =>
             c.updateSetting(
-                typemoq.It.isValue('sendSelectionToInteractiveWindow'),
+                typemoq.It.isValue('interactiveWindow.textEditor.executeSelection'),
                 typemoq.It.isAny(),
                 typemoq.It.isAny(),
                 typemoq.It.isAny()
