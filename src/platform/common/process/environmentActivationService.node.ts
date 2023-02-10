@@ -187,7 +187,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
 
         traceVerbose(`Activated Env Variables, PATH value is ${env.PATH} and Path value is ${env.Path}`);
-        if (this.platform.osType !== OSType.Windows && !env.PATH && env.Path) {
+        if (!env.PATH && env.Path) {
             env.PATH = env.Path;
         }
         return env;
