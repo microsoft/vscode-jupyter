@@ -17,6 +17,8 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 import { translateProductToModule } from './utils';
+import { EOL } from 'os';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../errors/packageNotInstalledWindowsLongPathNotEnabledError';
 
 export type ExecutionInstallArgs = {
     args: string[];
@@ -113,6 +115,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 });
             }
             let lastStdErr: string | undefined;
+            let couldNotInstallErr: string | undefined;
             const ticker = ['', '.', '..', '...'];
             let counter = 0;
             if (observable) {
@@ -126,12 +129,44 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                         progress.report({ message });
                         traceVerbose(output.out);
                         if (output.source === 'stderr') {
+                            // https://github.com/microsoft/vscode-jupyter/issues/12703
+                            // Sometimes on windows we get an error that says "ERROR: Could not install packages due to an OSError: [Errno 2] No such file or directory:"
+                            // Look for such errors so we can provide a better error message to the user.
+                            if (couldNotInstallErr) {
+                                couldNotInstallErr += output.out;
+                            } else if (
+                                !couldNotInstallErr &&
+                                output.out.includes('ERROR: Could not install packages')
+                            ) {
+                                couldNotInstallErr = output.out.substring(
+                                    output.out.indexOf('ERROR: Could not install packages')
+                                );
+                            }
+
                             lastStdErr = output.out;
                         }
                     },
                     complete: () => {
                         if (observable?.proc?.exitCode !== 0) {
-                            deferred.reject(lastStdErr || observable?.proc?.exitCode);
+                            // https://github.com/microsoft/vscode-jupyter/issues/12703
+                            couldNotInstallErr = `ERROR: Could not install packages due to an OSError: [Errno 2] No such file or directory: 'C:\\Users\\donjayamanne\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\jedi\\third_party\\typeshed\\third_party\\2and3\\requests\\packages\\urllib3\\packages\\ssl_match_hostname\\_implementation.pyi'
+                            HINT: This error might have occurred since this system does not have Windows Long Path support enabled. You can find information on how to enable this at https://pip.pypa.io/warnings/enable-long-paths`;
+                            // Remove the `[notice]` lines from the error messages
+                            if (couldNotInstallErr) {
+                                couldNotInstallErr = couldNotInstallErr
+                                    .splitLines({ trim: true, removeEmptyEntries: true })
+                                    .filter((line) => !line.startsWith('[notice]'))
+                                    .join(EOL);
+                                deferred.reject(
+                                    new PackageNotInstalledWindowsLongPathNotEnabledError(
+                                        productOrModuleName,
+                                        interpreter,
+                                        couldNotInstallErr
+                                    )
+                                );
+                            } else {
+                                deferred.reject(lastStdErr || observable?.proc?.exitCode);
+                            }
                         } else {
                             deferred.resolve();
                         }
