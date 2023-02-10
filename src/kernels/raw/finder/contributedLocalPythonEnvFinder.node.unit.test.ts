@@ -9,6 +9,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, IExtensions, IFeaturesManager } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { createEventHandler } from '../../../test/common';
 import { KernelFinder } from '../../kernelFinder';
 import {
@@ -28,7 +29,7 @@ suite('Contributed Python Kernel Finder', () => {
     let interpreterService: IInterpreterService;
     let extensions: IExtensions;
     let clock: fakeTimers.InstalledClock;
-    let onDidChangeInterpreters: EventEmitter<void>;
+    let onDidChangeInterpreter: EventEmitter<PythonEnvironment | undefined>;
     let onDidChangeExtensions: EventEmitter<void>;
     let onDidChangeNonPythonKernels: EventEmitter<void>;
     let onDidChangePythonKernels: EventEmitter<void>;
@@ -77,18 +78,18 @@ suite('Contributed Python Kernel Finder', () => {
         extensionChecker = mock<IPythonExtensionChecker>();
         interpreterService = mock<IInterpreterService>();
         extensions = mock<IExtensions>();
-        onDidChangeInterpreters = new EventEmitter<void>();
+        onDidChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
         onDidChangeExtensions = new EventEmitter<void>();
         onDidChangeNonPythonKernels = new EventEmitter<void>();
         onDidChangePythonKernels = new EventEmitter<void>();
         onDidChangeInterpreterStatus = new EventEmitter<void>();
-        disposables.push(onDidChangeInterpreters);
+        disposables.push(onDidChangeInterpreter);
         disposables.push(onDidChangeExtensions);
         disposables.push(onDidChangeNonPythonKernels);
         disposables.push(onDidChangePythonKernels);
         disposables.push(onDidChangeInterpreterStatus);
         when(interpreterService.status).thenReturn('idle');
-        when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreters.event);
+        when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
         when(interpreterService.onDidChangeStatus).thenReturn(onDidChangeInterpreterStatus.event);
         when(extensions.onDidChange).thenReturn(onDidChangeExtensions.event);
         when(pythonKernelFinder.status).thenReturn('idle');

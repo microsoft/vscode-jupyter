@@ -458,7 +458,7 @@ suite('Notebook Controller Manager', () => {
             );
             assert.strictEqual(name, 'Python');
         });
-        test('DIsplay name if kernel is associated with a non-global 64bit Python environment', () => {
+        test('Display name if kernel is associated with a non-global 64bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
                     id: '',

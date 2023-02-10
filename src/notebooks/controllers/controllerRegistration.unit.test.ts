@@ -115,8 +115,8 @@ suite('Controller Registration', () => {
     let onDidChangeConnectionType: EventEmitter<void>;
     let onDidChangeUri: EventEmitter<void>;
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
-    let onDidChangeInterpreter: EventEmitter<void>;
-    let onDidChangeInterpreters: EventEmitter<void>;
+    let onDidChangeInterpreter: EventEmitter<PythonEnvironment | undefined>;
+    let onDidChangeInterpreters: EventEmitter<PythonEnvironment[]>;
     let contributedLocalKernelFinder: IContributedKernelFinder;
     let contributedPythonKernelFinder: IContributedKernelFinder;
     let configService: IConfigurationService;
@@ -183,9 +183,9 @@ suite('Controller Registration', () => {
         disposables.push(onDidChangeUri);
         onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
         disposables.push(onDidRemoveUris);
-        onDidChangeInterpreter = new EventEmitter<void>();
+        onDidChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
         disposables.push(onDidChangeInterpreter);
-        onDidChangeInterpreters = new EventEmitter<void>();
+        onDidChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
         disposables.push(onDidChangeInterpreters);
         onDidChangeKernelsInContributedLocalKernelFinder = new EventEmitter<{
             added?: KernelConnectionMetadata[] | undefined;
@@ -220,7 +220,6 @@ suite('Controller Registration', () => {
             instance(contributedPythonKernelFinder)
         ]);
         when(kernelFinder.kernels).thenReturn([]);
-        when(interpreters.environments).thenReturn([]);
         when(interpreters.resolvedEnvironments).thenReturn([activePythonEnv]);
         when(kernelFilter.isKernelHidden(anything())).thenReturn(false);
         when(vscNotebook.notebookDocuments).thenReturn([]);

@@ -11,7 +11,7 @@ import { IRawNotebookSupportedService } from './raw/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.web';
 import { injectable } from 'inversify';
-import { IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './types';
+import { IKernelDependencyService, IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './types';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
@@ -27,6 +27,7 @@ import { KernelStatusProvider } from './kernelStatusProvider';
 import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { RemoteJupyterServerMruUpdate } from './remoteJupyterServerMruUpdate';
+import { KernelDependencyService } from './kernelDependencyService.web';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -83,7 +84,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PreferredRemoteKernelIdProvider
     );
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
-
+    serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
 

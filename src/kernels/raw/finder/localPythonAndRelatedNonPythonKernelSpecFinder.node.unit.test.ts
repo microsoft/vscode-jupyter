@@ -46,7 +46,7 @@ import { sleep } from '../../../test/core';
         let clock: fakeTimers.InstalledClock;
         let jupyterPaths: JupyterPaths;
         let onDidChangeKernelsFromKnownLocations: EventEmitter<void>;
-        let onDidChangeInterpreters: EventEmitter<void>;
+        let onDidChangeInterpreters: EventEmitter<PythonEnvironment[]>;
         let onDidRemoveInterpreter: EventEmitter<{ id: string }>;
         let tempDirForKernelSpecs = Uri.file('/tmp');
         let findKernelSpecsInPathsReturnValue = new ResourceMap<Uri[]>();
@@ -154,7 +154,7 @@ import { sleep } from '../../../test/core';
             trustedKernels = mock<ITrustedKernelPaths>();
             onDidChangeKernelsFromKnownLocations = new EventEmitter<void>();
             onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
-            onDidChangeInterpreters = new EventEmitter<void>();
+            onDidChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
             disposables.push(onDidChangeKernelsFromKnownLocations);
             disposables.push(onDidChangeInterpreters);
             disposables.push(onDidRemoveInterpreter);
@@ -458,7 +458,7 @@ import { sleep } from '../../../test/core';
 
             // Now lets discover Python environments, and ensure we have 2 kernels, and one of the kernel has the updated Version of Python
             when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
-            onDidChangeInterpreters.fire();
+            onDidChangeInterpreters.fire([]);
             await clock.runAllAsync();
             await onDidChange.assertFiredAtLeast(1);
 
@@ -514,7 +514,7 @@ import { sleep } from '../../../test/core';
 
             // Indication that we've finished discovering interpreters.
             when(interpreterService.status).thenReturn('idle');
-            onDidChangeInterpreters.fire();
+            onDidChangeInterpreters.fire([]);
             await clock.runAllAsync();
             await onDidChange.assertFiredAtLeast(numberOfTimesChangeEventTriggered + 1);
 
@@ -543,7 +543,7 @@ import { sleep } from '../../../test/core';
             // Now Python will only give us 1 environment.
             // Ie. the virtual env has been deleted.
             when(interpreterService.resolvedEnvironments).thenReturn([condaInterpreter]);
-            onDidChangeInterpreters.fire();
+            onDidChangeInterpreters.fire([]);
             await clock.runAllAsync();
             await onDidChange.assertFiredAtLeast(numberOfTimesChangeEventTriggered + 1);
 

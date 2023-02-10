@@ -425,11 +425,6 @@ abstract class BaseKernel implements IBaseKernel {
         }
         if (!this._jupyterSessionPromise) {
             const stopWatch = new StopWatch();
-            await trackKernelResourceInformation(this.resourceUri, {
-                kernelConnection: this.kernelConnectionMetadata,
-                actionSource: this.creator
-            });
-
             this._jupyterSessionPromise = this.createJupyterSession()
                 .then((session) => {
                     sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
@@ -530,6 +525,11 @@ abstract class BaseKernel implements IBaseKernel {
     }
 
     private async createJupyterSession(): Promise<IKernelConnectionSession> {
+        await trackKernelResourceInformation(this.resourceUri, {
+            kernelConnection: this.kernelConnectionMetadata,
+            actionSource: this.creator
+        });
+
         let disposables: Disposable[] = [];
         try {
             // No need to block kernel startup on UI updates.

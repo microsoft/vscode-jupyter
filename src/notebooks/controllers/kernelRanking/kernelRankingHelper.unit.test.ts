@@ -71,8 +71,8 @@ import { ServiceContainer } from '../../../platform/ioc/container';
             let pythonExecService: IPythonExecutionService;
             let kernelRankHelper: IKernelRankingHelper;
             let cancelToken: CancellationTokenSource;
-            let onDidChangeInterpreters: EventEmitter<void>;
-            let onDidChangeInterpreter: EventEmitter<void>;
+            let onDidChangeInterpreters: EventEmitter<PythonEnvironment[]>;
+            let onDidChangeInterpreter: EventEmitter<PythonEnvironment | undefined>;
             type TestData = {
                 interpreters?: (
                     | PythonEnvironment
@@ -100,8 +100,8 @@ import { ServiceContainer } from '../../../platform/ioc/container';
                 getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
                 interpreterService = mock(InterpreterService);
                 remoteKernelFinder = mock(RemoteKernelFinder);
-                onDidChangeInterpreter = new EventEmitter<void>();
-                onDidChangeInterpreters = new EventEmitter<void>();
+                onDidChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
+                onDidChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
                 const onDidChangeInterpreterStatus = new EventEmitter<void>();
                 const onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
                 disposables.push(onDidChangeInterpreter);

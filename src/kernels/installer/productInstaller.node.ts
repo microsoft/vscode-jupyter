@@ -109,6 +109,9 @@ export class DataScienceInstaller {
         if (cancelTokenSource.token.isCancellationRequested) {
             return InstallerResponse.Cancelled;
         }
+        if (interpreter.isCondaEnvWithoutPython) {
+            interpreter.isCondaEnvWithoutPython = false;
+        }
         return this.isInstalled(product, interpreter).then((isInstalled) => {
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
         });
