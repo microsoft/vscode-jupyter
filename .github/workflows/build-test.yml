@@ -279,6 +279,7 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
+        ipywidgetsVersion: ['']
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
@@ -287,47 +288,62 @@ jobs:
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
-            os: ubuntu-latest
             tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
-            os: ubuntu-latest
             tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
-            os: windows-latest
             tags: '^[^@]+$|@mandatory'
+            os: windows-latest
+            ipywidgetsVersion: ''
+        # IPyWidgets 8
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            tags: '@widgets'
+            os: ubuntu-latest
+            ipywidgetsVersion: '8'
         # Conda
           - jupyterConnection: raw
             python: conda
             pythonVersion: '3.10'
-            os: ubuntu-latest
             tags: '^[^@]+$|@mandatory|@python'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
         # Pre-Release Versions
           - jupyterConnection: raw
             python: python
             pythonVersion: '3.10'
             packageVersion: 'prerelease'
-            os: ubuntu-latest
             tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
         # Without Python
           - jupyterConnection: raw
             python: noPython
-            os: ubuntu-latest
             tags: '@nonPython'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
         # Misc
           - jupyterConnection: local
             python: python
             pythonVersion: '3.10'
-            os: ubuntu-latest
             tags: '@kernelCore|@kernelInstall'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
-            os: ubuntu-latest
             tags: '@kernelPicker|@kernelCore'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
 
     steps:
       - name: Checkout
@@ -390,30 +406,57 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v3
-        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on linux
+        uses: actions/cache@v3
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on mac
         uses: actions/cache@v3
-        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on mac
+        uses: actions/cache@v3
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on windows
         uses: actions/cache@v3
-        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on windows
+        uses: actions/cache@v3
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
@@ -462,12 +505,23 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
-        if: matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/venv-test-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          python -m ipykernel install --user
+
+      - name: Install Python Libs (IPyWidget 8)
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        run: |
+          python --version
+          python -c "import sys;print(sys.executable)"
+          python -m pip install ipywidgets -U
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
           python ./pythonFiles/install_debugpy.py
           python -m ipykernel install --user
 
@@ -547,7 +601,13 @@ jobs:
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8'
+
+      - name: Create Virtual Env for Tests (ipywidgets 8)
+        uses: ./.github/actions/create-venv-for-tests
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8'
+        with:
+          IPyWidgetVersion: '8'
 
       - name: Create temp folder for user data dir
         run: |

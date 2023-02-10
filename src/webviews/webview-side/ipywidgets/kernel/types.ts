@@ -6,6 +6,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ISignal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
+import { NotebookMetadata } from '../../../../platform/common/utils';
 
 export type ScriptLoader = {
     readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
@@ -18,8 +19,15 @@ export type IJupyterLabWidgetManagerCtor = new (
     kernel: Kernel.IKernelConnection,
     el: HTMLElement,
     scriptLoader: ScriptLoader,
-    logger: (message: string) => void
+    logger: (message: string) => void,
+    widgetState?: NotebookMetadata['widgets']
 ) => IJupyterLabWidgetManager;
+
+export type INotebookModel = {
+    metadata: {
+        get(key: 'widgets'): NotebookMetadata['widgets'];
+    };
+};
 
 export interface IJupyterLabWidgetManager {
     /**
@@ -55,6 +63,17 @@ export interface IJupyterLabWidgetManager {
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     create_view(model: jupyterlab.DOMWidgetModel, options: any): Promise<jupyterlab.DOMWidgetView>;
+    /**
+     * Restore widgets from kernel and saved state.
+     * (for now loading state from kernel is not supported).
+     */
+    restoreWidgets(
+        notebook: INotebookModel,
+        options?: {
+            loadKernel: false;
+            loadNotebook: boolean;
+        }
+    ): Promise<void>;
 }
 
 // export interface IIPyWidgetManager extends IMessageHandler {

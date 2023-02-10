@@ -121,12 +121,60 @@ function buildConfiguration(bundle) {
     // console.error(`Bundle = ${ bundle }`);
     // Folder inside `webviews/webview-side` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
+    const filesToCopy = [];
+    if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
+        filesToCopy.push({
+            from: path.join(
+                constants.ExtensionRootDir,
+                'node_modules',
+                '@vscode',
+                'jupyter-ipywidgets7',
+                'dist',
+                'ipywidgets.js'
+            ),
+            to: path.join(
+                constants.ExtensionRootDir,
+                'out',
+                'node_modules',
+                '@vscode',
+                'jupyter-ipywidgets7',
+                'dist',
+                'ipywidgets.js'
+            )
+        });
+        filesToCopy.push({
+            from: path.join(
+                constants.ExtensionRootDir,
+                'node_modules',
+                '@vscode',
+                'jupyter-ipywidgets8',
+                'dist',
+                'ipywidgets.js'
+            ),
+            to: path.join(
+                constants.ExtensionRootDir,
+                'out',
+                'node_modules',
+                '@vscode',
+                'jupyter-ipywidgets8',
+                'dist',
+                'ipywidgets.js'
+            )
+        });
+    }
     const plugins = [
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 100
         }),
         ...getPlugins(bundle)
     ];
+    if (filesToCopy.length > 0) {
+        plugins.push(
+            new CopyWebpackPlugin({
+                patterns: [...filesToCopy]
+            })
+        );
+    }
     return {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),

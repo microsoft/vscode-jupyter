@@ -319,6 +319,8 @@ export type KernelHooks =
     | 'didStart'
     | 'willCancel';
 export interface IBaseKernel extends IAsyncDisposable {
+    readonly ipywidgetsVersion?: 7 | 8;
+    readonly onIPyWidgetVersionResolved: Event<7 | 8 | undefined>;
     readonly uri: Uri;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
