@@ -133,6 +133,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         let settings = JupyterSettings.jupyterSettings.get(workspaceFolderKey);
         if (!settings) {
             settings = new JupyterSettings(workspaceFolderUri, systemVariablesCtor, type, workspace);
+            settings.initialize();
             JupyterSettings.jupyterSettings.set(workspaceFolderKey, settings);
         } else if (settings._type === 'web' && type === 'node') {
             // Update to a node system variables if anybody every asks for a node one after
@@ -215,8 +216,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
         // The rest are all the same.
         const replacer = (k: string, config: WorkspaceConfiguration) => {
+            const newKey = ConfigMigration.migratedSettings[k];
             // Replace variables with their actual value.
-            const val = systemVariables.resolveAny(config.get(k));
+            const configValue = newKey && config.get(newKey) !== undefined ? config.get(newKey) : config.get(k);
+            const val = systemVariables.resolveAny(configValue);
             if (k !== 'variableTooltipFields' || val) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (<any>this)[k] = val;
@@ -268,66 +271,16 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         );
 
         const initialConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
-        await this.migrateSettings(initialConfig);
         const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
         if (initialConfig) {
             this.update(initialConfig, pythonConfig);
+            this.migrateSettings(initialConfig).ignoreErrors();
         }
     }
 
     private async migrateSettings(config: WorkspaceConfiguration) {
         const configMigration = new ConfigMigration(config);
-
-        await configMigration.migrateSetting('jupyter.interactiveWindowMode', 'jupyter.interactiveWindow.creationMode');
-
-        await configMigration.migrateSetting(
-            'jupyter.sendSelectionToInteractiveWindow',
-            'jupyter.interactiveWindow.textEditor.executeSelection'
-        );
-        await configMigration.migrateSetting(
-            'jupyter.magicCommandsAsComments',
-            'jupyter.interactiveWindow.textEditor.magicCommandsAsComments'
-        );
-        await configMigration.migrateSetting(
-            'jupyter.enableAutoMoveToNextCell',
-            'jupyter.interactiveWindow.textEditor.autoMoveToNextCell'
-        );
-        await configMigration.migrateSetting(
-            'jupyter.newCellOnRunLast',
-            'jupyter.interactiveWindow.textEditor.autoAddNewCell'
-        );
-        await configMigration.migrateSetting(
-            'jupyter.pythonCellFolding',
-            'jupyter.interactiveWindow.textEditor.cellFolding'
-        );
-
-        await configMigration.migrateSetting('jupyter.enableCellCodeLens', 'jupyter.interactiveWindow.codeLens.enable');
-        await configMigration.migrateSetting(
-            'jupyter.addGotoCodeLenses',
-            'jupyter.interactiveWindow.codeLens.enableGotoCell'
-        );
-        await configMigration.migrateSetting('jupyter.codeLenses', 'jupyter.interactiveWindow.codeLens.commands');
-        await configMigration.migrateSetting(
-            'jupyter.debugCodeLenses',
-            'jupyter.interactiveWindow.codeLes.debugCommands'
-        );
-
-        await configMigration.migrateSetting(
-            'jupyter.codeRegularExpression',
-            'jupyter.interactiveWindow.cellMarker.codeRegex'
-        );
-        await configMigration.migrateSetting(
-            'jupyter.markdownRegularExpression',
-            'jupyter.interactiveWindow.cellMarker.markdownRegex'
-        );
-        await configMigration.migrateSetting(
-            'jupyter.decorateCells',
-            'jupyter.interactiveWindow.cellMarker.decorateCells'
-        );
-        await configMigration.migrateSetting(
-            'jupyter.defaultCellMarker',
-            'jupyter.interactiveWindow.cellMarker.default'
-        );
+        await configMigration.migrateSettings();
     }
 
     @debounceSync(1)

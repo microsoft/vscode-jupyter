@@ -2,31 +2,69 @@
 // Licensed under the MIT License.
 
 import { ConfigurationTarget, WorkspaceConfiguration } from 'vscode';
+import { traceWarning } from '../logging';
 
 export class ConfigMigration {
     constructor(private readonly config: WorkspaceConfiguration) {}
 
-    public async migrateSetting(oldSetting: string, newSetting: string) {
+    // old setting name: new setting name
+    // omit the jupyter. prefix
+    public static readonly migratedSettings: Record<string, string> = {
+        interactiveWindowMode: 'interactiveWindow.creationMode',
+        interactiveWindowViewColumn: 'interactiveWindow.viewColumn',
+
+        sendSelectionToInteractiveWindow: 'interactiveWindow.textEditor.executeSelection',
+        magicCommandsAsComments: 'interactiveWindow.textEditor.magicCommandsAsComments',
+        enableAutoMoveToNextCell: 'interactiveWindow.textEditor.autoMoveToNextCell',
+        newCellOnRunLast: 'interactiveWindow.textEditor.autoAddNewCell',
+        pythonCellFolding: 'interactiveWindow.textEditor.cellFolding',
+
+        enableCellCodeLens: 'interactiveWindow.codeLens.enable',
+        addGotoCodeLenses: 'interactiveWindow.codeLens.enableGotoCell',
+        codeLenses: 'interactiveWindow.codeLens.commands',
+        debugCodeLenses: 'interactiveWindow.codeLes.debugCommands',
+
+        codeRegularExpression: 'interactiveWindow.cellMarker.codeRegex',
+        markdownRegularExpression: 'interactiveWindow.cellMarker.markdownRegex',
+        decorateCells: 'interactiveWindow.cellMarker.decorateCells',
+        defaultCellMarker: 'interactiveWindow.cellMarker.default'
+    };
+
+    public async migrateSettings() {
+        for (let prop of Object.keys(ConfigMigration.migratedSettings)) {
+            await this.migrateSetting(prop, ConfigMigration.migratedSettings[prop]);
+        }
+    }
+
+    private async migrateSetting(oldSetting: string, newSetting: string) {
         const oldDetails = this.config.inspect(oldSetting);
         const newDetails = this.config.inspect(newSetting);
 
-        if (oldDetails?.workspaceValue) {
-            if (newDetails?.workspaceValue) {
-                await this.config.update(newSetting, oldDetails.workspaceValue, ConfigurationTarget.Workspace);
+        try {
+            if (oldDetails?.workspaceValue !== undefined) {
+                if (newDetails?.workspaceValue === undefined) {
+                    await this.config.update(newSetting, oldDetails.workspaceValue, ConfigurationTarget.Workspace);
+                }
+                await this.config.update(oldSetting, undefined, ConfigurationTarget.Workspace);
             }
-            await this.config.update(oldSetting, undefined, ConfigurationTarget.Workspace);
-        }
-        if (oldDetails?.workspaceFolderValue) {
-            if (newDetails?.workspaceFolderValue) {
-                await this.config.update(newSetting, oldDetails.workspaceValue, ConfigurationTarget.WorkspaceFolder);
+            if (oldDetails?.workspaceFolderValue !== undefined) {
+                if (newDetails?.workspaceFolderValue === undefined) {
+                    await this.config.update(
+                        newSetting,
+                        oldDetails.workspaceFolderValue,
+                        ConfigurationTarget.WorkspaceFolder
+                    );
+                }
+                await this.config.update(oldSetting, undefined, ConfigurationTarget.WorkspaceFolder);
             }
-            await this.config.update(oldSetting, undefined, ConfigurationTarget.WorkspaceFolder);
-        }
-        if (oldDetails?.globalValue) {
-            if (newDetails?.globalValue) {
-                await this.config.update(newSetting, oldDetails.workspaceValue, ConfigurationTarget.Global);
+            if (oldDetails?.globalValue !== undefined) {
+                if (newDetails?.globalValue === undefined) {
+                    await this.config.update(newSetting, oldDetails.globalValue, ConfigurationTarget.Global);
+                }
+                await this.config.update(oldSetting, undefined, ConfigurationTarget.Global);
             }
-            await this.config.update(oldSetting, undefined, ConfigurationTarget.Global);
+        } catch (e) {
+            traceWarning('Error migrating Jupyter configurations', e);
         }
     }
 }
