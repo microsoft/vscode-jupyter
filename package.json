@@ -1750,7 +1750,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "%jupyter.configuration.jupyter.addGotoCodeLenses.description%",
-                    "deprecationMessage": "%jupyter.configuration.jupyter.addGotoCodeLenses.description%",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.addGotoCodeLenses.deprecationMessage%",
                     "scope": "resource"
                 },
                 "jupyter.interactiveWindow.codeLens.enableGotoCell": {
@@ -1869,7 +1869,7 @@
                     ],
                     "scope": "resource",
                     "description": "%jupyter.configuration.jupyter.interactiveWindowViewColumn.description%",
-                    "deprecationMessage": "%jupyter.configuration.jupyter.interactiveWindowViewColumn.deprecationMessage",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.interactiveWindowViewColumn.deprecationMessage%",
                     "default": "secondGroup"
                 },
                 "jupyter.interactiveWindow.viewColumn": {

@@ -133,7 +133,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         let settings = JupyterSettings.jupyterSettings.get(workspaceFolderKey);
         if (!settings) {
             settings = new JupyterSettings(workspaceFolderUri, systemVariablesCtor, type, workspace);
-            settings.initialize();
             JupyterSettings.jupyterSettings.set(workspaceFolderKey, settings);
         } else if (settings._type === 'web' && type === 'node') {
             // Update to a node system variables if anybody every asks for a node one after
@@ -217,7 +216,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         // The rest are all the same.
         const replacer = (k: string, config: WorkspaceConfiguration) => {
             const newKey = ConfigMigration.migratedSettings[k];
-            // Replace variables with their actual value.
+            // Configuration migration is asyncronous, so check the old configuration key if the new one isn't set
             const configValue = newKey && config.get(newKey) !== undefined ? config.get(newKey) : config.get(k);
             const val = systemVariables.resolveAny(configValue);
             if (k !== 'variableTooltipFields' || val) {
