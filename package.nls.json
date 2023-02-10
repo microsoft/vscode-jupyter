@@ -175,24 +175,33 @@
     "jupyter.configuration.jupyter.notebookFileRoot.description": "Set the root directory for running notebooks and the Interactive window.",
     "jupyter.configuration.jupyter.searchForJupyter.deprecationMessage": "This setting is deprecated and will be removed in a future release.",
     "jupyter.configuration.jupyter.searchForJupyter.description": "Search all installed Python interpreters for a Jupyter installation when starting the Interactive window",
-    "jupyter.configuration.jupyter.useDefaultConfigForJupyter.description": "When running Jupyter locally, create a default empty Jupyter config for the Interactive window",
+    "jupyter.configuration.jupyter.useDefaultConfigForJupyter.description": "When running Jupyter locally, create a default empty Jupyter config",
     "jupyter.configuration.jupyter.jupyterInterruptTimeout.description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
+    "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.executeSelection.",
     "jupyter.configuration.jupyter.variableExplorerExclude.description": "Types to exclude from showing in the Interactive variable explorer",
     "jupyter.configuration.jupyter.codeRegularExpression.description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell.",
+    "jupyter.configuration.jupyter.codeRegularExpression.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.codeRegex.",
     "jupyter.configuration.jupyter.defaultCellMarker.description": "Cell marker used for delineating a cell in a python file.",
+    "jupyter.configuration.jupyter.defaultCellMarker.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.default",
     "jupyter.configuration.jupyter.markdownRegularExpression.description": "Regular expression used to identify markdown cells. All comments after this expression are considered part of the markdown.",
+    "jupyter.configuration.jupyter.markdownRegularExpression.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.markdownRegex.",
     "jupyter.configuration.jupyter.ignoreVscodeTheme.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
     "jupyter.configuration.jupyter.ignoreVscodeTheme.description": "Don't use the VS Code theme in the Interactive window (requires reload of VS Code). This forces the Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
     "jupyter.configuration.jupyter.themeMatplotlibPlots.description": "In the Interactive window and Notebook Editor theme matplotlib outputs to match the VS Code editor theme.",
     "jupyter.configuration.jupyter.decorateCells.description": "Draw a highlight behind the currently active cell.",
+    "jupyter.configuration.jupyter.decorateCells.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.decorateCells.",
     "jupyter.configuration.jupyter.enableCellCodeLens.description": "Enables code lens for 'cells' in a python file.",
+    "jupyter.configuration.jupyter.enableCellCodeLens.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.enable.",
     "jupyter.configuration.jupyter.enableAutoMoveToNextCell.description": "Enables moving to the next cell when clicking on a 'Run Cell' code lens.",
+    "jupyter.configuration.jupyter.enableAutoMoveToNextCell.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.autoMoveToNextCell.",
     "jupyter.configuration.jupyter.allowUnauthorizedRemoteConnection.description": "Allow for connecting the Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
     "jupyter.configuration.jupyter.generateSVGPlots.description": "Generate SVG output for notebook plots. This allows for better display in the plot viewer at the cost of generation speed and file size.",
     "jupyter.configuration.jupyter.generateSVGPlots.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
     "jupyter.configuration.jupyter.codeLenses.description": "Set of commands to put as code lens above a cell.",
+    "jupyter.configuration.jupyter.codeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.commands.",
     "jupyter.configuration.jupyter.debugCodeLenses.description": "Set of debug commands to put as code lens above a cell while debugging.",
+    "jupyter.configuration.jupyter.debugCodeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLes.debugCommands.",
     "jupyter.configuration.jupyter.debugpyDistPath.description": "Path to debugpy bits for debugging cells.",
     "jupyter.configuration.jupyter.stopOnFirstLineWhileDebugging.description": "When debugging a cell, stop on the first line.",
     "jupyter.configuration.jupyter.remoteDebuggerPort.description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
@@ -204,6 +213,7 @@
             "{Locked='Goto'}"
         ]
     },
+    "jupyter.configuration.jupyter.addGotoCodeLenses.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.enableGotoCell.",
     "jupyter.configuration.jupyter.variableQueries.markdownDescription": {
         "message": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example:\n```\n[\n  {\n    \"language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr\": \"'(\\\\w+)'\"\n  }\n]\n```",
         "comment": [
@@ -221,7 +231,9 @@
             "{Locked=\"'multiple'\"}"
         ]
     },
+    "jupyter.configuration.jupyter.interactiveWindowMode.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.creationMode.",
     "jupyter.configuration.jupyter.pythonCellFolding.description": "Enable folding regions for code cells in Python files. This setting requires a reload of VS Code.",
+    "jupyter.configuration.jupyter.pythonCellFolding.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.cellFolding.",
     "jupyter.configuration.jupyter.interactiveWindowViewColumn.description": {
         "message": "Where to open an Interactive Window that is not associated with a python file. 'beside' will open the interactive window to the right of the active editor. 'active' will open the interactive window in place of the active editor. 'secondGroup' will open the interactive window in the second editor group.",
         "comment": [
@@ -230,7 +242,9 @@
             "{Locked=\"'secondGroup'\"}"
         ]
     },
+    "jupyter.configuration.jupyter.interactiveWindowViewColumn.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.viewColumn.",
     "jupyter.configuration.jupyter.magicCommandsAsComments.description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
+    "jupyter.configuration.jupyter.magicCommandsAsComments.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.magicCommandsAsComments.",
     "jupyter.configuration.jupyter.pythonExportMethod.description": {
         "message": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
         "comment": [
@@ -248,6 +262,7 @@
     "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, only step through user-written code. Disable this to allow stepping into library code.",
     "jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description": "Show the Outline button in the Jupyter notebook toolbar.",
     "jupyter.configuration.jupyter.newCellOnRunLast.description": "Append a new empty cell to an interactive window file on running the currently last cell.",
+    "jupyter.configuration.jupyter.newCellOnRunLast.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.textEditor.autoAddNewCell.",
     "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a python jupyter kernel.",
     "jupyter.configuration.jupyter.logKernelOutputSeparately.description": "Creates separate output panels for kernels/jupyter server console output",
     "jupyter.configuration.jupyter.excludeUserSitePackages.description": {

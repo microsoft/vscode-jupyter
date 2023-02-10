@@ -157,7 +157,7 @@ function loadBanner(
     config
         .setup((c) =>
             c.updateSetting(
-                typemoq.It.isValue('sendSelectionToInteractiveWindow'),
+                typemoq.It.isValue('interactiveWindow.textEditor.executeSelection'),
                 typemoq.It.isAny(),
                 typemoq.It.isAny(),
                 typemoq.It.isAny()
