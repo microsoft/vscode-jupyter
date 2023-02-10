@@ -320,7 +320,7 @@ export class InteractiveWindowProvider
                 result = 'perFile';
                 this._windows[0].changeMode(result);
                 await this.configService.updateSetting(
-                    'interactiveWindowMode',
+                    'interactiveWindow.creationMode',
                     result,
                     resource,
                     ConfigurationTarget.Global

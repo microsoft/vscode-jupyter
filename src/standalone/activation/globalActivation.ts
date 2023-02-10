@@ -124,7 +124,7 @@ export class GlobalActivation implements IExtensionSyncActivationService {
                 if (typeof currentValue === 'function') {
                     continue;
                 }
-                if (typeof currentValue === 'string' && k !== 'interactiveWindowMode') {
+                if (typeof currentValue === 'string' && k !== 'interactiveWindow.creationMode') {
                     const inspectResult = jupyterConfig.inspect<string>(`${k}`);
                     if (inspectResult && inspectResult.defaultValue !== currentValue) {
                         resultSettings[k] = 'non-default';
