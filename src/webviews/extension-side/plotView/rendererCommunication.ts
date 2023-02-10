@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Event, extensions, NotebookEditor, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { RendererExtension } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -33,7 +34,7 @@ export class RendererCommunication implements IExtensionSingleActivationService,
         disposeAllDisposables(this.disposables);
     }
     public async activate() {
-        const ext = extensions.getExtension('ms-toolsai.jupyter-renderers');
+        const ext = extensions.getExtension(RendererExtension);
         if (!ext) {
             return;
         }
