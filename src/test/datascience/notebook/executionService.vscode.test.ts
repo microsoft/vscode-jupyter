@@ -425,13 +425,15 @@ suite('Kernel Execution @kernelCore', function () {
             waitForCellHavingOutput(cell4)
         ]);
 
-        const pathValue = getCellOutputs(cell3).split(path.delimiter);
-        const sysExecutable = getCellOutputs(cell4).trim().toLowerCase();
+        const pathOutput = getCellOutputs(cell3);
+        const execOutput = getCellOutputs(cell4);
+        const pathValue = pathOutput.split(path.delimiter);
+        const sysExecutable = execOutput.trim().toLowerCase();
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
             areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0]), getOSType(), true),
-            `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
+            `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable}). Path Output ${pathOutput} and Exec Output ${execOutput}`
         );
     });
     test('!python should point to the Environment', async function () {

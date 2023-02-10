@@ -56,25 +56,26 @@ export class BaseKernelConnectionMetadata {
             | ReadWrite<RemoteKernelSpecConnectionMetadata>
             | ReadWrite<PythonKernelConnectionMetadata>
     ) {
-        if (json.interpreter) {
+        const clone = Object.assign(json, {});
+        if (clone.interpreter) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            json.interpreter = deserializePythonEnvironment(json.interpreter as any, '')!;
+            clone.interpreter = deserializePythonEnvironment(clone.interpreter as any, '')!;
         }
         switch (json.kind) {
             case 'startUsingLocalKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LocalKernelSpecConnectionMetadata.create(json as LocalKernelSpecConnectionMetadata);
+                return LocalKernelSpecConnectionMetadata.create(clone as LocalKernelSpecConnectionMetadata);
             case 'connectToLiveRemoteKernel':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LiveRemoteKernelConnectionMetadata.create(json as LiveRemoteKernelConnectionMetadata);
+                return LiveRemoteKernelConnectionMetadata.create(clone as LiveRemoteKernelConnectionMetadata);
             case 'startUsingRemoteKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return RemoteKernelSpecConnectionMetadata.create(json as RemoteKernelSpecConnectionMetadata);
+                return RemoteKernelSpecConnectionMetadata.create(clone as RemoteKernelSpecConnectionMetadata);
             case 'startUsingPythonInterpreter':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return PythonKernelConnectionMetadata.create(json as PythonKernelConnectionMetadata);
+                return PythonKernelConnectionMetadata.create(clone as PythonKernelConnectionMetadata);
             default:
-                throw new Error(`Invalid object to be deserialized into a connection, kind = ${json.kind}`);
+                throw new Error(`Invalid object to be deserialized into a connection, kind = ${clone.kind}`);
         }
     }
 }
