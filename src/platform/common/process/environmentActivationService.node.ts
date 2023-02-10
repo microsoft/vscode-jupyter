@@ -202,6 +202,22 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 }
             }
 
+            // On unix machines if Python is installed via `apt-get install python3 python3-pip`
+            // Then, just like the homebrew case above, we need to add the path to where sitepackages are located
+            if (
+                interpreter.envType === EnvironmentType.Unknown &&
+                interpreter.uri.fsPath.startsWith('/usr/bin/python')
+            ) {
+                if (interpreter.version && this.platform.homeDir) {
+                    const sitePackagesPath = path.join(this.platform.homeDir.fsPath, '.local', 'bin');
+                    this.envVarsService.appendPath(env, sitePackagesPath);
+                } else {
+                    traceError(
+                        `Unable to determine site packages path for unix apt-get python ${interpreter.uri.fsPath}}`
+                    );
+                }
+            }
+
             // This way all executables from that env are used.
             // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
             // Also applies to `!java` where java could be an executable in the conda bin directory.
