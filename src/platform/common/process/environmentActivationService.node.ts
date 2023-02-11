@@ -23,6 +23,7 @@ import { Telemetry } from '../constants';
 import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
+import { IPlatformService } from '../platform/types';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -35,7 +36,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         private readonly customEnvVarsService: ICustomEnvironmentVariablesProvider,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService
+        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
+        @inject(IPlatformService) private readonly platform: IPlatformService
     ) {
         this.customEnvVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
@@ -112,6 +114,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             | 'failedToGetActivatedEnvVariablesFromPython'
             | 'failedToGetCustomEnvVariables' = 'emptyVariables';
         let failureEx: Error | undefined;
+
         let env = await this.apiProvider.getApi().then((api) =>
             api
                 .getActivatedEnvironmentVariables(resource, serializePythonEnvironment(interpreter)!, false)
@@ -150,7 +153,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
             // Hence we must log these as errors (so we can see them in jupyter logs).
             traceError(
-                `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}`
+                `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}
+                } in ${stopWatch.elapsedTime}ms`
             );
         } else {
             traceWarning(
@@ -175,6 +179,28 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
             if (customEnvVars!.PYTHONPATH) {
                 this.envVarsService.appendPythonPath(env, customEnvVars!.PYTHONPATH);
+            }
+
+            // If this is a home brew python, then ensure we add the path to where site-packages are located
+            // as documented here: https://docs.brew.sh/Homebrew-and-Python#site-packages-and-the-pythonpath
+            // & here https://github.com/microsoft/vscode-jupyter/issues/12808#issue-1579598340
+            if (
+                interpreter.envType === EnvironmentType.Unknown &&
+                interpreter.uri.fsPath.startsWith('/opt/homebrew/bin/python')
+            ) {
+                if (interpreter.version && this.platform.homeDir) {
+                    const sitePackagesPath = path.join(
+                        this.platform.homeDir.fsPath,
+                        'Library',
+                        'Python',
+                        `${interpreter.version.major.toString()}.${interpreter.version.minor.toString()}`,
+                        'bin'
+                    );
+                    // Based on docs this is the right path and must be setup in the path.
+                    this.envVarsService.prependPath(env, sitePackagesPath);
+                } else {
+                    traceError(`Unable to determine site packages path for homebrew python ${interpreter.uri.fsPath}}`);
+                }
             }
 
             // This way all executables from that env are used.
