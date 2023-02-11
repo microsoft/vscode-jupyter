@@ -154,7 +154,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // Hence we must log these as errors (so we can see them in jupyter logs).
             traceError(
                 `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}
-                } in ${stopWatch.elapsedTime}ms`
+                 in ${stopWatch.elapsedTime}ms`
             );
         } else {
             traceWarning(
@@ -200,6 +200,27 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     this.envVarsService.prependPath(env, sitePackagesPath);
                 } else {
                     traceError(`Unable to determine site packages path for homebrew python ${interpreter.uri.fsPath}}`);
+                }
+            }
+
+            // On unix machines if Python is installed via `apt-get install python3 python3-pip`
+            // Then, just like the homebrew case above, we need to add the path to where site-packages are located
+            if (
+                interpreter.envType === EnvironmentType.Unknown &&
+                this.platform.isLinux &&
+                interpreter.uri.fsPath.startsWith('/usr/bin/python')
+            ) {
+                if (interpreter.version && this.platform.homeDir) {
+                    const sitePackagesPath = path.join(this.platform.homeDir.fsPath, '.local', 'bin');
+                    // Based on docs this is the right path and must be setup in the path.
+                    // However the problem is we do not know whether this is the right python executable or not.
+                    // This could be a symlink, could be the python.org version of Python as well, and those don't necessarily need such path changes
+                    // Hence to avoid issues with those, lets just append, this way the right path will be used for those that do not need this.
+                    this.envVarsService.appendPath(env, sitePackagesPath);
+                } else {
+                    traceError(
+                        `Unable to determine site packages path for unix apt-get python ${interpreter.uri.fsPath}}`
+                    );
                 }
             }
 
