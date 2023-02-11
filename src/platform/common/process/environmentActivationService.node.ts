@@ -154,7 +154,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // Hence we must log these as errors (so we can see them in jupyter logs).
             traceError(
                 `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}
-                } in ${stopWatch.elapsedTime}ms`
+                 in ${stopWatch.elapsedTime}ms`
             );
         } else {
             traceWarning(
@@ -202,7 +202,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     traceError(`Unable to determine site packages path for homebrew python ${interpreter.uri.fsPath}}`);
                 }
             }
-            
+
             // On unix machines if Python is installed via `apt-get install python3 python3-pip`
             // Then, just like the homebrew case above, we need to add the path to where site-packages are located
             if (
