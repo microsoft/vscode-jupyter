@@ -181,7 +181,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 this.envVarsService.appendPythonPath(env, customEnvVars!.PYTHONPATH);
             }
 
-            // If this is a home brew python, then ensure we add the path to where sitepackages are located
+            // If this is a home brew python, then ensure we add the path to where site-packages are located
             // as documented here: https://docs.brew.sh/Homebrew-and-Python#site-packages-and-the-pythonpath
             // & here https://github.com/microsoft/vscode-jupyter/issues/12808#issue-1579598340
             if (
@@ -203,7 +203,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
 
             // On unix machines if Python is installed via `apt-get install python3 python3-pip`
-            // Then, just like the homebrew case above, we need to add the path to where sitepackages are located
+            // Then, just like the homebrew case above, we need to add the path to where site-packages are located
             if (
                 interpreter.envType === EnvironmentType.Unknown &&
                 interpreter.uri.fsPath.startsWith('/usr/bin/python')
