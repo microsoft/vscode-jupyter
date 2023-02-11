@@ -196,25 +196,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         `${interpreter.version.major.toString()}.${interpreter.version.minor.toString()}`,
                         'bin'
                     );
+                    // Based on docs this is the right path and must be setup in the path.
                     this.envVarsService.prependPath(env, sitePackagesPath);
                 } else {
                     traceError(`Unable to determine site packages path for homebrew python ${interpreter.uri.fsPath}}`);
-                }
-            }
-
-            // On unix machines if Python is installed via `apt-get install python3 python3-pip`
-            // Then, just like the homebrew case above, we need to add the path to where site-packages are located
-            if (
-                interpreter.envType === EnvironmentType.Unknown &&
-                interpreter.uri.fsPath.startsWith('/usr/bin/python')
-            ) {
-                if (interpreter.version && this.platform.homeDir) {
-                    const sitePackagesPath = path.join(this.platform.homeDir.fsPath, '.local', 'bin');
-                    this.envVarsService.appendPath(env, sitePackagesPath);
-                } else {
-                    traceError(
-                        `Unable to determine site packages path for unix apt-get python ${interpreter.uri.fsPath}}`
-                    );
                 }
             }
 
