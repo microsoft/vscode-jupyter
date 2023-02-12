@@ -81,6 +81,10 @@ export class GlobalPythonSiteService {
             }
             traceVerbose(`USER_SITE for ${getDisplayPath(interpreter.uri)} is ${sitePath.fsPath}`);
             return sitePath;
+        } else {
+            throw new Error(
+                `USER_SITE not found for the interpreter ${getDisplayPath(interpreter.uri)}. Stdout: ${stdout}`
+            );
         }
     }
 }
