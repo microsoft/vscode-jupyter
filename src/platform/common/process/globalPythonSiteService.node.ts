@@ -38,6 +38,23 @@ export class GlobalPythonSiteService {
         }
         return this.userSitePaths.get(interpreter.uri);
     }
+    /**
+     * Tested the following scenarios:
+     * 1. HomeBrew Python on Mac
+     * 2. Python install from Python org on Mac
+     * 3. apt-get install python3 on Ubuntu
+     * 4. Windows Store Python on Windows
+     *
+     * In all of these cases when we install packages a warning is displayed in the terminal
+     * indicating the fact that packages are being installed in a directory that is not on the PATH.
+     * Upon further investigation it is found that this directory is a USER_SITE directory.
+     *
+     * After all, when we install packages into the global envs we use the `--user` flag.
+     * Which results in installing the packages in a user directory (hence USER_SITE).
+     *
+     * The work around here is to ensure we add that path into the PATH
+     * This service merely returns the path that needs to be added to the PATH.
+     */
     public async getUserSitePathImpl(interpreter: PythonEnvironment): Promise<Uri | undefined> {
         const processService = await this.processFactory.create();
         const delimiter = 'USER_BASE_VALUE';
