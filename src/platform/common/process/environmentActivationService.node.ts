@@ -24,6 +24,8 @@ import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
 import { IPlatformService } from '../platform/types';
+import { GlobalPythonSiteService } from './globalPythonSiteService.node';
+import { Uri } from 'vscode';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -37,7 +39,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(IPlatformService) private readonly platform: IPlatformService
+        @inject(IPlatformService) private readonly platform: IPlatformService,
+        @inject(GlobalPythonSiteService) private readonly userSite: GlobalPythonSiteService
     ) {
         this.customEnvVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
@@ -181,47 +184,17 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 this.envVarsService.appendPythonPath(env, customEnvVars!.PYTHONPATH);
             }
 
-            // If this is a home brew python, then ensure we add the path to where site-packages are located
-            // as documented here: https://docs.brew.sh/Homebrew-and-Python#site-packages-and-the-pythonpath
-            // & here https://github.com/microsoft/vscode-jupyter/issues/12808#issue-1579598340
-            if (
-                interpreter.envType === EnvironmentType.Unknown &&
-                interpreter.uri.fsPath.startsWith('/opt/homebrew/bin/python')
-            ) {
-                if (interpreter.version && this.platform.homeDir) {
-                    const sitePackagesPath = path.join(
-                        this.platform.homeDir.fsPath,
-                        'Library',
-                        'Python',
-                        `${interpreter.version.major.toString()}.${interpreter.version.minor.toString()}`,
-                        'bin'
-                    );
-                    // Based on docs this is the right path and must be setup in the path.
-                    this.envVarsService.prependPath(env, sitePackagesPath);
-                } else {
-                    traceError(`Unable to determine site packages path for homebrew python ${interpreter.uri.fsPath}}`);
-                }
-            }
-
-            // On unix machines if Python is installed via `apt-get install python3 python3-pip`
-            // Then, just like the homebrew case above, we need to add the path to where site-packages are located
-            if (
-                interpreter.envType === EnvironmentType.Unknown &&
-                this.platform.isLinux &&
-                interpreter.uri.fsPath.startsWith('/usr/bin/python')
-            ) {
-                if (interpreter.version && this.platform.homeDir) {
-                    const sitePackagesPath = path.join(this.platform.homeDir.fsPath, '.local', 'bin');
-                    // Based on docs this is the right path and must be setup in the path.
-                    // However the problem is we do not know whether this is the right python executable or not.
-                    // This could be a symlink, could be the python.org version of Python as well, and those don't necessarily need such path changes
-                    // Hence to avoid issues with those, lets just append, this way the right path will be used for those that do not need this.
-                    this.envVarsService.appendPath(env, sitePackagesPath);
-                } else {
-                    traceError(
-                        `Unable to determine site packages path for unix apt-get python ${interpreter.uri.fsPath}}`
-                    );
-                }
+            const userSite = await this.userSite.getUserSitePath(interpreter);
+            if (userSite) {
+                // Based on docs this is the right path and must be setup in the path.
+                this.envVarsService.prependPath(
+                    env,
+                    Uri.joinPath(userSite, this.platform.isWindows ? 'Scripts' : 'bin').fsPath
+                );
+            } else {
+                traceError(
+                    `Unable to determine site packages path for python ${interpreter.uri.fsPath} (${interpreter.envType})`
+                );
             }
 
             // This way all executables from that env are used.
