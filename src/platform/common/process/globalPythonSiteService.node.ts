@@ -3,17 +3,25 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { traceWarning } from '../../logging';
+import * as path from '../../../platform/vscode-path/path';
+import { traceVerbose } from '../../logging';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { getDisplayPath } from '../platform/fs-paths.node';
+import { IFileSystem, IPlatformService } from '../platform/types';
 import { ResourceMap } from '../resourceMap';
+import { swallowExceptions } from '../utils/decorators';
 import { IProcessServiceFactory } from './types.node';
 
 @injectable()
 export class GlobalPythonSiteService {
     private readonly userSitePaths = new ResourceMap<Promise<Uri | undefined>>();
-    constructor(@inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory) {}
+    constructor(
+        @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory,
+        @inject(IPlatformService) private readonly platform: IPlatformService,
+        @inject(IFileSystem) private readonly fs: IFileSystem
+    ) {}
 
+    @swallowExceptions()
     public async getUserSitePath(interpreter: PythonEnvironment): Promise<Uri | undefined> {
         if (interpreter.envType !== EnvironmentType.Unknown) {
             return;
@@ -31,23 +39,31 @@ export class GlobalPythonSiteService {
         return this.userSitePaths.get(interpreter.uri);
     }
     public async getUserSitePathImpl(interpreter: PythonEnvironment): Promise<Uri | undefined> {
-        try {
-            const processService = await this.processFactory.create();
-            const delimiter = 'USER_BASE_VALUE';
-            const { stdout } = await processService.exec(interpreter.uri.fsPath, [
-                '-c',
-                `import site;print("${delimiter}");print(site.USER_BASE);print("${delimiter}");`
-            ]);
-            if (stdout.includes(delimiter)) {
-                const output = stdout
-                    .substring(stdout.indexOf(delimiter) + delimiter.length, stdout.lastIndexOf(delimiter))
-                    .trim();
-                if (output.length > 0) {
-                    return Uri.file(output);
-                }
+        const processService = await this.processFactory.create();
+        const delimiter = 'USER_BASE_VALUE';
+        const { stdout } = await processService.exec(interpreter.uri.fsPath, [
+            '-c',
+            `import site;print("${delimiter}");print(site.USER_SITE);print("${delimiter}");`
+        ]);
+        if (stdout.includes(delimiter)) {
+            const output = stdout
+                .substring(stdout.indexOf(delimiter) + delimiter.length, stdout.lastIndexOf(delimiter))
+                .trim();
+            let sitePath = Uri.file(output);
+            if (this.platform.isWindows) {
+                sitePath = Uri.file(path.join(path.dirname(sitePath.fsPath), 'Scripts'));
+            } else if (sitePath.fsPath.endsWith('lib/python/site-packages')) {
+                sitePath = Uri.file(path.join(path.dirname(path.dirname(path.dirname(sitePath.fsPath))), 'bin'));
             }
-        } catch (ex) {
-            traceWarning(`Failed to get the USER_BASE value for the interpreter ${getDisplayPath(interpreter.uri)}`);
+            if (!this.fs.exists(sitePath)) {
+                throw new Error(
+                    `USER_SITE ${sitePath.fsPath} dir does not exist for the interpreter ${getDisplayPath(
+                        interpreter.uri
+                    )}`
+                );
+            }
+            traceVerbose(`USER_SITE for ${getDisplayPath(interpreter.uri)} is ${sitePath.fsPath}`);
+            return sitePath;
         }
     }
 }

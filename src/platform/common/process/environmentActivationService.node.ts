@@ -23,9 +23,8 @@ import { Telemetry } from '../constants';
 import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
-import { IPlatformService } from '../platform/types';
 import { GlobalPythonSiteService } from './globalPythonSiteService.node';
-import { Uri } from 'vscode';
+import { noop } from '../utils/misc';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -39,7 +38,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(GlobalPythonSiteService) private readonly userSite: GlobalPythonSiteService
     ) {
         this.customEnvVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
@@ -184,13 +182,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 this.envVarsService.appendPythonPath(env, customEnvVars!.PYTHONPATH);
             }
 
-            const userSite = await this.userSite.getUserSitePath(interpreter);
+            const userSite = await this.userSite.getUserSitePath(interpreter).catch(noop);
             if (userSite) {
                 // Based on docs this is the right path and must be setup in the path.
-                this.envVarsService.prependPath(
-                    env,
-                    Uri.joinPath(userSite, this.platform.isWindows ? 'Scripts' : 'bin').fsPath
-                );
+                this.envVarsService.prependPath(env, userSite.fsPath);
             } else {
                 traceError(
                     `Unable to determine site packages path for python ${interpreter.uri.fsPath} (${interpreter.envType})`
