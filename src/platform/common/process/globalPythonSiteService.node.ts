@@ -55,7 +55,7 @@ export class GlobalPythonSiteService {
      * The work around here is to ensure we add that path into the PATH
      * This service merely returns the path that needs to be added to the PATH.
      */
-    public async getUserSitePathImpl(interpreter: PythonEnvironment): Promise<Uri | undefined> {
+    private async getUserSitePathImpl(interpreter: PythonEnvironment): Promise<Uri | undefined> {
         const processService = await this.processFactory.create();
         const delimiter = 'USER_BASE_VALUE';
         const { stdout } = await processService.exec(interpreter.uri.fsPath, [
