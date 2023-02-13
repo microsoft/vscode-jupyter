@@ -332,7 +332,7 @@ export namespace DataScience {
     export const jupyterSelectUserPrompt = l10n.t('Enter your user name');
     export const jupyterSelectPasswordPrompt = l10n.t('Enter your password');
     export const pythonNotInstalled = l10n.t(
-        'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook.'
+        'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook. \nOnce installed please reload VS Code.'
     );
     export const jupyterNotebookFailure = (errorMessage: string) =>
         l10n.t('Jupyter notebook failed to launch. \r\n{0}', errorMessage);
