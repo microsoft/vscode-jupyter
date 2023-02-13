@@ -149,10 +149,13 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     complete: () => {
                         if (observable?.proc?.exitCode !== 0) {
                             // https://github.com/microsoft/vscode-jupyter/issues/12703
-                            couldNotInstallErr = `ERROR: Could not install packages due to an OSError: [Errno 2] No such file or directory: 'C:\\Users\\donjayamanne\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\jedi\\third_party\\typeshed\\third_party\\2and3\\requests\\packages\\urllib3\\packages\\ssl_match_hostname\\_implementation.pyi'
-                            HINT: This error might have occurred since this system does not have Windows Long Path support enabled. You can find information on how to enable this at https://pip.pypa.io/warnings/enable-long-paths`;
+                            // `ERROR: Could not install packages due to an OSError: [Errno 2] No such file or directory: 'C:\\Users\\donjayamanne\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\jedi\\third_party\\typeshed\\third_party\\2and3\\requests\\packages\\urllib3\\packages\\ssl_match_hostname\\_implementation.pyi'
+                            // HINT: This error might have occurred since this system does not have Windows Long Path support enabled. You can find information on how to enable this at https://pip.pypa.io/warnings/enable-long-paths`;
                             // Remove the `[notice]` lines from the error messages
-                            if (couldNotInstallErr) {
+                            if (
+                                couldNotInstallErr &&
+                                couldNotInstallErr.includes('https://pip.pypa.io/warnings/enable-long-paths')
+                            ) {
                                 couldNotInstallErr = couldNotInstallErr
                                     .splitLines({ trim: true, removeEmptyEntries: true })
                                     .filter((line) => !line.startsWith('[notice]'))
