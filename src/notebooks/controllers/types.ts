@@ -149,6 +149,10 @@ export interface IControllerDefaultService {
         resource: Resource,
         viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): Promise<IVSCodeNotebookController | undefined>;
+    getActiveInterpreterController(
+        resource: Resource,
+        viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): Promise<IVSCodeNotebookController | undefined>;
 }
 
 // Flag enum for the reason why a kernel was logged as an exact match

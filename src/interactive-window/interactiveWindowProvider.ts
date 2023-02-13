@@ -199,9 +199,21 @@ export class InteractiveWindowProvider
         this.pendingCreations = creationInProgress.promise;
         try {
             // Find our preferred controller
-            const preferredController = connection
-                ? this.controllerRegistration.get(connection, InteractiveWindowView)
-                : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
+
+            let preferredController: IVSCodeNotebookController | undefined;
+            if (connection) {
+                preferredController = this.controllerRegistration.get(connection, InteractiveWindowView);
+            } else if (InteractiveWindow.lastRemoteSelected) {
+                preferredController = this.controllerRegistration.get(
+                    InteractiveWindow.lastRemoteSelected,
+                    InteractiveWindowView
+                );
+            } else {
+                preferredController = await this.controllerDefaultService.getActiveInterpreterController(
+                    resource,
+                    InteractiveWindowView
+                );
+            }
 
             traceInfo(
                 `Starting interactive window for resource '${getDisplayPath(resource)}' with controller '${
@@ -220,14 +232,14 @@ export class InteractiveWindowProvider
             traceVerbose(
                 `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
             );
-            const result = new InteractiveWindow(
-                this.serviceContainer,
-                resource,
-                mode,
-                preferredController,
-                editor,
-                inputUri
-            );
+
+            let controller = this.controllerRegistration.getSelected(editor.notebook);
+            if (!controller) {
+                await commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
+                controller = this.controllerRegistration.getSelected(editor.notebook);
+            }
+
+            const result = new InteractiveWindow(this.serviceContainer, resource, mode, controller, editor, inputUri);
             sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
                 hasKernel: !!preferredController,
                 hasOwner: !!resource,

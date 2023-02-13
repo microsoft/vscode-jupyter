@@ -87,6 +87,8 @@ import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
  * Methods for talking to an Interactive Window are exposed here, but the actual UI is part of VS code core.
  */
 export class InteractiveWindow implements IInteractiveWindow {
+    public static lastRemoteSelected: KernelConnectionMetadata | undefined;
+
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -284,25 +286,27 @@ export class InteractiveWindow implements IInteractiveWindow {
             const kernel = await KernelConnector.connectToNotebookKernel(
                 metadata,
                 this.serviceContainer,
-                { resource: this.owner, notebook: this.notebookDocument, controller },
+                { resource: this.owner || this.notebookUri, notebook: this.notebookDocument, controller },
                 new DisplayOptions(false),
                 this.internalDisposables,
                 'jupyterExtension',
                 onStartKernel
             );
 
+            if (
+                this.currentKernelInfo.metadata?.kind === 'connectToLiveRemoteKernel' ||
+                this.currentKernelInfo.metadata?.kind === 'startUsingRemoteKernelSpec'
+            ) {
+                InteractiveWindow.lastRemoteSelected = this.currentKernelInfo.metadata;
+            } else {
+                InteractiveWindow.lastRemoteSelected = undefined;
+            }
+
             traceInfoIfCI(
                 `Looking for controller ${kernel.controller.id} in ${this.controllerRegistration.all
                     .map((item) => `${item.kind}:${item.id}`)
                     .join(', ')}`
             );
-            const found = this.controllerRegistration.registered.find((item) => item.id === kernel.controller.id);
-            if (!found) {
-                throw Error(`Controller ${kernel.controller.id} not found or not yet created`);
-            }
-
-            this.currentKernelInfo.controller = found.controller;
-            this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
 
             const kernelEventHookForRestart = async () => {
                 if (this.notebookDocument && this.currentKernelInfo.metadata) {
@@ -347,7 +351,7 @@ export class InteractiveWindow implements IInteractiveWindow {
             if (this.owner) {
                 // The actual error will be displayed in the cell, hence no need to display the actual
                 // error here, else we'd just be duplicating the error messages.
-                await this.deleteSysInfoCell(sysInfoCell);
+                this.deleteSysInfoCell(sysInfoCell);
             } else {
                 // We don't have a cell when starting IW without an *.py file,
                 // hence display error where the sysinfo is displayed.
