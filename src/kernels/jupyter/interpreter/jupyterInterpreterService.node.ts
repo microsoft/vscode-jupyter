@@ -176,7 +176,16 @@ export class JupyterInterpreterService {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
         this.interpreterSelectionState.updateSelectedPythonPath(interpreter.uri);
-        sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'selected' });
+        let envVersion = '';
+        if (interpreter.version) {
+            const { major, minor, patch } = interpreter.version;
+            envVersion = `${major}.${minor}.${patch}`;
+        }
+        sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, {
+            result: 'selected',
+            envType: interpreter.envType,
+            envVersion
+        });
     }
 
     // For a given python path check if it can run jupyter for us
