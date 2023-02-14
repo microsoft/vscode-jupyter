@@ -66,6 +66,7 @@ import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from '.
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from './packageNotInstalledWindowsLongPathNotEnabledError';
 
 /***
  * Common code for handling errors.
@@ -153,6 +154,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         } else if (isCancellationError(error)) {
             // Don't show the message for cancellation errors
             return '';
+        } else if (error instanceof PackageNotInstalledWindowsLongPathNotEnabledError) {
+            const packageName =
+                typeof error.product === 'string'
+                    ? error.product
+                    : ProductNames.get(error.product) || `${error.product}`;
+            const interpreterDisplayName = error.interpreter.displayName || error.interpreter.envName || '';
+            const displayPath = getDisplayPath(error.interpreter.uri);
+            let displayName = interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
+            return DataScience.packageNotInstalledWindowsLongPathNotEnabledError(packageName, displayName);
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
             (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||

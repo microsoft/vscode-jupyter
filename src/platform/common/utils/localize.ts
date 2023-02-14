@@ -362,6 +362,15 @@ export namespace DataScience {
             'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URL can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.',
             hostName
         );
+    export const packageNotInstalledWindowsLongPathNotEnabledError = (
+        pythonPackageName: string,
+        interpreterDisplayName: string
+    ) =>
+        l10n.t(
+            'Support for Windows Long Path has not been enabled, hence the package {0} could not be installed into the Python Environment {1}.\nPlease ensure that support for Windows Long Path is enabled.\nSee [here](https://pip.pypa.io/warnings/enable-long-paths) for more information.',
+            pythonPackageName,
+            interpreterDisplayName
+        );
     export const changeRemoteJupyterConnectionButtonText = l10n.t('Manage Connections');
     export const rawConnectionBrokenError = l10n.t('Direct kernel connection broken');
     export const jupyterServerCrashed = (exitCode: number) =>
