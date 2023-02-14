@@ -353,12 +353,9 @@ export namespace DataScience {
         l10n.t('Connection failure. Verify the server is running and reachable. ({0}).', errorMessage);
     export const remoteJupyterConnectionFailedWithoutServerWithErrorWeb = (errorMessage: string) =>
         l10n.t(
-            'Connection failure. Verify the server is running and reachable from a browser. ({0}). When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.',
+            'Connection failure. Verify the server is running and reachable from a browser. ({0}). \nWhen connecting from vscode.dev Jupyter servers must be started with specific options to connect. \nClick [here](https://aka.ms/vscjremoteweb) for more information.',
             errorMessage
         );
-    export const remoteJupyterConnectionFailedWebExtension = l10n.t(
-        'When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.'
-    );
     export const removeRemoteJupyterConnectionButtonText = l10n.t('Forget Connection');
     export const jupyterNotebookRemoteConnectFailedWeb = (hostName: string) =>
         l10n.t(
