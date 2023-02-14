@@ -45,6 +45,6 @@ export async function isActiveInterpreter(
     resource: Resource,
     interpreters: IInterpreterService
 ) {
-    const pythonInterpreter = await interpreters.getActiveInterpreter(resource);
-    return pythonInterpreter?.envPath?.toString() === metadata.interpreter?.envPath?.toString();
+    const activeInterpreter = await interpreters.getActiveInterpreter(resource);
+    return activeInterpreter?.id === metadata.interpreter?.id;
 }
