@@ -161,12 +161,12 @@ export namespace DataScience {
         if (interpreter) {
             const displayName = getInterpreterDisplayName(interpreter);
             return l10n.t(
-                "The packages 'jupyter' and 'notebook' could not be located or are not installed in the Python environment '{0}'.",
+                "Failed to start Jupyter Server as the packages 'jupyter' and 'notebook' could not be located in the Python environment '{0}'.",
                 displayName
             );
         } else {
             return l10n.t(
-                "The packages 'jupyter' and 'notebook' could not be located or are not installed in the Python environment."
+                "Failed to start Jupyter Server as the packages 'jupyter' and 'notebook' could not be located in the Python environment."
             );
         }
     };
