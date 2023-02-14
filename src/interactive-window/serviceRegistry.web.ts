@@ -16,7 +16,7 @@ import {
     ICodeGeneratorFactory
 } from './editor-integration/types';
 import { InteractiveWindowProvider } from './interactiveWindowProvider';
-import { IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
+import { IInteractiveControllerHelper, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
 import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
 import { IGeneratedCodeStorageFactory } from './editor-integration/types';
@@ -26,9 +26,14 @@ import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingM
 import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
 import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldingProvider';
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
+import { InteractiveControllerHelper } from './InteractiveControllerHelper';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    serviceManager.addSingleton<IInteractiveControllerHelper>(
+        IInteractiveControllerHelper,
+        InteractiveControllerHelper
+    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);

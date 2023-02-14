@@ -41,7 +41,6 @@ import {
     IKernel,
     IKernelProvider,
     isLocalConnection,
-    KernelAction,
     KernelConnectionMetadata,
     NotebookCellRunState
 } from '../kernels/types';
@@ -57,6 +56,7 @@ import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import {
+    IInteractiveControllerHelper,
     IInteractiveWindow,
     IInteractiveWindowDebugger,
     IInteractiveWindowDebuggingManager,
@@ -64,9 +64,7 @@ import {
 } from './types';
 import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
 import { IControllerRegistration, IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
-import { KernelConnector } from '../notebooks/controllers/kernelConnector';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
     ICodeGeneratorFactory,
@@ -77,7 +75,6 @@ import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { CellExecutionCreator } from '../kernels/execution/cellExecutionCreator';
 import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
-import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 import { KernelController } from '../kernels/kernelController';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
@@ -148,7 +145,8 @@ export class InteractiveWindow implements IInteractiveWindow {
         public mode: InteractiveWindowMode,
         preferredController: IVSCodeNotebookController | undefined,
         notebookEditorOrTab: NotebookEditor | InteractiveTab,
-        public readonly inputUri: Uri
+        public readonly inputUri: Uri,
+        private readonly controllerHelper: IInteractiveControllerHelper
     ) {
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -214,13 +212,11 @@ export class InteractiveWindow implements IInteractiveWindow {
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
 
-        if (this.currentKernelInfo) {
+        if (this.currentKernelInfo.controller) {
             this.startKernel().ignoreErrors();
         } else {
             traceWarning('No controller selected for Interactive Window');
-            if (this.isWebExtension) {
-                this.insertInfoMessage(DataScience.noKernelsSpecifyRemote).ignoreErrors;
-            }
+            this.insertInfoMessage(DataScience.selectKernelForEditor).ignoreErrors;
         }
         this.initialized = true;
     }
@@ -245,7 +241,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         const controller = this.currentKernelInfo.controller;
         const metadata = this.currentKernelInfo.metadata;
         if (!controller || !metadata) {
-            // This cannot happen, but we need to make typescript happy.
             throw new Error('Controller not selected');
         }
 
@@ -256,56 +251,22 @@ export class InteractiveWindow implements IInteractiveWindow {
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
         try {
             // Try creating a kernel
-            await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
-
-            const onStartKernel = (action: KernelAction, k: IKernel) => {
-                if (action !== 'start' && action !== 'restart') {
-                    return;
-                }
-                // Id may be different if the user switched controllers
-                traceInfoIfCI(
-                    `(onStart) Looking for controller ${k.controller.id} in ${this.controllerRegistration.all
-                        .map((item) => `${item.kind}:${item.id}`)
-                        .join(', ')}`
-                );
-                const found = this.controllerRegistration.registered.find((item) => item.id === k.controller.id);
-                if (!found) {
-                    throw Error(`Controller ${k.controller.id} not found or not yet created`);
-                }
-                this.currentKernelInfo.controller = found.controller;
-                this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
-                !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
-                this.updateSysInfoMessage(
-                    this.getSysInfoMessage(k.kernelConnectionMetadata, SysInfoReason.Start),
-                    false,
-                    sysInfoCell
-                );
-            };
-            // When connecting, we need to update the sys info message
-            this.updateSysInfoMessage(this.getSysInfoMessage(metadata, SysInfoReason.Start), false, sysInfoCell);
-            const kernel = await KernelConnector.connectToNotebookKernel(
+            const { kernel, actualController } = await this.controllerHelper.createKernel(
                 metadata,
-                this.serviceContainer,
-                { resource: this.owner || this.notebookUri, notebook: this.notebookDocument, controller },
-                new DisplayOptions(false),
+                controller,
+                this.owner,
+                this.notebookDocument,
                 this.internalDisposables,
-                'jupyterExtension',
-                onStartKernel
+                this.serviceContainer
             );
+            !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
+            this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
+            this.currentKernelInfo.controller = actualController;
 
-            if (
-                this.currentKernelInfo.metadata?.kind === 'connectToLiveRemoteKernel' ||
-                this.currentKernelInfo.metadata?.kind === 'startUsingRemoteKernelSpec'
-            ) {
-                InteractiveWindow.lastRemoteSelected = this.currentKernelInfo.metadata;
-            } else {
-                InteractiveWindow.lastRemoteSelected = undefined;
-            }
-
-            traceInfoIfCI(
-                `Looking for controller ${kernel.controller.id} in ${this.controllerRegistration.all
-                    .map((item) => `${item.kind}:${item.id}`)
-                    .join(', ')}`
+            this.updateSysInfoMessage(
+                this.getSysInfoMessage(kernel.kernelConnectionMetadata, SysInfoReason.Start),
+                false,
+                sysInfoCell
             );
 
             const kernelEventHookForRestart = async () => {
@@ -553,7 +514,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
-        return this.submitCodeImpl(code, file, line, false);
+        return this.submitCode(code, file, line, false);
     }
 
     private useNewDebugMode(): boolean {
@@ -597,13 +558,13 @@ export class InteractiveWindow implements IInteractiveWindow {
 
         // Call the internal method if we were able to save
         if (saved) {
-            return this.submitCodeImpl(code, fileUri, line, true);
+            return this.submitCode(code, fileUri, line, true);
         }
 
         return result;
     }
 
-    private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+    private async submitCode(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         // Do not execute or render empty cells
         if (this.cellMatcher.isEmptyCell(code) || !this.currentKernelInfo.controller) {
             return true;

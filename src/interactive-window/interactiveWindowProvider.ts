@@ -36,8 +36,9 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from '../notebooks/types';
 import { InteractiveWindow } from './interactiveWindow';
-import { InteractiveWindowView, JVSC_EXTENSION_ID, NotebookCellScheme, Telemetry } from '../platform/common/constants';
+import { JVSC_EXTENSION_ID, NotebookCellScheme, Telemetry } from '../platform/common/constants';
 import {
+    IInteractiveControllerHelper,
     IInteractiveWindow,
     IInteractiveWindowCache,
     IInteractiveWindowProvider,
@@ -47,11 +48,7 @@ import {
 import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
-import {
-    IControllerDefaultService,
-    IControllerRegistration,
-    IVSCodeNotebookController
-} from '../notebooks/controllers/types';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isInteractiveInputTab } from './helpers';
 import { Schemas } from '../platform/vscode-path/utils';
 import { sendTelemetryEvent } from '../telemetry';
@@ -70,9 +67,6 @@ export class InteractiveWindowProvider
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
-    public get onDidCreateInteractiveWindow(): Event<IInteractiveWindow> {
-        return this._onDidCreateInteractiveWindow.event;
-    }
 
     // returns the active Editor if it is an Interactive Window that we are tracking
     public get activeWindow(): IInteractiveWindow | undefined {
@@ -81,7 +75,6 @@ export class InteractiveWindowProvider
     }
 
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
-    private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
     private pendingCreations: Promise<void> | undefined;
     private _windows: InteractiveWindow[] = [];
@@ -96,9 +89,8 @@ export class InteractiveWindowProvider
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IControllerDefaultService) private readonly controllerDefaultService: IControllerDefaultService,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IInteractiveControllerHelper) private readonly controllerHelper: IInteractiveControllerHelper
     ) {
         asyncRegistry.push(this);
 
@@ -134,7 +126,8 @@ export class InteractiveWindowProvider
                 iw.mode,
                 undefined,
                 tab,
-                Uri.parse(iw.inputBoxUriString)
+                Uri.parse(iw.inputBoxUriString),
+                this.controllerHelper
             );
             sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
                 hasKernel: false,
@@ -198,33 +191,18 @@ export class InteractiveWindowProvider
         // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
         this.pendingCreations = creationInProgress.promise;
         try {
-            // Find our preferred controller
-
-            let preferredController: IVSCodeNotebookController | undefined;
-            if (connection) {
-                preferredController = this.controllerRegistration.get(connection, InteractiveWindowView);
-            } else if (InteractiveWindow.lastRemoteSelected) {
-                preferredController = this.controllerRegistration.get(
-                    InteractiveWindow.lastRemoteSelected,
-                    InteractiveWindowView
-                );
-            } else {
-                preferredController = await this.controllerDefaultService.getActiveInterpreterController(
-                    resource,
-                    InteractiveWindowView
-                );
-            }
+            let initialController = await this.controllerHelper.getInitialController(resource, connection);
 
             traceInfo(
                 `Starting interactive window for resource '${getDisplayPath(resource)}' with controller '${
-                    preferredController?.id
+                    initialController?.id
                 }'`
             );
 
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-            const [inputUri, editor] = await this.createEditor(preferredController, resource, mode, commandManager);
-            if (preferredController) {
-                preferredController.controller.updateNotebookAffinity(
+            const [inputUri, editor] = await this.createEditor(initialController, resource, mode, commandManager);
+            if (initialController) {
+                initialController.controller.updateNotebookAffinity(
                     editor.notebook,
                     NotebookControllerAffinity.Preferred
                 );
@@ -233,15 +211,19 @@ export class InteractiveWindowProvider
                 `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
             );
 
-            let controller = this.controllerRegistration.getSelected(editor.notebook);
-            if (!controller) {
-                await commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
-                controller = this.controllerRegistration.getSelected(editor.notebook);
-            }
+            let controller = this.controllerHelper.getSelected(editor.notebook);
 
-            const result = new InteractiveWindow(this.serviceContainer, resource, mode, controller, editor, inputUri);
+            const result = new InteractiveWindow(
+                this.serviceContainer,
+                resource,
+                mode,
+                controller,
+                editor,
+                inputUri,
+                this.controllerHelper
+            );
             sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
-                hasKernel: !!preferredController,
+                hasKernel: !!initialController,
                 hasOwner: !!resource,
                 mode: mode,
                 restored: false
@@ -258,8 +240,6 @@ export class InteractiveWindowProvider
             this.disposables.push(handler);
             this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
 
-            // fire created event
-            this._onDidCreateInteractiveWindow.fire(result);
             return result;
         } finally {
             creationInProgress.resolve();

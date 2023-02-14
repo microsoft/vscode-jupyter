@@ -58,13 +58,6 @@ export class ControllerDefaultService implements IControllerDefaultService {
         }
     }
 
-    public async getActiveInterpreterController(
-        resource: Resource,
-        viewType: 'jupyter-notebook' | 'interactive'
-    ): Promise<IVSCodeNotebookController | undefined> {
-        return createActiveInterpreterController(viewType, resource, this.interpreters, this.registration);
-    }
-
     @traceDecoratorVerbose('Get default Remote Controller')
     private async createDefaultRemoteController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
