@@ -353,17 +353,23 @@ export namespace DataScience {
         l10n.t('Connection failure. Verify the server is running and reachable. ({0}).', errorMessage);
     export const remoteJupyterConnectionFailedWithoutServerWithErrorWeb = (errorMessage: string) =>
         l10n.t(
-            'Connection failure. Verify the server is running and reachable from a browser. ({0}). When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.',
+            'Connection failure. Verify the server is running and reachable from a browser. ({0}). \nWhen connecting from vscode.dev Jupyter servers must be started with specific options to connect. \nClick [here](https://aka.ms/vscjremoteweb) for more information.',
             errorMessage
         );
-    export const remoteJupyterConnectionFailedWebExtension = l10n.t(
-        'When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.'
-    );
     export const removeRemoteJupyterConnectionButtonText = l10n.t('Forget Connection');
     export const jupyterNotebookRemoteConnectFailedWeb = (hostName: string) =>
         l10n.t(
             'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URL can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.',
             hostName
+        );
+    export const packageNotInstalledWindowsLongPathNotEnabledError = (
+        pythonPackageName: string,
+        interpreterDisplayName: string
+    ) =>
+        l10n.t(
+            'Support for Windows Long Path has not been enabled, hence the package {0} could not be installed into the Python Environment {1}.\nPlease ensure that support for Windows Long Path is enabled.\nSee [here](https://pip.pypa.io/warnings/enable-long-paths) for more information.',
+            pythonPackageName,
+            interpreterDisplayName
         );
     export const changeRemoteJupyterConnectionButtonText = l10n.t('Manage Connections');
     export const rawConnectionBrokenError = l10n.t('Direct kernel connection broken');
