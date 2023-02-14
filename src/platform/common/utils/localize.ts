@@ -2,7 +2,14 @@
 // Licensed under the MIT License.
 
 import { l10n } from 'vscode';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { getDisplayPath } from '../platform/fs-paths';
 
+function getInterpreterDisplayName(interpreter: PythonEnvironment) {
+    const interpreterDisplayName = interpreter.displayName || interpreter.envName || '';
+    const displayPath = getDisplayPath(interpreter.uri);
+    return interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
+}
 export namespace Common {
     export const bannerLabelYes = l10n.t('Yes');
     export const bannerLabelNo = l10n.t('No');
@@ -150,6 +157,19 @@ export namespace DataScience {
         l10n.t('current: {0}', pythonEnvPath);
     export const jupyterNotSupported = (errorMessage: string) =>
         l10n.t('Jupyter cannot be started. Error attempting to locate Jupyter: {0}', errorMessage);
+    export const jupyterNotebookNotInstalledOrNotFound = (interpreter: PythonEnvironment | undefined) => {
+        if (interpreter) {
+            const displayName = getInterpreterDisplayName(interpreter);
+            return l10n.t(
+                "Failed to start Jupyter Server as the packages 'jupyter' and 'notebook' could not be located in the Python environment '{0}'.",
+                displayName
+            );
+        } else {
+            return l10n.t(
+                "Failed to start Jupyter Server as the packages 'jupyter' and 'notebook' could not be located in the Python environment."
+            );
+        }
+    };
     export const jupyterNotSupportedBecauseOfEnvironment = (pythonEnvName: string, errorMessage: string) =>
         l10n.t('Activating {0} to run Jupyter failed with {1}', pythonEnvName, errorMessage);
     export const jupyterNbConvertNotSupported = l10n.t('Jupyter nbconvert is not installed');
@@ -367,7 +387,7 @@ export namespace DataScience {
         interpreterDisplayName: string
     ) =>
         l10n.t(
-            'Support for Windows Long Path has not been enabled, hence the package {0} could not be installed into the Python Environment {1}.\nPlease ensure that support for Windows Long Path is enabled.\nSee [here](https://pip.pypa.io/warnings/enable-long-paths) for more information.',
+            "Support for Windows Long Path has not been enabled, hence the package {0} could not be installed into the Python Environment '{1}'.\nPlease ensure that support for Windows Long Path is enabled.\nSee [here](https://pip.pypa.io/warnings/enable-long-paths) for more information.",
             pythonPackageName,
             interpreterDisplayName
         );

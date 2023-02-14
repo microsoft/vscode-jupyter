@@ -97,6 +97,7 @@ suite('JupyterConnection', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             getServerInfoStub as any,
             instance(serviceContainer),
+            undefined,
             cancelToken
         );
     }
