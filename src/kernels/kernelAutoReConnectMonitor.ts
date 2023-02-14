@@ -86,6 +86,14 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             this.kernelsStartedSuccessfully.add(kernel);
             this.kernelConnectionToKernelMapping.set(kernel.session.kernel, kernel);
             kernel.session?.kernel?.connectionStatusChanged.connect(this.onKernelStatusChanged, this);
+            kernel.onDisposed(
+                () => {
+                    this.kernelReconnectProgress.get(kernel)?.dispose();
+                    this.kernelReconnectProgress.delete(kernel);
+                },
+                this,
+                this.disposableRegistry
+            );
             kernel.addHook(
                 'willRestart',
                 async () => {
