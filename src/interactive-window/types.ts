@@ -1,11 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';
+import {
+    Disposable,
+    Event,
+    NotebookCell,
+    NotebookController,
+    NotebookDocument,
+    NotebookEditor,
+    Tab,
+    Uri
+} from 'vscode';
 import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
+import { IServiceContainer } from '../platform/ioc/types';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
 export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebookEditor: NotebookEditor };
 
@@ -29,10 +40,6 @@ export interface IInteractiveWindowProvider {
      */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
     /**
-     * Event fired when an interactive window is created
-     */
-    readonly onDidCreateInteractiveWindow: Event<IInteractiveWindow>;
-    /**
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param {Resource} owner File that started this interactive window
      * @param {KernelConnectionMetadata} [connection] The kernel connection to be used when starting/connecting to the kernel.
@@ -55,6 +62,23 @@ export interface IInteractiveWindowProvider {
      * Find all interactive windows to which the file has submitted code
      */
     getInteractiveWindowsWithSubmitter(file: Uri): IInteractiveWindow[];
+}
+
+export const IInteractiveControllerHelper = Symbol('IInteractiveControllerHelper');
+export interface IInteractiveControllerHelper {
+    getInitialController(
+        resource: Resource,
+        connection?: KernelConnectionMetadata
+    ): Promise<IVSCodeNotebookController | undefined>;
+    getSelected(notebookDocument: NotebookDocument): IVSCodeNotebookController | undefined;
+    createKernel(
+        metadata: KernelConnectionMetadata,
+        controller: NotebookController,
+        resource: Resource,
+        notebookDocument: NotebookDocument,
+        disposables: Disposable[],
+        serviceContainer: IServiceContainer
+    ): Promise<{ kernel: IKernel; actualController: NotebookController }>;
 }
 
 export interface IInteractiveBase extends Disposable {

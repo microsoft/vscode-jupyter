@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { createInterpreterKernelSpec, getKernelId } from '../../kernels/helpers';
-import { PythonKernelConnectionMetadata } from '../../kernels/types';
+import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Resource } from '../../platform/common/types';
@@ -38,4 +38,13 @@ export async function createActiveInterpreterController(
         );
         return controller;
     }
+}
+
+export async function isActiveInterpreter(
+    metadata: KernelConnectionMetadata,
+    resource: Resource,
+    interpreters: IInterpreterService
+) {
+    const activeInterpreter = await interpreters.getActiveInterpreter(resource);
+    return activeInterpreter?.id === metadata.interpreter?.id;
 }

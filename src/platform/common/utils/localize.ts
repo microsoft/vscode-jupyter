@@ -554,13 +554,7 @@ export namespace DataScience {
         'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
     );
     export const insecureSessionDenied = l10n.t('Denied connection to insecure server.');
-    export const noKernelsSpecifyRemote = l10n.t({
-        message:
-            'No kernel available for cell execution, please [specify a Jupyter server for connections](command:jupyter.selectjupyteruri)',
-        comment: [
-            'Do not translate the text "command:jupyter.selectjupyteruri" as that is a VS Code command identifier'
-        ]
-    });
+    export const selectKernelForEditor = l10n.t('[Select a kernel](command:notebook.selectKernel) to run cells.');
     export const needIpykernel6 = l10n.t('Ipykernel setup required for this feature');
     export const setup = l10n.t('Setup');
     export const showDataViewerFail = l10n.t(
