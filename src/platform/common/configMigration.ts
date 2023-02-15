@@ -30,45 +30,61 @@ export class ConfigMigration {
 
     constructor(private readonly jupyterConfig: WorkspaceConfiguration) {}
 
-    public async migrateSettings() {
+    public migrateSettings() {
         for (let prop of Object.keys(ConfigMigration.migratedSettings)) {
-            await this.migrateSetting(prop, ConfigMigration.migratedSettings[prop]);
+            this.migrateSetting(prop, ConfigMigration.migratedSettings[prop]);
         }
     }
 
-    private async migrateSetting(oldSetting: string, newSetting: string) {
+    private migrateSetting(oldSetting: string, newSetting: string) {
         const oldDetails = this.jupyterConfig.inspect(oldSetting);
         const newDetails = this.jupyterConfig.inspect(newSetting);
 
         try {
             if (oldDetails?.workspaceValue !== undefined) {
+                let promise: Thenable<void> = Promise.resolve();
                 if (newDetails?.workspaceValue === undefined) {
-                    await this.jupyterConfig.update(
+                    promise = this.jupyterConfig.update(
                         newSetting,
                         oldDetails.workspaceValue,
                         ConfigurationTarget.Workspace
                     );
                 }
-                await this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.Workspace);
+                promise.then(
+                    () => this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.Workspace),
+                    handleSettingMigrationFailure
+                );
             }
             if (oldDetails?.workspaceFolderValue !== undefined) {
+                let promise: Thenable<void> = Promise.resolve();
                 if (newDetails?.workspaceFolderValue === undefined) {
-                    await this.jupyterConfig.update(
+                    promise = this.jupyterConfig.update(
                         newSetting,
                         oldDetails.workspaceFolderValue,
                         ConfigurationTarget.WorkspaceFolder
                     );
                 }
-                await this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.WorkspaceFolder);
+                promise.then(
+                    () => this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.WorkspaceFolder),
+                    handleSettingMigrationFailure
+                );
             }
             if (oldDetails?.globalValue !== undefined) {
+                let promise: Thenable<void> = Promise.resolve();
                 if (newDetails?.globalValue === undefined) {
-                    await this.jupyterConfig.update(newSetting, oldDetails.globalValue, ConfigurationTarget.Global);
+                    promise = this.jupyterConfig.update(newSetting, oldDetails.globalValue, ConfigurationTarget.Global);
                 }
-                await this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.Global);
+                promise.then(
+                    () => this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.Global),
+                    handleSettingMigrationFailure
+                );
             }
         } catch (e) {
             traceWarning('Error migrating Jupyter configurations', e);
         }
     }
+}
+
+function handleSettingMigrationFailure(e: Error) {
+    traceWarning('Error migrating Jupyter configuration', e);
 }
