@@ -42,6 +42,7 @@ import {
     MultiStepInput
 } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
+import { KernelFilterService } from '../kernelFilter/kernelFilterService';
 import { INotebookKernelSourceSelector } from '../types';
 import { CreateAndSelectItemFromQuickPick, KernelSelector } from './kernelSelector';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
@@ -82,6 +83,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
+        @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
     public async selectLocalKernel(
@@ -362,7 +364,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         const provider = new QuickPickKernelItemProvider(
             state.notebook,
             ContributedKernelFinderKind.Remote,
-            finderPromise
+            finderPromise,
+            this.kernelFilter
         );
         provider.status = 'discovering';
         state.disposables.push(provider);
@@ -376,7 +379,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         state: MultiStepResult
     ) {
         state.source = source;
-        const provider = new QuickPickKernelItemProvider(state.notebook, source.kind, source);
+        const provider = new QuickPickKernelItemProvider(state.notebook, source.kind, source, this.kernelFilter);
         state.disposables.push(provider);
         return this.selectKernel(provider, token, multiStep, state);
     }
