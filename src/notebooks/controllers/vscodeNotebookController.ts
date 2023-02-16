@@ -86,7 +86,7 @@ import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
+import { ConnectionDisplayDataProvider, IConnectionDisplayData } from './connectionDisplayData';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -143,6 +143,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     public isAssociatedWithDocument(doc: NotebookDocument) {
         return this.associatedDocuments.has(doc);
     }
+    private readonly displayData: IConnectionDisplayData;
 
     private readonly associatedDocuments = new WeakMap<NotebookDocument, Promise<void>>();
     public static create(
@@ -207,32 +208,24 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly featureManager: IFeaturesManager
     ) {
         disposableRegistry.push(this);
-        displayDataProvider.onDidChange(
-            (e) => {
-                if (e.connectionId === this.connection.id) {
-                    this.updateDisplayData();
-                }
-            },
-            this,
-            this.disposables
-        );
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
             controller: VSCodeNotebookController;
         }>();
 
-        const displayData = this.displayDataProvider.getDisplayData(this.connection);
+        this.displayData = this.displayDataProvider.getDisplayData(this.connection);
         traceVerbose(
-            `Creating notebook controller for ${kernelConnection.kind} & view ${_viewType} (id='${kernelConnection.id}') with name '${displayData.label}'`
+            `Creating notebook controller for ${kernelConnection.kind} & view ${_viewType} (id='${kernelConnection.id}') with name '${this.displayData.label}'`
         );
         this.controller = this.notebookApi.createNotebookController(
             id,
             _viewType,
-            displayData.label,
+            this.displayData.label,
             this.handleExecution.bind(this),
             this.getRendererScripts(),
             []
         );
+        this.displayData.onDidChange(this.updateDisplayData, this, this.disposables);
         this.updateDisplayData();
 
         // Fill in extended info for our controller
@@ -307,15 +300,15 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         disposeAllDisposables(this.disposables);
     }
     private updateDisplayData() {
-        const displayData = this.displayDataProvider.getDisplayData(this.connection);
-        this.controller.label = displayData.label;
-        if (this.featureManager.features.kernelPickerType === 'Insiders' && displayData.serverDisplayName) {
+        this.controller.label = this.displayData.label;
+        this.controller.description = this.displayData.description;
+        this.controller.kind = this.displayData.category;
+        if (this.featureManager.features.kernelPickerType === 'Insiders' && this.displayData.serverDisplayName) {
             // MRU kernel picker doesn't show controller kind/category, so add server name to description
-            this.controller.description = displayData.description
-                ? `${displayData.description} (${displayData.serverDisplayName})`
-                : displayData.serverDisplayName;
+            this.controller.description = this.displayData.description
+                ? `${this.displayData.description} (${this.displayData.serverDisplayName})`
+                : this.displayData.serverDisplayName;
         }
-        this.controller.kind = displayData.category;
     }
     // Handle the execution of notebook cell
     @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)

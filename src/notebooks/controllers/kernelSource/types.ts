@@ -12,6 +12,9 @@ export interface ConnectionQuickPickItem extends QuickPickItem {
 export interface KernelListErrorQuickPickItem extends QuickPickItem {
     error: Error;
 }
+export interface ConnectionSeparatorQuickPickItem extends QuickPickItem {
+    isEmptyCondaEnvironment?: boolean;
+}
 export interface CommandQuickPickItem extends QuickPickItem {
     command: () => Promise<PythonKernelConnectionMetadata | undefined>;
 }
