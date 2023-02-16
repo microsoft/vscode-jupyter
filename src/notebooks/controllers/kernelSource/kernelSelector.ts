@@ -24,7 +24,6 @@ import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
 import {
