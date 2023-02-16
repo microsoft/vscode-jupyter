@@ -30,9 +30,15 @@ export class ConfigMigration {
 
     constructor(private readonly jupyterConfig: WorkspaceConfiguration) {}
 
-    public migrateSettings() {
+    public async migrateSettings() {
+        const migratedSettings: Thenable<void>[] = [];
         for (let prop of Object.keys(ConfigMigration.migratedSettings)) {
-            this.migrateSetting(prop, ConfigMigration.migratedSettings[prop]);
+            migratedSettings.push(...this.migrateSetting(prop, ConfigMigration.migratedSettings[prop]));
+        }
+        try {
+            await Promise.all(migratedSettings);
+        } catch (e) {
+            handleSettingMigrationFailure(e);
         }
     }
 
@@ -40,48 +46,53 @@ export class ConfigMigration {
         const oldDetails = this.jupyterConfig.inspect(oldSetting);
         const newDetails = this.jupyterConfig.inspect(newSetting);
 
-        try {
-            if (oldDetails?.workspaceValue !== undefined) {
-                let promise: Thenable<void> = Promise.resolve();
-                if (newDetails?.workspaceValue === undefined) {
-                    promise = this.jupyterConfig.update(
-                        newSetting,
-                        oldDetails.workspaceValue,
-                        ConfigurationTarget.Workspace
-                    );
-                }
+        const migratedSettings: Thenable<void>[] = [];
+        if (oldDetails?.workspaceValue !== undefined) {
+            let promise: Thenable<void> = Promise.resolve();
+            if (newDetails?.workspaceValue === undefined) {
+                promise = this.jupyterConfig.update(
+                    newSetting,
+                    oldDetails.workspaceValue,
+                    ConfigurationTarget.Workspace
+                );
+            }
+            migratedSettings.push(
                 promise.then(
                     () => this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.Workspace),
                     handleSettingMigrationFailure
+                )
+            );
+        }
+        if (oldDetails?.workspaceFolderValue !== undefined) {
+            let promise: Thenable<void> = Promise.resolve();
+            if (newDetails?.workspaceFolderValue === undefined) {
+                promise = this.jupyterConfig.update(
+                    newSetting,
+                    oldDetails.workspaceFolderValue,
+                    ConfigurationTarget.WorkspaceFolder
                 );
             }
-            if (oldDetails?.workspaceFolderValue !== undefined) {
-                let promise: Thenable<void> = Promise.resolve();
-                if (newDetails?.workspaceFolderValue === undefined) {
-                    promise = this.jupyterConfig.update(
-                        newSetting,
-                        oldDetails.workspaceFolderValue,
-                        ConfigurationTarget.WorkspaceFolder
-                    );
-                }
+            migratedSettings.push(
                 promise.then(
                     () => this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.WorkspaceFolder),
                     handleSettingMigrationFailure
-                );
+                )
+            );
+        }
+        if (oldDetails?.globalValue !== undefined) {
+            let promise: Thenable<void> = Promise.resolve();
+            if (newDetails?.globalValue === undefined) {
+                promise = this.jupyterConfig.update(newSetting, oldDetails.globalValue, ConfigurationTarget.Global);
             }
-            if (oldDetails?.globalValue !== undefined) {
-                let promise: Thenable<void> = Promise.resolve();
-                if (newDetails?.globalValue === undefined) {
-                    promise = this.jupyterConfig.update(newSetting, oldDetails.globalValue, ConfigurationTarget.Global);
-                }
+            migratedSettings.push(
                 promise.then(
                     () => this.jupyterConfig.update(oldSetting, undefined, ConfigurationTarget.Global),
                     handleSettingMigrationFailure
-                );
-            }
-        } catch (e) {
-            traceWarning('Error migrating Jupyter configurations', e);
+                )
+            );
         }
+
+        return migratedSettings;
     }
 }
 
