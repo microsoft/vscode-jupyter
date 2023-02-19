@@ -128,10 +128,10 @@ jobs:
         run: npm ci --prefer-offline
 
       - name: node Version
-        run: node --version,
+        run: node --version
 
       - name: npm Version
-        run: npm --version,
+        run: npm --version
 
       - name: Verify Translation files
         run: npm run validateTranslationFiles
