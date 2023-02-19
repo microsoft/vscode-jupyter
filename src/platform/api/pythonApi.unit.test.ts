@@ -82,8 +82,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from './types';
                 disposables,
                 instance(workspace),
                 instance(context),
-                instance(fs),
-                instance(featureManager)
+                instance(fs)
             );
         }
         test('Progress status triggered upon refresh', async () => {
