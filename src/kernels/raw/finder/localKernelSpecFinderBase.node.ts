@@ -387,5 +387,8 @@ export async function loadKernelSpec(
     }
 
     kernelJson.isRegisteredByVSC = getKernelRegistrationInfo(kernelJson);
+    traceVerbose(
+        `KernelSpec.json ${specPath.fsPath} for interpreter ${interpreter?.id} is ${JSON.stringify(kernelJson)}`
+    );
     return kernelSpec;
 }
