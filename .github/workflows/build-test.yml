@@ -127,6 +127,12 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
+      - name: node Version
+        run: node --version,
+
+      - name: npm Version
+        run: npm --version,
+
       - name: Verify Translation files
         run: npm run validateTranslationFiles
 
