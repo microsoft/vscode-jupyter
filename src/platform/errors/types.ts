@@ -82,6 +82,7 @@ export type ErrorCategory =
     | 'remotejupyterserveruriprovider'
     | 'invalidremotejupyterserverurihandle'
     | 'jupyternotebooknotinstalled'
+    | 'jupytercannotbelaunchedwitheroot'
     | 'pythonExtension'
     | 'windowsLongPathNotEnabled'
     | 'unknown';
