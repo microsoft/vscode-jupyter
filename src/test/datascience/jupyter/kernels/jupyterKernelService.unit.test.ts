@@ -29,6 +29,7 @@ import { IEnvironmentActivationService } from '../../../../platform/interpreter/
 import { ICustomEnvironmentVariablesProvider } from '../../../../platform/common/variables/types';
 import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment.node';
 import { isWeb } from '../../../../platform/common/utils/misc';
+import { isPythonKernelConnection } from '../../../../kernels/helpers';
 
 // eslint-disable-next-line
 suite('JupyterKernelService', () => {
@@ -425,7 +426,7 @@ suite('JupyterKernelService', () => {
         );
         token.dispose();
         verify(kernelDependencyService.installMissingDependencies(anything())).times(
-            kernels.filter((k) => k.interpreter).length
+            kernels.filter((k) => k.interpreter && isPythonKernelConnection(k)).length
         );
     });
     test('Kernel installed when spec comes from interpreter', async () => {
