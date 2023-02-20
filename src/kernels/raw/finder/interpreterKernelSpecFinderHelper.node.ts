@@ -21,7 +21,7 @@ import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
-import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
+import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
@@ -68,7 +68,7 @@ export class InterpreterKernelSpecFinderHelper {
         const isCreatedByUs = getKernelRegistrationInfo(kernelSpec) ? true : false;
         // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
         if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
-            traceInfoIfCI(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
+            traceVerbose(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
 
             // We could be dealing with a powershell kernel where kernelspec looks like
             // { "argv": ["python", "-m", "powershell_kernel", "-f", "{connection_file}" ], "display_name": "PowerShell", "language": "powershell" }
@@ -232,7 +232,7 @@ export class InterpreterKernelSpecFinderHelper {
         interpreter: PythonEnvironment,
         cancelToken: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        traceInfoIfCI(
+        traceVerbose(
             `Finding kernel specs for ${interpreter.id} interpreters: ${interpreter.displayName} => ${interpreter.uri}`
         );
         // Find all the possible places to look for this resource
@@ -249,7 +249,7 @@ export class InterpreterKernelSpecFinderHelper {
         if (rootSpecPaths.some((uri) => uriPath.isEqual(uri, kernelSearchPath))) {
             return [];
         }
-
+        traceVerbose(`Searching for kernel specs in interpreter ${interpreter.id} in path ${kernelSearchPath.fsPath}`);
         const kernelSpecs = await this.kernelSpecFinder.findKernelSpecsInPaths(kernelSearchPath, cancelToken);
         if (cancelToken.isCancellationRequested) {
             return [];
@@ -291,7 +291,7 @@ export class InterpreterKernelSpecFinderHelper {
             }
         });
         results = results.filter((r) => !r.specFile || !originalSpecFiles.has(r.specFile));
-
+        traceVerbose(`Kernel Specs found in interpreter ${interpreter.id} are ${JSON.stringify(results)}`);
         // There was also an old bug where the same item would be registered more than once. Eliminate these dupes
         // too.
         const uniqueKernelSpecs: IJupyterKernelSpec[] = [];
@@ -307,9 +307,9 @@ export class InterpreterKernelSpecFinderHelper {
             }
         });
 
-        traceInfoIfCI(
+        traceVerbose(
             `Finding kernel specs for interpreter ${getDisplayPath(interpreter.uri)} unique results: ${uniqueKernelSpecs
-                .map((u) => u.interpreterPath!)
+                .map((u) => (u.specFile || u.name)!)
                 .join('\n')}`
         );
 
