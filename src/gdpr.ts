@@ -1368,7 +1368,7 @@
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_KERNEL_SPEC" : {
      "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
-     "kernelId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"What kind of kernel spec did we fail to create.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
      "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the Python environment.","owner":"donjayamanne"},
@@ -1924,6 +1924,7 @@
 //Telemetry.AmbiguousGlobalKernelSpec
 /* __GDPR__
    "GLOBAL_PYTHON_KERNELSPEC" : {
+     "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether kernel was started using kernel spec, interpreter, etc.","owner":"donjayamanne"},
      "pythonPathDefined": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the fully qualified path to the python executable has been defined or not in the KernleSpec file.","owner":"donjayamanne"},
      "pythonEnvFound": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the python path is defined, then this property will be set to true if we found the python env.","owner":"donjayamanne"},
      "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"donjayamanne"},

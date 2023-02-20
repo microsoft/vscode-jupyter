@@ -950,7 +950,6 @@ export class IEventNamePropertyMapping {
         kernelSpecHash: string;
         /**
          * Hash of the Kernel Connection id.
-         * Common to most of the events.
          */
         kernelId: string;
         /**
@@ -2110,6 +2109,10 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.AmbiguousGlobalKernelSpec]: TelemetryEventInfo<{
         /**
+         * Whether kernel was started using kernel spec, interpreter, etc.
+         */
+        kernelConnectionType: KernelConnectionMetadata['kind'];
+        /**
          * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
          */
         kernelSpecHash: string;
@@ -2135,6 +2138,10 @@ export class IEventNamePropertyMapping {
         feature: 'N/A',
         source: 'N/A',
         properties: {
+            kernelConnectionType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
             pythonPathDefined: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
