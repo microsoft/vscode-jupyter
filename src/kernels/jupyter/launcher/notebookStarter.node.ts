@@ -32,6 +32,7 @@ import { IJupyterSubCommandExecutionService } from '../types.node';
 import { INotebookStarter } from '../types';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
+import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 
 /**
  * Responsible for starting a notebook.
@@ -171,6 +172,7 @@ export class NotebookStarter implements INotebookStarter {
             if (
                 isCancellationError(err) ||
                 err instanceof JupyterConnectError ||
+                err instanceof JupyterCannotBeLaunchedWithRootError ||
                 err instanceof JupyterNotebookNotInstalled
             ) {
                 throw err;
