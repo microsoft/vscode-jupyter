@@ -78,11 +78,14 @@ export class InterpreterKernelSpecFinderHelper {
                 pathInArgv &&
                 kernelSpec.specFile &&
                 (path.basename(pathInArgv).toLocaleLowerCase() === 'python' ||
-                    path.basename(pathInArgv).toLocaleLowerCase() === 'python.exe')
+                    path.basename(pathInArgv).toLocaleLowerCase() === 'python3' ||
+                    path.basename(pathInArgv).toLocaleLowerCase() === 'python.exe' ||
+                    path.basename(pathInArgv).toLocaleLowerCase() === 'python3.exe')
             ) {
                 sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                     kernelSpecHash,
                     pythonPathDefined: path.basename(pathInArgv) !== pathInArgv,
+                    argv0: path.basename(pathInArgv),
                     language: kernelSpecLanguage
                 });
             }
@@ -112,6 +115,7 @@ export class InterpreterKernelSpecFinderHelper {
             sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                 kernelSpecHash,
                 pythonPathDefined: false,
+                argv0: path.basename(pathInArgv),
                 language: kernelSpecLanguage
             });
         }
@@ -130,6 +134,7 @@ export class InterpreterKernelSpecFinderHelper {
                     sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                         kernelSpecHash,
                         pythonPathDefined: true,
+                        argv0: path.basename(pathInArgv),
                         pythonEnvFound: 'found',
                         language: kernelSpecLanguage
                     });
@@ -147,6 +152,7 @@ export class InterpreterKernelSpecFinderHelper {
                         sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                             kernelSpecHash,
                             pythonPathDefined: true,
+                            argv0: path.basename(pathInArgv),
                             pythonEnvFound: 'foundViaGetEnvDetails',
                             language: kernelSpecLanguage
                         });
@@ -157,6 +163,7 @@ export class InterpreterKernelSpecFinderHelper {
                     sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                         kernelSpecHash,
                         pythonPathDefined: true,
+                        argv0: path.basename(pathInArgv),
                         pythonEnvFound: 'notFound',
                         language: kernelSpecLanguage
                     });
@@ -165,6 +172,7 @@ export class InterpreterKernelSpecFinderHelper {
                 sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                     kernelSpecHash,
                     pythonPathDefined: true,
+                    argv0: path.basename(pathInArgv),
                     pythonEnvFound: 'notTrusted',
                     language: kernelSpecLanguage
                 });
