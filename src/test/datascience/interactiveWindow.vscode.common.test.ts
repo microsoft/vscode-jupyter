@@ -79,7 +79,7 @@ suite(`Interactive window execution @iw`, async function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
         // restore the default value
         const settings = vscode.workspace.getConfiguration('jupyter', null);
-        await settings.update('interactiveWindowMode', 'multiple');
+        await settings.update('interactiveWindow.creationMode', 'multiple');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test.skip('__file__ exists even after restarting a kernel', async function () {
@@ -218,7 +218,7 @@ suite(`Interactive window execution @iw`, async function () {
 
     test('Multiple interactive windows', async () => {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
-        await settings.update('interactiveWindowMode', 'multiple');
+        await settings.update('interactiveWindow.creationMode', 'multiple');
         const window1 = await interactiveWindowProvider.getOrCreate(undefined);
         const window2 = await interactiveWindowProvider.getOrCreate(undefined);
         assert.notEqual(
@@ -389,7 +389,7 @@ ${actualCode}
 
     test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
-        await settings.update('interactiveWindowMode', 'single');
+        await settings.update('interactiveWindow.creationMode', 'single');
 
         const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await runInteractiveWindowInput('print(1)', interactiveWindow, 1);
@@ -559,7 +559,7 @@ ${actualCode}
         let runFilePromise = vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows);
 
         const settings = vscode.workspace.getConfiguration('jupyter', null);
-        const mode = (await settings.get('interactiveWindowMode')) as InteractiveWindowMode;
+        const mode = (await settings.get('interactiveWindow.creationMode')) as InteractiveWindowMode;
         const interactiveWindow = interactiveWindowProvider.getExisting(tempFile.file, mode) as InteractiveWindow;
         await runInteractiveWindowInput('x = 5', interactiveWindow, 5);
         await runFilePromise;

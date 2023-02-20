@@ -10,6 +10,7 @@ import { IDisposable } from '../../../platform/common/types';
 import { isPromise } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { traceError } from '../../../platform/logging';
+import { KernelFilterService } from '../kernelFilter/kernelFilterService';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IQuickPickKernelItemProvider } from './types';
 
@@ -39,7 +40,8 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
     constructor(
         private readonly notebook: NotebookDocument,
         kind: ContributedKernelFinderKind,
-        finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>
+        finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>,
+        private readonly kernelFilter: KernelFilterService
     ) {
         this.refresh = async () => {
             this.refreshInvoked = true;
@@ -72,7 +74,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             // then trigger a refresh.
             finder.kind === ContributedKernelFinderKind.Remote &&
             finder.status === 'idle' &&
-            finder.kernels.length === 0
+            this.filteredKernels(finder.kernels).length === 0
         ) {
             finder.refresh().catch((ex) => traceError(`Failed to refresh finder for ${this.title}`, ex));
         }
@@ -90,7 +92,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         finder.onDidChangeKernels(
             () => {
                 this.kernels.length = 0;
-                this.kernels.push(...finder.kernels);
+                this.kernels.push(...this.filteredKernels(finder.kernels));
                 this._onDidChange.fire();
             },
             this,
@@ -100,7 +102,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             this.status = finder.status;
             this._onDidChangeStatus.fire();
 
-            if (this.status === 'idle' && finder.lastError && finder.kernels.length === 0) {
+            if (this.status === 'idle' && finder.lastError && this.filteredKernels(finder.kernels).length === 0) {
                 // Ok we have an error and there are no kernels to be displayed.
                 // Notify the user about this error.
                 this.kernels.length = 0;
@@ -108,7 +110,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             }
         });
         this.kernels.length = 0;
-        this.kernels.push(...finder.kernels);
+        this.kernels.push(...this.filteredKernels(finder.kernels));
         this._onDidChange.fire();
         this._onDidChangeStatus.fire();
 
@@ -124,6 +126,9 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         } else {
             this.computePreferredLocalKernel(finder, preferred, cancellationToken.token);
         }
+    }
+    private filteredKernels(kernels: KernelConnectionMetadata[]) {
+        return kernels.filter((k) => !this.kernelFilter.isKernelHidden(k));
     }
     private computePreferredRemoteKernel(
         finder: IContributedKernelFinder,

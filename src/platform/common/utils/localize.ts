@@ -2,7 +2,14 @@
 // Licensed under the MIT License.
 
 import { l10n } from 'vscode';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { getDisplayPath } from '../platform/fs-paths';
 
+function getInterpreterDisplayName(interpreter: PythonEnvironment) {
+    const interpreterDisplayName = interpreter.displayName || interpreter.envName || '';
+    const displayPath = getDisplayPath(interpreter.uri);
+    return interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
+}
 export namespace Common {
     export const bannerLabelYes = l10n.t('Yes');
     export const bannerLabelNo = l10n.t('No');
@@ -60,6 +67,12 @@ export namespace DataScience {
     export const installingPythonExtension = l10n.t('Installing Python extension and locating kernels.');
     export const pythonExtensionRequired = l10n.t(
         'The Python Extension is required to perform that task. Click Yes to open Python Extension installation page.'
+    );
+    export const rendererExtensionRequired = l10n.t(
+        'The Renderer Extension is required to view IPyWidgets. Click Yes to open Jupyter Notebook Renderer Extension installation page.'
+    );
+    export const rendererExtension1015Required = l10n.t(
+        'The installed version of the Renderer Extension is outdated and requires and update to view IPyWidgets. Click Yes to open Jupyter Notebook Renderer Extension installation page.'
     );
 
     export const pythonExtensionInstalled = l10n.t(
@@ -144,6 +157,19 @@ export namespace DataScience {
         l10n.t('current: {0}', pythonEnvPath);
     export const jupyterNotSupported = (errorMessage: string) =>
         l10n.t('Jupyter cannot be started. Error attempting to locate Jupyter: {0}', errorMessage);
+    export const jupyterNotebookNotInstalledOrNotFound = (interpreter: PythonEnvironment | undefined) => {
+        if (interpreter) {
+            const displayName = getInterpreterDisplayName(interpreter);
+            return l10n.t(
+                "Failed to start Jupyter Server as the packages 'jupyter' and 'notebook' could not be located in the Python environment '{0}'.",
+                displayName
+            );
+        } else {
+            return l10n.t(
+                "Failed to start Jupyter Server as the packages 'jupyter' and 'notebook' could not be located in the Python environment."
+            );
+        }
+    };
     export const jupyterNotSupportedBecauseOfEnvironment = (pythonEnvName: string, errorMessage: string) =>
         l10n.t('Activating {0} to run Jupyter failed with {1}', pythonEnvName, errorMessage);
     export const jupyterNbConvertNotSupported = l10n.t('Jupyter nbconvert is not installed');
@@ -326,7 +352,7 @@ export namespace DataScience {
     export const jupyterSelectUserPrompt = l10n.t('Enter your user name');
     export const jupyterSelectPasswordPrompt = l10n.t('Enter your password');
     export const pythonNotInstalled = l10n.t(
-        'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook.'
+        'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook. \nOnce installed please reload VS Code.'
     );
     export const jupyterNotebookFailure = (errorMessage: string) =>
         l10n.t('Jupyter notebook failed to launch. \r\n{0}', errorMessage);
@@ -347,17 +373,23 @@ export namespace DataScience {
         l10n.t('Connection failure. Verify the server is running and reachable. ({0}).', errorMessage);
     export const remoteJupyterConnectionFailedWithoutServerWithErrorWeb = (errorMessage: string) =>
         l10n.t(
-            'Connection failure. Verify the server is running and reachable from a browser. ({0}). When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.',
+            'Connection failure. Verify the server is running and reachable from a browser. ({0}). \nWhen connecting from vscode.dev Jupyter servers must be started with specific options to connect. \nClick [here](https://aka.ms/vscjremoteweb) for more information.',
             errorMessage
         );
-    export const remoteJupyterConnectionFailedWebExtension = l10n.t(
-        'When connecting from vscode.dev Jupyter servers must be started with specific options to connect. See [here](https://aka.ms/vscjremoteweb) for more information.'
-    );
     export const removeRemoteJupyterConnectionButtonText = l10n.t('Forget Connection');
     export const jupyterNotebookRemoteConnectFailedWeb = (hostName: string) =>
         l10n.t(
             'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URL can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.',
             hostName
+        );
+    export const packageNotInstalledWindowsLongPathNotEnabledError = (
+        pythonPackageName: string,
+        interpreterDisplayName: string
+    ) =>
+        l10n.t(
+            "Support for Windows Long Path has not been enabled, hence the package {0} could not be installed into the Python Environment '{1}'.\nPlease ensure that support for Windows Long Path is enabled.\nSee [here](https://pip.pypa.io/warnings/enable-long-paths) for more information.",
+            pythonPackageName,
+            interpreterDisplayName
         );
     export const changeRemoteJupyterConnectionButtonText = l10n.t('Manage Connections');
     export const rawConnectionBrokenError = l10n.t('Direct kernel connection broken');
@@ -522,13 +554,7 @@ export namespace DataScience {
         'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
     );
     export const insecureSessionDenied = l10n.t('Denied connection to insecure server.');
-    export const noKernelsSpecifyRemote = l10n.t({
-        message:
-            'No kernel available for cell execution, please [specify a Jupyter server for connections](command:jupyter.selectjupyteruri)',
-        comment: [
-            'Do not translate the text "command:jupyter.selectjupyteruri" as that is a VS Code command identifier'
-        ]
-    });
+    export const selectKernelForEditor = l10n.t('[Select a kernel](command:_notebook.selectKernel) to run cells.');
     export const needIpykernel6 = l10n.t('Ipykernel setup required for this feature');
     export const setup = l10n.t('Setup');
     export const showDataViewerFail = l10n.t(

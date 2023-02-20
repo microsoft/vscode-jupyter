@@ -69,7 +69,7 @@ export const activate: ActivationFunction = (context) => {
 
     logger('Jupyter IPyWidget Renderer Activated');
     hookupTestScripts(context);
-    const modelAvailabilityResponse = new Map<string, Deferred<boolean>>();
+    const modelAvailabilityResponse = new Map<string, Deferred<{ hasWidgetState: boolean; kernelSelected: boolean }>>();
     const rendererInitPromise = createDeferred<{
         version?: 7 | 8;
         widgetState?: NotebookMetadata['widgets'];
@@ -83,7 +83,7 @@ export const activate: ActivationFunction = (context) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         context.onDidReceiveMessage(async (e: any) => {
             if (e.command === 'query-widget-state' && e.model_id) {
-                modelAvailabilityResponse.get(e.model_id)?.resolve(e.available);
+                modelAvailabilityResponse.get(e.model_id)?.resolve(e);
             }
             if (e.command === 'ipywidget-renderer-init') {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -154,11 +154,13 @@ export const activate: ActivationFunction = (context) => {
      * for the widget (as this widget could be from a previous session).
      * This function will tell us whether the current kernel has the necessary state required to render this widget.
      */
-    async function doesKernelHaveWidgetState(model_id: string): Promise<boolean> {
+    async function doesKernelHaveWidgetState(
+        model_id: string
+    ): Promise<{ hasWidgetState: boolean; kernelSelected: boolean }> {
         if (!context.postMessage) {
-            return false;
+            return { hasWidgetState: false, kernelSelected: false };
         }
-        const deferred = createDeferred<boolean>();
+        const deferred = createDeferred<{ hasWidgetState: boolean; kernelSelected: boolean }>();
         modelAvailabilityResponse.set(model_id, deferred);
         context.postMessage({ command: 'query-widget-state', model_id });
         return deferred.promise;
@@ -172,21 +174,27 @@ export const activate: ActivationFunction = (context) => {
                     logger(`Error: Model not found to render output ${outputItem.id}`, 'error');
                     throw new FallbackRenderer();
                 }
-                const info = await rendererInitPromise.promise;
-                const renderOutputFunc = info.kernelSelected ? await getRendererFunction() : undefined;
+                // Query this state when loading ipywidgets from the notebook metadata.
+                // const info = await rendererInitPromise.promise;
+                const renderOutputFuncPromise = getRendererFunction();
+                const { hasWidgetState, kernelSelected } = await doesKernelHaveWidgetState(widgetModel.model_id);
+                const renderOutputFunc = hasWidgetState && kernelSelected ? await renderOutputFuncPromise : undefined;
+                if (!hasWidgetState) {
+                    logger(
+                        `Model not found in Kernel state to render output ${outputItem.id}, rendering a fallback mime type`,
+                        'info'
+                    );
+                    throw new FallbackRenderer();
+                }
+                if (!kernelSelected) {
+                    logger(`No Kernel selected, hence not rendering widget output ${outputItem.id}`, 'error');
+                    throw new FallbackRenderer();
+                }
                 if (renderOutputFunc) {
                     logger(`Rendering ${outputItem.id} widget renderer found *************`);
-                    if (!info.widgetStateLoaded && !(await doesKernelHaveWidgetState(widgetModel.model_id))) {
-                        logger(
-                            `Info: Model not found in Kernel state to render output ${outputItem.id}, rendering a fallback mime type`,
-                            'info'
-                        );
-                        throw new FallbackRenderer();
-                    }
                     element.className = (element.className || '') + ' cell-output-ipywidget-background';
                     return renderOutputFunc(outputItem, widgetModel, element, logger, doesKernelHaveWidgetState);
                 }
-                logger(`No Kernel selected, hence not rendering widget output ${outputItem.id}`, 'info');
                 throw new FallbackRenderer();
             } catch (ex) {
                 logErrorMessage(`Failed to render output ${outputItem.id}, ${ex}`);

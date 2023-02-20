@@ -66,6 +66,8 @@ import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from '.
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from './packageNotInstalledWindowsLongPathNotEnabledError';
+import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 
 /***
  * Common code for handling errors.
@@ -113,6 +115,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         } else if (
             err instanceof KernelDiedError ||
             err instanceof KernelProcessExitedError ||
+            err instanceof JupyterNotebookNotInstalled ||
             err instanceof JupyterConnectError
         ) {
             this.applicationShell.showErrorMessage(getUserFriendlyErrorMessage(err)).then(noop, noop);
@@ -153,6 +156,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         } else if (isCancellationError(error)) {
             // Don't show the message for cancellation errors
             return '';
+        } else if (error instanceof PackageNotInstalledWindowsLongPathNotEnabledError) {
+            const packageName =
+                typeof error.product === 'string'
+                    ? error.product
+                    : ProductNames.get(error.product) || `${error.product}`;
+            const interpreterDisplayName = error.interpreter.displayName || error.interpreter.envName || '';
+            const displayPath = getDisplayPath(error.interpreter.uri);
+            let displayName = interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
+            return DataScience.packageNotInstalledWindowsLongPathNotEnabledError(packageName, displayName);
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
             (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
@@ -552,19 +564,19 @@ const errorPrefixes = {
 function getUserFriendlyErrorMessage(error: Error | string, errorContext?: KernelAction) {
     error = typeof error === 'string' ? error : WrappedError.unwrap(error);
     const errorPrefix = errorContext ? errorPrefixes[errorContext] : '';
-    if (error instanceof BaseError) {
+    let errorMessageSuffix = '';
+    if (error instanceof JupyterNotebookNotInstalled) {
+        errorMessageSuffix = DataScience.jupyterNotebookNotInstalledOrNotFound(error.interpreter);
+    } else if (error instanceof BaseError) {
         // These are generic errors, we have no idea what went wrong,
         // hence add a descriptive prefix (message), that provides more context to the user.
-        return getCombinedErrorMessage(
-            errorPrefix,
-            getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message
-        );
+        errorMessageSuffix = getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message;
     } else {
         // These are generic errors, we have no idea what went wrong,
         // hence add a descriptive prefix (message), that provides more context to the user.
-        const errorMessage = typeof error === 'string' ? error : error.message;
-        return getCombinedErrorMessage(errorPrefix, errorMessage);
+        errorMessageSuffix = typeof error === 'string' ? error : error.message;
     }
+    return getCombinedErrorMessage(errorPrefix, errorMessageSuffix);
 }
 function doesErrorHaveMarkdownLinks(message: string) {
     const markdownLinks = new RegExp(/\[([^\[]+)\]\((.*)\)/);

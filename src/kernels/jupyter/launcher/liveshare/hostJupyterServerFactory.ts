@@ -26,7 +26,7 @@ export class HostJupyterServerFactory implements INotebookServerFactory {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public async createNotebookServer(connection: IJupyterConnection): Promise<INotebookServer> {
-        traceInfo(`Connecting server kernel ${connection.baseUrl}`);
+        traceInfo(`Connecting ${connection.localLaunch ? 'local' : 'remote'} server kernel ${connection.baseUrl}`);
 
         // Indicate we have a new session on the output channel
         if (!connection.localLaunch) {

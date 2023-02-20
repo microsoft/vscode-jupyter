@@ -15,7 +15,6 @@ import {
     IQuickPickParameters,
     InputFlowAction
 } from '../../platform/common/utils/multiStepInput';
-import { noop } from '../../platform/common/utils/misc';
 import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../telemetry';
 import {
@@ -106,15 +105,15 @@ export async function validateSelectJupyterURI(
                 return DataScience.jupyterSelfCertExpiredErrorMessageOnly;
             }
         } else {
-            // Notify the user of web extension specific connection help
-            if (isWebExtension) {
-                applicationShell
-                    .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension)
-                    .then(noop, noop);
-            }
-
             // Return the general connection error to show in the validation box
-            return DataScience.remoteJupyterConnectionFailedWithoutServerWithError(err.message || err.toString);
+            // Replace any Urls in the error message with markdown link.
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const errorMessage = (err.message || err.toString()).replace(urlRegex, (url: string) => `[${url}](${url})`);
+            return (
+                isWebExtension || true
+                    ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
+                    : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
+            )(errorMessage);
         }
     }
 }
@@ -664,15 +663,18 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
                     return DataScience.jupyterSelfCertExpiredErrorMessageOnly;
                 }
             } else {
-                // Notify the user of web extension specific connection help
-                if (this.isWebExtension) {
-                    this.applicationShell
-                        .showErrorMessage(DataScience.remoteJupyterConnectionFailedWebExtension)
-                        .then(noop, noop);
-                }
-
                 // Return the general connection error to show in the validation box
-                return DataScience.remoteJupyterConnectionFailedWithoutServerWithError(err.message || err.toString);
+                // Replace any Urls in the error message with markdown link.
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                const errorMessage = (err.message || err.toString()).replace(
+                    urlRegex,
+                    (url: string) => `[${url}](${url})`
+                );
+                return (
+                    this.isWebExtension || true
+                        ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
+                        : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
+                )(errorMessage);
             }
         }
     };

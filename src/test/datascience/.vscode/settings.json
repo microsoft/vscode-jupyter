@@ -26,8 +26,6 @@
     "jupyter.logging.level": "verbose",
     "python.logging.level": "debug",
     "webview.experimental.useIframes": true,
-    "jupyter.interactiveWindowMode": "multiple",
-    "jupyter.magicCommandsAsComments": false,
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true,
     "jupyter.generateSVGPlots": false,
@@ -37,5 +35,7 @@
     "task.problemMatchers.neverPrompt": {
         "shell": true,
         "npm": true
-    }
+    },
+    "jupyter.interactiveWindow.creationMode": "multiple",
+    "jupyter.interactiveWindow.textEditor.magicCommandsAsComments": false,
 }

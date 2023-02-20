@@ -5,10 +5,10 @@ import '../extensions';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { inject, injectable } from 'inversify';
-
+import * as path from '../../../platform/vscode-path/path';
 import { IWorkspaceService } from '../application/types';
 import { IDisposable, Resource } from '../types';
-import { ICustomEnvironmentVariablesProvider } from '../variables/types';
+import { ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
@@ -20,9 +20,10 @@ import { swallowExceptions } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
-import { logValue, traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
+import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
+import { GlobalPythonSiteService } from './globalPythonSiteService.node';
 import { noop } from '../utils/misc';
 
 @injectable()
@@ -33,11 +34,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(ICustomEnvironmentVariablesProvider)
-        private readonly envVarsService: ICustomEnvironmentVariablesProvider,
+        private readonly customEnvVarsService: ICustomEnvironmentVariablesProvider,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
+        @inject(GlobalPythonSiteService) private readonly userSite: GlobalPythonSiteService
     ) {
-        this.envVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
+        this.customEnvVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
     }
     public clearCache() {
@@ -102,7 +105,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             : undefined;
         const stopWatch = new StopWatch();
         // We'll need this later.
-        this.envVarsService.getEnvironmentVariables(resource, 'RunPythonCode').catch(noop);
+        const customEnvVarsPromise = this.customEnvVarsService
+            .getEnvironmentVariables(resource, 'RunPythonCode')
+            .catch(() => undefined);
 
         // Check cache.
         let reasonForFailure:
@@ -110,33 +115,21 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             | 'failedToGetActivatedEnvVariablesFromPython'
             | 'failedToGetCustomEnvVariables' = 'emptyVariables';
         let failureEx: Error | undefined;
-        let [env, customEnvVars] = await Promise.all([
-            this.apiProvider.getApi().then((api) =>
-                api
-                    .getActivatedEnvironmentVariables(resource, serializePythonEnvironment(interpreter)!, false)
-                    .catch((ex) => {
-                        traceError(
-                            `Failed to get activated env variables from Python Extension for ${getDisplayPath(
-                                interpreter.uri
-                            )}`,
-                            ex
-                        );
-                        reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
-                        return undefined;
-                    })
-            ),
-            this.envVarsService.getCustomEnvironmentVariables(resource, 'RunPythonCode').catch((ex) => {
-                traceError(
-                    `Failed to get activated env variables from Python Extension for ${getDisplayPath(
-                        interpreter.uri
-                    )}`,
-                    ex
-                );
-                reasonForFailure = 'failedToGetCustomEnvVariables';
-                failureEx = ex;
-                return undefined;
-            })
-        ]);
+
+        let env = await this.apiProvider.getApi().then((api) =>
+            api
+                .getActivatedEnvironmentVariables(resource, serializePythonEnvironment(interpreter)!, false)
+                .catch((ex) => {
+                    traceError(
+                        `Failed to get activated env variables from Python Extension for ${getDisplayPath(
+                            interpreter.uri
+                        )}`,
+                        ex
+                    );
+                    reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
+                    return undefined;
+                })
+        );
 
         const envType = interpreter.envType;
         sendTelemetryEvent(
@@ -150,32 +143,69 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             },
             failureEx
         );
-        // We must get activated env variables for Conda env, if not running stuff against conda will not work.
-        // Hence we must log these as errors (so we can see them in jupyter logs).
-        if (!env && envType === EnvironmentType.Conda) {
-            traceError(
-                `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}`
-            );
-        }
 
         if (env) {
             traceVerbose(
                 `Got env vars with python ${getDisplayPath(interpreter?.uri)}, with env var count ${
                     Object.keys(env || {}).length
-                } and custom env var count ${Object.keys(customEnvVars || {}).length} in ${stopWatch.elapsedTime}ms`
+                } in ${stopWatch.elapsedTime}ms. \n PATH value is ${env.PATH} and Path value is ${env.Path}`
+            );
+        } else if (envType === EnvironmentType.Conda) {
+            // We must get activated env variables for Conda env, if not running stuff against conda will not work.
+            // Hence we must log these as errors (so we can see them in jupyter logs).
+            traceError(
+                `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}
+                 in ${stopWatch.elapsedTime}ms`
             );
         } else {
-            traceVerbose(
-                `Got empty env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
+            traceWarning(
+                `Failed to get activated env vars with python ${getDisplayPath(interpreter?.uri)} in ${
+                    stopWatch.elapsedTime
+                }ms`
             );
         }
+        if (!env) {
+            // Temporary work around until https://github.com/microsoft/vscode-python/issues/20663
+            const customEnvVars = await customEnvVarsPromise;
+            env = {};
+            this.envVarsService.mergeVariables(process.env, env); // Copy current proc vars into new obj.
+            this.envVarsService.mergeVariables(customEnvVars!, env); // Copy custom vars over into obj.
+            this.envVarsService.mergePaths(process.env, env);
+            if (process.env.PYTHONPATH) {
+                env.PYTHONPATH = process.env.PYTHONPATH;
+            }
+            let pathKey = customEnvVars ? Object.keys(customEnvVars).find((k) => k.toLowerCase() == 'path') : undefined;
+            if (pathKey && customEnvVars![pathKey]) {
+                this.envVarsService.appendPath(env, customEnvVars![pathKey]!);
+            }
+            if (customEnvVars!.PYTHONPATH) {
+                this.envVarsService.appendPythonPath(env, customEnvVars!.PYTHONPATH);
+            }
 
-        if (env && customEnvVars) {
-            env = {
-                ...env,
-                ...customEnvVars
-            };
+            const userSite = await this.userSite.getUserSitePath(interpreter).catch(noop);
+            if (userSite) {
+                // Based on docs this is the right path and must be setup in the path.
+                this.envVarsService.prependPath(env, userSite.fsPath);
+            } else {
+                traceError(
+                    `Unable to determine site packages path for python ${interpreter.uri.fsPath} (${interpreter.envType})`
+                );
+            }
+
+            // This way all executables from that env are used.
+            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+            // Also applies to `!java` where java could be an executable in the conda bin directory.
+            this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
+
+            // Seems to be required on windows,
+            // Without this, in Python, the PATH variable inherits the process env variables and not what we give it.
+            // Probably because Python uses PATH on windows as well , even if Path is provided.
+            if (!env.PATH && env.Path) {
+                env.PATH = env.Path;
+            }
         }
+
+        traceVerbose(`Activated Env Variables, PATH value is ${env.PATH} and Path value is ${env.Path}`);
         return env;
     }
 }

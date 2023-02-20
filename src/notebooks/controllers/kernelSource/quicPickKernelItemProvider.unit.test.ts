@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import * as fakeTimers from '@sinonjs/fake-timers';
-import { instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookDocument } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IDisposable } from '../../../platform/common/types';
@@ -12,6 +12,7 @@ import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { noop } from '../../../platform/common/utils/misc';
+import { KernelFilterService } from '../kernelFilter/kernelFilterService';
 
 suite('Quick Pick Kernel Item Provider', () => {
     [
@@ -27,6 +28,8 @@ suite('Quick Pick Kernel Item Provider', () => {
             let onDidChangeStatus: EventEmitter<void>;
             const disposables: IDisposable[] = [];
             let clock: fakeTimers.InstalledClock;
+            const kernelFilter = mock<KernelFilterService>();
+            when(kernelFilter.isKernelHidden(anything())).thenReturn(false);
             const kernelConnection1 = instance(mock<KernelConnectionMetadata>());
             const kernelConnection2 = instance(mock<KernelConnectionMetadata>());
             const kernelConnection3 = instance(mock<KernelConnectionMetadata>());
@@ -64,7 +67,8 @@ suite('Quick Pick Kernel Item Provider', () => {
                 provider = new QuickPickKernelItemProvider(
                     instance(notebook),
                     kind,
-                    kind === ContributedKernelFinderKind.Remote ? Promise.resolve(instance(finder)) : instance(finder)
+                    kind === ContributedKernelFinderKind.Remote ? Promise.resolve(instance(finder)) : instance(finder),
+                    instance(kernelFilter)
                 );
             }
             teardown(() => disposeAllDisposables(disposables));

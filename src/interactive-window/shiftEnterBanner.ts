@@ -93,7 +93,7 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
     @captureUsageTelemetry(Telemetry.DisableInteractiveShiftEnter)
     public async disableInteractiveShiftEnter(): Promise<void> {
         await this.configuration.updateSetting(
-            'sendSelectionToInteractiveWindow',
+            'interactiveWindow.textEditor.executeSelection',
             false,
             undefined,
             ConfigurationTarget.Global
@@ -104,7 +104,7 @@ export class InteractiveShiftEnterBanner implements IJupyterExtensionBanner {
     @captureUsageTelemetry(Telemetry.EnableInteractiveShiftEnter)
     public async enableInteractiveShiftEnter(): Promise<void> {
         await this.configuration.updateSetting(
-            'sendSelectionToInteractiveWindow',
+            'interactiveWindow.textEditor.executeSelection',
             true,
             undefined,
             ConfigurationTarget.Global
