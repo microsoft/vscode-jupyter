@@ -39,6 +39,7 @@ import { serializePythonEnvironment } from '../../platform/api/pythonApi';
 import { IJupyterKernelService } from './types';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
 import { KernelEnvironmentVariablesService } from '../raw/launcher/kernelEnvVarsService.node';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Responsible for registering and updating kernels in a non ZMQ situation (kernel specs)
@@ -150,6 +151,16 @@ export class JupyterKernelService implements IJupyterKernelService {
         // If this file already exists, we can just exit
         if (await this.fs.exists(kernelSpecFilePath)) {
             traceInfo(`Kernel spec file for ${kernel.id} already exists ${getDisplayPath(kernelSpecFilePath)}`);
+            this.fs
+                .readFile(kernelSpecFilePath)
+                .then((contents) =>
+                    traceInfo(
+                        `Kernel spec file for ${kernel.id} already exists ${getDisplayPath(
+                            kernelSpecFilePath
+                        )} with contents ${contents}}`
+                    )
+                )
+                .catch(noop);
             return kernelSpecFilePath.fsPath;
         }
 
@@ -178,7 +189,11 @@ export class JupyterKernelService implements IJupyterKernelService {
             };
         }
 
-        traceInfo(`RegisterKernel for ${kernel.id} into ${getDisplayPath(kernelSpecFilePath)}`);
+        traceInfo(
+            `RegisterKernel for ${kernel.id} into ${getDisplayPath(kernelSpecFilePath)} with contents ${JSON.stringify(
+                contents
+            )}`
+        );
 
         // Write out the contents into the new spec file
         try {

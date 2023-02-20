@@ -592,7 +592,7 @@ import { sleep } from '../../../test/core';
             const onDidChange = createEventHandler(finder, 'onDidChangeKernels', disposables);
 
             // We need to have a Kernel Spec that will be started using activated Python enviornment.
-            const expectedJavaKernelSpec = PythonKernelConnectionMetadata.create({
+            const expectedJavaKernelSpec = LocalKernelSpecConnectionMetadata.create({
                 kernelSpec: javaKernelSpec.kernelSpec,
                 interpreter: condaInterpreter,
                 id: getKernelId(javaKernelSpec.kernelSpec, condaInterpreter)

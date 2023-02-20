@@ -324,6 +324,11 @@ export async function loadKernelSpec(
             }`
         );
         kernelJson = JSON.parse(await fs.readFile(specPath));
+        traceVerbose(
+            `Loading kernelspec from ${getDisplayPath(specPath)} for ${
+                interpreter?.uri ? getDisplayPath(interpreter.uri) : ''
+            } and contents is ${JSON.stringify(kernelJson)}}`
+        );
     } catch (ex) {
         traceError(`Failed to parse kernelspec ${specPath}`, ex);
         return;
