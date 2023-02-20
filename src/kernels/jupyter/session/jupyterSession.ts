@@ -14,7 +14,7 @@ import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelErro
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
-import { getNameOfKernelConnection, isPythonKernelConnection } from '../../helpers';
+import { getNameOfKernelConnection } from '../../helpers';
 import {
     KernelConnectionMetadata,
     isLocalConnection,
