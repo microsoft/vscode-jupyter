@@ -112,6 +112,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
+
       - name: Cache pip files
         uses: actions/cache@v3
         with:
