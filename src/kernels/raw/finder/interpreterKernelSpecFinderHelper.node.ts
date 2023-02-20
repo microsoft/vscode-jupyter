@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from '../../../platform/vscode-path/path';
+import * as os from 'os';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, CancellationTokenSource, Uri } from 'vscode';
 import {
@@ -471,12 +472,16 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                     return;
                 }
 
+                const expectedExecutable = os.platform() === 'win32' ? 'python.exe' : 'python';
+                const isIPyKernel =
+                    k.argv[0].toLowerCase().endsWith(expectedExecutable) ||
+                    k.argv.some((arg) => arg.includes('ipykernel_launcher') || arg.includes('ipykernel'));
                 // Find the interpreter that matches. If we find one, we want to use
                 // this to start the kernel.
                 const matchingInterpreter = kernelSpecsBelongingToPythonEnvironment.includes(k)
                     ? interpreter
                     : await interpreterKernelSpecFinder.findMatchingInterpreter(k, false);
-                if (matchingInterpreter) {
+                if (matchingInterpreter && isIPyKernel) {
                     const result = PythonKernelConnectionMetadata.create({
                         kernelSpec: k,
                         interpreter: matchingInterpreter,
@@ -508,7 +513,11 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                     return result;
                 } else {
                     const activeInterpreterOfAWorkspaceFolder = activeInterpreters.find((i) => !!i);
-                    let interpreter = k.language === PYTHON_LANGUAGE ? activeInterpreterOfAWorkspaceFolder : undefined;
+                    // Possible we already have interpreter information in the kernlel spec.
+                    // E.g its possible this is a non-python kernelspec that belongs to a Conda environment.
+                    let kernelInterpreter =
+                        (kernelSpecsBelongingToPythonEnvironment.includes(k) ? interpreter : undefined) ||
+                        (k.language === PYTHON_LANGUAGE ? activeInterpreterOfAWorkspaceFolder : undefined);
                     // If the interpreter information is stored in kernel spec.json then use that to determine the interpreter.
                     // This can happen under the following circumstances:
                     // 1. Open workspace folder XYZ, and create a virtual environment named venvA
@@ -530,12 +539,12 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                             );
                             if (interpreterInKernelSpec) {
                                 // Found the exact interpreter as defined in metadata.
-                                interpreter = interpreterInKernelSpec;
+                                kernelInterpreter = interpreterInKernelSpec;
                             } else {
                                 try {
                                     // Get the interpreter details as defined in the metadata.
                                     // Possible the kernel spec points to an interpreter in a different workspace folder or the like.
-                                    interpreter = await interpreterService.getInterpreterDetails(
+                                    kernelInterpreter = await interpreterService.getInterpreterDetails(
                                         kernelSpecInterpreterPath
                                     );
                                 } catch (ex) {
@@ -551,22 +560,22 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                         }
                         if (
                             activeInterpreterOfAWorkspaceFolder &&
-                            activeInterpreterOfAWorkspaceFolder === interpreter &&
+                            activeInterpreterOfAWorkspaceFolder === kernelInterpreter &&
                             !foundRightInterpreter
                         ) {
                             traceWarning(
                                 `Kernel Spec ${k.id} in ${getDisplayPathFromLocalFile(
                                     k.specFile
                                 )} has interpreter metadata but we couldn't find the interpreter, using best match of ${
-                                    interpreter?.id
+                                    kernelInterpreter?.id
                                 }`
                             );
                         }
                     }
                     const result = LocalKernelSpecConnectionMetadata.create({
                         kernelSpec: k,
-                        interpreter,
-                        id: getKernelId(k, interpreter)
+                        interpreter: kernelInterpreter,
+                        id: getKernelId(k, kernelInterpreter)
                     });
                     return result;
                 }
