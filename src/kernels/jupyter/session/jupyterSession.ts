@@ -14,7 +14,7 @@ import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelErro
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
-import { getNameOfKernelConnection } from '../../helpers';
+import { getNameOfKernelConnection, isPythonKernelConnection } from '../../helpers';
 import {
     KernelConnectionMetadata,
     isLocalConnection,
@@ -268,6 +268,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         if (
             this.kernelConnectionMetadata?.interpreter &&
             isLocalConnection(this.kernelConnectionMetadata) &&
+            isPythonKernelConnection(this.kernelConnectionMetadata) &&
             this.kernelService
         ) {
             // Make sure the kernel actually exists and is up to date.

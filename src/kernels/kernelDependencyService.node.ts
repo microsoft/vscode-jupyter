@@ -24,6 +24,7 @@ import { IRawNotebookSupportedService } from './raw/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { isModulePresentInEnvironment } from './installer/productInstaller.node';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
+import { isPythonKernelConnection } from './helpers';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -70,6 +71,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         if (
             kernelConnection.kind === 'connectToLiveRemoteKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+            (kernelConnection.kind === 'startUsingLocalKernelSpec' && !isPythonKernelConnection(kernelConnection)) ||
             kernelConnection.interpreter === undefined
         ) {
             return KernelInterpreterDependencyResponse.ok;
