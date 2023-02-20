@@ -9,7 +9,6 @@ import { CancellationToken, Uri } from 'vscode';
 import { Cancellation } from '../../platform/common/cancellation';
 import '../../platform/common/extensions';
 import {
-    traceInfoIfCI,
     traceInfo,
     traceVerbose,
     logValue,
