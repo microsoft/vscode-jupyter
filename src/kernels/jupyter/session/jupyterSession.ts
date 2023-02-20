@@ -268,7 +268,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         if (
             this.kernelConnectionMetadata?.interpreter &&
             isLocalConnection(this.kernelConnectionMetadata) &&
-            isPythonKernelConnection(this.kernelConnectionMetadata) &&
             this.kernelService
         ) {
             // Make sure the kernel actually exists and is up to date.
