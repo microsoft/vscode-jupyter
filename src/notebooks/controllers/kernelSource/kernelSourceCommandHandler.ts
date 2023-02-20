@@ -12,6 +12,7 @@ import {
     Uri,
     window
 } from 'vscode';
+import { getKernelRegistrationInfo } from '../../../kernels/helpers';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
@@ -116,7 +117,16 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     return;
                 }
 
-                if (this.kernelFinder.kernels.some((k) => k.kind === 'startUsingLocalKernelSpec')) {
+                if (
+                    this.kernelFinder.kernels.some(
+                        (k) =>
+                            k.kind === 'startUsingLocalKernelSpec' ||
+                            (k.kind === 'startUsingPythonInterpreter' &&
+                                // Also include kernel Specs that are in a non-global directory.
+                                getKernelRegistrationInfo(k.kernelSpec) ===
+                                    'registeredByNewVersionOfExtForCustomKernelSpec')
+                    )
+                ) {
                     this.kernelSpecsSourceRegistered = true;
                     kernelSpecActions = [
                         {
