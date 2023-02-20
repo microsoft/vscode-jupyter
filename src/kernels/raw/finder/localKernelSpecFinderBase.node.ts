@@ -382,7 +382,8 @@ export async function loadKernelSpec(
 
     // Possible user deleted the underlying interpreter.
     const interpreterPath = interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path;
-    if (interpreterPath && !(await fs.exists(Uri.file(interpreterPath)))) {
+    // Do not validate interpreter paths for empty conda envs
+    if (interpreterPath && !interpreter?.isCondaEnvWithoutPython && !(await fs.exists(Uri.file(interpreterPath)))) {
         return;
     }
 
