@@ -525,8 +525,14 @@ export class KernelProcess implements IKernelProcess {
     private async launchAsObservable(workingDirectory: string, @ignoreLogging() cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string>;
 
+        const expectedExecutable = os.platform() === 'win32' ? 'python.exe' : 'python';
+        const isIPyKernel =
+            this.launchKernelSpec.argv[0].toLowerCase().endsWith(expectedExecutable) ||
+            this.launchKernelSpec.argv.some((arg) => arg.includes('ipykernel_launcher') || arg.includes('ipykernel'));
+
         if (
             this.isPythonKernel &&
+            isIPyKernel &&
             this.extensionChecker.isPythonExtensionInstalled &&
             this._kernelConnectionMetadata.interpreter
         ) {
@@ -544,12 +550,8 @@ export class KernelProcess implements IKernelProcess {
                     this._kernelConnectionMetadata.kernelSpec
                 )
             ]);
-
-            const isIPyKernel = this.launchKernelSpec.argv.some(
-                (arg) => arg.includes('ipykernel_launcher') || arg.includes('ipykernel')
-            );
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
-            if (os.platform() === 'win32' && isIPyKernel) {
+            if (os.platform() === 'win32') {
                 env = env || process.env;
                 try {
                     const handle = await this.getWin32InterruptHandle();
@@ -568,16 +570,8 @@ export class KernelProcess implements IKernelProcess {
             }
 
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
-            const args = this.launchKernelSpec.argv.slice();
-            if (isIPyKernel) {
-                traceVerbose(
-                    `Removing the first argument '${args[0]}' of the Python Kernel args ${
-                        this.kernelConnectionMetadata.id
-                    } # ${args.join(' ')}`
-                );
-                args.shift(); // Remove the python part of the command
-            }
-            if (this.jupyterSettings.enablePythonKernelLogging && isIPyKernel) {
+            const args = this.launchKernelSpec.argv.slice(1); // Remove the python part of the command
+            if (this.jupyterSettings.enablePythonKernelLogging) {
                 args.push('--debug');
             }
             exeObs = executionService.execObservable(args, {
@@ -600,7 +594,11 @@ export class KernelProcess implements IKernelProcess {
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
                 Promise.race([
-                    this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                    this.kernelEnvVarsService.getEnvironmentVariables(
+                        this.resource,
+                        this._kernelConnectionMetadata.interpreter,
+                        this.launchKernelSpec
+                    ),
                     promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
                 ])
             ]);
