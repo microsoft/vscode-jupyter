@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import type { KernelSpec } from '@jupyterlab/services';
+import * as os from 'os';
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
@@ -264,11 +265,16 @@ export class JupyterKernelService implements IJupyterKernelService {
                 // Make sure the specmodel has an interpreter or already in the metadata or we
                 // may overwrite a kernel created by the user
                 if (specModel.metadata?.interpreter) {
+                    const expectedExecutable = os.platform() === 'win32' ? 'python.exe' : 'python';
+                    const isIPyKernel =
+                        specModel.argv[0].toLowerCase().endsWith(expectedExecutable) ||
+                        specModel.argv.some((arg) => arg.includes('ipykernel_launcher') || arg.includes('ipykernel'));
+
                     // Ensure we use a fully qualified path to the python interpreter in `argv`.
                     if (specModel.argv[0].toLowerCase() === 'conda') {
                         // If conda is the first word, its possible its a conda activation command.
                         traceInfo(`Spec argv[0], not updated as it is using conda.`);
-                    } else {
+                    } else if (isIPyKernel) {
                         traceInfo(
                             `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(interpreter.uri)}'`
                         );
