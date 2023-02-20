@@ -92,6 +92,7 @@ export function pythonEnvToJupyterEnv(
                     : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
             // Sys prefix can also be empty for conda environments.
             if (!sysPrefix && env.environment?.folderUri) {
+                // This is required to look for non-python kernels in the conda environment.
                 // eslint-disable-next-line local-rules/dont-use-fspath
                 sysPrefix = env.environment.folderUri.fsPath;
             }

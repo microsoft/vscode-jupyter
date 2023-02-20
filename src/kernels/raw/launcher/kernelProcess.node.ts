@@ -545,8 +545,11 @@ export class KernelProcess implements IKernelProcess {
                 )
             ]);
 
+            const isIPyKernel = this.launchKernelSpec.argv.some(
+                (arg) => arg.includes('ipykernel_launcher') || arg.includes('ipykernel')
+            );
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
-            if (os.platform() === 'win32') {
+            if (os.platform() === 'win32' && isIPyKernel) {
                 env = env || process.env;
                 try {
                     const handle = await this.getWin32InterruptHandle();
@@ -565,8 +568,16 @@ export class KernelProcess implements IKernelProcess {
             }
 
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
-            const args = this.launchKernelSpec.argv.slice(1);
-            if (this.jupyterSettings.enablePythonKernelLogging) {
+            const args = this.launchKernelSpec.argv.slice();
+            if (isIPyKernel) {
+                traceVerbose(
+                    `Removing the first argument '${args[0]}' of the Python Kernel args ${
+                        this.kernelConnectionMetadata.id
+                    } # ${args.join(' ')}`
+                );
+                args.shift(); // Remove the python part of the command
+            }
+            if (this.jupyterSettings.enablePythonKernelLogging && isIPyKernel) {
                 args.push('--debug');
             }
             exeObs = executionService.execObservable(args, {
