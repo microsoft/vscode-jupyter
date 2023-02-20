@@ -82,6 +82,7 @@ export function pythonEnvToJupyterEnv(
     let isCondaEnvWithoutPython = false;
     let uri: Uri;
     let id = env.id;
+    let sysPrefix = env.executable.sysPrefix;
     if (!env.executable.uri) {
         if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
             isCondaEnvWithoutPython = true;
@@ -89,6 +90,11 @@ export function pythonEnvToJupyterEnv(
                 getOSType() === OSType.Windows
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
                     : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
+            // Sys prefix can also be empty for conda environments.
+            if (!sysPrefix && env.environment?.folderUri) {
+                // eslint-disable-next-line local-rules/dont-use-fspath
+                sysPrefix = env.environment.folderUri.fsPath;
+            }
         } else {
             traceError(`Python environment ${env.id} excluded as Uri is undefined`);
             return;
@@ -99,7 +105,7 @@ export function pythonEnvToJupyterEnv(
 
     return {
         id,
-        sysPrefix: env.executable.sysPrefix || '',
+        sysPrefix: sysPrefix || '',
         envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',

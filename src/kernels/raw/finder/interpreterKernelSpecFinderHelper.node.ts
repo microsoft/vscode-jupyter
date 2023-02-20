@@ -331,7 +331,7 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
     interpreterKernelSpecFinder: InterpreterKernelSpecFinderHelper,
     globalKernelSpecs: LocalKernelSpecConnectionMetadata[]
 ): Promise<LocalKernelConnectionMetadata[]> {
-    traceVerbose(`Listing Python kernels for Interpreter ${getDisplayPath(interpreter.uri)}`);
+    traceVerbose(`Listing Python & non-Python kernels for Interpreter ${getDisplayPath(interpreter.uri)}`);
     // First find the on disk kernel specs and interpreters
     const activeInterpreterInAWorkspacePromise = Promise.all(
         (workspaceService.workspaceFolders || []).map((folder) => interpreterService.getActiveInterpreter(folder.uri))
