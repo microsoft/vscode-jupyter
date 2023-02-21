@@ -119,70 +119,81 @@ export class CommonMessageCoordinator {
             this,
             this.disposables
         );
+        const deferred = createDeferred<7 | 8>();
+        const sendIPyWidgetsVersion = async () => {
+            const stopWatch = new StopWatch();
+            if (!deferred.completed) {
+                // Determine the version of ipywidgets and send the appropriate script url to the webview.
+                traceVerbose('Attempting to determine version of IPyWidgets');
+                const disposables: IDisposable[] = [];
+                const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
+                const kernelPromise = createDeferred<IKernel>();
+                if (kernelProvider.get(this.document)) {
+                    kernelPromise.resolve(kernelProvider.get(this.document));
+                } else {
+                    kernelProvider.onDidCreateKernel(
+                        (e) => {
+                            if (e.notebook === this.document) {
+                                kernelPromise.resolve(e);
+                            }
+                        },
+                        this,
+                        disposables
+                    );
+                }
+                const kernel = await kernelPromise.promise;
+                if (kernel) {
+                    if (isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+                        if (kernel.ipywidgetsVersion) {
+                            if (!deferred.completed) {
+                                deferred.resolve(kernel.ipywidgetsVersion);
+                            }
+                        } else {
+                            traceVerbose('Waiting for IPyWidgets version');
+                            kernel.onIPyWidgetVersionResolved(
+                                () => {
+                                    if (kernel.ipywidgetsVersion) {
+                                        if (!deferred.completed) {
+                                            deferred.resolve(kernel.ipywidgetsVersion);
+                                        }
+                                        disposeAllDisposables(disposables);
+                                    }
+                                },
+                                this,
+                                disposables
+                            );
+                        }
+                    } else {
+                        // For non-python kernels, always assume version 7.
+                        if (!deferred.completed) {
+                            deferred.resolve(WIDGET_VERSION_NON_PYTHON_KERNELS);
+                        }
+                    }
+                }
+                if (disposables.length) {
+                    this.disposables.push(...disposables);
+                }
+                traceVerbose('Waiting for IPyWidgets version promise');
+            }
+            // IPyWidgets scripts will not be loaded if we're unable to determine the version of IPyWidgets.
+            const version = await deferred.promise;
+            traceVerbose(`Version of IPyWidgets ${version} determined after ${stopWatch.elapsedTime / 1000}s`);
+            webview
+                .postMessage({
+                    type: IPyWidgetMessages.IPyWidgets_Reply_Widget_Version,
+                    payload: version
+                })
+                .then(noop, noop);
+        };
         webview.onDidReceiveMessage(
             async (m) => {
                 traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
                 this.onMessage(webview, m.type, m.payload);
                 if (m.type === IPyWidgetMessages.IPyWidgets_Request_Widget_Version) {
-                    // Determine the version of ipywidgets and send the appropriate script url to the webview.
-                    const stopWatch = new StopWatch();
-                    traceVerbose('Attempting to determine version of IPyWidgets');
-                    const disposables: IDisposable[] = [];
-                    const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
-                    const deferred = createDeferred<7 | 8>();
-                    const kernelPromise = createDeferred<IKernel>();
-                    if (kernelProvider.get(this.document)) {
-                        kernelPromise.resolve(kernelProvider.get(this.document));
-                    } else {
-                        kernelProvider.onDidCreateKernel(
-                            (e) => {
-                                if (e.notebook === this.document) {
-                                    kernelPromise.resolve(e);
-                                }
-                            },
-                            this,
-                            disposables
-                        );
-                    }
-                    const kernel = await kernelPromise.promise;
-                    if (kernel) {
-                        if (isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
-                            if (kernel.ipywidgetsVersion) {
-                                deferred.resolve(kernel.ipywidgetsVersion);
-                            } else {
-                                traceVerbose('Waiting for IPyWidgets version');
-                                kernel.onIPyWidgetVersionResolved(
-                                    () => {
-                                        if (kernel.ipywidgetsVersion) {
-                                            deferred.resolve(kernel.ipywidgetsVersion);
-                                            disposeAllDisposables(disposables);
-                                        }
-                                    },
-                                    this,
-                                    disposables
-                                );
-                            }
-                        } else {
-                            // For non-python kernels, always assume version 7.
-                            deferred.resolve(WIDGET_VERSION_NON_PYTHON_KERNELS);
-                        }
-                    }
-                    if (disposables.length) {
-                        this.disposables.push(...disposables);
-                    }
-                    traceVerbose('Waiting for IPyWidgets version promise');
-                    // IPyWidgets scripts will not be loaded if we're unable to determine the version of IPyWidgets.
-                    const version = await deferred.promise;
-                    traceVerbose(`Version of IPyWidgets ${version} determined after ${stopWatch.elapsedTime / 1000}s`);
-                    webview
-                        .postMessage({
-                            type: IPyWidgetMessages.IPyWidgets_Reply_Widget_Version,
-                            payload: version
-                        })
-                        .then(noop, noop);
+                    await sendIPyWidgetsVersion();
                 }
                 if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
-                    traceInfoIfCI('Web view is ready to receive widget messages');
+                    traceVerbose('Web view is ready to receive widget messages');
                     this.readyMessageReceived = true;
                     this.sendPendingWebViewMessages(webview);
                 }
@@ -193,6 +204,9 @@ export class CommonMessageCoordinator {
         // In case the webview loaded earlier and it already sent the IPyWidgetMessages.IPyWidgets_Ready message
         // This way we don't make assumptions, we just query widgets and ask its its ready (avoids timing issues etc).
         webview.postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined }).then(noop, noop);
+        // Send the IPyWidgets message immediately, sometimes
+        // the webview is ready before we get the request message.
+        sendIPyWidgetsVersion().catch(noop);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -358,7 +372,7 @@ export class CommonMessageCoordinator {
         // If no one is listening to the messages, then cache these.
         // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
         if (!this.listeningToPostMessageEvent) {
-            traceInfoIfCI(`${ConsoleForegroundColors.Green}Queuing messages (no listenerts)`);
+            traceInfoIfCI(`${ConsoleForegroundColors.Green}Queuing messages (no listeners)`);
             this.cachedMessages.push(data);
             return;
         }

@@ -311,7 +311,7 @@ function initializeWidgetManager(widgetState?: NotebookMetadata['widgets']) {
     }
     initialize(JupyterLabWidgetManager, capturedContext, widgetState);
 }
-
+let ipyWidgetVersionResponseHandled = false;
 export function activate(context: KernelMessagingApi) {
     capturedContext = context;
     logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
@@ -324,6 +324,10 @@ export function activate(context: KernelMessagingApi) {
             'payload' in e &&
             typeof e.payload === 'number'
         ) {
+            if (ipyWidgetVersionResponseHandled) {
+                return;
+            }
+            ipyWidgetVersionResponseHandled = true;
             try {
                 const version = e.payload;
                 logMessage(`Loading IPyWidget Version ${version}`);
