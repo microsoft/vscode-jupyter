@@ -312,6 +312,10 @@ function commonClassificationForResourceSpecificTelemetryProperties(): PropertyM
                 comment: '',
                 purpose: 'PerformanceAndHealth'
             },
+            kernelSpecHash: {
+                classification: 'EndUserPseudonymizedInformation',
+                purpose: 'FeatureInsight'
+            },
             kernelId: {
                 classification: 'PublicNonPersonalData',
                 comment: '',
@@ -370,6 +374,10 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
          * Common to most of the events.
          */
         kernelId: string;
+        /**
+         * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
+         */
+        kernelSpecHash: string;
         /**
          * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
          * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
@@ -931,6 +939,90 @@ export class IEventNamePropertyMapping {
         },
         measures: commonClassificationForDurationProperties()
     };
+    /**
+     * Used to capture time taken to get environment variables for a python environment.
+     * Also lets us know whether it worked or not.
+     */
+    [Telemetry.KernelSpec]: TelemetryEventInfo<{
+        /**
+         * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
+         */
+        kernelSpecHash: string;
+        /**
+         * Hash of the Kernel Connection id.
+         */
+        kernelId: string;
+        /**
+         * What kind of kernel spec did we fail to create.
+         */
+        kernelConnectionType:
+            | 'startUsingPythonInterpreter'
+            | 'startUsingLocalKernelSpec'
+            | 'startUsingRemoteKernelSpec'
+            | 'connectToLiveRemoteKernel';
+        /**
+         * Language of the kernel spec.
+         */
+        kernelLanguage: string | undefined;
+        /**
+         * Type of the Python environment.
+         */
+        envType?: EnvironmentType;
+        /**
+         * Whether the argv0 is same as the interpreter.
+         */
+        isArgv0SameAsInterpreter?: boolean;
+        /**
+         * First argument of the kernelSpec argv (without the full path)
+         * Helps determine if we have python/conda executables used for kernelSpecs.
+         */
+        argv0?: string;
+        /**
+         * argv of KernelSpec
+         * Helps determine if we have ipykernel, ipykernel_launcher, etc and other combinations
+         * In the case of paths, all path values are stripped, exe names are not.
+         */
+        argv?: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            kernelSpecHash: {
+                classification: 'EndUserPseudonymizedInformation',
+                purpose: 'FeatureInsight'
+            },
+            kernelId: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            kernelConnectionType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            kernelLanguage: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            envType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            isArgv0SameAsInterpreter: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            argv0: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            argv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+
     /**
      * Sent when we fail to update the kernel spec json file.
      */
@@ -2017,6 +2109,10 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.AmbiguousGlobalKernelSpec]: TelemetryEventInfo<{
         /**
+         * Whether kernel was started using kernel spec, interpreter, etc.
+         */
+        kernelConnectionType: KernelConnectionMetadata['kind'];
+        /**
          * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
          */
         kernelSpecHash: string;
@@ -2032,11 +2128,20 @@ export class IEventNamePropertyMapping {
          * Language of the target notebook or interactive window
          */
         language: string;
+        /**
+         * First argument of the kernelSpec argv (without the full path)
+         * Helps determine if we have python/conda executables used for kernelSpecs.
+         */
+        argv0?: string;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         properties: {
+            kernelConnectionType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
             pythonPathDefined: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
@@ -2051,6 +2156,10 @@ export class IEventNamePropertyMapping {
             },
             kernelSpecHash: {
                 classification: 'EndUserPseudonymizedInformation',
+                purpose: 'FeatureInsight'
+            },
+            argv0: {
+                classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
         }
@@ -2988,7 +3097,6 @@ export class IEventNamePropertyMapping {
              */
             kind:
                 | 'startUsingPythonInterpreter'
-                | 'startUsingDefaultKernel'
                 | 'startUsingLocalKernelSpec'
                 | 'startUsingRemoteKernelSpec'
                 | 'connectToLiveRemoteKernel';

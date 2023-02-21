@@ -442,6 +442,7 @@ export enum Telemetry {
     GetActivatedEnvironmentVariables = 'DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES',
     WebviewStartup = 'DS_INTERNAL.WEBVIEW_STARTUP',
     VariableExplorerFetchTime = 'DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME',
+    KernelSpec = 'DS_INTERNAL.JUPYTER_KERNEL_SPEC',
     FailedToUpdateKernelSpec = 'DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC',
     CellOutputMimeType = 'DS_INTERNAL.CELL_OUTPUT_MIME_TYPE',
     JupyterApiUsage = 'DATASCIENCE.JUPYTER_API_USAGE',
