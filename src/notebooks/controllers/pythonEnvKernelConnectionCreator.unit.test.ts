@@ -115,15 +115,17 @@ suite('Python Environment Kernel Connection Creator', () => {
     });
     teardown(() => disposeAllDisposables(disposables));
     test('Not does create a Python Env when Python extension fails to create it', async () => {
-        when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment')).thenResolve(undefined);
+        when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment', anything())).thenResolve(
+            undefined
+        );
 
         const kernel = await pythonEnvKernelConnectionCreator.createPythonEnvFromKernelPicker();
-
-        assert.isUndefined(kernel);
+        const connection = 'kernelConnection' in kernel ? kernel.kernelConnection : undefined;
+        assert.isUndefined(connection);
     });
     test('Can cancel after creation of the Environment', async () => {
         const newCondaEnvPath = '<workspaceFolder>/.conda';
-        when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment')).thenResolve({
+        when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment', anything())).thenResolve({
             path: newCondaEnvPath
         } as any);
         when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel]);
@@ -140,7 +142,7 @@ suite('Python Environment Kernel Connection Creator', () => {
     });
     test('Installs missing dependencies and returns the kernel connection', async () => {
         const newCondaEnvPath = '<workspaceFolder>/.conda';
-        when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment')).thenResolve({
+        when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment', anything())).thenResolve({
             path: newCondaEnvPath
         } as any);
         when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel, newCondaPythonKernel]);
@@ -153,8 +155,11 @@ suite('Python Environment Kernel Connection Creator', () => {
         );
 
         const kernel = await pythonEnvKernelConnectionCreator.createPythonEnvFromKernelPicker();
-
-        assert.strictEqual(kernel, newCondaPythonKernel);
+        const kernelConnection = 'kernelConnection' in kernel ? kernel.kernelConnection : undefined;
+        if (!kernelConnection) {
+            assert.fail('Kernel Connection not created');
+        }
+        assert.strictEqual(kernelConnection, newCondaPythonKernel);
         verify(interpreterService.getInterpreterDetails(deepEqual({ path: newCondaEnvPath }))).once();
         verify(kernelDependencyService.installMissingDependencies(anything())).once();
         const args = capture(kernelDependencyService.installMissingDependencies).first()[0];
@@ -166,7 +171,7 @@ suite('Python Environment Kernel Connection Creator', () => {
     });
     test('Abort creation if another controller is selected for the notebook', async () => {
         const newCondaEnvPath = '<workspaceFolder>/.conda';
-        when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment')).thenResolve({
+        when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment', anything())).thenResolve({
             path: newCondaEnvPath
         } as any);
         when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel]);
