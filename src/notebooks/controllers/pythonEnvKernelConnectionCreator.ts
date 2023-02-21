@@ -118,7 +118,10 @@ export class PythonEnvKernelConnectionCreator {
             );
         }
 
-        sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { dependenciesInstalled });
+        sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, {
+            dependenciesInstalled,
+            envType: envResult.interpreter.envType
+        });
         return { kernelConnection };
     }
     private async waitForPythonKernel(env: PythonEnvironment) {
