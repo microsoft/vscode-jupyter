@@ -479,7 +479,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
 
         // See comments on dummy.ts for more details.
-        scripts.push(Uri.joinPath(this.context.extensionUri, 'out', 'webviews', 'webview-side', 'dummy.js'));
+        scripts.push(
+            Uri.joinPath(this.context.extensionUri, 'out', 'webviews', 'webview-side', 'ipywidgetsKernel', 'dummy.js')
+        );
         return scripts.map((uri) => new NotebookRendererScript(uri));
     }
 
