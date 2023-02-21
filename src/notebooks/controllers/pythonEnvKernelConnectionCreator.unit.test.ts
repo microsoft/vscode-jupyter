@@ -135,9 +135,9 @@ suite('Python Environment Kernel Connection Creator', () => {
             return Promise.resolve(newCondaPythonKernel.interpreter);
         });
 
-        const kernelPromise = pythonEnvKernelConnectionCreator.createPythonEnvFromKernelPicker();
-
-        assert.isUndefined(await kernelPromise);
+        const kernel = await pythonEnvKernelConnectionCreator.createPythonEnvFromKernelPicker();
+        const connection = 'kernelConnection' in kernel ? kernel.kernelConnection : undefined;
+        assert.isUndefined(connection);
         verify(interpreterService.getInterpreterDetails(deepEqual({ path: newCondaEnvPath }))).once();
     });
     test('Installs missing dependencies and returns the kernel connection', async () => {
@@ -188,9 +188,9 @@ suite('Python Environment Kernel Connection Creator', () => {
             return Promise.resolve(newCondaPythonKernel.interpreter);
         });
 
-        const kernelPromise = pythonEnvKernelConnectionCreator.createPythonEnvFromKernelPicker();
-
-        assert.isUndefined(await kernelPromise);
+        const kernel = await pythonEnvKernelConnectionCreator.createPythonEnvFromKernelPicker();
+        const connection = 'kernelConnection' in kernel ? kernel.kernelConnection : undefined;
+        assert.isUndefined(connection);
         verify(interpreterService.getInterpreterDetails(deepEqual({ path: newCondaEnvPath }))).once();
     });
 });

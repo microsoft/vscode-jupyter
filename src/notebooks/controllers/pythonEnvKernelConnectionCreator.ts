@@ -190,10 +190,10 @@ export class PythonEnvKernelConnectionCreator {
             const result: CreateEnvironmentResult = await commands.executeCommand('python.createEnvironment', {
                 showBackButton: true
             });
-            if (result.action === 'Cancel') {
+            if (result?.action === 'Cancel') {
                 return { action: 'Cancel' };
             }
-            if (result.action === 'Back') {
+            if (result?.action === 'Back') {
                 return { action: 'Back' };
             }
             const path = result?.path;
