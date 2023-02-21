@@ -181,12 +181,6 @@ export class KernelSelector implements IDisposable {
             this.categories.set(item, new Set(items));
         });
 
-        const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh };
-        const refreshingButton: QuickInputButton = {
-            iconPath: new ThemeIcon('loading~spin'),
-            tooltip: Common.refreshing
-        };
-
         if (
             !this.extensionChecker.isPythonExtensionInstalled &&
             this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
@@ -194,7 +188,9 @@ export class KernelSelector implements IDisposable {
             this.installPythonExtItems.push(this.installPythonExtension);
         }
 
-        let quickPickToBeUpdated: QuickPick<CompoundQuickPickItem> | undefined;
+        const quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined } = {
+            quickPick: undefined
+        };
         if (
             this.extensionChecker.isPythonExtensionInstalled &&
             this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
@@ -213,14 +209,14 @@ export class KernelSelector implements IDisposable {
                     ) {
                         if (this.workspace.isTrusted) {
                             this.installPythonItems.push(this.installPythonItem);
-                            if (quickPickToBeUpdated) {
-                                this.updateQuickPickItems(quickPickToBeUpdated);
+                            if (quickPickToBeUpdated.quickPick) {
+                                this.updateQuickPickItems(quickPickToBeUpdated.quickPick);
                             }
                         }
                     } else if (this.provider.kernels.length) {
                         this.installPythonItems.length = 0;
-                        if (quickPickToBeUpdated) {
-                            this.updateQuickPickItems(quickPickToBeUpdated);
+                        if (quickPickToBeUpdated.quickPick) {
+                            this.updateQuickPickItems(quickPickToBeUpdated.quickPick);
                         }
                     }
                 };
@@ -247,6 +243,21 @@ export class KernelSelector implements IDisposable {
                 );
             }
         }
+        return this.selectKernelImpl(quickPickFactory, quickPickToBeUpdated);
+    }
+    public async selectKernelImpl(
+        quickPickFactory: CreateAndSelectItemFromQuickPick,
+        quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined }
+    ): Promise<
+        | { selection: 'controller'; finder: IContributedKernelFinder; connection: KernelConnectionMetadata }
+        | { selection: 'userPerformedSomeOtherAction' }
+        | undefined
+    > {
+        const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh };
+        const refreshingButton: QuickInputButton = {
+            iconPath: new ThemeIcon('loading~spin'),
+            tooltip: Common.refreshing
+        };
         const { quickPick, selection } = quickPickFactory({
             title: this.provider.title,
             items: this.installPythonItems
@@ -263,7 +274,7 @@ export class KernelSelector implements IDisposable {
                 }
             }
         });
-        quickPickToBeUpdated = quickPick;
+        quickPickToBeUpdated.quickPick = quickPick;
         if (this.provider.status === 'discovering') {
             quickPick.busy = true;
         }
@@ -309,6 +320,8 @@ export class KernelSelector implements IDisposable {
             } catch (ex) {
                 if (ex instanceof SomeOtherActionError) {
                     return { selection: 'userPerformedSomeOtherAction' };
+                } else if (ex === InputFlowAction.back) {
+                    return this.selectKernelImpl(quickPickFactory, quickPickToBeUpdated);
                 }
                 throw ex;
             }
@@ -319,14 +332,21 @@ export class KernelSelector implements IDisposable {
             throw InputFlowAction.back;
         }
     }
-    private onCreatePythonEnvironment() {
+    private async onCreatePythonEnvironment() {
         const cancellationToken = new CancellationTokenSource();
         this.disposables.push(new Disposable(() => cancellationToken.cancel()));
         this.disposables.push(cancellationToken);
 
         const creator = new PythonEnvKernelConnectionCreator(this.notebook, cancellationToken.token);
         this.disposables.push(creator);
-        return creator.createPythonEnvFromKernelPicker();
+        const result = await creator.createPythonEnvFromKernelPicker();
+        if ('action' in result) {
+            if (result.action === 'Cancel') {
+                throw InputFlowAction.cancel;
+            }
+            throw InputFlowAction.back;
+        }
+        return result.kernelConnection;
     }
     private updateQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>) {
         quickPick.title = this.provider.title;

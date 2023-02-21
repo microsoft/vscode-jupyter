@@ -3139,6 +3139,10 @@ export class IEventNamePropertyMapping {
                * kernelConnectionNotCreated - Kernel connection not created via the kernel finder.
                */
               reason: 'cancelled' | 'kernelConnectionNotCreated';
+              /**
+               * Type of the Python environment.
+               */
+              envType?: EnvironmentType;
           }
         | /* Creation succeeded */ {
               /**
@@ -3157,6 +3161,10 @@ export class IEventNamePropertyMapping {
             },
             reason: { classification: 'SystemMetaData', purpose: 'PerformanceAndHealth' },
             dependenciesInstalled: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            envType: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
