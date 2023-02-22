@@ -43,7 +43,11 @@ export function deserializePythonEnvironment(
             sysPrefix: pythonVersion.sysPrefix || '',
             uri: Uri.file(pythonVersion.path || ''),
             id: pythonEnvId || (pythonVersion as any).id,
-            envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined
+            envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined,
+            displayPath:
+                'displayPath' in pythonVersion && typeof pythonVersion.displayPath === 'string'
+                    ? Uri.file(pythonVersion.displayPath)
+                    : undefined
         };
 
         // Cleanup stuff that shouldn't be there.
@@ -111,7 +115,8 @@ export function serializePythonEnvironment(
     if (jupyterVersion) {
         const result = Object.assign({}, jupyterVersion, {
             path: getFilePath(jupyterVersion.uri),
-            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined
+            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined,
+            displayPath: jupyterVersion.displayPath ? getFilePath(jupyterVersion.displayPath) : undefined
         });
         // Cleanup stuff that shouldn't be there.
         delete (result as any).uri;

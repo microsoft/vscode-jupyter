@@ -17,7 +17,7 @@ import { sendKernelSpecTelemetry } from './helper';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 
-const LocalKernelSpecsCacheKey = 'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10';
+const LocalKernelSpecsCacheKey = 'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2023_2';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
