@@ -861,13 +861,18 @@ import { ServiceContainer } from '../../../platform/ioc/container';
                         // Interpreter URI is weird, we have to force it to format itself or the
                         // internal state won't match
                         if (kernel.interpreter) {
+                            // Force some internal state change ('formatted' property will get updated)
                             kernel.interpreter.uri.toString();
+                            (kernel.interpreter as any).displayPath = kernel.interpreter.displayPath || undefined;
                         }
 
                         const serialize = kernel.toJSON();
                         const deserialized = BaseKernelConnectionMetadata.fromJSON(serialize);
                         if (deserialized.interpreter) {
+                            // Force some internal state change ('formatted' property will get updated)
                             deserialized.interpreter.uri.toString();
+                            (deserialized.interpreter as any).displayPath =
+                                deserialized.interpreter.displayPath || undefined;
                         }
 
                         // On windows we can lose path casing so make it all lower case for both

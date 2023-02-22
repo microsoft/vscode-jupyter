@@ -281,7 +281,7 @@ import { sleep } from '../../../test/core';
                 extensionVersion: '1',
                 kernels: [pythonKernelSpec.toJSON(), condaKernel.toJSON(), javaKernelSpec.toJSON()]
             };
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(kernelsInCache);
+            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(JSON.stringify(kernelsInCache));
             finder.activate();
 
             await clock.runAllAsync();
@@ -440,10 +440,12 @@ import { sleep } from '../../../test/core';
             // & later the user updates that same virtual env to 3.10.0 (either by deleting that folder and re-installing a new venv in the same folder or other means)
             // After we load, we need to ensure we display the new version of 3.10.0
             // This is something users have done quite a lot in the past.
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn({
-                kernels: [cachedVenvPythonKernel],
-                extensionVersion: '1'
-            });
+            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(
+                JSON.stringify({
+                    kernels: [cachedVenvPythonKernel],
+                    extensionVersion: '1'
+                })
+            );
             when(interpreterService.resolvedEnvironments).thenReturn([]);
             when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
 
@@ -454,7 +456,14 @@ import { sleep } from '../../../test/core';
             await onDidChange.assertFiredAtLeast(1);
 
             // We should have the cached kernels.
-            assert.deepEqual(finder.kernels, [cachedVenvPythonKernel]);
+            assert.deepEqual(
+                finder.kernels.map((k) =>
+                    Object.assign({}, k, {
+                        kernelSpec: { ...k.kernelSpec, interrupt_mode: k.kernelSpec.interrupt_mode || undefined }
+                    })
+                ),
+                [cachedVenvPythonKernel as any]
+            );
 
             // Now lets discover Python environments, and ensure we have 2 kernels, and one of the kernel has the updated Version of Python
             when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
@@ -470,10 +479,12 @@ import { sleep } from '../../../test/core';
             // & later the user updates that same virtual env to 3.10.0 (either by deleting that folder and re-installing a new venv in the same folder or other means)
             // After we load, we need to ensure we display the new version of 3.10.0
             // This is something users have done quite a lot in the past.
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn({
-                kernels: [cachedVenvPythonKernel],
-                extensionVersion: '1'
-            });
+            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(
+                JSON.stringify({
+                    kernels: [cachedVenvPythonKernel],
+                    extensionVersion: '1'
+                })
+            );
             when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
 
             const onDidChange = createEventHandler(finder, 'onDidChangeKernels', disposables);
@@ -494,10 +505,12 @@ import { sleep } from '../../../test/core';
             // Cache will have a virtual env of Python
             // & later the Python extension no longer returns this Python env in the list of environments
             // At this point we should not list this kernel as its not a valid environment (not valid because Python doesn't list it anymore).
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn({
-                kernels: [venvPythonKernel],
-                extensionVersion: '1'
-            });
+            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(
+                JSON.stringify({
+                    kernels: [venvPythonKernel],
+                    extensionVersion: '1'
+                })
+            );
             when(kernelSpecsFromKnownLocations.kernels).thenReturn([]);
             // Indication that Python is still busy refreshing interpreters
             when(interpreterService.status).thenReturn('refreshing');
@@ -509,8 +522,27 @@ import { sleep } from '../../../test/core';
             await onDidChange.assertFiredAtLeast(2);
             const numberOfTimesChangeEventTriggered = onDidChange.count;
 
+            // Force some internal state change ('formatted' property will get updated)
+            venvPythonKernel.interpreter.uri.toString();
+            venvPythonKernel.interpreter.displayPath = venvPythonKernel.interpreter.displayPath || undefined;
+            // Force some internal state change ('formatted' property will get updated)
+            condaKernel.interpreter.uri.toString();
+            condaKernel.interpreter.displayPath = condaKernel.interpreter.displayPath || undefined;
             // The cached kernel should be listed as Python extension has not yet completed refreshing of interpreters.
-            assert.deepEqual(finder.kernels, [venvPythonKernel, condaKernel]);
+            assert.deepEqual(
+                finder.kernels.map((k) => {
+                    if (k.interpreter) {
+                        // Force some internal state change ('formatted' property will get updated)
+                        k.interpreter.uri.toString();
+                        // k.interpreter.displayPath
+                        (k as any).interpreter.displayPath = k.interpreter?.displayPath || undefined;
+                    }
+                    return Object.assign({}, k, {
+                        kernelSpec: { ...k.kernelSpec, interrupt_mode: k.kernelSpec.interrupt_mode || undefined }
+                    });
+                }),
+                [venvPythonKernel, condaKernel] as any
+            );
 
             // Indication that we've finished discovering interpreters.
             when(interpreterService.status).thenReturn('idle');

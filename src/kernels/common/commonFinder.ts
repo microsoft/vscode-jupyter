@@ -18,7 +18,9 @@ export async function removeOldCachedItems(globalState: Memento): Promise<void> 
             'JUPYTER_REMOTE_KERNELSPECS_V1',
             'JUPYTER_REMOTE_KERNELSPECS_V2',
             'JUPYTER_REMOTE_KERNELSPECS_V3',
-            'JUPYTER_LOCAL_KERNELSPECS_V4'
+            'JUPYTER_LOCAL_KERNELSPECS_V4',
+            'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10',
+            'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10'
         ]
             .filter((key) => RemoteKernelSpecsCacheKey !== key) // Exclude latest cache key
             .filter((key) => globalState.get(key, undefined) !== undefined)

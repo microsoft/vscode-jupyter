@@ -241,11 +241,14 @@ export abstract class LocalKernelSpecFinderBase<
     protected async listKernelsFirstTimeFromMemento(cacheKey: string): Promise<T[]> {
         const promise = (async () => {
             // Check memento too
-            const cache = this.memento.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
-                kernels: [],
-                extensionVersion: ''
-            });
-
+            const jsonStr = this.memento.get<string>(
+                cacheKey,
+                JSON.stringify({
+                    kernels: [],
+                    extensionVersion: ''
+                })
+            );
+            const cache: { kernels: T[]; extensionVersion: string } = JSON.parse(jsonStr);
             let kernels: T[] = [];
             /**
              * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
@@ -276,13 +279,15 @@ export abstract class LocalKernelSpecFinderBase<
     }
 
     protected async writeToMementoCache(values: T[], cacheKey: string) {
-        const serialized = values.map((item) => item.toJSON());
         await Promise.all([
             removeOldCachedItems(this.memento),
-            this.memento.update(cacheKey, {
-                kernels: serialized,
-                extensionVersion: this.env.extensionVersion
-            })
+            this.memento.update(
+                cacheKey,
+                JSON.stringify({
+                    kernels: values.map((item) => item.toJSON()),
+                    extensionVersion: this.env.extensionVersion
+                })
+            )
         ]);
     }
     protected async isValidCachedKernel(kernel: LocalKernelConnectionMetadata): Promise<boolean> {
