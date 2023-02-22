@@ -246,14 +246,6 @@ jobs:
       - name: Verify there are no unhandled errors
         run: npm run verifyUnhandledErrors
 
-      - name: Publish Test Report
-        uses: scacap/action-surefire-report@v1
-        if: steps.test_unittests.outcome == 'failure' && failure()
-        with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Ts-Unit Test Report
-
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
 
