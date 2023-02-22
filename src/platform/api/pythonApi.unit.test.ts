@@ -94,6 +94,6 @@ suite('Interpreter Service', () => {
 
         verify(environments.refreshEnvironments(anything())).once();
         assert.isAtLeast(progressEvent.count, 2, 'Progress event not triggered at least 2 times');
-        assert.deepEqual(statuses, ['refreshing1', 'idle1']);
+        assert.deepEqual(statuses, ['refreshing', 'idle']);
     });
 });
