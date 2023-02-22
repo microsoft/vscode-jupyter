@@ -27,7 +27,8 @@ function getEntry(bundle) {
             };
         case 'ipywidgetsKernel':
             return {
-                ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`]
+                ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`],
+                dummy: [`./src/webviews/webview-side/ipywidgets/dummy.ts`]
             };
         case 'ipywidgetsRenderer':
             // This is only used in tests (not shipped with extension).
