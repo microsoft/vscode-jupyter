@@ -396,9 +396,7 @@ export class InterpreterService implements IInterpreterService {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
         this.workspace.onDidGrantWorkspaceTrust(
-            () => {
-                this.populateCachedListOfInterpreters(true).catch(noop);
-            },
+            () => this.populateCachedListOfInterpreters(true).catch(noop),
             this,
             this.disposables
         );
