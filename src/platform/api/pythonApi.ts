@@ -395,6 +395,11 @@ export class InterpreterService implements IInterpreterService {
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
+        this.workspace.onDidGrantWorkspaceTrust(
+            () => this.populateCachedListOfInterpreters(true).catch(noop),
+            this,
+            this.disposables
+        );
     }
     public get onDidChangeInterpreter(): Event<void> {
         this.hookupOnDidChangeInterpreterEvent();
