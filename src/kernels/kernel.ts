@@ -774,7 +774,7 @@ abstract class BaseKernel implements IBaseKernel {
             const version = await this.executeSilently(session, [codeToDetermineIPyWidgetsVersion]).catch((ex) =>
                 traceError('Failed to determine version of IPyWidgets', ex)
             );
-            traceError('Determined IPyKernel Version', JSON.stringify(version));
+            traceVerbose('Determined IPyKernel Version', JSON.stringify(version));
             if (Array.isArray(version)) {
                 const isVersion8 = version.some((output) =>
                     (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
@@ -784,7 +784,7 @@ abstract class BaseKernel implements IBaseKernel {
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                traceError('Determined IPyKernel Version and event fired', JSON.stringify(newVersion));
+                traceVerbose('Determined IPyKernel Version and event fired', JSON.stringify(newVersion));
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion == newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
