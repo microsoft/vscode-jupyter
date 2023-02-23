@@ -294,12 +294,8 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                     return envName;
                 }
                 return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
-            } else if (!oldDisplayName.includes(pythonVersion)) {
-                if (oldDisplayName === `Python ${pythonVersion.substring(0, 1)}`) {
-                    return `Python ${pythonVersion}`;
-                } else {
-                    return `${oldDisplayName} (Python ${pythonVersion})`;
-                }
+            } else {
+                return `Python ${pythonVersion}`.trim();
             }
     }
     return oldDisplayName;

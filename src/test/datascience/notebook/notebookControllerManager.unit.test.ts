@@ -412,7 +412,7 @@ suite('Notebook Controller Manager', () => {
             );
             assert.strictEqual(name, 'kspecname');
         });
-        test('Return current lable if this is a global python environment', () => {
+        test('Return Python Version for global python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
                     id: '',
@@ -433,7 +433,31 @@ suite('Notebook Controller Manager', () => {
                     }
                 })
             );
-            assert.strictEqual(name, 'kspecname');
+            assert.strictEqual(name, 'Python');
+        });
+        test('Return Python Version for global python environment with a version', () => {
+            const name = getDisplayNameOrNameOfKernelConnection(
+                PythonKernelConnectionMetadata.create({
+                    id: '',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'kspecname',
+                        name: 'kspec',
+                        executable: 'path',
+                        language: 'python'
+                    },
+                    interpreter: {
+                        uri: Uri.file('pyPath'),
+                        id: Uri.file('pyPath').fsPath,
+                        sysPrefix: 'sysPrefix',
+                        envName: '',
+                        version: { major: 1, minor: 2, patch: 3, raw: '1.2.3' },
+                        displayName: 'Something 64-bit',
+                        envType: EnvironmentType.Unknown
+                    }
+                })
+            );
+            assert.strictEqual(name, 'Python 1.2.3');
         });
         test('Display name if kernel is associated with a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
