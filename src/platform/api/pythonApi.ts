@@ -721,6 +721,11 @@ export class InterpreterService implements IInterpreterService {
                         }
                     })
                 );
+                // We have updated the list of environments, trigger a change
+                // Possible one of the environments was resolve even before this method started.
+                // E.g. we got active interpreter details, and then we came here.
+                // At this point the env is already resolved, but we did not trigger a change event.
+                this.triggerEventIfAllowed(this.didChangeInterpreters);
             } catch (ex) {
                 traceError(`Failed to refresh list of interpreters and get their details`, ex);
             }
