@@ -1931,6 +1931,7 @@
      "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"donjayamanne"},
      "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "argv0": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"First argument of the kernelSpec argv (without the full path) Helps determine if we have python/conda executables used for kernelSpecs.","owner":"donjayamanne"},
+     "isCreatedByUs": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this is a kernelspec created by us.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
