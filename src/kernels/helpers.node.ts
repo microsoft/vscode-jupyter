@@ -61,10 +61,14 @@ function isKernelLaunchedViaLocalPythonProcess(kernel: KernelConnectionMetadata 
     if (!kernelSpec || (connection && !isLocalConnection(connection))) {
         return false;
     }
-    const expectedExecutable = os.platform() === 'win32' ? 'python.exe' : 'python';
-    const expectedExecutable3 = os.platform() === 'win32' ? 'python3.exe' : 'python3';
+    // When we generate kernel specs, the first argument is `python` even for windows.
+    const pythonExecutables: string[] = ['python', 'python3'];
+    if (os.platform() === 'win32') {
+        pythonExecutables.push('python.exe');
+        pythonExecutables.push('python3.exe');
+    }
     const executable = path.basename(kernelSpec.argv[0]).toLowerCase();
-    return executable === expectedExecutable || executable === expectedExecutable3;
+    return pythonExecutables.includes(executable);
 }
 
 /**
@@ -78,6 +82,11 @@ function isKernelLaunchedViaLocalPythonProcess(kernel: KernelConnectionMetadata 
 export function isKernelLaunchedViaLocalPythonIPyKernel(kernel: KernelConnectionMetadata | IJupyterKernelSpec) {
     const kernelSpec = 'kernelSpec' in kernel ? kernel.kernelSpec : undefined;
     const connection = 'kernelSpec' in kernel ? kernel : undefined;
+
+    // We generate these, and these kernels are always started by us using Python code.
+    if (connection?.kind === 'startUsingPythonInterpreter') {
+        return true;
+    }
     if (!kernelSpec || (connection && !isLocalConnection(connection))) {
         return false;
     }
