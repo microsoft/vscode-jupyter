@@ -15,7 +15,6 @@ import {
     ignoreLogging,
     traceDecoratorError,
     traceError,
-    traceDecoratorVerbose,
     traceWarning
 } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
