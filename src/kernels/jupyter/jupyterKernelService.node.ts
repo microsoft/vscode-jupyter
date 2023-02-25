@@ -15,7 +15,8 @@ import {
     ignoreLogging,
     traceDecoratorError,
     traceError,
-    traceWarning
+    traceWarning,
+    traceInfoIfCI
 } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
@@ -281,6 +282,11 @@ export class JupyterKernelService implements IJupyterKernelService {
                 // Update the kernel.json with our new stuff.
                 await this.fs.writeFile(uri, JSON.stringify(specModel, undefined, 2));
                 traceVerbose(`Updated kernel spec with environment variables for ${getDisplayPath(uri)}`);
+                traceInfoIfCI(
+                    `Updated kernel spec with environment variables for ${getDisplayPath(
+                        uri
+                    )} with env variables ${JSON.stringify(specModel.env)}}`
+                );
 
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
