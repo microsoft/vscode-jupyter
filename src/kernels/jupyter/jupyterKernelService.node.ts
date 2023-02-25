@@ -9,13 +9,14 @@ import { CancellationToken, Uri } from 'vscode';
 import { Cancellation } from '../../platform/common/cancellation';
 import '../../platform/common/extensions';
 import {
-    traceInfoIfCI,
     traceInfo,
     traceVerbose,
     logValue,
     ignoreLogging,
     traceDecoratorError,
-    traceError
+    traceError,
+    traceDecoratorVerbose,
+    traceWarning
 } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
@@ -28,6 +29,7 @@ import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 import {
     IJupyterKernelSpec,
     IKernelDependencyService,
+    isLocalConnection,
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse,
     LocalKernelConnectionMetadata
@@ -37,6 +39,7 @@ import { serializePythonEnvironment } from '../../platform/api/pythonApi';
 import { IJupyterKernelService } from './types';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
 import { KernelEnvironmentVariablesService } from '../raw/launcher/kernelEnvVarsService.node';
+import { isKernelLaunchedViaLocalPythonIPyKernel } from '../helpers.node';
 
 /**
  * Responsible for registering and updating kernels in a non ZMQ situation (kernel specs)
@@ -67,12 +70,8 @@ export class JupyterKernelService implements IJupyterKernelService {
         cannotChangeKernels?: boolean
     ): Promise<void> {
         traceVerbose('Check if a kernel is usable');
-        // If we have an interpreter, make sure it has the correct dependencies installed
-        if (
-            kernel.kind !== 'connectToLiveRemoteKernel' &&
-            kernel.interpreter &&
-            kernel.kind !== 'startUsingRemoteKernelSpec'
-        ) {
+        // When dealing with Python kernels, and we have an interpreter, make sure it has the correct dependencies installed
+        if (isKernelLaunchedViaLocalPythonIPyKernel(kernel) && kernel.interpreter) {
             const result = await this.kernelDependencyService.installMissingDependencies({
                 resource,
                 kernelConnection: kernel,
@@ -95,12 +94,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         var specFile: string | undefined = undefined;
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
-        if (
-            kernel.kind !== 'connectToLiveRemoteKernel' &&
-            kernel.kind !== 'startUsingRemoteKernelSpec' &&
-            kernel.kernelSpec &&
-            kernel.interpreter
-        ) {
+        if (isLocalConnection(kernel)) {
             // Default to the kernel spec file.
             specFile = kernel.kernelSpec.specFile;
 
@@ -117,22 +111,18 @@ export class JupyterKernelService implements IJupyterKernelService {
                     specFile = await this.registerKernel(kernel, cancelToken);
                 }
             }
-        }
 
-        // Update the kernel environment to use the interpreter's latest
-        if (
-            kernel.kind !== 'connectToLiveRemoteKernel' &&
-            kernel.kind !== 'startUsingRemoteKernelSpec' &&
-            kernel.kernelSpec &&
-            kernel.interpreter &&
-            specFile
-        ) {
-            traceInfoIfCI(
-                `updateKernelEnvironment ${kernel.interpreter.displayName}, ${getDisplayPath(
-                    kernel.interpreter.uri
-                )} for ${kernel.id}`
-            );
-            await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, cancelToken);
+            // Update the kernel environment to use the interpreter's latest
+            if (kernel.interpreter && specFile) {
+                traceVerbose(`updateKernelEnvironment ${kernel.interpreter.id} for ${kernel.id}`);
+                await this.updateKernelEnvironment(
+                    resource,
+                    kernel.interpreter,
+                    kernel.kernelSpec,
+                    specFile,
+                    cancelToken
+                );
+            }
         }
     }
 
@@ -162,6 +152,7 @@ export class JupyterKernelService implements IJupyterKernelService {
 
         // If this file already exists, we can just exit
         if (await this.fs.exists(kernelSpecFilePath)) {
+            traceInfo(`Kernel spec file for ${kernel.id} already exists ${getDisplayPath(kernelSpecFilePath)}`);
             return kernelSpecFilePath.fsPath;
         }
 
@@ -190,7 +181,11 @@ export class JupyterKernelService implements IJupyterKernelService {
             };
         }
 
-        traceInfo(`RegisterKernel for ${kernel.id} into ${getDisplayPath(kernelSpecFilePath)}`);
+        traceInfo(
+            `RegisterKernel for ${kernel.id} into ${getDisplayPath(kernelSpecFilePath)} with contents ${JSON.stringify(
+                contents
+            )}`
+        );
 
         // Write out the contents into the new spec file
         try {
@@ -246,6 +241,7 @@ export class JupyterKernelService implements IJupyterKernelService {
 
             // Make sure the file exists
             if (!(await this.fs.exists(Uri.file(kernelSpecFilePath)))) {
+                traceWarning(`Spec file does not exist ${kernelSpecFilePath} hence not updating env vars.`);
                 return;
             }
             const uri = Uri.file(kernelSpecFilePath);
@@ -260,12 +256,11 @@ export class JupyterKernelService implements IJupyterKernelService {
                 // may overwrite a kernel created by the user
                 if (specModel.metadata?.interpreter) {
                     // Ensure we use a fully qualified path to the python interpreter in `argv`.
-                    if (specModel.argv[0].toLowerCase() === 'conda') {
-                        // If conda is the first word, its possible its a conda activation command.
-                        traceInfo(`Spec argv[0], not updated as it is using conda.`);
-                    } else {
-                        traceInfo(
-                            `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(interpreter.uri)}'`
+                    if (isKernelLaunchedViaLocalPythonIPyKernel(kernel)) {
+                        traceVerbose(
+                            `Python KernelSpec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(
+                                interpreter.uri
+                            )}'`
                         );
                         specModel.argv[0] = interpreter.uri.fsPath;
                     }
@@ -303,6 +298,8 @@ export class JupyterKernelService implements IJupyterKernelService {
                 traceError(`Failed to update kernel spec with environment variables for ${getDisplayPath(uri)}`, ex);
                 throw ex;
             }
+        } else {
+            traceWarning(`Either Kernel spec file or root spec file path does not exist.`);
         }
     }
 }

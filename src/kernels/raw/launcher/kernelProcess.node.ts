@@ -60,6 +60,7 @@ import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import pidtree from 'pidtree';
+import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -85,7 +86,10 @@ export class KernelProcess implements IKernelProcess {
         return this._connection;
     }
     private get isPythonKernel(): boolean {
-        return isPythonKernelConnection(this.kernelConnectionMetadata);
+        return (
+            isPythonKernelConnection(this.kernelConnectionMetadata) &&
+            isKernelLaunchedViaLocalPythonIPyKernel(this.kernelConnectionMetadata)
+        );
     }
     public get canInterrupt() {
         if (this._kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
@@ -565,7 +569,7 @@ export class KernelProcess implements IKernelProcess {
             }
 
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
-            const args = this.launchKernelSpec.argv.slice(1);
+            const args = this.launchKernelSpec.argv.slice(1); // Remove the python part of the command
             if (this.jupyterSettings.enablePythonKernelLogging) {
                 args.push('--debug');
             }
@@ -585,11 +589,16 @@ export class KernelProcess implements IKernelProcess {
                     this.processExecutionFactory.create(this.resource),
                     promiseCancellation as Promise<IProcessService>
                 ]),
-                // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
+                // If we have an interpreter always use that, its possible we are launching a kernel that is associated with a Python environment
+                // E.g. we could be dealing with a Java/R kernel registered in a conda environment.
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
                 Promise.race([
-                    this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                    this.kernelEnvVarsService.getEnvironmentVariables(
+                        this.resource,
+                        this._kernelConnectionMetadata.interpreter,
+                        this.launchKernelSpec
+                    ),
                     promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
                 ])
             ]);

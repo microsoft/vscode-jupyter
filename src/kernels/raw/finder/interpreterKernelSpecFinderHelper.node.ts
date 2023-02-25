@@ -22,7 +22,7 @@ import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
-import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
+import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
@@ -33,6 +33,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
+import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 
 export const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2023_3';
 
@@ -70,7 +71,7 @@ export class InterpreterKernelSpecFinderHelper {
         const isCreatedByUs = getKernelRegistrationInfo(kernelSpec) ? true : false;
         // If we know for a fact that the kernel spec is a Non-Python kernel, then return nothing.
         if (kernelSpec.language && kernelSpec.language !== PYTHON_LANGUAGE) {
-            traceInfoIfCI(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
+            traceVerbose(`Kernel ${kernelSpec.name} is not python based so does not have an interpreter.`);
 
             // We could be dealing with a powershell kernel where kernelspec looks like
             // { "argv": ["python", "-m", "powershell_kernel", "-f", "{connection_file}" ], "display_name": "PowerShell", "language": "powershell" }
@@ -248,7 +249,7 @@ export class InterpreterKernelSpecFinderHelper {
         interpreter: PythonEnvironment,
         cancelToken: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        traceInfoIfCI(
+        traceVerbose(
             `Finding kernel specs for ${interpreter.id} interpreters: ${interpreter.displayName} => ${interpreter.uri}`
         );
         // Find all the possible places to look for this resource
@@ -265,7 +266,7 @@ export class InterpreterKernelSpecFinderHelper {
         if (rootSpecPaths.some((uri) => uriPath.isEqual(uri, kernelSearchPath))) {
             return [];
         }
-
+        traceVerbose(`Searching for kernel specs in interpreter ${interpreter.id} in path ${kernelSearchPath.fsPath}`);
         const kernelSpecs = await this.kernelSpecFinder.findKernelSpecsInPaths(kernelSearchPath, cancelToken);
         if (cancelToken.isCancellationRequested) {
             return [];
@@ -307,7 +308,7 @@ export class InterpreterKernelSpecFinderHelper {
             }
         });
         results = results.filter((r) => !r.specFile || !originalSpecFiles.has(r.specFile));
-
+        traceVerbose(`Kernel Specs found in interpreter ${interpreter.id} are ${JSON.stringify(results)}`);
         // There was also an old bug where the same item would be registered more than once. Eliminate these dupes
         // too.
         const uniqueKernelSpecs: IJupyterKernelSpec[] = [];
@@ -323,9 +324,9 @@ export class InterpreterKernelSpecFinderHelper {
             }
         });
 
-        traceInfoIfCI(
+        traceVerbose(
             `Finding kernel specs for interpreter ${getDisplayPath(interpreter.uri)} unique results: ${uniqueKernelSpecs
-                .map((u) => u.interpreterPath!)
+                .map((u) => (u.specFile || u.name)!)
                 .join('\n')}`
         );
 
@@ -347,7 +348,7 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
     interpreterKernelSpecFinder: InterpreterKernelSpecFinderHelper,
     globalKernelSpecs: LocalKernelSpecConnectionMetadata[]
 ): Promise<LocalKernelConnectionMetadata[]> {
-    traceVerbose(`Listing Python kernels for Interpreter ${getDisplayPath(interpreter.uri)}`);
+    traceVerbose(`Listing Python & non-Python kernels for Interpreter ${getDisplayPath(interpreter.uri)}`);
     // First find the on disk kernel specs and interpreters
     const activeInterpreterInAWorkspacePromise = Promise.all(
         (workspaceService.workspaceFolders || []).map((folder) => interpreterService.getActiveInterpreter(folder.uri))
@@ -497,13 +498,13 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                           false,
                           'startUsingPythonInterpreter'
                       );
-                if (matchingInterpreter) {
+                if (matchingInterpreter && isKernelLaunchedViaLocalPythonIPyKernel(k)) {
                     const result = PythonKernelConnectionMetadata.create({
                         kernelSpec: k,
                         interpreter: matchingInterpreter,
                         id: getKernelId(k, matchingInterpreter)
                     });
-                    traceVerbose(`Kernel for matching interpreter ${matchingInterpreter.id} is ${result.id}`);
+                    traceVerbose(`Interpreter for Local Python kernel ${result.id} is ${matchingInterpreter.id}`);
 
                     // Hide the interpreters from list of kernels unless the user created this kernel spec.
                     // Users can create their own kernels with custom environment variables, in such cases, we should list that
@@ -529,7 +530,13 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                     return result;
                 } else {
                     const activeInterpreterOfAWorkspaceFolder = activeInterpreters.find((i) => !!i);
-                    let interpreter = k.language === PYTHON_LANGUAGE ? activeInterpreterOfAWorkspaceFolder : undefined;
+                    // Possible we already have interpreter information in the kernelSpec.
+                    // E.g its possible this is a non-python kernelSpec that belongs to a Conda environment.
+                    let kernelInterpreter =
+                        (kernelSpecsBelongingToPythonEnvironment.includes(k) ? interpreter : undefined) ||
+                        // NOTE: Defaulting to the active interpreter is hacky, but the only fall back we have.
+                        // See here https://github.com/microsoft/vscode-jupyter/issues/12278
+                        (k.language === PYTHON_LANGUAGE ? activeInterpreterOfAWorkspaceFolder : undefined);
                     // If the interpreter information is stored in kernel spec.json then use that to determine the interpreter.
                     // This can happen under the following circumstances:
                     // 1. Open workspace folder XYZ, and create a virtual environment named venvA
@@ -551,12 +558,12 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                             );
                             if (interpreterInKernelSpec) {
                                 // Found the exact interpreter as defined in metadata.
-                                interpreter = interpreterInKernelSpec;
+                                kernelInterpreter = interpreterInKernelSpec;
                             } else {
                                 try {
                                     // Get the interpreter details as defined in the metadata.
                                     // Possible the kernel spec points to an interpreter in a different workspace folder or the like.
-                                    interpreter = await interpreterService.getInterpreterDetails(
+                                    kernelInterpreter = await interpreterService.getInterpreterDetails(
                                         kernelSpecInterpreterPath
                                     );
                                 } catch (ex) {
@@ -572,23 +579,25 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                         }
                         if (
                             activeInterpreterOfAWorkspaceFolder &&
-                            activeInterpreterOfAWorkspaceFolder === interpreter &&
+                            activeInterpreterOfAWorkspaceFolder === kernelInterpreter &&
                             !foundRightInterpreter
                         ) {
                             traceWarning(
                                 `Kernel Spec ${k.id} in ${getDisplayPathFromLocalFile(
                                     k.specFile
                                 )} has interpreter metadata but we couldn't find the interpreter, using best match of ${
-                                    interpreter?.id
+                                    kernelInterpreter?.id
                                 }`
                             );
                         }
                     }
                     const result = LocalKernelSpecConnectionMetadata.create({
                         kernelSpec: k,
-                        interpreter,
-                        id: getKernelId(k, interpreter)
+                        interpreter: kernelInterpreter,
+                        id: getKernelId(k, kernelInterpreter)
                     });
+                    traceVerbose(`Interpreter for Local kernel ${result.id} is ${kernelInterpreter?.id}`);
+
                     return result;
                 }
             })
