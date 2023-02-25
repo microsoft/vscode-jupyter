@@ -2133,6 +2133,10 @@ export class IEventNamePropertyMapping {
          * Helps determine if we have python/conda executables used for kernelSpecs.
          */
         argv0?: string;
+        /**
+         * Whether this is a kernelspec created by us.
+         */
+        isCreatedByUs: boolean;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -2159,6 +2163,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             argv0: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            isCreatedByUs: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
