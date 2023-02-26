@@ -56,19 +56,17 @@ export async function sendTelemetryForPythonKernelExecutable(
  * Any kernelSpec where the first argument (in argv) is `python` or `python3` will be launched via a Python executable.
  */
 function isKernelLaunchedViaLocalPythonProcess(kernel: KernelConnectionMetadata | IJupyterKernelSpec) {
-    const kernelSpec = 'kernelSpec' in kernel ? kernel.kernelSpec : undefined;
     const connection = 'kernelSpec' in kernel ? kernel : undefined;
-    if (!kernelSpec || (connection && !isLocalConnection(connection))) {
+    // We generate these, and these kernels are always started by us using Python code.
+    if (connection?.kind === 'startUsingPythonInterpreter') {
+        return true;
+    }
+    if (connection && !isLocalConnection(connection)) {
         return false;
     }
-    // When we generate kernel specs, the first argument is `python` even for windows.
-    const pythonExecutables: string[] = ['python', 'python3'];
-    if (os.platform() === 'win32') {
-        pythonExecutables.push('python.exe');
-        pythonExecutables.push('python3.exe');
-    }
+    const kernelSpec = connection ? connection.kernelSpec : (kernel as IJupyterKernelSpec);
     const executable = path.basename(kernelSpec.argv[0]).toLowerCase();
-    return pythonExecutables.includes(executable);
+    return executable.startsWith('python') // This covers cases like python.exe, python3, python3.10;
 }
 
 /**
@@ -80,16 +78,16 @@ function isKernelLaunchedViaLocalPythonProcess(kernel: KernelConnectionMetadata 
  * how the process is launched.
  */
 export function isKernelLaunchedViaLocalPythonIPyKernel(kernel: KernelConnectionMetadata | IJupyterKernelSpec) {
-    const kernelSpec = 'kernelSpec' in kernel ? kernel.kernelSpec : undefined;
     const connection = 'kernelSpec' in kernel ? kernel : undefined;
-
     // We generate these, and these kernels are always started by us using Python code.
     if (connection?.kind === 'startUsingPythonInterpreter') {
         return true;
     }
-    if (!kernelSpec || (connection && !isLocalConnection(connection))) {
+    if (connection && !isLocalConnection(connection)) {
         return false;
     }
+
+    const kernelSpec = connection ? connection.kernelSpec : (kernel as IJupyterKernelSpec);
     if (kernelSpec.language && kernelSpec.language.toLowerCase() !== PYTHON_LANGUAGE) {
         return false;
     }
