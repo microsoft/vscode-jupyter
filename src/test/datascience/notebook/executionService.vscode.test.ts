@@ -411,7 +411,7 @@ suite('Kernel Execution @kernelCore', function () {
         assert.notInclude(getCellOutputs(cell), 'First Button');
         assert.include(getCellOutputs(cell), 'Second Button');
     });
-    test.only('Shell commands should give preference to executables in Python Environment', async function () {
+    test('Shell commands should give preference to executables in Python Environment', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
