@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
+import { traceInfo, traceError, traceVerbose, traceInfoIfCI } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IConfigurationService, Resource } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -136,7 +136,11 @@ export class KernelEnvironmentVariablesService {
                 // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
                 // Also applies to `!java` where java could be an executable in the conda bin directory.
                 if (interpreter) {
+                    traceInfoIfCI('Prepending PATH of interpreter', interpreter.uri.fsPath);
+                    traceInfoIfCI('Prepending PATH of interpreter dir', path.dirname(interpreter.uri.fsPath));
                     this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.uri.fsPath));
+                    traceInfoIfCI('Prepended PATH of interpreter', mergedVars.PATH);
+                    traceInfoIfCI('Prepended PATH of interpreter', JSON.stringify(mergedVars));
                 }
             } else {
                 Object.assign(mergedVars, interpreterEnv, kernelEnv); // kernels vars win over interpreter.

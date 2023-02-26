@@ -237,7 +237,7 @@ export class JupyterKernelService implements IJupyterKernelService {
             // Make sure the file exists
             if (!(await this.fs.exists(Uri.file(kernelSpecFilePath)))) {
                 traceWarning(
-                    `Spec file for ${kernel.id} does not exist ${kernelSpecFilePath} hence not updating env vars.`
+                    `Spec file for ${kernelConnection.id} does not exist ${kernelSpecFilePath} hence not updating env vars.`
                 );
                 return;
             }
@@ -255,7 +255,7 @@ export class JupyterKernelService implements IJupyterKernelService {
                     // Ensure we use a fully qualified path to the python interpreter in `argv`.
                     if (isKernelLaunchedViaLocalPythonIPyKernel(kernel)) {
                         traceVerbose(
-                            `Python KernelSpec argv[0] updated for ${kernel.id} from '${
+                            `Python KernelSpec argv[0] updated for ${kernelConnection.id} from '${
                                 specModel.argv[0]
                             }' to '${getDisplayPath(interpreter.uri)}'`
                         );
@@ -269,7 +269,7 @@ export class JupyterKernelService implements IJupyterKernelService {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     specModel.metadata.interpreter = interpreter as any;
                 } else {
-                    traceVerbose(`KernelSpec argv[0] not updated for ${kernel.id} ('${specModel.argv[0]}')`);
+                    traceVerbose(`KernelSpec argv[0] not updated for ${kernelConnection.id} ('${specModel.argv[0]}')`);
                 }
 
                 specModel.env = await this.kernelEnvVars.getEnvironmentVariables(resource, interpreter, specedKernel);
@@ -281,10 +281,12 @@ export class JupyterKernelService implements IJupyterKernelService {
                 // Update the kernel.json with our new stuff.
                 await this.fs.writeFile(uri, JSON.stringify(specModel, undefined, 2));
                 traceVerbose(
-                    `Updated kernel spec for ${kernel.id} with environment variables for ${getDisplayPath(uri)}`
+                    `Updated kernel spec for ${kernelConnection.id} with environment variables for ${getDisplayPath(
+                        uri
+                    )}`
                 );
                 traceInfoIfCI(
-                    `Updated kernel spec for ${kernel.id} with environment variables for ${getDisplayPath(
+                    `Updated kernel spec for ${kernelConnection.id} with environment variables for ${getDisplayPath(
                         uri
                     )} with env variables ${JSON.stringify(specModel.env)}}`
                 );
@@ -302,15 +304,15 @@ export class JupyterKernelService implements IJupyterKernelService {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any);
                 traceError(
-                    `Failed to update kernel spec for ${kernel.id} with environment variables for ${getDisplayPath(
-                        uri
-                    )}`,
+                    `Failed to update kernel spec for ${
+                        kernelConnection.id
+                    } with environment variables for ${getDisplayPath(uri)}`,
                     ex
                 );
                 throw ex;
             }
         } else {
-            traceWarning(`Either Kernel spec file or root spec file path does not exist for ${kernel.id}.`);
+            traceWarning(`Either Kernel spec file or root spec file path does not exist for ${kernelConnection.id}.`);
         }
     }
 }
