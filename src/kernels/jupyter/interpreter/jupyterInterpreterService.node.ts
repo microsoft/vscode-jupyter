@@ -16,8 +16,9 @@ import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCac
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
 import { JupyterInterpreterDependencyResponse } from '../types';
-import { IApplicationShell } from '../../../platform/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { IDisposableRegistry } from '../../../platform/common/types';
 
 /**
  * Manages picking an interpreter that can run jupyter.
@@ -28,6 +29,7 @@ export class JupyterInterpreterService {
     private _selectedInterpreter?: PythonEnvironment;
     private _onDidChangeInterpreter = new EventEmitter<PythonEnvironment>();
     private getInitialInterpreterPromise: Promise<PythonEnvironment | undefined> | undefined;
+    private getInitialInterpreterPromiseFailed?: boolean;
     public get onDidChangeInterpreter(): Event<PythonEnvironment> {
         return this._onDidChangeInterpreter.event;
     }
@@ -40,8 +42,21 @@ export class JupyterInterpreterService {
         @inject(JupyterInterpreterDependencyService)
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) {}
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+    ) {
+        this.workspace.onDidGrantWorkspaceTrust(
+            () => {
+                if (this.getInitialInterpreterPromiseFailed) {
+                    this.getInitialInterpreterPromise = undefined;
+                    this.getInitialInterpreterPromiseFailed = false;
+                }
+            },
+            this,
+            disposables
+        );
+    }
     /**
      * Gets the selected interpreter configured to run Jupyter.
      *
@@ -69,6 +84,7 @@ export class JupyterInterpreterService {
                 }
                 return result;
             });
+            this.getInitialInterpreterPromise.catch(() => (this.getInitialInterpreterPromiseFailed = true));
         }
 
         return this.getInitialInterpreterPromise;

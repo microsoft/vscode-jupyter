@@ -3,7 +3,7 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { Memento, Uri } from 'vscode';
+import { EventEmitter, Memento, Uri } from 'vscode';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
@@ -14,9 +14,11 @@ import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interp
 import { MockMemento } from '../../../mocks/mementos';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 import { JupyterInterpreterDependencyResponse } from '../../../../kernels/jupyter/types';
-import { IApplicationShell } from '../../../../platform/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../../platform/common/application/types';
 import { JupyterInstallError } from '../../../../platform/errors/jupyterInstallError';
 import { DataScience } from '../../../../platform/common/utils/localize';
+import { IDisposable } from '../../../../platform/common/types';
+import { disposeAllDisposables } from '../../../../platform/common/helpers';
 
 /* eslint-disable  */
 
@@ -43,6 +45,7 @@ suite('Jupyter Interpreter Service', () => {
         sysPrefix: '',
         sysVersion: ''
     };
+    const disposables: IDisposable[] = [];
 
     setup(() => {
         interpreterSelector = mock(JupyterInterpreterSelector);
@@ -52,13 +55,19 @@ suite('Jupyter Interpreter Service', () => {
         interpreterSelectionState = mock(JupyterInterpreterStateStore);
         oldVersionCacheStateStore = mock(JupyterInterpreterOldCacheStateStore);
         appShell = mock<IApplicationShell>();
+        const workspace = mock<IWorkspaceService>();
+        const onDidGrantWorkspaceTrust = new EventEmitter<void>();
+        disposables.push(onDidGrantWorkspaceTrust);
+        when(workspace.onDidGrantWorkspaceTrust).thenReturn(onDidGrantWorkspaceTrust.event);
         jupyterInterpreterService = new JupyterInterpreterService(
             instance(oldVersionCacheStateStore),
             instance(interpreterSelectionState),
             instance(interpreterSelector),
             instance(interpreterConfiguration),
             instance(interpreterService),
-            instance(appShell)
+            instance(appShell),
+            instance(workspace),
+            disposables
         );
         when(interpreterService.getInterpreterDetails(pythonInterpreter.uri)).thenResolve(pythonInterpreter);
         when(interpreterService.getInterpreterDetails(secondPythonInterpreter.uri)).thenResolve(
@@ -68,6 +77,7 @@ suite('Jupyter Interpreter Service', () => {
         jupyterInterpreterService.onDidChangeInterpreter((e) => (selectedInterpreterEventArgs = e));
         when(interpreterSelector.selectInterpreter()).thenResolve(pythonInterpreter);
     });
+    teardown(() => disposeAllDisposables(disposables));
 
     test('Cancelling interpreter configuration is same as cancelling selection of an interpreter', async () => {
         when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything())).thenResolve(
