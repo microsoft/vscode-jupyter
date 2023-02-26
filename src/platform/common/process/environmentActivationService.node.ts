@@ -192,11 +192,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 );
             }
 
-            // This way all executables from that env are used.
-            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
-            // Also applies to `!java` where java could be an executable in the conda bin directory.
-            this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
-
             // Seems to be required on windows,
             // Without this, in Python, the PATH variable inherits the process env variables and not what we give it.
             // Probably because Python uses PATH on windows as well , even if Path is provided.
@@ -205,7 +200,28 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
         }
 
-        traceVerbose(`Activated Env Variables, PATH value is ${env.PATH} and Path value is ${env.Path}`);
+        // On windows (see https://github.com/microsoft/vscode-jupyter/issues/10940)
+        // upper case all of the keys
+        if (process.platform === 'win32' && env) {
+            Object.keys(env).forEach((k) => {
+                env![k.toUpperCase()] = env![k];
+            });
+        }
+
+        // Ensure the first path in PATH variable points to the directory of python executable.
+        // We need to add this to ensure kernels start and work correctly, else things can fail miserably.
+        const expectedPath = path.dirname(interpreter.uri.fsPath);
+        const pathValue = env.PATH || env.Path;
+        if (pathValue && !pathValue.startsWith(`${expectedPath}${path.delimiter}`)) {
+            // This way all executables from that env are used.
+            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+            // Also applies to `!java` where java could be an executable in the conda bin directory.
+            this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
+        }
+
+        traceVerbose(
+            `Activated Env Variables for ${interpreter.id}, PATH value is ${env.PATH} and Path value is ${env.Path}`
+        );
         return env;
     }
 }
