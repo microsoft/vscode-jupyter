@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as os from 'os';
 import * as path from '../platform/vscode-path/path';
 import * as nbformat from '@jupyterlab/nbformat';
 import { IJupyterKernelSpec, IKernelConnectionSession, isLocalConnection, KernelConnectionMetadata } from './types';
