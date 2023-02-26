@@ -118,7 +118,11 @@ suite('Kernel Execution @kernelCore', function () {
         notebook.cells.length = 0;
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(function () {
+    teardown(async function () {
+        if (this.currentTest?.isFailed()) {
+            // For a flaky interrupt test.
+            await captureScreenShot(this);
+        }
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));

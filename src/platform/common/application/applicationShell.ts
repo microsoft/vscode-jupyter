@@ -33,6 +33,7 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions
 } from 'vscode';
+import { traceInfoIfCI } from '../../logging';
 import { noop } from '../utils/misc';
 import { IApplicationShell } from './types';
 
@@ -80,6 +81,7 @@ export class ApplicationShell implements IApplicationShell {
         ...items: T[]
     ): Thenable<T>;
     public showErrorMessage(message: any, options?: any, ...items: any[]) {
+        traceInfoIfCI(`Show Error Message ${message}, ${JSON.stringify(items)}`);
         return window.showErrorMessage(message, options, ...items);
     }
 
