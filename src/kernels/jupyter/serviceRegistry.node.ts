@@ -19,7 +19,6 @@ import {
 import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupyterInterpreterSubCommandExecutionService.node';
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
-import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
 import { JupyterKernelService } from './jupyterKernelService.node';
@@ -67,10 +66,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        CellOutputMimeTypeTracker
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         JupyterInterpreterSelectionCommand

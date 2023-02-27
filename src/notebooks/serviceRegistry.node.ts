@@ -46,6 +46,7 @@ import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
+import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { JupyterServerSelectorCommand } from './serverSelectorCommand';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
@@ -122,6 +123,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IDebugLocationTrackerFactory
     ]);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CellOutputMimeTypeTracker
+    );
 
     // File export/import
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
