@@ -46,10 +46,6 @@ export const rootHooks: Mocha.RootHookObject = {
             testResult: result
         };
 
-        if (this.currentTest?.perfCheckpoints) {
-            dimensions = { ...dimensions, timedCheckpoints: JSON.stringify(this.currentTest?.perfCheckpoints) };
-        }
-
         if (process.env.GITHUB_SHA) {
             dimensions = { ...dimensions, commitHash: process.env.GITHUB_SHA };
         }
