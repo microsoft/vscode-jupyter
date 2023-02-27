@@ -124,7 +124,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             }
 
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).catch(noop);
         }
     }
 
@@ -160,7 +160,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
         traceInfo(`Refreshing data viewer for variable ${dataFrameInfo.name}`);
         // Send a message with our data
-        this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+        this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).catch(noop);
     }
 
     public override dispose(): void {
@@ -188,19 +188,19 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     protected override onMessage(message: string, payload: any) {
         switch (message) {
             case DataViewerMessages.GetAllRowsRequest:
-                this.getAllRows(payload as string).ignoreErrors();
+                this.getAllRows(payload as string).catch(noop);
                 break;
 
             case DataViewerMessages.GetRowsRequest:
-                this.getRowChunk(payload as IGetRowsRequest).ignoreErrors();
+                this.getRowChunk(payload as IGetRowsRequest).catch(noop);
                 break;
 
             case DataViewerMessages.GetSliceRequest:
-                this.getSlice(payload as IGetSliceRequest).ignoreErrors();
+                this.getSlice(payload as IGetSliceRequest).catch(noop);
                 break;
 
             case DataViewerMessages.RefreshDataViewer:
-                this.refreshData().ignoreErrors();
+                this.refreshData().catch(noop);
                 void sendTelemetryEvent(Telemetry.RefreshDataViewer);
                 break;
 

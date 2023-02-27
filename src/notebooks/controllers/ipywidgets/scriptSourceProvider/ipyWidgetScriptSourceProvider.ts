@@ -19,6 +19,7 @@ import { Disposable } from 'vscode';
 import type { IAnyMessageArgs, IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import type { ICommOpenMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { swallowExceptions } from '../../../../platform/common/utils/decorators';
+import { noop } from '../../../../platform/common/utils/misc';
 
 /**
  * This class decides where to get widget scripts from.
@@ -97,7 +98,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 break;
             }
         }
-        this.sendTelemetryForWidgetModule(moduleName, moduleVersion, '', found.source).ignoreErrors();
+        this.sendTelemetryForWidgetModule(moduleName, moduleVersion, '', found.source).catch(noop);
         if (!found.scriptUri) {
             traceError(`Script source for Widget ${moduleName}@${moduleVersion} not found`);
         } else {
@@ -177,7 +178,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                     data.state?._model_module,
                     data.state?._model_module_version || '',
                     data.state?._model_name
-                ).ignoreErrors();
+                ).catch(noop);
             }
         }
     }

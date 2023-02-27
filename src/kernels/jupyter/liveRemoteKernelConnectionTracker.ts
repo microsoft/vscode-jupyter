@@ -99,7 +99,7 @@ export class LiveRemoteKernelConnectionUsageTracker
                         )
                         .then(noop, noop);
                 })
-                .ignoreErrors();
+                .catch(noop);
         });
     }
 }

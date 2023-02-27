@@ -250,7 +250,7 @@ export class DebuggerVariables
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'event' && message.event === 'stopped' && this.activeNotebookIsDebugging()) {
-            this.handleNotebookVariables(message as DebugProtocol.StoppedEvent).ignoreErrors();
+            this.handleNotebookVariables(message as DebugProtocol.StoppedEvent).catch(noop);
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
             const response = message as DebugProtocol.ScopesResponse;
 

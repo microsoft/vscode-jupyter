@@ -53,7 +53,7 @@ export class LocalKnownPathKernelSpecFinder
                     this._onDidChangeKernels.fire();
                 }
             })
-            .ignoreErrors();
+            .catch(noop);
         this.refresh().then(noop, noop);
     }
     public get kernels(): LocalKernelSpecConnectionMetadata[] {

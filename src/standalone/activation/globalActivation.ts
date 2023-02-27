@@ -60,7 +60,7 @@ export class GlobalActivation implements IExtensionSyncActivationService {
         this.onChangedActiveTextEditor();
 
         // Send telemetry for all of our settings
-        this.sendSettingsTelemetry().ignoreErrors();
+        this.sendSettingsTelemetry().catch(noop);
 
         // Figure out the ZMQ available context key
         this.computeZmqAvailable();

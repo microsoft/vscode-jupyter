@@ -152,7 +152,7 @@ export function cache(expiryDurationMs: number) {
             const promise = originalMethod.apply(this, args) as Promise<any>;
             promise
                 .then((result) => cacheStoreForMethods.set(key, new DataWithExpiry(expiryDurationMs, result)))
-                .ignoreErrors();
+                .catch(noop);
             return promise;
         };
     };

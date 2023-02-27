@@ -20,6 +20,7 @@ import { IJupyterDebugService } from '../../notebooks/debugger/debuggingTypes';
 import { executeSilently } from '../../kernels/helpers';
 import { buildSourceMap } from './helper';
 import { trimQuotes } from '../../platform/common/helpers';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Public API to begin debugging in the interactive window
@@ -114,7 +115,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             traceErrors: true,
             traceErrorsMessage: 'Execute_request failure enabling tracing code for IW',
             telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
-        }).ignoreErrors();
+        }).catch(noop);
     }
 
     public disable(kernel: IKernel) {
@@ -125,7 +126,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             traceErrors: true,
             traceErrorsMessage: 'Execute_request failure disabling tracing code for IW',
             telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
-        }).ignoreErrors();
+        }).catch(noop);
     }
 
     private async startDebugSession(

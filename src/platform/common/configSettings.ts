@@ -29,6 +29,7 @@ import {
 import { debounceSync } from './utils/decorators';
 import { ISystemVariables, ISystemVariablesConstructor } from './variables/types';
 import { ConfigMigration } from './configMigration';
+import { noop } from './utils/misc';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
@@ -274,7 +275,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
         if (initialConfig) {
             this.update(initialConfig, pythonConfig);
-            this.migrateSettings(initialConfig).ignoreErrors();
+            this.migrateSettings(initialConfig).catch(noop);
         }
     }
 

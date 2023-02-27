@@ -129,7 +129,7 @@ export class KernelLauncher implements IKernelLauncher {
                     { resourceType: getResourceType(resource) }
                 )
             )
-            .ignoreErrors();
+            .catch(noop);
         return promise;
     }
 

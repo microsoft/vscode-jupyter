@@ -116,7 +116,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // Otherwise Telemetry is send via the error handler.
         sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
             // Run in the background.
-            .ignoreErrors();
+            .catch(noop);
         await ready;
         return api;
     } catch (ex) {

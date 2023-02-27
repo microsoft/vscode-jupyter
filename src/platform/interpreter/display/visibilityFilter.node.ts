@@ -8,6 +8,7 @@ import { IInterpreterStatusbarVisibilityFilter, IPythonApiProvider, IPythonExten
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { isJupyterNotebook } from '../../common/utils';
+import { noop } from '../../common/utils/misc';
 
 /**
  * Singleton that listens to active editor changes in order to hide/show the python interpreter
@@ -65,6 +66,6 @@ export class InterpreterStatusBarVisibility
                     this._changed.fire();
                 }
             })
-            .ignoreErrors();
+            .catch(noop);
     }
 }

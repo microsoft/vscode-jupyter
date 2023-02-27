@@ -57,7 +57,7 @@ export class HostJupyterServer implements INotebookServer {
             try {
                 this.serverExitCode = c;
                 traceError(DataScience.jupyterServerCrashed(c));
-                this.shutdown().ignoreErrors();
+                this.shutdown().catch(noop);
             } catch {
                 noop();
             }

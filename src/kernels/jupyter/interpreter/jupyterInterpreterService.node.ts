@@ -184,7 +184,7 @@ export class JupyterInterpreterService {
         }
 
         // Clear the cache to not check again
-        this.oldVersionCacheStateStore.clearCache().ignoreErrors();
+        this.oldVersionCacheStateStore.clearCache().catch(noop);
         return pythonPath;
     }
 

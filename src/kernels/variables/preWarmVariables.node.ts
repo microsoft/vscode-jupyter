@@ -33,12 +33,12 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSy
                     this.preWarmInterpreterVariables().catch(noop)
                 )
             );
-            this.preWarmInterpreterVariables().ignoreErrors();
+            this.preWarmInterpreterVariables().catch(noop);
             this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
         }
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            this.condaService.getCondaFile().ignoreErrors();
-            this.condaService.getCondaVersion().ignoreErrors();
+            this.condaService.getCondaFile().catch(noop);
+            this.condaService.getCondaVersion().catch(noop);
         }
     }
 
@@ -50,6 +50,6 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSy
         if (!interpreter) {
             return;
         }
-        this.activationService.getActivatedEnvironmentVariables(undefined, interpreter).ignoreErrors();
+        this.activationService.getActivatedEnvironmentVariables(undefined, interpreter).catch(noop);
     }
 }

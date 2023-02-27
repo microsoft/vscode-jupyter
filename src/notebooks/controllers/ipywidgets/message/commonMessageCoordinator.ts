@@ -212,11 +212,11 @@ export class CommonMessageCoordinator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(webview: IWebviewCommunication, message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
-            this.sendLoadSucceededTelemetry(payload).ignoreErrors();
+            this.sendLoadSucceededTelemetry(payload).catch(noop);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
-            this.handleWidgetLoadFailure(webview, payload).ignoreErrors();
+            this.handleWidgetLoadFailure(webview, payload).catch(noop);
         } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
-            this.sendUnsupportedWidgetVersionFailureTelemetry(payload).ignoreErrors();
+            this.sendUnsupportedWidgetVersionFailureTelemetry(payload).catch(noop);
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
             this.sendRenderFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage) {
@@ -277,7 +277,7 @@ export class CommonMessageCoordinator {
                                 this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
                                 break;
                             case enableDownloads:
-                                this.enableCDNForWidgets(webview).ignoreErrors();
+                                this.enableCDNForWidgets(webview).catch(noop);
                                 break;
                             default:
                                 break;

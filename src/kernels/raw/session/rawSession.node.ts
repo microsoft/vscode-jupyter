@@ -15,6 +15,7 @@ import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation }
 import { IKernelProcess } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel.node';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
+import { noop } from '../../../platform/common/utils/misc';
 
 /*
 RawSession class implements a jupyterlab ISession object
@@ -290,6 +291,6 @@ export class RawSession implements ISessionWithSocket {
         );
 
         // Just kill the session.
-        this.dispose().ignoreErrors();
+        this.dispose().catch(noop);
     }
 }

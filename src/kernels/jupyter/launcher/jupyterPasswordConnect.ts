@@ -6,6 +6,7 @@ import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
 import { traceWarning } from '../../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
@@ -172,7 +173,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                                     Cookie: cookieString,
                                     Referer: `${baseUrl}/hub/login`
                                 }
-                            }).ignoreErrors(); // Don't wait for this during shutdown. Just make the request
+                            }).catch(noop); // Don't wait for this during shutdown. Just make the request
                         }
                     });
 

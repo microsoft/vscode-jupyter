@@ -130,7 +130,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     ): Promise<WidgetScriptSource> {
         // If the webview is not online, then we cannot use the CDN.
         if (isWebViewOnline === false) {
-            this.warnIfNoAccessToInternetFromWebView(moduleName).ignoreErrors();
+            this.warnIfNoAccessToInternetFromWebView(moduleName).catch(noop);
             return {
                 moduleName
             };
@@ -191,7 +191,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
 
         traceError(`Widget Script ${moduleName}#${moduleVersion} was not found on on any cdn`);
-        this.handleWidgetSourceNotFound(moduleName, moduleVersion).ignoreErrors();
+        this.handleWidgetSourceNotFound(moduleName, moduleVersion).catch(noop);
         return { moduleName };
     }
 

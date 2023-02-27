@@ -133,7 +133,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         if (this.webviewView) {
             visible = this.webviewView.visible;
         }
-        context.set(visible).ignoreErrors();
+        context.set(visible).catch(noop);
 
         // I've we've been made visible, make sure that we are updated
         if (visible) {
@@ -143,10 +143,10 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             if (this.notebookWatcher.activeNotebookExecutionCount !== undefined) {
                 this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
                     executionCount: this.notebookWatcher.activeNotebookExecutionCount
-                }).ignoreErrors();
+                }).catch(noop);
             } else {
                 // No active view, so just trigger refresh to clear
-                this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+                this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).catch(noop);
             }
         }
     }
@@ -182,7 +182,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         if (activeNotebook) {
             const response = await this.variables.getVariables(args, activeNotebook);
 
-            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).catch(noop);
             sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, {
                 variableCount: response.totalCount
             });
@@ -196,7 +196,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                 refreshCount: args.refreshCount
             };
 
-            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).catch(noop);
         }
     }
 
@@ -204,7 +204,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     private async activeNotebookExecuted(args: { executionCount: number }) {
         this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
             executionCount: args.executionCount
-        }).ignoreErrors();
+        }).catch(noop);
     }
 
     // The active variable new notebook has changed, so force a refresh on the view to pick up the new info
@@ -212,26 +212,26 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         if (arg.executionCount) {
             this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
                 executionCount: arg.executionCount
-            }).ignoreErrors();
+            }).catch(noop);
         } else {
             this.postMessage(InteractiveWindowMessages.UpdateVariableViewExecutionCount, {
                 executionCount: 0
-            }).ignoreErrors();
+            }).catch(noop);
         }
 
-        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).catch(noop);
     }
 
     // Active text editor changed. Editor may not be associated with a notebook
     private activeTextEditorChanged() {
-        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).catch(noop);
     }
 
     private async activeNotebookRestarted() {
-        this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.RestartKernel).catch(noop);
     }
 
     private async sendRefreshMessage() {
-        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).catch(noop);
     }
 }

@@ -25,6 +25,7 @@ import { Deferred, createDeferred } from '../../../../platform/common/utils/asyn
 import { IInteractiveWindowMapping, IPyWidgetMessages, InteractiveWindowMessages } from '../../../../messageTypes';
 import { WIDGET_MIMETYPE, WIDGET_STATE_MIMETYPE } from '../../../../platform/common/constants';
 import { NotebookMetadata } from '../../../../platform/common/utils';
+import { noop } from '../../../../platform/common/utils/misc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -86,7 +87,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     public dispose(): void {
         this.proxyKernel?.dispose(); // NOSONAR
         this.postOffice.removeHandler(this);
-        this.clear().ignoreErrors();
+        this.clear().catch(noop);
     }
     public async clear(): Promise<void> {
         await this.manager?.clear_state();

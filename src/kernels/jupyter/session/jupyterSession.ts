@@ -162,7 +162,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         } catch (exc) {
             traceWarning(`Error waiting for restart session: ${exc}`);
             if (result) {
-                this.shutdownSession(result, undefined, true).ignoreErrors();
+                this.shutdownSession(result, undefined, true).catch(noop);
             }
             result = undefined;
             throw exc;
@@ -211,7 +211,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                 content: JSON.parse(contents),
                 type: 'notebook'
             })
-            .ignoreErrors();
+            .catch(noop);
 
         await handler({
             filePath: backingFile.filePath,
@@ -219,7 +219,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         });
 
         await backingFile.dispose();
-        await this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+        await this.contentsManager.delete(backingFile.filePath).catch(noop);
     }
 
     async createTempfile(ext: string): Promise<string> {
@@ -282,7 +282,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
                 if (this.connInfo && backingFile) {
-                    this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+                    this.contentsManager.delete(backingFile.filePath).catch(noop);
                 }
                 throw ex;
             }
@@ -346,7 +346,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(async () => {
                         if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+                            this.contentsManager.delete(backingFile.filePath).catch(noop);
                         }
                     }),
             options.token

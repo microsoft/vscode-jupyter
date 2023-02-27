@@ -110,9 +110,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
                     const timeoutInMS = serverUri.expiration.getTime() - Date.now();
                     // Week seems long enough (in case the expiration is ridiculous)
                     if (timeoutInMS > 0 && timeoutInMS < 604800000) {
-                        this.pendingTimeouts.push(
-                            setTimeout(() => this.updateServerUri(uri).ignoreErrors(), timeoutInMS)
-                        );
+                        this.pendingTimeouts.push(setTimeout(() => this.updateServerUri(uri).catch(noop), timeoutInMS));
                     }
                 }
             } catch (ex) {

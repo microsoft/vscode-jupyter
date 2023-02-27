@@ -136,7 +136,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             })
             .finally(async () => {
                 this.refreshCancellation?.cancel();
-                this.refreshData().ignoreErrors();
+                this.refreshData().catch(noop);
                 this.kernelSpecsFromKnownLocations.onDidChangeKernels(
                     () => {
                         // Only refresh if we know there are new global Python kernels that we haven't already seen before.
@@ -168,7 +168,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         this.clearCache();
         this.cachedInformationForPythonInterpreter.clear();
         this.discoveredKernelSpecFiles.clear();
-        this.interpreterService.refreshInterpreters(true).ignoreErrors();
+        this.interpreterService.refreshInterpreters(true).catch(noop);
         await this.refreshData(true);
     }
     public refreshData(forcePythonInterpreterRefresh: boolean = false) {

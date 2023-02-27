@@ -88,7 +88,7 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
         this.vscNotebook.onDidChangeNotebookCellExecutionState(
             (e) => {
                 if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
-                    this.checkNotebookCell(e.cell, 'onExecution').ignoreErrors();
+                    this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
                 }
             },
             this,

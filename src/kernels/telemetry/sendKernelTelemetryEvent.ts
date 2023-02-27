@@ -4,7 +4,7 @@
 import { Resource } from '../../platform/common/types';
 import { sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping, TelemetryEventInfo } from '../../telemetry';
 import { getContextualPropsForTelemetry } from '../../platform/telemetry/telemetry';
-import { ExcludeType, PickType, UnionToIntersection } from '../../platform/common/utils/misc';
+import { ExcludeType, noop, PickType, UnionToIntersection } from '../../platform/common/utils/misc';
 
 /**
  * @param {(P[E] & { waitBeforeSending: Promise<void> })} [properties]
@@ -31,5 +31,5 @@ export function sendKernelTelemetryEvent<P extends IEventNamePropertyMapping, E 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             sendTelemetryEvent(eventName as any, measures as any, props as any, ex);
         })
-        .ignoreErrors();
+        .catch(noop);
 }

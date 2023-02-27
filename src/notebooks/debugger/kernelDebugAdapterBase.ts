@@ -88,7 +88,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 this.kernel.onDisposed(() => {
                     if (!this.disconnected) {
                         debug.stopDebugging(this.session).then(noop, noop);
-                        this.disconnect().ignoreErrors();
+                        this.disconnect().catch(noop);
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
                     }
                 })
@@ -105,7 +105,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                         !this.disconnected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                        this.disconnect().ignoreErrors();
+                        this.disconnect().catch(noop);
                     }
                 },
                 this,
@@ -119,7 +119,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                     e.contentChanges.forEach((change) => {
                         change.removedCells.forEach((cell: NotebookCell) => {
                             if (cell === this.debugCell) {
-                                this.disconnect().ignoreErrors();
+                                this.disconnect().catch(noop);
                             }
                         });
                     });
@@ -131,7 +131,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         this.disposables.push(
             this.debugService.onDidTerminateDebugSession((e) => {
                 if (e === this.session) {
-                    this.disconnect().ignoreErrors();
+                    this.disconnect().catch(noop);
                 }
             })
         );
@@ -163,7 +163,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
      * Handle a message from the client to the debug adapter.
      */
     handleMessage(message: DebugProtocol.ProtocolMessage): void {
-        this.handleClientMessageAsync(message).ignoreErrors();
+        this.handleClientMessageAsync(message).catch(noop);
     }
 
     protected async handleClientMessageAsync(message: DebugProtocol.ProtocolMessage): Promise<void> {
