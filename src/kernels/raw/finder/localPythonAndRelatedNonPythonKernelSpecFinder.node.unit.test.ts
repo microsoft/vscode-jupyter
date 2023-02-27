@@ -26,10 +26,10 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { ResourceMap } from '../../../platform/vscode-path/map';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { uriEquals } from '../../../test/datascience/helpers';
-import { LocalPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
+import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 
 (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
     suite(`Local Python and related kernels (Kernel Picker = ${kernelPickerType})`, async () => {
@@ -263,7 +263,7 @@ import { sleep } from '../../../test/core';
             const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels');
             const statues: typeof finder.status[] = [];
             finder.onDidChangeStatus(() => statues.push(finder.status), this, disposables);
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenCall((_, defaultValue) => defaultValue);
+            when(globalState.get(localPythonKernelsCacheKey(), anything())).thenCall((_, defaultValue) => defaultValue);
             finder.activate();
 
             await clock.runAllAsync();
@@ -281,7 +281,7 @@ import { sleep } from '../../../test/core';
                 extensionVersion: '1',
                 kernels: [pythonKernelSpec.toJSON(), condaKernel.toJSON(), javaKernelSpec.toJSON()]
             };
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(JSON.stringify(kernelsInCache));
+            when(globalState.get(localPythonKernelsCacheKey(), anything())).thenReturn(JSON.stringify(kernelsInCache));
             finder.activate();
 
             await clock.runAllAsync();
@@ -296,7 +296,7 @@ import { sleep } from '../../../test/core';
             when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
             const statues: typeof finder.status[] = [];
             finder.onDidChangeStatus(() => statues.push(finder.status), this, disposables);
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenCall((_, defaultValue) => defaultValue);
+            when(globalState.get(localPythonKernelsCacheKey(), anything())).thenCall((_, defaultValue) => defaultValue);
             finder.activate();
 
             await clock.runAllAsync();
@@ -440,7 +440,7 @@ import { sleep } from '../../../test/core';
             // & later the user updates that same virtual env to 3.10.0 (either by deleting that folder and re-installing a new venv in the same folder or other means)
             // After we load, we need to ensure we display the new version of 3.10.0
             // This is something users have done quite a lot in the past.
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(
+            when(globalState.get(localPythonKernelsCacheKey(), anything())).thenReturn(
                 JSON.stringify({
                     kernels: [cachedVenvPythonKernel],
                     extensionVersion: '1'
@@ -479,7 +479,7 @@ import { sleep } from '../../../test/core';
             // & later the user updates that same virtual env to 3.10.0 (either by deleting that folder and re-installing a new venv in the same folder or other means)
             // After we load, we need to ensure we display the new version of 3.10.0
             // This is something users have done quite a lot in the past.
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(
+            when(globalState.get(localPythonKernelsCacheKey(), anything())).thenReturn(
                 JSON.stringify({
                     kernels: [cachedVenvPythonKernel],
                     extensionVersion: '1'
@@ -505,7 +505,7 @@ import { sleep } from '../../../test/core';
             // Cache will have a virtual env of Python
             // & later the Python extension no longer returns this Python env in the list of environments
             // At this point we should not list this kernel as its not a valid environment (not valid because Python doesn't list it anymore).
-            when(globalState.get(LocalPythonKernelsCacheKey, anything())).thenReturn(
+            when(globalState.get(localPythonKernelsCacheKey(), anything())).thenReturn(
                 JSON.stringify({
                     kernels: [venvPythonKernel],
                     extensionVersion: '1'
