@@ -89,7 +89,8 @@ export class InterpreterKernelSpecFinderHelper {
                     kernelConnectionType,
                     pythonPathDefined: path.basename(pathInArgv) !== pathInArgv,
                     argv0: path.basename(pathInArgv),
-                    language: kernelSpecLanguage
+                    language: kernelSpecLanguage,
+                    isCreatedByUs
                 });
             }
             return;
@@ -120,7 +121,8 @@ export class InterpreterKernelSpecFinderHelper {
                 kernelConnectionType,
                 pythonPathDefined: false,
                 argv0: path.basename(pathInArgv),
-                language: kernelSpecLanguage
+                language: kernelSpecLanguage,
+                isCreatedByUs
             });
         }
         // 2. Check if we have a fully qualified path in `argv`
@@ -141,7 +143,8 @@ export class InterpreterKernelSpecFinderHelper {
                         pythonPathDefined: true,
                         argv0: path.basename(pathInArgv),
                         pythonEnvFound: 'found',
-                        language: kernelSpecLanguage
+                        language: kernelSpecLanguage,
+                        isCreatedByUs
                     });
                 }
                 return exactMatchBasedOnArgv;
@@ -160,7 +163,8 @@ export class InterpreterKernelSpecFinderHelper {
                             pythonPathDefined: true,
                             argv0: path.basename(pathInArgv),
                             pythonEnvFound: 'foundViaGetEnvDetails',
-                            language: kernelSpecLanguage
+                            language: kernelSpecLanguage,
+                            isCreatedByUs
                         });
                     }
                     return interpreterInArgv;
@@ -172,7 +176,8 @@ export class InterpreterKernelSpecFinderHelper {
                         pythonPathDefined: true,
                         argv0: path.basename(pathInArgv),
                         pythonEnvFound: 'notFound',
-                        language: kernelSpecLanguage
+                        language: kernelSpecLanguage,
+                        isCreatedByUs
                     });
                 }
             } else if (kernelSpec.specFile && isGlobalKernelSpec && !isCreatedByUs) {
@@ -182,7 +187,8 @@ export class InterpreterKernelSpecFinderHelper {
                     pythonPathDefined: true,
                     argv0: path.basename(pathInArgv),
                     pythonEnvFound: 'notTrusted',
-                    language: kernelSpecLanguage
+                    language: kernelSpecLanguage,
+                    isCreatedByUs
                 });
             }
         }
