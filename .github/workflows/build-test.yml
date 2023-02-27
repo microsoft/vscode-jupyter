@@ -93,7 +93,7 @@ jobs:
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
 
-      - run: npm i -g vsce
+      - run: npm i -g @vscode/vsce
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
