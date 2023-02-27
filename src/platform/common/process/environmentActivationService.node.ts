@@ -20,7 +20,7 @@ import { swallowExceptions } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
-import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
+import { logValue, traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
 import { GlobalPythonSiteService } from './globalPythonSiteService.node';
@@ -183,7 +183,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
 
             const userSite = await this.userSite.getUserSitePath(interpreter).catch(noop);
-            if (userSite) {
+            const pathValue = env.PATH || env.Path;
+            const pathValues = pathValue ? pathValue.split(path.delimiter) : [];
+            // First value in PATH is expected to be the directory of python executable.
+            // Second value in PATH is expected to be the site packages directory.
+            if (userSite && pathValues[1] !== userSite.fsPath) {
+                traceVerbose(`Prepend PATH with user site path for ${interpreter.id}, user site ${userSite.fsPath}`);
                 // Based on docs this is the right path and must be setup in the path.
                 this.envVarsService.prependPath(env, userSite.fsPath);
             } else {
@@ -200,24 +205,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
         }
 
-        // On windows (see https://github.com/microsoft/vscode-jupyter/issues/10940)
-        // upper case all of the keys
-        if (process.platform === 'win32' && env) {
-            Object.keys(env).forEach((k) => {
-                env![k.toUpperCase()] = env![k];
-            });
-        }
-
         // Ensure the first path in PATH variable points to the directory of python executable.
         // We need to add this to ensure kernels start and work correctly, else things can fail miserably.
-        const expectedPath = path.dirname(interpreter.uri.fsPath);
-        const pathValue = env.PATH || env.Path;
-        if (pathValue && !pathValue.startsWith(`${expectedPath}${path.delimiter}`)) {
-            // This way all executables from that env are used.
-            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
-            // Also applies to `!java` where java could be an executable in the conda bin directory.
-            this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
-        }
+        traceVerbose(
+            `Prepend PATH with python bin for ${interpreter.id}, PATH value is ${env.PATH} and Path value is ${env.Path}`
+        );
+        // This way all executables from that env are used.
+        // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+        // Also applies to `!java` where java could be an executable in the conda bin directory.
+        this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
 
         traceVerbose(
             `Activated Env Variables for ${interpreter.id}, PATH value is ${env.PATH} and Path value is ${env.Path}`

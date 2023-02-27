@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as os from 'os';
 import { inject, injectable } from 'inversify';
 import * as path from '../../vscode-path/path';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -101,6 +102,23 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             }
         } else {
             vars[setKey] = valueToAppendOrPrepend;
+        }
+
+        // WINDOWS  can have PATH and Path, update both
+        const windowsPaths = ['Path', 'PATH'];
+        const otherWindowPath = windowsPaths.find((p) => p !== setKey);
+        if (os.platform() === 'win32' && otherWindowPath && otherWindowPath in vars && typeof vars[otherWindowPath] === 'string') {
+            const existingValue = vars[otherWindowPath];
+            const setKey = otherWindowPath;
+            if (existingValue && typeof existingValue === 'string' && existingValue.length > 0) {
+                if (append && !(vars[setKey] || '').endsWith(path.delimiter + valueToAppendOrPrepend)) {
+                    vars[setKey] = existingValue + path.delimiter + valueToAppendOrPrepend;
+                } else if (!append && !(vars[setKey] || '').startsWith(valueToAppendOrPrepend + path.delimiter)) {
+                    vars[setKey] = valueToAppendOrPrepend + path.delimiter + existingValue;
+                }
+            } else {
+                vars[setKey] = valueToAppendOrPrepend;
+            }
         }
         return vars;
     }
