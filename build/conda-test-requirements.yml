@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - ipywidgets=7.7.2 # Pinned per ipywidget 8 support: https://github.com/microsoft/vscode-jupyter/issues/11598
+  - ipywidgets
   - pandas
   - nbformat=5.0.8 # Lock down to prevent this error: https://github.com/jupyter/nbformat/issues/206
   - jinja2=3.0.3 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039

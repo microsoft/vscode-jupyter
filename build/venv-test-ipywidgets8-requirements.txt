@@ -13,7 +13,7 @@ livelossplot
 versioneer
 pythreejs
 ipywidgets
-ipysheet==0.5.0
+ipysheet
 ipyvolume
 beakerx
 beakerx_kernel_java
