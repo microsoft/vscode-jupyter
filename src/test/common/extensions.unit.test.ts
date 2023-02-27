@@ -3,6 +3,7 @@
 
 import { expect } from 'chai';
 import '../../platform/common/extensions';
+import { format } from '../../platform/common/helpers';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('String Extensions', () => {
@@ -47,32 +48,32 @@ suite('String Extensions', () => {
         expect(fileToTest.fileToCommandArgument()).to.be.equal(`"${fileToTest.replace(/\\/g, '/')}"`);
     });
     test('Should leave string unchanged', () => {
-        expect('something {0}'.format()).to.be.equal('something {0}');
+        expect(format('something {0}')).to.be.equal('something {0}');
     });
     test('String should be formatted to contain first argument', () => {
         const formatString = 'something {0}';
         const expectedString = 'something one';
-        expect(formatString.format('one')).to.be.equal(expectedString);
+        expect(format(formatString, 'one')).to.be.equal(expectedString);
     });
     test('String should be formatted to contain first argument even with too many args', () => {
         const formatString = 'something {0}';
         const expectedString = 'something one';
-        expect(formatString.format('one', 'two')).to.be.equal(expectedString);
+        expect(format(formatString, 'one', 'two')).to.be.equal(expectedString);
     });
     test('String should be formatted to contain second argument', () => {
         const formatString = 'something {1}';
         const expectedString = 'something two';
-        expect(formatString.format('one', 'two')).to.be.equal(expectedString);
+        expect(format(formatString, 'one', 'two')).to.be.equal(expectedString);
     });
     test('String should be formatted to contain second argument even with too many args', () => {
         const formatString = 'something {1}';
         const expectedString = 'something two';
-        expect(formatString.format('one', 'two', 'three')).to.be.equal(expectedString);
+        expect(format(formatString, 'one', 'two', 'three')).to.be.equal(expectedString);
     });
     test('String should be formatted with multiple args', () => {
         const formatString = 'something {1}, {0}';
         const expectedString = 'something two, one';
-        expect(formatString.format('one', 'two', 'three')).to.be.equal(expectedString);
+        expect(format(formatString, 'one', 'two', 'three')).to.be.equal(expectedString);
     });
     test('String should remove quotes', () => {
         /* eslint-disable no-multi-str */

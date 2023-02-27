@@ -7,6 +7,7 @@ import ansiToHtml from 'ansi-to-html';
 import escape from 'lodash/escape';
 import { ErrorRendererMessageType, Localizations } from '../../../messageTypes';
 import { createDeferred } from '../../../platform/common/utils/async';
+import { format } from '../../../platform/common/helpers';
 
 const localizations: Localizations = {
     errorOutputExceedsLinkToOpenFormatString:
@@ -54,16 +55,10 @@ function handleInnerClick(target: HTMLAnchorElement, context: RendererContext<an
     return false;
 }
 
-if (!String.prototype.format) {
-    String.prototype.format = function (this: string) {
-        const args = arguments;
-        return this.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
-    };
-}
-
 function generateViewMoreElement(outputId: string) {
     const container = document.createElement('span');
-    const infoInnerHTML = localizations.errorOutputExceedsLinkToOpenFormatString.format(
+    const infoInnerHTML = format(
+        localizations.errorOutputExceedsLinkToOpenFormatString,
         `"command:workbench.action.openSettings?["notebook.output.textLineLimit"]"`,
         `"command:workbench.action.openLargeOutput?${outputId}"`
     );

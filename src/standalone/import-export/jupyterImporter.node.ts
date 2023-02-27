@@ -17,6 +17,7 @@ import {
     INbConvertExportToPythonService
 } from '../../kernels/jupyter/types';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { format } from '../../platform/common/helpers';
 
 /**
  * Translates a python file into a notebook
@@ -100,7 +101,7 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addIPythonImport = (pythonOutput: string): string => {
-        return CodeSnippets.ImportIPython.format(this.defaultCellMarker, pythonOutput);
+        return format(CodeSnippets.ImportIPython, this.defaultCellMarker, pythonOutput);
     };
 
     public async createTemplateFile(nbconvert6: boolean): Promise<string | undefined> {
@@ -114,7 +115,8 @@ export class JupyterImporter implements INotebookImporter {
                 this.disposableRegistry.push(file);
                 await this.fs.writeFile(
                     Uri.file(file.filePath),
-                    this.nbconvertBaseTemplateFormat.format(
+                    format(
+                        this.nbconvertBaseTemplateFormat,
                         nbconvert6 ? this.nbconvert6Null : this.nbconvert5Null,
                         this.defaultCellMarker
                     )

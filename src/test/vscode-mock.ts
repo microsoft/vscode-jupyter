@@ -5,6 +5,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 /* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
 
 import * as vscode from 'vscode';
+import { format } from '../platform/common/helpers';
 import { noop } from '../platform/common/utils/misc';
 import * as vscodeMocks from './mocks/vsc';
 import { vscMockTelemetryReporter } from './mocks/vsc/telemetryReporter';
@@ -101,7 +102,7 @@ mockedVSCode.l10n = {
             if (typeof restOfArguments === 'object' && !Array.isArray(restOfArguments)) {
                 throw new Error('Records for l10n.t() are not supported in the mock');
             }
-            return arg1.format(...restOfArguments);
+            return format(arg1, ...restOfArguments);
         }
         if (typeof arg1 === 'object') {
             const message = arg1.message;
@@ -112,7 +113,7 @@ mockedVSCode.l10n = {
             if (args.length === 0) {
                 return message;
             }
-            return message.format(...args);
+            return format(message, ...args);
         }
         return arg1;
     },
