@@ -38,7 +38,6 @@ import {
     ILiveRemoteKernelConnectionUsageTracker,
     IJupyterRemoteCachedKernelValidator
 } from './types';
-import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
@@ -74,10 +73,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterRemoteCachedKernelValidator
     );
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandlerWeb);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        CellOutputMimeTypeTracker
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteKernelFinderController
