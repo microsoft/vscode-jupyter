@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { Telemetry } from '../platform/common/constants';
-import '../platform/common/extensions';
 import { IJupyterExtensionBanner, IPersistentStateFactory, IConfigurationService } from '../platform/common/types';
 import * as localize from '../platform/common/utils/localize';
 import { sendTelemetryEvent, captureUsageTelemetry } from '../telemetry';

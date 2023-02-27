@@ -6,7 +6,6 @@ import { inject, injectable, multiInject, optional } from 'inversify';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
-import '../../platform/common/extensions';
 import {
     IConfigurationService,
     IDataScienceCommandListener,

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import '../../platform/common/extensions';
 import { format } from '../../platform/common/helpers';
 import { fileToCommandArgument, toCommandArgument, trimQuotes } from '../../platform/common/helpers';
 

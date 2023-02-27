@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../platform/common/extensions';
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import { NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 import { CellMatcher } from './cellMatcher';

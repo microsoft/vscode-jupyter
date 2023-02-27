@@ -3,7 +3,6 @@
 
 import { injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import '../../platform/common/extensions';
 import { traceVerbose, logValue, ignoreLogging } from '../../platform/logging';
 import { Resource, IDisplayOptions } from '../../platform/common/types';
 import { KernelConnectionMetadata } from '../types';

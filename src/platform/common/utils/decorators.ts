@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, , no-invalid-this */
 
-import '../extensions';
 import { isTestExecution } from '../constants';
 import { createDeferred, Deferred } from './async';
 import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';

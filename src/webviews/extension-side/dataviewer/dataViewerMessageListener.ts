@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { IWebviewPanel, IWebviewPanelMessageListener } from '../../../platform/common/application/types';
-import '../../../platform/common/extensions';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

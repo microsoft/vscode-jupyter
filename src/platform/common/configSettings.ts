@@ -10,7 +10,6 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import './extensions';
 import { LogLevel } from '../logging/types';
 import { IWorkspaceService } from './application/types';
 import { isTestExecution } from './constants';

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../platform/common/extensions';
 import { splitLines } from '../../platform/common/helpers';
 
 /**

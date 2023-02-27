@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../../../platform/common/extensions';
-
 import { CancellationToken } from 'vscode';
 import { traceError, traceVerbose } from '../../../../platform/logging';
 import { IAsyncDisposable } from '../../../../platform/common/types';

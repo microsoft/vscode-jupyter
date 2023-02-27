@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { RegExpValues } from '../../platform/common/constants';
-import '../../platform/common/extensions';
 import { splitLines } from '../../platform/common/helpers';
 import { IJupyterSettings } from '../../platform/common/types';
 

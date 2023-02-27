@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as path from '../../platform/vscode-path/path';
-import '../../platform/common/extensions';
 import { traceError } from '../../platform/logging';
 import { PythonEnvInfo } from '../../platform/common/process/internal/scripts/index.node';
 import { ProcessService } from '../../platform/common/process/proc.node';

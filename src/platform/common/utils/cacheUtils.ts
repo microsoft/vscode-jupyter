@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 
-import '../extensions';
-
 type CacheData = {
     value: unknown;
     expiry: number;
