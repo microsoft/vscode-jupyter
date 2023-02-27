@@ -65,7 +65,7 @@ function isKernelLaunchedViaLocalPythonProcess(kernel: KernelConnectionMetadata 
     }
     const kernelSpec = connection ? connection.kernelSpec : (kernel as IJupyterKernelSpec);
     const executable = path.basename(kernelSpec.argv[0]).toLowerCase();
-    return executable.startsWith('python') // This covers cases like python.exe, python3, python3.10;
+    return executable.startsWith('python'); // This covers cases like python.exe, python3, python3.10;
 }
 
 /**
