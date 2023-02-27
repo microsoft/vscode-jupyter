@@ -349,7 +349,7 @@ export class KernelProcess implements IKernelProcess {
                 this.killChildProcesses(this._process?.pid).catch(noop)
             ]);
             try {
-                this.interrupter?.dispose().ignoreErrors();
+                this.interrupter?.dispose().catch(noop);
                 this._process?.kill(); // NOSONAR
                 this.exitEvent.fire({});
             } catch (ex) {

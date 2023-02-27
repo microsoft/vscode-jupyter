@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../../platform/common/extensions';
-
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs/Subscription';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';

@@ -181,12 +181,12 @@ abstract class BaseKernel implements IBaseKernel {
             kernelConnection: this.kernelConnectionMetadata,
             actionSource: this.creator,
             disableUI: this.startupUI.disableUI
-        }).ignoreErrors();
+        }).catch(noop);
         this.startupUI.onDidChangeDisableUI(() => {
             if (!this.startupUI.disableUI) {
                 trackKernelResourceInformation(this.resourceUri, {
                     disableUI: false
-                }).ignoreErrors();
+                }).catch(noop);
             }
         }, this.disposables);
     }
@@ -250,9 +250,9 @@ abstract class BaseKernel implements IBaseKernel {
                 this._interruptPromise = undefined;
             }
         } finally {
-            Promise.all(
+            await Promise.all(
                 Array.from(this.hooks.get('interruptCompleted') || new Set<Hook>()).map((h) => h())
-            ).ignoreErrors();
+            ).catch(noop);
         }
 
         traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
@@ -383,9 +383,7 @@ abstract class BaseKernel implements IBaseKernel {
             traceError(`Failed to restart kernel ${getDisplayPath(this.uri)}`, ex);
             throw ex;
         } finally {
-            Promise.all(
-                Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())
-            ).ignoreErrors();
+            Promise.all(Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())).catch(noop);
         }
     }
     protected async startJupyterSession(
@@ -417,7 +415,7 @@ abstract class BaseKernel implements IBaseKernel {
                     initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
                         this.resourceUri,
                         this.kernelConnectionMetadata
-                    ).ignoreErrors();
+                    ).catch(noop);
                 },
                 this,
                 this.disposables

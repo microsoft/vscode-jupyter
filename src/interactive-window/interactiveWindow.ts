@@ -24,7 +24,6 @@ import {
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
-import '../platform/common/extensions';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
@@ -214,10 +213,10 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (this.currentKernelInfo.controller) {
-            this.startKernel().ignoreErrors();
+            this.startKernel().catch(noop);
         } else {
             traceWarning('No controller selected for Interactive Window');
-            this.insertInfoMessage(DataScience.selectKernelForEditor).ignoreErrors;
+            this.insertInfoMessage(DataScience.selectKernelForEditor).catch(noop);
         }
         this.initialized = true;
     }
@@ -384,7 +383,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     }
                 })
             )
-            .ignoreErrors();
+            .catch(noop);
     }
 
     private deleteSysInfoCell(cellPromise: Promise<NotebookCell>) {
@@ -405,7 +404,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     }
                 })
             )
-            .ignoreErrors();
+            .catch(noop);
     }
 
     private finishSysInfoMessage(kernel: IKernel, cellPromise: Promise<NotebookCell>, reason: SysInfoReason) {
@@ -439,7 +438,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     };
                     // don't start the kernel if the IW has only been restored from a previous session
                     if (this.initialized) {
-                        this.startKernel().ignoreErrors();
+                        this.startKernel().catch(noop);
                     }
                 }
             },

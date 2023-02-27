@@ -10,6 +10,7 @@ import { traceInfo } from '../platform/logging';
 import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
 import { IJupyterServerUriStorage } from '../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
+import { noop } from '../platform/common/utils/misc';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
@@ -45,7 +46,7 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
             await this.serverSelector.setJupyterURIToRemote(source.toString(true));
         } else {
             // Activate UI Selector
-            this.serverSelector.selectJupyterURI(source).ignoreErrors();
+            this.serverSelector.selectJupyterURI(source).catch(noop);
         }
 
         // Picking the 'preferred' kernel for remote should happen in the command handler from the

@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import '../../../platform/common/extensions';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -184,7 +183,7 @@ export class JupyterInterpreterService {
         }
 
         // Clear the cache to not check again
-        this.oldVersionCacheStateStore.clearCache().ignoreErrors();
+        this.oldVersionCacheStateStore.clearCache().catch(noop);
         return pythonPath;
     }
 

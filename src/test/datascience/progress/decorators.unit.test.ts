@@ -48,8 +48,8 @@ suite('Progress Reporter Decorator', () => {
         verify(reporter.report(anything())).never();
 
         // Report progress of actions started.
-        cls1.doSomething().ignoreErrors();
-        cls2.doSomething().ignoreErrors();
+        cls1.doSomething().catch(noop);
+        cls2.doSomething().catch(noop);
 
         verify(reporter.report(anything())).times(2);
         verify(reporter.report(deepEqual({ action: ReportableAction.NotebookStart, phase: 'started' }))).once();
@@ -71,8 +71,8 @@ suite('Progress Reporter Decorator', () => {
         ).once();
 
         // Report progress of actions started again.
-        cls1.doSomethingElse().ignoreErrors();
-        cls2.doSomethingElse().ignoreErrors();
+        cls1.doSomethingElse().catch(noop);
+        cls2.doSomethingElse().catch(noop);
 
         verify(reporter.report(anything())).times(6);
         verify(reporter.report(deepEqual({ action: ReportableAction.NotebookConnect, phase: 'started' }))).once();

@@ -17,6 +17,7 @@ import {
     IsWebExtension,
     IConfigurationService
 } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { computeServerId, extractJupyterServerHandleAndId } from '../jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRegistration } from '../types';
@@ -79,7 +80,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         this._currentServerId = this.globalMemento.get<string | undefined>(currentServerHashKey, undefined);
 
         // Cache our current state so we don't keep asking for it from the encrypted storage
-        this.getUri().ignoreErrors();
+        this.getUri().catch(noop);
     }
     public async addServerToUriList(serverId: string, time: number) {
         // Start with saved list.

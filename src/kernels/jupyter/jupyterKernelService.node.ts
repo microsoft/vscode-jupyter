@@ -7,7 +7,6 @@ import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { CancellationToken, Uri } from 'vscode';
 import { Cancellation } from '../../platform/common/cancellation';
-import '../../platform/common/extensions';
 import {
     traceInfo,
     traceVerbose,

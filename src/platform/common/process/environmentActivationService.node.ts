@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../extensions';
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';

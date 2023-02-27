@@ -6,6 +6,7 @@ import { Disposable } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
+import { noop } from '../platform/common/utils/misc';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { IKernel, IKernelProvider, isRemoteConnection } from './types';
 
@@ -45,7 +46,7 @@ export class RemoteJupyterServerMruUpdate implements IExtensionSyncActivationSer
                     const now = Date.now();
                     const timeout = setTimeout(() => {
                         // Log this remote URI into our MRU list
-                        this.serverStorage.addServerToUriList(connection.serverId, now).ignoreErrors();
+                        this.serverStorage.addServerToUriList(connection.serverId, now).catch(noop);
                     }, INTERVAL_IN_SECONDS_TO_UPDATE_MRU);
                     this.monitoredKernels.set(kernel, timeout);
                     this.disposables.push(new Disposable(() => clearTimeout(timeout)));
@@ -56,6 +57,6 @@ export class RemoteJupyterServerMruUpdate implements IExtensionSyncActivationSer
         );
 
         // Log this remote URI into our MRU list
-        this.serverStorage.addServerToUriList(connection.serverId, Date.now()).ignoreErrors();
+        this.serverStorage.addServerToUriList(connection.serverId, Date.now()).catch(noop);
     }
 }

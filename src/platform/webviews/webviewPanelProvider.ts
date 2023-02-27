@@ -6,6 +6,7 @@ import { Uri, ViewColumn, WebviewOptions, WebviewPanel as vscodeWebviewPanel, wi
 import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../common/application/types';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import { noop } from '../common/utils/misc';
 import * as path from '../vscode-path/path';
 import { Webview } from './webview';
 
@@ -87,7 +88,7 @@ class WebviewPanel extends Webview implements IWebviewPanel {
         this.disposableRegistry.push(
             webviewHost.onDidDispose(() => {
                 this.webviewHost = undefined;
-                this.panelOptions.listener.dispose().ignoreErrors();
+                this.panelOptions.listener.dispose().catch(noop);
             })
         );
 

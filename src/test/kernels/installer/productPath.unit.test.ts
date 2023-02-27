@@ -7,7 +7,6 @@ import { expect, use } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
 import { Memento, Uri } from 'vscode';
-import '../../../platform/common/extensions';
 import { IConfigurationService, IOutputChannel } from '../../../platform/common/types';
 import { InterpreterPackages } from '../../../platform/interpreter/interpreterPackages.node';
 import { IServiceContainer } from '../../../platform/ioc/types';

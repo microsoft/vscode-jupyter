@@ -240,7 +240,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             this.emitMessage('variables', {
                 threadId: this._stoppedThreadId ? this._stoppedThreadId : 1,
                 variablesReference: variablesReference
-            }).ignoreErrors();
+            }).catch(noop);
         });
         this.protocolParser.once('response_variables', (args: any) => {
             this.sendToTrackers(args);
@@ -415,7 +415,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             this.sessionChangedEvent.fire(undefined);
             this.debugAdapterTrackers.forEach((d) => (d.onExit ? d.onExit(0, undefined) : noop()));
             this.debugAdapterTrackers = [];
-            this.sendDisconnect().ignoreErrors();
+            this.sendDisconnect().catch(noop);
             this.socket.destroy();
             this.socket = undefined;
         }

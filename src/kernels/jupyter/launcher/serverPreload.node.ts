@@ -59,7 +59,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
 
     private checkDateForServerStart() {
         if (this.shouldAutoStartStartServer(this.lastNotebookCreated)) {
-            this.createServerIfNecessary().ignoreErrors();
+            this.createServerIfNecessary().catch(noop);
         }
     }
     private shouldAutoStartStartServer(lastTime?: Date) {
@@ -104,7 +104,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
             return;
         }
         // Automatically start a server whenever we open a notebook
-        this.createServerIfNecessary().ignoreErrors();
+        this.createServerIfNecessary().catch(noop);
     }
 
     // Callback for when a notebook is created by the notebook provider

@@ -53,7 +53,7 @@ export class LocalKnownPathKernelSpecFinder
                     this._onDidChangeKernels.fire();
                 }
             })
-            .ignoreErrors();
+            .catch(noop);
         this.refresh().then(noop, noop);
     }
     public get kernels(): LocalKernelSpecConnectionMetadata[] {
@@ -105,7 +105,7 @@ export class LocalKnownPathKernelSpecFinder
                 JSON.stringify(oldSortedKernels) !== JSON.stringify(newSortedKernels)
             ) {
                 this._onDidChangeKernels.fire();
-                this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey()).ignoreErrors();
+                this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey()).catch(noop);
             }
             if (deletedKernels.length) {
                 traceVerbose(

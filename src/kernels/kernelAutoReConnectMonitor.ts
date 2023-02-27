@@ -123,13 +123,13 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             case 'disconnected': {
                 if (this.kernelReconnectProgress.has(kernel)) {
                     this.kernelReconnectProgress.delete(kernel);
-                    this.onKernelDisconnected(kernel)?.ignoreErrors();
+                    this.onKernelDisconnected(kernel)?.catch(noop);
                 }
                 return;
             }
             case 'connecting':
                 if (!this.kernelReconnectProgress.has(kernel)) {
-                    this.onKernelConnecting(kernel)?.ignoreErrors();
+                    this.onKernelConnecting(kernel)?.catch(noop);
                 }
                 return;
             default:

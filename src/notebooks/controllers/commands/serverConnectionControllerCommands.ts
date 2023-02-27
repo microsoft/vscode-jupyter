@@ -75,18 +75,18 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
             this.commandManager.registerCommand(Commands.SwitchToRemoteKernels, this.switchToRemoteKernels, this)
         );
         this.disposables.push(this.serverUriStorage.onDidChangeConnectionType(this.updateContextKeys, this));
-        this.updateContextKeys().ignoreErrors;
+        this.updateContextKeys().catch(noop);
 
         this.disposables.push(this.featuresManager.onDidChangeFeatures(this.updateContextKeys, this));
     }
 
     private async updateContextKeys() {
         if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-            this.showingLocalOrWebEmptyContext.set(false).ignoreErrors();
+            this.showingLocalOrWebEmptyContext.set(false).catch(noop);
         } else {
             // const isLocal = this.serverUriStorage.isLocalLaunch;
             // await (this.isWeb ? this.controllerLoader.loaded : Promise.resolve(true));
-            this.showingLocalOrWebEmptyContext.set(this.isWeb).ignoreErrors();
+            this.showingLocalOrWebEmptyContext.set(this.isWeb).catch(noop);
         }
     }
 
