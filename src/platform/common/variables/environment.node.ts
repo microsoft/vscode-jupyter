@@ -107,7 +107,12 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         // WINDOWS  can have PATH and Path, update both
         const windowsPaths = ['Path', 'PATH'];
         const otherWindowPath = windowsPaths.find((p) => p !== setKey);
-        if (os.platform() === 'win32' && otherWindowPath && otherWindowPath in vars && typeof vars[otherWindowPath] === 'string') {
+        if (
+            os.platform() === 'win32' &&
+            otherWindowPath &&
+            otherWindowPath in vars &&
+            typeof vars[otherWindowPath] === 'string'
+        ) {
             const existingValue = vars[otherWindowPath];
             const setKey = otherWindowPath;
             if (existingValue && typeof existingValue === 'string' && existingValue.length > 0) {
