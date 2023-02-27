@@ -19,6 +19,7 @@ import { IFileGeneratedCodes } from '../editor-integration/types';
 import { IJupyterDebugService } from '../../notebooks/debugger/debuggingTypes';
 import { executeSilently } from '../../kernels/helpers';
 import { buildSourceMap } from './helper';
+import { trimQuotes } from '../../platform/common/helpers';
 
 /**
  * Public API to begin debugging in the interactive window
@@ -291,7 +292,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         if (outputs.length > 0) {
             let enableAttachString = getPlainTextOrStreamOutput(outputs);
             if (enableAttachString) {
-                enableAttachString = enableAttachString.trimQuotes();
+                enableAttachString = trimQuotes(enableAttachString);
 
                 // Important: This regex matches the format of the string returned from enable_attach. When
                 // doing enable_attach remotely, make sure to print out a string in the format ('host', port)

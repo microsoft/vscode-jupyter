@@ -3,6 +3,7 @@
 
 import * as path from '../../../../vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../../../../constants.node';
+import { fileToCommandArgument } from '../../../helpers';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
 export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
@@ -63,7 +64,7 @@ export function normalizeSelection(): [string[], (out: string) => string] {
 // printEnvVariables.py
 
 export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessEnv] {
-    const script = path.join(SCRIPTS_DIR, 'printEnvVariables.py').fileToCommandArgument();
+    const script = fileToCommandArgument(path.join(SCRIPTS_DIR, 'printEnvVariables.py'));
     const args = [script];
 
     function parse(out: string): NodeJS.ProcessEnv {
@@ -78,7 +79,7 @@ export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessE
 
 export function printEnvVariablesToFile(filename: string): [string[], (out: string) => NodeJS.ProcessEnv] {
     const script = path.join(SCRIPTS_DIR, 'printEnvVariablesToFile.py');
-    const args = [script, filename.fileToCommandArgument()];
+    const args = [script, fileToCommandArgument(filename)];
 
     function parse(out: string): NodeJS.ProcessEnv {
         return JSON.parse(out);

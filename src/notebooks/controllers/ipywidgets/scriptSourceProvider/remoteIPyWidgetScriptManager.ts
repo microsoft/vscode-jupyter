@@ -14,6 +14,7 @@ import { isCI } from '../../../../platform/common/constants';
 import { sleep } from '../../../../platform/common/utils/async';
 import { noop } from '../../../../platform/common/utils/misc';
 import { IFileSystem } from '../../../../platform/common/platform/types';
+import { trimQuotes } from '../../../../platform/common/helpers';
 
 /**
  * IPyWidgetScriptManager for remote kernels
@@ -114,7 +115,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
                 .substring(1) // Trim leading `[`
                 .slice(0, -1) // Trim trailing `]`
                 .split(',')
-                .map((item) => item.trim().trimQuotes());
+                .map((item) => trimQuotes(item.trim()));
             return items.map((item) => ({
                 uri: Uri.joinPath(Uri.parse(this.kernelConnection.baseUrl), 'nbextensions', item),
                 widgetFolderName: path.dirname(item)

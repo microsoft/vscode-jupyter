@@ -14,6 +14,7 @@ import { getCondaEnvironment, getCondaFile, isCondaAvailable } from './condaServ
 import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { Uri } from 'vscode';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
+import { fileToCommandArgument } from '../../platform/common/helpers';
 
 const executionTimeout = 30_000;
 const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles');
@@ -40,7 +41,7 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
         try {
             const cli = await getPythonCli(pythonPath);
             const processService = new ProcessService();
-            const argv = [...cli, path.join(SCRIPTS_DIR, 'interpreterInfo.py').fileToCommandArgument()];
+            const argv = [...cli, fileToCommandArgument(path.join(SCRIPTS_DIR, 'interpreterInfo.py'))];
             const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
             const result = await processService.shellExec(cmd, {
                 timeout: executionTimeout,
@@ -125,11 +126,11 @@ async function getPythonCli(pythonPath: Uri | undefined) {
             }
 
             const condaFile = await getCondaFile();
-            return [condaFile.fileToCommandArgument(), ...runArgs, 'python'];
+            return [fileToCommandArgument(condaFile), ...runArgs, 'python'];
         } catch {
             // Noop.
         }
         traceError('Using Conda Interpreter, but no conda');
     }
-    return pythonPath ? [pythonPath.fsPath.fileToCommandArgument()] : [];
+    return pythonPath ? [fileToCommandArgument(pythonPath.fsPath)] : [];
 }

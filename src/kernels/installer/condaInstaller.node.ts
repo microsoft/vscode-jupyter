@@ -9,6 +9,7 @@ import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 import * as path from '../../platform/vscode-path/path';
 import { translateProductToModule } from './utils';
+import { fileToCommandArgument, toCommandArgument } from '../../platform/common/helpers';
 
 /**
  * A Python module installer for a conda environment.
@@ -88,11 +89,11 @@ export class CondaInstaller extends ModuleInstaller {
         if (name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');
-            args.push(name.toCommandArgument());
+            args.push(toCommandArgument(name));
         } else if (envPath) {
             // Else provide the full path to the environment path.
             args.push('--prefix');
-            args.push(envPath.fileToCommandArgument());
+            args.push(fileToCommandArgument(envPath));
         }
         if (flags & ModuleInstallFlags.updateDependencies) {
             args.push('--update-deps');

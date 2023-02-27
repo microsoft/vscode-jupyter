@@ -14,6 +14,7 @@ import { CondaInstaller } from '../../../kernels/installer/condaInstaller.node';
 import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller.node';
 import { ModuleInstallFlags } from '../../../kernels/installer/types';
 import { Uri } from 'vscode';
+import { fileToCommandArgument } from '../../../platform/common/helpers';
 
 suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;
@@ -158,7 +159,7 @@ suite('Common - Conda Installer', () => {
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
         assert.deepStrictEqual(execInfo, {
-            args: ['install', '--prefix', '/baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
+            args: ['install', '--prefix', fileToCommandArgument('/baz/foobar'), 'abc', '-y'],
             exe: condaPath.fsPath
         });
     });
@@ -178,7 +179,7 @@ suite('Common - Conda Installer', () => {
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
         assert.deepStrictEqual(execInfo, {
-            args: ['install', '--prefix', '/baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
+            args: ['install', '--prefix', fileToCommandArgument('/baz/foobar'), 'abc', '-y'],
             exe: condaPath.fsPath
         });
     });

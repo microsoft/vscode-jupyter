@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { disposeAllDisposables, splitLines } from '../../../../platform/common/helpers';
+import { disposeAllDisposables, splitLines, trimQuotes } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../../platform/logging';
@@ -89,8 +89,8 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
     // Go through each and extract the key and the value.
     mappings.forEach((mapping) => {
         const parts = mapping.split(':');
-        const key = parts[0].trim().trimQuotes().trim();
-        const value = parts[1].trim().trimQuotes().trim();
+        const key = trimQuotes(parts[0].trim()).trim();
+        const value = trimQuotes(parts[1].trim()).trim();
         requireConfig[key] = Uri.joinPath(baseUrl, value);
     });
 
