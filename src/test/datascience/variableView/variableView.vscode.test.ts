@@ -26,6 +26,7 @@ import { Commands } from '../../../platform/common/constants';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
 import { IKernelProvider } from '../../../kernels/types';
+import { trimQuotes } from '../../../platform/common/helpers';
 
 suite('VariableView @variableViewer', function () {
     let api: IExtensionTestApi;
@@ -116,7 +117,7 @@ suite('VariableView @variableViewer', function () {
             .slice(0, -1)
             .split(',')
             .map((item) => item.trim())
-            .map((item) => item.trimQuotes())
+            .map((item) => trimQuotes(item))
             .filter((item) => !varsToIgnore.includes(item))
             .sort();
         assert.deepEqual(vars, ['test', 'test2'].sort());

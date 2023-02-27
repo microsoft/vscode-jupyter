@@ -68,6 +68,7 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from './packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
+import { fileToCommandArgument } from '../../platform/common/helpers';
 
 /***
  * Common code for handling errors.
@@ -617,9 +618,9 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
     const ipyKernelName = ProductNames.get(Product.ipykernel)!;
     const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 
-    let installerCommand = `${getFilePath(
-        kernelConnection.interpreter.uri
-    ).fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
+    let installerCommand = `${fileToCommandArgument(
+        getFilePath(kernelConnection.interpreter.uri)
+    )} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
     if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
         if (kernelConnection.interpreter?.envName) {
             installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
@@ -629,9 +630,9 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
             )} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
     } else if (kernelConnection.interpreter?.envType === EnvironmentType.Unknown) {
-        installerCommand = `${getFilePath(
-            kernelConnection.interpreter.uri
-        ).fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
+        installerCommand = `${fileToCommandArgument(
+            getFilePath(kernelConnection.interpreter.uri)
+        )} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
     }
     const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter(
         displayNameOfKernel,
