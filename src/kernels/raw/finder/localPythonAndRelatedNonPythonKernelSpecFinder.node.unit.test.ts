@@ -623,8 +623,9 @@ import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.
             loadKernelSpecReturnValue.set(Uri.file(javaKernelSpec.kernelSpec.specFile!), javaKernelSpec.kernelSpec);
             const onDidChange = createEventHandler(finder, 'onDidChangeKernels', disposables);
 
-            // We need to have a Kernel Spec that will be started using activated Python enviornment.
-            const expectedJavaKernelSpec = PythonKernelConnectionMetadata.create({
+            // We need to have a Kernel Spec that will be started using activated Python environment.
+            // But is a local kernelSpec.
+            const expectedJavaKernelSpec = LocalKernelSpecConnectionMetadata.create({
                 kernelSpec: javaKernelSpec.kernelSpec,
                 interpreter: condaInterpreter,
                 id: getKernelId(javaKernelSpec.kernelSpec, condaInterpreter)

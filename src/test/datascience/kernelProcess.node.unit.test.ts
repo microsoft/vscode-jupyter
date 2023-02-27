@@ -3,6 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import * as os from 'os';
 import { assert } from 'chai';
 import * as path from '../../platform/vscode-path/path';
 import * as sinon from 'sinon';
@@ -288,7 +289,7 @@ suite('kernel Process', () => {
     });
     test('Ensure connection file is created in jupyter runtime directory (python daemon kernel)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
-            argv: ['python', '-f', '{connection_file}'],
+            argv: [os.platform() === 'win32' ? 'python.exe' : 'python', '-m', 'ipykernel', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
             executable: 'python'
@@ -306,6 +307,8 @@ suite('kernel Process', () => {
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [
+            `-m`,
+            `ipykernel`,
             `--ip=${connection.ip}`,
             `--stdin=${connection.stdin_port}`,
             `--control=${connection.control_port}`,
@@ -336,7 +339,7 @@ suite('kernel Process', () => {
     });
     test('Ensure connection file is created in temp directory (python daemon kernel)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
-            argv: ['python', '-f', '{connection_file}'],
+            argv: [os.platform() === 'win32' ? 'python.exe' : 'python', '-m', 'ipykernel', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
             executable: 'python'
@@ -352,6 +355,8 @@ suite('kernel Process', () => {
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [
+            `-m`,
+            `ipykernel`,
             `--ip=${connection.ip}`,
             `--stdin=${connection.stdin_port}`,
             `--control=${connection.control_port}`,
@@ -382,7 +387,7 @@ suite('kernel Process', () => {
     });
     test('Start Python process along with the daemon', async () => {
         const kernelSpec: IJupyterKernelSpec = {
-            argv: ['python', '-f', '{connection_file}'],
+            argv: [os.platform() === 'win32' ? 'python.exe' : 'python', '-m', 'ipykernel', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
             executable: 'python'
@@ -391,6 +396,8 @@ suite('kernel Process', () => {
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         const expectedArgs = [
+            `-m`,
+            `ipykernel`,
             `--ip=${connection.ip}`,
             `--stdin=${connection.stdin_port}`,
             `--control=${connection.control_port}`,

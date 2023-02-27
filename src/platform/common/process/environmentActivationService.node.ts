@@ -183,7 +183,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
 
             const userSite = await this.userSite.getUserSitePath(interpreter).catch(noop);
-            if (userSite) {
+            const pathValue = env.PATH || env.Path;
+            const pathValues = pathValue ? pathValue.split(path.delimiter) : [];
+            // First value in PATH is expected to be the directory of python executable.
+            // Second value in PATH is expected to be the site packages directory.
+            if (userSite && pathValues[1] !== userSite.fsPath) {
+                traceVerbose(`Prepend PATH with user site path for ${interpreter.id}, user site ${userSite.fsPath}`);
                 // Based on docs this is the right path and must be setup in the path.
                 this.envVarsService.prependPath(env, userSite.fsPath);
             } else {
@@ -191,11 +196,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     `Unable to determine site packages path for python ${interpreter.uri.fsPath} (${interpreter.envType})`
                 );
             }
-
-            // This way all executables from that env are used.
-            // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
-            // Also applies to `!java` where java could be an executable in the conda bin directory.
-            this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
 
             // Seems to be required on windows,
             // Without this, in Python, the PATH variable inherits the process env variables and not what we give it.
@@ -205,7 +205,19 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
         }
 
-        traceVerbose(`Activated Env Variables, PATH value is ${env.PATH} and Path value is ${env.Path}`);
+        // Ensure the first path in PATH variable points to the directory of python executable.
+        // We need to add this to ensure kernels start and work correctly, else things can fail miserably.
+        traceVerbose(
+            `Prepend PATH with python bin for ${interpreter.id}, PATH value is ${env.PATH} and Path value is ${env.Path}`
+        );
+        // This way all executables from that env are used.
+        // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
+        // Also applies to `!java` where java could be an executable in the conda bin directory.
+        this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
+
+        traceVerbose(
+            `Activated Env Variables for ${interpreter.id}, PATH value is ${env.PATH} and Path value is ${env.Path}`
+        );
         return env;
     }
 }

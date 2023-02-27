@@ -48,7 +48,10 @@ import { isWeb, swallowExceptions } from '../../../platform/common/utils/misc';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import {
+    areInterpreterPathsSame,
+    getNormalizedInterpreterPath
+} from '../../../platform/pythonEnvironments/info/interpreter';
 import {
     getTextOutputValue,
     getTextOutputValues,
@@ -118,7 +121,11 @@ suite('Kernel Execution @kernelCore', function () {
         notebook.cells.length = 0;
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(function () {
+    teardown(async function () {
+        if (this.currentTest?.isFailed()) {
+            // For a flaky interrupt test.
+            await captureScreenShot(this);
+        }
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
@@ -432,7 +439,12 @@ suite('Kernel Execution @kernelCore', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0]), getOSType(), true),
+            areInterpreterPathsSame(
+                Uri.file(path.dirname(getNormalizedInterpreterPath(Uri.file(sysExecutable)).fsPath)),
+                Uri.file(pathValue[0]),
+                getOSType(),
+                true
+            ),
             `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable}). Path Output ${pathOutput} and Exec Output ${execOutput}`
         );
     });

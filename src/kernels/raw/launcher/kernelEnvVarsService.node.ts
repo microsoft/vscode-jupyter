@@ -158,6 +158,11 @@ export class KernelEnvironmentVariablesService {
             this.envVarsService.mergeVariables(kernelEnv, mergedVars); // kernels vars win over interpreter.
             this.envVarsService.mergeVariables(customEnvVars, mergedVars); // custom vars win over all.
         }
+
+        traceVerbose(
+            `Kernel Env Variables for ${kernelSpec.specFile || kernelSpec.name}, PATH value is ${mergedVars.PATH}`
+        );
+
         return mergedVars;
     }
 }
