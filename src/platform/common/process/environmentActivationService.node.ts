@@ -20,7 +20,7 @@ import { swallowExceptions } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
-import { logValue, traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../logging';
+import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
 import { GlobalPythonSiteService } from './globalPythonSiteService.node';
