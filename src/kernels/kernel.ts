@@ -250,9 +250,9 @@ abstract class BaseKernel implements IBaseKernel {
                 this._interruptPromise = undefined;
             }
         } finally {
-            await Promise.all(Array.from(this.hooks.get('interruptCompleted') || new Set<Hook>()).map((h) => h())).catch(
-                noop
-            );
+            await Promise.all(
+                Array.from(this.hooks.get('interruptCompleted') || new Set<Hook>()).map((h) => h())
+            ).catch(noop);
         }
 
         traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
