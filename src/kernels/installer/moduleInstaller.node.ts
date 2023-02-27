@@ -19,6 +19,7 @@ import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } fr
 import { translateProductToModule } from './utils';
 import { EOL } from 'os';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../errors/packageNotInstalledWindowsLongPathNotEnabledError';
+import { splitLines } from '../../platform/common/helpers';
 
 export type ExecutionInstallArgs = {
     args: string[];
@@ -156,8 +157,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                                 couldNotInstallErr &&
                                 couldNotInstallErr.includes('https://pip.pypa.io/warnings/enable-long-paths')
                             ) {
-                                couldNotInstallErr = couldNotInstallErr
-                                    .splitLines({ trim: true, removeEmptyEntries: true })
+                                couldNotInstallErr = splitLines(couldNotInstallErr, {
+                                    trim: true,
+                                    removeEmptyEntries: true
+                                })
                                     .filter((line) => !line.startsWith('[notice]'))
                                     .join(EOL);
                                 deferred.reject(

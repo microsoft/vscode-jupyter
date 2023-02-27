@@ -15,6 +15,7 @@ import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
 import { DataScience } from './utils/localize';
+import { splitLines } from './helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -370,7 +371,7 @@ export function parseForComments(
 export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
-        str.splitLines({ trim: false, removeEmptyEntries: false }),
+        splitLines(str, { trim: false, removeEmptyEntries: false }),
         (_s) => {
             // Do nothing
         },
@@ -418,7 +419,7 @@ export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
 }
 
 export function removeLinesFromFrontAndBack(code: string | string[]): string {
-    const lines = Array.isArray(code) ? code : code.splitLines({ trim: false, removeEmptyEntries: false });
+    const lines = Array.isArray(code) ? code : splitLines(code, { trim: false, removeEmptyEntries: false });
     return removeLinesFromFrontAndBackNoConcat(lines).join('\n');
 }
 

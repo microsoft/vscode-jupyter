@@ -11,12 +11,6 @@
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare interface String {
     /**
-     * Split a string using the cr and lf characters and return them as an array.
-     * By default lines are trimmed and empty lines are removed.
-     * @param {SplitLinesOptions=} splitOptions - Options used for splitting the string.
-     */
-    splitLines(splitOptions?: { trim: boolean; removeEmptyEntries?: boolean }): string[];
-    /**
      * Appropriately formats a string so it can be used as an argument for a command in a shell.
      * E.g. if an argument contains a space, then it will be enclosed within double quotes.
      */

@@ -78,6 +78,7 @@ import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 import { KernelController } from '../kernels/kernelController';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
+import { splitLines } from '../platform/common/helpers';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -574,7 +575,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         this.updateOwners(fileUri);
 
         // Code may have markdown inside of it, if so, split into two cells
-        const split = code.splitLines({ trim: false });
+        const split = splitLines(code, { trim: false });
         const matcher = new CellMatcher(this.configuration.getSettings(fileUri));
         let firstNonMarkdown = -1;
         if (matcher.isMarkdown(split[0])) {
@@ -793,7 +794,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         const settings = this.configuration.getSettings(this.owningResource);
         const isMarkdown = this.cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
-            ? generateMarkdownFromCodeLines(code.splitLines()).join('')
+            ? generateMarkdownFromCodeLines(splitLines(code)).join('')
             : generateInteractiveCode(code, settings, this.cellMatcher);
         const interactiveWindowCellMarker = this.cellMatcher.getFirstMarker(code);
 

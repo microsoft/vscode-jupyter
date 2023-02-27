@@ -17,6 +17,7 @@ import {
 } from '../../platform/common/platform/fileUtils.node';
 import { isTestExecution } from '../../platform/common/constants';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
+import { splitLines } from '../../platform/common/helpers';
 
 /**
  * Global virtual env dir for a project is named as:
@@ -207,7 +208,7 @@ export class Poetry {
          */
         const activated = '(Activated)';
         const res = await Promise.all(
-            result.stdout.splitLines().map(async (line) => {
+            splitLines(result.stdout).map(async (line) => {
                 if (line.endsWith(activated)) {
                     line = line.slice(0, -activated.length);
                 }

@@ -4,6 +4,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { generateCells } from '../../interactive-window/editor-integration/cellFactory';
+import { splitLines } from '../../platform/common/helpers';
 import { removeLinesFromFrontAndBack, stripComments } from '../../platform/common/utils';
 
 /* eslint-disable  */
@@ -154,7 +155,7 @@ class Pizza(object):
         nonComments = stripComments(multilineTwo);
         assert.equal(nonComments, '', 'Multline comment is not being stripped');
         nonComments = stripComments(multilineQuoteInFunc);
-        assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
+        assert.equal(splitLines(nonComments).length, 6, 'Splitting quote in func wrong number of lines');
     });
 
     test('Line removal', () => {

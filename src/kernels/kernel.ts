@@ -22,7 +22,7 @@ import {
 } from '../platform/common/constants';
 import { IApplicationShell } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { disposeAllDisposables, splitLines } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
@@ -874,7 +874,7 @@ abstract class BaseKernel implements IBaseKernel {
             traceVerbose(`Initialize matplotlib for ${getDisplayPath(this.resourceUri || this.uri)}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
-            results.push(...matplotInit.splitLines({ trim: false }));
+            results.push(...splitLines(matplotInit, { trim: false }));
 
             // TODO: This must be joined with the previous request (else we send two separate requests unnecessarily).
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
@@ -890,7 +890,7 @@ abstract class BaseKernel implements IBaseKernel {
 
         // Add in SVG to the figure formats if needed
         if (this.kernelSettings.generateSVGPlots) {
-            results.push(...CodeSnippets.AppendSVGFigureFormat.splitLines({ trim: false }));
+            results.push(...splitLines(CodeSnippets.AppendSVGFigureFormat, { trim: false }));
             traceVerbose('Add SVG to matplotlib figure formats');
         }
 
@@ -909,7 +909,7 @@ abstract class BaseKernel implements IBaseKernel {
         if (setting) {
             // Cleanup the line feeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
             const cleanedUp = setting.replace(/\\n/g, '\n');
-            return cleanedUp.splitLines({ trim: false });
+            return splitLines(cleanedUp, { trim: false });
         }
         return [];
     }

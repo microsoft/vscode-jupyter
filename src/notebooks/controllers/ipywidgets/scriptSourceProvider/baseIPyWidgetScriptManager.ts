@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { disposeAllDisposables, splitLines } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../../platform/logging';
@@ -66,7 +66,7 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
     // We cannot eval as thats dangerous, and we cannot use JSON.parse either as it not JSON.
     // Lets just extract what we need.
     configStr = stripComments(configStr, { language: 'javascript' });
-    configStr = configStr.splitLines({ trim: true, removeEmptyEntries: true }).join('');
+    configStr = splitLines(configStr, { trim: true, removeEmptyEntries: true }).join('');
     // Now that we have just valid JS, extract contents between the third '{' and corresponding ending '}'
     const mappings = configStr
         .split('{')[3]
