@@ -54,7 +54,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../kernelFinder';
-import { PreferredRemoteKernelIdProvider } from '../../jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../jupyter/connection/preferredRemoteKernelIdProvider';
 import { IJupyterServerUriStorage } from '../../jupyter/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';

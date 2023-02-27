@@ -5,10 +5,10 @@ import { anything, capture, instance, mock, verify } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../platform/common/application/commandManager';
 import { ICommandManager } from '../../../platform/common/application/types';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import { Commands } from '../../../platform/common/constants';
 import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelectorCommand';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/connection/serverUriStorage';
 
 /* eslint-disable  */
 suite('Server Selector Command', () => {

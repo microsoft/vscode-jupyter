@@ -15,7 +15,7 @@ import { RegExpValues } from '../../../platform/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
-import { getJupyterConnectionDisplayName } from './helpers';
+import { getJupyterConnectionDisplayName } from '../helpers';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';

@@ -16,7 +16,7 @@ import {
 } from './kernels/types';
 // eslint-disable-next-line
 import { IExportedKernelService } from './standalone/api/extension';
-import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
+import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';

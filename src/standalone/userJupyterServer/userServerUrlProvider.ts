@@ -14,9 +14,9 @@ import {
     Uri,
     window
 } from 'vscode';
-import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
-import { validateSelectJupyterURI } from '../../kernels/jupyter/serverSelector';
+import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUri,
     IJupyterServerUriStorage,

@@ -7,7 +7,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { waitForCondition } from '../../platform/common/utils/async';

@@ -14,7 +14,7 @@ import {
 } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import { IControllerRegistration, IVSCodeNotebookController } from '../types';
 import {
     IMultiStepInput,

@@ -23,9 +23,9 @@ import { MockEncryptedStorage } from '../mockEncryptedStorage';
 import {
     JupyterServerUriStorage,
     mementoKeyToIndicateIfConnectingToLocalKernelsOnly
-} from '../../../kernels/jupyter/launcher/serverUriStorage';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
+} from '../../../kernels/jupyter/connection/serverUriStorage';
+import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
+import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/connection/jupyterUriProviderRegistration';
 import { Settings } from '../../../platform/common/constants';
 import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHandler';
 import {
@@ -36,7 +36,7 @@ import {
     KernelPickerType
 } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
+import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { noop } from '../../../platform/common/utils/misc';
 

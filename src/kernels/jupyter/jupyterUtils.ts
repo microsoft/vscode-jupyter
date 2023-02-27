@@ -7,7 +7,7 @@ import { IApplicationShell, IWorkspaceService } from '../../platform/common/appl
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
 import { IJupyterServerUri, JupyterServerUriHandle } from './types';
-import { getJupyterConnectionDisplayName } from './launcher/helpers';
+import { getJupyterConnectionDisplayName } from './helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';

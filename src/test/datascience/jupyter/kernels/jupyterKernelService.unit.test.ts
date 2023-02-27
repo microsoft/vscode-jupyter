@@ -17,7 +17,7 @@ import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import * as path from '../../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelService.node';
+import { JupyterKernelService } from '../../../../kernels/jupyter/session/jupyterKernelService.node';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { DisplayOptions } from '../../../../kernels/displayOptions';
 import { IWatchableJupyterSettings } from '../../../../platform/common/types';

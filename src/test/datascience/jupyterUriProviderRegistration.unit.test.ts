@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { Extensions } from '../../platform/common/application/extensions.node';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
-import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
+import { JupyterUriProviderRegistration } from '../../kernels/jupyter/connection/jupyterUriProviderRegistration';
 import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '../../kernels/jupyter/types';
 import { IDisposable } from '../../platform/common/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';

@@ -3,10 +3,10 @@
 
 import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import * as path from '../../platform/vscode-path/path';
-import * as uriPath from '../../platform/vscode-path/resources';
+import * as path from '../../../platform/vscode-path/path';
+import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Uri } from 'vscode';
-import { Cancellation } from '../../platform/common/cancellation';
+import { Cancellation } from '../../../platform/common/cancellation';
 import {
     traceInfo,
     traceVerbose,
@@ -14,15 +14,15 @@ import {
     traceError,
     traceWarning,
     traceInfoIfCI
-} from '../../platform/logging';
-import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { JupyterKernelDependencyError } from '../errors/jupyterKernelDependencyError';
-import { cleanEnvironment } from '../helpers';
-import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
+} from '../../../platform/logging';
+import { getDisplayPath, getFilePath } from '../../../platform/common/platform/fs-paths';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+import { Resource, ReadWrite, IDisplayOptions } from '../../../platform/common/types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { JupyterKernelDependencyError } from '../../errors/jupyterKernelDependencyError';
+import { cleanEnvironment } from '../../helpers';
+import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
 import {
     IJupyterKernelSpec,
     IKernelDependencyService,
@@ -30,13 +30,13 @@ import {
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse,
     LocalKernelConnectionMetadata
-} from '../types';
-import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { serializePythonEnvironment } from '../../platform/api/pythonApi';
-import { IJupyterKernelService } from './types';
-import { arePathsSame } from '../../platform/common/platform/fileUtils';
-import { KernelEnvironmentVariablesService } from '../raw/launcher/kernelEnvVarsService.node';
-import { isKernelLaunchedViaLocalPythonIPyKernel } from '../helpers.node';
+} from '../../types';
+import { JupyterKernelSpec } from '../jupyterKernelSpec';
+import { serializePythonEnvironment } from '../../../platform/api/pythonApi';
+import { IJupyterKernelService } from '../types';
+import { arePathsSame } from '../../../platform/common/platform/fileUtils';
+import { KernelEnvironmentVariablesService } from '../../raw/launcher/kernelEnvVarsService.node';
+import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 
 /**
  * Responsible for registering and updating kernels in a non ZMQ situation (kernel specs)

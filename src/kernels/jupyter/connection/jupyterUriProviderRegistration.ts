@@ -3,21 +3,27 @@
 
 import { inject, injectable, named } from 'inversify';
 import { EventEmitter, Memento } from 'vscode';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
-import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../../platform/common/types';
-import { swallowExceptions } from '../../platform/common/utils/decorators';
-import * as localize from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
-import { InvalidRemoteJupyterServerUriHandleError } from '../errors/invalidRemoteJupyterServerUriHandleError';
+import {
+    GLOBAL_MEMENTO,
+    IDisposable,
+    IDisposableRegistry,
+    IExtensions,
+    IMemento
+} from '../../../platform/common/types';
+import { swallowExceptions } from '../../../platform/common/utils/decorators';
+import * as localize from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
+import { InvalidRemoteJupyterServerUriHandleError } from '../../errors/invalidRemoteJupyterServerUriHandleError';
 import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper';
-import { computeServerId, generateUriFromRemoteProvider } from './jupyterUtils';
+import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     JupyterServerUriHandle
-} from './types';
+} from '../types';
 
 const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 

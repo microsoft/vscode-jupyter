@@ -7,7 +7,7 @@ import { ICommandManager } from '../platform/common/application/types';
 import { Commands } from '../platform/common/constants';
 import { IDisposable } from '../platform/common/types';
 import { traceInfo } from '../platform/logging';
-import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
+import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../kernels/jupyter/connection/serverSelector';
 import { IJupyterServerUriStorage } from '../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { noop } from '../platform/common/utils/misc';

@@ -10,7 +10,7 @@ import { registerInstallerTypes } from './installer/serviceRegistry.node';
 import { KernelDependencyService } from './kernelDependencyService.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
-import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
 import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsService.node';
 import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
 import { HostRawNotebookProvider } from './raw/session/hostRawNotebookProvider.node';
@@ -52,7 +52,7 @@ import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { RemoteJupyterServerMruUpdate } from './remoteJupyterServerMruUpdate';
+import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);

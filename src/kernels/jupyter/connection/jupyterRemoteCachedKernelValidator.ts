@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { traceWarning } from '../../platform/logging';
-import { LiveRemoteKernelConnectionMetadata } from '../types';
-import { extractJupyterServerHandleAndId } from './jupyterUtils';
+import { traceWarning } from '../../../platform/logging';
+import { LiveRemoteKernelConnectionMetadata } from '../../types';
+import { extractJupyterServerHandleAndId } from '../jupyterUtils';
 import {
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriStorage,
     IJupyterUriProviderRegistration,
     ILiveRemoteKernelConnectionUsageTracker
-} from './types';
+} from '../types';
 
 /**
  * Used to verify remote jupyter connections from 3rd party URIs are still valid.
