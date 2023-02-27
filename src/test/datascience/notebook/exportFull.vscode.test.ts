@@ -34,6 +34,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { CodeSnippets, Identifiers } from '../../../platform/common/constants';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { format } from '../../../platform/common/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -223,7 +224,7 @@ suite('Export @export', function () {
         const prefix = DataScience.instructionComments(defaultCellMarker);
         let expectedContents = output.stdout;
         if (expectedContents.includes('get_ipython')) {
-            expectedContents = CodeSnippets.ImportIPython.format(defaultCellMarker, expectedContents);
+            expectedContents = format(CodeSnippets.ImportIPython, defaultCellMarker, expectedContents);
         }
         expectedContents = prefix.concat(expectedContents);
 

@@ -37,6 +37,7 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { TraceOptions } from '../../../platform/logging/types';
 import { getResourceType } from '../../../platform/common/utils';
+import { format } from '../../../platform/common/helpers';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -70,7 +71,7 @@ export class KernelLauncher implements IKernelLauncher {
             const port = await KernelLauncher.startPortPromise;
             traceVerbose(`Cleaning up port start file : ${port}`);
 
-            const filePath = path.join(os.tmpdir(), PortFormatString.format(port.toString()));
+            const filePath = path.join(os.tmpdir(), format(PortFormatString, port.toString()));
             await fsextra.remove(filePath);
         } catch (exc) {
             // If it fails it doesn't really matter. Just a temp file
@@ -86,7 +87,7 @@ export class KernelLauncher implements IKernelLauncher {
             while (result === 0 && portStart < 65_000) {
                 try {
                     // Try creating a file with the port in the name
-                    const filePath = path.join(os.tmpdir(), PortFormatString.format(portStart.toString()));
+                    const filePath = path.join(os.tmpdir(), format(PortFormatString, portStart.toString()));
                     await fsextra.open(filePath, 'wx');
 
                     // If that works, we have our port

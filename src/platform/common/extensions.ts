@@ -27,12 +27,6 @@ declare interface String {
      */
     fileToCommandArgument(): string;
     /**
-     * String.format() implementation.
-     * Tokens such as {0}, {1} will be replaced with corresponding positional arguments.
-     */
-    format(...args: string[]): string;
-
-    /**
      * String.trimQuotes implementation
      * Removes leading and trailing quotes from a string
      */
@@ -107,10 +101,3 @@ Promise.prototype.ignoreErrors = function <T>(this: Promise<T>) {
     // eslint-disable-next-line no-empty, @typescript-eslint/no-empty-function
     this.catch(() => {});
 };
-
-if (!String.prototype.format) {
-    String.prototype.format = function (this: string) {
-        const args = arguments;
-        return this.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
-    };
-}

@@ -27,11 +27,6 @@ declare interface String {
      */
     fileToCommandArgument(): string;
     /**
-     * String.format() implementation.
-     * Tokens such as {0}, {1} will be replaced with corresponding positional arguments.
-     */
-    format(...args: string[]): string;
-    /**
      * String.trimQuotes implementation
      * Removes leading and trailing quotes from a string
      */

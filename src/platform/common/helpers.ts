@@ -15,3 +15,11 @@ export function disposeAllDisposables(disposables: IDisposable[] = []) {
         }
     }
 }
+
+/**
+ * String.format() implementation.
+ * Tokens such as {0}, {1} will be replaced with corresponding positional arguments.
+ */
+export function format(value: string, ...args: string[]) {
+    return value.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
+}
