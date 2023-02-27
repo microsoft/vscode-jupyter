@@ -7,6 +7,7 @@ import { DataScience } from '../common/utils/localize';
 import { JupyterConnectError } from './jupyterConnectError';
 import { BaseError } from './types';
 import * as path from '../../platform/vscode-path/resources';
+import { splitLines } from '../common/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
@@ -444,8 +445,7 @@ export function analyzeKernelErrors(
     const noModule = 'No module named'.toLowerCase();
     const isNotAPackage = `is not a package`.toLowerCase();
     if (stdErr.includes(noModule) && !isNotAPackage) {
-        const line = stdErrOrStackTrace
-            .splitLines()
+        const line = splitLines(stdErrOrStackTrace)
             .map((line) => line.trim())
             .filter((line) => line.length)
             .find((line) => line.toLowerCase().includes(noModule));
@@ -460,8 +460,7 @@ export function analyzeKernelErrors(
             };
         }
     } else if (stdErr.includes(noModule) && isNotAPackage) {
-        const line = stdErrOrStackTrace
-            .splitLines()
+        const line = splitLines(stdErrOrStackTrace)
             .map((line) => line.trim())
             .filter((line) => line.length)
             .find((line) => line.toLowerCase().includes(noModule));
@@ -544,8 +543,7 @@ export function analyzeKernelErrors(
     }
     if (error instanceof JupyterConnectError) {
         // Get the last error message in the stack trace.
-        let errorMessage = stdErrOrStackTrace
-            .splitLines()
+        let errorMessage = splitLines(stdErrOrStackTrace)
             .map((line) => line.trim())
             .reverse()
             .find((line) => line.toLowerCase().includes('error: '));
@@ -555,14 +553,12 @@ export function analyzeKernelErrors(
         let link: string | undefined;
         let reason = KernelFailureReason.jupyterStartFailure;
         // Some times the error message is either in the message or the stderr.
-        let pythonError = error.message
-            .splitLines({ removeEmptyEntries: true, trim: true })
+        let pythonError = splitLines(error.message, { removeEmptyEntries: true, trim: true })
             .reverse()
             .find((item) => item.toLowerCase().includes('error: '));
         pythonError =
             pythonError ||
-            (error.stdErr || '')
-                .splitLines({ removeEmptyEntries: true, trim: true })
+            splitLines(error.stdErr || '', { removeEmptyEntries: true, trim: true })
                 .reverse()
                 .find((item) => item.toLowerCase().includes('error: '));
         if (stdErr.includes(errorMessageDueToOutdatedTraitlets.toLowerCase())) {
@@ -667,8 +663,7 @@ export function createOutputWithErrorMessageForDisplay(errorMessage: string) {
         }
     }
     // Ensure all lines are colored red as errors (except for lines containing hyperlinks).
-    const stack = errorMessage
-        .splitLines({ removeEmptyEntries: false, trim: false })
+    const stack = splitLines(errorMessage, { removeEmptyEntries: false, trim: false })
         .map((line) => `\u001b[1;31m${line}`)
         .join('\n');
     return new NotebookCellOutput([

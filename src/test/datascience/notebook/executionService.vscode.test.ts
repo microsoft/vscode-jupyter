@@ -62,6 +62,7 @@ import { IKernel, IKernelProvider, INotebookKernelExecution, NotebookCellRunStat
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
+import { splitLines } from '../../../platform/common/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -176,7 +177,7 @@ suite('Kernel Execution @kernelCore', function () {
         await waitForCondition(
             () => {
                 const output = getCellOutputs(cell);
-                const lines = output.splitLines({ trim: false, removeEmptyEntries: true });
+                const lines = splitLines(output, { trim: false, removeEmptyEntries: true });
                 return lines.length === 3 && lines[0] === '\tho' && lines[1] === '\tho' && lines[2] === '\tho';
             },
             defaultNotebookTestTimeout,

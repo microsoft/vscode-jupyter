@@ -6,6 +6,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { INotebookKernelExecution } from '../../../kernels/types';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { Commands } from '../../../platform/common/constants';
+import { splitLines } from '../../../platform/common/helpers';
 import { IConfigurationService } from '../../../platform/common/types';
 import { parseForComments } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
@@ -123,7 +124,7 @@ export class RunByLineController implements IDebuggingDelegate {
 
         // This will save the code lines of the cell in lineList (so ignore comments and emtpy lines)
         // Its done to set the Run by Line breakpoint on the first code line
-        const textLines = this.debugCell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
+        const textLines = splitLines(this.debugCell.document.getText(), { trim: false, removeEmptyEntries: false });
         const lineList: number[] = [];
         parseForComments(
             textLines,

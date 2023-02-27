@@ -11,6 +11,7 @@ import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
 import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { splitLines } from '../../../platform/common/helpers';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
@@ -143,8 +144,7 @@ export class PythonKernelInterruptDaemon {
                         started = true;
                         resolve();
                     } else if (out.source === 'stdout' && out.out.includes('INTERRUPT:') && started) {
-                        out.out
-                            .splitLines({ trim: true, removeEmptyEntries: true })
+                        splitLines(out.out, { trim: true, removeEmptyEntries: true })
                             .filter((output) => output.includes('INTERRUPT:'))
                             .forEach((output) => {
                                 try {

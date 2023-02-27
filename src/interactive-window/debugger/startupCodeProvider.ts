@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { IKernel, isLocalConnection, IStartupCodeProvider, StartupCodePriority } from '../../kernels/types';
 import { InteractiveWindowView } from '../../platform/common/constants';
+import { splitLines } from '../../platform/common/helpers';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService, IExtensionContext, IsWebExtension } from '../../platform/common/types';
 
@@ -57,7 +58,7 @@ export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCo
             }
             const addRunCellHook = await this.addRunCellHookContents;
 
-            return addRunCellHook.splitLines({ trim: false });
+            return splitLines(addRunCellHook, { trim: false });
         }
         return [];
     }

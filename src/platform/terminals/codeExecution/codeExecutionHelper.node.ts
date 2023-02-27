@@ -14,6 +14,7 @@ import { CodeExecutionHelperBase } from './codeExecutionHelper';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { splitLines } from '../../common/helpers';
 
 /**
  * Node version of the code execution helper. Node version is necessary because we can't create processes in the web version.
@@ -77,12 +78,14 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
 
             const normalizedLines = parse(object.normalized);
             // Python will remove leading empty spaces, add them back.
-            const indexOfFirstNonEmptyLineInOriginalCode = code
-                .splitLines({ trim: true, removeEmptyEntries: false })
-                .findIndex((line) => line.length);
-            const indexOfFirstNonEmptyLineInNormalizedCode = normalizedLines
-                .splitLines({ trim: true, removeEmptyEntries: false })
-                .findIndex((line) => line.length);
+            const indexOfFirstNonEmptyLineInOriginalCode = splitLines(code, {
+                trim: true,
+                removeEmptyEntries: false
+            }).findIndex((line) => line.length);
+            const indexOfFirstNonEmptyLineInNormalizedCode = splitLines(normalizedLines, {
+                trim: true,
+                removeEmptyEntries: false
+            }).findIndex((line) => line.length);
             if (indexOfFirstNonEmptyLineInOriginalCode > indexOfFirstNonEmptyLineInNormalizedCode) {
                 // Some white space has been trimmed, add them back.
                 const trimmedLineCount =

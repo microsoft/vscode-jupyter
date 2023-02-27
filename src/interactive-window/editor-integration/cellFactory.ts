@@ -10,6 +10,7 @@ import { ICell, ICellRange, IJupyterSettings } from '../../platform/common/types
 import { noop } from '../../platform/common/utils/misc';
 import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/helpers';
 import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
+import { splitLines } from '../../platform/common/helpers';
 
 export function createCodeCell(): nbformat.ICodeCell;
 // eslint-disable-next-line @typescript-eslint/unified-signatures
@@ -84,7 +85,7 @@ export function generateCells(
     splitMarkdown: boolean
 ): ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
-    const split = code.splitLines({ trim: false });
+    const split = splitLines(code, { trim: false });
     const firstLine = split[0];
     const matcher = new CellMatcher(settings);
     const { magicCommandsAsComments = false } = settings || {};
@@ -179,7 +180,7 @@ export function generateCellsFromNotebookDocument(
         .filter((cell) => !cell.metadata.isInteractiveWindowMessageCell)
         .map((cell) => {
             // Reinstate cell structure + comments from cell metadata
-            let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
+            let code = splitLines(cell.document.getText(), { trim: false, removeEmptyEntries: false });
             if (cell.metadata.interactiveWindowCellMarker !== undefined) {
                 code.unshift(cell.metadata.interactiveWindowCellMarker + '\n');
             }

@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookCell, NotebookCellKind, NotebookDocument, Uri } from 'vscode';
+import { splitLines } from '../../platform/common/helpers';
 import { IFileSystem, IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { appendLineFeed } from '../../platform/common/utils';
@@ -62,7 +63,7 @@ export class ExportToPythonPlain implements IExport {
 
     // Convert one Code cell to a string
     private exportCodeCell(cell: NotebookCell): string {
-        let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
+        let code = splitLines(cell.document.getText(), { trim: false, removeEmptyEntries: false });
 
         // Check to see if we should comment out Shell / Magic commands
         const commentMagic = this.configuration.getSettings(cell.notebook.uri).pythonExportMethod === 'commentMagics';
@@ -72,7 +73,7 @@ export class ExportToPythonPlain implements IExport {
 
     // Convert one Markup cell to a string
     private exportMarkdownCell(cell: NotebookCell): string {
-        let code = cell.document.getText().splitLines({ trim: false, removeEmptyEntries: false });
+        let code = splitLines(cell.document.getText(), { trim: false, removeEmptyEntries: false });
 
         // Comment out lines of markdown cells
         return appendLineFeed(code, this.getEOL(), commentLine).join('');

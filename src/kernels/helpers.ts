@@ -33,6 +33,7 @@ import { deserializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
 import { IPlatformService } from '../platform/common/platform/types';
+import { splitLines } from '../platform/common/helpers';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -598,7 +599,7 @@ export async function executeSilently(
     code: string,
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
-    traceVerbose(`Executing silently Code (${session.status}) = ${code.substring(0, 100).splitLines().join('\\n')}`);
+    traceVerbose(`Executing silently Code (${session.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -615,7 +616,7 @@ export async function executeSilently(
     const outputs: nbformat.IOutput[] = [];
     request.onIOPub = (msg) => {
         if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-            traceInfoIfCI(`Got io pub message (stream), ${msg.content.text.substr(0, 100).splitLines().join('\\n')}`);
+            traceInfoIfCI(`Got io pub message (stream), ${splitLines(msg.content.text.substr(0, 100)).join('\\n')}`);
             if (
                 outputs.length > 0 &&
                 outputs[outputs.length - 1].output_type === 'stream' &&
@@ -667,7 +668,7 @@ export async function executeSilently(
     };
     await request.done;
 
-    const codeForLogging = code.substring(0, 100).splitLines().join('\\n');
+    const codeForLogging = splitLines(code.substring(0, 100)).join('\\n');
 
     // Handle any errors logged in the output if needed
     if (errorOptions) {

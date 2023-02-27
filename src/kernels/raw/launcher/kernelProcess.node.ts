@@ -61,6 +61,7 @@ import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import pidtree from 'pidtree';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
+import { splitLines } from '../../../platform/common/helpers';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -218,7 +219,7 @@ export class KernelProcess implements IKernelProcess {
                         //          warn(
                         ///         .../site-packages/traitlets/traitlets.py:2157: FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use '841dde17-f6aa-4ea7-9c02-b3bb414b28b3' instead of 'b"841dde17-f6aa-4ea7-9c02-b3bb414b28b3"'.
                         //          warn(
-                        const lines = output.out.splitLines({ trim: true, removeEmptyEntries: true });
+                        const lines = splitLines(output.out, { trim: true, removeEmptyEntries: true });
                         if (
                             lines.length === 4 &&
                             lines[0].endsWith(
@@ -245,7 +246,7 @@ export class KernelProcess implements IKernelProcess {
                         stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
                         // Strip the leading space, as we've removed some leading text.
                         stdout = stdout.trimStart();
-                        const lines = stdout.splitLines({ trim: true, removeEmptyEntries: true });
+                        const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
                         if (
                             lines.length === 2 &&
                             lines[0] === kernelOutputWithConnectionFile &&
