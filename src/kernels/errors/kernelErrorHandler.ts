@@ -582,8 +582,13 @@ function doesErrorHaveMarkdownLinks(message: string) {
     const markdownLinks = new RegExp(/\[([^\[]+)\]\((.*)\)/);
     return (markdownLinks.exec(message)?.length ?? 0) > 0;
 }
-function getCombinedErrorMessage(prefix?: string, message?: string) {
-    const errorMessage = [prefix || '', message || '']
+function getCombinedErrorMessage(prefix: string = '', message: string = '') {
+    // No point in repeating the same message twice.
+    // (strip the last character, as it could be a period).
+    if (prefix && message.startsWith(prefix.substring(0, prefix.length - 1))) {
+        prefix = '';
+    }
+    const errorMessage = [prefix, message]
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .join(' \n');
