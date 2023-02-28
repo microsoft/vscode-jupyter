@@ -69,7 +69,7 @@ export class GlobalPythonSiteService {
             let sitePath = Uri.file(output);
             if (this.platform.isWindows) {
                 sitePath = Uri.file(path.join(path.dirname(sitePath.fsPath), 'Scripts'));
-            } else if (sitePath.fsPath.endsWith('lib/python/site-packages')) {
+            } else if (sitePath.fsPath.endsWith('site-packages')) {
                 sitePath = Uri.file(path.join(path.dirname(path.dirname(path.dirname(sitePath.fsPath))), 'bin'));
             }
             if (!this.fs.exists(sitePath)) {
