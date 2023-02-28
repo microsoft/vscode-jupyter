@@ -174,8 +174,7 @@ export class JupyterPaths {
             try {
                 const factory = await this.pythonExecFactory.createActivatedEnvironment({
                     interpreter,
-                    resource,
-                    allowEnvironmentFetchExceptions: true
+                    resource
                 });
                 const pythonFile = Uri.joinPath(this.context.extensionUri, 'pythonFiles', 'printJupyterDataDir.py');
                 const result = await factory.exec([pythonFile.fsPath], {});

@@ -488,6 +488,7 @@ suite('JupyterKernelService', () => {
         const variablesService = new EnvironmentVariablesService(instance(fs));
         const customEnvVars = mock<ICustomEnvironmentVariablesProvider>();
         when(customEnvVars.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
+        when(customEnvVars.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve();
         settings = mock(JupyterSettings);
         const configService = mock(ConfigurationService);
         settings = mock(JupyterSettings);

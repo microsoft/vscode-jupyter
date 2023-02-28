@@ -183,7 +183,6 @@ export class InterpreterPackages implements IInterpreterPackages {
     )
     private async getPackageInformation({ interpreter }: { interpreter: PythonEnvironment }) {
         const service = await this.executionFactory.createActivatedEnvironment({
-            allowEnvironmentFetchExceptions: true,
             interpreter
         });
 

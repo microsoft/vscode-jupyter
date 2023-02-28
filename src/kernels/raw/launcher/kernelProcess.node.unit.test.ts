@@ -98,6 +98,7 @@ suite('kernel Process', () => {
         when(proc.stdout).thenReturn(eventEmitter as any);
         when(proc.stderr).thenReturn(eventEmitter as any);
         when(processServiceFactory.create(anything())).thenResolve(instance(processService));
+        when(processServiceFactory.create(anything(), anything())).thenResolve(instance(processService));
         when(kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything())).thenResolve();
         when(processService.execObservable(anything(), anything(), anything())).thenReturn({
             dispose: noop,
@@ -467,6 +468,7 @@ suite('Kernel Process', () => {
         pythonExecFactory = mock<IPythonExecutionFactory>();
         when(jupyterPaths.getRuntimeDir()).thenResolve();
         when(processExecutionFactory.create(anything())).thenResolve(instanceOfExecutionService);
+        when(processExecutionFactory.create(anything(), anything())).thenResolve(instanceOfExecutionService);
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: connectionFile });
         when(fs.writeFile(anything(), anything())).thenResolve();
         when(kernelEnvVarsService.getEnvironmentVariables(anything(), anything(), anything())).thenResolve({});

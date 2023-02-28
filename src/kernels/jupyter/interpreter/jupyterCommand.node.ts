@@ -28,7 +28,6 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         this.interpreterPromise = Promise.resolve(this._interpreter);
         this.pythonLauncher = this.interpreterPromise.then(async (interpreter) => {
             return pythonExecutionFactory.createActivatedEnvironment({
-                allowEnvironmentFetchExceptions: true,
                 interpreter
             });
         });

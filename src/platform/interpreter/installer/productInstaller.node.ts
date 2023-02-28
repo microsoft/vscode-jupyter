@@ -124,8 +124,7 @@ export class DataScienceInstaller {
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
                 .createActivatedEnvironment({
                     resource: undefined,
-                    interpreter,
-                    allowEnvironmentFetchExceptions: true
+                    interpreter
                 });
             return pythonProcess.isModuleInstalled(executableName);
         } else {

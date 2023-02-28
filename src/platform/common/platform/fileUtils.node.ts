@@ -19,7 +19,9 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 // processes
 
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+    const service = await internalServiceContainer
+        .get<IProcessServiceFactory>(IProcessServiceFactory)
+        .create(undefined);
     return service.shellExec(command, options);
 }
 

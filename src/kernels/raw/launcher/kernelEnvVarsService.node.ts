@@ -70,12 +70,17 @@ export class KernelEnvironmentVariablesService {
                 .getCustomEnvironmentVariables(resource, isPythonKernel ? 'RunPythonCode' : 'RunNonPythonCode', token)
                 .catch(noop),
             interpreter
-                ? this.envActivation.getActivatedEnvironmentVariables(resource, interpreter).catch<undefined>((ex) => {
-                      traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
-                      return undefined;
-                  })
+                ? this.envActivation
+                      .getActivatedEnvironmentVariables(resource, interpreter, token)
+                      .catch<undefined>((ex) => {
+                          traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
+                          return undefined;
+                      })
                 : undefined
         ]);
+        if (token?.isCancellationRequested) {
+            return;
+        }
         await trackKernelResourceInformation(resource, {
             capturedEnvVars: Object.keys(interpreterEnv || {}).length > 0
         });

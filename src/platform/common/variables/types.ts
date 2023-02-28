@@ -62,7 +62,8 @@ export interface ICustomEnvironmentVariablesProvider {
      */
     getEnvironmentVariables(
         resource: Resource,
-        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+        purpose: 'RunPythonCode' | 'RunNonPythonCode',
+        token?: CancellationToken
     ): Promise<EnvironmentVariables>;
     /**
      * Gets the env variables defined in the .env file.

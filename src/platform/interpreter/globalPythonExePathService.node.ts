@@ -66,7 +66,7 @@ export class GlobalPythonExecutablePathService {
      *
      */
     private async getUserSitePathImpl(interpreter: PythonEnvironment): Promise<Uri | undefined> {
-        const processService = await this.processFactory.create();
+        const processService = await this.processFactory.create(undefined);
         const delimiter = 'USER_BASE_VALUE';
         const valueToUse = this.platform.isWindows ? 'USER_SITE' : 'USER_BASE';
         // Add delimiters as sometimes, the python runtime can spit out warning/information messages as well.
