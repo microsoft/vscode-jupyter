@@ -19,7 +19,7 @@ jobs:
         env:
             ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
-          echo ::set-output name=result::$(node -p -e "['amunger', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens', 'kieferrm'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
+          echo result=$(node -p -e "['amunger', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens', 'kieferrm'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0") >> $GITHUB_OUTPUT
         shell: bash
       - name: Should we proceed
         id: proceed
@@ -28,25 +28,25 @@ jobs:
             ISSUE_ASSIGNEES: ${{toJson(github.event.issue.assignees)}}
             ISSUE_IS_INTERNAL: ${{steps.internal.outputs.result}}
         run: |
-          echo ::set-output name=result::$(node -p -e "process.env.ISSUE_IS_INTERNAL === '0' && JSON.parse(process.env.ISSUE_ASSIGNEES).length === 0 ? 1 : 0")
+          echo result=$(node -p -e "process.env.ISSUE_IS_INTERNAL === '0' && JSON.parse(process.env.ISSUE_ASSIGNEES).length === 0 ? 1 : 0") >> $GITHUB_OUTPUT
         shell: bash
       - name: Day of week
         if: steps.proceed.outputs.result == 1
         id: day
         run: |
-          echo ::set-output name=number::$(node -p -e "new Date().getDay()")
+          echo 'number::$(node -p -e "new Date().getDay()")' >> $GITHUB_OUTPUT
         shell: bash
       - name: Hour of day
         if: steps.proceed.outputs.result == 1
         id: hour
         run: |
-          echo ::set-output name=hour::$(node -p -e "(new Date().getUTCHours() - 7)%24")
+          echo 'hour::$(node -p -e "(new Date().getUTCHours() - 7)%24")' >> $GITHUB_OUTPUT
         shell: bash
       - name: Week Number
         if: steps.proceed.outputs.result == 1
         id: week
         run: |
-          echo ::set-output name=odd::$(node .github/workflows/week.js)
+          echo "odd=$(node .github/workflows/week.js)" >> $GITHUB_OUTPUT
         shell: bash
       - name: Print day and week
         if: steps.proceed.outputs.result == 1

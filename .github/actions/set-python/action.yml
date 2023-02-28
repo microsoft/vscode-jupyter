@@ -16,7 +16,7 @@ runs:
     - name: Output python path
       id: python_run
       shell: bash
-      run: python -c "import sys;print('::set-output name=python_path::' + sys.executable)"
+      run: python -c "import sys;print('python_path=' + sys.executable)" >> $GITHUB_OUTPUT
 
     - name: Push to environment
       shell: bash
