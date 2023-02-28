@@ -14,7 +14,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 import { translateProductToModule } from './utils';
 import { EOL } from 'os';
-import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../../kernels/errors/packageNotInstalledWindowsLongPathNotEnabledError';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { splitLines } from '../../common/helpers';
 import { IPythonExecutionFactory } from '../types.node';
 

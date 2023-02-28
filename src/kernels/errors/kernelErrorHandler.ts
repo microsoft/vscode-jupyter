@@ -66,7 +66,7 @@ import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from '.
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { PackageNotInstalledWindowsLongPathNotEnabledError } from './packageNotInstalledWindowsLongPathNotEnabledError';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
 
