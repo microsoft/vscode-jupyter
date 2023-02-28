@@ -5,43 +5,43 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
-import { IApplicationShell, IClipboard, IWorkspaceService } from '../../platform/common/application/types';
-import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
-import { DataScience } from '../../platform/common/utils/localize';
+import { IApplicationShell, IClipboard, IWorkspaceService } from '../../../platform/common/application/types';
+import { traceDecoratorError, traceError, traceWarning } from '../../../platform/logging';
+import { DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInputFactory,
     IMultiStepInput,
     InputStep,
     IQuickPickParameters,
     InputFlowAction
-} from '../../platform/common/utils/multiStepInput';
-import { capturePerfTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../telemetry';
+} from '../../../platform/common/utils/multiStepInput';
+import { capturePerfTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../../telemetry';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
     JupyterServerUriHandle,
     IJupyterServerUriEntry
-} from './types';
-import { IDataScienceErrorHandler } from '../errors/types';
+} from '../types';
+import { IDataScienceErrorHandler } from '../../errors/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
     IFeaturesManager,
     IsWebExtension,
     KernelPickerType
-} from '../../platform/common/types';
+} from '../../../platform/common/types';
 import {
     handleExpiredCertsError,
     handleSelfCertsError,
     computeServerId,
     generateUriFromRemoteProvider
-} from './jupyterUtils';
+} from '../jupyterUtils';
 import { JupyterConnection } from './jupyterConnection';
-import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
-import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
-import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
+import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
+import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
+import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 interface ISelectUriQuickPickItem extends QuickPickItem {

@@ -25,7 +25,7 @@ import {
     IJupyterServerUriStorage
 } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
-import { JupyterConnection } from '../../jupyterConnection';
+import { JupyterConnection } from '../../connection/jupyterConnection';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

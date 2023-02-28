@@ -20,7 +20,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { RemoteKernelConnectionHandler } from '../../../notebooks/controllers/remoteKernelConnectionHandler';
 import { Subject } from 'rxjs/Subject';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';

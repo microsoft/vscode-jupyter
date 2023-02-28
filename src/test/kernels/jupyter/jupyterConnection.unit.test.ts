@@ -7,7 +7,7 @@ import { assert, use } from 'chai';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
-import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
+import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,

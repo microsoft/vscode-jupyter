@@ -14,7 +14,7 @@ import chaiAsPromised from 'chai-as-promised';
 import {
     LiveRemoteKernelConnectionUsageTracker,
     mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources
-} from '../../../kernels/jupyter/liveRemoteKernelConnectionTracker';
+} from '../../../kernels/jupyter/connection/liveRemoteKernelConnectionTracker';
 import { LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
 import { computeServerId } from '../../../kernels/jupyter/jupyterUtils';
 import { waitForCondition } from '../../common.node';

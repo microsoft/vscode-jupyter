@@ -30,7 +30,7 @@ import {
     LocalKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { MockOutputChannel } from '../../mockClasses';
-import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
+import { JupyterKernelService } from '../../../kernels/jupyter/session/jupyterKernelService.node';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';

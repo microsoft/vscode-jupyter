@@ -10,7 +10,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/connection/serverUriStorage';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterExecution, INotebookServer } from '../../../kernels/jupyter/types';
 

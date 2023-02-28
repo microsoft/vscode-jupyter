@@ -2,25 +2,25 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IDisposableRegistry } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
-import { RemoteJupyterServerUriProviderError } from '../errors/remoteJupyterServerUriProviderError';
-import { BaseError } from '../../platform/errors/types';
-import { IJupyterConnection } from '../types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
+import { BaseError } from '../../../platform/errors/types';
+import { IJupyterConnection } from '../../types';
 import {
     computeServerId,
     createRemoteConnectionInfo,
     extractJupyterServerHandleAndId,
     generateUriFromRemoteProvider
-} from './jupyterUtils';
+} from '../jupyterUtils';
 import {
     IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration
-} from './types';
+} from '../types';
 
 /**
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.

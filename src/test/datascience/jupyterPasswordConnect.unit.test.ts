@@ -12,7 +12,7 @@ import { ConfigurationService } from '../../platform/common/configuration/servic
 import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
-import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';
+import { JupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
 import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.node';
 import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IDisposableRegistry } from '../../platform/common/types';

@@ -3,10 +3,10 @@
 
 import { injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { traceVerbose, logValue, ignoreLogging } from '../../platform/logging';
-import { Resource, IDisplayOptions } from '../../platform/common/types';
-import { KernelConnectionMetadata } from '../types';
-import { IJupyterKernelService } from './types';
+import { traceVerbose, logValue, ignoreLogging } from '../../../platform/logging';
+import { Resource, IDisplayOptions } from '../../../platform/common/types';
+import { KernelConnectionMetadata } from '../../types';
+import { IJupyterKernelService } from '../types';
 
 /**
  * Responsible for registering and updating kernels in a web situation

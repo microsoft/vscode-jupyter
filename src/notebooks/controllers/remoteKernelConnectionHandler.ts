@@ -9,7 +9,7 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { traceVerbose } from '../../platform/logging';
 import { IKernel, IKernelProvider, isLocalConnection } from '../../kernels/types';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { ILiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/types';
 
 /**

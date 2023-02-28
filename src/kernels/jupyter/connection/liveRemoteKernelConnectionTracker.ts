@@ -3,12 +3,12 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
-import { LiveRemoteKernelConnectionMetadata } from '../types';
-import { computeServerId } from './jupyterUtils';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage, ILiveRemoteKernelConnectionUsageTracker } from './types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { LiveRemoteKernelConnectionMetadata } from '../../types';
+import { computeServerId } from '../jupyterUtils';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, ILiveRemoteKernelConnectionUsageTracker } from '../types';
 
 export const mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources = 'removeKernelUrisAndSessionsUsedByResources';
 

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { IDisposableRegistry } from '../../platform/common/types';
-import * as localize from '../../platform/common/utils/localize';
-import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from './types';
+import { IDisposableRegistry } from '../../../platform/common/types';
+import * as localize from '../../../platform/common/utils/localize';
+import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '../types';
 
 /**
  * This class wraps an IJupyterUriProvider provided by another extension. It allows us to show

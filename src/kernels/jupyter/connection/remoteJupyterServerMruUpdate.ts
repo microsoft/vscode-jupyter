@@ -3,12 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
-import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { disposeAllDisposables } from '../platform/common/helpers';
-import { IDisposable, IDisposableRegistry } from '../platform/common/types';
-import { noop } from '../platform/common/utils/misc';
-import { IJupyterServerUriStorage } from './jupyter/types';
-import { IKernel, IKernelProvider, isRemoteConnection } from './types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { IJupyterServerUriStorage } from '../types';
+import { IKernel, IKernelProvider, isRemoteConnection } from '../../types';
 
 const INTERVAL_IN_SECONDS_TO_UPDATE_MRU = 60_000;
 @injectable()
