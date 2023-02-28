@@ -10,6 +10,7 @@ import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 import * as path from '../../vscode-path/path';
 import { translateProductToModule } from './utils';
 import { fileToCommandArgument, toCommandArgument } from '../../common/helpers';
+import { getPinnedPackages } from './pinnedPackages';
 
 /**
  * A Python module installer for a conda environment.
@@ -68,7 +69,7 @@ export class CondaInstaller extends ModuleInstaller {
     protected async getExecutionArgs(
         moduleName: string,
         interpreter: PythonEnvironment,
-        flags: ModuleInstallFlags = 0
+        flags: ModuleInstallFlags = ModuleInstallFlags.None
     ): Promise<ExecutionInstallArgs> {
         const condaService = this.serviceContainer.get<CondaService>(CondaService);
         const condaFile = await condaService.getCondaFile();
@@ -102,6 +103,7 @@ export class CondaInstaller extends ModuleInstaller {
             args.push('--force-reinstall');
         }
         args.push(moduleName);
+        args.push(...getPinnedPackages('conda', moduleName));
         args.push('-y');
         return {
             exe: condaFile,
