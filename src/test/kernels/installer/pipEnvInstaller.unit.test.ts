@@ -11,8 +11,8 @@ import { IWorkspaceService } from '../../../platform/common/application/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
-import { PipEnvInstaller } from '../../../kernels/installer/pipEnvInstaller.node';
-import * as pipEnvHelper from '../../../kernels/installer/pipenv.node';
+import { PipEnvInstaller } from '../../../platform/interpreter/installer/pipEnvInstaller.node';
+import * as pipEnvHelper from '../../../platform/interpreter/installer/pipenv.node';
 
 suite('PipEnv installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

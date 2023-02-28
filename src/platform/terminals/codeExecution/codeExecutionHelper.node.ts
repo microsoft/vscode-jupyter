@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 
 import { traceError } from '../../logging';
-import * as internalScripts from '../../common/process/internal/scripts/index.node';
+import * as internalScripts from '../../interpreter/internal/scripts/index.node';
 import { createDeferred } from '../../common/utils/async';
 import { getFilePath } from '../../common/platform/fs-paths';
 import { CodeExecutionHelperBase } from './codeExecutionHelper';

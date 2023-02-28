@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { CondaService } from '../../platform/common/process/condaService.node';
-import { IServiceContainer } from '../../platform/ioc/types';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { CondaService } from '../condaService.node';
+import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
-import * as path from '../../platform/vscode-path/path';
+import * as path from '../../vscode-path/path';
 import { translateProductToModule } from './utils';
-import { fileToCommandArgument, toCommandArgument } from '../../platform/common/helpers';
+import { fileToCommandArgument, toCommandArgument } from '../../common/helpers';
 
 /**
  * A Python module installer for a conda environment.

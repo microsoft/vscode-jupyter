@@ -7,16 +7,16 @@ import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
-import { IInstaller, Product } from '../../../kernels/installer/types';
+import { ProductInstaller } from '../../../platform/interpreter/installer/productInstaller.node';
+import { IInstaller, Product } from '../../../platform/interpreter/installer/types';
 import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import { Uri } from 'vscode';
 import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews/extension-side/dataviewer/constants';
+import { PythonExecutionFactory } from '../../../platform/interpreter/pythonExecutionFactory.node';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/interpreter/types.node';
 
 suite('DataViewerDependencyService (PythonEnvironment, Node)', () => {
     let dependencyService: DataViewerDependencyService;

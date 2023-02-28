@@ -10,10 +10,10 @@ import { Memento, Uri } from 'vscode';
 import { IConfigurationService, IOutputChannel } from '../../../platform/common/types';
 import { InterpreterPackages } from '../../../platform/interpreter/interpreterPackages.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
-import { BaseProductPathsService } from '../../../kernels/installer/productPath.node';
-import { ProductService } from '../../../kernels/installer/productService.node';
-import { Product, ProductType, IInstaller, IProductService } from '../../../kernels/installer/types';
+import { ProductInstaller } from '../../../platform/interpreter/installer/productInstaller.node';
+import { BaseProductPathsService } from '../../../platform/interpreter/installer/productPath.node';
+import { ProductService } from '../../../platform/interpreter/installer/productService.node';
+import { Product, ProductType, IInstaller, IProductService } from '../../../platform/interpreter/installer/types';
 import { getNamesAndValues } from '../../../test/utils/enum';
 
 use(chaiAsPromised);

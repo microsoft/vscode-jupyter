@@ -10,14 +10,14 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { InterpreterUri, IOutputChannel } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { DataScienceInstaller } from '../../../kernels/installer/productInstaller.node';
+import { DataScienceInstaller } from '../../../platform/interpreter/installer/productInstaller.node';
 import {
     Product,
     IInstallationChannelManager,
     InstallerResponse,
     IModuleInstaller,
     ModuleInstallerType
-} from '../../../kernels/installer/types';
+} from '../../../platform/interpreter/installer/types';
 import { sleep } from '../../core';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {

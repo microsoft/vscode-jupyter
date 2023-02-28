@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { getExecutable as getPythonExecutableCommand } from '../../common/process/internal/python.node';
+import { getExecutable as getPythonExecutableCommand } from '../../interpreter/internal/python.node';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 
 type ExecResult = {

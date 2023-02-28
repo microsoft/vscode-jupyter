@@ -6,7 +6,6 @@ import { IPythonExtensionChecker } from '../platform/api/types';
 import { Identifiers, isPreReleaseVersion } from '../platform/common/constants';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
-import { registerInstallerTypes } from './installer/serviceRegistry.node';
 import { KernelDependencyService } from './kernelDependencyService.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
@@ -150,7 +149,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
 
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
-    registerInstallerTypes(serviceManager);
     setSharedProperty('isInsiderExtension', isPreReleaseVersion());
 
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);

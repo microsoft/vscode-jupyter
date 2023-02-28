@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
-import { IPythonExecutionFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
+import { ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -12,6 +12,7 @@ import { Disposable, Uri } from 'vscode';
 import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { splitLines } from '../../../platform/common/helpers';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments

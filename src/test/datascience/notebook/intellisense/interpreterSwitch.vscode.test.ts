@@ -24,11 +24,11 @@ import {
     defaultNotebookTestTimeout
 } from '../helper.node';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
-import { IPythonExecutionFactory } from '../../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
+import { IPythonExecutionFactory } from '../../../../platform/interpreter/types.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Intellisense Switch interpreters in a notebook @lsp', function () {

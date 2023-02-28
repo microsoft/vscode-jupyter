@@ -2,26 +2,24 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from '../../common/platform/types';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IServiceContainer } from '../../ioc/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { IWorkspaceService } from '../application/types';
-import { traceDecoratorVerbose } from '../../logging';
-import { IDisposableRegistry } from '../types';
-import { ProcessService } from './proc.node';
+import { IFileSystem } from '../common/platform/types';
+import { IEnvironmentActivationService } from '../interpreter/activation/types';
+import { IServiceContainer } from '../ioc/types';
+import { PythonEnvironment } from '../pythonEnvironments/info';
+import { IWorkspaceService } from '../common/application/types';
+import { traceDecoratorVerbose } from '../logging';
+import { IDisposableRegistry } from '../common/types';
 import { createCondaEnv, createPythonEnv } from './pythonEnvironment.node';
 import { createPythonProcessService } from './pythonProcess.node';
+import { TraceOptions } from '../logging/types';
+import { ProcessService } from '../common/process/proc.node';
+import { IProcessLogger, IProcessServiceFactory, IProcessService } from '../common/process/types.node';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionFactoryCreationOptions,
-    IProcessLogger,
-    IProcessService,
-    IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService
 } from './types.node';
-import { TraceOptions } from '../../logging/types';
 
 /**
  * Creates IPythonExecutionService objects. They can be either process based or daemon based.

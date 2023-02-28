@@ -8,20 +8,15 @@ import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
-import { PythonExecutionFactory } from '../../../../platform/common/process/pythonExecutionFactory.node';
-import {
-    IPythonExecutionService,
-    ObservableExecutionResult,
-    Output
-} from '../../../../platform/common/process/types.node';
+import { ObservableExecutionResult, Output } from '../../../../platform/common/process/types.node';
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
-import { ProductNames } from '../../../../kernels/installer/productNames';
-import { Product } from '../../../../kernels/installer/types';
+import { ProductNames } from '../../../../platform/interpreter/installer/productNames';
+import { Product } from '../../../../platform/interpreter/installer/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants.node';
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
 import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
@@ -30,6 +25,8 @@ import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernel
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { JupyterServerInfo } from '../../../../kernels/jupyter/types';
 import { Uri } from 'vscode';
+import { PythonExecutionFactory } from '../../../../platform/interpreter/pythonExecutionFactory.node';
+import { IPythonExecutionService } from '../../../../platform/interpreter/types.node';
 use(chaiPromise);
 
 /* eslint-disable  */

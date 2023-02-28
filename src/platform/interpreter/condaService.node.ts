@@ -4,13 +4,13 @@
 import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
 import { Memento, Uri } from 'vscode';
-import { IPythonApiProvider } from '../../api/types';
-import { traceVerbose } from '../../logging';
-import { IFileSystem } from '../platform/types';
-import { GLOBAL_MEMENTO, IMemento } from '../types';
-import { createDeferredFromPromise } from '../utils/async';
-import * as path from '../../../platform/vscode-path/path';
-import { noop } from '../utils/misc';
+import { IPythonApiProvider } from '../api/types';
+import { traceVerbose } from '../logging';
+import { IFileSystem } from '../common/platform/types';
+import { GLOBAL_MEMENTO, IMemento } from '../common/types';
+import { createDeferredFromPromise } from '../common/utils/async';
+import * as path from '../vscode-path/path';
+import { noop } from '../common/utils/misc';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
 

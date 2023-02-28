@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as path from '../../platform/vscode-path/path';
-import { traceError } from '../../platform/logging';
-import { getEnvironmentVariable } from '../../platform/common/utils/platform.node';
-import { pathExists, readFile } from '../../platform/common/platform/fileUtils.node';
+import * as path from '../../vscode-path/path';
+import { traceError } from '../../logging';
+import { getEnvironmentVariable } from '../../common/utils/platform.node';
+import { pathExists, readFile } from '../../common/platform/fileUtils.node';
 import { Uri } from 'vscode';
-import { normCasePath, arePathsSame } from '../../platform/common/platform/fileUtils';
+import { normCasePath, arePathsSame } from '../../common/platform/fileUtils';
 
 function getSearchHeight() {
     // PIPENV_MAX_DEPTH tells pipenv the maximum number of directories to recursively search for

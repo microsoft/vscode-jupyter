@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IExtensionSyncActivationService } from '../activation/types';
-import { IDataFrameScriptGenerator, IExperimentService, IHttpClient, IVariableScriptGenerator } from '../common/types';
+import { IExperimentService, IHttpClient } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
 import { ClipboardService } from './application/clipboard';
@@ -49,8 +49,6 @@ import { registerTypes as processRegisterTypes } from './process/serviceRegistry
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
 import { TerminalManager } from './application/terminalManager.node';
-import { VariableScriptGenerator } from './variableScriptGenerator';
-import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -71,8 +69,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
-    serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
-    serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
 
     serviceManager.addSingleton<IFeaturesManager>(IFeaturesManager, FeatureManager);
 

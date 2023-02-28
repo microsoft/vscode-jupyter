@@ -13,8 +13,6 @@ import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess.node';
 import {
     IProcessService,
     IProcessServiceFactory,
-    IPythonExecutionFactory,
-    IPythonExecutionService,
     ObservableExecutionResult,
     Output
 } from '../../platform/common/process/types.node';
@@ -42,6 +40,7 @@ import { uriEquals } from './helpers';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { traceInfo } from '../../platform/logging';
 import { IPlatformService } from '../../platform/common/platform/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../platform/interpreter/types.node';
 
 suite('kernel Process', () => {
     let kernelProcess: KernelProcess;

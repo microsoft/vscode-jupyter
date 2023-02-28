@@ -7,11 +7,11 @@ import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { createPythonEnv } from '../../../platform/common/process/pythonEnvironment.node';
-import { createPythonProcessService } from '../../../platform/common/process/pythonProcess.node';
+import { createPythonEnv } from '../../../platform/interpreter/pythonEnvironment.node';
 import { IProcessService, StdErrError } from '../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../core';
+import { createPythonProcessService } from '../../../platform/interpreter/pythonProcess.node';
 
 use(chaiAsPromised);
 

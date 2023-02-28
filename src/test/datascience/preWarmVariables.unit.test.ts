@@ -6,7 +6,7 @@ import { EventEmitter, Uri } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { PythonExtensionChecker } from '../../platform/api/pythonApi';
 import { IPythonApiProvider } from '../../platform/api/types';
-import { CondaService } from '../../platform/common/process/condaService.node';
+import { CondaService } from '../../platform/interpreter/condaService.node';
 import { createDeferred } from '../../platform/common/utils/async';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';

@@ -9,7 +9,7 @@ import { ShellOptions, ExecutionResult } from '../../../platform/common/process/
 import * as platformApis from '../../../platform/common/utils/platform';
 import * as platformApisNode from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
-import { isPoetryEnvironment, Poetry } from '../../../kernels/installer/poetry.node';
+import { isPoetryEnvironment, Poetry } from '../../../platform/interpreter/installer/poetry.node';
 
 const testPoetryDir = path.join(TEST_LAYOUT_ROOT, 'poetry');
 const project1 = path.join(testPoetryDir, 'project1');

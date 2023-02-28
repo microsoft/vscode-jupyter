@@ -11,12 +11,12 @@ import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as helpers from '../../../kernels/helpers';
 import * as sinon from 'sinon';
 import { kernelGetPandasVersion } from '../../../webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
-import { IInstaller } from '../../../kernels/installer/types';
+import { IInstaller } from '../../../platform/interpreter/installer/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
-import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
+import { ProductInstaller } from '../../../platform/interpreter/installer/productInstaller.node';
 import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews/extension-side/dataviewer/constants';
+import { PythonExecutionFactory } from '../../../platform/interpreter/pythonExecutionFactory.node';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 suite('DataViewerDependencyService (IKernel, Node)', () => {
     let dependencyService: DataViewerDependencyService;

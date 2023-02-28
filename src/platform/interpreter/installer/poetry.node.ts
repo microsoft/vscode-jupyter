@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as path from '../../platform/vscode-path/path';
-import { traceVerbose, traceError } from '../../platform/logging';
-import { cache } from '../../platform/common/utils/decorators';
-import { getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform.node';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
+import * as path from '../../vscode-path/path';
+import { traceVerbose, traceError } from '../../logging';
+import { cache } from '../../common/utils/decorators';
+import { getOSType, getUserHomeDir, OSType } from '../../common/utils/platform.node';
+import { StopWatch } from '../../common/utils/stopWatch';
 import {
     getPythonSetting,
     shellExecute,
@@ -14,10 +14,10 @@ import {
     getEnvironmentDirFromPath,
     isVirtualenvEnvironment,
     pathExists
-} from '../../platform/common/platform/fileUtils.node';
-import { isTestExecution } from '../../platform/common/constants';
-import { isParentPath } from '../../platform/common/platform/fileUtils';
-import { splitLines } from '../../platform/common/helpers';
+} from '../../common/platform/fileUtils.node';
+import { isTestExecution } from '../../common/constants';
+import { isParentPath } from '../../common/platform/fileUtils';
+import { splitLines } from '../../common/helpers';
 
 /**
  * Global virtual env dir for a project is named as:

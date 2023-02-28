@@ -3,14 +3,14 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import * as path from '../../../platform/vscode-path/path';
-import { traceVerbose } from '../../logging';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { getDisplayPath } from '../platform/fs-paths.node';
-import { IFileSystem, IPlatformService } from '../platform/types';
-import { ResourceMap } from '../resourceMap';
-import { swallowExceptions } from '../utils/decorators';
-import { IProcessServiceFactory } from './types.node';
+import * as path from '../../platform/vscode-path/path';
+import { getDisplayPath } from '../common/platform/fs-paths';
+import { IFileSystem, IPlatformService } from '../common/platform/types';
+import { IProcessServiceFactory } from '../common/process/types.node';
+import { swallowExceptions } from '../common/utils/decorators';
+import { traceVerbose } from '../logging';
+import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
+import { ResourceMap } from '../vscode-path/map';
 
 @injectable()
 export class GlobalPythonSiteService {

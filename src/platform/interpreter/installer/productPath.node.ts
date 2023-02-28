@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import * as path from '../../platform/vscode-path/path';
+import * as path from '../../vscode-path/path';
 import { Uri } from 'vscode';
-import { IConfigurationService } from '../../platform/common/types';
-import { IServiceContainer } from '../../platform/ioc/types';
+import { IConfigurationService } from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { IInstaller, IProductPathService, ModuleNamePurpose, Product } from './types';
 
 /**

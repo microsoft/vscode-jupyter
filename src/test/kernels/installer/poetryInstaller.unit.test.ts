@@ -17,9 +17,9 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
 import { JupyterSettings } from '../../../platform/common/configSettings';
-import { PoetryInstaller } from '../../../kernels/installer/poetryInstaller.node';
-import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller.node';
-import { ModuleInstallFlags } from '../../../kernels/installer/types';
+import { PoetryInstaller } from '../../../platform/interpreter/installer/poetryInstaller.node';
+import { ExecutionInstallArgs } from '../../../platform/interpreter/installer/moduleInstaller.node';
+import { ModuleInstallFlags } from '../../../platform/interpreter/installer/types';
 
 suite('Module Installer - Poetry', () => {
     class TestInstaller extends PoetryInstaller {

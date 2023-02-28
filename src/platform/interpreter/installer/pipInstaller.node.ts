@@ -3,14 +3,14 @@
 
 import { inject, injectable } from 'inversify';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
-import * as path from '../../platform/vscode-path/path';
-import { IWorkspaceService } from '../../platform/common/application/types';
-import { _SCRIPTS_DIR } from '../../platform/common/process/internal/scripts/index.node';
-import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
+import * as path from '../../vscode-path/path';
+import { IWorkspaceService } from '../../common/application/types';
+import { _SCRIPTS_DIR } from '../internal/scripts/index.node';
 import { ModuleInstallerType, ModuleInstallFlags, Product, IInstaller } from './types';
-import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { IServiceContainer } from '../../platform/ioc/types';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { IServiceContainer } from '../../ioc/types';
 import { translateProductToModule } from './utils';
+import { IPythonExecutionFactory } from '../types.node';
 
 /**
  * Installer for pip. Default installer for most everything.

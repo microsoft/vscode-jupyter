@@ -4,10 +4,10 @@
 import { Memento, Uri } from 'vscode';
 import { ProductNames } from './productNames';
 import { Product } from './types';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { InterpreterUri } from '../../platform/common/types';
-import { isResource } from '../../platform/common/utils/misc';
-import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { InterpreterUri } from '../../common/types';
+import { isResource } from '../../common/utils/misc';
+import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 
 /**
  * Keep track of the fact that we attempted to install a package into an interpreter.

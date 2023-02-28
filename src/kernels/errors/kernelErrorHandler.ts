@@ -22,9 +22,9 @@ import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { Commands, Identifiers } from '../../platform/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
-import { translateProductToModule } from '../installer/utils';
-import { ProductNames } from '../installer/productNames';
-import { Product } from '../installer/types';
+import { translateProductToModule } from '../../platform/interpreter/installer/utils';
+import { ProductNames } from '../../platform/interpreter/installer/productNames';
+import { Product } from '../../platform/interpreter/installer/types';
 import {
     IKernelDependencyService,
     isLocalConnection,
@@ -66,7 +66,7 @@ import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from '.
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { PackageNotInstalledWindowsLongPathNotEnabledError } from './packageNotInstalledWindowsLongPathNotEnabledError';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
 

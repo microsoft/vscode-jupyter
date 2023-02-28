@@ -2,17 +2,17 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { IWorkspaceService } from '../../platform/common/application/types';
-import { InterpreterUri } from '../../platform/common/types';
-import { isResource } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { IWorkspaceService } from '../../common/application/types';
+import { InterpreterUri } from '../../common/types';
+import { isResource } from '../../common/utils/misc';
+import { IInterpreterService } from '../contracts';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
 import { isPipenvEnvironmentRelatedToFolder } from './pipenv.node';
-import { getInterpreterWorkspaceFolder } from '../helpers';
-import { IServiceContainer } from '../../platform/ioc/types';
-import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { IServiceContainer } from '../../ioc/types';
+import { getFilePath } from '../../common/platform/fs-paths';
+import { getInterpreterWorkspaceFolder } from './helpers';
 
 export const pipenvName = 'pipenv';
 

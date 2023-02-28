@@ -23,8 +23,8 @@ import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTele
 import { IServiceContainer } from '../../platform/ioc/types';
 import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
-import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';
-import { Product } from '../../kernels/installer/types';
+import { clearInstalledIntoInterpreterMemento } from '../../platform/interpreter/installer/productInstaller';
+import { Product } from '../../platform/interpreter/installer/types';
 import { INotebookEditorProvider } from '../types';
 import { selectKernel } from './kernelSelector';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';

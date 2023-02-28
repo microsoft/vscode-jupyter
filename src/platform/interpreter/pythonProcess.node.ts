@@ -1,11 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { PythonExecInfo } from '../../pythonEnvironments/exec';
-import { ErrorUtils } from '../../errors/errorUtils';
-import { ModuleNotInstalledError } from '../../errors/moduleNotInstalledError';
-import * as internalPython from './internal/python.node';
-import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types.node';
+import { PythonExecInfo } from '../pythonEnvironments/exec';
+import { ErrorUtils } from '../errors/errorUtils';
+import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
+import * as internalPython from '../interpreter/internal/python.node';
+import {
+    SpawnOptions,
+    ExecutionResult,
+    ObservableExecutionResult,
+    IProcessService
+} from '../common/process/types.node';
 
 /**
  * IProcessService (like) that is python based. Starting arg isn't necessary when python is used.

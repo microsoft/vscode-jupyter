@@ -14,7 +14,7 @@ import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platfo
 import { traceDecoratorVerbose, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
+import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -38,6 +38,7 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { TraceOptions } from '../../../platform/logging/types';
 import { getResourceType } from '../../../platform/common/utils';
 import { format } from '../../../platform/common/helpers';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.

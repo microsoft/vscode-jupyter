@@ -5,14 +5,14 @@ import assert from 'assert';
 import { instance, mock, when } from 'ts-mockito';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { CondaService } from '../../../platform/common/process/condaService.node';
+import { CondaService } from '../../../platform/interpreter/condaService.node';
 import { IConfigurationService } from '../../../platform/common/types';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { CondaInstaller } from '../../../kernels/installer/condaInstaller.node';
-import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller.node';
-import { ModuleInstallFlags } from '../../../kernels/installer/types';
+import { CondaInstaller } from '../../../platform/interpreter/installer/condaInstaller.node';
+import { ExecutionInstallArgs } from '../../../platform/interpreter/installer/moduleInstaller.node';
+import { ModuleInstallFlags } from '../../../platform/interpreter/installer/types';
 import { Uri } from 'vscode';
 import { fileToCommandArgument } from '../../../platform/common/helpers';
 

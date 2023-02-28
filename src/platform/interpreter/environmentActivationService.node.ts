@@ -3,26 +3,26 @@
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { inject, injectable } from 'inversify';
-import * as path from '../../../platform/vscode-path/path';
-import { IWorkspaceService } from '../application/types';
-import { IDisposable, Resource } from '../types';
-import { ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../variables/types';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
-import { StopWatch } from '../utils/stopWatch';
-import { getDisplayPath } from '../platform/fs-paths';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IInterpreterService } from '../../interpreter/contracts';
-import { swallowExceptions } from '../utils/decorators';
-import { DataScience } from '../utils/localize';
-import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
-import { Telemetry } from '../constants';
-import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../../logging';
-import { TraceOptions } from '../../logging/types';
-import { serializePythonEnvironment } from '../../api/pythonApi';
+import * as path from '../vscode-path/path';
+import { IWorkspaceService } from '../common/application/types';
+import { IDisposable, Resource } from '../common/types';
+import { ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../common/variables/types';
+import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../telemetry';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
+import { StopWatch } from '../common/utils/stopWatch';
+import { getDisplayPath } from '../common/platform/fs-paths';
+import { IEnvironmentActivationService } from './activation/types';
+import { IInterpreterService } from './contracts';
+import { swallowExceptions } from '../common/utils/decorators';
+import { DataScience } from '../common/utils/localize';
+import { KernelProgressReporter } from '../progress/kernelProgressReporter';
+import { Telemetry } from '../common/constants';
+import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../logging';
+import { TraceOptions } from '../logging/types';
+import { serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonSiteService } from './globalPythonSiteService.node';
-import { noop } from '../utils/misc';
+import { noop } from '../common/utils/misc';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {

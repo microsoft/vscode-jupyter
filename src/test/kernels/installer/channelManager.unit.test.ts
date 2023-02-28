@@ -11,8 +11,8 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { Installer } from '../../../platform/common/utils/localize';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { InstallationChannelManager } from '../../../kernels/installer/channelManager.node';
-import { IModuleInstaller, Product } from '../../../kernels/installer/types';
+import { InstallationChannelManager } from '../../../platform/interpreter/installer/channelManager.node';
+import { IModuleInstaller, Product } from '../../../platform/interpreter/installer/types';
 import { Uri } from 'vscode';
 
 suite('InstallationChannelManager - getInstallationChannel()', () => {
