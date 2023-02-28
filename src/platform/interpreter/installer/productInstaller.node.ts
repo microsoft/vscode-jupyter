@@ -14,11 +14,11 @@ import {
     Product,
     ProductType
 } from './types';
-import { logValue, traceDecoratorVerbose } from '../../platform/logging';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { traceError } from '../../platform/logging';
-import { IPythonExecutionFactory, IProcessServiceFactory } from '../../platform/common/process/types.node';
+import { logValue, traceDecoratorVerbose } from '../../logging';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { traceError } from '../../logging';
+import { IProcessServiceFactory } from '../../common/process/types.node';
 import {
     IConfigurationService,
     IPersistentStateFactory,
@@ -26,17 +26,18 @@ import {
     IMemento,
     IOutputChannel,
     InterpreterUri
-} from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
-import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { InterpreterPackages } from '../../platform/interpreter/interpreterPackages.node';
-import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
-import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
-import { sleep } from '../../platform/common/utils/async';
+} from '../../common/types';
+import { noop } from '../../common/utils/misc';
+import { IServiceContainer } from '../../ioc/types';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { InterpreterPackages } from '../interpreterPackages.node';
+import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
+import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { sleep } from '../../common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';
 import { translateProductToModule } from './utils';
-import { IInterpreterPackages } from '../../platform/interpreter/types';
+import { IInterpreterPackages } from '../types';
+import { IPythonExecutionFactory } from '../types.node';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${await getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;

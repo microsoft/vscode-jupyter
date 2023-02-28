@@ -3,7 +3,7 @@
 
 import * as path from '../../platform/vscode-path/path';
 import { traceError } from '../../platform/logging';
-import { PythonEnvInfo } from '../../platform/common/process/internal/scripts/index.node';
+import { PythonEnvInfo } from '../../platform/interpreter/internal/scripts/index.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { parsePythonVersion } from '../../platform/pythonEnvironments/info/pythonVersion.node';

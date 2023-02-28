@@ -22,9 +22,9 @@ import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { Commands, Identifiers } from '../../platform/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
-import { translateProductToModule } from '../installer/utils';
-import { ProductNames } from '../installer/productNames';
-import { Product } from '../installer/types';
+import { translateProductToModule } from '../../platform/interpreter/installer/utils';
+import { ProductNames } from '../../platform/interpreter/installer/productNames';
+import { Product } from '../../platform/interpreter/installer/types';
 import {
     IKernelDependencyService,
     isLocalConnection,

@@ -2,24 +2,21 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
-import { IApplicationShell } from '../../platform/common/application/types';
-import { traceVerbose } from '../../platform/logging';
-import {
-    IProcessServiceFactory,
-    IPythonExecutionFactory,
-    ObservableExecutionResult
-} from '../../platform/common/process/types.node';
-import { createDeferred } from '../../platform/common/utils/async';
-import { Products } from '../../platform/common/utils/localize';
-import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
-import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
-import { IServiceContainer } from '../../platform/ioc/types';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { IApplicationShell } from '../../common/application/types';
+import { traceVerbose } from '../../logging';
+import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types.node';
+import { createDeferred } from '../../common/utils/async';
+import { Products } from '../../common/utils/localize';
+import { IEnvironmentVariablesService } from '../../common/variables/types';
+import { IEnvironmentActivationService } from '../activation/types';
+import { IServiceContainer } from '../../ioc/types';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 import { translateProductToModule } from './utils';
 import { EOL } from 'os';
-import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../errors/packageNotInstalledWindowsLongPathNotEnabledError';
-import { splitLines } from '../../platform/common/helpers';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../../kernels/errors/packageNotInstalledWindowsLongPathNotEnabledError';
+import { splitLines } from '../../common/helpers';
+import { IPythonExecutionFactory } from '../types.node';
 
 export type ExecutionInstallArgs = {
     args: string[];

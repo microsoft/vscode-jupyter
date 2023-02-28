@@ -8,7 +8,10 @@ import * as platformApis from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
 import * as fileUtilsCommon from '../../../platform/common/platform/fileUtils';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
-import { isPipenvEnvironmentRelatedToFolder, _getAssociatedPipfile } from '../../../kernels/installer/pipenv.node';
+import {
+    isPipenvEnvironmentRelatedToFolder,
+    _getAssociatedPipfile
+} from '../../../platform/interpreter/installer/pipenv.node';
 import { Uri } from 'vscode';
 
 suite('Pipenv helper', () => {

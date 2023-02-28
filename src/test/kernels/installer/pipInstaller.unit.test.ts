@@ -4,19 +4,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { assert, expect } from 'chai';
-import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../../platform/common/process/types.node';
+import { Output } from '../../../platform/common/process/types.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { PipInstaller } from '../../../kernels/installer/pipInstaller.node';
+import { PipInstaller } from '../../../platform/interpreter/installer/pipInstaller.node';
 import { CancellationTokenSource, Uri, WorkspaceConfiguration } from 'vscode';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { Product } from '../../../kernels/installer/types';
+import { Product } from '../../../platform/interpreter/installer/types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { noop } from '../../core';
 import { ChildProcess } from 'child_process';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/interpreter/types.node';
 
 suite('Pip installer', async () => {
     let serviceContainer: IServiceContainer;

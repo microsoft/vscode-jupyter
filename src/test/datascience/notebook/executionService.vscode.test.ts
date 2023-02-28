@@ -45,8 +45,8 @@ import {
     getDefaultKernelConnection
 } from './helper.node';
 import { isWeb, swallowExceptions } from '../../../platform/common/utils/misc';
-import { ProductNames } from '../../../kernels/installer/productNames';
-import { Product } from '../../../kernels/installer/types';
+import { ProductNames } from '../../../platform/interpreter/installer/productNames';
+import { Product } from '../../../platform/interpreter/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import {
     areInterpreterPathsSame,

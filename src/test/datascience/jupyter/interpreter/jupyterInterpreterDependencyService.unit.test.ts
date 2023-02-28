@@ -7,8 +7,8 @@ import { ApplicationShell } from '../../../../platform/common/application/applic
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
-import { ProductInstaller } from '../../../../kernels/installer/productInstaller.node';
-import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
+import { ProductInstaller } from '../../../../platform/interpreter/installer/productInstaller.node';
+import { IInstaller, Product, InstallerResponse } from '../../../../platform/interpreter/installer/types';
 import {
     JupyterCommandFactory,
     InterpreterJupyterKernelSpecCommand

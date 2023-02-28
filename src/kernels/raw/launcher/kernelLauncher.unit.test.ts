@@ -8,11 +8,7 @@ import * as sinon from 'sinon';
 import { KernelLauncher } from './kernelLauncher.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import {
-    IProcessServiceFactory,
-    IPythonExecutionFactory,
-    IPythonExecutionService
-} from '../../../platform/common/process/types.node';
+import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
@@ -24,6 +20,7 @@ import { PythonKernelConnectionMetadata } from '../../types';
 import { CancellationTokenSource, Disposable, EventEmitter, PortAutoForwardAction, Uri } from 'vscode';
 import { KernelProcess } from './kernelProcess.node';
 import { PortAttributesProviders } from '../port/portAttributeProvider.node';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/interpreter/types.node';
 
 suite('kernel Launcher', () => {
     const disposables: IDisposable[] = [];

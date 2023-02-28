@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
-import { getExecutablePath } from '../../pythonEnvironments/info/executable.node';
+import { buildPythonExecInfo, PythonExecInfo } from '../pythonEnvironments/exec';
+import { getExecutablePath } from '../pythonEnvironments/info/executable.node';
 import * as internalPython from './internal/python.node';
-import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
+import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from '../common/process/types.node';
 import { compare, SemVer } from 'semver';
-import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
-import { getFilePath } from '../platform/fs-paths';
+import type { PythonEnvironment as PyEnv } from '../pythonEnvironments/info';
+import { getFilePath } from '../common/platform/fs-paths';
 import { Uri } from 'vscode';
-import { IFileSystem } from '../platform/types';
-import { traceWarning } from '../../logging';
+import { IFileSystem } from '../common/platform/types';
+import { traceWarning } from '../logging';
 class PythonEnvironment {
     constructor(
         protected readonly interpreter: PyEnv,

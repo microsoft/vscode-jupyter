@@ -42,7 +42,6 @@ import {
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import {
     IProcessServiceFactory,
-    IPythonExecutionFactory,
     ObservableExecutionResult,
     IProcessService
 } from '../../../platform/common/process/types.node';
@@ -62,6 +61,7 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import pidtree from 'pidtree';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 import { splitLines } from '../../../platform/common/helpers';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =

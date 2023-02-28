@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
-import { CondaService } from '../../platform/common/process/condaService.node';
+import { CondaService } from '../../platform/interpreter/condaService.node';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';

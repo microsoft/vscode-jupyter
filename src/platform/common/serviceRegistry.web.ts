@@ -31,8 +31,8 @@ import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStep
 import { BrowserService } from './net/browser';
 import { DebugService } from './application/debugService';
 import { HttpClient } from './net/httpClient';
-import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
-import { VariableScriptGenerator } from './variableScriptGenerator';
+import { DataFrameScriptGenerator } from '../interpreter/dataFrameScriptGenerator';
+import { VariableScriptGenerator } from '../interpreter/variableScriptGenerator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, false);

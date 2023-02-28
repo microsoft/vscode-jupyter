@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { traceVerbose } from '../../../logging';
+import { traceVerbose } from '../../logging';
 
 // "python" contains functions corresponding to the various ways that
 // the extension invokes a Python executable internally.  Each function

@@ -3,7 +3,7 @@
 
 import { BaseError } from '../../platform/errors/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { Product } from '../installer/types';
+import { Product } from '../../platform/interpreter/installer/types';
 
 /**
  * Thrown when we fail to install a Package due to long path not being enabled on Windows. */

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from './platform/types';
-import { IDataFrameScriptGenerator, IExtensionContext } from './types';
+import { IFileSystem } from '../common/platform/types';
+import { IDataFrameScriptGenerator, IExtensionContext } from '../common/types';
 import { joinPath } from '../vscode-path/resources';
 import dedent from 'dedent';
 

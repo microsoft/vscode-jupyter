@@ -10,11 +10,11 @@ import { CancellationTokenSource, ExtensionContext, Memento, Uri } from 'vscode'
 import { CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { IFileSystem, IPlatformService } from '../../../../platform/common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../platform/common/process/types.node';
 import { IDisposable } from '../../../../platform/common/types';
 import { isWeb } from '../../../../platform/common/utils/misc';
 import { OSType } from '../../../../platform/common/utils/platform';
 import { ICustomEnvironmentVariablesProvider } from '../../../../platform/common/variables/types';
+import { IPythonExecutionService, IPythonExecutionFactory } from '../../../../platform/interpreter/types.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import * as path from '../../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants.node';
