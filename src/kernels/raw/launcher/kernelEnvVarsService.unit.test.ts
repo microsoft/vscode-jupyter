@@ -81,6 +81,9 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
+        when(envActivation.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({
+            PATH: 'foobar'
+        });
         when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
@@ -91,6 +94,9 @@ suite('Kernel Environment Variables Service', () => {
     test('Interpreter env variable trumps process', async () => {
         process.env['HELLO_VAR'] = 'process';
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            HELLO_VAR: 'new'
+        });
+        when(envActivation.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({
             HELLO_VAR: 'new'
         });
         when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();

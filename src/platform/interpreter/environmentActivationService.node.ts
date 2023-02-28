@@ -23,6 +23,7 @@ import { TraceOptions } from '../logging/types';
 import { serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
+import { CancellationToken } from 'vscode';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -50,26 +51,31 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @traceDecoratorVerbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
+        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const title = DataScience.activatingPythonEnvironment(
             interpreter.displayName || getDisplayPath(interpreter.uri)
         );
         return KernelProgressReporter.wrapAndReportProgress(resource, title, () =>
-            this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
+            this.getActivatedEnvironmentVariablesImpl(resource, interpreter, token)
         );
     }
     @traceDecoratorVerbose('Getting activated env variables impl', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
+        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
         const stopWatch = new StopWatch();
-        return this.getActivatedEnvironmentVariablesFromPython(resource, interpreter)
+        return this.getActivatedEnvironmentVariablesFromPython(resource, interpreter, token)
             .then((env) => {
+                if (token?.isCancellationRequested) {
+                    return;
+                }
                 traceVerbose(
                     `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms with ${
                         Object.keys(env || {}).length
@@ -94,7 +100,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @swallowExceptions('Get activated env variables from Python')
     public async getActivatedEnvironmentVariablesFromPython(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
+        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         resource = resource
             ? resource
@@ -128,7 +135,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     return undefined;
                 })
         );
-
+        if (token?.isCancellationRequested) {
+            return;
+        }
         const envType = interpreter.envType;
         sendTelemetryEvent(
             Telemetry.GetActivatedEnvironmentVariables,
@@ -181,6 +190,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
 
             const executablesPath = await this.globalExecPaths.getExecutablesPath(interpreter).catch(noop);
+            if (token?.isCancellationRequested) {
+                return;
+            }
+
             const pathValue = env.PATH || env.Path;
             const pathValues = pathValue ? pathValue.split(path.delimiter) : [];
             // First value in PATH is expected to be the directory of python executable.

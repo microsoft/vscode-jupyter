@@ -89,7 +89,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 // Args can be for a specific exe or for the interpreter. Both need to
                 // use an activated environment though
                 // For the exe, just figure out the environment variables.
-                const envVars = await activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, false);
+                const envVars = await activationHelper.getActivatedEnvironmentVariables(undefined, interpreter);
                 if (cancelTokenSource.token.isCancellationRequested) {
                     return;
                 }

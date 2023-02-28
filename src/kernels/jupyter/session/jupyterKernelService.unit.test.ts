@@ -575,6 +575,10 @@ suite('JupyterKernelService', () => {
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({
+            foo: 'bar',
+            [pathVariable]: `Path1${path.delimiter}Path2`
+        });
         when(fs.writeFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
@@ -591,6 +595,10 @@ suite('JupyterKernelService', () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '13')!;
         when(fs.exists(anything())).thenResolve(true);
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            foo: 'bar',
+            [pathVariable]: `Path1${path.delimiter}Path2`
+        });
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
@@ -611,6 +619,10 @@ suite('JupyterKernelService', () => {
         const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
         when(fs.exists(anything())).thenCall((f: Uri) => Promise.resolve(filesCreated.has(f.fsPath)));
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+            foo: 'bar',
+            [pathVariable]: `Path1${path.delimiter}Path2`
+        });
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
@@ -639,6 +651,10 @@ suite('JupyterKernelService', () => {
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({
+            foo: 'bar',
+            [pathVariable]: `Path1${path.delimiter}Path2`
+        });
         when(fs.writeFile(anything(), anything())).thenCall((f: Uri) => {
             filesCreated.add(f.fsPath);
             return Promise.resolve();
@@ -662,6 +678,7 @@ suite('JupyterKernelService', () => {
         let updateCount = 0;
         when(fs.exists(anything())).thenResolve(true);
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ foo: 'bar' });
+        when(appEnv.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({ foo: 'bar' });
         when(fs.writeFile(anything(), anything())).thenCall((f: Uri, c) => {
             if (f.fsPath.endsWith('.json')) {
                 const obj = JSON.parse(c);

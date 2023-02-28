@@ -15,7 +15,7 @@ import { IEnvironmentActivationService } from '../../../platform/interpreter/act
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 
@@ -48,31 +48,32 @@ export class KernelEnvironmentVariablesService {
     public async getEnvironmentVariables(
         resource: Resource,
         interpreter: PythonEnvironment | undefined,
-        kernelSpec: IJupyterKernelSpec
+        kernelSpec: IJupyterKernelSpec,
+        token?: CancellationToken
     ) {
         let kernelEnv = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
         const isPythonKernel = (kernelSpec.language || '').toLowerCase() === PYTHON_LANGUAGE;
         // If an interpreter was not explicitly passed in, check for an interpreter path in the kernelspec to use
         if (!interpreter && kernelSpec.interpreterPath) {
             interpreter = await this.interpreterService
-                .getInterpreterDetails(Uri.file(kernelSpec.interpreterPath))
+                .getInterpreterDetails(Uri.file(kernelSpec.interpreterPath), token)
                 .catch((ex) => {
                     traceError('Failed to fetch interpreter information for interpreter that owns a kernel', ex);
                     return undefined;
                 });
         }
-
+        if (token?.isCancellationRequested) {
+            return;
+        }
         let [customEnvVars, interpreterEnv] = await Promise.all([
             this.customEnvVars
-                .getCustomEnvironmentVariables(resource, isPythonKernel ? 'RunPythonCode' : 'RunNonPythonCode')
+                .getCustomEnvironmentVariables(resource, isPythonKernel ? 'RunPythonCode' : 'RunNonPythonCode', token)
                 .catch(noop),
             interpreter
-                ? this.envActivation
-                      .getActivatedEnvironmentVariables(resource, interpreter, false)
-                      .catch<undefined>((ex) => {
-                          traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
-                          return undefined;
-                      })
+                ? this.envActivation.getActivatedEnvironmentVariables(resource, interpreter).catch<undefined>((ex) => {
+                      traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
+                      return undefined;
+                  })
                 : undefined
         ]);
         await trackKernelResourceInformation(resource, {

@@ -62,8 +62,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(
             options.resource,
-            options.interpreter,
-            options.allowEnvironmentFetchExceptions
+            options.interpreter
         );
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         if (!hasEnvVars) {

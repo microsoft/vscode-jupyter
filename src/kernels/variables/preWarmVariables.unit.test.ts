@@ -58,6 +58,10 @@ suite('PreWarm Env Vars', () => {
             envActivated.reject(new Error('Environment Activated when it should not have been!'));
             return Promise.resolve();
         });
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenCall(() => {
+            envActivated.reject(new Error('Environment Activated when it should not have been!'));
+            return Promise.resolve();
+        });
 
         await activationService.activate();
 
@@ -67,6 +71,10 @@ suite('PreWarm Env Vars', () => {
         const envActivated = createDeferred<string>();
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);
         when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenCall(() => {
+            envActivated.reject(new Error('Environment Activated when it should not have been!'));
+            return Promise.resolve();
+        });
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenCall(() => {
             envActivated.reject(new Error('Environment Activated when it should not have been!'));
             return Promise.resolve();
         });
@@ -82,6 +90,10 @@ suite('PreWarm Env Vars', () => {
             envActivated.reject(new Error('Environment Activated when it should not have been!'));
             return Promise.resolve();
         });
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenCall(() => {
+            envActivated.reject(new Error('Environment Activated when it should not have been!'));
+            return Promise.resolve();
+        });
 
         await activationService.activate();
 
@@ -91,6 +103,10 @@ suite('PreWarm Env Vars', () => {
         const envActivated = createDeferred<string>();
         when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(interpreter);
         when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenCall(() => {
+            envActivated.resolve();
+            return Promise.resolve();
+        });
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenCall(() => {
             envActivated.resolve();
             return Promise.resolve();
         });
@@ -107,6 +123,10 @@ suite('PreWarm Env Vars', () => {
             envActivated.reject(new Error('Environment Activated when it should not have been!'));
             return Promise.resolve();
         });
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenCall(() => {
+            envActivated.reject(new Error('Environment Activated when it should not have been!'));
+            return Promise.resolve();
+        });
 
         await activationService.activate();
 
@@ -115,6 +135,10 @@ suite('PreWarm Env Vars', () => {
         // Change interpreter
         when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(interpreter);
         when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenCall(() => {
+            envActivated.resolve();
+            return Promise.resolve();
+        });
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenCall(() => {
             envActivated.resolve();
             return Promise.resolve();
         });

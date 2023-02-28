@@ -548,7 +548,10 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async getInterpreterDetails(pythonPath: Uri | { path: string }): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(
+        pythonPath: Uri | { path: string },
+        token?: CancellationToken
+    ): Promise<undefined | PythonEnvironment> {
         if (!this.workspace.isTrusted) {
             throw new Error('Unable to determine active Interpreter as Workspace is not trusted');
         }
@@ -556,7 +559,7 @@ export class InterpreterService implements IInterpreterService {
         this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.getApi().then(async (api) => {
-                if (!api) {
+                if (!api || token?.isCancellationRequested) {
                     return;
                 }
                 // Find the Env with the same Uri.
@@ -582,7 +585,9 @@ export class InterpreterService implements IInterpreterService {
                         isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
                     }`
                 );
-
+                if (token?.isCancellationRequested) {
+                    return;
+                }
                 const env = await api.environments.resolveEnvironment(
                     // eslint-disable-next-line local-rules/dont-use-fspath
                     isUri(pythonPath) ? pythonPath.fsPath : pythonPath.path
