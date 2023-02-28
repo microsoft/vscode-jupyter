@@ -5,7 +5,6 @@ import { Uri } from 'vscode';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types.node';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
-export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
 export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     interpreter: PythonEnvironment;
@@ -16,6 +15,7 @@ export type ExecutionFactoryCreateWithEnvironmentOptions = {
     interpreter: PythonEnvironment;
     allowEnvironmentFetchExceptions?: boolean;
 };
+export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
