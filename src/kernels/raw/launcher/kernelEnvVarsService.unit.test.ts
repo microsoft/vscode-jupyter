@@ -85,6 +85,7 @@ suite('Kernel Environment Variables Service', () => {
             PATH: 'foobar'
         });
         when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve();
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
@@ -100,6 +101,7 @@ suite('Kernel Environment Variables Service', () => {
             HELLO_VAR: 'new'
         });
         when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve();
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
