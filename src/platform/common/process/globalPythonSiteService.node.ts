@@ -47,10 +47,10 @@ export class GlobalPythonSiteService {
      *
      * In all of these cases when we install packages a warning is displayed in the terminal
      * indicating the fact that packages are being installed in a directory that is not on the PATH.
-     * Upon further investigation it is found that this directory is a USER_SITE directory.
+     * Upon further investigation it is found that this directory is a USER_BASE directory.
      *
      * After all, when we install packages into the global envs we use the `--user` flag.
-     * Which results in installing the packages in a user directory (hence USER_SITE).
+     * Which results in installing the packages in a user directory (hence USER_BASE).
      *
      * The work around here is to ensure we add that path into the PATH
      * This service merely returns the path that needs to be added to the PATH.
@@ -60,7 +60,7 @@ export class GlobalPythonSiteService {
         const delimiter = 'USER_BASE_VALUE';
         const { stdout } = await processService.exec(interpreter.uri.fsPath, [
             '-c',
-            `import site;print("${delimiter}");print(site.USER_SITE);print("${delimiter}");`
+            `import site;print("${delimiter}");print(site.USER_BASE);print("${delimiter}");`
         ]);
         if (stdout.includes(delimiter)) {
             const output = stdout
@@ -74,16 +74,16 @@ export class GlobalPythonSiteService {
             }
             if (!this.fs.exists(sitePath)) {
                 throw new Error(
-                    `USER_SITE ${sitePath.fsPath} dir does not exist for the interpreter ${getDisplayPath(
+                    `USER_BASE ${sitePath.fsPath} dir does not exist for the interpreter ${getDisplayPath(
                         interpreter.uri
                     )}`
                 );
             }
-            traceVerbose(`USER_SITE for ${getDisplayPath(interpreter.uri)} is ${sitePath.fsPath}`);
+            traceVerbose(`USER_BASE for ${getDisplayPath(interpreter.uri)} is ${sitePath.fsPath}`);
             return sitePath;
         } else {
             throw new Error(
-                `USER_SITE not found for the interpreter ${getDisplayPath(interpreter.uri)}. Stdout: ${stdout}`
+                `USER_BASE not found for the interpreter ${getDisplayPath(interpreter.uri)}. Stdout: ${stdout}`
             );
         }
     }
