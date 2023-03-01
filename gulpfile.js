@@ -431,7 +431,7 @@ gulp.task('validateTelemetry', async () => {
 gulp.task('validatePackageLockJson', async () => {
     const fileName = path.join(__dirname, 'package-lock.json');
     const oldContents = fs.readFileSync(fileName).toString();
-    spawnSync('npm', ['install', '--build-from-source']);
+    spawnSync('npm', ['install', '--prefer-offline', '--build-from-source']);
     const newContents = fs.readFileSync(fileName).toString();
     if (oldContents.trim() !== newContents.trim()) {
         throw new Error('package-lock.json has changed after running `npm install`\n' + newContents);
