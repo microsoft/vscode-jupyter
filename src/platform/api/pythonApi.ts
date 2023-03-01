@@ -374,7 +374,8 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext    ) {
+        @inject(IExtensionContext) private readonly context: IExtensionContext
+    ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
                 // This event may not fire. It only fires if we're the reason for python extension
@@ -816,14 +817,13 @@ export class InterpreterService implements IInterpreterService {
                     );
                     api.environments.onDidChangeEnvironments(
                         async (e) => {
-                            const ignoreRemovePythonEnvStillExists = false;
+                            traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             // Remove items that are no longer valid.
-                            if (e.type === 'remove' && !ignoreRemovePythonEnvStillExists) {
+                            if (e.type === 'remove') {
                                 this._interpreters.delete(e.env.id);
                             }
-                            traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             this.populateCachedListOfInterpreters(true).finally(() => {
-                                if (e.type === 'remove' && !ignoreRemovePythonEnvStillExists) {
+                                if (e.type === 'remove') {
                                     if (!this._interpreters.has(e.env.id)) {
                                         this.triggerEventIfAllowed(this.didChangeInterpreter);
                                         this.triggerEventIfAllowed(this.didChangeInterpreters);
