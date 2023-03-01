@@ -152,6 +152,13 @@ suite('Installation - channel messages', () => {
         let message = '';
         let search = '';
         appShell
+            .setup((x) => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString()))
+            .callback((m: string, _, s: string) => {
+                message = m;
+                search = s;
+            })
+            .returns(() => new Promise<string>((resolve, _reject) => resolve(search)));
+        appShell
             .setup((x) => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .callback((m: string, s: string) => {
                 message = m;
