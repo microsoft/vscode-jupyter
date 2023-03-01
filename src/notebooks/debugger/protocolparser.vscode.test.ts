@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-// eslint-disable-next-line local-rules/node-imports
 import { PassThrough } from 'stream';
 import { createDeferred } from '../../platform/common/utils/async';
 import { ProtocolParser } from './protocolParser.node';

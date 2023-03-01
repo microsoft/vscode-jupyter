@@ -12,7 +12,7 @@ function reportIfMissing(context, node, allowed, name) {
         allowed.indexOf(name) === -1 &&
         importType.default(name, context) === 'builtin' &&
         !fileName.endsWith('.node.ts') &&
-        !fileName.endsWith('.unit.test.ts') &&
+        !fileName.endsWith('.test.ts') &&
         !fileName.includes(testFolder)
     ) {
         context.report(node, `Do not import Node.js builtin module "${name}"`);
