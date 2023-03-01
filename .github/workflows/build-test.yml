@@ -50,15 +50,6 @@ env:
   DOTNET_VERSION: 7.0.x
 
 jobs:
-  # Make sure to cancel previous runs on a push
-  cancel_previous_runs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-        with:
-          access_token: ${{ github.token }}
-
   build-vsix:
     name: Build VSIX
     runs-on: ubuntu-latest
