@@ -431,13 +431,10 @@ gulp.task('validateTelemetry', async () => {
 gulp.task('validatePackageLockJson', async () => {
     const fileName = path.join(__dirname, 'package-lock.json');
     const oldContents = fs.readFileSync(fileName).toString();
-    spawnSync('npm', ['install', '--prefer-offline', '--build-from-source']);
+    spawnSync('npm', ['install', '--prefer-offline']);
     const newContents = fs.readFileSync(fileName).toString();
     if (oldContents.trim() !== newContents.trim()) {
-        console.error('old Content\n' + oldContents + '\n');
-        console.error('new Content\n' + newContents + '\n');
-
-        // throw new Error('package-lock.json has changed after running `npm install`');
+        throw new Error('package-lock.json has changed after running `npm install`');
     }
 });
 
