@@ -7,7 +7,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
-import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
+import { Resource, IOutputChannel, IDisplayOptions, ReadWrite } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
@@ -139,6 +139,14 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         }
 
         return newSession;
+    }
+    protected override setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo?: boolean) {
+        // When we restart a remote session, the socket information is different, hence reset it.
+        const socket = this.requestCreator.getWebsocket(this.kernelConnectionMetadata.id);
+        if (session?.kernelSocketInformation?.socket && forceUpdateKernelSocketInfo && socket) {
+            (session.kernelSocketInformation as ReadWrite<typeof session.kernelSocketInformation>).socket = socket;
+        }
+        return super.setSession(session, forceUpdateKernelSocketInfo);
     }
     protected async createRestartSession(
         disableUI: boolean,
