@@ -9,7 +9,6 @@ import { IBrowserService, IDisposable } from '../../platform/common/types';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportFormat } from './types';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
-import { getLocString } from '../../webviews/webview-side/react-common/locReactSide';
 
 suite('Export File Opener', () => {
     let fileOpener: ExportFileOpener;
@@ -48,7 +47,7 @@ suite('Export File Opener', () => {
     test('HTML File opened if yes button pressed', async () => {
         const uri = Uri.file('test.html');
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('openExportFileYes', 'Yes'))
+            Promise.resolve('Yes')
         );
 
         await fileOpener.openFile(ExportFormat.html, uri);
@@ -58,7 +57,7 @@ suite('Export File Opener', () => {
     test('HTML File not opened if no button button pressed', async () => {
         const uri = Uri.file('test.html');
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('openExportFileNo', 'No'))
+            Promise.resolve('No')
         );
 
         await fileOpener.openFile(ExportFormat.html, uri);
@@ -68,17 +67,17 @@ suite('Export File Opener', () => {
     test('PDF File opened if yes button pressed', async () => {
         const uri = Uri.file('test.pdf');
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('openExportFileYes', 'Yes'))
+            Promise.resolve('Yes')
         );
 
-        await fileOpener.openFile(ExportFormat.pdf, uri);
+        await fileOpener.openFile, (ExportFormat.pdf, uri);
 
         verify(browserService.launch(anything())).once();
     });
     test('PDF File not opened if no button button pressed', async () => {
         const uri = Uri.file('test.pdf');
         when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
-            Promise.resolve(getLocString('openExportFileNo', 'No'))
+            Promise.resolve('No')
         );
 
         await fileOpener.openFile(ExportFormat.pdf, uri);
