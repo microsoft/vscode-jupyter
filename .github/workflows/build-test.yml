@@ -112,10 +112,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Install dependencies for native modules
         run: |
           sudo apt-get update
-          sudo apt-get install libpango1.0-dev
+          sudo apt-get install libpango1.0-dev libgif-dev
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
@@ -196,6 +196,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
@@ -400,6 +406,12 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install -U pip
         if: matrix.python != 'conda' && matrix.python != 'noPython'
+
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
@@ -781,6 +793,12 @@ jobs:
 
       - name: Upgrade pip
         run: python -m pip install -U pip
+
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
