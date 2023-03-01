@@ -4,7 +4,7 @@
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { isLocalConnection, KernelConnectionMetadata } from '../../../kernels/types';
 import { Resource } from '../../../platform/common/types';
 import { ignoreLogging, logValue, traceDecoratorVerbose, traceError } from '../../../platform/logging';

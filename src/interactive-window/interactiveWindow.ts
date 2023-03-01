@@ -24,7 +24,6 @@ import {
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
-import '../platform/common/extensions';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
@@ -78,6 +77,7 @@ import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 import { KernelController } from '../kernels/kernelController';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
+import { splitLines } from '../platform/common/helpers';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -213,10 +213,10 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (this.currentKernelInfo.controller) {
-            this.startKernel().ignoreErrors();
+            this.startKernel().catch(noop);
         } else {
             traceWarning('No controller selected for Interactive Window');
-            this.insertInfoMessage(DataScience.selectKernelForEditor).ignoreErrors;
+            this.insertInfoMessage(DataScience.selectKernelForEditor).catch(noop);
         }
         this.initialized = true;
     }
@@ -383,7 +383,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     }
                 })
             )
-            .ignoreErrors();
+            .catch(noop);
     }
 
     private deleteSysInfoCell(cellPromise: Promise<NotebookCell>) {
@@ -404,7 +404,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     }
                 })
             )
-            .ignoreErrors();
+            .catch(noop);
     }
 
     private finishSysInfoMessage(kernel: IKernel, cellPromise: Promise<NotebookCell>, reason: SysInfoReason) {
@@ -438,7 +438,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     };
                     // don't start the kernel if the IW has only been restored from a previous session
                     if (this.initialized) {
-                        this.startKernel().ignoreErrors();
+                        this.startKernel().catch(noop);
                     }
                 }
             },
@@ -574,7 +574,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         this.updateOwners(fileUri);
 
         // Code may have markdown inside of it, if so, split into two cells
-        const split = code.splitLines({ trim: false });
+        const split = splitLines(code, { trim: false });
         const matcher = new CellMatcher(this.configuration.getSettings(fileUri));
         let firstNonMarkdown = -1;
         if (matcher.isMarkdown(split[0])) {
@@ -793,7 +793,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         const settings = this.configuration.getSettings(this.owningResource);
         const isMarkdown = this.cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
-            ? generateMarkdownFromCodeLines(code.splitLines()).join('')
+            ? generateMarkdownFromCodeLines(splitLines(code)).join('')
             : generateInteractiveCode(code, settings, this.cellMatcher);
         const interactiveWindowCellMarker = this.cellMatcher.getFirstMarker(code);
 

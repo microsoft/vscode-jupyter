@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, NotebookDocument, Disposable, EventEmitter } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import {
     IKernelFinder,
     LiveKernelModel,

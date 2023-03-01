@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../platform/common/extensions';
-
 import { inject, injectable } from 'inversify';
 
 import {
@@ -74,9 +72,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 Commands.NotebookEditorRestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        this.restartKernel(context?.notebookEditor?.notebookUri).ignoreErrors();
+                        this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
                     } else {
-                        this.restartKernel(context).ignoreErrors();
+                        this.restartKernel(context).catch(noop);
                     }
                 }
             )
@@ -193,12 +191,12 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
-                    this.wrapKernelMethod('restart', kernel).ignoreErrors();
+                    this.wrapKernelMethod('restart', kernel).catch(noop);
                 } else if (response === yes) {
-                    this.wrapKernelMethod('restart', kernel).ignoreErrors();
+                    this.wrapKernelMethod('restart', kernel).catch(noop);
                 }
             } else {
-                this.wrapKernelMethod('restart', kernel).ignoreErrors();
+                this.wrapKernelMethod('restart', kernel).catch(noop);
             }
         }
     }
@@ -264,7 +262,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         if (settings) {
             this.configurationService
                 .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
-                .ignoreErrors();
+                .catch(noop);
         }
     }
 }

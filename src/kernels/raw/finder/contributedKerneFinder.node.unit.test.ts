@@ -54,9 +54,8 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../kernelFinder';
-import { PreferredRemoteKernelIdProvider } from '../../jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../jupyter/connection/preferredRemoteKernelIdProvider';
 import { IJupyterServerUriStorage } from '../../jupyter/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -71,6 +70,7 @@ import { ITrustedKernelPaths } from './types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
 import { ServiceContainer } from '../../../platform/ioc/container';
+import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 [false, true].forEach((isWindows) => {
     (['Stable', 'Insiders'] as KernelPickerType[]).forEach((kernelPickerType) => {
@@ -861,13 +861,18 @@ import { ServiceContainer } from '../../../platform/ioc/container';
                         // Interpreter URI is weird, we have to force it to format itself or the
                         // internal state won't match
                         if (kernel.interpreter) {
+                            // Force some internal state change ('formatted' property will get updated)
                             kernel.interpreter.uri.toString();
+                            (kernel.interpreter as any).displayPath = kernel.interpreter.displayPath || undefined;
                         }
 
                         const serialize = kernel.toJSON();
                         const deserialized = BaseKernelConnectionMetadata.fromJSON(serialize);
                         if (deserialized.interpreter) {
+                            // Force some internal state change ('formatted' property will get updated)
                             deserialized.interpreter.uri.toString();
+                            (deserialized.interpreter as any).displayPath =
+                                deserialized.interpreter.displayPath || undefined;
                         }
 
                         // On windows we can lose path casing so make it all lower case for both

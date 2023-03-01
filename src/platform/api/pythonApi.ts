@@ -43,7 +43,11 @@ export function deserializePythonEnvironment(
             sysPrefix: pythonVersion.sysPrefix || '',
             uri: Uri.file(pythonVersion.path || ''),
             id: pythonEnvId || (pythonVersion as any).id,
-            envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined
+            envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined,
+            displayPath:
+                'displayPath' in pythonVersion && typeof pythonVersion.displayPath === 'string'
+                    ? Uri.file(pythonVersion.displayPath)
+                    : undefined
         };
 
         // Cleanup stuff that shouldn't be there.
@@ -111,7 +115,8 @@ export function serializePythonEnvironment(
     if (jupyterVersion) {
         const result = Object.assign({}, jupyterVersion, {
             path: getFilePath(jupyterVersion.uri),
-            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined
+            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined,
+            displayPath: jupyterVersion.displayPath ? getFilePath(jupyterVersion.displayPath) : undefined
         });
         // Cleanup stuff that shouldn't be there.
         delete (result as any).uri;
@@ -307,7 +312,10 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
-    constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
+    constructor(
+        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+    ) {}
 
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
         const [api, newApi] = await Promise.all([this.apiProvider.getApi(), this.apiProvider.getNewApi()]);
@@ -317,18 +325,20 @@ export class InterpreterSelector implements IInterpreterSelector {
             : await api.getSuggestions(resource);
 
         const deserializedSuggestions: IInterpreterQuickPickItem[] = [];
-        await Promise.all(
-            suggestions.map(async (item) => {
-                const env = await newApi!.environments.resolveEnvironment(item.interpreter.path);
-                if (!env) {
-                    return;
-                }
-                const interpreter = deserializePythonEnvironment(item.interpreter, env?.id);
-                if (interpreter) {
-                    deserializedSuggestions.push({ ...item, interpreter: interpreter });
-                }
-            })
-        );
+        if (this.workspace.isTrusted) {
+            await Promise.all(
+                suggestions.map(async (item) => {
+                    const env = await newApi!.environments.resolveEnvironment(item.interpreter.path);
+                    if (!env) {
+                        return;
+                    }
+                    const interpreter = deserializePythonEnvironment(item.interpreter, env?.id);
+                    if (interpreter) {
+                        deserializedSuggestions.push({ ...item, interpreter: interpreter });
+                    }
+                })
+            );
+        }
         return deserializedSuggestions;
     }
 }
@@ -384,12 +394,18 @@ export class InterpreterService implements IInterpreterService {
             }
         }
         this.workspace.onDidChangeWorkspaceFolders(this.onDidChangeWorkspaceFolders, this, disposables);
+        this.workspace.onDidGrantWorkspaceTrust(() => this.refreshInterpreters(true), this, this.disposables);
         this.disposables.push(this._onDidChangeStatus);
         this.disposables.push(this.refreshPromises);
         this.disposables.push(this.onResumeEnvDetection);
         this.refreshPromises.onStateChange(() => {
             this.status = this.refreshPromises.isComplete ? 'idle' : 'refreshing';
         });
+        this.workspace.onDidGrantWorkspaceTrust(
+            () => this.populateCachedListOfInterpreters(true).catch(noop),
+            this,
+            this.disposables
+        );
     }
     public get onDidChangeInterpreter(): Event<void> {
         this.hookupOnDidChangeInterpreterEvent();
@@ -470,6 +486,9 @@ export class InterpreterService implements IInterpreterService {
         TraceOptions.Arguments | TraceOptions.BeforeCall | TraceOptions.ReturnValue
     )
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        if (!this.workspace.isTrusted) {
+            return;
+        }
         const stopWatch = new StopWatch();
         this.hookupOnDidChangeInterpreterEvent();
         // If there's only one workspace folder, and we don't have a resource, then use the
@@ -530,6 +549,10 @@ export class InterpreterService implements IInterpreterService {
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async getInterpreterDetails(pythonPath: Uri | { path: string }): Promise<undefined | PythonEnvironment> {
+        if (!this.workspace.isTrusted) {
+            throw new Error('Unable to determine active Interpreter as Workspace is not trusted');
+        }
+
         this.hookupOnDidChangeInterpreterEvent();
         try {
             return await this.getApi().then(async (api) => {
@@ -663,6 +686,10 @@ export class InterpreterService implements IInterpreterService {
         cancelToken: CancellationToken,
         recursiveCounter = 0
     ): Promise<PythonEnvironment[]> {
+        if (!this.workspace.isTrusted) {
+            return [];
+        }
+
         if (this.extensionChecker.isPythonExtensionInstalled) {
             this.builtListOfInterpretersAtLeastOnce = true;
         }
@@ -716,6 +743,11 @@ export class InterpreterService implements IInterpreterService {
                         }
                     })
                 );
+                // We have updated the list of environments, trigger a change
+                // Possible one of the environments was resolve even before this method started.
+                // E.g. we got active interpreter details, and then we came here.
+                // At this point the env is already resolved, but we did not trigger a change event.
+                this.triggerEventIfAllowed(this.didChangeInterpreters);
             } catch (ex) {
                 traceError(`Failed to refresh list of interpreters and get their details`, ex);
             }
@@ -770,10 +802,12 @@ export class InterpreterService implements IInterpreterService {
             ? this.fs.exists(env.executable.uri)
             : new Promise<boolean>(() => noop());
         pythonFileExists.catch(noop);
-        const pythonEnvInfo = api.environments
-            .resolveEnvironment(env)
-            .then((e) => (e ? true : false))
-            .catch(() => false);
+        const pythonEnvInfo = this.workspace.isTrusted
+            ? api.environments
+                  .resolveEnvironment(env)
+                  .then((e) => (e ? true : false))
+                  .catch(() => false)
+            : pythonFileExists;
         pythonEnvInfo.catch(noop);
         return Promise.race([pythonFileExists, pythonEnvInfo]);
     }

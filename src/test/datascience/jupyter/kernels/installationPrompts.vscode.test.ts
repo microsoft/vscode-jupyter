@@ -39,9 +39,9 @@ import {
     uninstallIPyKernel
 } from '../../helpers.node';
 import { WrappedError } from '../../../../platform/errors/types';
-import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
-import { ProductNames } from '../../../../kernels/installer/productNames';
-import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
+import { clearInstalledIntoInterpreterMemento } from '../../../../platform/interpreter/installer/productInstaller';
+import { ProductNames } from '../../../../platform/interpreter/installer/productNames';
+import { Product, IInstaller, InstallerResponse } from '../../../../platform/interpreter/installer/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
     hijackPrompt,

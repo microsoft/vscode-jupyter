@@ -22,9 +22,9 @@ import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { Commands, Identifiers } from '../../platform/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
-import { translateProductToModule } from '../installer/utils';
-import { ProductNames } from '../installer/productNames';
-import { Product } from '../installer/types';
+import { translateProductToModule } from '../../platform/interpreter/installer/utils';
+import { ProductNames } from '../../platform/interpreter/installer/productNames';
+import { Product } from '../../platform/interpreter/installer/types';
 import {
     IKernelDependencyService,
     isLocalConnection,
@@ -66,8 +66,9 @@ import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from '.
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { PackageNotInstalledWindowsLongPathNotEnabledError } from './packageNotInstalledWindowsLongPathNotEnabledError';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
+import { fileToCommandArgument } from '../../platform/common/helpers';
 
 /***
  * Common code for handling errors.
@@ -582,8 +583,13 @@ function doesErrorHaveMarkdownLinks(message: string) {
     const markdownLinks = new RegExp(/\[([^\[]+)\]\((.*)\)/);
     return (markdownLinks.exec(message)?.length ?? 0) > 0;
 }
-function getCombinedErrorMessage(prefix?: string, message?: string) {
-    const errorMessage = [prefix || '', message || '']
+function getCombinedErrorMessage(prefix: string = '', message: string = '') {
+    // No point in repeating the same message twice.
+    // (strip the last character, as it could be a period).
+    if (prefix && message.startsWith(prefix.substring(0, prefix.length - 1))) {
+        prefix = '';
+    }
+    const errorMessage = [prefix, message]
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .join(' \n');
@@ -612,9 +618,9 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
     const ipyKernelName = ProductNames.get(Product.ipykernel)!;
     const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 
-    let installerCommand = `${getFilePath(
-        kernelConnection.interpreter.uri
-    ).fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
+    let installerCommand = `${fileToCommandArgument(
+        getFilePath(kernelConnection.interpreter.uri)
+    )} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
     if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
         if (kernelConnection.interpreter?.envName) {
             installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
@@ -624,9 +630,9 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
             )} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
     } else if (kernelConnection.interpreter?.envType === EnvironmentType.Unknown) {
-        installerCommand = `${getFilePath(
-            kernelConnection.interpreter.uri
-        ).fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
+        installerCommand = `${fileToCommandArgument(
+            getFilePath(kernelConnection.interpreter.uri)
+        )} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
     }
     const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter(
         displayNameOfKernel,

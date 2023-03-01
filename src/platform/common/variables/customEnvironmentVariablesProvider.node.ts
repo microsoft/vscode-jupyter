@@ -13,6 +13,7 @@ import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironment
 import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '../../logging';
 import { disposeAllDisposables } from '../helpers';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
+import { noop } from '../utils/misc';
 
 const CACHE_DURATION = 60 * 1000;
 /**
@@ -69,7 +70,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             return cacheStoreIndexedByWorkspaceFolder.data!;
         }
         const promise = this._getEnvironmentVariables(resource, purpose);
-        promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).ignoreErrors();
+        promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).catch(noop);
         return promise;
     }
     public async getCustomEnvironmentVariables(
@@ -122,7 +123,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         this.createFileWatcher(envFile, workspaceFolderUri);
 
         const promise = this.envVarsService.parseFile(envFile, process.env);
-        promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).ignoreErrors();
+        promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).catch(noop);
         return promise;
     }
     public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {

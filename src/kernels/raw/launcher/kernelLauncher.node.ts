@@ -14,7 +14,7 @@ import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platfo
 import { traceDecoratorVerbose, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
+import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -37,6 +37,8 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { TraceOptions } from '../../../platform/logging/types';
 import { getResourceType } from '../../../platform/common/utils';
+import { format } from '../../../platform/common/helpers';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -70,7 +72,7 @@ export class KernelLauncher implements IKernelLauncher {
             const port = await KernelLauncher.startPortPromise;
             traceVerbose(`Cleaning up port start file : ${port}`);
 
-            const filePath = path.join(os.tmpdir(), PortFormatString.format(port.toString()));
+            const filePath = path.join(os.tmpdir(), format(PortFormatString, port.toString()));
             await fsextra.remove(filePath);
         } catch (exc) {
             // If it fails it doesn't really matter. Just a temp file
@@ -86,7 +88,7 @@ export class KernelLauncher implements IKernelLauncher {
             while (result === 0 && portStart < 65_000) {
                 try {
                     // Try creating a file with the port in the name
-                    const filePath = path.join(os.tmpdir(), PortFormatString.format(portStart.toString()));
+                    const filePath = path.join(os.tmpdir(), format(PortFormatString, portStart.toString()));
                     await fsextra.open(filePath, 'wx');
 
                     // If that works, we have our port
@@ -128,7 +130,7 @@ export class KernelLauncher implements IKernelLauncher {
                     { resourceType: getResourceType(resource) }
                 )
             )
-            .ignoreErrors();
+            .catch(noop);
         return promise;
     }
 

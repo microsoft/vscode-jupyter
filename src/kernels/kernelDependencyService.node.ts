@@ -13,17 +13,26 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { Telemetry } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
-import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
-import { ProductNames } from './installer/productNames';
-import { IInstaller, Product, InstallerResponse } from './installer/types';
-import { IKernelDependencyService, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './types';
+import {
+    isModulePresentInEnvironmentCache,
+    trackPackageInstalledIntoInterpreter
+} from '../platform/interpreter/installer/productInstaller';
+import { ProductNames } from '../platform/interpreter/installer/productNames';
+import { IInstaller, Product, InstallerResponse } from '../platform/interpreter/installer/types';
+import {
+    IKernelDependencyService,
+    isLocalConnection,
+    KernelConnectionMetadata,
+    KernelInterpreterDependencyResponse
+} from './types';
 import { noop } from '../platform/common/utils/misc';
 import { getResourceType } from '../platform/common/utils';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { IRawNotebookSupportedService } from './raw/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
-import { isModulePresentInEnvironment } from './installer/productInstaller.node';
+import { isModulePresentInEnvironment } from '../platform/interpreter/installer/productInstaller.node';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
+import { isPythonKernelConnection } from './helpers';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -68,9 +77,9 @@ export class KernelDependencyService implements IKernelDependencyService {
             }, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
         );
         if (
-            kernelConnection.kind === 'connectToLiveRemoteKernel' ||
-            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
-            kernelConnection.interpreter === undefined
+            !isLocalConnection(kernelConnection) ||
+            !isPythonKernelConnection(kernelConnection) ||
+            !kernelConnection.interpreter
         ) {
             return KernelInterpreterDependencyResponse.ok;
         }

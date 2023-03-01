@@ -26,7 +26,7 @@ export class KernelFinder implements IKernelFinder {
 
     private _onDidChangeKernels = new EventEmitter<void>();
     onDidChangeKernels: Event<void> = this._onDidChangeKernels.event;
-    private _status: 'idle' | 'discovering';
+    private _status: 'idle' | 'discovering' = 'idle';
     public get status() {
         return this._status;
     }
@@ -47,7 +47,16 @@ export class KernelFinder implements IKernelFinder {
 
     public registerKernelFinder(finder: IContributedKernelFinder<KernelConnectionMetadata>): IDisposable {
         this._finders.push(finder);
-        const statusChange = finder.onDidChangeStatus(() => (this.status = finder.status), this, this.disposables);
+        if (finder.status === 'discovering') {
+            this.status = 'discovering';
+        }
+        const statusChange = finder.onDidChangeStatus(
+            () =>
+                // If all finders are idle, then we are idle.
+                (this.status = this._finders.every((f) => f.status === 'idle') ? 'idle' : 'discovering'),
+            this,
+            this.disposables
+        );
         const onDidChangeDisposable = finder.onDidChangeKernels(() => this._onDidChangeKernels.fire());
         this.disposables.push(onDidChangeDisposable);
 

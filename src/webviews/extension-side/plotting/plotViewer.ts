@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../../platform/common/extensions';
-
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
@@ -80,7 +78,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             await super.show(false);
 
             // Send a message with our data
-            this.postMessage(PlotViewerMessages.SendPlot, imageHtml).ignoreErrors();
+            this.postMessage(PlotViewerMessages.SendPlot, imageHtml).catch(noop);
         }
     };
 
@@ -100,11 +98,11 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     protected override onMessage(message: string, payload: any) {
         switch (message) {
             case PlotViewerMessages.CopyPlot:
-                this.copyPlot(payload.toString()).ignoreErrors();
+                this.copyPlot(payload.toString()).catch(noop);
                 break;
 
             case PlotViewerMessages.ExportPlot:
-                this.exportPlot(payload).ignoreErrors();
+                this.exportPlot(payload).catch(noop);
                 break;
 
             case PlotViewerMessages.RemovePlot:

@@ -15,14 +15,17 @@ import type {
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
+import * as path from '../platform/vscode-path/path';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
-import { isWeb } from '../platform/common/utils/misc';
+import { isWeb, noop } from '../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
+import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import { sendTelemetryEvent } from '../telemetry';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -109,6 +112,7 @@ export class LiveRemoteKernelConnectionMetadata {
         this.baseUrl = options.baseUrl;
         this.id = options.id;
         this.serverId = options.serverId;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         kernelModel: LiveKernelModel;
@@ -163,6 +167,7 @@ export class LocalKernelSpecConnectionMetadata {
         this.kernelSpec = options.kernelSpec;
         this.interpreter = options.interpreter;
         this.id = options.id;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         kernelSpec: IJupyterKernelSpec;
@@ -217,6 +222,7 @@ export class RemoteKernelSpecConnectionMetadata {
         this.baseUrl = options.baseUrl;
         this.id = options.id;
         this.serverId = options.serverId;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
@@ -259,6 +265,7 @@ export class PythonKernelConnectionMetadata {
         this.kernelSpec = options.kernelSpec;
         this.interpreter = options.interpreter;
         this.id = options.id;
+        sendKernelTelemetry(this);
     }
     public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
         return new PythonKernelConnectionMetadata(options);
@@ -890,3 +897,55 @@ export type IKernelController = {
     id: string;
     createNotebookCellExecution(cell: NotebookCell): NotebookCellExecution;
 };
+
+const capturedTelemetry = new Set<string>();
+function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
+    if (capturedTelemetry.has(kernel.id)) {
+        return;
+    }
+    capturedTelemetry.add(kernel.id);
+    const kernelSpec = 'kernelSpec' in kernel ? kernel.kernelSpec : undefined;
+    const language =
+        kernelSpec?.language || (kernel.kind === 'startUsingPythonInterpreter' ? PYTHON_LANGUAGE : undefined);
+    let argv0 = '';
+    let argv = '';
+    const interpreter = 'interpreter' in kernel ? kernel.interpreter : undefined;
+    const separator = `<#>`;
+    let isArgv0SameAsInterpreter: undefined | boolean = undefined;
+    if (kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0) {
+        argv0 = kernelSpec.argv[0];
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        isArgv0SameAsInterpreter = argv0.toLowerCase() === interpreter?.uri?.fsPath?.toLowerCase();
+        if (path.basename(argv0) !== argv0) {
+            argv0 = `<P>${path.basename(argv0)}`;
+        }
+        argv = kernelSpec.argv
+            .map((arg) => {
+                if (arg.includes('/') || arg.includes('\\')) {
+                    return `<P>${path.basename(arg)}`;
+                }
+                return arg;
+            })
+            .join(separator);
+    }
+
+    const kernelSpecHashPromise =
+        'kernelSpec' in kernel && kernel.kernelSpec.specFile
+            ? getTelemetrySafeHashedString(kernel.kernelSpec.specFile)
+            : Promise.resolve('');
+    const kernelIdHash = getTelemetrySafeHashedString(kernel.id);
+    Promise.all([kernelSpecHashPromise, kernelIdHash])
+        .then(([kernelSpecHash, kernelId]) =>
+            sendTelemetryEvent(Telemetry.KernelSpec, undefined, {
+                kernelId,
+                kernelSpecHash,
+                kernelConnectionType: kernel.kind,
+                kernelLanguage: language,
+                envType: interpreter?.envType,
+                isArgv0SameAsInterpreter,
+                argv0,
+                argv
+            })
+        )
+        .catch(noop);
+}

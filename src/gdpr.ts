@@ -44,6 +44,7 @@
    "DATASCIENCE.CREATE_PYTHON_ENVIRONMENT" : {
      "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Reason for failure. cancelled - User cancelled the operation (cancellation token cancelled). kernelConnectionNotCreated - Kernel connection not created via the kernel finder.","owner":"donjayamanne"},
      "dependenciesInstalled": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the kernel dependencies were installed or not.","owner":"donjayamanne"},
+     "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the Python environment.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -248,6 +249,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -463,6 +465,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -522,6 +525,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -547,6 +551,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
@@ -571,6 +576,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -859,6 +865,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -884,6 +891,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -1357,6 +1365,23 @@
      ]
    }
  */
+//Telemetry.KernelSpec
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_KERNEL_SPEC" : {
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "kernelId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"What kind of kernel spec did we fail to create.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
+     "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the Python environment.","owner":"donjayamanne"},
+     "isArgv0SameAsInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the argv0 is same as the interpreter.","owner":"donjayamanne"},
+     "argv0": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"First argument of the kernelSpec argv (without the full path) Helps determine if we have python/conda executables used for kernelSpecs.","owner":"donjayamanne"},
+     "argv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"argv of KernelSpec Helps determine if we have ipykernel, ipykernel_launcher, etc and other combinations In the case of paths, all path values are stripped, exe names are not.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.RegisterInterpreterAsKernel
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL" : {
@@ -1468,6 +1493,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -1570,6 +1596,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -1608,6 +1635,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -1634,6 +1662,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -1660,6 +1689,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -1688,6 +1718,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -1802,6 +1833,7 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
@@ -1893,10 +1925,13 @@
 //Telemetry.AmbiguousGlobalKernelSpec
 /* __GDPR__
    "GLOBAL_PYTHON_KERNELSPEC" : {
+     "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether kernel was started using kernel spec, interpreter, etc.","owner":"donjayamanne"},
      "pythonPathDefined": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the fully qualified path to the python executable has been defined or not in the KernleSpec file.","owner":"donjayamanne"},
      "pythonEnvFound": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the python path is defined, then this property will be set to true if we found the python env.","owner":"donjayamanne"},
      "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"donjayamanne"},
      "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "argv0": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"First argument of the kernelSpec argv (without the full path) Helps determine if we have python/conda executables used for kernelSpecs.","owner":"donjayamanne"},
+     "isCreatedByUs": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this is a kernelspec created by us.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

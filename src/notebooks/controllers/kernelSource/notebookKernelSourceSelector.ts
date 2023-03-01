@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUriStorage,
     IJupyterUriProvider,

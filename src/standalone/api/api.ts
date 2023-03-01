@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { ExtensionMode, NotebookController, NotebookDocument } from 'vscode';
-import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
-import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,

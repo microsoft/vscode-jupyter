@@ -5,7 +5,6 @@ import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } f
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../../errors/types';
 import { IDisposable } from '../types';
 
@@ -56,32 +55,6 @@ export const IProcessServiceFactory = Symbol('IProcessServiceFactory');
 
 export interface IProcessServiceFactory {
     create(resource?: Uri): Promise<IProcessService>;
-}
-
-export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
-export type ExecutionFactoryCreationOptions = {
-    resource?: Uri;
-    interpreter: PythonEnvironment;
-};
-
-export type ExecutionFactoryCreateWithEnvironmentOptions = {
-    resource?: Uri;
-    interpreter: PythonEnvironment;
-    allowEnvironmentFetchExceptions?: boolean;
-};
-export interface IPythonExecutionFactory {
-    create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
-    createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
-}
-export const IPythonExecutionService = Symbol('IPythonExecutionService');
-
-export interface IPythonExecutionService {
-    isModuleInstalled(moduleName: string): Promise<boolean>;
-    execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
-    execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
-
-    exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
-    execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
 /**

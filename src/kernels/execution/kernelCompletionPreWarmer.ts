@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
 import { isPythonKernelConnection } from '../helpers';
 import { IKernelConnectionSession, IKernelProvider } from '../types';
 
@@ -36,6 +37,6 @@ export class KernelCompletionsPreWarmer implements IExtensionSyncActivationServi
                 code: '__file__.',
                 cursor_pos: 9
             })
-            .ignoreErrors();
+            .catch(noop);
     }
 }

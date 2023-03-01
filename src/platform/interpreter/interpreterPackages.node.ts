@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
-import { IPythonExecutionFactory } from '../common/process/types.node';
 import { IDisposableRegistry, InterpreterUri, Resource } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { isResource, noop } from '../common/utils/misc';
@@ -16,6 +15,7 @@ import { traceDecoratorVerbose, traceError, traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IInterpreterPackages } from './types';
 import { TraceOptions } from '../logging/types';
+import { IPythonExecutionFactory } from './types.node';
 
 const interestedPackages = new Set(
     [

@@ -21,13 +21,13 @@ import {
 } from '../../types';
 import { JupyterSessionManager } from '../session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
-import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../preferredRemoteKernelIdProvider';
+import { ActiveKernelIdList, PreferredRemoteKernelIdProvider } from '../connection/preferredRemoteKernelIdProvider';
 import { IJupyterKernel, IJupyterRemoteCachedKernelValidator, IJupyterSessionManager } from '../types';
 import { KernelFinder } from '../../kernelFinder';
 import { NotebookProvider } from '../launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { JupyterServerUriStorage } from '../launcher/serverUriStorage';
+import { JupyterServerUriStorage } from '../connection/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';

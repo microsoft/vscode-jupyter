@@ -45,10 +45,13 @@ import {
     getDefaultKernelConnection
 } from './helper.node';
 import { isWeb, swallowExceptions } from '../../../platform/common/utils/misc';
-import { ProductNames } from '../../../kernels/installer/productNames';
-import { Product } from '../../../kernels/installer/types';
+import { ProductNames } from '../../../platform/interpreter/installer/productNames';
+import { Product } from '../../../platform/interpreter/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import {
+    areInterpreterPathsSame,
+    getNormalizedInterpreterPath
+} from '../../../platform/pythonEnvironments/info/interpreter';
 import {
     getTextOutputValue,
     getTextOutputValues,
@@ -59,6 +62,7 @@ import { IKernel, IKernelProvider, INotebookKernelExecution, NotebookCellRunStat
 import { createKernelController, TestNotebookDocument } from './executionHelper';
 import { noop } from '../../core';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
+import { splitLines } from '../../../platform/common/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -118,7 +122,11 @@ suite('Kernel Execution @kernelCore', function () {
         notebook.cells.length = 0;
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(function () {
+    teardown(async function () {
+        if (this.currentTest?.isFailed()) {
+            // For a flaky interrupt test.
+            await captureScreenShot(this);
+        }
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
@@ -169,7 +177,7 @@ suite('Kernel Execution @kernelCore', function () {
         await waitForCondition(
             () => {
                 const output = getCellOutputs(cell);
-                const lines = output.splitLines({ trim: false, removeEmptyEntries: true });
+                const lines = splitLines(output, { trim: false, removeEmptyEntries: true });
                 return lines.length === 3 && lines[0] === '\tho' && lines[1] === '\tho' && lines[2] === '\tho';
             },
             defaultNotebookTestTimeout,
@@ -432,7 +440,12 @@ suite('Kernel Execution @kernelCore', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0]), getOSType(), true),
+            areInterpreterPathsSame(
+                Uri.file(path.dirname(getNormalizedInterpreterPath(Uri.file(sysExecutable)).fsPath)),
+                Uri.file(pathValue[0]),
+                getOSType(),
+                true
+            ),
             `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable}). Path Output ${pathOutput} and Exec Output ${execOutput}`
         );
     });
@@ -444,7 +457,7 @@ suite('Kernel Execution @kernelCore', function () {
         await notebook.appendCodeCell('import sys');
         const cell3 = await notebook.appendCodeCell('print(sys.executable)');
 
-        notebook.cells.map((cell) => kernelExecution.executeCell(cell).ignoreErrors());
+        notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop));
 
         // Basically anything such as `!which python` and the like should point to the right executable.
         // For that to work, the first directory in the PATH must be the Python environment.
@@ -768,7 +781,7 @@ suite('Kernel Execution @kernelCore', function () {
 
         // Cell 1 should have started, cells 2 & 3 should be queued.
         const [cell1, cell2, cell3, cell4] = cells;
-        Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))).ignoreErrors();
+        Promise.all(notebook.cells.map((cell) => kernelExecution.executeCell(cell))).catch(noop);
         await Promise.all([
             waitForExecutionInProgress(cell1.cell),
             waitForQueuedForExecution(cell2.cell),
@@ -822,7 +835,7 @@ suite('Kernel Execution @kernelCore', function () {
             const index = Math.floor(Math.random() * codeCells.length);
             const cellToQueue = codeCells.splice(index, 1)[0];
             queuedCells.push(cellToQueue);
-            kernelExecution.executeCell(cellToQueue.cell).ignoreErrors();
+            kernelExecution.executeCell(cellToQueue.cell).catch(noop);
         }
 
         // Verify all have been queued.
@@ -850,7 +863,7 @@ suite('Kernel Execution @kernelCore', function () {
 
         // Run the whole document.
         // Verify all have been queued.
-        notebook.cells.map((cell) => kernelExecution.executeCell(cell).ignoreErrors());
+        notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop));
         await Promise.all(cells.map((item) => item.cell).map((cell) => waitForQueuedForExecutionOrExecuting(cell)));
 
         // let all cells run to completion & validate their execution orders match the order of the queue.
@@ -885,7 +898,7 @@ suite('Kernel Execution @kernelCore', function () {
             const cell = codeCells[index].cell;
             if (cell.kind === NotebookCellKind.Code) {
                 queuedCells.push(cell);
-                kernelExecution.executeCell(cell).ignoreErrors();
+                kernelExecution.executeCell(cell).catch(noop);
                 await waitForQueuedForExecutionOrExecuting(cell);
             }
         }
@@ -899,7 +912,7 @@ suite('Kernel Execution @kernelCore', function () {
         const cells = await insertRandomCells(notebook, { count: 15, addMarkdownCells: true });
 
         const queuedCells = cells.filter((item) => item.cell.kind === NotebookCellKind.Code).map((item) => item.cell);
-        notebook.cells.map((cell) => kernelExecution.executeCell(cell).ignoreErrors());
+        notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop));
         await Promise.all(queuedCells.map((cell) => waitForQueuedForExecutionOrExecuting(cell)));
 
         // Add a new cell to the document, this should not get executed.
@@ -921,13 +934,13 @@ suite('Kernel Execution @kernelCore', function () {
 
         const queuedCells = codeCells.map((item) => item.cell);
         // Run entire notebook & verify all cells are queued for execution.
-        notebook.cells.map((cell) => kernelExecution.executeCell(cell).ignoreErrors());
+        notebook.cells.map((cell) => kernelExecution.executeCell(cell).catch(noop));
         await Promise.all(queuedCells.map((cell) => waitForQueuedForExecutionOrExecuting(cell)));
 
         // Insert new cell & run it, & verify that too is queued for execution.
         const [newCell] = await insertRandomCells(notebook, { count: 1, addMarkdownCells: false });
         queuedCells.push(newCell.cell);
-        kernelExecution.executeCell(newCell.cell).ignoreErrors();
+        kernelExecution.executeCell(newCell.cell).catch(noop);
         await Promise.all(queuedCells.map((cell) => waitForQueuedForExecutionOrExecuting(cell)));
 
         // let all cells run to completion & validate their execution orders match the order in which they were run.
@@ -1022,9 +1035,9 @@ suite('Kernel Execution @kernelCore', function () {
         nbEditStub.callsFake((index, newCells) => {
             newCells.forEach((cell, i) => {
                 if (cell.kind === NotebookCellKind.Code) {
-                    notebook.insertCodeCell(index + i, cell.value, cell.languageId).ignoreErrors();
+                    notebook.insertCodeCell(index + i, cell.value, cell.languageId).catch(noop);
                 } else {
-                    notebook.insertMarkdownCell(index + i, cell.value).ignoreErrors();
+                    notebook.insertMarkdownCell(index + i, cell.value).catch(noop);
                 }
             });
             return undefined as any;

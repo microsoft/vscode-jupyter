@@ -27,7 +27,7 @@ import {
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { IControllerDefaultService, IControllerRegistration } from '../../../notebooks/controllers/types';

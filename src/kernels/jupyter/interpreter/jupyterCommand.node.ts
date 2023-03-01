@@ -5,15 +5,12 @@ import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { traceError } from '../../../platform/logging';
-import {
-    IPythonExecutionService,
-    IPythonExecutionFactory,
-    ExecutionResult
-} from '../../../platform/common/process/types.node';
+import { ExecutionResult } from '../../../platform/common/process/types.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCommands } from '../../../platform/common/constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types.node';
+import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 /**
  * Launches jupyter using the current python environment.

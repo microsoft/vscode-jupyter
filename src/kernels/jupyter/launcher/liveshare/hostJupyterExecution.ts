@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../../../platform/common/extensions';
-
 import uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
@@ -27,7 +25,7 @@ import {
     IJupyterServerUriStorage
 } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
-import { JupyterConnection } from '../../jupyterConnection';
+import { JupyterConnection } from '../../connection/jupyterConnection';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

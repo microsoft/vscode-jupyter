@@ -235,7 +235,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 oldSession.kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
             }
         }
-        this.shutdownSession(oldSession, undefined, false).ignoreErrors();
+        this.shutdownSession(oldSession, undefined, false).catch(noop);
     }
 
     public requestExecute(
@@ -373,9 +373,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     )
                 );
                 const sleepPromise = sleep(timeout);
-                sessionDisposed.promise.ignoreErrors();
-                sleepPromise.ignoreErrors();
-                kernelStatus.promise.ignoreErrors();
+                sessionDisposed.promise.catch(noop);
+                sleepPromise.catch(noop);
+                kernelStatus.promise.catch(noop);
                 const result = await Promise.race([kernelStatus.promise, sleepPromise, sessionDisposed.promise]);
                 if (session.isDisposed) {
                     traceError('Session disposed while waiting for session to be idle.');
@@ -391,7 +391,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     `Shutting down after failing to wait for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
                 );
                 // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-                this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
+                this.shutdownSession(session, this.statusHandler, isRestartSession).catch(noop);
                 throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
             } catch (ex) {
                 traceInfoIfCI(`Error waiting for idle`, ex);

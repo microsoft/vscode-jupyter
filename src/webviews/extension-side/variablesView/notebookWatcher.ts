@@ -11,7 +11,6 @@ import {
     NotebookDocument,
     NotebookEditor
 } from 'vscode';
-import '../../../platform/common/extensions';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';

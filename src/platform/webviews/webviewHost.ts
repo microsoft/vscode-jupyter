@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../common/extensions';
-
 import {
     ConfigurationChangeEvent,
     EventEmitter,
@@ -24,6 +22,7 @@ import { InteractiveWindowMessages, LocalizedMessages, SharedMessages } from '..
 import { sendTelemetryEvent } from '../../telemetry';
 import { IJupyterExtraSettings } from './types';
 import { getOSType, OSType } from '../common/utils/platform';
+import { noop } from '../common/utils/misc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -87,7 +86,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     private getHTMLById(id: string): Promise<string> {
         if (!this.activeHTMLRequest) {
             this.activeHTMLRequest = createDeferred<string>();
-            this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).ignoreErrors();
+            this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).catch(noop);
         } else {
             throw new Error('getHTMLById request already in progress');
         }
@@ -125,7 +124,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected onDataScienceSettingsChanged = async () => {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
-        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).catch(noop);
     };
 
     protected asWebviewUri(localResource: Uri) {
@@ -193,10 +192,10 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
 
         // Send the first settings message
-        this.onDataScienceSettingsChanged().ignoreErrors();
+        this.onDataScienceSettingsChanged().catch(noop);
 
         // Send the loc strings (skip during testing as it takes up a lot of memory)
-        this.sendLocStrings().ignoreErrors();
+        this.sendLocStrings().catch(noop);
     }
 
     protected async generateDataScienceExtraSettings(): Promise<IJupyterExtraSettings> {
@@ -271,7 +270,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             selectedImageListLabel: localize.WebViews.selectedImageListLabel,
             selectedImageLabel: localize.WebViews.selectedImageLabel
         };
-        this.postMessageInternal(SharedMessages.LocInit, JSON.stringify(locStrings)).ignoreErrors();
+        this.postMessageInternal(SharedMessages.LocInit, JSON.stringify(locStrings)).catch(noop);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -299,8 +298,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
 
         // On started, resend our init data.
-        this.sendLocStrings().ignoreErrors();
-        this.onDataScienceSettingsChanged().ignoreErrors();
+        this.sendLocStrings().catch(noop);
+        this.onDataScienceSettingsChanged().catch(noop);
     }
 
     // If our webview fails to load then just dispose ourselves
@@ -339,7 +338,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             const newSettings = await this.generateDataScienceExtraSettings();
             if (newSettings) {
                 const dsSettings = JSON.stringify(newSettings);
-                this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+                this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).catch(noop);
             }
         }
     };

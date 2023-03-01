@@ -32,6 +32,8 @@ import { IJupyterSubCommandExecutionService } from '../types.node';
 import { INotebookStarter } from '../types';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
+import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
+import { noop } from '../../../platform/common/utils/misc';
 
 /**
  * Responsible for starting a notebook.
@@ -86,7 +88,7 @@ export class NotebookStarter implements INotebookStarter {
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
-            tempDirPromise.then((dir) => this.disposables.push(dir)).ignoreErrors();
+            tempDirPromise.then((dir) => this.disposables.push(dir)).catch(noop);
             // Before starting the notebook process, make sure we generate a kernel spec
             const args = await this.generateArguments(
                 useDefaultConfig,
@@ -171,6 +173,7 @@ export class NotebookStarter implements INotebookStarter {
             if (
                 isCancellationError(err) ||
                 err instanceof JupyterConnectError ||
+                err instanceof JupyterCannotBeLaunchedWithRootError ||
                 err instanceof JupyterNotebookNotInstalled
             ) {
                 throw err;

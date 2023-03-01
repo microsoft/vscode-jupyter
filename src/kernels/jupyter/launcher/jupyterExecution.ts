@@ -24,7 +24,7 @@ import {
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { JupyterConnection } from '../jupyterConnection';
+import { JupyterConnection } from '../connection/jupyterConnection';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';

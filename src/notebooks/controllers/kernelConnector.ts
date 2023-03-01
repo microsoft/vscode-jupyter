@@ -23,8 +23,8 @@ import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTele
 import { IServiceContainer } from '../../platform/ioc/types';
 import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
-import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';
-import { Product } from '../../kernels/installer/types';
+import { clearInstalledIntoInterpreterMemento } from '../../platform/interpreter/installer/productInstaller';
+import { Product } from '../../platform/interpreter/installer/types';
 import { INotebookEditorProvider } from '../types';
 import { selectKernel } from './kernelSelector';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
@@ -111,7 +111,7 @@ export class KernelConnector {
             // If we failed to start the kernel, then clear cache used to track
             // whether we have dependencies installed or not.
             // Possible something is missing.
-            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).ignoreErrors();
+            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).catch(noop);
         }
 
         const handleResult = await errorHandler.handleKernelError(
@@ -135,7 +135,7 @@ export class KernelConnector {
         }
 
         // Dispose the kernel no matter what happened as we need to go around again when there's an error
-        kernel.dispose().ignoreErrors();
+        kernel.dispose().catch(noop);
 
         switch (handleResult) {
             case KernelInterpreterDependencyResponse.cancel:

@@ -15,7 +15,7 @@ import { IShowDataViewerFromVariablePanel } from './messageTypes';
 import { Commands as DSCommands, CommandSource } from './platform/common/constants';
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { Channel } from './platform/common/application/types';
-import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
+import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
