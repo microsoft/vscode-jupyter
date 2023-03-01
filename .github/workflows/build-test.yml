@@ -120,11 +120,6 @@ jobs:
       - name: Use Npm ${{env.NPM_VERSION}}
         run: npm i -g npm@${{env.NPM_VERSION}}
 
-      - name: Test zeromq installation
-        run: |
-          git clone https://github.com/zeromq/zeromq.js /tmp/zeromq.js
-          cd /tmp/zeromq.js && npm i
-
       - name: Cache pip files
         uses: actions/cache@v3
         with:
@@ -138,7 +133,9 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_loglevel: "silly"
 
       - name: Verify Translation files
         run: npm run validateTranslationFiles
