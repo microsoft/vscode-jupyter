@@ -135,7 +135,7 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --foreground-scripts --prefer-offline
         env:
-          npm_config_loglevel: "silly"
+          npm_config_build_from_source: true
 
       - name: Verify Translation files
         run: npm run validateTranslationFiles
