@@ -70,7 +70,7 @@ suite('Export File Opener', () => {
             Promise.resolve('Yes')
         );
 
-        await fileOpener.openFile, (ExportFormat.pdf, uri);
+        await fileOpener.openFile(ExportFormat.pdf, uri);
 
         verify(browserService.launch(anything())).once();
     });
