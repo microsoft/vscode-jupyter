@@ -120,6 +120,11 @@ jobs:
       - name: Use Npm ${{env.NPM_VERSION}}
         run: npm i -g npm@${{env.NPM_VERSION}}
 
+      - name: Test zeromq installation
+        run: |
+          git clone https://github.com/zeromq/zeromq.js /tmp/zeromq.js
+          cd /tmp/zeromq.js && npm i
+
       - name: Cache pip files
         uses: actions/cache@v3
         with:
