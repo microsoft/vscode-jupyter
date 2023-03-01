@@ -819,7 +819,6 @@ export class InterpreterService implements IInterpreterService {
                         async (e) => {
                             traceVerbose(`Python API env change detected, ${e.type} => '${e.env.id}'`);
                             // Remove items that are no longer valid.
-                            // yellow
                             if (e.type === 'remove') {
                                 this._interpreters.delete(e.env.id);
                             }
