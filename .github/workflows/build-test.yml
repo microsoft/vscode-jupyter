@@ -67,6 +67,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install dependencies for native modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
+
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
