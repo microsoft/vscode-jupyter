@@ -12,5 +12,8 @@ runs:
     - run: npm ci --prefer-offline
       shell: bash
 
+    - run: npm i zeromq@6.0.0-beta.16 --ignore-scripts
+      shell: bash
+
     - run: npm run package
       shell: bash

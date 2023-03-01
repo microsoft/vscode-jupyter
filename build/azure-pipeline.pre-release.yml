@@ -30,6 +30,9 @@ extends:
       - script: npm ci
         displayName: Install dependencies
 
+      - script: npm i zeromq@6.0.0-beta.16 --ignore-scripts
+        displayName: Install zmq
+
       - script: gulp clean
         displayName: Clean
 

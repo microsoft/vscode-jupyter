@@ -135,6 +135,9 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
+      - name: Install latest zmq
+        run: npm i zeromq@6.0.0-beta.16 --ignore-scripts
+
       - name: Verify Translation files
         run: npm run validateTranslationFiles
 
@@ -232,6 +235,9 @@ jobs:
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
+
+      - name: Install zmq
+        run: npm i zeromq@6.0.0-beta.16 --ignore-scripts
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
@@ -554,6 +560,9 @@ jobs:
         # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
+
+      - name: Install zmq
+        run: npm i zeromq@6.0.0-beta.16 --ignore-scripts
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
