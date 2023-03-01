@@ -119,10 +119,10 @@ suite('Installation - channel messages', () => {
 
     function verifyMessage(message: string, present: string[], missing: string[]) {
         for (const p of present) {
-            assert.strictEqual(message.indexOf(p) >= 0, true, `Message does not contain ${p}.`);
+            assert.strictEqual(message.indexOf(p) >= 0, true, `Message '${message}' does not contain ${p}.`);
         }
         for (const m of missing) {
-            assert.strictEqual(message.indexOf(m) < 0, true, `Message incorrectly contains ${m}.`);
+            assert.strictEqual(message.indexOf(m) < 0, true, `Message '${message}' incorrectly contains ${m}.`);
         }
     }
 
