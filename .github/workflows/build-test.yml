@@ -112,6 +112,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev
+
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
@@ -233,7 +238,9 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_build_from_source: true
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
@@ -555,7 +562,9 @@ jobs:
 
         # This step is slow.
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_build_from_source: true
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -787,7 +796,9 @@ jobs:
           name: 'ms-toolsai-jupyter-insiders.vsix'
 
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_build_from_source: true
 
       - name: pip install system test requirements
         run: |
