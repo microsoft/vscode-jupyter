@@ -120,12 +120,10 @@ export class KernelSelector implements IDisposable {
         this.installPythonExtension = {
             label: DataScience.installPythonExtensionViaKernelPickerTitle,
             command: async () => {
-                // TODO: Once user installs Python wait here and refresh this UI so we display the Python Envs.
                 const installed = await commands.executeCommand(Commands.InstallPythonExtensionViaKernelPicker);
                 if (installed === true) {
                     // refresh the view and wait here
                     this.provider.refresh().catch(noop);
-                    // TODO: Re-display the quick pick so user can pick a kernel.
                     return undefined;
                 } else {
                     throw new SomeOtherActionError();

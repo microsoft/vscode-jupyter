@@ -434,8 +434,6 @@ VAR4="QR"ST"
             expect(vars).to.have.property('BAZ', '"ABCD', 'value is invalid');
             expect(vars).to.have.property('VAR1', '"EFGH', 'value is invalid');
             expect(vars).to.have.property('VAR2', 'IJKL"', 'value is invalid');
-            // eslint-disable-next-line
-            // TODO: Should the outer marks be left?
             expect(vars).to.have.property('VAR3', "MN'OP", 'value is invalid');
             expect(vars).to.have.property('VAR4', 'QR"ST', 'value is invalid');
         });

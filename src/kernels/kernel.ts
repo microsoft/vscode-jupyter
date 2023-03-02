@@ -874,7 +874,6 @@ abstract class BaseKernel implements IBaseKernel {
             // get a request to update style
             results.push(...splitLines(matplotInit, { trim: false }));
 
-            // TODO: This must be joined with the previous request (else we send two separate requests unnecessarily).
             const useDark = this.appShell.activeColorTheme.kind === ColorThemeKind.Dark;
             if (!this.kernelSettings.ignoreVscodeTheme) {
                 // Reset the matplotlib style based on if dark or not.

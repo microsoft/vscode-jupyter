@@ -80,12 +80,7 @@ export function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeC
                     log({ elapsed: timer.elapsedTime, returnValue: data });
                     return data;
                 })
-                .catch((ex) => {
-                    log({ elapsed: timer.elapsedTime, err: ex });
-                    // eslint-disable-next-line
-                    // TODO(GH-11645) Re-throw the error like we do
-                    // in the non-Promise case.
-                });
+                .catch((ex) => log({ elapsed: timer.elapsedTime, err: ex }));
         } else {
             log({ elapsed: timer.elapsedTime, returnValue: result });
         }

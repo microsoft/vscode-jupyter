@@ -335,9 +335,8 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         // Go through all controllers that have been created and hide them.
         // Unless they are attached to an existing document.
         this.registered.forEach((item) => {
-            // TODO: Don't hide controllers that are already associated with a notebook.
-            // If we have a notebook opened and its using a kernel.
-            // Else we end up killing the execution as well.
+            // Don't hide controllers that are already associated with a notebook.
+            // If we have a notebook opened and its using a kernel then we end up killing the execution as well.
             if (this.isFiltered(item.connection) && this.canControllerBeDisposed(item)) {
                 traceWarning(
                     `Deleting controller ${item.id} as it is associated with a connection that has been hidden`

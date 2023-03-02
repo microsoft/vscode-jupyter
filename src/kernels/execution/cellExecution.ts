@@ -155,7 +155,6 @@ export class CellExecution implements IDisposable {
         if (this.started) {
             traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
             traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
-            // TODO: Send telemetry this should never happen, if it does we have problems.
             return this.result;
         }
         this.started = true;

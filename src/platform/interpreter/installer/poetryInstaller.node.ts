@@ -72,9 +72,7 @@ export class PoetryInstaller extends ModuleInstaller {
         const args = [execPath, 'add', '--dev', moduleName];
         const cwd = getInterpreterWorkspaceFolder(interpreter, this.workspaceService)?.fsPath;
 
-        // TODO: We have to shell exec this because child_process.spawn will die
-        // for poetry.
-        // See issue:
+        // We have to shell exec this because child_process.spawn will die
         // https://github.com/microsoft/vscode-jupyter/issues/9265
         return {
             useShellExec: true,
