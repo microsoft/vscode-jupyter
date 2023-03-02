@@ -3,17 +3,17 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import * as path from '../../platform/vscode-path/path';
-import { getDisplayPath } from '../common/platform/fs-paths';
-import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IProcessServiceFactory } from '../common/process/types.node';
-import { swallowExceptions } from '../common/utils/decorators';
-import { traceVerbose } from '../logging';
+import * as path from '../vscode-path/resources';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { ResourceMap } from '../vscode-path/map';
+import { IFileSystem, IPlatformService } from '../common/platform/types';
+import { ResourceMap } from '../common/resourceMap';
+import { swallowExceptions } from '../common/utils/decorators';
+import { IProcessServiceFactory } from '../common/process/types.node';
+import { traceVerbose } from '../logging';
+import { getDisplayPath } from '../common/platform/fs-paths';
 
 @injectable()
-export class GlobalPythonSiteService {
+export class GlobalPythonExecutablePathService {
     private readonly userSitePaths = new ResourceMap<Promise<Uri | undefined>>();
     constructor(
         @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory,
@@ -21,8 +21,11 @@ export class GlobalPythonSiteService {
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
 
+    /**
+     * Gets the path where executables are installed for the given Global Python interpreter.
+     */
     @swallowExceptions()
-    public async getUserSitePath(interpreter: PythonEnvironment): Promise<Uri | undefined> {
+    public async getExecutablesPath(interpreter: PythonEnvironment): Promise<Uri | undefined> {
         if (interpreter.envType !== EnvironmentType.Unknown) {
             return;
         }
@@ -45,34 +48,44 @@ export class GlobalPythonSiteService {
      * 3. apt-get install python3 on Ubuntu
      * 4. Windows Store Python on Windows
      *
+     * Also documented here by other users
+     * https://stackoverflow.com/questions/35898734/pip-installs-packages-successfully-but-executables-not-found-from-command-line
+     *
      * In all of these cases when we install packages a warning is displayed in the terminal
      * indicating the fact that packages are being installed in a directory that is not on the PATH.
-     * Upon further investigation it is found that this directory is a USER_SITE directory.
+     * Upon further investigation it is found that this directory is a USER_SITE or USER_BASE directory.
      *
      * After all, when we install packages into the global envs we use the `--user` flag.
-     * Which results in installing the packages in a user directory (hence USER_SITE).
+     * Which results in installing the packages in a user directory (hence USER_SITE or USER_BASE).
      *
      * The work around here is to ensure we add that path into the PATH
      * This service merely returns the path that needs to be added to the PATH.
+     *
+     * On windows it is USER_SITE/../Scripts
+     * On Unix it is USER_BASE/bin
+     *
      */
     private async getUserSitePathImpl(interpreter: PythonEnvironment): Promise<Uri | undefined> {
         const processService = await this.processFactory.create();
         const delimiter = 'USER_BASE_VALUE';
+        const valueToUse = this.platform.isWindows ? 'USER_SITE' : 'USER_BASE';
+        // Add delimiters as sometimes, the python runtime can spit out warning/information messages as well.
         const { stdout } = await processService.exec(interpreter.uri.fsPath, [
             '-c',
-            `import site;print("${delimiter}");print(site.USER_SITE);print("${delimiter}");`
+            `import site;print("${delimiter}");print(site.${valueToUse});print("${delimiter}");`
         ]);
         if (stdout.includes(delimiter)) {
             const output = stdout
                 .substring(stdout.indexOf(delimiter) + delimiter.length, stdout.lastIndexOf(delimiter))
                 .trim();
-            let sitePath = Uri.file(output);
+            const outputPath = Uri.file(output);
+            let sitePath: Uri | undefined;
             if (this.platform.isWindows) {
-                sitePath = Uri.file(path.join(path.dirname(sitePath.fsPath), 'Scripts'));
-            } else if (sitePath.fsPath.endsWith('site-packages')) {
-                sitePath = Uri.file(path.join(path.dirname(path.dirname(path.dirname(sitePath.fsPath))), 'bin'));
+                sitePath = Uri.joinPath(path.dirname(outputPath), 'Scripts');
+            } else {
+                sitePath = Uri.joinPath(outputPath, 'bin');
             }
-            if (!this.fs.exists(sitePath)) {
+            if (!sitePath || !this.fs.exists(sitePath)) {
                 throw new Error(
                     `USER_SITE ${sitePath.fsPath} dir does not exist for the interpreter ${getDisplayPath(
                         interpreter.uri

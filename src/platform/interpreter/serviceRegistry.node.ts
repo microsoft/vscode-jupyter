@@ -6,7 +6,7 @@ import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../common/t
 import { IServiceManager } from '../ioc/types';
 import { CondaService } from './condaService.node';
 import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
-import { GlobalPythonSiteService } from './globalPythonSiteService.node';
+import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { InstallationChannelManager } from './installer/channelManager.node';
 import { CondaInstaller } from './installer/condaInstaller.node';
 import { PipEnvInstaller } from './installer/pipEnvInstaller.node';
@@ -34,7 +34,10 @@ import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
     serviceManager.addSingleton<CondaService>(CondaService, CondaService);
-    serviceManager.addSingleton<GlobalPythonSiteService>(GlobalPythonSiteService, GlobalPythonSiteService);
+    serviceManager.addSingleton<GlobalPythonExecutablePathService>(
+        GlobalPythonExecutablePathService,
+        GlobalPythonExecutablePathService
+    );
     serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
