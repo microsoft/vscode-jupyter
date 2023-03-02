@@ -6,7 +6,7 @@ import { getDisplayPath as getDisplayPathCommon } from './fs-paths';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { homedir } from 'os';
 
-export const homePath = Uri.file(homedir()); // This is the only thing requiring a node version
+const homePath = Uri.file(homedir()); // This is the only thing requiring a node version
 
 export function removeHomeFromFile(file: string | undefined) {
     if (getOSType() === OSType.Windows) {

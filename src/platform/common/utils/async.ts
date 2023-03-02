@@ -147,7 +147,7 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
 }
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-export const NEVER: Promise<unknown> = new Promise(() => {});
+const NEVER: Promise<unknown> = new Promise(() => {});
 
 /**
  * Yield everything produced by the given iterators as soon as each is ready.

@@ -25,15 +25,6 @@ export type TemporaryFileUri = { file: vscode.Uri } & vscode.Disposable;
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export type TemporaryDirectory = { path: string } & vscode.Disposable;
 
-// Where to fine executables.
-//
-// In particular this class provides all the tools needed to find
-// executables, including through an environment variable.
-export interface IExecutables {
-    delimiter: string;
-    envVar: string;
-}
-
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean;
