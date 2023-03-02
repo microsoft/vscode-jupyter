@@ -124,11 +124,18 @@ jobs:
         tags: ['^[^@]+$|@mandatory']
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [windows-latest]
+        os: [ubuntu-latest]
         ipywidgetsVersion: ['']
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
+        include:
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
+            os: windows-latest
+            ipywidgetsVersion: ''
 
     steps:
       - name: Checkout
