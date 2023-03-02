@@ -136,8 +136,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
     ): Promise<IPythonExecutionService | undefined> {
         return this.pythonExecutionFactory.createActivatedEnvironment({
             resource: source,
-            interpreter,
-            allowEnvironmentFetchExceptions: false
+            interpreter
         });
     }
 }

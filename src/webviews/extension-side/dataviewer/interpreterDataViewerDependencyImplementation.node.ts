@@ -31,8 +31,7 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
     ): Promise<string | undefined> {
         const launcher = await this.pythonFactory.createActivatedEnvironment({
             resource: undefined,
-            interpreter,
-            allowEnvironmentFetchExceptions: true
+            interpreter
         });
         const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {
             throwOnStdErr: true,

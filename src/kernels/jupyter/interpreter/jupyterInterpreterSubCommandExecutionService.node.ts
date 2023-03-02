@@ -107,7 +107,6 @@ export class JupyterInterpreterSubCommandExecutionService
             DataScience.startingJupyterLogMessage(getDisplayPath(interpreter.uri), notebookArgs.join(' '))
         );
         const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
-            allowEnvironmentFetchExceptions: true,
             interpreter: interpreter
         });
         // We should never set token for long running processes.
@@ -115,7 +114,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const spawnOptions = { ...options };
         spawnOptions.token = undefined;
         const envVars =
-            (await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)) || process.env;
+            (await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter)) || process.env;
         const jupyterDataPaths = (process.env['JUPYTER_PATH'] || envVars['JUPYTER_PATH'] || '')
             .split(path.delimiter)
             .filter((item) => item.trim().length);
@@ -141,7 +140,6 @@ export class JupyterInterpreterSubCommandExecutionService
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createActivatedEnvironment({
-            allowEnvironmentFetchExceptions: true,
             interpreter: interpreter
         });
 

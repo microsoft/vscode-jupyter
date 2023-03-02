@@ -34,7 +34,8 @@ export interface IInterpreterService {
             | {
                   /** Environment Path */
                   path: string;
-              }
+              },
+        token?: CancellationToken
     ): Promise<undefined | PythonEnvironment>;
     getInterpreterHash(id: string): string | undefined;
 }

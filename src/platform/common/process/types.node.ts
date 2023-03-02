@@ -3,10 +3,10 @@
 
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken } from 'vscode';
 
 import { BaseError } from '../../errors/types';
-import { IDisposable } from '../types';
+import { IDisposable, Resource } from '../types';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
@@ -54,7 +54,7 @@ export interface IProcessService extends IDisposable {
 export const IProcessServiceFactory = Symbol('IProcessServiceFactory');
 
 export interface IProcessServiceFactory {
-    create(resource?: Uri): Promise<IProcessService>;
+    create(resource: Resource, cancelToken?: CancellationToken): Promise<IProcessService>;
 }
 
 /**

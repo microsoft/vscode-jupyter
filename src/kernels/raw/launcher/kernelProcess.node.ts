@@ -40,11 +40,7 @@ import {
     ignoreLogging
 } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import {
-    IProcessServiceFactory,
-    ObservableExecutionResult,
-    IProcessService
-} from '../../../platform/common/process/types.node';
+import { IProcessServiceFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -546,9 +542,12 @@ export class KernelProcess implements IKernelProcess {
                 this.kernelEnvVarsService.getEnvironmentVariables(
                     this.resource,
                     this._kernelConnectionMetadata.interpreter,
-                    this._kernelConnectionMetadata.kernelSpec
+                    this._kernelConnectionMetadata.kernelSpec,
+                    cancelToken
                 )
             ]);
+
+            Cancellation.throwIfCanceled(cancelToken);
 
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
             if (os.platform() === 'win32') {
@@ -568,6 +567,7 @@ export class KernelProcess implements IKernelProcess {
                     );
                 }
             }
+            Cancellation.throwIfCanceled(cancelToken);
 
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
             const args = this.launchKernelSpec.argv.slice(1); // Remove the python part of the command
@@ -584,25 +584,20 @@ export class KernelProcess implements IKernelProcess {
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
             traceInfo(`Launching Raw Kernel ${this.launchKernelSpec.display_name} # ${executable}`);
-            const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
             const [executionService, env] = await Promise.all([
-                Promise.race([
-                    this.processExecutionFactory.create(this.resource),
-                    promiseCancellation as Promise<IProcessService>
-                ]),
+                this.processExecutionFactory.create(this.resource, cancelToken),
                 // If we have an interpreter always use that, its possible we are launching a kernel that is associated with a Python environment
                 // E.g. we could be dealing with a Java/R kernel registered in a conda environment.
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
-                Promise.race([
-                    this.kernelEnvVarsService.getEnvironmentVariables(
-                        this.resource,
-                        this._kernelConnectionMetadata.interpreter,
-                        this.launchKernelSpec
-                    ),
-                    promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
-                ])
+                this.kernelEnvVarsService.getEnvironmentVariables(
+                    this.resource,
+                    this._kernelConnectionMetadata.interpreter,
+                    this.launchKernelSpec,
+                    cancelToken
+                )
             ]);
+            Cancellation.throwIfCanceled(cancelToken);
             // The first argument is sliced because it is the executable command.
             const args = this.launchKernelSpec.argv.slice(1);
             exeObs = executionService.execObservable(executable, args, {
