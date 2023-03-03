@@ -34,6 +34,7 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 import { noop } from '../../../platform/common/utils/misc';
+import { UsedPorts } from '../../common/usedPorts';
 
 /**
  * Responsible for starting a notebook.
@@ -46,10 +47,6 @@ import { noop } from '../../../platform/common/utils/misc';
 @injectable()
 export class NotebookStarter implements INotebookStarter {
     private readonly disposables: IDisposable[] = [];
-    private static _usedPorts = new Set<number>();
-    public static get usedPorts() {
-        return Array.from(NotebookStarter._usedPorts);
-    }
     constructor(
         @inject(IJupyterSubCommandExecutionService)
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
@@ -158,9 +155,9 @@ export class NotebookStarter implements INotebookStarter {
                 const port = parseInt(new URL(connection.baseUrl).port || '0', 10);
                 if (port && !isNaN(port)) {
                     if (launchResult.proc) {
-                        launchResult.proc.on('exit', () => NotebookStarter._usedPorts.delete(port));
+                        launchResult.proc.on('exit', () => UsedPorts.delete(port));
                     }
-                    NotebookStarter._usedPorts.add(port);
+                    UsedPorts.add(port);
                 }
             } catch (ex) {
                 traceError(`Parsing failed ${connection.baseUrl}`, ex);
