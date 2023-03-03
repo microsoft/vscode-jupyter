@@ -474,13 +474,13 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     @chainable()
-    public async addErrorMessage(message: string, notebookCell: NotebookCell): Promise<void> {
+    async addErrorMessage(message: string, notebookCell: NotebookCell): Promise<void> {
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
         markdownCell.metadata = { isInteractiveWindowMessageCell: true };
         const insertionIndex =
             notebookCell && notebookCell.index >= 0 ? notebookCell.index : this.notebookDocument.cellCount;
         // If possible display the error message in the cell.
-        const controller = this.controllerRegistration.getSelected(this.notebookDocument);
+        const controller = this.currentKernelInfo.controller;
         const output = createOutputWithErrorMessageForDisplay(message);
         if (this.notebookDocument.cellCount === 0 || !controller || !output || !notebookCell) {
             const edit = new WorkspaceEdit();
@@ -488,15 +488,14 @@ export class InteractiveWindow implements IInteractiveWindow {
             edit.set(this.notebookDocument.uri, [nbEdit]);
             await workspace.applyEdit(edit);
         } else {
-            const execution = CellExecutionCreator.getOrCreate(
-                notebookCell,
-                new KernelController(controller.controller)
-            );
+            const execution = CellExecutionCreator.getOrCreate(notebookCell, new KernelController(controller));
             if (!execution.started) {
                 execution.start(notebookCell.executionSummary?.timing?.startTime);
             }
             execution.executionOrder = notebookCell.executionSummary?.executionOrder;
-            execution.appendOutput(output).then(noop, noop);
+            execution
+                .appendOutput(output)
+                .then(noop, (err) => traceWarning(`Could not append error message "${output}" to cell: ${err}`));
             execution.end(false, notebookCell.executionSummary?.timing?.endTime);
         }
     }
@@ -642,7 +641,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         // Kick of starting kernels early.
         const kernelPromise = this.startKernel();
-        kernelPromise.then(noop, noop);
         const cell = await notebookCellPromise;
 
         let success = true;
