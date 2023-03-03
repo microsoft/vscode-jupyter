@@ -39,6 +39,7 @@ import { TraceOptions } from '../../../platform/logging/types';
 import { getResourceType } from '../../../platform/common/utils';
 import { format } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { UsedPorts } from '../../common/usedPorts';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -47,11 +48,7 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
-    private static _usedPorts = new Set<number>();
     private portChain: Promise<number[]> | undefined;
-    public static get usedPorts(): number[] {
-        return Array.from(KernelLauncher._usedPorts);
-    }
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
@@ -248,11 +245,11 @@ export class KernelLauncher implements IKernelLauncher {
                         exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
                     }
                 );
-                KernelLauncher._usedPorts.delete(connection.control_port);
-                KernelLauncher._usedPorts.delete(connection.hb_port);
-                KernelLauncher._usedPorts.delete(connection.iopub_port);
-                KernelLauncher._usedPorts.delete(connection.shell_port);
-                KernelLauncher._usedPorts.delete(connection.stdin_port);
+                UsedPorts.delete(connection.control_port);
+                UsedPorts.delete(connection.hb_port);
+                UsedPorts.delete(connection.iopub_port);
+                UsedPorts.delete(connection.shell_port);
+                UsedPorts.delete(connection.stdin_port);
                 disposable.dispose();
             },
             this,
@@ -279,11 +276,11 @@ export class KernelLauncher implements IKernelLauncher {
         // Then get the next set starting at that point
         const getPorts = promisify((await import('portfinder')).getPorts);
         const ports = await getPorts(5, { host: '127.0.0.1', port });
-        if (ports.some((item) => KernelLauncher._usedPorts.has(item))) {
-            const maxPort = Math.max(...KernelLauncher._usedPorts, ...ports);
+        if (ports.some((item) => UsedPorts.has(item))) {
+            const maxPort = Math.max(...UsedPorts, ...ports);
             return KernelLauncher.findNextFreePort(maxPort);
         }
-        ports.forEach((item) => KernelLauncher._usedPorts.add(item));
+        ports.forEach((item) => UsedPorts.add(item));
         return ports;
     }
 
