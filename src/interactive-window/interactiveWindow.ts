@@ -186,6 +186,8 @@ export class InteractiveWindow implements IInteractiveWindow {
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
 
+        this.controller.setController(this.notebookDocument);
+
         if (this.controller.controller) {
             this.controller.enableAutoStart();
             this.startKernel().catch(noop);
@@ -205,7 +207,7 @@ export class InteractiveWindow implements IInteractiveWindow {
 
         const sysInfoCell = this.insertSysInfoMessage(this.controller.metadata, SysInfoReason.Start);
         try {
-            const kernel = await this.controller.startKernel(this.notebookDocument, this.owner);
+            const kernel = await this.controller.startKernel(this.owner);
             const kernelEventHookForRestart = async () => {
                 if (this.notebookDocument && this.controller.metadata) {
                     this._insertSysInfoPromise = undefined;

@@ -16,7 +16,6 @@ import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { InteractiveWindowController } from './InteractiveWindowController';
 
 export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebookEditor: NotebookEditor };
 
@@ -74,7 +73,7 @@ export interface IInteractiveControllerHelper {
         resource: Resource,
         connection?: KernelConnectionMetadata
     ): Promise<IVSCodeNotebookController | undefined>;
-    getSelectedController(notebookDocument: NotebookDocument): InteractiveWindowController;
+    getSelectedController(notebookDocument: NotebookDocument): IVSCodeNotebookController | undefined;
     getRegisteredController(metadata: KernelConnectionMetadata): IVSCodeNotebookController | undefined;
     createKernel(
         metadata: KernelConnectionMetadata,

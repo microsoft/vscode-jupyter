@@ -15,7 +15,6 @@ import { IInterpreterService } from '../platform/interpreter/contracts';
 import { IServiceContainer } from '../platform/ioc/types';
 import { traceInfoIfCI, traceWarning } from '../platform/logging';
 import { IInteractiveControllerHelper } from './types';
-import { InteractiveWindowController } from './InteractiveWindowController';
 
 const MostRecentKernelSelectedKey = 'LastInteractiveKernelSelected';
 
@@ -63,9 +62,8 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         );
     }
 
-    public getSelectedController(notebookDocument: NotebookDocument): InteractiveWindowController {
-        const controller = this.controllerRegistration.getSelected(notebookDocument);
-        return new InteractiveWindowController(this, controller?.controller, controller?.connection);
+    public getSelectedController(notebookDocument: NotebookDocument): IVSCodeNotebookController | undefined {
+        return this.controllerRegistration.getSelected(notebookDocument);
     }
 
     public getRegisteredController(metadata: KernelConnectionMetadata): IVSCodeNotebookController | undefined {

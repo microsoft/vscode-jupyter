@@ -211,9 +211,14 @@ export class InteractiveWindowProvider
                 `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
             );
 
-            let controller = this.controllerHelper.getSelectedController(editor.notebook);
-
-            const result = new InteractiveWindow(this.serviceContainer, resource, mode, controller, editor, inputUri);
+            const result = new InteractiveWindow(
+                this.serviceContainer,
+                resource,
+                mode,
+                new InteractiveWindowController(this.controllerHelper),
+                editor,
+                inputUri
+            );
             sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
                 hasKernel: !!initialController,
                 hasOwner: !!resource,
