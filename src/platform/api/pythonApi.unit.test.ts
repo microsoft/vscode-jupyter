@@ -8,7 +8,6 @@ import { Disposable, EventEmitter, WorkspaceFoldersChangeEvent } from 'vscode';
 import { createEventHandler } from '../../test/common';
 import { IWorkspaceService } from '../common/application/types';
 import { disposeAllDisposables } from '../common/helpers';
-import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IExtensionContext } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterService } from './pythonApi';
@@ -35,7 +34,6 @@ suite('Interpreter Service', () => {
     let onDidEnvironmentVariablesChange: EventEmitter<EnvironmentVariablesChangeEvent>;
     let newPythonApi: ProposedExtensionAPI;
     let environments: ProposedExtensionAPI['environments'];
-    let fs: IFileSystem;
     setup(() => {
         interpreterService = mock<IInterpreterService>();
         apiProvider = mock<IPythonApiProvider>();
@@ -47,7 +45,6 @@ suite('Interpreter Service', () => {
         onDidChangeActiveEnvironmentPath = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
         onDidChangeEnvironments = new EventEmitter<EnvironmentsChangeEvent>();
         onDidEnvironmentVariablesChange = new EventEmitter<EnvironmentVariablesChangeEvent>();
-        fs = mock<IFileSystem>();
         disposables.push(onDidActivatePythonExtension);
         disposables.push(onDidChangeWorkspaceFolders);
         disposables.push(onDidChangeActiveEnvironmentPath);
@@ -77,8 +74,7 @@ suite('Interpreter Service', () => {
             instance(extensionChecker),
             disposables,
             instance(workspace),
-            instance(context),
-            instance(fs)
+            instance(context)
         );
     }
     test('Progress status triggered upon refresh', async () => {
