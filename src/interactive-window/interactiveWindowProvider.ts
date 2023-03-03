@@ -52,6 +52,7 @@ import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isInteractiveInputTab } from './helpers';
 import { Schemas } from '../platform/vscode-path/utils';
 import { sendTelemetryEvent } from '../telemetry';
+import { InteractiveWindowController } from './InteractiveWindowController';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -124,10 +125,9 @@ export class InteractiveWindowProvider
                 this.serviceContainer,
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
                 iw.mode,
-                undefined,
+                new InteractiveWindowController(this.controllerHelper),
                 tab,
-                Uri.parse(iw.inputBoxUriString),
-                this.controllerHelper
+                Uri.parse(iw.inputBoxUriString)
             );
             sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
                 hasKernel: false,
@@ -211,17 +211,9 @@ export class InteractiveWindowProvider
                 `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
             );
 
-            let controller = this.controllerHelper.getSelected(editor.notebook);
+            let controller = this.controllerHelper.getSelectedController(editor.notebook);
 
-            const result = new InteractiveWindow(
-                this.serviceContainer,
-                resource,
-                mode,
-                controller,
-                editor,
-                inputUri,
-                this.controllerHelper
-            );
+            const result = new InteractiveWindow(this.serviceContainer, resource, mode, controller, editor, inputUri);
             sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
                 hasKernel: !!initialController,
                 hasOwner: !!resource,
