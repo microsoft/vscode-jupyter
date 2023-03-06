@@ -9,13 +9,11 @@ const jupyterNotebookModuleNames = [
     translateProductToModule(Product.notebook)
 ];
 export function getPinnedPackages(installer: 'conda' | 'pip', moduleName: string): string[] {
-    // if (moduleName === translateProductToModule(Product.ipykernel)) {
-    //     return ['pyzmq<25'];
-    // }
     if (!jupyterNotebookModuleNames.includes(moduleName)) {
         return [];
     }
     // https://github.com/microsoft/vscode-jupyter/issues/12775
+    // https://github.com/jupyter/jupyter_client/issues/926
     // Pin dependencies for jupyter-client and pyzmq as a work around.
     if (installer === 'pip') {
         return ['jupyter-client<8', 'pyzmq<25'];
