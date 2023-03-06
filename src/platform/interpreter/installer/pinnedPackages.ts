@@ -9,6 +9,9 @@ const jupyterNotebookModuleNames = [
     translateProductToModule(Product.notebook)
 ];
 export function getPinnedPackages(installer: 'conda' | 'pip', moduleName: string): string[] {
+    // if (moduleName === translateProductToModule(Product.ipykernel)) {
+    //     return ['pyzmq<25'];
+    // }
     if (!jupyterNotebookModuleNames.includes(moduleName)) {
         return [];
     }
