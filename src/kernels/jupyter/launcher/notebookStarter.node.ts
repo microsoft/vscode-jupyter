@@ -113,7 +113,7 @@ export class NotebookStarter implements INotebookStarter {
             if (launchResult.proc) {
                 launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
                 launchResult.out.subscribe((out) => {
-                    if (out.out.includes('Uncaught exception in ZMQStream callback')){
+                    if (out.out.includes('Uncaught exception in ZMQStream callback')) {
                         sendTelemetryEvent(Telemetry.JupyterServerZMQStreamError);
                     }
                     this.jupyterOutputChannel.append(out.out);
