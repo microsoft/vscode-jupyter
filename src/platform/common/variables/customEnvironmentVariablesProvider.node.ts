@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import * as path from '../../vscode-path/path';
-import { Disposable, Event, EventEmitter, RelativePattern, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, RelativePattern, Uri } from 'vscode';
 import { TraceOptions } from '../../logging/types';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import { IWorkspaceService } from '../application/types';
@@ -48,7 +48,8 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getEnvironmentVariables(
         resource: Resource,
-        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+        purpose: 'RunPythonCode' | 'RunNonPythonCode',
+        token?: CancellationToken
     ): Promise<EnvironmentVariables> {
         resource = resource
             ? resource
@@ -58,7 +59,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
 
         if (purpose === 'RunPythonCode') {
             // No need to cache for Python code, as we get these env vars from Python extension.
-            return this._getEnvironmentVariables(resource, purpose);
+            return this._getEnvironmentVariables(resource, purpose, token);
         }
         const cacheStoreIndexedByWorkspaceFolder = new InMemoryCache<EnvironmentVariables>(
             this.cacheDuration,
@@ -69,13 +70,20 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             traceVerbose(`Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`);
             return cacheStoreIndexedByWorkspaceFolder.data!;
         }
-        const promise = this._getEnvironmentVariables(resource, purpose);
-        promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).catch(noop);
+        const promise = this._getEnvironmentVariables(resource, purpose, token);
+        promise
+            .then((result) => {
+                if (!token?.isCancellationRequested) {
+                    cacheStoreIndexedByWorkspaceFolder.data = result;
+                }
+            })
+            .catch(noop);
         return promise;
     }
     public async getCustomEnvironmentVariables(
         resource: Resource,
-        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+        purpose: 'RunPythonCode' | 'RunNonPythonCode',
+        token?: CancellationToken
     ): Promise<EnvironmentVariables | undefined> {
         resource = resource
             ? resource
@@ -90,7 +98,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
 
         if (purpose === 'RunPythonCode' && this.extensionChecker.isPythonExtensionInstalled) {
             const api = await this.pythonApi.getNewApi();
-            if (api) {
+            if (api && !token?.isCancellationRequested) {
                 if (!this.pythonEnvVarChangeEventHooked) {
                     this.pythonEnvVarChangeEventHooked = true;
                     api.environments.onDidEnvironmentVariablesChange(
@@ -116,14 +124,22 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             );
             return cacheStoreIndexedByWorkspaceFolder.data!;
         }
-
+        if (token?.isCancellationRequested) {
+            return;
+        }
         this.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath || '');
 
         const envFile = this.getEnvFile(workspaceFolderUri);
         this.createFileWatcher(envFile, workspaceFolderUri);
 
         const promise = this.envVarsService.parseFile(envFile, process.env);
-        promise.then((result) => (cacheStoreIndexedByWorkspaceFolder.data = result)).catch(noop);
+        promise
+            .then((result) => {
+                if (!token?.isCancellationRequested) {
+                    cacheStoreIndexedByWorkspaceFolder.data = result;
+                }
+            })
+            .catch(noop);
         return promise;
     }
     public createFileWatcher(envFile: string, workspaceFolderUri?: Uri) {
@@ -148,9 +164,13 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     }
     private async _getEnvironmentVariables(
         resource: Resource,
-        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+        purpose: 'RunPythonCode' | 'RunNonPythonCode',
+        token?: CancellationToken
     ): Promise<EnvironmentVariables> {
-        let customEnvVars = await this.getCustomEnvironmentVariables(resource, purpose);
+        let customEnvVars = await this.getCustomEnvironmentVariables(resource, purpose, token);
+        if (token?.isCancellationRequested) {
+            return {};
+        }
         if (customEnvVars && purpose === 'RunPythonCode' && this.extensionChecker.isPythonExtensionInstalled) {
             // Python extension API returns the resolved env variables.
             return customEnvVars;

@@ -21,8 +21,9 @@ import { Telemetry } from '../common/constants';
 import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../logging';
 import { TraceOptions } from '../logging/types';
 import { serializePythonEnvironment } from '../api/pythonApi';
-import { GlobalPythonSiteService } from './globalPythonSiteService.node';
+import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
+import { CancellationToken } from 'vscode';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -36,7 +37,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(GlobalPythonSiteService) private readonly userSite: GlobalPythonSiteService
+        @inject(GlobalPythonExecutablePathService) private readonly globalExecPaths: GlobalPythonExecutablePathService
     ) {
         this.customEnvVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
@@ -50,26 +51,31 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @traceDecoratorVerbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
+        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const title = DataScience.activatingPythonEnvironment(
             interpreter.displayName || getDisplayPath(interpreter.uri)
         );
         return KernelProgressReporter.wrapAndReportProgress(resource, title, () =>
-            this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
+            this.getActivatedEnvironmentVariablesImpl(resource, interpreter, token)
         );
     }
     @traceDecoratorVerbose('Getting activated env variables impl', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
+        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
         const stopWatch = new StopWatch();
-        return this.getActivatedEnvironmentVariablesFromPython(resource, interpreter)
+        return this.getActivatedEnvironmentVariablesFromPython(resource, interpreter, token)
             .then((env) => {
+                if (token?.isCancellationRequested) {
+                    return;
+                }
                 traceVerbose(
                     `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms with ${
                         Object.keys(env || {}).length
@@ -94,7 +100,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @swallowExceptions('Get activated env variables from Python')
     public async getActivatedEnvironmentVariablesFromPython(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
+        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         resource = resource
             ? resource
@@ -128,7 +135,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     return undefined;
                 })
         );
-
+        if (token?.isCancellationRequested) {
+            return;
+        }
         const envType = interpreter.envType;
         sendTelemetryEvent(
             Telemetry.GetActivatedEnvironmentVariables,
@@ -180,15 +189,21 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 this.envVarsService.appendPythonPath(env, customEnvVars!.PYTHONPATH);
             }
 
-            const userSite = await this.userSite.getUserSitePath(interpreter).catch(noop);
+            const executablesPath = await this.globalExecPaths.getExecutablesPath(interpreter).catch(noop);
+            if (token?.isCancellationRequested) {
+                return;
+            }
+
             const pathValue = env.PATH || env.Path;
             const pathValues = pathValue ? pathValue.split(path.delimiter) : [];
             // First value in PATH is expected to be the directory of python executable.
             // Second value in PATH is expected to be the site packages directory.
-            if (userSite && pathValues[1] !== userSite.fsPath) {
-                traceVerbose(`Prepend PATH with user site path for ${interpreter.id}, user site ${userSite.fsPath}`);
+            if (executablesPath && pathValues[1] !== executablesPath.fsPath) {
+                traceVerbose(
+                    `Prepend PATH with user site path for ${interpreter.id}, user site ${executablesPath.fsPath}`
+                );
                 // Based on docs this is the right path and must be setup in the path.
-                this.envVarsService.prependPath(env, userSite.fsPath);
+                this.envVarsService.prependPath(env, executablesPath.fsPath);
             } else {
                 traceError(
                     `Unable to determine site packages path for python ${interpreter.uri.fsPath} (${interpreter.envType})`

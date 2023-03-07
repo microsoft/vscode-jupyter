@@ -19,8 +19,9 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { PythonKernelConnectionMetadata } from '../../types';
 import { CancellationTokenSource, Disposable, EventEmitter, PortAutoForwardAction, Uri } from 'vscode';
 import { KernelProcess } from './kernelProcess.node';
-import { PortAttributesProviders } from '../port/portAttributeProvider.node';
+import { PortAttributesProviders } from '../../portAttributeProvider.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/interpreter/types.node';
+import { UsedPorts } from '../../common/usedPorts';
 
 suite('kernel Launcher', () => {
     const disposables: IDisposable[] = [];
@@ -96,13 +97,11 @@ suite('kernel Launcher', () => {
         await kernelLauncher.launch(kernelSpec, 10_000, undefined, __dirname, cancellation.token);
     }
     test('Verify used ports are listed', async () => {
-        const oldPorts = KernelLauncher.usedPorts;
+        const oldPorts = Array.from(UsedPorts);
 
         await launchKernel();
 
-        assert.notDeepEqual(KernelLauncher.usedPorts, oldPorts, 'Ports not updated');
-        console.error(oldPorts);
-        console.error(KernelLauncher.usedPorts);
+        assert.notDeepEqual(Array.from(UsedPorts), oldPorts, 'Ports not updated');
     });
     test('Verify Kernel ports are not forwarded', async () => {
         await launchKernel();
@@ -110,7 +109,7 @@ suite('kernel Launcher', () => {
         const portAttributeProvider = new PortAttributesProviders(disposables);
         const cancellation = new CancellationTokenSource();
 
-        for (const port of KernelLauncher.usedPorts) {
+        for (const port of UsedPorts) {
             assert.equal(
                 portAttributeProvider.providePortAttributes(port, undefined, undefined, cancellation.token)
                     ?.autoForwardAction,

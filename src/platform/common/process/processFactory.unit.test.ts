@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 
@@ -48,10 +48,12 @@ suite('Process - ProcessServiceFactory', () => {
 
     [Uri.parse('test'), undefined].forEach((resource) => {
         test(`Ensure ProcessService is created with an ${resource ? 'existing' : 'undefined'} resource`, async () => {
-            when(envVariablesProvider.getEnvironmentVariables(resource, 'RunNonPythonCode')).thenResolve({ x: 'test' });
+            when(envVariablesProvider.getEnvironmentVariables(resource, 'RunNonPythonCode', anything())).thenResolve({
+                x: 'test'
+            });
 
             const proc = await factory.create(resource);
-            verify(envVariablesProvider.getEnvironmentVariables(resource, 'RunNonPythonCode')).once();
+            verify(envVariablesProvider.getEnvironmentVariables(resource, 'RunNonPythonCode', anything())).once();
 
             const disposables = disposableRegistry as Disposable[];
             expect(disposables.length).equal(1);

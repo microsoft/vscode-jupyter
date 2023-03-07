@@ -81,6 +81,10 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
+        when(envActivation.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({
+            PATH: 'foobar'
+        });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve();
         when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
@@ -93,14 +97,18 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             HELLO_VAR: 'new'
         });
+        when(envActivation.getActivatedEnvironmentVariables(anything(), anything())).thenResolve({
+            HELLO_VAR: 'new'
+        });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve();
         when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
-        assert.strictEqual(vars['HELLO_VAR'], 'new');
+        assert.strictEqual(vars!['HELLO_VAR'], 'new');
         // Compare ignoring the PATH variable.
         assert.deepEqual(
-            Object.assign(vars, { PATH: '', Path: '' }),
+            Object.assign(vars!, { PATH: '', Path: '' }),
             Object.assign({}, processEnv, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
         );
     });
@@ -110,13 +118,13 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             HELLO_VAR: 'interpreter'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             HELLO_VAR: 'new'
         });
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
-        assert.strictEqual(vars['HELLO_VAR'], 'interpreter');
+        assert.strictEqual(vars!['HELLO_VAR'], 'interpreter');
         // Compare ignoring the PATH variable.
         assert.deepEqual(vars, Object.assign({}, processEnv, { HELLO_VAR: 'interpreter' }));
     });
@@ -125,23 +133,23 @@ suite('Kernel Environment Variables Service', () => {
         process.env['HELLO_VAR'] = 'very old';
         delete kernelSpec.interpreterPath;
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
-        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             HELLO_VAR: 'new'
         });
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
 
-        assert.strictEqual(vars['HELLO_VAR'], 'new');
+        assert.strictEqual(vars!['HELLO_VAR'], 'new');
         // Compare ignoring the PATH variable.
         assert.deepEqual(
-            Object.assign(vars, { PATH: '', Path: '' }),
+            Object.assign(vars!, { PATH: '', Path: '' }),
             Object.assign({}, processEnv, { HELLO_VAR: 'new' }, { PATH: '', Path: '' })
         );
     });
 
     test('Returns process.env vars if no interpreter and no kernelspec.env', async () => {
         delete kernelSpec.interpreterPath;
-        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
 
@@ -152,7 +160,7 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobaz'
         });
 
@@ -162,7 +170,7 @@ suite('Kernel Environment Variables Service', () => {
     });
 
     test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
-        when(interpreterService.getInterpreterDetails(anything())).thenResolve({
+        when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
             envType: EnvironmentType.Conda,
             uri: Uri.joinPath(Uri.file('env'), 'foopath'),
             id: Uri.joinPath(Uri.file('env'), 'foopath').fsPath,
@@ -171,7 +179,7 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'pathInInterpreterEnv'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobaz'
         });
 
@@ -182,7 +190,7 @@ suite('Kernel Environment Variables Service', () => {
     });
 
     async function testPYTHONNOUSERSITE(envType: EnvironmentType, shouldBeSet: boolean) {
-        when(interpreterService.getInterpreterDetails(anything())).thenResolve({
+        when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
             envType,
             uri: Uri.file('foopath'),
             id: Uri.file('foopath').fsPath,
@@ -191,7 +199,7 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobaz'
         });
         when(settings.excludeUserSitePackages).thenReturn(shouldBeSet);

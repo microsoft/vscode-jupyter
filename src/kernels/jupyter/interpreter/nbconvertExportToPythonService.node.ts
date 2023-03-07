@@ -24,7 +24,6 @@ export class NbConvertExportToPythonService {
         token?: CancellationToken
     ): Promise<string> {
         const daemon = await this.pythonExecutionFactory.createActivatedEnvironment({
-            allowEnvironmentFetchExceptions: true,
             resource: file,
             interpreter: interpreter
         });

@@ -4,20 +4,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import assert from 'assert';
-import { Container } from 'inversify';
-import * as TypeMoq from 'typemoq';
-import { IApplicationShell } from '../../common/application/types';
 import { ServiceContainer } from '../../ioc/container';
-import { ServiceManager } from '../../ioc/serviceManager';
 import { IServiceContainer } from '../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { InstallationChannelManager } from './channelManager.node';
 import { Product, IModuleInstaller } from './types';
 import { Uri } from 'vscode';
+import { anything, instance, mock, when } from 'ts-mockito';
 
 suite('Installation - installation channels', () => {
-    let serviceManager: ServiceManager;
     let serviceContainer: IServiceContainer;
+    let cm: InstallationChannelManager;
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
         uri: Uri.file('foobar'),
@@ -26,78 +23,64 @@ suite('Installation - installation channels', () => {
     };
 
     setup(() => {
-        const cont = new Container();
-        serviceManager = new ServiceManager(cont);
-        serviceContainer = new ServiceContainer(cont);
+        serviceContainer = mock<ServiceContainer>();
+        cm = new InstallationChannelManager(instance(serviceContainer));
     });
 
     test('Single channel', async () => {
-        const installer = mockInstaller(true, '');
-        const cm = new InstallationChannelManager(serviceContainer);
+        const installer = mockInstaller(true);
+        when(serviceContainer.getAll(IModuleInstaller)).thenReturn([instance(installer)]);
         const channels = await cm.getInstallationChannels(interpreter);
         assert.strictEqual(channels.length, 1, 'Incorrect number of channels');
-        assert.strictEqual(channels[0], installer.object, 'Incorrect installer');
+        assert.strictEqual(channels[0], instance(installer), 'Incorrect installer');
     });
 
     test('Multiple channels', async () => {
-        const installer1 = mockInstaller(true, '1');
-        mockInstaller(false, '2');
-        const installer3 = mockInstaller(true, '3');
-
-        const cm = new InstallationChannelManager(serviceContainer);
+        const installer1 = mockInstaller(true);
+        const installer2 = mockInstaller(true);
+        when(serviceContainer.getAll(IModuleInstaller)).thenReturn([instance(installer1), instance(installer2)]);
         const channels = await cm.getInstallationChannels(interpreter);
         assert.strictEqual(channels.length, 2, 'Incorrect number of channels');
-        assert.strictEqual(channels[0], installer1.object, 'Incorrect installer 1');
-        assert.strictEqual(channels[1], installer3.object, 'Incorrect installer 2');
+        assert.strictEqual(channels[0], instance(installer1), 'Incorrect installer 1');
+        assert.strictEqual(channels[1], instance(installer2), 'Incorrect installer 2');
     });
 
     test('pipenv channel', async () => {
-        mockInstaller(true, '1');
-        mockInstaller(false, '2');
-        mockInstaller(true, '3');
-        const pipenvInstaller = mockInstaller(true, 'pipenv', 10);
+        const installer1 = mockInstaller(true);
+        const installer2 = mockInstaller(false);
+        const installer3 = mockInstaller(true);
+        const pipenvInstaller = mockInstaller(true, 10);
+        when(serviceContainer.getAll(IModuleInstaller)).thenReturn([
+            instance(installer1),
+            instance(installer2),
+            instance(installer3),
+            instance(pipenvInstaller)
+        ]);
 
-        const cm = new InstallationChannelManager(serviceContainer);
         const channels = await cm.getInstallationChannels(interpreter);
         assert.strictEqual(channels.length, 1, 'Incorrect number of channels');
-        assert.strictEqual(channels[0], pipenvInstaller.object, 'Installer must be pipenv');
+        assert.strictEqual(channels[0], instance(pipenvInstaller), 'Installer must be pipenv');
     });
 
     test('Select installer should not happen', async () => {
-        const installer1 = mockInstaller(true, '1');
-        const installer2 = mockInstaller(true, '2');
+        const installer1 = mockInstaller(true);
+        const installer2 = mockInstaller(true);
+        when(serviceContainer.getAll(IModuleInstaller)).thenReturn([instance(installer1), instance(installer2)]);
+        when(installer1.displayName).thenReturn('Name 1');
+        when(installer2.displayName).thenReturn('Name 2');
+        (instance(installer1) as any).then = undefined;
+        (instance(installer2) as any).then = undefined;
 
-        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let items: any[] | undefined;
-        appShell
-            .setup((x) => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .callback((i: string[]) => {
-                items = i;
-            })
-            .returns(() => new Promise<string | undefined>((resolve, _reject) => resolve(undefined)));
-
-        installer1.setup((x) => x.displayName).returns(() => 'Name 1');
-        installer2.setup((x) => x.displayName).returns(() => 'Name 2');
-        installer1.setup((x) => (x as any).then).returns(() => undefined);
-        installer2.setup((x) => (x as any).then).returns(() => undefined);
-
-        const cm = new InstallationChannelManager(serviceContainer);
         const result = await cm.getInstallationChannel(Product.ensurepip, interpreter);
 
-        assert.strictEqual(items, undefined, 'showQuickPick called');
-        assert.strictEqual(result, installer1.object);
+        assert.strictEqual(result, instance(installer1));
     });
 
-    function mockInstaller(supported: boolean, name: string, priority?: number): TypeMoq.IMock<IModuleInstaller> {
-        const installer = TypeMoq.Mock.ofType<IModuleInstaller>();
-        installer
-            .setup((x) => x.isSupported(TypeMoq.It.isAny()))
-            .returns(() => new Promise<boolean>((resolve) => resolve(supported)));
-        installer.setup((x) => x.priority).returns(() => priority || 0);
-        serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, installer.object, name);
+    function mockInstaller(supported: boolean, priority?: number): IModuleInstaller {
+        const installer = mock<IModuleInstaller>();
+        (installer as any).then = undefined;
+        when(installer.isSupported(anything())).thenResolve(supported);
+        when(installer.priority).thenReturn(priority || 0);
         return installer;
     }
 });

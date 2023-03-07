@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { traceDecoratorVerbose } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { IWorkspaceService } from '../application/types';
-import { IDisposableRegistry } from '../types';
+import { IDisposableRegistry, Resource } from '../types';
 import { ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc.node';
 import { IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
@@ -24,12 +24,16 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
     @traceDecoratorVerbose('Create ProcessService', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    public async create(resource?: Uri): Promise<IProcessService> {
+    public async create(resource: Resource, cancelToken?: CancellationToken): Promise<IProcessService> {
         // This should never happen, but if it does ensure we never run code accidentally in untrusted workspaces.
         if (!this.workspace.isTrusted) {
             throw new Error('Workspace not trusted');
         }
-        const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource, 'RunNonPythonCode');
+        const customEnvVars = await this.envVarsService.getEnvironmentVariables(
+            resource,
+            'RunNonPythonCode',
+            cancelToken
+        );
         const proc: IProcessService = new ProcessService(customEnvVars);
         this.disposableRegistry.push(proc);
         return proc.on('exec', this.processLogger.logProcess.bind(this.processLogger));

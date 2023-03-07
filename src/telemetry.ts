@@ -1906,6 +1906,14 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
+     * Whether we ran into the ZMQ Error as identified here https://github.com/microsoft/vscode-jupyter/issues/12775
+     */
+    [Telemetry.JupyterServerZMQStreamError]: TelemetryEventInfo<undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A'
+    };
+    /**
      * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
      */
     [Telemetry.JupyterInstalledButNotKernelSpecModule]: TelemetryEventInfo<never | undefined> = {
