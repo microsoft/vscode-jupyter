@@ -188,7 +188,8 @@ export class PythonEnvKernelConnectionCreator {
         interpreterService.pauseInterpreterDetection(cancellation.token);
         try {
             const result: CreateEnvironmentResult = await commands.executeCommand('python.createEnvironment', {
-                showBackButton: true
+                showBackButton: true,
+                selectEnvironment: true
             });
             if (result?.action === 'Cancel') {
                 return { action: 'Cancel' };
