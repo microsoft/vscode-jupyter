@@ -18,6 +18,7 @@ import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage
 } from '../types';
+import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 
 /**
  * Responsible for intercepting connections to a remote server and asking for a password if necessary
@@ -40,8 +41,13 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         // Sign up to see if servers are removed from our uri storage list
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
-
+    public static isPromptingForPassword = false;
+    private static _prompt?: Deferred<void>;
+    public static get prompt(): Promise<void> | undefined {
+        return JupyterPasswordConnect._prompt?.promise;
+    }
     public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
+        JupyterPasswordConnect._prompt = undefined;
         if (!url || url.length < 1) {
             return Promise.resolve(undefined);
         }
@@ -52,6 +58,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
         let result = this.savedConnectInfo.get(newUrl);
         if (!result) {
+            const deferred = (JupyterPasswordConnect._prompt = createDeferred());
             result = this.getNonCachedPasswordConnectionInfo(newUrl).then((value) => {
                 // If we fail to get a valid password connect info, don't save the value
                 traceWarning(`Password for ${newUrl} was invalid.`);
@@ -60,6 +67,12 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 }
 
                 return value;
+            });
+            result.finally(() => {
+                deferred.resolve();
+                if (JupyterPasswordConnect._prompt === deferred) {
+                    JupyterPasswordConnect._prompt = undefined;
+                }
             });
             this.savedConnectInfo.set(newUrl, result);
         }
