@@ -103,6 +103,11 @@ export interface IJupyterSettings {
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
     readonly enableExtendedKernelCompletions: boolean;
+    /**
+     * To be removed in the future (remove around April 2023)
+     * Added as a fallback in case the new approach of resolving Python env variables for Kernels fails or does not work as expected.
+     */
+    readonly useOldKernelResolve: boolean;
 }
 
 export interface IVariableTooltipFields {

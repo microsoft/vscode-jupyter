@@ -115,10 +115,14 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        kernel: IKernel,
+        kernel?: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
+        if (!kernel) {
+            return targetVariable;
+        }
+
         const languageId = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {

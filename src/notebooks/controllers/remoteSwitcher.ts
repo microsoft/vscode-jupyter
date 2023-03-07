@@ -13,7 +13,7 @@ import {
 import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { Commands } from '../../platform/common/constants';
-import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { Settings } from '../../platform/common/constants';
 import { isJupyterNotebook } from '../../platform/common/utils';

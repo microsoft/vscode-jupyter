@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../common/extensions';
-
 import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
 
 import { WebviewHost } from './webviewHost';

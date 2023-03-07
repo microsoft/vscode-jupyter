@@ -81,7 +81,10 @@ export type ErrorCategory =
     | 'localjupyterserverconnection'
     | 'remotejupyterserveruriprovider'
     | 'invalidremotejupyterserverurihandle'
+    | 'jupyternotebooknotinstalled'
+    | 'jupytercannotbelaunchedwitheroot'
     | 'pythonExtension'
+    | 'windowsLongPathNotEnabled'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.

@@ -22,8 +22,8 @@ import { OSType } from '../../../platform/common/utils/platform.node';
 import { ResourceMap, ResourceSet } from '../../../platform/vscode-path/map';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { TraceOptions } from '../../../platform/logging/types';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');

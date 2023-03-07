@@ -25,6 +25,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError, traceWarning } from '../../../platform/logging';
+import { INotebookEditorProvider } from '../../types';
 import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
 
 @injectable()
@@ -37,7 +38,8 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
     ) {
         disposables.push(this);
     }
@@ -232,6 +234,10 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
     }
     private async onSelectRemoteKernel(providerId: string, notebook?: NotebookDocument) {
         notebook = notebook || window.activeNotebookEditor?.notebook;
+        if (!notebook && window.activeTextEditor) {
+            // find associated notebook document for the active text editor
+            notebook = this.notebookEditorProvider.findNotebookEditor(window.activeTextEditor.document.uri)?.notebook;
+        }
         if (!notebook) {
             return;
         }

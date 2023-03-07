@@ -3,7 +3,7 @@
 
 import { CancellationToken, NotebookDocument, workspace, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import {
     IKernelFinder,
     KernelConnectionMetadata,

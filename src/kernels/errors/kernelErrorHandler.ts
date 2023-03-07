@@ -22,9 +22,9 @@ import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { Commands, Identifiers } from '../../platform/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
-import { translateProductToModule } from '../installer/utils';
-import { ProductNames } from '../installer/productNames';
-import { Product } from '../installer/types';
+import { translateProductToModule } from '../../platform/interpreter/installer/utils';
+import { ProductNames } from '../../platform/interpreter/installer/productNames';
+import { Product } from '../../platform/interpreter/installer/types';
 import {
     IKernelDependencyService,
     isLocalConnection,
@@ -66,6 +66,9 @@ import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from '.
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
+import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
+import { fileToCommandArgument } from '../../platform/common/helpers';
 
 /***
  * Common code for handling errors.
@@ -113,6 +116,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         } else if (
             err instanceof KernelDiedError ||
             err instanceof KernelProcessExitedError ||
+            err instanceof JupyterNotebookNotInstalled ||
             err instanceof JupyterConnectError
         ) {
             this.applicationShell.showErrorMessage(getUserFriendlyErrorMessage(err)).then(noop, noop);
@@ -153,6 +157,15 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         } else if (isCancellationError(error)) {
             // Don't show the message for cancellation errors
             return '';
+        } else if (error instanceof PackageNotInstalledWindowsLongPathNotEnabledError) {
+            const packageName =
+                typeof error.product === 'string'
+                    ? error.product
+                    : ProductNames.get(error.product) || `${error.product}`;
+            const interpreterDisplayName = error.interpreter.displayName || error.interpreter.envName || '';
+            const displayPath = getDisplayPath(error.interpreter.uri);
+            let displayName = interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
+            return DataScience.packageNotInstalledWindowsLongPathNotEnabledError(packageName, displayName);
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
             (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
@@ -552,26 +565,31 @@ const errorPrefixes = {
 function getUserFriendlyErrorMessage(error: Error | string, errorContext?: KernelAction) {
     error = typeof error === 'string' ? error : WrappedError.unwrap(error);
     const errorPrefix = errorContext ? errorPrefixes[errorContext] : '';
-    if (error instanceof BaseError) {
+    let errorMessageSuffix = '';
+    if (error instanceof JupyterNotebookNotInstalled) {
+        errorMessageSuffix = DataScience.jupyterNotebookNotInstalledOrNotFound(error.interpreter);
+    } else if (error instanceof BaseError) {
         // These are generic errors, we have no idea what went wrong,
         // hence add a descriptive prefix (message), that provides more context to the user.
-        return getCombinedErrorMessage(
-            errorPrefix,
-            getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message
-        );
+        errorMessageSuffix = getErrorMessageFromPythonTraceback(error.stdErr) || error.stdErr || error.message;
     } else {
         // These are generic errors, we have no idea what went wrong,
         // hence add a descriptive prefix (message), that provides more context to the user.
-        const errorMessage = typeof error === 'string' ? error : error.message;
-        return getCombinedErrorMessage(errorPrefix, errorMessage);
+        errorMessageSuffix = typeof error === 'string' ? error : error.message;
     }
+    return getCombinedErrorMessage(errorPrefix, errorMessageSuffix);
 }
 function doesErrorHaveMarkdownLinks(message: string) {
     const markdownLinks = new RegExp(/\[([^\[]+)\]\((.*)\)/);
     return (markdownLinks.exec(message)?.length ?? 0) > 0;
 }
-function getCombinedErrorMessage(prefix?: string, message?: string) {
-    const errorMessage = [prefix || '', message || '']
+function getCombinedErrorMessage(prefix: string = '', message: string = '') {
+    // No point in repeating the same message twice.
+    // (strip the last character, as it could be a period).
+    if (prefix && message.startsWith(prefix.substring(0, prefix.length - 1))) {
+        prefix = '';
+    }
+    const errorMessage = [prefix, message]
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .join(' \n');
@@ -600,9 +618,9 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
     const ipyKernelName = ProductNames.get(Product.ipykernel)!;
     const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 
-    let installerCommand = `${getFilePath(
-        kernelConnection.interpreter.uri
-    ).fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
+    let installerCommand = `${fileToCommandArgument(
+        getFilePath(kernelConnection.interpreter.uri)
+    )} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
     if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
         if (kernelConnection.interpreter?.envName) {
             installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
@@ -612,9 +630,9 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
             )} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
     } else if (kernelConnection.interpreter?.envType === EnvironmentType.Unknown) {
-        installerCommand = `${getFilePath(
-            kernelConnection.interpreter.uri
-        ).fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
+        installerCommand = `${fileToCommandArgument(
+            getFilePath(kernelConnection.interpreter.uri)
+        )} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
     }
     const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter(
         displayNameOfKernel,

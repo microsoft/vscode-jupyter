@@ -177,7 +177,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                 );
             }
         })
-        .ignoreErrors();
+        .catch(noop);
 }
 
 function sendNextTelemetryItem(): void {
@@ -229,9 +229,9 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
         populateTelemetryWithErrorInfo(customProperties, ex)
             .then(() => {
                 customProperties = sanitizeProperties(eventNameSent, customProperties);
-                reporter.then((e) => e.sendTelemetryEvent(eventNameSent, customProperties, measures)).ignoreErrors();
+                reporter.then((e) => e.sendTelemetryEvent(eventNameSent, customProperties, measures)).catch(noop);
             })
-            .ignoreErrors();
+            .catch(noop);
     } else {
         if (properties) {
             customProperties = sanitizeProperties(eventNameSent, properties);
@@ -240,7 +240,7 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
 
-        reporter.then((r) => r.sendTelemetryEvent(eventNameSent, customProperties, measures)).ignoreErrors();
+        reporter.then((r) => r.sendTelemetryEvent(eventNameSent, customProperties, measures)).catch(noop);
     }
     traceEverything(
         `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(

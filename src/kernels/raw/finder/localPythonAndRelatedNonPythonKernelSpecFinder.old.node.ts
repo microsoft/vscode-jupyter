@@ -26,7 +26,7 @@ import { ITrustedKernelPaths } from './types';
 import {
     InterpreterKernelSpecFinderHelper,
     listPythonAndRelatedNonPythonKernelSpecs,
-    LocalPythonKernelsCacheKey
+    localPythonKernelsCacheKey
 } from './interpreterKernelSpecFinderHelper.node';
 
 /**
@@ -112,7 +112,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
         );
     }
     public activate() {
-        this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
+        this.listKernelsFirstTimeFromMemento(localPythonKernelsCacheKey())
             .then((kernels) => {
                 if (kernels.length) {
                     // Its possible we have already started discovering via Python API,
@@ -128,7 +128,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
                 }
             })
             .finally(async () => {
-                this.refreshData().ignoreErrors();
+                this.refreshData().catch(noop);
                 this.kernelSpecsFromKnownLocations.onDidChangeKernels(
                     () => {
                         // Only refresh if we know there are new global Python kernels that we haven't already seen before.
@@ -183,7 +183,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
                 JSON.stringify(this._kernels) !== JSON.stringify(previousListOfKernels)
             ) {
                 // Previously we didn't wait, leave that behavior for the old approach (this will go away soon).
-                this.updateCache().ignoreErrors();
+                this.updateCache().catch(noop);
             }
         })()
             .catch((ex) => traceError(`Failed to discover kernels in interpreters`, ex))
@@ -202,7 +202,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
         this._onDidChangeKernels.fire();
         const kernels = Array.from(this._kernels.values());
 
-        await this.writeToMementoCache(kernels, LocalPythonKernelsCacheKey).catch(noop);
+        await this.writeToMementoCache(kernels, localPythonKernelsCacheKey()).catch(noop);
     }
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     private async listKernelsImplementationOld(cancelToken: CancellationToken) {

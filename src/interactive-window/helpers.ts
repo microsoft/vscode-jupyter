@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { NotebookCell } from 'vscode';
+import { splitLines } from '../platform/common/helpers';
 import { IJupyterSettings } from '../platform/common/types';
 import { appendLineFeed, removeLinesFromFrontAndBackNoConcat } from '../platform/common/utils';
 import { isUri } from '../platform/common/utils/misc';
@@ -22,7 +23,7 @@ export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellM
  * @param code The code string text from a #%% code cell to be executed.
  */
 export function generateInteractiveCode(code: string, settings: IJupyterSettings, cellMatcher: CellMatcher): string {
-    const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+    const lines = splitLines(code, { trim: false, removeEmptyEntries: false });
 
     // Remove the first marker
     const withoutFirstMarker = cellMatcher.stripFirstMarkerNoConcat(lines);

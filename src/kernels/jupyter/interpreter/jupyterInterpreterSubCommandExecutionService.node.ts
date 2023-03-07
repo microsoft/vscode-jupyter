@@ -6,11 +6,7 @@ import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken } from 'vscode';
 import { traceError, traceVerbose, traceWarning } from '../../../platform/logging';
-import {
-    IPythonExecutionFactory,
-    SpawnOptions,
-    ObservableExecutionResult
-} from '../../../platform/common/process/types.node';
+import { SpawnOptions, ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { IOutputChannel } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -19,7 +15,7 @@ import { IEnvironmentActivationService } from '../../../platform/interpreter/act
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { Product } from '../../installer/types';
+import { Product } from '../../../platform/interpreter/installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
 import {
     getMessageForLibrariesNotInstalled,
@@ -34,6 +30,7 @@ import {
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.

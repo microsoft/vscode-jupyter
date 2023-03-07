@@ -180,7 +180,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
             condaInterpreter,
             globalInterpreter
         ]);
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false, 'startUsingPythonInterpreter');
 
         assert.strictEqual(interpreter, venvInterpreter);
     });
@@ -204,7 +204,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
             condaInterpreter,
             globalInterpreter
         ]);
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false, 'startUsingPythonInterpreter');
 
         assert.strictEqual(interpreter, venvInterpreter);
     });
@@ -227,7 +227,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(venvInterpreter);
         when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(true);
 
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false, 'startUsingPythonInterpreter');
 
         assert.strictEqual(interpreter, venvInterpreter);
     });
@@ -251,7 +251,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(venvInterpreter);
         when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(false);
 
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false, 'startUsingPythonInterpreter');
 
         assert.isUndefined(interpreter);
     });
@@ -275,7 +275,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(undefined);
         when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(true);
 
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, false, 'startUsingPythonInterpreter');
 
         assert.isUndefined(interpreter);
     });

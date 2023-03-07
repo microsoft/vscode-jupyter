@@ -12,8 +12,8 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterCommands } from '../../../platform/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { ProductNames } from '../../installer/productNames';
-import { Product, IInstaller, InstallerResponse } from '../../installer/types';
+import { ProductNames } from '../../../platform/interpreter/installer/productNames';
+import { Product, IInstaller, InstallerResponse } from '../../../platform/interpreter/installer/types';
 import { HelpLinks } from '../../../platform/common/constants';
 import { reportAction } from '../../../platform/progress/decorator';
 import { ReportableAction } from '../../../platform/progress/types';

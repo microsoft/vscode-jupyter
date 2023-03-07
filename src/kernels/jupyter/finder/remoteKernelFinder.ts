@@ -293,7 +293,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     results = values.kernels.map((item) =>
                         BaseKernelConnectionMetadata.fromJSON(item)
                     ) as RemoteKernelConnectionMetadata[];
-                    this.cache = results;
                 }
             }
 

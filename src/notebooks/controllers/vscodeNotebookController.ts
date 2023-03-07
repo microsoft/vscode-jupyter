@@ -470,48 +470,17 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 Uri.joinPath(
                     this.context.extensionUri,
                     'out',
-                    'webviews/webview-side',
+                    'webviews',
+                    'webview-side',
                     'widgetTester',
                     'widgetTester.js'
                 )
             );
-
-            // In development mode, ipywidgets is not under the 'out' folder.
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'node_modules',
-                    '@vscode',
-                    'jupyter-ipywidgets7',
-                    'dist',
-                    'ipywidgets.js'
-                )
-            );
-        } else {
-            // Normal package mode, ipywidgets ends up next to extension.ts
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'node_modules',
-                    '@vscode',
-                    'jupyter-ipywidgets7',
-                    'dist',
-                    'ipywidgets.js'
-                )
-            );
         }
+
+        // See comments on dummy.ts for more details.
         scripts.push(
-            ...[
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'webviews',
-                    'webview-side',
-                    'ipywidgetsKernel',
-                    'ipywidgetsKernel.js'
-                )
-            ]
+            Uri.joinPath(this.context.extensionUri, 'out', 'webviews', 'webview-side', 'ipywidgetsKernel', 'dummy.js')
         );
         return scripts.map((uri) => new NotebookRendererScript(uri));
     }

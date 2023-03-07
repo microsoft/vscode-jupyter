@@ -130,6 +130,7 @@ export const DefaultTheme = 'Default Light+';
 // Python Module to be used when instantiating the Python Daemon.
 
 export const PythonExtension = 'ms-python.python';
+export const RendererExtension = 'ms-toolsai.jupyter-renderers';
 export const PylanceExtension = 'ms-python.vscode-pylance';
 
 export const LanguagesSupportedByPythonkernel = [
@@ -441,6 +442,7 @@ export enum Telemetry {
     GetActivatedEnvironmentVariables = 'DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES',
     WebviewStartup = 'DS_INTERNAL.WEBVIEW_STARTUP',
     VariableExplorerFetchTime = 'DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME',
+    KernelSpec = 'DS_INTERNAL.JUPYTER_KERNEL_SPEC',
     FailedToUpdateKernelSpec = 'DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC',
     CellOutputMimeType = 'DS_INTERNAL.CELL_OUTPUT_MIME_TYPE',
     JupyterApiUsage = 'DATASCIENCE.JUPYTER_API_USAGE',
@@ -555,6 +557,8 @@ export const DataScienceStartupTime = Symbol('DataScienceStartupTime');
 export const defaultNotebookFormat = { major: 4, minor: 2 };
 
 export const WIDGET_MIMETYPE = 'application/vnd.jupyter.widget-view+json';
+export const WIDGET_STATE_MIMETYPE = 'application/vnd.jupyter.widget-state+json';
+export const WIDGET_VERSION_NON_PYTHON_KERNELS = 7;
 
 /**
  * Used as a fallback when determinining the extension id that calls into the Jupyter extension API fails.

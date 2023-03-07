@@ -4,14 +4,15 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
+import { STANDARD_OUTPUT_CHANNEL, WIDGET_VERSION_NON_PYTHON_KERNELS } from '../../../../platform/common/constants';
 import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
     IOutputChannel,
     IConfigurationService,
     IHttpClient,
-    IsWebExtension
+    IsWebExtension,
+    IDisposable
 } from '../../../../platform/common/types';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
@@ -27,7 +28,7 @@ import { IServiceContainer } from '../../../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
 import { Commands } from '../../../../platform/common/constants';
-import { IKernelProvider } from '../../../../kernels/types';
+import { IKernel, IKernelProvider } from '../../../../kernels/types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../scriptSourceProvider/ipyWidgetScriptSource';
 import { IIPyWidgetMessageDispatcher, IWidgetScriptSourceProviderFactory } from '../types';
@@ -35,6 +36,10 @@ import { ConsoleForegroundColors } from '../../../../platform/logging/types';
 import { IWebviewCommunication } from '../../../../platform/webviews/types';
 import { swallowExceptions } from '../../../../platform/common/utils/decorators';
 import { CDNWidgetScriptSourceProvider } from '../scriptSourceProvider/cdnWidgetScriptSourceProvider';
+import { createDeferred } from '../../../../platform/common/utils/async';
+import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { StopWatch } from '../../../../platform/common/utils/stopWatch';
+import { isPythonKernelConnection } from '../../../../kernels/helpers';
 
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook
@@ -114,12 +119,81 @@ export class CommonMessageCoordinator {
             this,
             this.disposables
         );
+        const deferred = createDeferred<7 | 8>();
+        const sendIPyWidgetsVersion = async () => {
+            const stopWatch = new StopWatch();
+            if (!deferred.completed) {
+                // Determine the version of ipywidgets and send the appropriate script url to the webview.
+                traceVerbose('Attempting to determine version of IPyWidgets');
+                const disposables: IDisposable[] = [];
+                const kernelProvider = this.serviceContainer.get<IKernelProvider>(IKernelProvider);
+                const kernelPromise = createDeferred<IKernel>();
+                if (kernelProvider.get(this.document)) {
+                    kernelPromise.resolve(kernelProvider.get(this.document));
+                } else {
+                    kernelProvider.onDidCreateKernel(
+                        (e) => {
+                            if (e.notebook === this.document) {
+                                kernelPromise.resolve(e);
+                            }
+                        },
+                        this,
+                        disposables
+                    );
+                }
+                const kernel = await kernelPromise.promise;
+                if (kernel) {
+                    if (isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+                        if (kernel.ipywidgetsVersion) {
+                            if (!deferred.completed) {
+                                deferred.resolve(kernel.ipywidgetsVersion);
+                            }
+                        } else {
+                            traceVerbose('Waiting for IPyWidgets version');
+                            kernel.onIPyWidgetVersionResolved(
+                                () => {
+                                    if (kernel.ipywidgetsVersion) {
+                                        if (!deferred.completed) {
+                                            deferred.resolve(kernel.ipywidgetsVersion);
+                                        }
+                                        disposeAllDisposables(disposables);
+                                    }
+                                },
+                                this,
+                                disposables
+                            );
+                        }
+                    } else {
+                        // For non-python kernels, always assume version 7.
+                        if (!deferred.completed) {
+                            deferred.resolve(WIDGET_VERSION_NON_PYTHON_KERNELS);
+                        }
+                    }
+                }
+                if (disposables.length) {
+                    this.disposables.push(...disposables);
+                }
+                traceVerbose('Waiting for IPyWidgets version promise');
+            }
+            // IPyWidgets scripts will not be loaded if we're unable to determine the version of IPyWidgets.
+            const version = await deferred.promise;
+            traceVerbose(`Version of IPyWidgets ${version} determined after ${stopWatch.elapsedTime / 1000}s`);
+            webview
+                .postMessage({
+                    type: IPyWidgetMessages.IPyWidgets_Reply_Widget_Version,
+                    payload: version
+                })
+                .then(noop, noop);
+        };
         webview.onDidReceiveMessage(
-            (m) => {
+            async (m) => {
                 traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
                 this.onMessage(webview, m.type, m.payload);
+                if (m.type === IPyWidgetMessages.IPyWidgets_Request_Widget_Version) {
+                    await sendIPyWidgetsVersion();
+                }
                 if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
-                    traceInfoIfCI('Web view is ready to receive widget messages');
+                    traceVerbose('Web view is ready to receive widget messages');
                     this.readyMessageReceived = true;
                     this.sendPendingWebViewMessages(webview);
                 }
@@ -130,16 +204,19 @@ export class CommonMessageCoordinator {
         // In case the webview loaded earlier and it already sent the IPyWidgetMessages.IPyWidgets_Ready message
         // This way we don't make assumptions, we just query widgets and ask its its ready (avoids timing issues etc).
         webview.postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined }).then(noop, noop);
+        // Send the IPyWidgets message immediately, sometimes
+        // the webview is ready before we get the request message.
+        sendIPyWidgetsVersion().catch(noop);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public onMessage(webview: IWebviewCommunication, message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
-            this.sendLoadSucceededTelemetry(payload).ignoreErrors();
+            this.sendLoadSucceededTelemetry(payload).catch(noop);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
-            this.handleWidgetLoadFailure(webview, payload).ignoreErrors();
+            this.handleWidgetLoadFailure(webview, payload).catch(noop);
         } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
-            this.sendUnsupportedWidgetVersionFailureTelemetry(payload).ignoreErrors();
+            this.sendUnsupportedWidgetVersionFailureTelemetry(payload).catch(noop);
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
             this.sendRenderFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage) {
@@ -200,7 +277,7 @@ export class CommonMessageCoordinator {
                                 this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
                                 break;
                             case enableDownloads:
-                                this.enableCDNForWidgets(webview).ignoreErrors();
+                                this.enableCDNForWidgets(webview).catch(noop);
                                 break;
                             default:
                                 break;
@@ -295,7 +372,7 @@ export class CommonMessageCoordinator {
         // If no one is listening to the messages, then cache these.
         // It means its too early to dispatch the messages, we need to wait for the event handlers to get bound.
         if (!this.listeningToPostMessageEvent) {
-            traceInfoIfCI(`${ConsoleForegroundColors.Green}Queuing messages (no listenerts)`);
+            traceInfoIfCI(`${ConsoleForegroundColors.Green}Queuing messages (no listeners)`);
             this.cachedMessages.push(data);
             return;
         }

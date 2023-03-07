@@ -6,7 +6,6 @@ import { inject, injectable, multiInject, optional } from 'inversify';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
-import '../../platform/common/extensions';
 import {
     IConfigurationService,
     IDataScienceCommandListener,
@@ -60,7 +59,7 @@ export class GlobalActivation implements IExtensionSyncActivationService {
         this.onChangedActiveTextEditor();
 
         // Send telemetry for all of our settings
-        this.sendSettingsTelemetry().ignoreErrors();
+        this.sendSettingsTelemetry().catch(noop);
 
         // Figure out the ZMQ available context key
         this.computeZmqAvailable();
@@ -124,7 +123,7 @@ export class GlobalActivation implements IExtensionSyncActivationService {
                 if (typeof currentValue === 'function') {
                     continue;
                 }
-                if (typeof currentValue === 'string' && k !== 'interactiveWindowMode') {
+                if (typeof currentValue === 'string' && k !== 'interactiveWindow.creationMode') {
                     const inspectResult = jupyterConfig.inspect<string>(`${k}`);
                     if (inspectResult && inspectResult.defaultValue !== currentValue) {
                         resultSettings[k] = 'non-default';

@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';

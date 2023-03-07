@@ -10,7 +10,6 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import './extensions';
 import { LogLevel } from '../logging/types';
 import { IWorkspaceService } from './application/types';
 import { isTestExecution } from './constants';
@@ -28,6 +27,8 @@ import {
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { ISystemVariables, ISystemVariablesConstructor } from './variables/types';
+import { ConfigMigration } from './configMigration';
+import { noop } from './utils/misc';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
@@ -95,6 +96,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
     public enableExtendedKernelCompletions: boolean = false;
+    public useOldKernelResolve: boolean = false;
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
@@ -119,7 +121,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             this.disableJupyterAutoStart = true;
         }
     }
-    // eslint-disable-next-line
+
     public static getInstance(
         resource: Uri | undefined,
         systemVariablesCtor: ISystemVariablesConstructor,
@@ -142,7 +144,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         return settings;
     }
 
-    // eslint-disable-next-line @typescript-eslint/member-delimiter-style
     public static getSettingsUriAndTarget(
         resource: Uri | undefined,
         workspace: IWorkspaceService
@@ -158,17 +159,14 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         return { uri: workspaceFolderUri, target };
     }
 
-    // eslint-disable-next-line
     public static dispose() {
         if (!isTestExecution()) {
             throw new Error('Dispose can only be called from unit tests');
         }
-        // eslint-disable-next-line no-void
         JupyterSettings.jupyterSettings.forEach((item) => item && item.dispose());
         JupyterSettings.jupyterSettings.clear();
     }
     public dispose() {
-        // eslint-disable-next-line
         this._disposables.forEach((disposable) => disposable && disposable.dispose());
         this._disposables = [];
     }
@@ -187,8 +185,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         allowedKeys.forEach((k) => (result[k] = (<any>this)[k]));
         return result;
     }
-    // eslint-disable-next-line complexity,
-    protected update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
+
+    private update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
         const systemVariables = this.createSystemVariables(undefined);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -218,8 +216,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
         // The rest are all the same.
         const replacer = (k: string, config: WorkspaceConfiguration) => {
-            // Replace variables with their actual value.
-            const val = systemVariables.resolveAny(config.get(k));
+            const newKey = ConfigMigration.migratedSettings[k];
+            // Configuration migration is asyncronous, so check the old configuration key if the new one isn't set
+            const configValue = newKey && config.get(newKey) !== undefined ? config.get(newKey) : config.get(k);
+            const val = systemVariables.resolveAny(configValue);
             if (k !== 'variableTooltipFields' || val) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (<any>this)[k] = val;
@@ -236,7 +236,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         }
     }
 
-    protected onWorkspaceFoldersChanged() {
+    private onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
         const workspaceKeys = this._workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.path);
         const activatedWkspcKeys = Array.from(JupyterSettings.jupyterSettings.keys());
@@ -247,7 +247,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             }
         }
     }
-    protected initialize(): void {
+
+    private initialize(): void {
         const onDidChange = () => {
             const currentConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
             const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
@@ -273,10 +274,17 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
         if (initialConfig) {
             this.update(initialConfig, pythonConfig);
+            this.migrateSettings(initialConfig).catch(noop);
         }
     }
+
+    private async migrateSettings(config: WorkspaceConfiguration) {
+        const configMigration = new ConfigMigration(config);
+        await configMigration.migrateSettings();
+    }
+
     @debounceSync(1)
-    protected debounceChangeNotification() {
+    private debounceChangeNotification() {
         this._changeEmitter.fire();
     }
 

@@ -14,7 +14,7 @@ import { injectable } from 'inversify';
 import { IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './types';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder';
-import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
@@ -26,7 +26,7 @@ import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelStatusProvider } from './kernelStatusProvider';
 import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
-import { RemoteJupyterServerMruUpdate } from './remoteJupyterServerMruUpdate';
+import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {

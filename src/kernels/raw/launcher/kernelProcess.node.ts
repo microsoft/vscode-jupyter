@@ -42,7 +42,6 @@ import {
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import {
     IProcessServiceFactory,
-    IPythonExecutionFactory,
     ObservableExecutionResult,
     IProcessService
 } from '../../../platform/common/process/types.node';
@@ -60,6 +59,9 @@ import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import pidtree from 'pidtree';
+import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
+import { splitLines } from '../../../platform/common/helpers';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -85,7 +87,10 @@ export class KernelProcess implements IKernelProcess {
         return this._connection;
     }
     private get isPythonKernel(): boolean {
-        return isPythonKernelConnection(this.kernelConnectionMetadata);
+        return (
+            isPythonKernelConnection(this.kernelConnectionMetadata) &&
+            isKernelLaunchedViaLocalPythonIPyKernel(this.kernelConnectionMetadata)
+        );
     }
     public get canInterrupt() {
         if (this._kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
@@ -214,7 +219,7 @@ export class KernelProcess implements IKernelProcess {
                         //          warn(
                         ///         .../site-packages/traitlets/traitlets.py:2157: FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use '841dde17-f6aa-4ea7-9c02-b3bb414b28b3' instead of 'b"841dde17-f6aa-4ea7-9c02-b3bb414b28b3"'.
                         //          warn(
-                        const lines = output.out.splitLines({ trim: true, removeEmptyEntries: true });
+                        const lines = splitLines(output.out, { trim: true, removeEmptyEntries: true });
                         if (
                             lines.length === 4 &&
                             lines[0].endsWith(
@@ -241,7 +246,7 @@ export class KernelProcess implements IKernelProcess {
                         stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
                         // Strip the leading space, as we've removed some leading text.
                         stdout = stdout.trimStart();
-                        const lines = stdout.splitLines({ trim: true, removeEmptyEntries: true });
+                        const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
                         if (
                             lines.length === 2 &&
                             lines[0] === kernelOutputWithConnectionFile &&
@@ -344,7 +349,7 @@ export class KernelProcess implements IKernelProcess {
                 this.killChildProcesses(this._process?.pid).catch(noop)
             ]);
             try {
-                this.interrupter?.dispose().ignoreErrors();
+                this.interrupter?.dispose().catch(noop);
                 this._process?.kill(); // NOSONAR
                 this.exitEvent.fire({});
             } catch (ex) {
@@ -565,7 +570,7 @@ export class KernelProcess implements IKernelProcess {
             }
 
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
-            const args = this.launchKernelSpec.argv.slice(1);
+            const args = this.launchKernelSpec.argv.slice(1); // Remove the python part of the command
             if (this.jupyterSettings.enablePythonKernelLogging) {
                 args.push('--debug');
             }
@@ -585,11 +590,16 @@ export class KernelProcess implements IKernelProcess {
                     this.processExecutionFactory.create(this.resource),
                     promiseCancellation as Promise<IProcessService>
                 ]),
-                // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
+                // If we have an interpreter always use that, its possible we are launching a kernel that is associated with a Python environment
+                // E.g. we could be dealing with a Java/R kernel registered in a conda environment.
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
                 Promise.race([
-                    this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
+                    this.kernelEnvVarsService.getEnvironmentVariables(
+                        this.resource,
+                        this._kernelConnectionMetadata.interpreter,
+                        this.launchKernelSpec
+                    ),
                     promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
                 ])
             ]);

@@ -5,6 +5,7 @@ import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IConfigurationService, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import { ColumnWarningSize } from './types';
 
 // This helper class validates requests to show large data in the data viewer and configures related settings.
@@ -42,7 +43,7 @@ export class DataViewerChecker {
             settings.askForLargeDataFrames = false;
             this.configuration
                 .updateSetting('askForLargeDataFrames', false, undefined, ConfigurationTarget.Global)
-                .ignoreErrors();
+                .catch(noop);
         }
     }
 }

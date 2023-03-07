@@ -15,7 +15,7 @@ import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfoIfCI, traceVerbose, traceError, traceWarning } from '../../../platform/logging';
+import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, IDisposableRegistry, WORKSPACE_MEMENTO } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -26,7 +26,7 @@ import { ITrustedKernelPaths } from './types';
 import {
     InterpreterKernelSpecFinderHelper,
     listPythonAndRelatedNonPythonKernelSpecs,
-    LocalPythonKernelsCacheKey
+    localPythonKernelsCacheKey
 } from './interpreterKernelSpecFinderHelper.node';
 
 type InterpreterId = string;
@@ -119,7 +119,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         );
     }
     public activate() {
-        this.listKernelsFirstTimeFromMemento(LocalPythonKernelsCacheKey)
+        this.listKernelsFirstTimeFromMemento(localPythonKernelsCacheKey())
             .then((kernels) => {
                 if (kernels.length) {
                     // Its possible we have already started discovering via Python API,
@@ -136,7 +136,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             })
             .finally(async () => {
                 this.refreshCancellation?.cancel();
-                this.refreshData().ignoreErrors();
+                this.refreshData().catch(noop);
                 this.kernelSpecsFromKnownLocations.onDidChangeKernels(
                     () => {
                         // Only refresh if we know there are new global Python kernels that we haven't already seen before.
@@ -168,7 +168,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         this.clearCache();
         this.cachedInformationForPythonInterpreter.clear();
         this.discoveredKernelSpecFiles.clear();
-        this.interpreterService.refreshInterpreters(true).ignoreErrors();
+        this.interpreterService.refreshInterpreters(true).catch(noop);
         await this.refreshData(true);
     }
     public refreshData(forcePythonInterpreterRefresh: boolean = false) {
@@ -269,7 +269,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         this._onDidChangeKernels.fire();
         const kernels = Array.from(this._kernels.values());
         this.updateCachePromise = this.updateCachePromise.finally(() =>
-            this.writeToMementoCache(kernels, LocalPythonKernelsCacheKey).catch(noop)
+            this.writeToMementoCache(kernels, localPythonKernelsCacheKey()).catch(noop)
         );
         await this.updateCachePromise;
     }
@@ -280,7 +280,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             ? this.interpreterService.resolvedEnvironments
             : [];
 
-        traceInfoIfCI(
+        traceVerbose(
             `Listing kernels for ${interpreters.length} interpreters (${interpreters.map((i) => i.id).join(', ')})`
         );
         // If we don't have Python extension installed or don't discover any Python interpreters

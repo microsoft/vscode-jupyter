@@ -102,15 +102,15 @@ export class DebuggingManager
             rblDocumentUris.push(controller.debugCell.notebook.uri);
         });
 
-        this.runByLineCells.set(rblCellUris).ignoreErrors();
-        this.runByLineDocuments.set(rblDocumentUris).ignoreErrors();
+        this.runByLineCells.set(rblCellUris).catch(noop);
+        this.runByLineDocuments.set(rblDocumentUris).catch(noop);
     }
 
     private updateDebugContextKey() {
         const debugDocumentUris = new ResourceSet();
         this.notebookToDebugAdapter.forEach((_, notebook) => debugDocumentUris.add(notebook.uri));
         this.notebookInProgress.forEach((notebook) => debugDocumentUris.add(notebook.uri));
-        this.debugDocuments.set(Array.from(debugDocumentUris.values())).ignoreErrors();
+        this.debugDocuments.set(Array.from(debugDocumentUris.values())).catch(noop);
     }
 
     public async tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell, skipIpykernelCheck = false) {

@@ -19,23 +19,22 @@ import {
 import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupyterInterpreterSubCommandExecutionService.node';
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
-import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
-import { JupyterConnection } from './jupyterConnection';
+import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
-import { JupyterKernelService } from './jupyterKernelService.node';
-import { JupyterRemoteCachedKernelValidator } from './jupyterRemoteCachedKernelValidator';
-import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
+import { JupyterKernelService } from './session/jupyterKernelService.node';
+import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
+import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
-import { JupyterPasswordConnect } from './launcher/jupyterPasswordConnect';
+import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
 import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServerFactory';
 import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
-import { JupyterServerUriStorage } from './launcher/serverUriStorage';
-import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
-import { JupyterServerSelector } from './serverSelector';
+import { JupyterServerUriStorage } from './connection/serverUriStorage';
+import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
+import { JupyterServerSelector } from './connection/serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.node';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
@@ -67,10 +66,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        CellOutputMimeTypeTracker
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         JupyterInterpreterSelectionCommand

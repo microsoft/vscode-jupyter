@@ -22,7 +22,12 @@ import {
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
-import { IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
+import {
+    IInteractiveControllerHelper,
+    IInteractiveWindowDebugger,
+    IInteractiveWindowDebuggingManager,
+    IInteractiveWindowProvider
+} from './types';
 import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from './shiftEnterBanner';
@@ -30,9 +35,14 @@ import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startu
 import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldingProvider';
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
+import { InteractiveControllerHelper } from './InteractiveControllerHelper';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    serviceManager.addSingleton<IInteractiveControllerHelper>(
+        IInteractiveControllerHelper,
+        InteractiveControllerHelper
+    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);

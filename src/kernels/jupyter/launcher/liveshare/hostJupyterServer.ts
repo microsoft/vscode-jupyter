@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../../../platform/common/extensions';
-
 import { CancellationToken } from 'vscode-jsonrpc';
 import { inject, named } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
@@ -57,7 +55,7 @@ export class HostJupyterServer implements INotebookServer {
             try {
                 this.serverExitCode = c;
                 traceError(DataScience.jupyterServerCrashed(c));
-                this.shutdown().ignoreErrors();
+                this.shutdown().catch(noop);
             } catch {
                 noop();
             }

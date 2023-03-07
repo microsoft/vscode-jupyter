@@ -8,6 +8,7 @@ import { IOutputChannel } from '../types';
 import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types.node';
 import { removeHomeFromFile } from '../platform/fs-paths.node';
+import { toCommandArgument } from '../helpers';
 
 /***
  * Logs the running of a new process. Does not log stdout/stderr.
@@ -25,7 +26,7 @@ export class ProcessLogger implements IProcessLogger {
             return;
         }
         const argsList = args.reduce((accumulator, current, index) => {
-            let formattedArg = removeHomeFromFile(current).toCommandArgument();
+            let formattedArg = toCommandArgument(removeHomeFromFile(current));
             if (current[0] === "'" || current[0] === '"') {
                 formattedArg = `${current[0]}${removeHomeFromFile(current.substr(1))}`;
             }

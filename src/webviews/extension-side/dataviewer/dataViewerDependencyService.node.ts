@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IInstaller } from '../../../kernels/installer/types';
+import { IInstaller } from '../../../platform/interpreter/installer/types';
 import { IKernel } from '../../../kernels/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IsCodeSpace } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { InterpreterDataViewerDependencyImplementation } from './interpreterDataViewerDependencyImplementation.node';
 import { KernelDataViewerDependencyImplementation } from './kernelDataViewerDependencyImplementation';

@@ -24,7 +24,6 @@ import {
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
-import '../platform/common/extensions';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
@@ -41,7 +40,6 @@ import {
     IKernel,
     IKernelProvider,
     isLocalConnection,
-    KernelAction,
     KernelConnectionMetadata,
     NotebookCellRunState
 } from '../kernels/types';
@@ -57,6 +55,7 @@ import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import {
+    IInteractiveControllerHelper,
     IInteractiveWindow,
     IInteractiveWindowDebugger,
     IInteractiveWindowDebuggingManager,
@@ -64,9 +63,7 @@ import {
 } from './types';
 import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
 import { IControllerRegistration, IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
-import { KernelConnector } from '../notebooks/controllers/kernelConnector';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
     ICodeGeneratorFactory,
@@ -77,16 +74,18 @@ import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { CellExecutionCreator } from '../kernels/execution/cellExecutionCreator';
 import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
-import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 import { KernelController } from '../kernels/kernelController';
 import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
+import { splitLines } from '../platform/common/helpers';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
  * Methods for talking to an Interactive Window are exposed here, but the actual UI is part of VS code core.
  */
 export class InteractiveWindow implements IInteractiveWindow {
+    public static lastRemoteSelected: KernelConnectionMetadata | undefined;
+
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -146,7 +145,8 @@ export class InteractiveWindow implements IInteractiveWindow {
         public mode: InteractiveWindowMode,
         preferredController: IVSCodeNotebookController | undefined,
         notebookEditorOrTab: NotebookEditor | InteractiveTab,
-        public readonly inputUri: Uri
+        public readonly inputUri: Uri,
+        private readonly controllerHelper: IInteractiveControllerHelper
     ) {
         this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -212,13 +212,11 @@ export class InteractiveWindow implements IInteractiveWindow {
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
 
-        if (this.currentKernelInfo) {
-            this.startKernel().ignoreErrors();
+        if (this.currentKernelInfo.controller) {
+            this.startKernel().catch(noop);
         } else {
             traceWarning('No controller selected for Interactive Window');
-            if (this.isWebExtension) {
-                this.insertInfoMessage(DataScience.noKernelsSpecifyRemote).ignoreErrors;
-            }
+            this.insertInfoMessage(DataScience.selectKernelForEditor).catch(noop);
         }
         this.initialized = true;
     }
@@ -243,7 +241,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         const controller = this.currentKernelInfo.controller;
         const metadata = this.currentKernelInfo.metadata;
         if (!controller || !metadata) {
-            // This cannot happen, but we need to make typescript happy.
             throw new Error('Controller not selected');
         }
 
@@ -254,55 +251,23 @@ export class InteractiveWindow implements IInteractiveWindow {
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
         try {
             // Try creating a kernel
-            await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
-
-            const onStartKernel = (action: KernelAction, k: IKernel) => {
-                if (action !== 'start' && action !== 'restart') {
-                    return;
-                }
-                // Id may be different if the user switched controllers
-                traceInfoIfCI(
-                    `(onStart) Looking for controller ${k.controller.id} in ${this.controllerRegistration.all
-                        .map((item) => `${item.kind}:${item.id}`)
-                        .join(', ')}`
-                );
-                const found = this.controllerRegistration.registered.find((item) => item.id === k.controller.id);
-                if (!found) {
-                    throw Error(`Controller ${k.controller.id} not found or not yet created`);
-                }
-                this.currentKernelInfo.controller = found.controller;
-                this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
-                !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
-                this.updateSysInfoMessage(
-                    this.getSysInfoMessage(k.kernelConnectionMetadata, SysInfoReason.Start),
-                    false,
-                    sysInfoCell
-                );
-            };
-            // When connecting, we need to update the sys info message
-            this.updateSysInfoMessage(this.getSysInfoMessage(metadata, SysInfoReason.Start), false, sysInfoCell);
-            const kernel = await KernelConnector.connectToNotebookKernel(
+            const { kernel, actualController } = await this.controllerHelper.createKernel(
                 metadata,
-                this.serviceContainer,
-                { resource: this.owner, notebook: this.notebookDocument, controller },
-                new DisplayOptions(false),
+                controller,
+                this.owner,
+                this.notebookDocument,
                 this.internalDisposables,
-                'jupyterExtension',
-                onStartKernel
+                this.serviceContainer
             );
-
-            traceInfoIfCI(
-                `Looking for controller ${kernel.controller.id} in ${this.controllerRegistration.all
-                    .map((item) => `${item.kind}:${item.id}`)
-                    .join(', ')}`
-            );
-            const found = this.controllerRegistration.registered.find((item) => item.id === kernel.controller.id);
-            if (!found) {
-                throw Error(`Controller ${kernel.controller.id} not found or not yet created`);
-            }
-
-            this.currentKernelInfo.controller = found.controller;
+            !!this.pendingCellAdd && this.setPendingCellAdd(this.pendingCellAdd);
             this.currentKernelInfo.metadata = kernel.kernelConnectionMetadata;
+            this.currentKernelInfo.controller = actualController;
+
+            this.updateSysInfoMessage(
+                this.getSysInfoMessage(kernel.kernelConnectionMetadata, SysInfoReason.Start),
+                false,
+                sysInfoCell
+            );
 
             const kernelEventHookForRestart = async () => {
                 if (this.notebookDocument && this.currentKernelInfo.metadata) {
@@ -347,7 +312,7 @@ export class InteractiveWindow implements IInteractiveWindow {
             if (this.owner) {
                 // The actual error will be displayed in the cell, hence no need to display the actual
                 // error here, else we'd just be duplicating the error messages.
-                await this.deleteSysInfoCell(sysInfoCell);
+                this.deleteSysInfoCell(sysInfoCell);
             } else {
                 // We don't have a cell when starting IW without an *.py file,
                 // hence display error where the sysinfo is displayed.
@@ -418,7 +383,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     }
                 })
             )
-            .ignoreErrors();
+            .catch(noop);
     }
 
     private deleteSysInfoCell(cellPromise: Promise<NotebookCell>) {
@@ -439,7 +404,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     }
                 })
             )
-            .ignoreErrors();
+            .catch(noop);
     }
 
     private finishSysInfoMessage(kernel: IKernel, cellPromise: Promise<NotebookCell>, reason: SysInfoReason) {
@@ -473,7 +438,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                     };
                     // don't start the kernel if the IW has only been restored from a previous session
                     if (this.initialized) {
-                        this.startKernel().ignoreErrors();
+                        this.startKernel().catch(noop);
                     }
                 }
             },
@@ -549,7 +514,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
-        return this.submitCodeImpl(code, file, line, false);
+        return this.submitCode(code, file, line, false);
     }
 
     private useNewDebugMode(): boolean {
@@ -593,13 +558,13 @@ export class InteractiveWindow implements IInteractiveWindow {
 
         // Call the internal method if we were able to save
         if (saved) {
-            return this.submitCodeImpl(code, fileUri, line, true);
+            return this.submitCode(code, fileUri, line, true);
         }
 
         return result;
     }
 
-    private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
+    private async submitCode(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         // Do not execute or render empty cells
         if (this.cellMatcher.isEmptyCell(code) || !this.currentKernelInfo.controller) {
             return true;
@@ -609,7 +574,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         this.updateOwners(fileUri);
 
         // Code may have markdown inside of it, if so, split into two cells
-        const split = code.splitLines({ trim: false });
+        const split = splitLines(code, { trim: false });
         const matcher = new CellMatcher(this.configuration.getSettings(fileUri));
         let firstNonMarkdown = -1;
         if (matcher.isMarkdown(split[0])) {
@@ -828,7 +793,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         const settings = this.configuration.getSettings(this.owningResource);
         const isMarkdown = this.cellMatcher.getCellType(code) === MARKDOWN_LANGUAGE;
         const strippedCode = isMarkdown
-            ? generateMarkdownFromCodeLines(code.splitLines()).join('')
+            ? generateMarkdownFromCodeLines(splitLines(code)).join('')
             : generateInteractiveCode(code, settings, this.cellMatcher);
         const interactiveWindowCellMarker = this.cellMatcher.getFirstMarker(code);
 

@@ -5,11 +5,17 @@ import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
-import { InteractiveWindowView, jupyterLanguageToMonacoLanguageMapping, JupyterNotebookView } from './constants';
+import {
+    InteractiveWindowView,
+    jupyterLanguageToMonacoLanguageMapping,
+    JupyterNotebookView,
+    WIDGET_STATE_MIMETYPE
+} from './constants';
 import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
 import { DataScience } from './utils/localize';
+import { splitLines } from './helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -177,6 +183,21 @@ export type NotebookMetadata = nbformat.INotebookMetadata & {
              * Hash of the interpreter executable path.
              */
             hash?: string;
+        };
+    };
+    widgets?: {
+        [WIDGET_STATE_MIMETYPE]?: {
+            state: Record<
+                string,
+                {
+                    model_module: '@jupyter-widgets/base' | '@jupyter-widgets/controls' | string;
+                    model_module_version: string;
+                    model_name: string;
+                    state: {};
+                }
+            >;
+            version_major: number;
+            version_minor: number;
         };
     };
 };
@@ -350,7 +371,7 @@ export function parseForComments(
 export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
-        str.splitLines({ trim: false, removeEmptyEntries: false }),
+        splitLines(str, { trim: false, removeEmptyEntries: false }),
         (_s) => {
             // Do nothing
         },
@@ -398,7 +419,7 @@ export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
 }
 
 export function removeLinesFromFrontAndBack(code: string | string[]): string {
-    const lines = Array.isArray(code) ? code : code.splitLines({ trim: false, removeEmptyEntries: false });
+    const lines = Array.isArray(code) ? code : splitLines(code, { trim: false, removeEmptyEntries: false });
     return removeLinesFromFrontAndBackNoConcat(lines).join('\n');
 }
 

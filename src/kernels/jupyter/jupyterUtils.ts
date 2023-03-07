@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../platform/common/extensions';
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
 import { IJupyterServerUri, JupyterServerUriHandle } from './types';
-import { getJupyterConnectionDisplayName } from './launcher/helpers';
+import { getJupyterConnectionDisplayName } from './helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
