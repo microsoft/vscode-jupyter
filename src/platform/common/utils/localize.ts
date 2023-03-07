@@ -418,7 +418,9 @@ export namespace DataScience {
     export const kernelFilterPlaceholder = l10n.t('Choose the kernels that are available in the kernel picker.');
     export const recommendedKernelCategoryInQuickPick = l10n.t('Recommended');
     export const createPythonEnvironmentInQuickPick = l10n.t('Create Python Environment');
-    export const createPythonEnvironmentInQuickPickTooltip = l10n.t('Create an isolated Python Environment per workspace folder');
+    export const createPythonEnvironmentInQuickPickTooltip = l10n.t(
+        'Create an isolated Python Environment per workspace folder'
+    );
 
     export const selectDifferentJupyterInterpreter = l10n.t('Change Interpreter');
     export const pandasTooOldForViewingFormat = (currentVersion: string, requiredVersion: string) =>
