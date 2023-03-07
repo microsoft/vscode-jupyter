@@ -25,14 +25,15 @@ import ipykernel
 builtins.print(ipykernel.__version__)`;
     const output = await execution.executeHidden(code);
 
-    const versionRegex = /^\d+\.\d+\.\d+$/;
+    const versionRegex: RegExp = /^(\d+)\.\d+\.\d+$/;
 
     // It is necessary to traverse all the output to determine the version of ipykernel, some jupyter servers may return extra status metadata
     for (const line of output) {
-        const lineText = line.text?.toString();
-        if (lineText && versionRegex.test(lineText)) {
-            const [majorVersion] = lineText.split('.').map(Number);
-            if (majorVersion >= 6) {
+        const lineText = line.text?.toString() ?? '';
+        const matches: RegExpMatchArray | null = lineText.match(versionRegex);
+        if (matches) {
+            const majorVersion: string = matches[1];
+            if (Number(majorVersion) >= 6) {
                 return IpykernelCheckResult.Ok;
             }
             return IpykernelCheckResult.Outdated;
