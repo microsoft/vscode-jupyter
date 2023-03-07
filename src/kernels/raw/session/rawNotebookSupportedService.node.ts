@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { traceVerbose, traceWarning } from '../../../platform/logging';
+import { traceError, traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 
@@ -40,7 +40,8 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             this._isSupported = true;
         } catch (e) {
             traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
-            traceVerbose(`Exception while attempting zmq :`, e);
+            traceError(`Exception while attempting zmq :`, e);
+            console.error(e);
             this._isSupported = false;
         }
 
