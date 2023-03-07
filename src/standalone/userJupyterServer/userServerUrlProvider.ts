@@ -38,6 +38,7 @@ import {
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError } from '../../platform/logging';
+import { JupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
@@ -242,6 +243,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 );
             }
 
+            let inputWasHidden = false;
             disposables.push(
                 input.onDidAccept(async () => {
                     const uri = input.value;
@@ -268,9 +270,19 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                     );
 
                     if (message) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
                         input.validationMessage = message;
                     } else {
-                        const serverInfo = this.parseUri(uri);
+                        // // Offer the user a chance to pick a display name for the server
+                        // // Leaving it blank will use the URI as the display name
+                        // const displayName = await this.applicationShell.showInputBox({
+                        //     title: DataScience.jupyterRenameServer
+                        // });
+                        const displayName = '';
+
+                        const serverInfo = this.parseUri(uri, (displayName || '').trim());
                         if (serverInfo) {
                             const handle = uuid();
                             this._servers.push({
@@ -286,7 +298,10 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                     }
                 }),
                 input.onDidHide(() => {
-                    resolve(undefined);
+                    inputWasHidden = true;
+                    if (!JupyterPasswordConnect.prompt) {
+                        resolve(undefined);
+                    }
                 })
             );
 
@@ -296,7 +311,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         });
     }
 
-    private parseUri(uri: string): IJupyterServerUri | undefined {
+    private parseUri(uri: string, displayName?: string): IJupyterServerUri | undefined {
         let url: URL;
         try {
             url = new URL(uri);
@@ -306,6 +321,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             const baseUrl = `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
 
             const token = `${url.searchParams.get('token')}`;
+            const isTokenEmpty = token === '' || token === 'null';
             const authorizationHeader = {
                 Authorization: `token ${token}`
             };
@@ -313,9 +329,9 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
 
             return {
                 baseUrl: baseUrl,
-                token: token,
-                displayName: hostName,
-                authorizationHeader
+                token: isTokenEmpty ? '' : token,
+                displayName: displayName || hostName,
+                authorizationHeader: isTokenEmpty ? {} : authorizationHeader
             };
         } catch (err) {
             // This should already have been parsed when set, so just throw if it's not right here
