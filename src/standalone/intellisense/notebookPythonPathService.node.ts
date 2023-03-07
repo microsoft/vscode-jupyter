@@ -155,7 +155,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
                 if (isInteractiveInputTab(tab)) {
                     const tabUri = tab.input.uri.toString();
                     // the interactive resource URI was altered to start with `/`, this will account for both URI formats
-                    if (tab.input.uri.toString().endsWith(notebookUri.toString())) {
+                    if (tab.input.uri.toString().endsWith(notebookUri.path)) {
                         result = tabUri;
                     }
                 }
