@@ -38,7 +38,7 @@ import {
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError } from '../../platform/logging';
-import { JupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
+import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
