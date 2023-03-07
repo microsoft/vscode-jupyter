@@ -41,7 +41,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         // Sign up to see if servers are removed from our uri storage list
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
-    public static isPromptingForPassword = false;
     private static _prompt?: Deferred<void>;
     public static get prompt(): Promise<void> | undefined {
         return JupyterPasswordConnect._prompt?.promise;
