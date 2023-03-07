@@ -11,6 +11,7 @@ import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/inf
 import { IServiceContainer } from '../../ioc/types';
 import { translateProductToModule } from './utils';
 import { IPythonExecutionFactory } from '../types.node';
+import { getPinnedPackages } from './pinnedPackages';
 
 /**
  * Installer for pip. Default installer for most everything.
@@ -83,7 +84,7 @@ export class PipInstaller extends ModuleInstaller {
             args.push('--user');
         }
         return {
-            args: ['-m', 'pip', ...args, moduleName]
+            args: ['-m', 'pip', ...args, moduleName].concat(getPinnedPackages('pip', moduleName))
         };
     }
     private isPipAvailable(interpreter: PythonEnvironment): Promise<boolean> {
