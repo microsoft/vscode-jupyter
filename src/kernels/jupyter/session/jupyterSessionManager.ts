@@ -42,6 +42,7 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
+import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -372,8 +373,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             } else if (pwSettings) {
                 serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
-                // Failed to get password info, notify the user
-                throw new Error(DataScience.passwordFailure);
+                throw new JupyterInvalidPasswordError();
             }
         } else {
             serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
@@ -441,7 +441,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
 
         // If they are local launch, https, or have a token, then they are secure
-        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token !== 'null') {
+        const isEmptyToken = connInfo.token === '' || connInfo.token === 'null';
+        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || !isEmptyToken) {
             return;
         }
 

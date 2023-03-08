@@ -42,6 +42,7 @@ import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
+import { JupyterInvalidPasswordError } from '../errors/jupyterInvalidPassword';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 interface ISelectUriQuickPickItem extends QuickPickItem {
@@ -104,6 +105,8 @@ export async function validateSelectJupyterURI(
             if (!handled) {
                 return DataScience.jupyterSelfCertExpiredErrorMessageOnly;
             }
+        } else if (err && err instanceof JupyterInvalidPasswordError) {
+            return DataScience.passwordFailure;
         } else {
             // Return the general connection error to show in the validation box
             // Replace any Urls in the error message with markdown link.
