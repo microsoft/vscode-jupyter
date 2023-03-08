@@ -6,10 +6,9 @@ import { Disposable, extensions, Uri, workspace, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider } from '../../platform/api/types';
-import { PylanceExtension, PythonExtension } from '../../platform/common/constants';
+import { PylanceExtension } from '../../platform/common/constants';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isInteractiveInputTab } from '../../interactive-window/helpers';
@@ -37,7 +36,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     }
 
     public async activate() {
-        if (!this.isPylanceUsingLspNotebooks()) {
+        if (!this.isUsingPylance()) {
             return;
         }
 
@@ -75,12 +74,8 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
      * Returns a boolean indicating whether Pylance's LSP notebooks experiment is enabled.
      * When this is True, the Python extension starts Pylance for notebooks instead of us.
      */
-    public isPylanceUsingLspNotebooks() {
+    public isUsingPylance() {
         if (this._isEnabled === undefined) {
-            const isInTreatmentGroup = true;
-            const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
-            const pylanceVersion = extensions.getExtension(PylanceExtension)?.packageJSON.version;
-
             const pythonConfig = workspace.getConfiguration('python');
             const languageServer = pythonConfig?.get<string>('languageServer');
 
@@ -89,22 +84,6 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             this._isEnabled = false;
             if (languageServer !== 'Pylance' && languageServer !== 'Default') {
                 traceInfo(`LSP Notebooks experiment is disabled -- not using Pylance`);
-            } else if (!isInTreatmentGroup) {
-                traceInfo(`LSP Notebooks experiment is disabled -- not in treatment group`);
-            } else if (!pythonVersion) {
-                traceInfo(`LSP Notebooks experiment is disabled -- Python disabled or not installed`);
-            } else if (
-                semver.lte(pythonVersion, '2022.7.11371008') &&
-                !semver.prerelease(pythonVersion)?.includes('dev')
-            ) {
-                traceInfo(`LSP Notebooks experiment is disabled -- Python does not support experiment`);
-            } else if (!pylanceVersion) {
-                traceInfo(`LSP Notebooks experiment is disabled -- Pylance disabled or not installed`);
-            } else if (
-                semver.lt(pylanceVersion, '2022.5.3-pre.1') &&
-                !semver.prerelease(pylanceVersion)?.includes('dev')
-            ) {
-                traceInfo(`LSP Notebooks experiment is disabled -- Pylance does not support experiment`);
             } else {
                 this._isEnabled = true;
                 traceInfo(`LSP Notebooks experiment is enabled`);
