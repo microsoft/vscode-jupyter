@@ -67,6 +67,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install dependencies for native modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
+
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
@@ -112,6 +117,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install dependencies for native modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
+
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
@@ -133,7 +143,9 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_build_from_source: true
 
       - name: Verify Translation files
         run: npm run validateTranslationFiles
@@ -190,6 +202,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
+
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
         with:
@@ -231,7 +249,9 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_build_from_source: true
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
@@ -391,6 +411,12 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install -U pip
         if: matrix.python != 'conda' && matrix.python != 'noPython'
+
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v3
@@ -553,7 +579,9 @@ jobs:
 
         # This step is slow.
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_build_from_source: true
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -784,19 +812,27 @@ jobs:
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
 
+      - name: Install libsodium and gnutls
+        if: matrix.os -= 'macos-latest'
+        run: |
+          brew install libsodium gnutls
+        shell: bash
+
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
+
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_build_from_source: true
 
       - name: pip install system test requirements
         run: |
           python -m pip install --upgrade -r build/venv-test-requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-        shell: bash
-
-      - name: Install libsodium and gnutls
-        if: matrix.os -= 'macos-latest'
-        run: |
-          brew install libsodium gnutls
         shell: bash
 
       # Compile the test files.
@@ -848,7 +884,10 @@ jobs:
           node-version: ${{env.NODE_VERSION}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+        run: npm ci --foreground-scripts --prefer-offline
+        env:
+          npm_config_build_from_source: true
+
 
       - name: Cache compiled TS files
         id: out-cache
