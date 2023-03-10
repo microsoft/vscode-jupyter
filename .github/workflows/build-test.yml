@@ -813,7 +813,7 @@ jobs:
           name: 'ms-toolsai-jupyter-insiders.vsix'
 
       - name: Install libsodium and gnutls
-        if: matrix.os -= 'macos-latest'
+        if: matrix.os == 'macos-latest'
         run: |
           brew install libsodium gnutls
         shell: bash
