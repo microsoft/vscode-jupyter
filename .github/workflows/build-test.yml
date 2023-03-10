@@ -793,6 +793,12 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
         shell: bash
 
+      - name: Install libsodium and gnutls
+        if: matrix.os -= 'macos-latest'
+        run: |
+          brew install libsodium gnutls
+        shell: bash
+
       # Compile the test files.
       - name: Prepare for smoke tests
         run: npx tsc -p ./
