@@ -275,12 +275,11 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         }
                         input.validationMessage = message;
                     } else {
-                        // // Offer the user a chance to pick a display name for the server
-                        // // Leaving it blank will use the URI as the display name
-                        // const displayName = await this.applicationShell.showInputBox({
-                        //     title: DataScience.jupyterRenameServer
-                        // });
-                        const displayName = '';
+                        // Offer the user a chance to pick a display name for the server
+                        // Leaving it blank will use the URI as the display name
+                        const displayName = await this.applicationShell.showInputBox({
+                            title: DataScience.jupyterRenameServer
+                        });
 
                         const serverInfo = this.parseUri(uri, (displayName || '').trim());
                         if (serverInfo) {
