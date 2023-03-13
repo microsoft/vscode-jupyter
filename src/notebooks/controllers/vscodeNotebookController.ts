@@ -42,7 +42,6 @@ import {
     IDisplayOptions,
     IDisposable,
     IDisposableRegistry,
-    IExtensionContext,
     IFeaturesManager
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';

@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as fakeTimers from '@sinonjs/fake-timers';
-import { NotebookDocument, EventEmitter, NotebookController, Uri, Disposable } from 'vscode';
+import { NotebookDocument, EventEmitter, NotebookController, Disposable } from 'vscode';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { IKernel, IKernelProvider, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -22,7 +22,6 @@ import {
     IBrowserService,
     IConfigurationService,
     IDisposable,
-    IExtensionContext,
     IFeaturesManager,
     IWatchableJupyterSettings,
     KernelPickerType
@@ -45,7 +44,6 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData';
         let kernelConnection: KernelConnectionMetadata;
         let vscNotebookApi: IVSCodeNotebook;
         let commandManager: ICommandManager;
-        let context: IExtensionContext;
         let languageService: NotebookCellLanguageService;
         let workspace: IWorkspaceService;
         let documentManager: IDocumentManager;
@@ -74,7 +72,6 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData';
             kernelConnection = mock<KernelConnectionMetadata>();
             vscNotebookApi = mock<IVSCodeNotebook>();
             commandManager = mock<ICommandManager>();
-            context = mock<IExtensionContext>();
             languageService = mock<NotebookCellLanguageService>();
             workspace = mock<IWorkspaceService>();
             documentManager = mock<IDocumentManager>();
@@ -101,7 +98,6 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData';
             clock = fakeTimers.install();
             disposables.push(new Disposable(() => clock.uninstall()));
             when(featureManager.features).thenReturn({ kernelPickerType });
-            when(context.extensionUri).thenReturn(Uri.file('extension'));
             when(controller.onDidChangeSelectedNotebooks).thenReturn(onDidChangeSelectedNotebooks.event);
             when(vscNotebookApi.onDidCloseNotebookDocument).thenReturn(onDidCloseNotebookDocument.event);
             when(
@@ -153,7 +149,6 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData';
                 instance(vscNotebookApi),
                 instance(commandManager),
                 instance(kernelProvider),
-                instance(context),
                 disposables,
                 instance(languageService),
                 instance(workspace),

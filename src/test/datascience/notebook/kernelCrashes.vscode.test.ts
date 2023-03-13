@@ -15,13 +15,7 @@ import {
     IWorkspaceService
 } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
-import {
-    IBrowserService,
-    IConfigurationService,
-    IDisposable,
-    IExtensionContext,
-    IFeaturesManager
-} from '../../../platform/common/types';
+import { IBrowserService, IConfigurationService, IDisposable, IFeaturesManager } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import {
@@ -101,7 +95,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             await startJupyterServer();
             sinon.restore();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-            const context = api.serviceContainer.get<IExtensionContext>(IExtensionContext);
             const languageService = api.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService);
             const commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
             const documentManager = api.serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -157,7 +150,6 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
                 vscodeNotebook,
                 commandManager,
                 kernelProvider,
-                context,
                 disposables,
                 languageService,
                 workspaceService,
