@@ -116,6 +116,7 @@ class JupyterKernelService implements IExportedKernelService {
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
+        this._status = this.kernelFinder.status;
         this.kernelFinder.onDidChangeStatus(
             () => {
                 this._status = this.kernelFinder.status;

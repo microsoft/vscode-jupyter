@@ -67,6 +67,7 @@ export type ErrorCategory =
     | 'jupyterconnection'
     | 'jupyterinstall'
     | 'jupyterselfcert'
+    | 'jupyterpassword'
     | 'jupyterexpiredcert'
     | 'jupyterselfexpiredcert'
     | 'invalidkernel'

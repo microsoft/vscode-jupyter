@@ -107,10 +107,12 @@ export class KernelSelector implements IDisposable {
         this.extensionChecker = ServiceContainer.instance.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         this.createPythonEnvQuickPickItem = {
             label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`,
+            tooltip: DataScience.createPythonEnvironmentInQuickPickTooltip,
             command: this.onCreatePythonEnvironment.bind(this)
         };
         this.installPythonItem = {
-            label: DataScience.installPythonTitle,
+            label: DataScience.installPythonQuickPickTitle,
+            tooltip: DataScience.installPythonQuickPickToolTip,
             command: async () => {
                 // Timeout as we want the quick pick to close before we start this process.
                 setTimeout(() => commands.executeCommand(Commands.InstallPythonViaKernelPicker).then(noop, noop));
@@ -119,6 +121,7 @@ export class KernelSelector implements IDisposable {
         };
         this.installPythonExtension = {
             label: DataScience.installPythonExtensionViaKernelPickerTitle,
+            tooltip: DataScience.installPythonExtensionViaKernelPickerToolTip,
             command: async () => {
                 // TODO: Once user installs Python wait here and refresh this UI so we display the Python Envs.
                 const installed = await commands.executeCommand(Commands.InstallPythonExtensionViaKernelPicker);
