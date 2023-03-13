@@ -242,7 +242,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
         if (await this.needPassword(url)) {
             // Get password first
-            let userPassword = await this.getUserPassword();
+            let userPassword = await this.getUserPassword(url);
 
             if (userPassword) {
                 xsrfCookie = await this.getXSRFToken(url, '');
@@ -332,8 +332,17 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         });
     }
 
-    private async getUserPassword(): Promise<string | undefined> {
+    private async getUserPassword(url: string): Promise<string | undefined> {
+        let friendlyUrl = url;
+        try {
+            const uri = new URL(url);
+            friendlyUrl = `${uri.protocol}//${uri.hostname}`;
+        } catch {
+            //
+        }
+
         return this.appShell.showInputBox({
+            title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
             prompt: DataScience.jupyterSelectPasswordPrompt,
             ignoreFocusOut: true,
             password: true
