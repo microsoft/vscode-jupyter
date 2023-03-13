@@ -418,6 +418,9 @@ export namespace DataScience {
     export const kernelFilterPlaceholder = l10n.t('Choose the kernels that are available in the kernel picker.');
     export const recommendedKernelCategoryInQuickPick = l10n.t('Recommended');
     export const createPythonEnvironmentInQuickPick = l10n.t('Create Python Environment');
+    export const createPythonEnvironmentInQuickPickTooltip = l10n.t(
+        'Create an isolated Python Environment per workspace folder'
+    );
 
     export const selectDifferentJupyterInterpreter = l10n.t('Change Interpreter');
     export const pandasTooOldForViewingFormat = (currentVersion: string, requiredVersion: string) =>
@@ -689,7 +692,13 @@ export namespace DataScience {
     export const kernelPickerSelectKernelFromRemoteTitle = (kernelProvider: string) =>
         l10n.t('Select a Kernel from {0}', kernelProvider);
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');
-    export const installPythonTitle = l10n.t('Install Python');
+    export const installPythonExtensionViaKernelPickerToolTip = l10n.t(
+        'Python Extension is required to detect and use Python environments for the execution of code cells.'
+    );
+    export const installPythonQuickPickTitle = l10n.t('Install Python');
+    export const installPythonQuickPickToolTip = l10n.t(
+        'Python Environments not detected. Upon installation reload VS Code or refresh the list of Kernels.'
+    );
     export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPickLabel = l10n.t({
         message: '$(error) Unable to connect to the remote server',
         comment: 'Do not translate the string $(error) as that is a VS Code icon.'

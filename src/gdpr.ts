@@ -1391,6 +1391,15 @@
      ]
    }
  */
+//Telemetry.JupyterServerZMQStreamError
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_SERVER_ZMQ_STREAM_ERROR" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.StartJupyter
 /* __GDPR__
    "DS_INTERNAL.JUPYTERSTARTUPCOST" : {

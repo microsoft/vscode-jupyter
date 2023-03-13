@@ -2,19 +2,17 @@
 // Licensed under the MIT License.
 
 import assert from 'assert';
-import { Container } from 'inversify';
 import { SemVer } from 'semver';
-import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { ServiceManager } from '../../../platform/ioc/serviceManager';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { InstallationChannelManager } from '../../../platform/interpreter/installer/channelManager.node';
 import { IModuleInstaller, Product } from '../../../platform/interpreter/installer/types';
 import { Uri } from 'vscode';
+import { anything, instance, mock, when } from 'ts-mockito';
 
 const info: PythonEnvironment = {
     displayName: '',
@@ -29,30 +27,26 @@ const info: PythonEnvironment = {
 
 suite('Installation - channel messages', () => {
     let serviceContainer: IServiceContainer;
-    let platform: TypeMoq.IMock<IPlatformService>;
-    let appShell: TypeMoq.IMock<IApplicationShell>;
-    let interpreters: TypeMoq.IMock<IInterpreterService>;
+    let platform: IPlatformService;
+    let appShell: IApplicationShell;
+    let interpreters: IInterpreterService;
+    let moduleInstaller: IModuleInstaller;
 
     setup(() => {
-        const cont = new Container();
-        const serviceManager = new ServiceManager(cont);
-        serviceContainer = new ServiceContainer(cont);
+        serviceContainer = mock<ServiceContainer>();
 
-        platform = TypeMoq.Mock.ofType<IPlatformService>();
-        serviceManager.addSingletonInstance<IPlatformService>(IPlatformService, platform.object);
-
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
-
-        interpreters = TypeMoq.Mock.ofType<IInterpreterService>();
-        serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreters.object);
-
-        const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
-        serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, moduleInstaller.object);
+        platform = mock<IPlatformService>();
+        appShell = mock<IApplicationShell>();
+        interpreters = mock<IInterpreterService>();
+        moduleInstaller = mock<IModuleInstaller>();
+        when(serviceContainer.get<IPlatformService>(IPlatformService)).thenReturn(instance(platform));
+        when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
+        when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreters));
+        when(serviceContainer.getAll<IModuleInstaller>(IModuleInstaller)).thenReturn([instance(moduleInstaller)]);
     });
 
     test('No installers message: Unknown/Windows', async () => {
-        platform.setup((x) => x.isWindows).returns(() => true);
+        when(platform.isWindows).thenReturn(true);
         await testInstallerMissingMessage(EnvironmentType.Unknown, async (message: string, url: string) => {
             verifyMessage(message, ['Pip'], ['Conda']);
             verifyUrl(url, ['Windows', 'Pip']);
@@ -60,7 +54,7 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Conda/Windows', async () => {
-        platform.setup((x) => x.isWindows).returns(() => true);
+        when(platform.isWindows).thenReturn(true);
         await testInstallerMissingMessage(EnvironmentType.Conda, async (message: string, url: string) => {
             verifyMessage(message, ['Pip', 'Conda'], []);
             verifyUrl(url, ['Windows', 'Pip', 'Conda']);
@@ -68,8 +62,8 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Unknown/Mac', async () => {
-        platform.setup((x) => x.isWindows).returns(() => false);
-        platform.setup((x) => x.isMac).returns(() => true);
+        when(platform.isWindows).thenReturn(false);
+        when(platform.isMac).thenReturn(true);
         await testInstallerMissingMessage(EnvironmentType.Unknown, async (message: string, url: string) => {
             verifyMessage(message, ['Pip'], ['Conda']);
             verifyUrl(url, ['Mac', 'Pip']);
@@ -77,8 +71,8 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Conda/Mac', async () => {
-        platform.setup((x) => x.isWindows).returns(() => false);
-        platform.setup((x) => x.isMac).returns(() => true);
+        when(platform.isWindows).thenReturn(false);
+        when(platform.isMac).thenReturn(true);
         await testInstallerMissingMessage(EnvironmentType.Conda, async (message: string, url: string) => {
             verifyMessage(message, ['Pip', 'Conda'], []);
             verifyUrl(url, ['Mac', 'Pip', 'Conda']);
@@ -86,9 +80,9 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Unknown/Linux', async () => {
-        platform.setup((x) => x.isWindows).returns(() => false);
-        platform.setup((x) => x.isMac).returns(() => false);
-        platform.setup((x) => x.isLinux).returns(() => true);
+        when(platform.isWindows).thenReturn(false);
+        when(platform.isMac).thenReturn(false);
+        when(platform.isLinux).thenReturn(true);
         await testInstallerMissingMessage(EnvironmentType.Unknown, async (message: string, url: string) => {
             verifyMessage(message, ['Pip'], ['Conda']);
             verifyUrl(url, ['Linux', 'Pip']);
@@ -96,9 +90,9 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Conda/Linux', async () => {
-        platform.setup((x) => x.isWindows).returns(() => false);
-        platform.setup((x) => x.isMac).returns(() => false);
-        platform.setup((x) => x.isLinux).returns(() => true);
+        when(platform.isWindows).thenReturn(false);
+        when(platform.isMac).thenReturn(false);
+        when(platform.isLinux).thenReturn(true);
         await testInstallerMissingMessage(EnvironmentType.Conda, async (message: string, url: string) => {
             verifyMessage(message, ['Pip', 'Conda'], []);
             verifyUrl(url, ['Linux', 'Pip', 'Conda']);
@@ -106,7 +100,7 @@ suite('Installation - channel messages', () => {
     });
 
     test('No channels message', async () => {
-        platform.setup((x) => x.isWindows).returns(() => true);
+        when(platform.isWindows).thenReturn(true);
         await testInstallerMissingMessage(
             EnvironmentType.Unknown,
             async (message: string, url: string) => {
@@ -143,33 +137,25 @@ suite('Installation - channel messages', () => {
             envType: interpreterType,
             uri: Uri.file('')
         };
-        interpreters
-            .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => new Promise<PythonEnvironment>((resolve, _reject) => resolve(activeInterpreter)));
-        const channels = new InstallationChannelManager(serviceContainer);
+        when(interpreters.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+        const channels = new InstallationChannelManager(instance(serviceContainer));
 
         let url = '';
         let message = '';
         let search = '';
-        appShell
-            .setup((x) => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString()))
-            .callback((m: string, _, s: string) => {
-                message = m;
-                search = s;
-            })
-            .returns(() => new Promise<string>((resolve, _reject) => resolve(search)));
-        appShell
-            .setup((x) => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
-            .callback((m: string, s: string) => {
-                message = m;
-                search = s;
-            })
-            .returns(() => new Promise<string>((resolve, _reject) => resolve(search)));
-        appShell
-            .setup((x) => x.openUrl(TypeMoq.It.isAnyString()))
-            .callback((s: string) => {
-                url = s;
-            });
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenCall((m: string, _, s: string) => {
+            message = m;
+            search = s;
+            return Promise.resolve(search);
+        });
+        when(appShell.showErrorMessage(anything(), anything())).thenCall((m: string, s: string) => {
+            message = m;
+            search = s;
+            return Promise.resolve(search);
+        });
+        when(appShell.openUrl(anything())).thenCall((s: string) => {
+            url = s;
+        });
         if (methodType === 'showNoInstallersMessage') {
             await channels.showNoInstallersMessage(activeInterpreter);
         } else {

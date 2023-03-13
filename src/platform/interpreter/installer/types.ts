@@ -118,6 +118,7 @@ export interface IProductPathService {
 }
 
 export enum ModuleInstallFlags {
+    None = 0,
     upgrade = 1,
     updateDependencies = 2,
     reInstall = 4,
