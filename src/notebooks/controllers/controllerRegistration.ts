@@ -21,7 +21,6 @@ import { JupyterNotebookView, InteractiveWindowView } from '../../platform/commo
 import {
     IDisposableRegistry,
     IConfigurationService,
-    IExtensionContext,
     IBrowserService,
     IFeaturesManager,
     IDisposable,
@@ -428,7 +427,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.notebook,
                         this.serviceContainer.get<ICommandManager>(ICommandManager),
                         this.serviceContainer.get<IKernelProvider>(IKernelProvider),
-                        this.serviceContainer.get<IExtensionContext>(IExtensionContext),
                         this.disposables,
                         this.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService),
                         this.workspace,
