@@ -315,7 +315,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 ? `${displayData.description} (${displayData.serverDisplayName})`
                 : displayData.serverDisplayName;
         }
-        this.controller.kind = displayData.category;
     }
     // Handle the execution of notebook cell
     @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
