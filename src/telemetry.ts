@@ -1914,6 +1914,52 @@ export class IEventNamePropertyMapping {
         source: 'N/A'
     };
     /**
+     * Information used to determine the zmq binary support.
+     * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
+     */
+    [Telemetry.ZMQSupport]: TelemetryEventInfo<{
+        /**
+         * Failed to support zmq.
+         */
+        failed: boolean;
+
+        /**
+         * Whether alpine or not.
+         */
+        alpine?: boolean;
+        /**
+         * libc implementation, from env variable LIBC
+         * If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)
+         */
+        libc?: string;
+        /**
+         * arm version
+         */
+        armv?: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            alpine: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            libc: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            armv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
      * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
      */
     [Telemetry.JupyterInstalledButNotKernelSpecModule]: TelemetryEventInfo<never | undefined> = {
