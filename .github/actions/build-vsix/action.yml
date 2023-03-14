@@ -10,8 +10,6 @@ runs:
   using: 'composite'
   steps:
     - run: npm ci --prefer-offline
-      env:
-        npm_config_build_from_source: true
       shell: bash
 
     - run: npm run package
