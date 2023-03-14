@@ -2034,7 +2034,6 @@
         ]
     },
     "enabledApiProposals": [
-        "notebookControllerKind",
         "notebookDeprecated",
         "notebookMessaging",
         "notebookMime",
