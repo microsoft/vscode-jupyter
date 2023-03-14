@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import { inject, injectable } from 'inversify';
-import { traceVerbose, traceWarning } from '../../../platform/logging';
+import { traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
