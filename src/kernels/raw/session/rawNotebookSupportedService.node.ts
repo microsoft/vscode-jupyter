@@ -49,7 +49,6 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         } catch (e) {
             telemetryInfo.failed = true;
             traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
-            traceVerbose(`Exception while attempting zmq :`, e);
             this._isSupported = false;
         }
 
