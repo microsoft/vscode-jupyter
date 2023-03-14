@@ -1,6 +1,6 @@
 {
     "capabilities.untrustedWorkspace.description": "Execution of cells in Interactive Window and Notebooks is not supported in untrusted workspaces.",
-    "contributes.walkthroughs.jupyterWelcome.title": "Get started with Jupyter Notebooks",
+    "contributes.walkthroughs.jupyterWelcome.title": "Get Started with Jupyter Notebooks",
     "contributes.walkthroughs.jupyterWelcome.description": "Your first steps to set up a Jupyter project with all the powerful tools and features that the Jupyter Extension has to offer!",
     "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.title": "Create or open a Jupyter Notebook",
     "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.description": {
