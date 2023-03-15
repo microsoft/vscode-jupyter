@@ -2250,7 +2250,7 @@
         "@typescript-eslint/parser": "^5.47.0",
         "@vscode/test-electron": "^2.2.0",
         "@vscode/test-web": "^0.0.29",
-        "@vscode/zeromq": "^0.0.4",
+        "@vscode/zeromq": "^0.0.6",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "bufferutil": "^4.0.6",
