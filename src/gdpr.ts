@@ -174,7 +174,7 @@
  */
 //DebuggingTelemetry.ipykernel6Status
 /* __GDPR__
-   "DATASCIENCE.DEBUGGING.IPYKERNEL_SIX_STATUS" : {
+   "DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS" : {
      "status": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether ipykernel 6 is installed.","owner":"roblourens"},
      "${include}": [
        "${F1}"
