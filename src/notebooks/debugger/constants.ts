@@ -7,7 +7,7 @@ export const pythonIWKernelDebugAdapter = 'Python Interactive Window Debug Adapt
 export enum DebuggingTelemetry {
     clickedOnSetup = 'DATASCIENCE.DEBUGGING.CLICKED_ON_SETUP',
     closedModal = 'DATASCIENCE.DEBUGGING.CLOSED_MODAL',
-    ipykernel6Status = 'DATASCIENCE.DEBUGGING.IPYKERNEL_SIX_STATUS',
+    ipykernel6Status = 'DATASCIENCE.DEBUGGING.IPYKERNEL6_STATUS',
     clickedRunByLine = 'DATASCIENCE.DEBUGGING.CLICKED_RUNBYLINE',
     successfullyStartedRunByLine = 'DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_RUNBYLINE',
     successfullyStartedIWJupyterDebugger = 'DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_IW_JUPYTER',
