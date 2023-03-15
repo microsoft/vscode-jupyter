@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import { inject, injectable } from 'inversify';
-import { traceVerbose, traceWarning } from '../../../platform/logging';
+import { traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
@@ -49,7 +49,6 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         } catch (e) {
             telemetryInfo.failed = true;
             traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
-            traceVerbose(`Exception while attempting zmq :`, e);
             this._isSupported = false;
         }
 
