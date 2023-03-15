@@ -2262,7 +2262,7 @@
         "codecov": "^3.7.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^10.2.4",
-        "cross-env": "^6.0.3",
+        "cross-env": "^7.0.3",
         "cross-spawn": "^6.0.5",
         "css-loader": "^6.6.0",
         "dedent": "^0.7.0",
