@@ -217,16 +217,23 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
         if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
             kernels = await this.listGlobalPythonKernelSpecs(false);
         } else {
+            // First find the on disk kernel specs and interpreters
+            const activeInterpreterInAWorkspacePromise = Promise.all(
+                (this.workspaceService.workspaceFolders || []).map((folder) =>
+                    this.interpreterService.getActiveInterpreter(folder.uri)
+                )
+            );
+
             const kernelsForAllInterpreters = await Promise.all(
                 interpreters.map((interpreter) =>
                     listPythonAndRelatedNonPythonKernelSpecs(
                         interpreter,
                         cancelToken,
-                        this.workspaceService,
                         this.interpreterService,
                         this.jupyterPaths,
                         this.interpreterKernelSpecFinder,
-                        this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs()
+                        this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs(),
+                        activeInterpreterInAWorkspacePromise
                     )
                 )
             );

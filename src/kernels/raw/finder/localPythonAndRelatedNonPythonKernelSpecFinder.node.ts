@@ -286,16 +286,23 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
         if (this.extensionChecker.isPythonExtensionInstalled) {
+            // First find the on disk kernel specs and interpreters
+            const activeInterpreterInAWorkspacePromise = Promise.all(
+                (this.workspaceService.workspaceFolders || []).map((folder) =>
+                    this.interpreterService.getActiveInterpreter(folder.uri)
+                )
+            );
+
             await Promise.all(
                 interpreters.map(async (interpreter) => {
                     const kernels = await listPythonAndRelatedNonPythonKernelSpecs(
                         interpreter,
                         cancelToken,
-                        this.workspaceService,
                         this.interpreterService,
                         this.jupyterPaths,
                         this.interpreterKernelSpecFinder,
-                        this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs()
+                        this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs(),
+                        activeInterpreterInAWorkspacePromise
                     );
                     if (cancelToken.isCancellationRequested) {
                         return [];

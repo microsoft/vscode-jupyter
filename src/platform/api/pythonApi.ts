@@ -479,6 +479,7 @@ export class InterpreterService implements IInterpreterService {
         await promise;
     }
     private workspaceCachedActiveInterpreter = new Set<string>();
+    private lastLoggedActiveInterpreter = new Map<string, string | undefined>();
     @traceDecoratorVerbose(
         'Get Active Interpreter',
         TraceOptions.Arguments | TraceOptions.BeforeCall | TraceOptions.ReturnValue
@@ -527,15 +528,20 @@ export class InterpreterService implements IInterpreterService {
             });
         if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
             promise
-                .then((item) =>
-                    traceInfo(
-                        `Active Interpreter in Python API for resource '${getDisplayPath(
-                            resource
-                        )}' is ${getDisplayPath(item?.uri)}, EnvType: ${item?.envType}, EnvName: '${
-                            item?.envName
-                        }', Version: ${item?.version?.raw}`
-                    )
-                )
+                .then((item) => {
+                    const key = resource?.toString() || '';
+                    // Reduce the noise in the logs, only log when the active interpreter changes.
+                    if (this.lastLoggedActiveInterpreter.get(key) !== item?.id) {
+                        this.lastLoggedActiveInterpreter.set(key, item?.id);
+                        traceInfo(
+                            `Active Interpreter in Python API for resource '${getDisplayPath(
+                                resource
+                            )}' is ${getDisplayPath(item?.uri)}, EnvType: ${item?.envType}, EnvName: '${
+                                item?.envName
+                            }', Version: ${item?.version?.raw}`
+                        );
+                    }
+                })
                 .catch(noop);
         }
         return promise;

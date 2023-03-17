@@ -3,7 +3,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceInfo } from '../../logging';
 import { IOutputChannel } from '../types';
 import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types.node';
@@ -34,14 +33,11 @@ export class ProcessLogger implements IProcessLogger {
             return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
         }, '');
 
-        const info = [`> ${removeHomeFromFile(file)} ${argsList}`];
+        this.outputChannel.appendLine(`> ${removeHomeFromFile(file)} ${argsList}`);
         if (options && options.cwd) {
-            info.push(`${Logging.currentWorkingDirectory} ${removeHomeFromFile(options.cwd.toString())}`);
+            this.outputChannel.appendLine(
+                `${Logging.currentWorkingDirectory} ${removeHomeFromFile(options.cwd.toString())}`
+            );
         }
-
-        info.forEach((line) => {
-            traceInfo(`Process Execution: ${line}`);
-            this.outputChannel.appendLine(line);
-        });
     }
 }

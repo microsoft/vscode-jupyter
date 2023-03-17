@@ -22,7 +22,7 @@ import * as fs from 'fs-extra';
 import { createNotebookMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
@@ -75,7 +75,7 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
 
     public register(_data: RegistrationData<ExecuteCommandRegistrationOptions>): void {
         // Do nothing. Otherwise we end up with double registration
-        traceInfo('Registering dummy command feature');
+        traceVerbose('Registering dummy command feature');
     }
 
     public unregister(id: string): void {

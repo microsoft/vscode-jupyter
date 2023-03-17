@@ -20,7 +20,6 @@ import {
 import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
 import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
@@ -351,17 +350,13 @@ export class InterpreterKernelSpecFinderHelper {
 export async function listPythonAndRelatedNonPythonKernelSpecs(
     interpreter: PythonEnvironment,
     cancelToken: CancellationToken,
-    workspaceService: IWorkspaceService,
     interpreterService: IInterpreterService,
     jupyterPaths: JupyterPaths,
     interpreterKernelSpecFinder: InterpreterKernelSpecFinderHelper,
-    globalKernelSpecs: LocalKernelSpecConnectionMetadata[]
+    globalKernelSpecs: LocalKernelSpecConnectionMetadata[],
+    activeInterpreterInAWorkspacePromise: Promise<(PythonEnvironment | undefined)[]>
 ): Promise<LocalKernelConnectionMetadata[]> {
     traceVerbose(`Listing Python & non-Python kernels for Interpreter ${getDisplayPath(interpreter.uri)}`);
-    // First find the on disk kernel specs and interpreters
-    const activeInterpreterInAWorkspacePromise = Promise.all(
-        (workspaceService.workspaceFolders || []).map((folder) => interpreterService.getActiveInterpreter(folder.uri))
-    );
     const [kernelSpecsBelongingToPythonEnvironment, activeInterpreters, tempDirForKernelSpecs] = await Promise.all([
         interpreterKernelSpecFinder.findKernelSpecsInInterpreter(interpreter, cancelToken),
         activeInterpreterInAWorkspacePromise,

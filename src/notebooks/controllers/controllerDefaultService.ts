@@ -11,7 +11,7 @@ import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../
 import { IDisposableRegistry, IFeaturesManager, IsWebExtension, Resource } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../platform/logging';
+import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError, traceInfo } from '../../platform/logging';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { createActiveInterpreterController } from './helpers';
 import { IControllerDefaultService, IControllerRegistration, IVSCodeNotebookController } from './types';
@@ -102,7 +102,7 @@ export class ControllerDefaultService implements IControllerDefaultService {
             return true;
         });
         if (controllers.length === 0) {
-            traceError('No remote controllers');
+            traceInfo('No remote controllers');
             return;
         }
 
