@@ -29,6 +29,7 @@ import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceVerbose } from '../../../platform/logging';
+import { ConnectionDisplayDataProvider } from '../connectionDisplayData';
 
 export function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
     const result: T[][] = [];
@@ -66,7 +67,8 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
+        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
+        @inject(IFeaturesManager) private readonly displayDataProvider: ConnectionDisplayDataProvider
     ) {
         this.showingLocalOrWebEmptyContext = new ContextKey('jupyter.showingLocalOrWebEmpty', this.commandManager);
     }
@@ -193,12 +195,15 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
 
         // Then group them by kind
         const kernelsPerCategory = groupBy(picks, (a, b) =>
-            compareIgnoreCase(a.controller.controller.kind || 'z', b.controller.controller.kind || 'z')
+            compareIgnoreCase(
+                this.displayDataProvider.getDisplayData(a.controller.connection).category || 'z',
+                this.displayDataProvider.getDisplayData(b.controller.connection).category || 'z'
+            )
         );
         const kindIndexes = new Map<string, number>();
         const quickPickItems: (QuickPickItem | ControllerQuickPick)[] = [];
         kernelsPerCategory.forEach((items) => {
-            const kind = items[0].controller.controller.kind || 'Other';
+            const kind = this.displayDataProvider.getDisplayData(items[0].controller.connection).category || 'Other';
             quickPickItems.push({
                 kind: QuickPickItemKind.Separator,
                 label: kind
@@ -223,7 +228,7 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
                     };
 
                     // Stick into the list at the right place
-                    const kind = e.controller.kind || 'Other';
+                    const kind = this.displayDataProvider.getDisplayData(e.connection).category || 'Other';
                     const index = kindIndexes.get(kind) || -1;
                     if (index < 0) {
                         quickPickItems.push({
