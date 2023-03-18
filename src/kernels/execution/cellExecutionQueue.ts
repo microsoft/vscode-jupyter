@@ -175,16 +175,16 @@ export class CellExecutionQueue implements Disposable {
                 this.cancelledOrCompletedWithErrors = true;
                 const reasons: string[] = [];
                 if (this.cancelledOrCompletedWithErrors) {
-                    reasons.push('Cancelled or completed with errors');
+                    reasons.push('cancellation or failure in execution');
                 }
                 if (notebookClosed) {
-                    reasons.push('Notebook was closed');
+                    reasons.push('Notebook being closed');
                 }
                 if (typeof executionResult === 'number' && executionResult === NotebookCellRunState.Error) {
-                    reasons.push('Cell failed with errors');
+                    reasons.push('failure in cell execution');
                 }
                 if (reasons.length === 0) {
-                    reasons.push('unknown reason');
+                    reasons.push('an unknown reason');
                 }
                 traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
                 await this.cancel();

@@ -11,7 +11,14 @@ import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceDecoratorVerbose, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
+import {
+    ignoreLogging,
+    logValue,
+    traceDecoratorVerbose,
+    traceInfo,
+    traceVerbose,
+    traceWarning
+} from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
@@ -106,11 +113,12 @@ export class KernelLauncher implements IKernelLauncher {
 
     @traceDecoratorVerbose('Kernel Launcher. launch', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async launch(
+        @logValue<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>('id')
         kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        cancelToken: CancellationToken
+        @ignoreLogging() cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const stopWatch = new StopWatch();
         const promise = (async () => {
