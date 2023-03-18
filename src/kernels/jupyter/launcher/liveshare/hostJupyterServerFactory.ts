@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import {} from 'underscore';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
-import { IAsyncDisposableRegistry, IDisposableRegistry, IOutputChannel } from '../../../../platform/common/types';
+import { IAsyncDisposableRegistry, IDisposableRegistry } from '../../../../platform/common/types';
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { traceInfo } from '../../../../platform/logging';
 import { IJupyterConnection } from '../../../types';
@@ -22,7 +21,6 @@ export class HostJupyterServerFactory implements INotebookServerFactory {
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
         @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public async createNotebookServer(connection: IJupyterConnection): Promise<INotebookServer> {
@@ -30,7 +28,7 @@ export class HostJupyterServerFactory implements INotebookServerFactory {
 
         // Indicate we have a new session on the output channel
         if (!connection.localLaunch) {
-            this.jupyterOutputChannel.appendLine(DataScience.connectingToJupyterUri(connection.baseUrl));
+            traceInfo(DataScience.connectingToJupyterUri(connection.baseUrl));
         }
         // Create our session manager
         const sessionManager = (await this.sessionManagerFactory.create(connection)) as JupyterSessionManager;
@@ -38,7 +36,6 @@ export class HostJupyterServerFactory implements INotebookServerFactory {
         return new HostJupyterServer(
             this.asyncRegistry,
             this.workspaceService,
-            this.jupyterOutputChannel,
             this.disposables,
             connection,
             sessionManager
