@@ -505,10 +505,7 @@ export class InterpreterService implements IInterpreterService {
         await promise;
     }
     private workspaceCachedActiveInterpreter = new Set<string>();
-    @traceDecoratorVerbose(
-        'Get Active Interpreter',
-        TraceOptions.Arguments | TraceOptions.BeforeCall | TraceOptions.ReturnValue
-    )
+    private lastLoggedResourceAndInterpreterId = '';
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         if (!this.workspace.isTrusted) {
             return;
@@ -553,15 +550,21 @@ export class InterpreterService implements IInterpreterService {
             });
         if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
             promise
-                .then((item) =>
+                .then((item) => {
+                    // Reduce excessive logging.
+                    const key = `${getDisplayPath(resource)}'-${getDisplayPath(item?.id)}`;
+                    if (this.lastLoggedResourceAndInterpreterId === key) {
+                        return;
+                    }
+                    this.lastLoggedResourceAndInterpreterId = key;
                     traceInfo(
-                        `Active Interpreter in Python API for resource '${getDisplayPath(
-                            resource
-                        )}' is ${getDisplayPath(item?.uri)}, EnvType: ${item?.envType}, EnvName: '${
-                            item?.envName
-                        }', Version: ${item?.version?.raw}`
-                    )
-                )
+                        `Active Interpreter for resource '${getDisplayPath(resource)}' is ${getDisplayPath(
+                            item?.id
+                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${
+                            item?.version?.patch
+                        })`
+                    );
+                })
                 .catch(noop);
         }
         return promise;
@@ -571,6 +574,7 @@ export class InterpreterService implements IInterpreterService {
         return this.pythonEnvHashes.get(id);
     }
 
+    private loggedEnvsWithoutInterpreterPath = new Set<string>();
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async getInterpreterDetails(
         pythonPath: Uri | { path: string } | InterpreterId,
@@ -609,9 +613,14 @@ export class InterpreterService implements IInterpreterService {
                     );
                     return resolved;
                 }
-                traceWarning(
-                    `No interpreter with path ${pythonPathForLogging} found in Python API, will convert Uri path to string as Id ${pythonPathForLogging}`
-                );
+                const key = pythonPathForLogging;
+                // Reduce excessive logging.
+                if (!this.loggedEnvsWithoutInterpreterPath.has(key)) {
+                    this.loggedEnvsWithoutInterpreterPath.add(key);
+                    traceWarning(
+                        `No interpreter with path ${pythonPathForLogging} found in Python API, will convert Uri path to string as Id ${pythonPathForLogging}`
+                    );
+                }
                 if (token?.isCancellationRequested) {
                     return;
                 }
@@ -786,7 +795,7 @@ export class InterpreterService implements IInterpreterService {
                         try {
                             const env = await api.environments.resolveEnvironment(item);
                             const resolved = this.trackResolvedEnvironment(env, true);
-                            traceVerbose(
+                            traceInfoIfCI(
                                 `Python environment for ${item.id} is ${
                                     env?.id
                                 } from Python Extension API is ${JSON.stringify(
@@ -797,7 +806,8 @@ export class InterpreterService implements IInterpreterService {
                             );
                             if (resolved) {
                                 allInterpreters.push(resolved);
-                            } else {
+                            } else if (item.executable.uri && item.environment?.type !== EnvironmentType.Conda) {
+                                // Ignore cases where we do not have Uri and its a conda env, as those as conda envs without Python.
                                 traceError(`Failed to get env details from Python API for ${item.id} without an error`);
                             }
                         } catch (ex) {

@@ -246,7 +246,7 @@ function addConsoleLogger() {
 }
 
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter);
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
     registerLogger(new OutputChannelLogger(standardOutputChannel));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(

@@ -259,7 +259,9 @@ export class InterpreterKernelSpecFinderHelper {
         cancelToken: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
         traceVerbose(
-            `Finding kernel specs for ${interpreter.id} interpreters: ${interpreter.displayName} => ${interpreter.uri}`
+            `Finding kernel specs for ${interpreter.id} interpreters: ${interpreter.displayName} => ${getDisplayPath(
+                interpreter.uri
+            )}`
         );
         // Find all the possible places to look for this resource
         const kernelSearchPath = Uri.file(path.join(interpreter.sysPrefix, baseKernelPath));
@@ -275,7 +277,9 @@ export class InterpreterKernelSpecFinderHelper {
         if (rootSpecPaths.some((uri) => uriPath.isEqual(uri, kernelSearchPath))) {
             return [];
         }
-        traceVerbose(`Searching for kernel specs in interpreter ${interpreter.id} in path ${kernelSearchPath.fsPath}`);
+        traceVerbose(
+            `Searching for kernel specs in interpreter ${interpreter.id} in path ${getDisplayPath(kernelSearchPath)}`
+        );
         const kernelSpecs = await this.kernelSpecFinder.findKernelSpecsInPaths(kernelSearchPath, cancelToken);
         if (cancelToken.isCancellationRequested) {
             return [];
@@ -335,7 +339,7 @@ export class InterpreterKernelSpecFinderHelper {
 
         traceVerbose(
             `Finding kernel specs for interpreter ${getDisplayPath(interpreter.uri)} unique results: ${uniqueKernelSpecs
-                .map((u) => (u.specFile || u.name)!)
+                .map((u) => (getDisplayPath(u.specFile) || u.name)!)
                 .join('\n')}`
         );
 

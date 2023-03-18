@@ -330,10 +330,7 @@ export class JupyterPaths {
                 this.updateCachedPaths(value).then(noop, noop);
             }
         }, noop);
-        if (this.getCachedPaths().length > 0) {
-            return this.getCachedPaths();
-        }
-        return this.cachedJupyterKernelPaths;
+        return this.getCachedPaths().length > 0 ? this.getCachedPaths() : this.cachedJupyterKernelPaths;
     }
 
     @traceDecoratorVerbose('Get Jupyter Paths')

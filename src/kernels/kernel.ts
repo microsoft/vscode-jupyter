@@ -311,10 +311,10 @@ abstract class BaseKernel implements IBaseKernel {
     public async restart(): Promise<void> {
         try {
             const resourceType = getResourceType(this.resourceUri);
+            traceInfo(`Restart requested ${getDisplayPath(this.uri)}`);
             await Promise.all(
                 Array.from(this.hooks.get('willRestart') || new Set<Hook>()).map((h) => h(this._jupyterSessionPromise))
             );
-            traceInfo(`Restart requested ${this.uri}`);
             this.startCancellation.cancel(); // Cancel any pending starts.
             this.startCancellation.dispose();
             const stopWatch = new StopWatch();
@@ -532,18 +532,21 @@ abstract class BaseKernel implements IBaseKernel {
         try {
             // No need to block kernel startup on UI updates.
             let pythonInfo = '';
-            if (this.kernelConnectionMetadata.interpreter) {
+            const interpreter = this.kernelConnectionMetadata.interpreter;
+            if (interpreter) {
                 const info: string[] = [];
-                info.push(`Python Path: ${getDisplayPath(this.kernelConnectionMetadata.interpreter.envPath)}`);
-                info.push(`EnvType: ${this.kernelConnectionMetadata.interpreter.envType}`);
-                info.push(`EnvName: '${this.kernelConnectionMetadata.interpreter.envName}'`);
-                info.push(`Version: ${this.kernelConnectionMetadata.interpreter.version?.raw}`);
-                pythonInfo = ` (${info.join(', ')})`;
+                info.push(`Python Path: ${getDisplayPath(interpreter.uri)}`);
+                info.push(interpreter.envType || '');
+                info.push(interpreter.envName || '');
+                if (interpreter.version) {
+                    info.push(`${interpreter.version.major}.${interpreter.version.minor}.${interpreter.version.patch}`);
+                }
+                pythonInfo = ` (${info.filter((s) => s).join(', ')})`;
             }
             traceInfo(
-                `Starting Jupyter Session ${this.kernelConnectionMetadata.kind}, ${
+                `Starting Kernel ${this.kernelConnectionMetadata.kind}, ${
                     this.kernelConnectionMetadata.id
-                }${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
+                } ${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;

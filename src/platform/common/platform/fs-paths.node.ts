@@ -34,6 +34,9 @@ export function getDisplayPathFromLocalFile(file: string | undefined, cwd?: stri
     return getDisplayPath(file ? Uri.file(file) : undefined, folders);
 }
 
-export function getDisplayPath(file?: Uri, workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = []) {
+export function getDisplayPath(
+    file?: Uri | string,
+    workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = []
+) {
     return getDisplayPathCommon(file, workspaceFolders, homePath);
 }

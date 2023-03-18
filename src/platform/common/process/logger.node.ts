@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
-import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { injectable } from 'inversify';
+import { isCI, isTestExecution } from '../constants';
 import { traceInfo } from '../../logging';
-import { IOutputChannel } from '../types';
 import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types.node';
 import { removeHomeFromFile } from '../platform/fs-paths.node';
@@ -15,10 +14,6 @@ import { toCommandArgument } from '../helpers';
  */
 @injectable()
 export class ProcessLogger implements IProcessLogger {
-    constructor(
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel
-    ) {}
-
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
         if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {
             // Added to disable logging of process execution commands during UI Tests.
@@ -34,14 +29,9 @@ export class ProcessLogger implements IProcessLogger {
             return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
         }, '');
 
-        const info = [`> ${removeHomeFromFile(file)} ${argsList}`];
+        traceInfo(`Process Execution: ${removeHomeFromFile(file)} ${argsList}`);
         if (options && options.cwd) {
-            info.push(`${Logging.currentWorkingDirectory} ${removeHomeFromFile(options.cwd.toString())}`);
+            traceInfo(`${Logging.currentWorkingDirectory} ${removeHomeFromFile(options.cwd.toString())}`);
         }
-
-        info.forEach((line) => {
-            traceInfo(`Process Execution: ${line}`);
-            this.outputChannel.appendLine(line);
-        });
     }
 }

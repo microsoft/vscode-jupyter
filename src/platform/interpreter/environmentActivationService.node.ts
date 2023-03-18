@@ -18,7 +18,7 @@ import { swallowExceptions } from '../common/utils/decorators';
 import { DataScience } from '../common/utils/localize';
 import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import { Telemetry } from '../common/constants';
-import { logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../logging';
+import { ignoreLogging, logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../logging';
 import { TraceOptions } from '../logging/types';
 import { serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
@@ -93,15 +93,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 return undefined;
             });
     }
-    @traceDecoratorVerbose(
-        'Getting activated env variables from Python',
-        TraceOptions.BeforeCall | TraceOptions.Arguments
-    )
-    @swallowExceptions('Get activated env variables from Python')
+    @traceDecoratorVerbose('Get activated env vars', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @swallowExceptions('Get activated env vars')
     public async getActivatedEnvironmentVariablesFromPython(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
-        token?: CancellationToken
+        @ignoreLogging() token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         resource = resource
             ? resource
@@ -161,7 +158,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
             // Hence we must log these as errors (so we can see them in jupyter logs).
             traceError(
-                `Failed to get activated conda env variables for ${getDisplayPath(interpreter?.uri)}
+                `Failed to get activated conda env vars for ${getDisplayPath(interpreter?.uri)}
                  in ${stopWatch.elapsedTime}ms`
             );
         } else {

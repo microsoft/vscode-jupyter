@@ -138,7 +138,6 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         const executionQueue = this.documentExecutions.get(this.notebook);
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;
-        traceInfo('Restart kernel execution');
         // First cancel all the cells & then wait for them to complete.
         // Both must happen together, we cannot just wait for cells to complete, as its possible
         // that cell1 has started & cell2 has been queued. If Cell1 completes, then Cell2 will start.

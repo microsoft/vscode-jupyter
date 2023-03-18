@@ -202,10 +202,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         if (this.session?.isRemoteSession && this.session.kernel) {
             await this.session.kernel.restart();
             this.setSession(this.session, true);
+            traceInfo(`Restarted ${this.session?.kernel?.id}`);
             return;
         }
-
-        traceInfo(`Restarting ${this.session?.kernel?.id}`);
 
         // Save old state for shutdown
         const oldSession = this.session;
@@ -222,19 +221,19 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         this.setSession(newSession);
 
         if (newSession.kernel) {
-            traceInfo(`Got new session ${newSession.kernel.id}`);
+            traceVerbose(`New Session after restarting ${newSession.kernel.id}`);
 
             // Rewire our status changed event.
             newSession.statusChanged.connect(this.statusHandler);
             newSession.kernel.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
         }
-        traceInfo('Started new restart session');
         if (oldStatusHandler && oldSession) {
             oldSession.statusChanged.disconnect(oldStatusHandler);
             if (oldSession.kernel) {
                 oldSession.kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
             }
         }
+        traceInfo(`Shutdown old session ${oldSession?.kernel?.id}`);
         this.shutdownSession(oldSession, undefined, false).catch(noop);
     }
 
@@ -408,6 +407,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     protected setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo: boolean = false) {
         const oldSession = this._session;
         this.previousAnyMessageHandler?.dispose();
+        if (session) {
+            traceInfo(`Started new session ${session?.kernel?.id}`);
+        }
         if (oldSession) {
             if (this.unhandledMessageHandler) {
                 oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);

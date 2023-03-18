@@ -182,11 +182,11 @@ export class ContributedLocalPythonEnvFinder
             traceVerbose(
                 `Updating cache with Python kernels ${values
                     .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Added = ${added
+                    .join(', ')}, Added = ${added
                     .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Updated = ${updated
+                    .join(', ')}, Updated = ${updated
                     .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Removed = ${removed
+                    .join(', ')}, Removed = ${removed
                     .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
                     .join(', ')}`
             );
