@@ -12,6 +12,7 @@ export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
     onDidActivatePythonExtension: Event<void>;
     pythonExtensionHooked: Promise<void>;
+    pythonExtensionVersion: SemVer | undefined;
     getApi(): Promise<PythonApi>;
     getNewApi(): Promise<ProposedExtensionAPI | undefined>;
     setApi(api: PythonApi): void;

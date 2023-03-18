@@ -734,7 +734,9 @@ export async function updateNotebookMetadata(
     const kernelSpecOrModel =
         kernelConnection && kernelConnectionMetadataHasKernelModel(kernelConnection)
             ? kernelConnection.kernelModel
-            : kernelConnection?.kernelSpec;
+            : kernelConnection && 'kernelSpec' in kernelConnection
+            ? kernelConnection.kernelSpec
+            : undefined;
     if (kernelConnection?.kind === 'startUsingPythonInterpreter') {
         // Store interpreter name, we expect the kernel finder will find the corresponding interpreter based on this name.
         const kernelSpec = kernelConnection.kernelSpec;

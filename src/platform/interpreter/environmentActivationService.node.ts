@@ -161,20 +161,25 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
             // Hence we must log these as errors (so we can see them in jupyter logs).
             traceError(
-                `Failed to get activated conda env variables from Python for ${getDisplayPath(interpreter?.uri)}
+                `Failed to get activated conda env variables for ${getDisplayPath(interpreter?.uri)}
                  in ${stopWatch.elapsedTime}ms`
             );
         } else {
             traceWarning(
-                `Failed to get activated env vars with python ${getDisplayPath(interpreter?.uri)} in ${
-                    stopWatch.elapsedTime
-                }ms`
+                `Failed to get activated env vars for ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
             );
         }
         if (!env) {
             // Temporary work around until https://github.com/microsoft/vscode-python/issues/20663
+            // However we might still need a work around for failure to activate conda envs without Python.
             const customEnvVars = await customEnvVarsPromise;
             env = {};
+
+            // Patch for conda envs.
+            if (interpreter.envType === EnvironmentType.Conda && interpreter.sysPrefix) {
+                env.CONDA_PREFIX = interpreter.sysPrefix;
+            }
+
             this.envVarsService.mergeVariables(process.env, env); // Copy current proc vars into new obj.
             this.envVarsService.mergeVariables(customEnvVars!, env); // Copy custom vars over into obj.
             this.envVarsService.mergePaths(process.env, env);
@@ -204,6 +209,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 );
                 // Based on docs this is the right path and must be setup in the path.
                 this.envVarsService.prependPath(env, executablesPath.fsPath);
+            } else if (interpreter.isCondaEnvWithoutPython) {
+                //
             } else {
                 traceError(
                     `Unable to determine site packages path for python ${interpreter.uri.fsPath} (${interpreter.envType})`
@@ -226,6 +233,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // This way all executables from that env are used.
         // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
         // Also applies to `!java` where java could be an executable in the conda bin directory.
+        // Also required for conda environments that do not have Python installed (in the conda env).
         this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
 
         traceVerbose(

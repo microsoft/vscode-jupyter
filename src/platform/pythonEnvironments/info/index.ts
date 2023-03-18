@@ -19,6 +19,7 @@ export enum EnvironmentType {
     VirtualEnvWrapper = 'VirtualEnvWrapper',
 }
 
+export type InterpreterId = string;
 /**
  * Details about a Python runtime.
  *
@@ -28,7 +29,7 @@ export enum EnvironmentType {
  * @prop sysPrefix - the environment's install root (`sys.prefix`)
  */
 export type InterpreterInformation = {
-    id: string;
+    id: InterpreterId;
     uri: Uri;
     version?: PythonVersion;
     sysVersion?: string;
@@ -52,4 +53,5 @@ export type PythonEnvironment = InterpreterInformation & {
      * Used for display purposes only (in kernel picker or other places).
      */
     displayPath?: Uri;
+    isCondaEnvWithoutPython?: boolean;
 };

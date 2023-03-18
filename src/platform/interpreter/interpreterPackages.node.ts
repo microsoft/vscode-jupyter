@@ -182,6 +182,9 @@ export class InterpreterPackages implements IInterpreterPackages {
         TraceOptions.BeforeCall | TraceOptions.Arguments
     )
     private async getPackageInformation({ interpreter }: { interpreter: PythonEnvironment }) {
+        if (interpreter.isCondaEnvWithoutPython) {
+            return;
+        }
         const service = await this.executionFactory.createActivatedEnvironment({
             interpreter
         });

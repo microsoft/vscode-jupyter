@@ -16,7 +16,7 @@ import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
+import { IExtensions, IDisposableRegistry, Resource, IExtensionContext, IFeaturesManager } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
@@ -31,6 +31,8 @@ import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
+import { getOSType, OSType } from '../common/utils/platform';
+import { SemVer } from 'semver';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -57,7 +59,10 @@ export function deserializePythonEnvironment(
         return result;
     }
 }
-export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironment | undefined {
+export function pythonEnvToJupyterEnv(
+    env: ResolvedEnvironment,
+    supportsEmptyCondaEnv: boolean
+): PythonEnvironment | undefined {
     const envTools = env.tools as KnownEnvironmentTools[];
     // Map the Python env tool to a Jupyter environment type.
     const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
@@ -83,20 +88,38 @@ export function pythonEnvToJupyterEnv(env: ResolvedEnvironment): PythonEnvironme
             envType = EnvironmentType.VirtualEnv;
         }
     }
+    let isCondaEnvWithoutPython = false;
+    let uri: Uri;
+    let id = env.id;
+    let sysPrefix = env.executable.sysPrefix;
     if (!env.executable.uri) {
-        traceWarning(`Python environment ${env.id} excluded as Uri is undefined`);
-        return;
+        if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
+            isCondaEnvWithoutPython = true;
+            // sysprefix is the same as the env path.
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
+            uri =
+                getOSType() === OSType.Windows
+                    ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
+                    : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
+        } else {
+            traceError(`Python environment ${env.id} excluded as Uri is undefined`);
+            return;
+        }
+    } else {
+        uri = env.executable.uri;
     }
 
     return {
-        id: env.id,
-        sysPrefix: env.executable.sysPrefix || '',
+        id,
+        sysPrefix: sysPrefix || '',
         envPath: env.environment?.folderUri,
         displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
-        uri: env.executable.uri,
+        uri,
         displayName: env.environment?.name || '',
         envType,
+        isCondaEnvWithoutPython,
         version: env.version
             ? {
                   major: env.version.major,
@@ -137,9 +160,13 @@ export class PythonApiProvider implements IPythonApiProvider {
     public get pythonExtensionHooked(): Promise<void> {
         return this._pythonExtensionHooked.promise;
     }
+    public get pythonExtensionVersion(): SemVer | undefined {
+        return this._pythonExtensionVersion;
+    }
 
     private initialized?: boolean;
     private hooksRegistered?: boolean;
+    private _pythonExtensionVersion?: SemVer | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -168,7 +195,11 @@ export class PythonApiProvider implements IPythonApiProvider {
     }
     public async getNewApi(): Promise<ProposedExtensionAPI | undefined> {
         await this.init();
-        return this.extensions.getExtension<ProposedExtensionAPI>(PythonExtension)?.exports;
+        const extension = this.extensions.getExtension<ProposedExtensionAPI>(PythonExtension);
+        if (extension?.packageJSON?.version) {
+            this._pythonExtensionVersion = new SemVer(extension?.packageJSON?.version);
+        }
+        return extension?.exports;
     }
 
     public setApi(api: PythonApi): void {
@@ -341,7 +372,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         return deserializedSuggestions;
     }
 }
-
+type InterpreterId = string;
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterService implements IInterpreterService {
@@ -374,7 +405,8 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -547,7 +579,7 @@ export class InterpreterService implements IInterpreterService {
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async getInterpreterDetails(
-        pythonPath: Uri | { path: string },
+        pythonPath: Uri | { path: string } | InterpreterId,
         token?: CancellationToken
     ): Promise<undefined | PythonEnvironment> {
         if (!this.workspace.isTrusted) {
@@ -564,31 +596,34 @@ export class InterpreterService implements IInterpreterService {
                 const matchedPythonEnv = api.environments.known.find((item) => {
                     return isUri(pythonPath)
                         ? areInterpreterPathsSame(item.executable.uri, pythonPath)
+                        : typeof pythonPath === 'string'
+                        ? item.id === pythonPath
                         : areInterpreterPathsSame(Uri.file(item.path), Uri.file(pythonPath.path));
                 });
+                const pythonPathForLogging = isUri(pythonPath)
+                    ? getDisplayPath(pythonPath)
+                    : typeof pythonPath === 'string'
+                    ? pythonPath
+                    : getDisplayPath(Uri.file(pythonPath.path));
                 if (matchedPythonEnv) {
                     const env = await api.environments.resolveEnvironment(matchedPythonEnv);
                     const resolved = this.trackResolvedEnvironment(env, false);
                     traceVerbose(
-                        `Interpreter details for ${getDisplayPath(
-                            isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
-                        )} from Python is ${JSON.stringify(env)} and our mapping is ${JSON.stringify(resolved)}`
+                        `Interpreter details for ${pythonPathForLogging} from Python is ${JSON.stringify(
+                            env
+                        )} and our mapping is ${JSON.stringify(resolved)}`
                     );
                     return resolved;
                 }
                 traceWarning(
-                    `No interpreter with path ${getDisplayPath(
-                        isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
-                    )} found in Python API, will convert Uri path to string as Id ${
-                        isUri(pythonPath) ? pythonPath : Uri.file(pythonPath.path)
-                    }`
+                    `No interpreter with path ${pythonPathForLogging} found in Python API, will convert Uri path to string as Id ${pythonPathForLogging}`
                 );
                 if (token?.isCancellationRequested) {
                     return;
                 }
                 const env = await api.environments.resolveEnvironment(
                     // eslint-disable-next-line local-rules/dont-use-fspath
-                    isUri(pythonPath) ? pythonPath.fsPath : pythonPath.path
+                    isUri(pythonPath) ? pythonPath.fsPath : typeof pythonPath == 'string' ? pythonPath : pythonPath.path
                 );
                 return this.trackResolvedEnvironment(env, false);
             });
@@ -619,7 +654,11 @@ export class InterpreterService implements IInterpreterService {
      */
     private trackResolvedEnvironment(env: ResolvedEnvironment | undefined, triggerChangeEvent: boolean) {
         if (env) {
-            const resolved = pythonEnvToJupyterEnv(env);
+            const displayEmptyCondaEnv =
+                this.featureManager.features.kernelPickerType === 'Insiders' &&
+                this.apiProvider.pythonExtensionVersion &&
+                this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
+            const resolved = pythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
             if (!resolved) {
                 return;
             }
@@ -734,7 +773,9 @@ export class InterpreterService implements IInterpreterService {
                                     env?.id
                                 } from Python Extension API is ${JSON.stringify(
                                     env
-                                )} and translated is ${JSON.stringify(resolved)}`
+                                )} and original env is ${JSON.stringify(item)} and translated is ${JSON.stringify(
+                                    resolved
+                                )}`
                             );
                             if (resolved) {
                                 allInterpreters.push(resolved);
