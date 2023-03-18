@@ -336,12 +336,6 @@ export class InterpreterKernelSpecFinderHelper {
             }
         });
 
-        traceVerbose(
-            `Finding kernel specs for interpreter ${getDisplayPath(interpreter.uri)} unique results: ${uniqueKernelSpecs
-                .map((u) => (getDisplayPath(u.specFile) || u.name)!)
-                .join('\n')}`
-        );
-
         return uniqueKernelSpecs;
     }
 }
