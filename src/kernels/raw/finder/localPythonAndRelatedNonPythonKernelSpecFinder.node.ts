@@ -28,7 +28,11 @@ import {
     listPythonAndRelatedNonPythonKernelSpecs,
     localPythonKernelsCacheKey
 } from './interpreterKernelSpecFinderHelper.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 
+const PYTHON_KERNLES_CACHE_EXPIRY = 60_000;
 type InterpreterId = string;
 
 /**
@@ -186,7 +190,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         this.refreshCancellation?.dispose();
         const cancelToken = (this.refreshCancellation = new CancellationTokenSource());
         const promise = (async () => {
-            await this.listKernelsImplementation(cancelToken.token).catch((ex) =>
+            await this.listKernelsImplementation(cancelToken.token, forcePythonInterpreterRefresh).catch((ex) =>
                 traceError('Failure in listKernelsImplementation', ex)
             );
             if (cancelToken.token.isCancellationRequested) {
@@ -274,41 +278,90 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         await this.updateCachePromise;
     }
 
+    private interpreterSearchCancellations = new Map<
+        string,
+        {
+            token: CancellationTokenSource;
+            time: StopWatch;
+            promise: Promise<LocalKernelConnectionMetadata[]>;
+            interpreter: PythonEnvironment;
+        }
+    >();
+
+    private clearCacheWhenInterpretersChange(interpreters: PythonEnvironment[], forceRefresh: boolean) {
+        interpreters.forEach((interpreter) => {
+            const info = this.interpreterSearchCancellations.get(interpreter.id);
+            if (!info) {
+                return;
+            }
+            if (
+                forceRefresh ||
+                // If the cache is over a minute old, then clear that cache.
+                // Its possible user has installed a kernel into this environment.
+                info.time.elapsedTime > PYTHON_KERNLES_CACHE_EXPIRY ||
+                // If the version, syspath has changed, then we need to re-discover the kernels.
+                info.interpreter.envPath !== interpreter.envPath ||
+                info.interpreter.version?.raw !== interpreter.version?.raw ||
+                info.interpreter.envType !== interpreter.envType ||
+                info.interpreter.sysPrefix !== interpreter.sysPrefix
+            ) {
+                info.token.cancel();
+                this.interpreterSearchCancellations.delete(interpreter.id);
+            }
+        });
+    }
     @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
-    private async listKernelsImplementation(cancelToken: CancellationToken) {
+    private async listKernelsImplementation(cancelToken: CancellationToken, forceRefresh: boolean) {
+        // If we don't have Python extension installed or don't discover any Python interpreters
+        // then list all of the global python kernel specs.
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            await this.appendNewKernels(this.listGlobalPythonKernelSpecs(false));
+            return;
+        }
+
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? this.interpreterService.resolvedEnvironments
             : [];
 
-        traceVerbose(
-            `Listing kernels for ${interpreters.length} interpreters (${interpreters.map((i) => i.id).join(', ')})`
+        const activeInterpreterInAWorkspacePromise = Promise.all(
+            (this.workspaceService.workspaceFolders || []).map((folder) =>
+                this.interpreterService.getActiveInterpreter(folder.uri)
+            )
         );
-        // If we don't have Python extension installed or don't discover any Python interpreters
-        // then list all of the global python kernel specs.
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            await Promise.all(
-                interpreters.map(async (interpreter) => {
-                    const kernels = await listPythonAndRelatedNonPythonKernelSpecs(
-                        interpreter,
-                        cancelToken,
-                        this.workspaceService,
-                        this.interpreterService,
-                        this.jupyterPaths,
-                        this.interpreterKernelSpecFinder,
-                        this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs()
-                    );
-                    if (cancelToken.isCancellationRequested) {
-                        return [];
-                    }
-                    traceVerbose(
-                        `Kernels for interpreter ${interpreter.id} are ${kernels.map((k) => k.id).join(', ')}`
-                    );
-                    await this.appendNewKernels(kernels);
-                })
-            );
-        } else {
-            await this.appendNewKernels(this.listGlobalPythonKernelSpecs(false));
-        }
+
+        // Possible we were searching earlier and something has changed since then.
+        this.clearCacheWhenInterpretersChange(interpreters, forceRefresh);
+
+        await Promise.all(
+            interpreters.map(async (interpreter) => {
+                if (this.interpreterSearchCancellations.has(interpreter.id)) {
+                    return this.interpreterSearchCancellations.has(interpreter.id);
+                }
+                traceVerbose(`Listing kernels for interpreters ${getDisplayPath(interpreter.uri)}`);
+                const promise = listPythonAndRelatedNonPythonKernelSpecs(
+                    interpreter,
+                    cancelToken,
+                    this.interpreterService,
+                    this.jupyterPaths,
+                    this.interpreterKernelSpecFinder,
+                    this.listGlobalPythonKernelSpecsIncludingThoseRegisteredByUs(),
+                    activeInterpreterInAWorkspacePromise
+                );
+                const token = new CancellationTokenSource();
+                this.interpreterSearchCancellations.set(interpreter.id, {
+                    promise,
+                    token,
+                    interpreter,
+                    time: new StopWatch()
+                });
+                const kernels = await promise;
+                if (cancelToken.isCancellationRequested) {
+                    return [];
+                }
+                traceVerbose(`Kernels for interpreter ${interpreter.id} are ${kernels.map((k) => k.id).join(', ')}`);
+                await this.appendNewKernels(kernels);
+            })
+        );
     }
     private async appendNewKernels(kernels: LocalKernelConnectionMetadata[]) {
         if (kernels.length) {
