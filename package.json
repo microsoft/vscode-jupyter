@@ -1479,8 +1479,7 @@
                         "warn",
                         "info",
                         "debug",
-                        "verbose",
-                        "everything"
+                        "verbose"
                     ],
                     "description": "%jupyter.configuration.jupyter.logging.level.description%"
                 },
