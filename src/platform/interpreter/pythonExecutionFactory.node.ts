@@ -7,11 +7,9 @@ import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IServiceContainer } from '../ioc/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IWorkspaceService } from '../common/application/types';
-import { traceDecoratorVerbose } from '../logging';
 import { IDisposableRegistry } from '../common/types';
 import { createCondaEnv, createPythonEnv } from './pythonEnvironment.node';
 import { createPythonProcessService } from './pythonProcess.node';
-import { TraceOptions } from '../logging/types';
 import { ProcessService } from '../common/process/proc.node';
 import { IProcessServiceFactory, IProcessService } from '../common/process/types.node';
 import {
@@ -38,13 +36,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
-    @traceDecoratorVerbose('Creating execution process')
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
 
         return createPythonService(options.interpreter, processService, this.fileSystem, undefined);
     }
-    @traceDecoratorVerbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createActivatedEnvironment(
         options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {

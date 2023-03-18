@@ -20,7 +20,6 @@ import {
 import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
 import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
@@ -355,17 +354,13 @@ export class InterpreterKernelSpecFinderHelper {
 export async function listPythonAndRelatedNonPythonKernelSpecs(
     interpreter: PythonEnvironment,
     cancelToken: CancellationToken,
-    workspaceService: IWorkspaceService,
     interpreterService: IInterpreterService,
     jupyterPaths: JupyterPaths,
     interpreterKernelSpecFinder: InterpreterKernelSpecFinderHelper,
-    globalKernelSpecs: LocalKernelSpecConnectionMetadata[]
+    globalKernelSpecs: LocalKernelSpecConnectionMetadata[],
+    activeInterpreterInAWorkspacePromise: Promise<(PythonEnvironment | undefined)[]>
 ): Promise<LocalKernelConnectionMetadata[]> {
     traceVerbose(`Listing Python & non-Python kernels for Interpreter ${getDisplayPath(interpreter.uri)}`);
-    // First find the on disk kernel specs and interpreters
-    const activeInterpreterInAWorkspacePromise = Promise.all(
-        (workspaceService.workspaceFolders || []).map((folder) => interpreterService.getActiveInterpreter(folder.uri))
-    );
     const [kernelSpecsBelongingToPythonEnvironment, activeInterpreters, tempDirForKernelSpecs] = await Promise.all([
         interpreterKernelSpecFinder.findKernelSpecsInInterpreter(interpreter, cancelToken),
         activeInterpreterInAWorkspacePromise,
@@ -483,15 +478,17 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                     traceVerbose(
                         `Hiding default kernel spec '${kernelSpec.display_name}', '${
                             kernelSpec.name
-                        }', ${getDisplayPathFromLocalFile(kernelSpec.argv[0])} for interpreter ${
+                        }', ${getDisplayPath(kernelSpec.argv[0])} for interpreter ${getDisplayPath(
                             kernelSpec.interpreterPath
-                        } and spec ${kernelSpec.specFile}`
+                        )} and spec ${getDisplayPath(kernelSpec.specFile)}`
                     );
                     return false;
                 }
                 if (kernelSpec.specFile && globalKernelSpecsLoadedForPython.has(kernelSpec.specFile)) {
                     traceVerbose(
-                        `Global kernel spec ${kernelSpec.name}${kernelSpec.specFile} already found with a matching Python Env`
+                        `Global kernel spec ${kernelSpec.name}${getDisplayPath(
+                            kernelSpec.specFile
+                        )} already found with a matching Python Env`
                     );
                     return false;
                 }

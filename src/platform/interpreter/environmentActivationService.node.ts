@@ -25,12 +25,15 @@ import { noop } from '../common/utils/misc';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../common/cancellation';
 
-const ENV_VAR_CACHE_TIMEOUT = 60_000;
+const ENV_VAR_CACHE_TIMEOUT = 15_000;
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
     private readonly disposables: IDisposable[] = [];
-    private readonly activatedEnvVariablesCache = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
+    private readonly activatedEnvVariablesCache = new Map<
+        string,
+        { promise: Promise<NodeJS.ProcessEnv | undefined>; time: StopWatch }
+    >();
     constructor(
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -60,10 +63,37 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             interpreter.displayName || getDisplayPath(interpreter.uri)
         );
         return KernelProgressReporter.wrapAndReportProgress(resource, title, () =>
-            this.getActivatedEnvironmentVariablesImpl(resource, interpreter, token)
+            this.getActivatedEnvironmentVariablesImplWithCaching(resource, interpreter, token)
         );
     }
-    @traceDecoratorVerbose('Getting activated env variables impl', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    private async getActivatedEnvironmentVariablesImplWithCaching(
+        resource: Resource,
+        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        token?: CancellationToken
+    ): Promise<NodeJS.ProcessEnv | undefined> {
+        const key = `${resource?.toString() || ''}${interpreter.id}`;
+        const info = this.activatedEnvVariablesCache.get(key);
+        if (info && info.time.elapsedTime >= ENV_VAR_CACHE_TIMEOUT) {
+            this.activatedEnvVariablesCache.delete(key);
+        }
+        if (!this.activatedEnvVariablesCache.has(key)) {
+            const promise = this.getActivatedEnvironmentVariablesImpl(resource, interpreter, token);
+            promise.catch(noop);
+            this.activatedEnvVariablesCache.set(key, { promise, time: new StopWatch() });
+        }
+        const promise = this.activatedEnvVariablesCache.get(key)!.promise;
+        if (token) {
+            return promise;
+        }
+        return Promise.race([
+            promise,
+            createPromiseFromCancellation({
+                cancelAction: 'resolve',
+                defaultValue: undefined,
+                token
+            })
+        ]);
+    }
     private async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,

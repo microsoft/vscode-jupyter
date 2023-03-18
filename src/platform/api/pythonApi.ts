@@ -12,13 +12,12 @@ import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext, IFeaturesManager } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
-import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { TraceOptions } from '../logging/types';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
@@ -575,7 +574,6 @@ export class InterpreterService implements IInterpreterService {
     }
 
     private loggedEnvsWithoutInterpreterPath = new Set<string>();
-    @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async getInterpreterDetails(
         pythonPath: Uri | { path: string } | InterpreterId,
         token?: CancellationToken
@@ -606,7 +604,7 @@ export class InterpreterService implements IInterpreterService {
                 if (matchedPythonEnv) {
                     const env = await api.environments.resolveEnvironment(matchedPythonEnv);
                     const resolved = this.trackResolvedEnvironment(env, false);
-                    traceVerbose(
+                    traceInfoIfCI(
                         `Interpreter details for ${pythonPathForLogging} from Python is ${JSON.stringify(
                             env
                         )} and our mapping is ${JSON.stringify(resolved)}`

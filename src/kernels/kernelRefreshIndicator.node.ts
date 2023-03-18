@@ -9,7 +9,7 @@ import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/c
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
-import { traceVerbose } from '../platform/logging';
+import { traceInfo } from '../platform/logging';
 import { IKernelFinder } from './types';
 
 /**
@@ -94,7 +94,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         }
         this.refreshedOnceBefore = true;
         const id = Date.now().toString();
-        traceVerbose(`Start refreshing Kernel Picker (${id})`);
+        traceInfo(`Start refreshing Kernel Picker (${id})`);
         const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
         const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
         this.disposables.push(taskNb);
@@ -102,7 +102,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
 
         this.interpreterService.refreshInterpreters().finally(() => {
             if (this.kernelFinder.status === 'idle') {
-                traceVerbose(`End refreshing Kernel Picker (${id})`);
+                traceInfo(`End refreshing Kernel Picker (${id})`);
                 taskNb.dispose();
                 taskIW.dispose();
                 return;
@@ -110,7 +110,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             this.kernelFinder.onDidChangeStatus(
                 () => {
                     if (this.kernelFinder.status === 'idle') {
-                        traceVerbose(`End refreshing Kernel Picker (${id})`);
+                        traceInfo(`End refreshing Kernel Picker (${id})`);
                         taskNb.dispose();
                         taskIW.dispose();
                     }

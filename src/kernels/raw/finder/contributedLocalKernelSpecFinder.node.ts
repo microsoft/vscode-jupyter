@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter } from 'vscode';
+import { Disposable, EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
@@ -58,6 +58,7 @@ export class ContributedLocalKernelSpecFinder
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: LocalKernelConnectionMetadata[] = [];
+    private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper)
@@ -234,17 +235,24 @@ export class ContributedLocalKernelSpecFinder
             }
 
             if (values.length) {
-                traceVerbose(
-                    `Updating cache with Local kernels ${values
-                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                        .join(', ')}, Added = ${added
-                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                        .join(', ')}, Updated = ${updated
-                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                        .join(', ')}, Removed = ${removed
-                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                        .join(', ')}`
-                );
+                if (this.cacheLoggingTimeout) {
+                    clearTimeout(this.cacheLoggingTimeout);
+                }
+                // Reduce the logging, as this can get written a lot,
+                this.cacheLoggingTimeout = setTimeout(() => {
+                    traceVerbose(
+                        `Updating cache with Local kernels ${values
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                            .join(', ')}, Added = ${added
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                            .join(', ')}, Updated = ${updated
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                            .join(', ')}, Removed = ${removed
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                            .join(', ')}`
+                    );
+                }, 15_000);
+                this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
             }
         } catch (ex) {
             traceError('LocalKernelFinder: Failed to write to cache', ex);
