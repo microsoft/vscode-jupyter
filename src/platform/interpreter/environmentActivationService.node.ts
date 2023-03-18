@@ -54,10 +54,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
-    @traceDecoratorVerbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const title = DataScience.activatingPythonEnvironment(
@@ -69,7 +68,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     private async getActivatedEnvironmentVariablesImplWithCaching(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment,
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const key = `${resource?.toString() || ''}${interpreter.id}`;
@@ -95,6 +94,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             })
         ]);
     }
+    @traceDecoratorVerbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
