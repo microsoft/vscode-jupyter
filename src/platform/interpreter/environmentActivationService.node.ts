@@ -14,7 +14,6 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { IEnvironmentActivationService } from './activation/types';
 import { IInterpreterService } from './contracts';
-import { swallowExceptions } from '../common/utils/decorators';
 import { DataScience } from '../common/utils/localize';
 import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import { Telemetry } from '../common/constants';
@@ -24,6 +23,9 @@ import { serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
 import { CancellationToken } from 'vscode';
+import { createPromiseFromCancellation } from '../common/cancellation';
+
+const ENV_VAR_CACHE_TIMEOUT = 60_000;
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -93,12 +95,44 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 return undefined;
             });
     }
-    @traceDecoratorVerbose('Get activated env vars', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    @swallowExceptions('Get activated env vars')
-    public async getActivatedEnvironmentVariablesFromPython(
+
+    private cachedEnvVariables = new Map<
+        string,
+        { promise: Promise<NodeJS.ProcessEnv | undefined>; lastRequestedTime: StopWatch }
+    >();
+    private async getActivatedEnvironmentVariablesFromPython(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
         @ignoreLogging() token?: CancellationToken
+    ): Promise<NodeJS.ProcessEnv | undefined> {
+        const key = `${resource?.toString() || ''}${interpreter?.id || ''}`;
+
+        // Ensure the cache is only valid for a limited time.
+        const info = this.cachedEnvVariables.get(key);
+        if (info && info.lastRequestedTime.elapsedTime > ENV_VAR_CACHE_TIMEOUT) {
+            this.cachedEnvVariables.delete(key);
+        }
+        if (!this.cachedEnvVariables.has(key)) {
+            const promise = this.getActivatedEnvironmentVariablesFromPythonImpl(resource, interpreter, token);
+            this.cachedEnvVariables.set(key, { promise, lastRequestedTime: new StopWatch() });
+        }
+
+        const promise = this.cachedEnvVariables.get(key)!.promise;
+        if (!token) {
+            return promise;
+        }
+
+        const cancelationPromise = createPromiseFromCancellation({
+            token,
+            cancelAction: 'resolve',
+            defaultValue: undefined
+        });
+        return Promise.race([promise, cancelationPromise]);
+    }
+    private async getActivatedEnvironmentVariablesFromPythonImpl(
+        resource: Resource,
+        interpreter: PythonEnvironment,
+        token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         resource = resource
             ? resource
