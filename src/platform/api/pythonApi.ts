@@ -371,8 +371,10 @@ type InterpreterId = string;
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
     private readonly didChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
+    private readonly _onDidEnvironmentVariablesChange = new EventEmitter<void>();
     private readonly _onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
     public onDidRemoveInterpreter = this._onDidRemoveInterpreter.event;
+    public onDidEnvironmentVariablesChange = this._onDidEnvironmentVariablesChange.event;
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
@@ -877,6 +879,13 @@ export class InterpreterService implements IInterpreterService {
             .then((api) => {
                 if (!this.eventHandlerAdded && api) {
                     this.eventHandlerAdded = true;
+                    api.environments.onDidEnvironmentVariablesChange(
+                        () => {
+                            this._onDidEnvironmentVariablesChange.fire();
+                        },
+                        this,
+                        this.disposables
+                    );
                     api.environments.onDidChangeActiveEnvironmentPath(
                         () => {
                             traceVerbose(`Detected change in Active Python environment via Python API`);

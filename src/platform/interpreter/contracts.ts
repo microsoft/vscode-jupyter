@@ -8,6 +8,7 @@ export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     readonly status: 'refreshing' | 'idle';
     readonly onDidChangeStatus: Event<void>;
+    readonly onDidEnvironmentVariablesChange: Event<void>;
     /**
      * Contains details of all the currently discovered Python Environments along with all of their resolved information.
      */

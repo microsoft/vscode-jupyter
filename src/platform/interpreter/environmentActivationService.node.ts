@@ -25,7 +25,7 @@ import { noop } from '../common/utils/misc';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../common/cancellation';
 
-const ENV_VAR_CACHE_TIMEOUT = 15_000;
+const ENV_VAR_CACHE_TIMEOUT = 60_000;
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -46,6 +46,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ) {
         this.customEnvVarsService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.clearCache, this, this.disposables);
+        this.interpreterService.onDidEnvironmentVariablesChange(this.clearCache, this, this.disposables);
     }
     public clearCache() {
         this.activatedEnvVariablesCache.clear();
