@@ -216,7 +216,7 @@ export class KernelLauncher implements IKernelLauncher {
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
         const outputChannel = jupyterSettings.logKernelOutputSeparately
-            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel(baseName))
+            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel(baseName), 'log')
             : undefined;
         outputChannel?.clear();
 
@@ -237,6 +237,7 @@ export class KernelLauncher implements IKernelLauncher {
             this.platformService
         );
 
+        kernelProcess.exited(() => outputChannel?.dispose(), this, this.disposables);
         try {
             await Promise.race([
                 kernelProcess.launch(workingDirectory, timeout, cancelToken),

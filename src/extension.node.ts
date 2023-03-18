@@ -245,13 +245,13 @@ function addConsoleLogger() {
     }
 }
 
-function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
+function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
     registerLogger(new OutputChannelLogger(standardOutputChannel));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
-        getJupyterOutputChannel(isDevMode, context.subscriptions, standardOutputChannel),
+        getJupyterOutputChannel(context.subscriptions),
         JUPYTER_OUTPUT_CHANNEL
     );
     serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);
@@ -318,7 +318,7 @@ async function activateLegacy(
     // Setup the console logger if asked to
     addConsoleLogger();
     // Output channel is special. We need it before everything else
-    addOutputChannel(context, serviceManager, isDevMode);
+    addOutputChannel(context, serviceManager);
 
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager);
