@@ -525,7 +525,6 @@ export namespace DataScience {
         'Please reload the window when changing the Jupyter command line.'
     );
     export const jupyterCommandLineReloadAnswer = l10n.t('Reload');
-    export const connectingToJupyterUri = (hostName: string) => l10n.t('Connecting to Jupyter server at {0}', hostName);
     export const createdNewNotebook = (hostName: string) => l10n.t('{0}: Creating new notebook ', hostName);
 
     export const createdNewKernel = (hostName: string, sessionId: string) =>

@@ -135,9 +135,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceVerbose(`Starting notebook server.`);
-            const result = await jupyterExecution.connectToNotebookServer(serverOptions, options.token);
-            traceInfo(`Server started.`);
-            return result;
+            return await jupyterExecution.connectToNotebookServer(serverOptions, options.token);
         } catch (e) {
             disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.

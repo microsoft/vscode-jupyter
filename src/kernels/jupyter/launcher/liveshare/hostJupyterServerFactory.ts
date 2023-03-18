@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import {} from 'underscore';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IDisposableRegistry } from '../../../../platform/common/types';
-import { DataScience } from '../../../../platform/common/utils/localize';
 import { traceInfo } from '../../../../platform/logging';
 import { IJupyterConnection } from '../../../types';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager';
@@ -26,10 +25,6 @@ export class HostJupyterServerFactory implements INotebookServerFactory {
     public async createNotebookServer(connection: IJupyterConnection): Promise<INotebookServer> {
         traceInfo(`Connecting ${connection.localLaunch ? 'local' : 'remote'} server kernel ${connection.baseUrl}`);
 
-        // Indicate we have a new session on the output channel
-        if (!connection.localLaunch) {
-            traceInfo(DataScience.connectingToJupyterUri(connection.baseUrl));
-        }
         // Create our session manager
         const sessionManager = (await this.sessionManagerFactory.create(connection)) as JupyterSessionManager;
         // Create a server tha  t we will then attempt to connect to.
