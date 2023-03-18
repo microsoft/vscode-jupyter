@@ -121,7 +121,7 @@ export interface IWatchableJupyterSettings extends IJupyterSettings {
     createSystemVariables(resource: Resource): ISystemVariables;
 }
 
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose' | 'everything';
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
 
 export interface ILoggingSettings {
     readonly level: LoggingLevelSettingType | 'off';

@@ -34,10 +34,6 @@ export class FileLogger implements ILogger, Disposable {
         this.stream.write(formatMessage('debug', ...data));
     }
 
-    public traceEverything(...data: Arguments): void {
-        this.stream.write(formatMessage('everything', ...data));
-    }
-
     public dispose(): void {
         try {
             this.stream.close();

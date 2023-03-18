@@ -33,8 +33,4 @@ export class ConsoleLogger implements ILogger {
     public traceVerbose(message: string, ...data: Arguments): void {
         console.log(formatMessage('verbose', `${this.prefix || ''} ${message}`, ...data));
     }
-
-    public traceEverything(message: string, ...data: Arguments): void {
-        console.log(formatMessage('everything', `${this.prefix || ''} ${message}`, ...data));
-    }
 }

@@ -29,7 +29,6 @@ const logLevelMap: Map<string | undefined, LogLevel> = new Map([
     ['warn', LogLevel.Warn],
     ['info', LogLevel.Info],
     ['debug', LogLevel.Debug],
-    ['everything', LogLevel.Everything],
     ['none', LogLevel.Off],
     ['off', LogLevel.Off],
     [undefined, LogLevel.Error]
@@ -63,12 +62,6 @@ export function traceWarning(message: string, ...args: Arguments): void {
 export function traceInfo(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Info) {
         loggers.forEach((l) => l.traceInfo(message, ...args));
-    }
-}
-
-export function traceEverything(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Everything) {
-        loggers.forEach((l) => l.traceEverything(message, ...args));
     }
 }
 

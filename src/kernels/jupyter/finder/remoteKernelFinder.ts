@@ -393,7 +393,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 const items = [...filtered, ...mappedSpecs];
                 return items;
             } catch (ex) {
-                traceError(`Error fetching remote kernels:`, ex);
+                traceError(
+                    `Error fetching kernels from ${connInfo.baseUrl} (${connInfo.displayName}, ${connInfo.type}):`,
+                    ex
+                );
                 throw ex;
             } finally {
                 if (sessionManager) {

@@ -32,7 +32,4 @@ export class OutputChannelLogger implements ILogger {
     public traceVerbose(message: string, ...data: Arguments): void {
         this.channel.appendLine(formatMessage('debug', message, ...data));
     }
-    public traceEverything(message: string, ...data: Arguments): void {
-        this.channel.appendLine(formatMessage('everything', message, ...data));
-    }
 }
