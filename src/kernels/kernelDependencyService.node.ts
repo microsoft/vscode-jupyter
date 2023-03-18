@@ -80,7 +80,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         traceInfo(
-            `Install missing Kernel dependencies for ${getDisplayPath(
+            `Check & install missing Kernel dependencies for ${getDisplayPath(
                 kernelConnection.interpreter?.uri
             )}, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
         );
