@@ -11,6 +11,7 @@ import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
 import { argsToLogString, returnValueToLogString } from './util';
 import { LoggingLevelSettingType } from '../common/types';
+import { splitLines } from '../common/helpers';
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
@@ -47,14 +48,77 @@ export function traceLog(message: string, ...args: Arguments): void {
     loggers.forEach((l) => l.traceLog(message, ...args));
 }
 
+function formatErrors(...args: Arguments) {
+    // Format the error message, if showing verbose then include all of the error stack & other details.
+    const formatError = globalLoggingLevel <= LogLevel.Trace ? false : true;
+    if (!formatError) {
+        return args;
+    }
+    return args.map((arg) => {
+        if (!(arg instanceof Error)) {
+            return arg;
+        }
+        // Only format errors raised by Jupyter extension.
+        if (!('isJupyterError' in arg)) {
+            return arg;
+        }
+        const info: string[] = [`${arg.name}: ${arg.message}`];
+        if (
+            'kernelConnectionMetadata' in arg &&
+            arg.kernelConnectionMetadata &&
+            typeof arg.kernelConnectionMetadata === 'object' &&
+            'id' in arg.kernelConnectionMetadata
+        ) {
+            info.push(`Kernel Id = ${arg.kernelConnectionMetadata.id}`);
+            if (
+                'interpreter' in arg &&
+                arg.interpreter &&
+                typeof arg.interpreter === 'object' &&
+                'id' in arg.interpreter
+            ) {
+                info.push(`Interpreter Id = ${arg.kernelConnectionMetadata.id}`);
+            }
+        }
+        if (arg.stack) {
+            const stack = splitLines(arg.stack);
+            if (stack.length === 1) {
+                //
+            } else if (stack.length === 1) {
+                info.push(`at ${stack[0]}`);
+            } else if (stack.length > 1 && stack.some((l) => l.indexOf('at ') === 0)) {
+                info.push(`at ${stack.find((l) => l.indexOf('at ') === 0)}`);
+            } else {
+                info.push(`at ${stack[0]}`);
+            }
+        }
+        const propertiesToIgnore = [
+            'stack',
+            'message',
+            'name',
+            'kernelConnectionMetadata',
+            'category',
+            'exitCode',
+            'isJupyterError'
+        ];
+        Object.keys(arg)
+            .filter((key) => propertiesToIgnore.indexOf(key) === -1)
+            .forEach((key) => info.push(`${key} = ${JSON.stringify((arg as any)[key])}`));
+        return info
+            .map((l) => l.trim())
+            .filter((l) => l.length)
+            .join('\n');
+    });
+}
 export function traceError(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Error) {
+        args = formatErrors(...args);
         loggers.forEach((l) => l.traceError(message, ...args));
     }
 }
 
 export function traceWarning(message: string, ...args: Arguments): void {
     if (globalLoggingLevel <= LogLevel.Warn) {
+        args = formatErrors(...args);
         loggers.forEach((l) => l.traceWarn(message, ...args));
     }
 }
