@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo, traceVerbose } from '../../../platform/logging';
+import { traceVerbose } from '../../../platform/logging';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -103,7 +103,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             throw new NotSupportedInWebError();
         }
         const serverOptions = this.getNotebookServerOptions(options);
-        traceInfo(`Checking for server existence.`);
 
         const disposables: IDisposable[] = [];
         let progressReporter: IDisposable | undefined;

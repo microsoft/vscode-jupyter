@@ -233,7 +233,12 @@ export class KernelProcess implements IKernelProcess {
                     // Capture stderr, incase kernel doesn't start.
                     stderr += output.out;
 
-                    traceWarning(`StdErr from Kernel Process ${output.out}`);
+                    // No point displaying false positives.
+                    // The message `.../site-packages/traitlets/traitlets.py:2548: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
+                    // always confuses users, and leads them to the assumption that this is the reason for the kernel not starting or the like.
+                    if (!output.out.includes('Supporting extra quotes around strings is deprecated in traitlets')) {
+                        traceWarning(`StdErr from Kernel Process ${output.out}`);
+                    }
                 } else {
                     stdout += output.out;
                     // Strip unwanted stuff from the output, else it just chews up unnecessary space.

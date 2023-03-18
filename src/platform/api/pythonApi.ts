@@ -559,7 +559,7 @@ export class InterpreterService implements IInterpreterService {
                     }
                     this.lastLoggedResourceAndInterpreterId = key;
                     traceInfo(
-                        `Active Interpreter for resource '${getDisplayPath(resource)}' is ${getDisplayPath(
+                        `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
                         )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${
                             item?.version?.patch
