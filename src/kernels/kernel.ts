@@ -389,7 +389,6 @@ abstract class BaseKernel implements IBaseKernel {
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)
     ): Promise<IKernelConnectionSession> {
-        traceVerbose(`Start Jupyter Session in kernel.ts with disableUI = ${options.disableUI}`);
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
@@ -775,7 +774,6 @@ abstract class BaseKernel implements IBaseKernel {
             const version = await this.executeSilently(session, [codeToDetermineIPyWidgetsVersion]).catch((ex) =>
                 traceError('Failed to determine version of IPyWidgets', ex)
             );
-            traceVerbose('Determined IPyKernel Version', JSON.stringify(version));
             if (Array.isArray(version)) {
                 const isVersion8 = version.some((output) =>
                     (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
@@ -785,10 +783,12 @@ abstract class BaseKernel implements IBaseKernel {
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                traceVerbose('Determined IPyKernel Version and event fired', JSON.stringify(newVersion));
+                traceVerbose(`Determined IPyKernel Version as ${newVersion} and event fired`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion == newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
+            } else {
+                traceWarning('Failed to determine IPyKernel Version', JSON.stringify(version));
             }
         };
         await determineVersionImpl();
@@ -920,8 +920,11 @@ abstract class BaseKernel implements IBaseKernel {
         code: string[],
         errorOptions?: SilentExecutionErrorOptions
     ) {
-        if (!session || code.join('').trim().length === 0) {
-            traceVerbose(`Not executing startup session: ${session ? 'Object' : 'undefined'}, code: ${code}`);
+        if (code.join('').trim().length === 0) {
+            return;
+        }
+        if (!session) {
+            traceVerbose(`Not executing startup as there is no session, code: ${code}`);
             return;
         }
         return executeSilently(session, code.join('\n'), errorOptions);

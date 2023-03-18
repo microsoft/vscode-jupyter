@@ -7,7 +7,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { ignoreLogging, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
+import { ignoreLogging, logValue, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -145,19 +145,16 @@ export class JupyterPaths {
     public async getDataDirs(options: { resource: Resource; interpreter?: PythonEnvironment }): Promise<Uri[]> {
         const key = options.interpreter ? options.interpreter.uri.toString() : '';
         if (!this.cachedDataDirs.has(key)) {
-            this.cachedDataDirs.set(key, this.getDataDirsImpl(options));
+            this.cachedDataDirs.set(key, this.getDataDirsImpl(options.resource, options.interpreter));
         }
         return this.cachedDataDirs.get(key)!;
     }
 
     @traceDecoratorVerbose('getDataDirsImpl', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    private async getDataDirsImpl({
-        resource,
-        interpreter
-    }: {
-        resource: Resource;
-        interpreter?: PythonEnvironment;
-    }): Promise<Uri[]> {
+    private async getDataDirsImpl(
+        resource: Resource,
+        @logValue<PythonEnvironment>('id') interpreter?: PythonEnvironment
+    ): Promise<Uri[]> {
         // When adding paths keep distinct values and preserve the order.
         const dataDir = new ResourceMap<number>();
 

@@ -93,6 +93,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public newCellOnRunLast: boolean = true;
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
+    public development: boolean = false;
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
     public enableExtendedKernelCompletions: boolean = false;
