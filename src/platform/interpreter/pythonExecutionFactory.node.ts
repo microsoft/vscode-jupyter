@@ -13,7 +13,7 @@ import { createCondaEnv, createPythonEnv } from './pythonEnvironment.node';
 import { createPythonProcessService } from './pythonProcess.node';
 import { TraceOptions } from '../logging/types';
 import { ProcessService } from '../common/process/proc.node';
-import { IProcessLogger, IProcessServiceFactory, IProcessService } from '../common/process/types.node';
+import { IProcessServiceFactory, IProcessService } from '../common/process/types.node';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionFactoryCreationOptions,
@@ -27,7 +27,6 @@ import {
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly disposables: IDisposableRegistry;
-    private readonly logger: IProcessLogger;
     private readonly fileSystem: IFileSystem;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -37,7 +36,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
     @traceDecoratorVerbose('Creating execution process')
@@ -72,7 +70,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             });
         }
         const processService: IProcessService = new ProcessService({ ...envVars });
-        processService.on('exec', this.logger.logProcess.bind(this.logger));
         this.disposables.push(processService);
 
         return createPythonService(options.interpreter, processService, this.fileSystem);

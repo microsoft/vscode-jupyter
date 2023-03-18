@@ -31,8 +31,6 @@ import { BrowserService } from './net/browser';
 import { HttpClient } from './net/httpClient';
 import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants.node';
-import { ProcessLogger } from './process/logger.node';
-import { IProcessLogger } from './process/types.node';
 import {
     IAsyncDisposableRegistry,
     IBrowserService,
@@ -58,7 +56,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
     serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
-    serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
