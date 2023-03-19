@@ -267,11 +267,6 @@ abstract class BaseKernel implements IBaseKernel {
     }
     public async dispose(): Promise<void> {
         traceInfo(`Dispose Kernel '${getDisplayPath(this.uri)}' associated with '${getDisplayPath(this.resourceUri)}'`);
-        traceInfoIfCI(
-            `Dispose Kernel '${getDisplayPath(this.uri)}' associated with '${getDisplayPath(
-                this.resourceUri
-            )}' called from ${new Error('').stack}`
-        );
         this._disposing = true;
         if (this.disposingPromise) {
             return this.disposingPromise;

@@ -81,14 +81,15 @@ function formatErrors(...args: Arguments) {
         }
         if (arg.stack) {
             const stack = splitLines(arg.stack);
+            const firstStackLine = stack.find((l) => l.indexOf('at ') === 0);
             if (stack.length === 1) {
                 //
             } else if (stack.length === 1) {
-                info.push(`at ${stack[0]}`);
-            } else if (stack.length > 1 && stack.some((l) => l.indexOf('at ') === 0)) {
-                info.push(`at ${stack.find((l) => l.indexOf('at ') === 0)}`);
+                info.push(stack[0]);
+            } else if (stack.length > 1 && firstStackLine?.length) {
+                info.push(firstStackLine);
             } else {
-                info.push(`at ${stack[0]}`);
+                info.push(stack[0]);
             }
         }
         const propertiesToIgnore = [
