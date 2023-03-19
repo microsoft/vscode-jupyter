@@ -19,6 +19,7 @@ import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -188,13 +189,13 @@ export class ContributedLocalPythonEnvFinder
                 this.cacheLoggingTimeout = setTimeout(() => {
                     traceVerbose(
                         `Updating cache with Python kernels ${values
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
                             .join(', ')}, Added = ${added
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
                             .join(', ')}, Updated = ${updated
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
                             .join(', ')}, Removed = ${removed
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
                             .join(', ')}`
                     );
                 }, 15_000);

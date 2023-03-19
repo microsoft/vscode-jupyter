@@ -12,6 +12,7 @@ import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
 import { argsToLogString, returnValueToLogString } from './util';
 import { LoggingLevelSettingType } from '../common/types';
 import { splitLines } from '../common/helpers';
+import { getDisplayPath } from '../common/platform/fs-paths';
 let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
@@ -71,12 +72,13 @@ function formatErrors(...args: Arguments) {
         ) {
             info.push(`Kernel Id = ${arg.kernelConnectionMetadata.id}`);
             if (
-                'interpreter' in arg &&
-                arg.interpreter &&
-                typeof arg.interpreter === 'object' &&
-                'id' in arg.interpreter
+                'interpreter' in arg.kernelConnectionMetadata &&
+                arg.kernelConnectionMetadata.interpreter &&
+                typeof arg.kernelConnectionMetadata.interpreter === 'object' &&
+                'id' in arg.kernelConnectionMetadata.interpreter &&
+                typeof arg.kernelConnectionMetadata.interpreter.id === 'string'
             ) {
-                info.push(`Interpreter Id = ${arg.kernelConnectionMetadata.id}`);
+                info.push(`Interpreter Id = ${getDisplayPath(arg.kernelConnectionMetadata.interpreter.id)}`);
             }
         }
         if (arg.stack) {

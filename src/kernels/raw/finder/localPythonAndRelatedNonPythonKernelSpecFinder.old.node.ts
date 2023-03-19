@@ -28,6 +28,7 @@ import {
     listPythonAndRelatedNonPythonKernelSpecs,
     localPythonKernelsCacheKey
 } from './interpreterKernelSpecFinderHelper.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
@@ -101,7 +102,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
                 if (deletedKernels.length) {
                     traceVerbose(
                         `Local Python connection deleted ${deletedKernels.map(
-                            (item) => `${item.kind}:'${item.id}: (interpreter id=${item.interpreter?.id})'`
+                            (item) =>
+                                `${item.kind}:'${item.id}: (interpreter id=${getDisplayPath(item.interpreter?.id)})'`
                         )}`
                     );
                     this.updateCache().catch(noop);

@@ -112,7 +112,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 if (deletedKernels.length) {
                     traceVerbose(
                         `Local Python connection deleted ${deletedKernels.map(
-                            (item) => `${item.kind}:'${item.id}: (interpreter id=${item.interpreter?.id})'`
+                            (item) =>
+                                `${item.kind}:'${item.id}: (interpreter id=${getDisplayPath(item.interpreter?.id)})'`
                         )}`
                     );
                     this.updateCache().catch(noop);
@@ -233,7 +234,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 if (kernelsThatPointToInvalidValidInterpreters.length) {
                     traceWarning(
                         `The following kernels use interpreters that are no longer valid or not recognized by Python extension, Kernels ${kernelsThatPointToInvalidValidInterpreters
-                            .map((item) => `${item.kind}:'id=${item.id}'(interpreterId='${item.interpreter?.id}')`)
+                            .map(
+                                (item) =>
+                                    `${item.kind}:'id=${item.id}'(interpreterId='${getDisplayPath(
+                                        item.interpreter?.id
+                                    )}')`
+                            )
                             .join(',')} and valid interpreter ids include ${Array.from(validInterpreterIds).join(', ')}`
                     );
                     kernelsThatPointToInvalidValidInterpreters.forEach((item) => {
@@ -245,7 +251,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 if (deletedKernels.length) {
                     traceVerbose(
                         `Local Python connection deleted ${deletedKernels.map(
-                            (item) => `${item.kind}:'${item.id}: (interpreter id=${item.interpreter?.id})'`
+                            (item) =>
+                                `${item.kind}:'${item.id}: (interpreter id=${getDisplayPath(item.interpreter?.id)})'`
                         )}`
                     );
                     await this.updateCache();
