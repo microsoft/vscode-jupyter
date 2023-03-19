@@ -63,7 +63,7 @@ function formatErrors(...args: Arguments) {
         if (!('isJupyterError' in arg)) {
             return arg;
         }
-        const info: string[] = [`${arg.name}: ${arg.message}`];
+        const info: string[] = [`${arg.name}: ${arg.message}`.trim()];
         if (
             'kernelConnectionMetadata' in arg &&
             arg.kernelConnectionMetadata &&
@@ -105,10 +105,10 @@ function formatErrors(...args: Arguments) {
         ];
         Object.keys(arg)
             .filter((key) => propertiesToIgnore.indexOf(key) === -1)
-            .forEach((key) => info.push(`${key} = ${JSON.stringify((arg as any)[key])}`));
+            .forEach((key) => info.push(`${key} = ${String((arg as any)[key]).trim()}`));
         return info
-            .map((l) => l.trim())
-            .filter((l) => l.length)
+            .filter((l) => l.trim().length)
+            .map((l, i) => (i === 0 ? l : `    > ${l}`))
             .join('\n');
     });
 }

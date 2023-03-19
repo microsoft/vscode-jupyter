@@ -5,6 +5,7 @@ import { window } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { traceVerbose } from '../../platform/logging';
+import { splitLines } from '../../platform/common/helpers';
 
 /**
  * Returns the output panel for output related to Jupyter Server.
@@ -22,13 +23,13 @@ export function getJupyterOutputChannel(disposables: IDisposableRegistry): IOutp
                 if (propKey === 'append') {
                     return (...args: Parameters<IOutputChannel['append']>) => {
                         jupyterServerOutputChannel.append(...args);
-                        traceVerbose(...args);
+                        formatMessageAndLog(...args);
                     };
                 }
                 if (propKey === 'appendLine') {
                     return (...args: Parameters<IOutputChannel['appendLine']>) => {
                         jupyterServerOutputChannel.appendLine(...args);
-                        traceVerbose(...args);
+                        formatMessageAndLog(...args);
                     };
                 }
             }
@@ -36,4 +37,16 @@ export function getJupyterOutputChannel(disposables: IDisposableRegistry): IOutp
         }
     };
     return new Proxy(jupyterServerOutputChannel, handler);
+}
+
+function formatMessageAndLog(...args: Parameters<IOutputChannel['append']>) {
+    if (args.length === 1) {
+        traceVerbose(
+            splitLines(args[0])
+                .map((line, i) => (i === 0 ? line : `    ${line}`))
+                .join('\n')
+        );
+    } else {
+        traceVerbose(...args);
+    }
 }

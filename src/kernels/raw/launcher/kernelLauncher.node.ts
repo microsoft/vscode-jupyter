@@ -44,7 +44,7 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { TraceOptions } from '../../../platform/logging/types';
 import { getResourceType } from '../../../platform/common/utils';
-import { format } from '../../../platform/common/helpers';
+import { format, splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { UsedPorts } from '../../common/usedPorts';
 import { isPythonKernelConnection } from '../../helpers';
@@ -191,8 +191,11 @@ export class KernelLauncher implements IKernelLauncher {
             }
         }
         if (output.stderr) {
+            const formattedOutput = splitLines(output.stderr.trim(), { removeEmptyEntries: true, trim: true })
+                .map((l, i) => (i === 0 ? l : `    ${l}`))
+                .join('\n');
             traceWarning(
-                `Stderr output when getting ipykernel version & path ${output.stderr.trim()} for ${displayInterpreterPath}`
+                `Stderr output when getting ipykernel version & path ${formattedOutput} for ${displayInterpreterPath}`
             );
         }
     }

@@ -93,7 +93,7 @@ import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { IInterpreterPackages } from './platform/interpreter/types';
-import { homedir } from 'os';
+import { homedir, platform, arch } from 'os';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -265,6 +265,7 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
     } else {
         standardOutputChannel.appendLine('Python Extension not installed.');
     }
+    standardOutputChannel.appendLine(`Platform: ${platform()} (${arch()}).`);
     if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
         standardOutputChannel.appendLine(`No workspace folder opened.`);
     } else if (workspace.workspaceFolders.length === 1) {

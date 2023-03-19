@@ -217,7 +217,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceVerbose(
                 `Got env vars with python ${getDisplayPath(interpreter?.uri)}, with env var count ${
                     Object.keys(env || {}).length
-                } in ${stopWatch.elapsedTime}ms. \n PATH value is ${env.PATH} and Path value is ${env.Path}`
+                } in ${stopWatch.elapsedTime}ms. \n    PATH value is ${env.PATH} and \n    Path value is ${env.Path}`
             );
         } else if (envType === EnvironmentType.Conda) {
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
@@ -267,7 +267,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // Second value in PATH is expected to be the site packages directory.
             if (executablesPath && pathValues[1] !== executablesPath.fsPath) {
                 traceVerbose(
-                    `Prepend PATH with user site path for ${interpreter.id}, user site ${executablesPath.fsPath}`
+                    `Prepend PATH with user site path for ${getDisplayPath(interpreter.id)}, user site ${
+                        executablesPath.fsPath
+                    }`
                 );
                 // Based on docs this is the right path and must be setup in the path.
                 this.envVarsService.prependPath(env, executablesPath.fsPath);
@@ -275,7 +277,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 //
             } else {
                 traceError(
-                    `Unable to determine site packages path for python ${interpreter.uri.fsPath} (${interpreter.envType})`
+                    `Unable to determine site packages path for python ${getDisplayPath(interpreter.uri.fsPath)} (${
+                        interpreter.envType
+                    })`
                 );
             }
 
@@ -290,7 +294,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Ensure the first path in PATH variable points to the directory of python executable.
         // We need to add this to ensure kernels start and work correctly, else things can fail miserably.
         traceVerbose(
-            `Prepend PATH with python bin for ${interpreter.id}, PATH value is ${env.PATH} and Path value is ${env.Path}`
+            `Prepend PATH with python bin for ${getDisplayPath(interpreter.id)}, \n    PATH value is ${
+                env.PATH
+            } and \n    Path value is ${env.Path}`
         );
         // This way all executables from that env are used.
         // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
@@ -299,7 +305,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
 
         traceVerbose(
-            `Activated Env Variables for ${interpreter.id}, PATH value is ${env.PATH} and Path value is ${env.Path}`
+            `Activated Env Variables for ${getDisplayPath(interpreter.id)}, \n    PATH value is ${
+                env.PATH
+            } and \n    Path value is ${env.Path}`
         );
         return env;
     }
