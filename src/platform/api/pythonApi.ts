@@ -96,7 +96,7 @@ export function pythonEnvToJupyterEnv(
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
                     : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
         } else {
-            traceError(`Python environment ${env.id} excluded as Uri is undefined`);
+            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
             return;
         }
     } else {
@@ -808,10 +808,14 @@ export class InterpreterService implements IInterpreterService {
                                 allInterpreters.push(resolved);
                             } else if (item.executable.uri && item.environment?.type !== EnvironmentType.Conda) {
                                 // Ignore cases where we do not have Uri and its a conda env, as those as conda envs without Python.
-                                traceError(`Failed to get env details from Python API for ${item.id} without an error`);
+                                traceError(
+                                    `Failed to get env details from Python API for ${getDisplayPath(
+                                        item.id
+                                    )} without an error`
+                                );
                             }
                         } catch (ex) {
-                            traceError(`Failed to get env details from Python API for ${item.id}`, ex);
+                            traceError(`Failed to get env details from Python API for ${getDisplayPath(item.id)}`, ex);
                         }
                     })
                 );
