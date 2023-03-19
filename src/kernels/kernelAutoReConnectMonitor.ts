@@ -204,7 +204,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             await kernel.dispose();
         }
     }
-    
+
     private async handleRemoteServerReinitiate(
         kernel: IKernel,
         metadata: RemoteKernelConnectionMetadata
