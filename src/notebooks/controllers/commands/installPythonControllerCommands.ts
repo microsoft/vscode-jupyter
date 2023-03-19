@@ -108,11 +108,11 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                 }
 
                 // Python extension is installed, let's wait for interpreters to be detected
-                if (this.interpreterService.environments.length === 0) {
+                if (!this.interpreterService.environmentsFound) {
                     await this.interpreterService.refreshInterpreters();
                 }
 
-                if (this.interpreterService.environments.length === 0) {
+                if (!this.interpreterService.environmentsFound) {
                     // Extension is installed, but we didn't find any python connections
                     // recommend installing python in this case
                     await this.showInstallPythonExtensionContext.set(false);

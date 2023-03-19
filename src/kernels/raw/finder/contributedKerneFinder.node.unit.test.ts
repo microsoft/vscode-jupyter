@@ -92,9 +92,9 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                 let pythonExecService: IPythonExecutionService;
                 let kernelRankHelper: IKernelRankingHelper;
                 let cancelToken: CancellationTokenSource;
-                let onDidChangeInterpreters: EventEmitter<void>;
+                let onDidChangeInterpreters: EventEmitter<PythonEnvironment[]>;
                 let onDidDeleteInterpreter: EventEmitter<{ id: string }>;
-                let onDidChangeInterpreter: EventEmitter<void>;
+                let onDidChangeInterpreter: EventEmitter<PythonEnvironment | undefined>;
                 let onDidChangeInterpreterStatus: EventEmitter<void>;
                 let changeEventFired: TestEventHandler<void>;
                 type TestData = {
@@ -123,8 +123,8 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                     const getOSTypeStub = sinon.stub(platform, 'getOSType');
                     getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
                     interpreterService = mock(InterpreterService);
-                    onDidChangeInterpreter = new EventEmitter<void>();
-                    onDidChangeInterpreters = new EventEmitter<void>();
+                    onDidChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
+                    onDidChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
                     onDidChangeInterpreterStatus = new EventEmitter<void>();
                     onDidDeleteInterpreter = new EventEmitter<{ id: string }>();
                     disposables.push(onDidChangeInterpreter);

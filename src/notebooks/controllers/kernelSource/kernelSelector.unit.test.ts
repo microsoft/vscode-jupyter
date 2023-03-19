@@ -36,7 +36,7 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../test/core';
 import {
-    ConnectionDisplayData,
+    IConnectionDisplayData,
     ConnectionDisplayDataProvider,
     getKernelConnectionCategorySync
 } from '../connectionDisplayData';
@@ -226,7 +226,7 @@ suite('Kernel Selector', () => {
             instance(pythonChecker)
         );
         when(displayDataProvider.getDisplayData(anything())).thenCall((c: KernelConnectionMetadata) => {
-            return <ConnectionDisplayData>{
+            return <IConnectionDisplayData>{
                 category: getKernelConnectionCategorySync(c),
                 label: getDisplayNameOrNameOfKernelConnection(c),
                 connectionId: c.id,
