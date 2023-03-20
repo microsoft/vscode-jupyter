@@ -11,40 +11,41 @@ export type DistroInfo = {
 };
 
 const knownDistros = [
-    'Mint',
-    'Manjaro',
-    'Ubuntu',
-    'Fuduntu',
-    'Kubuntu',
-    'Xubuntu',
+    'AlmaLinux',
+    'Amazon',
+    'Asianux',
+    'Berry',
+    'CentOS',
+    'ClearOS',
+    'Debian',
     'Elementary',
     'Fedora',
-    'Zorin',
-    'Debian',
-    'MX Linux',
-    'Pop!_OS',
+    'Fermi',
+    'Fuduntu',
+    'Gecko',
     'Kali',
+    'Kubuntu',
+    'Manjaro',
+    'Mint',
+    'Miracle',
+    'MX Linux',
+    'openSUSE',
+    'Oracle',
+    'Pop!_OS',
     'Raspbian',
-    'CentOS',
     'Red Hat Enterprise Linux',
     'Red Hat Linux',
     'Red Hat',
-    'openSUSE',
-    'AlmaLinux',
-    'Asianux',
-    'ClearOS',
-    'Fermi',
-    'Miracle',
-    'Oracle',   'Rocks',
+    'Rocks',
     'Rocky',
-    'Scientific',
-    'Amazon',
-    'Berry',
-    'Gecko',
     'Rosa',
-
+    'Scientific',
+    'Ubuntu',
+    'Xubuntu',
+    'Zorin'
 ];
 
+const VERSION_REG = new RegExp(/^[0-9 .]*$/);
 /**
  * Gets the linux distro information.
  * If we fail to get the information, we return an empty object.
@@ -59,17 +60,21 @@ export async function getDistroInfo(): Promise<DistroInfo> {
     }
     try {
         const contents = await fs.readFile('/etc/os-release', 'utf-8');
-        const requiredKeys = new Set(Object.keys(distro));
 
         splitLines(contents).forEach((line) => {
-            if (!line.includes('=')) {
-                return;
-            }
-            const key = line.substring(0, line.indexOf('='));
-            const value = line.substring(line.indexOf('=') + 1).replace(/"/g, '');
-            if (key in distro) {
-                (distro as Record<string, string>)[key] = value;
-                requiredKeys.delete(key);
+            const isId = line.toUpperCase().trim().startsWith('ID=');
+            const isVersion = line.toUpperCase().trim().startsWith('VERSION_ID=');
+            if (isId || isVersion) {
+                const value = line
+                    .substring(line.indexOf('=') + 1)
+                    .replace(/"/g, '')
+                    .toUpperCase();
+                if (isId) {
+                    distro.id = knownDistros.filter((known) => value.includes(known.toUpperCase())).join(', ');
+                } else {
+                    const versionNumber = parseFloat(value) || '';
+                    distro.version_id = VERSION_REG.test(value) ? value : versionNumber.toString();
+                }
             }
         });
     } catch (ex) {

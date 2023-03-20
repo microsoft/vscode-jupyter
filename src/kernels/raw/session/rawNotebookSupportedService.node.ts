@@ -58,9 +58,7 @@ async function sendZMQTelemetry(failed: boolean) {
 
     const telemetryInfo = {
         ...getPlatformInfo(),
-        distro_name: info.name,
         distro_id: info.id,
-        distro_version: info.version,
         distro_version_id: info.version_id,
         failed
     };
