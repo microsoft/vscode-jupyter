@@ -1936,6 +1936,22 @@ export class IEventNamePropertyMapping {
          * arm version
          */
         armv?: string;
+        /**
+         * Linux distro name.
+         */
+        distro_name?: string;
+        /**
+         * Linux distro version.
+         */
+        distro_version: string;
+        /**
+         * Linux distro id.
+         */
+        distro_id: string;
+        /**
+         * Linux distro version id.
+         */
+        distro_version_id: string;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -1954,6 +1970,22 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             armv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_name: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_version: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_version_id: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
