@@ -117,11 +117,13 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         }
         switch (connectionStatus) {
             case 'connected': {
+                this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);
                 return;
             }
             case 'disconnected': {
                 if (this.kernelReconnectProgress.has(kernel)) {
+                    this.kernelReconnectProgress.get(kernel)?.dispose();
                     this.kernelReconnectProgress.delete(kernel);
                     this.onKernelDisconnected(kernel)?.catch(noop);
                 }
@@ -202,6 +204,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             await kernel.dispose();
         }
     }
+
     private async handleRemoteServerReinitiate(
         kernel: IKernel,
         metadata: RemoteKernelConnectionMetadata
