@@ -1,21 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as os from 'os';
 import { inject, injectable } from 'inversify';
 import { traceWarning } from '../../../platform/logging';
-import { IConfigurationService } from '../../../platform/common/types';
+import { IConfigurationService, IExtensionContext } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { noop } from '../../../platform/common/utils/misc';
 import { DistroInfo, getDistroInfo } from '../../../platform/common/platform/linuxDistro.node';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { Uri } from 'vscode';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
 @injectable()
 export class RawNotebookSupportedService implements IRawNotebookSupportedService {
     private _isSupported?: boolean;
-    constructor(@inject(IConfigurationService) private readonly configuration: IConfigurationService) {}
+    constructor(
+        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(IPlatformService) private readonly platform: IPlatformService,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
+    ) {}
 
     // Check to see if we have all that we need for supporting raw kernel launch
     public get isSupported(): boolean {
@@ -45,20 +51,64 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             this._isSupported = true;
             sendZMQTelemetry(true).catch(noop);
         } catch (e) {
-            sendZMQTelemetry(false).catch(noop);
-            traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
-            this._isSupported = false;
+            if (this.platform.isWindows || this.platform.isMac) {
+                sendZMQTelemetry(false).catch(noop);
+                traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
+                this._isSupported = false;
+            } else {
+                try {
+                    // Copy the fallback files and see if that works.
+                    // This is only temporary and will be valid only for a single release.
+                    // We'll remove this code in the next release.
+                    // Sync FS operations, but this is only temporary and only for linux if we get here.
+                    const fallbackPath = Uri.joinPath(
+                        this.context.extensionUri,
+                        'out',
+                        'node_modules',
+                        'zeromq',
+                        'fallback_prebuilds'
+                    );
+                    const targetPath = Uri.joinPath(
+                        this.context.extensionUri,
+                        'out',
+                        'node_modules',
+                        'zeromq',
+                        'prebuilds'
+                    );
+                    [
+                        'linux-arm/node.napi.glibc.node',
+                        'linux-arm64/node.napi.glibc.node',
+                        'linux-x64/node.napi.glibc.node',
+                        'linux-x64/node.napi.musl.node'
+                    ].forEach((file) => {
+                        if (fs.existsSync(Uri.joinPath(fallbackPath, file).fsPath)) {
+                            fs.copyFileSync(
+                                Uri.joinPath(fallbackPath, file).fsPath,
+                                Uri.joinPath(targetPath, file).fsPath
+                            );
+                        }
+                    });
+                    require('zeromq');
+                    this._isSupported = true;
+                    sendZMQTelemetry(true, true).catch(noop);
+                } catch (e) {
+                    sendZMQTelemetry(false, true).catch(noop);
+                    traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
+                    this._isSupported = false;
+                }
+            }
         }
 
         return this._isSupported;
     }
 }
-async function sendZMQTelemetry(failed: boolean) {
+async function sendZMQTelemetry(failed: boolean, fallbackTried: boolean = false) {
     const info = await getDistroInfo().catch(() => <DistroInfo>{ name: '', id: '', version: '', version_id: '' });
 
     const telemetryInfo = {
         ...getPlatformInfo(),
         distro_name: info.name,
+        fallbackTried,
         distro_id: info.id,
         distro_version: info.version,
         distro_version_id: info.version_id,
