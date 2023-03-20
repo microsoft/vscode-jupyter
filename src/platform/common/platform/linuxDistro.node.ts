@@ -6,11 +6,44 @@ import * as os from 'os';
 import { splitLines } from '../helpers';
 import { traceError } from '../../logging';
 export type DistroInfo = {
-    name: string;
-    version: string;
     id: string;
     version_id: string;
 };
+
+const knownDistros = [
+    'Mint',
+    'Manjaro',
+    'Ubuntu',
+    'Fuduntu',
+    'Kubuntu',
+    'Xubuntu',
+    'Elementary',
+    'Fedora',
+    'Zorin',
+    'Debian',
+    'MX Linux',
+    'Pop!_OS',
+    'Kali',
+    'Raspbian',
+    'CentOS',
+    'Red Hat Enterprise Linux',
+    'Red Hat Linux',
+    'Red Hat',
+    'openSUSE',
+    'AlmaLinux',
+    'Asianux',
+    'ClearOS',
+    'Fermi',
+    'Miracle',
+    'Oracle',   'Rocks',
+    'Rocky',
+    'Scientific',
+    'Amazon',
+    'Berry',
+    'Gecko',
+    'Rosa',
+
+];
 
 /**
  * Gets the linux distro information.
@@ -18,8 +51,6 @@ export type DistroInfo = {
  */
 export async function getDistroInfo(): Promise<DistroInfo> {
     const distro = {
-        name: '',
-        version: '',
         id: '',
         version_id: ''
     };
