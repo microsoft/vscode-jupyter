@@ -8,6 +8,8 @@ import { traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
+import { noop } from '../../../platform/common/utils/misc';
+import { DistroInfo, getDistroInfo } from '../../../platform/common/platform/linuxDistro.node';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
 @injectable()
@@ -38,23 +40,31 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
         if ((process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true') {
             return false;
         }
-        const telemetryInfo = {
-            ...getPlatformInfo(),
-            failed: false
-        };
         try {
             require('zeromq');
             this._isSupported = true;
-            sendTelemetryEvent(Telemetry.ZMQSupport, undefined, telemetryInfo);
+            sendZMQTelemetry(true).catch(noop);
         } catch (e) {
-            telemetryInfo.failed = true;
+            sendZMQTelemetry(false).catch(noop);
             traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
             this._isSupported = false;
         }
 
-        sendTelemetryEvent(Telemetry.ZMQSupport, undefined, telemetryInfo);
         return this._isSupported;
     }
+}
+async function sendZMQTelemetry(failed: boolean) {
+    const info = await getDistroInfo().catch(() => <DistroInfo>{ name: '', id: '', version: '', version_id: '' });
+
+    const telemetryInfo = {
+        ...getPlatformInfo(),
+        distro_name: info.name,
+        distro_id: info.id,
+        distro_version: info.version,
+        distro_version_id: info.version_id,
+        failed
+    };
+    sendTelemetryEvent(Telemetry.ZMQSupport, undefined, telemetryInfo);
 }
 function isAlpine(platform: string) {
     return platform === 'linux' && fs.existsSync('/etc/alpine-release');
