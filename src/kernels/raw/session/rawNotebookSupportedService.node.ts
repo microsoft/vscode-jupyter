@@ -3,24 +3,26 @@
 
 import * as fs from 'fs-extra';
 import * as os from 'os';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { traceWarning } from '../../../platform/logging';
-import { IConfigurationService, IExtensionContext } from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IExtensionContext, IMemento } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { noop } from '../../../platform/common/utils/misc';
 import { DistroInfo, getDistroInfo } from '../../../platform/common/platform/linuxDistro.node';
-import { IPlatformService } from '../../../platform/common/platform/types';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
+import { IApplicationEnvironment } from '../../../platform/common/application/types';
 
+const ZMQ_FALLBACK_ATTEMPTED = 'ZMQ-FALLBACK-ATTEMPTED';
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
 @injectable()
 export class RawNotebookSupportedService implements IRawNotebookSupportedService {
     private _isSupported?: boolean;
     constructor(
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
+        @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment
     ) {}
 
     // Check to see if we have all that we need for supporting raw kernel launch
@@ -51,12 +53,14 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             this._isSupported = true;
             sendZMQTelemetry(true).catch(noop);
         } catch (e) {
-            if (this.platform.isWindows || this.platform.isMac) {
-                sendZMQTelemetry(false).catch(noop);
+            const shouldAttemptFallback = this.memento.get(ZMQ_FALLBACK_ATTEMPTED, '') !== this.env.extensionVersion;
+            if (!shouldAttemptFallback) {
+                sendZMQTelemetry(false, true).catch(noop);
                 traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
                 this._isSupported = false;
             } else {
                 try {
+                    this.memento.update('ZMQ-FALLBACK-ATTEMPTED', this.env.extensionVersion).then(noop, noop);
                     // Copy the fallback files and see if that works.
                     // This is only temporary and will be valid only for a single release.
                     // We'll remove this code in the next release.
@@ -76,6 +80,10 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
                         'prebuilds'
                     );
                     [
+                        'darwin-arm64/node.napi.glibc.node',
+                        'darwin-x64/node.napi.glibc.node',
+                        'win32-ia32/node.napi.glibc.node',
+                        'win32-x64/node.napi.glibc.node',
                         'linux-arm/node.napi.glibc.node',
                         'linux-arm64/node.napi.glibc.node',
                         'linux-x64/node.napi.glibc.node',
