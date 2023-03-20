@@ -1,15 +1,10 @@
-name: 'Build VSIX'
-description: "Build the extension's VSIX"
-
-outputs:
-  path:
-    description: 'Path to the VSIX'
-    value: 'ms-toolsai-jupyter-insiders.vsix'
+name: 'Install dependencies (npm ci)'
+description: "npm install (with GITHUB_TOKEN to run postinstall step)"
 
 runs:
   using: 'composite'
   steps:
-    - run: npm ci --prefer-offline
+    - run: npm ci --foreground-scripts --prefer-offline
       env:
         npm_config_build_from_source: true
       shell: bash
@@ -18,7 +13,4 @@ runs:
     - run: npm run postinstall
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      shell: bash
-
-    - run: npm run package
       shell: bash

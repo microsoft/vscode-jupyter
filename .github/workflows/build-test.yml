@@ -142,10 +142,8 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --foreground-scripts --prefer-offline
-        env:
-          npm_config_build_from_source: true
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: Verify Translation files
         run: npm run validateTranslationFiles
@@ -248,10 +246,8 @@ jobs:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --foreground-scripts --prefer-offline
-        env:
-          npm_config_build_from_source: true
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
@@ -578,10 +574,8 @@ jobs:
             sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
         # This step is slow.
-      - name: Install dependencies (npm ci)
-        run: npm ci --foreground-scripts --prefer-offline
-        env:
-          npm_config_build_from_source: true
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -824,10 +818,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --foreground-scripts --prefer-offline
-        env:
-          npm_config_build_from_source: true
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: pip install system test requirements
         run: |
@@ -883,11 +875,8 @@ jobs:
         with:
           node-version: ${{env.NODE_VERSION}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --foreground-scripts --prefer-offline
-        env:
-          npm_config_build_from_source: true
-
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: Cache compiled TS files
         id: out-cache
