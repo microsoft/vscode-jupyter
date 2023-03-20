@@ -40,6 +40,7 @@ import { getResourceType } from '../../../platform/common/utils';
 import { format } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { UsedPorts } from '../../common/usedPorts';
+import { isPythonKernelConnection } from '../../helpers';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -143,7 +144,11 @@ export class KernelLauncher implements IKernelLauncher {
         token: CancellationToken
     ) {
         const interpreter = kernelConnectionMetadata.interpreter;
-        if (!isLocalConnection(kernelConnectionMetadata) || !interpreter) {
+        if (
+            !isLocalConnection(kernelConnectionMetadata) ||
+            !isPythonKernelConnection(kernelConnectionMetadata) ||
+            !interpreter
+        ) {
             return;
         }
         const service = await this.pythonExecFactory.createActivatedEnvironment({

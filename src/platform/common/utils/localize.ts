@@ -582,6 +582,7 @@ export namespace DataScience {
     export const kernelCategoryForRemoteJupyterKernel = (kernelSpecName: string) =>
         l10n.t('({0}) Jupyter Kernel', kernelSpecName);
     export const kernelCategoryForConda = l10n.t('Conda Env');
+    export const kernelCategoryForCondaWithoutPython = l10n.t('Conda Env Without Python');
     export const kernelCategoryForPoetry = l10n.t('Poetry Env');
     export const kernelCategoryForPipEnv = l10n.t('Pipenv Env');
     export const kernelCategoryForPyEnv = l10n.t('PyEnv Env');

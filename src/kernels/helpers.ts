@@ -277,18 +277,9 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                     return kernelConnection.kernelSpec.display_name;
                 }
                 // If this is a conda environment without Python, then don't display `Python` in it.
-                const isEmptyVersion =
-                    !kernelConnection.interpreter.version ||
-                    (!kernelConnection.interpreter.version.major &&
-                        !kernelConnection.interpreter.version.minor &&
-                        !kernelConnection.interpreter.version.patch &&
-                        !kernelConnection.interpreter.version.raw);
                 const isCondaEnvWithoutPython =
                     kernelConnection.interpreter.envType === EnvironmentType.Conda &&
-                    !kernelConnection.interpreter.sysPrefix &&
-                    isEmptyVersion &&
-                    (kernelConnection.interpreter.uri.path === '/python' ||
-                        kernelConnection.interpreter.uri.path === 'python');
+                    kernelConnection.interpreter.isCondaEnvWithoutPython === true;
                 const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (isCondaEnvWithoutPython && envName) {

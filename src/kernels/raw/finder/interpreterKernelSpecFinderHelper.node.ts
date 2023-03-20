@@ -628,19 +628,22 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
     }
 
     await Promise.all(
-        filteredInterpreters.map(async (i) => {
-            // Update spec to have a default spec file
-            const spec = await createInterpreterKernelSpec(i, tempDirForKernelSpecs);
-            const result = PythonKernelConnectionMetadata.create({
-                kernelSpec: spec,
-                interpreter: i,
-                id: getKernelId(spec, i)
-            });
-            traceVerbose(`Kernel for interpreter ${i.id} is ${result.id}`);
-            if (!distinctKernelMetadata.has(result.id)) {
-                distinctKernelMetadata.set(result.id, result);
-            }
-        })
+        filteredInterpreters
+            // Exclude conda envs without Python.
+            .filter((i) => (i.isCondaEnvWithoutPython ? false : true))
+            .map(async (i) => {
+                // Update spec to have a default spec file
+                const spec = await createInterpreterKernelSpec(i, tempDirForKernelSpecs);
+                const result = PythonKernelConnectionMetadata.create({
+                    kernelSpec: spec,
+                    interpreter: i,
+                    id: getKernelId(spec, i)
+                });
+                traceVerbose(`Kernel for interpreter ${i.id} is ${result.id}`);
+                if (!distinctKernelMetadata.has(result.id)) {
+                    distinctKernelMetadata.set(result.id, result);
+                }
+            })
     );
     if (cancelToken.isCancellationRequested) {
         return [];
