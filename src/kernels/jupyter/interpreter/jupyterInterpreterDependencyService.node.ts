@@ -55,7 +55,9 @@ function sortProductsInOrderForInstallation(products: Product[]) {
  * @param {string} [interpreterName]
  * @returns {string}
  */
-export function getMessageForLibrariesNotInstalled(products: Product[], interpreterName?: string): string {
+export function getMessageForLibrariesNotInstalled(products: Product[], interpreter: PythonEnvironment): string {
+    const interpreterName =
+        interpreter.displayName || interpreter.envName || interpreter.envPath?.fsPath || interpreter.uri.fsPath;
     // Even though kernelspec cannot be installed, display it so user knows what is missing.
     const names = products
         .map((product) => ProductNames.get(product))
@@ -141,7 +143,7 @@ export class JupyterInterpreterDependencyService {
 
             const message = getMessageForLibrariesNotInstalled(
                 pipInstalledInNonCondaEnv === false ? [Product.pip].concat(missingProducts) : missingProducts,
-                interpreter.displayName
+                interpreter
             );
             sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
                 action: 'displayed',

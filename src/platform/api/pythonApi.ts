@@ -4,13 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { EventEmitter, Event, Uri, ExtensionMode, CancellationTokenSource, CancellationToken } from 'vscode';
-import {
-    IPythonApiProvider,
-    IPythonExtensionChecker,
-    PythonApi,
-    PythonEnvironmentV2,
-    PythonEnvironment_PythonApi
-} from './types';
+import { IPythonApiProvider, IPythonExtensionChecker, PythonApi, PythonEnvironment_PythonApi } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -376,8 +370,8 @@ type InterpreterId = string;
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterService implements IInterpreterService {
-    private readonly didChangeInterpreter = new EventEmitter<void>();
-    private readonly didChangeInterpreters = new EventEmitter<void>();
+    private readonly didChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
+    private readonly didChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
     private readonly _onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
     public onDidRemoveInterpreter = this._onDidRemoveInterpreter.event;
     private eventHandlerAdded?: boolean;
@@ -437,12 +431,12 @@ export class InterpreterService implements IInterpreterService {
             this.disposables
         );
     }
-    public get onDidChangeInterpreter(): Event<void> {
+    public get onDidChangeInterpreter(): Event<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreter.event;
     }
 
-    public get onDidChangeInterpreters(): Event<void> {
+    public get onDidChangeInterpreters(): Event<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
         return this.didChangeInterpreters.event;
     }
@@ -451,10 +445,10 @@ export class InterpreterService implements IInterpreterService {
         this.hookupOnDidChangeInterpreterEvent();
         return Array.from(this._interpreters.values()).map((item) => item.resolved);
     }
-    public get environments(): readonly PythonEnvironmentV2[] {
+    public get environmentsFound(): boolean {
         this.getApi().catch(noop);
         this.hookupOnDidChangeInterpreterEvent();
-        return this.api?.environments?.known || [];
+        return (this.api?.environments?.known.length ?? 0) > 0;
     }
     private getInterpretersCancellation?: CancellationTokenSource;
     private getInterpreters(): Promise<PythonEnvironment[]> {
@@ -674,25 +668,44 @@ export class InterpreterService implements IInterpreterService {
             ) {
                 this._interpreters.set(env.id, { resolved });
                 if (triggerChangeEvent) {
-                    this.triggerEventIfAllowed(this.didChangeInterpreters);
+                    this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
                 }
             }
             return resolved;
         }
     }
-    private pendingEventTriggers = new Set<EventEmitter<void>>();
-    private triggerEventIfAllowed(eventEmitter: EventEmitter<void>) {
+    private pendingInterpreterChangeEventTriggers = new Map<InterpreterId, PythonEnvironment | undefined>();
+    private pendingInterpretersChangeEventTriggers = new Map<InterpreterId, PythonEnvironment | undefined>();
+    private triggerEventIfAllowed(
+        changeType: 'interpreterChangeEvent' | 'interpretersChangeEvent',
+        interpreter?: PythonEnvironment
+    ) {
+        if (changeType === 'interpreterChangeEvent') {
+            this.pendingInterpreterChangeEventTriggers.set(interpreter?.id || '', interpreter);
+        } else {
+            this.pendingInterpretersChangeEventTriggers.set(interpreter?.id || '', interpreter);
+        }
         if (!this.pauseEnvDetection) {
-            eventEmitter.fire();
-            this.pendingEventTriggers.delete(eventEmitter);
             this.triggerPendingEvents();
             return;
         }
-        this.pendingEventTriggers.add(eventEmitter);
     }
     private triggerPendingEvents() {
-        Array.from(this.pendingEventTriggers).forEach((item) => item.fire());
-        this.pendingEventTriggers.clear();
+        this.pendingInterpreterChangeEventTriggers.forEach((interpreter) =>
+            this.didChangeInterpreter.fire(interpreter)
+        );
+        this.pendingInterpreterChangeEventTriggers.clear();
+        const interpreters = Array.from(this.pendingInterpretersChangeEventTriggers.values());
+        if (interpreters.length) {
+            const nonEmptyInterpreterList = interpreters.filter((item) => !!item) as PythonEnvironment[];
+            if (nonEmptyInterpreterList.length !== interpreters.length && nonEmptyInterpreterList.length === 0) {
+                // Trigger an empty event.
+                this.didChangeInterpreters.fire([]);
+            } else {
+                this.didChangeInterpreters.fire(nonEmptyInterpreterList);
+            }
+        }
+        this.pendingInterpretersChangeEventTriggers.clear();
     }
     private async getApi(): Promise<ProposedExtensionAPI | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
@@ -791,7 +804,7 @@ export class InterpreterService implements IInterpreterService {
                 // Possible one of the environments was resolve even before this method started.
                 // E.g. we got active interpreter details, and then we came here.
                 // At this point the env is already resolved, but we did not trigger a change event.
-                this.triggerEventIfAllowed(this.didChangeInterpreters);
+                this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
             } catch (ex) {
                 traceError(`Failed to refresh list of interpreters and get their details`, ex);
             }
@@ -856,7 +869,7 @@ export class InterpreterService implements IInterpreterService {
                             traceVerbose(`Detected change in Active Python environment via Python API`);
                             this.interpreterListCachePromise = undefined;
                             this.workspaceCachedActiveInterpreter.clear();
-                            this.triggerEventIfAllowed(this.didChangeInterpreter);
+                            this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
                         },
                         this,
                         this.disposables
@@ -871,8 +884,8 @@ export class InterpreterService implements IInterpreterService {
                             this.populateCachedListOfInterpreters(true).finally(() => {
                                 if (e.type === 'remove') {
                                     if (!this._interpreters.has(e.env.id)) {
-                                        this.triggerEventIfAllowed(this.didChangeInterpreter);
-                                        this.triggerEventIfAllowed(this.didChangeInterpreters);
+                                        this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
+                                        this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
                                         this._onDidRemoveInterpreter.fire({ id: e.env.id });
                                     }
                                 }
