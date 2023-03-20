@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import {
+    CancellationTokenSource,
     commands,
     EventEmitter,
     NotebookControllerAffinity,
@@ -12,11 +13,18 @@ import {
     Uri,
     window
 } from 'vscode';
+import { DisplayOptions } from '../../../kernels/displayOptions';
+import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
 import { sendKernelTelemetryEvent } from '../../../kernels/telemetry/sendKernelTelemetryEvent';
-import { IKernelFinder, KernelConnectionMetadata } from '../../../kernels/types';
+import {
+    IKernelDependencyService,
+    IKernelFinder,
+    isLocalConnection,
+    KernelConnectionMetadata
+} from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -26,7 +34,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError, traceWarning } from '../../../platform/logging';
 import { INotebookEditorProvider } from '../../types';
-import { IControllerRegistration, INotebookKernelSourceSelector } from '../types';
+import { IControllerRegistration, INotebookKernelSourceSelector, IVSCodeNotebookController } from '../types';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -39,7 +47,8 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService
     ) {
         disposables.push(this);
     }
@@ -230,7 +239,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         }
         const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
         const kernel = await selector.selectLocalKernel(notebook, kind);
-        return kernel ? this.getSelectedController(notebook, kernel)?.id : undefined;
+        return this.getSelectedController(notebook, kernel);
     }
     private async onSelectRemoteKernel(providerId: string, notebook?: NotebookDocument) {
         notebook = notebook || window.activeNotebookEditor?.notebook;
@@ -243,9 +252,12 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         }
         const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
         const kernel = await selector.selectRemoteKernel(notebook, providerId);
-        return kernel ? this.getSelectedController(notebook, kernel)?.id : undefined;
+        return this.getSelectedController(notebook, kernel);
     }
-    private getSelectedController(notebook: NotebookDocument, kernel: KernelConnectionMetadata) {
+    private async getSelectedController(notebook: NotebookDocument, kernel?: KernelConnectionMetadata) {
+        if (!kernel) {
+            return;
+        }
         const controllers = this.controllerRegistration.addOrUpdate(kernel, [
             notebook.notebookType as typeof JupyterNotebookView | typeof InteractiveWindowView
         ]);
@@ -261,6 +273,38 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         controllers
             .find((item) => item.viewType === notebook.notebookType)
             ?.controller.updateNotebookAffinity(notebook, NotebookControllerAffinity.Preferred);
-        return controllers[0].controller;
+
+        const controller = controllers[0];
+        await this.onControllerSelected(notebook, controller);
+        return controller.controller.id;
+    }
+    private async onControllerSelected(notebook: NotebookDocument, controller: IVSCodeNotebookController) {
+        if (
+            isLocalConnection(controller.connection) &&
+            isPythonKernelConnection(controller.connection) &&
+            controller.connection.interpreter?.isCondaEnvWithoutPython &&
+            !this.isWebExtension
+        ) {
+            const disposables: IDisposable[] = [];
+            try {
+                const token = new CancellationTokenSource();
+                disposables.push(token);
+                const ui = new DisplayOptions(false);
+                disposables.push(ui);
+                await this.kernelDependency.installMissingDependencies({
+                    resource: notebook.uri,
+                    kernelConnection: controller.connection,
+                    token: token.token,
+                    ui,
+                    cannotChangeKernels: true,
+                    ignoreCache: true,
+                    installWithoutPrompting: true
+                });
+            } catch (ex) {
+                traceError(`Failed to install missing dependencies for Conda kernel ${controller.connection.id}`, ex);
+            } finally {
+                disposeAllDisposables(disposables);
+            }
+        }
     }
 }

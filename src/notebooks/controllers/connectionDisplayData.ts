@@ -17,7 +17,7 @@ import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../platfo
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { EnvironmentType } from '../../platform/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 export interface IConnectionDisplayData extends IDisposable {
     readonly onDidChange: Event<ConnectionDisplayData>;
@@ -74,42 +74,42 @@ export class ConnectionDisplayDataProvider {
 
             // If the interpreter information changes, then update the display data.
             if (connection.kind === 'startUsingPythonInterpreter' && connection.interpreter.isCondaEnvWithoutPython) {
-                this.interpreters.onDidChangeInterpreters(
-                    (e) => {
-                        const changedEnv = e.find((env) => env.id === connection.interpreter?.id);
-                        const interpreter = this.interpreters.resolvedEnvironments.find(
-                            (env) => env.id === changedEnv?.id
+                const updateInterpreterInfo = (e: PythonEnvironment[]) => {
+                    const changedEnv = e.find((env) => env.id === connection.interpreter?.id);
+                    const interpreter = this.interpreters.resolvedEnvironments.find((env) => env.id === changedEnv?.id);
+                    if (connection.kind === 'startUsingPythonInterpreter' && interpreter) {
+                        connection.updateInterpreter(interpreter);
+                        const newLabel = getDisplayNameOrNameOfKernelConnection(connection);
+                        const newDescription = getKernelConnectionDisplayPath(
+                            connection,
+                            this.workspace,
+                            this.platform
                         );
-                        if (connection.kind === 'startUsingPythonInterpreter' && interpreter) {
-                            connection.updateInterpreter(interpreter);
-                            const newLabel = getDisplayNameOrNameOfKernelConnection(connection);
-                            const newDescription = getKernelConnectionDisplayPath(
-                                connection,
-                                this.workspace,
-                                this.platform
-                            );
-                            const newCategory = getKernelConnectionCategorySync(connection);
-                            let changed = false;
-                            if (newLabel !== newDetails.label) {
-                                newDetails.label = newLabel;
-                                changed = true;
-                            }
-                            if (newDescription !== newDetails.description) {
-                                newDetails.description = newDescription;
-                                changed = true;
-                            }
-                            if (newCategory !== newDetails.category) {
-                                newDetails.category = newCategory;
-                                changed = true;
-                            }
-                            if (changed) {
-                                newDetails.triggerChange();
-                            }
+                        const newCategory = getKernelConnectionCategorySync(connection);
+                        let changed = false;
+                        if (newLabel !== newDetails.label) {
+                            newDetails.label = newLabel;
+                            changed = true;
                         }
-                    },
+                        if (newDescription !== newDetails.description) {
+                            newDetails.description = newDescription;
+                            changed = true;
+                        }
+                        if (newCategory !== newDetails.category) {
+                            newDetails.category = newCategory;
+                            changed = true;
+                        }
+                        if (changed) {
+                            newDetails.triggerChange();
+                        }
+                    }
+                };
+                this.interpreters.onDidChangeInterpreter(
+                    (e) => (e ? updateInterpreterInfo([e]) : undefined),
                     this,
                     this.disposables
                 );
+                this.interpreters.onDidChangeInterpreters(updateInterpreterInfo, this, this.disposables);
             }
         }
         const details: ConnectionDisplayData = this.details.get(connection.id)!;

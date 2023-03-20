@@ -145,12 +145,26 @@ export namespace DataScience {
         pythonEnvName: string,
         pythonModuleName: string
     ) => l10n.t("Running cells with '{0}' requires the {1} package.", pythonEnvName, pythonModuleName);
+    export const pythonRequiredToLaunchJupyterNotInstalledInConda = (pythonEnvName: string, pythonModuleName: string) =>
+        l10n.t("Running cells with '{0}' requires Python and the {0} package.", pythonEnvName, pythonModuleName);
+
     export const installPackageInstructions = (pythonModuleName: string, commandId: string) =>
         l10n.t(
             "Run the following command to install '{0}' into the Python environment. \nCommand: '{1}'",
             pythonModuleName,
             commandId
         );
+    export const installPythonAndCondaPackageInstructions = (pythonModuleName: string, commandId: string) =>
+        l10n.t(
+            "Run the following command to install Python and '{0}' into the Conda environment. \nCommand: '{1}'",
+            pythonModuleName,
+            commandId
+        );
+
+    export const pythonCondaKernelsWithoutPython = l10n.t(
+        'The Python Runtime and IPyKernel will be automatically installed upon selecting this environment'
+    );
+
     export const selectJupyterInterpreter = l10n.t('Select an Interpreter to start Jupyter');
     export const jupyterInstall = l10n.t('Install');
     export const currentlySelectedJupyterInterpreterForPlaceholder = (pythonEnvPath: string) =>
@@ -309,6 +323,12 @@ export namespace DataScience {
                 'Do not translate the link https://aka.ms/vscodeJupyterKernelCrash'
             ]
         });
+    export const failedToStartKernelAsPythonIsNotInstalledInCondaEnv = (kernelName: string, condaEnvName: string) =>
+        l10n.t(
+            "The kernel '{0}' was not started as Python is not installed in the Conda Environment '{0}'.  \nClick [here](https://aka.ms/KernelFailurePythonNotInstalledInConda) for further details, optionally install Python into the Conda Environment using the command `conda install -n {0} python -y`.",
+            kernelName,
+            condaEnvName
+        );
     export const kernelCrashedDueToCodeInCurrentOrPreviousCell = l10n.t({
         message:
             "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",

@@ -666,6 +666,11 @@ export class InterpreterService implements IInterpreterService {
                 !this._interpreters.get(env.id) ||
                 !areObjectsWithUrisTheSame(resolved, this._interpreters.get(env.id)?.resolved)
             ) {
+                // Also update the interpreter details in place, so that old references get the latest details
+                const info = this._interpreters.get(env.id);
+                if (info?.resolved) {
+                    Object.assign(info.resolved, resolved);
+                }
                 this._interpreters.set(env.id, { resolved });
                 if (triggerChangeEvent) {
                     this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
@@ -881,13 +886,28 @@ export class InterpreterService implements IInterpreterService {
                             if (e.type === 'remove') {
                                 this._interpreters.delete(e.env.id);
                             }
+                            // If this is a conda env that was previously resolved,
+                            // & subsequently updated as having python then trigger changes.
+                            const pythonInstalledIntoConda =
+                                e.type === 'update' &&
+                                this._interpreters.get(e.env.id)?.resolved.isCondaEnvWithoutPython &&
+                                e.env.executable.uri
+                                    ? true
+                                    : false;
                             this.populateCachedListOfInterpreters(true).finally(() => {
-                                if (e.type === 'remove') {
-                                    if (!this._interpreters.has(e.env.id)) {
-                                        this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
-                                        this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
-                                        this._onDidRemoveInterpreter.fire({ id: e.env.id });
-                                    }
+                                const info = this._interpreters.get(e.env.id);
+                                if (e.type === 'remove' && !info) {
+                                    this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
+                                    this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
+                                    this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                } else if (
+                                    e.type === 'update' &&
+                                    info &&
+                                    pythonInstalledIntoConda &&
+                                    !info.resolved.isCondaEnvWithoutPython
+                                ) {
+                                    this.triggerEventIfAllowed('interpreterChangeEvent', info.resolved);
+                                    this.triggerEventIfAllowed('interpretersChangeEvent', info.resolved);
                                 }
                             });
                         },
