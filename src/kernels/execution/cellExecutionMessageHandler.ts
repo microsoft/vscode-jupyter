@@ -999,5 +999,6 @@ export class CellExecutionMessageHandler implements IDisposable {
         traceCellMessage(this.cell, `Replace output items in display data ${newOutput.items.length}`);
         task?.replaceOutput(newOutputs, outputToBeUpdated.cell).then(noop, noop);
         this.endTemporaryTask();
+        CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, newOutput);
     }
 }
