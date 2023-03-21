@@ -98,6 +98,7 @@ const config = {
         'commonjs',
         'electron',
         './node_modules/zeromq',
+        './node_modules/zeromqold',
         './node_modules/@vscode/jupyter-ipywidgets7',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
@@ -125,6 +126,7 @@ const config = {
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
         new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
+        new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromqold.js'], log: false } }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
