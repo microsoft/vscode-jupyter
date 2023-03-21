@@ -17,14 +17,17 @@ import { IDisposable } from '../../platform/common/types';
 import { startJupyterServer } from './notebook/helper.node';
 import { runNewPythonFile, waitForLastCellToComplete } from './helpers.node';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { EventEmitter } from 'vscode';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Telemetry validation @iw', function () {
     const disposables: IDisposable[] = [];
     let eventsSent: Set<string> = new Set<string>();
     let originalTelemetryReporter: TelemetryReporter | undefined;
+    const onDidChangeTelemetryLevel = new EventEmitter<'all' | 'error' | 'crash' | 'off'>();
     const testTelemetryReporter: TelemetryReporter = {
         telemetryLevel: 'all',
+        onDidChangeTelemetryLevel: onDidChangeTelemetryLevel.event,
         sendTelemetryEvent: function (
             eventName: string,
             _properties?: TelemetryEventProperties,
