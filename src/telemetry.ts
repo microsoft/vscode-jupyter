@@ -1922,7 +1922,10 @@ export class IEventNamePropertyMapping {
          * Failed to support zmq.
          */
         failed: boolean;
-
+        /**
+         * Whether we tried a fallback to to the older versions of the binaries.
+         */
+        fallbackTried?: boolean;
         /**
          * Whether alpine or not.
          */
@@ -1950,6 +1953,10 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         properties: {
             failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            fallbackTried: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },

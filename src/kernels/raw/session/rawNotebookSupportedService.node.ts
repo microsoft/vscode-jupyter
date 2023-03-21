@@ -1,15 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
-import * as os from 'os';
 import { inject, injectable } from 'inversify';
-import { traceWarning } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
-import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
-import { noop } from '../../../platform/common/utils/misc';
-import { DistroInfo, getDistroInfo } from '../../../platform/common/platform/linuxDistro.node';
+import { getZeroMQ } from './zeromq.node';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
 @injectable()
@@ -41,56 +36,12 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             return false;
         }
         try {
-            require('zeromq');
+            getZeroMQ();
             this._isSupported = true;
-            sendZMQTelemetry(true).catch(noop);
         } catch (e) {
-            sendZMQTelemetry(false).catch(noop);
-            traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
             this._isSupported = false;
         }
 
         return this._isSupported;
-    }
-}
-async function sendZMQTelemetry(failed: boolean) {
-    const info = await getDistroInfo().catch(() => <DistroInfo>{ name: '', id: '', version: '', version_id: '' });
-
-    const telemetryInfo = {
-        ...getPlatformInfo(),
-        distro_id: info.id,
-        distro_version_id: info.version_id,
-        failed
-    };
-    sendTelemetryEvent(Telemetry.ZMQSupport, undefined, telemetryInfo);
-}
-function isAlpine(platform: string) {
-    return platform === 'linux' && fs.existsSync('/etc/alpine-release');
-}
-
-/**
- * Gets the current platform details that are used to determine the correct
- * version of zmq binary to be loaded.
- * Source from node_modules/@aminya/node-gyp-build/index.js
- * (@aminya/node-gyp-build is what is used by zeromq.js)
- */
-function getPlatformInfo() {
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const vars: Record<string, any> = (process.config && process.config.variables) || {};
-        const arch = process.env.npm_config_arch || os.arch();
-        const platform = process.env.npm_config_platform || os.platform();
-        const alpine = isAlpine(platform);
-        const libc = process.env.LIBC || (isAlpine(platform) ? 'musl' : 'glibc');
-        const armv = process.env.ARM_VERSION || (arch === 'arm64' ? '8' : vars.arm_version) || '';
-
-        return {
-            alpine: alpine,
-            libc: String(libc),
-            armv: String(armv)
-        };
-    } catch (ex) {
-        traceWarning(`Failed to determine platform information used to load zeromq binary.`, ex);
-        return {};
     }
 }

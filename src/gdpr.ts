@@ -1403,6 +1403,7 @@
 //Telemetry.ZMQSupport
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_ZMQ_SUPPORT" : {
+     "fallbackTried": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether we tried a fallback to to the older versions of the binaries.","owner":"donjayamanne"},
      "alpine": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether alpine or not.","owner":"donjayamanne"},
      "libc": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"libc implementation, from env variable LIBC If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)","owner":"donjayamanne"},
      "armv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arm version","owner":"donjayamanne"},

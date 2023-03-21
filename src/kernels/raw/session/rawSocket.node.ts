@@ -14,6 +14,7 @@ import { IKernelSocket } from '../../types';
 import { IKernelConnection } from '../types';
 import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
 import { EventEmitter } from 'vscode';
+import { getZeroMQ } from './zeromq.node';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';
@@ -157,7 +158,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
     private generateChannels(connection: IKernelConnection): IChannels {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const zmq = require('zeromq') as typeof import('zeromq');
+        const zmq = getZeroMQ();
 
         // Need a routing id for them to share.
         const routingId = uuid();
