@@ -2,20 +2,24 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs-extra';
+import * as path from '../../../platform/vscode-path/path';
 import * as os from 'os';
 import { traceInfo, traceWarning } from '../../../platform/logging';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { noop } from '../../../platform/common/utils/misc';
 import { DistroInfo, getDistroInfo } from '../../../platform/common/platform/linuxDistro.node';
-
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+const zeromqModuleName = `${'zeromq'}`;
 export function getZeroMQ(): typeof import('zeromq') {
     try {
-        const zmq = require('zeromq');
+        const requireFunc = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
+        const zmq = requireFunc(zeromqModuleName);
         sendZMQTelemetry(true).catch(noop);
         return zmq;
     } catch (e) {
         try {
-            const zmq = require('zeromqold');
+            const requireFunc = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
+            const zmq = requireFunc(path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules', 'zeromqold'));
             traceInfo('ZMQ loaded via fallback mechanism.');
             sendZMQTelemetry(true, true).catch(noop);
             return zmq;
