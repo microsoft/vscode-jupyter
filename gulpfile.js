@@ -194,11 +194,43 @@ gulp.task('compile-webextension', async () => {
 });
 gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
 
+/**
+ * On CI we download the binaries from gitbhub.
+ * Sometimes there can be too many requests and we get a 403.
+ * We need to ensure we never run into this, else only some of the binaries will be downloaded and the vsix will contain partial binaries.
+ */
+async function verifyZmqBinaries() {
+    const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromq', 'prebuilds');
+    const files = [
+        path.join('darwin-arm64', 'node.napi.glibc.node'),
+        path.join('darwin-arm64', 'node.napi.glibc.node'),
+        path.join('darwin-x64', 'node.napi.glibc.node'),
+        path.join('linux-arm', 'node.napi.glibc.node'),
+        path.join('linux-arm64', 'node.napi.glibc.node'),
+        path.join('linux-x64', 'node.napi.musl.node'),
+        path.join('win32-ia32', 'node.napi.glibc.node'),
+        path.join('linux-x64', 'node.napi.glibc.node'),
+        path.join('win32-x64', 'node.napi.glibc.node')
+    ].map((file) => path.join(preBuildsFolder, file));
+    const filesNotDownloaded = [];
+    await Promise.all(
+        files.map((file) =>
+            fs
+                .pathExists(file)
+                .then((found) => (found ? undefined : filesNotDownloaded.push(file.replace(preBuildsFolder, ''))))
+        )
+    );
+
+    if (filesNotDownloaded.length) {
+        throw new Error(`Missing zeromq binaries. ${filesNotDownloaded.join(', ')}`);
+    }
+}
+
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
+        await verifyZmqBinaries();
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
-        console.log('Building ipywidgets in dev mode');
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
