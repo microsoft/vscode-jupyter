@@ -24,18 +24,11 @@ extends:
   parameters:
     l10nSourcePaths: ./src
     buildSteps:
-      - script: |
-          sudo apt-get update
-          sudo apt-get install libpango1.0-dev libgif-dev
-        displayName: Install dependencies for zeromq.js
-
       - script: npm i -g npm@8.15.1
         displayName: Install npm 8.15.1
 
-      - script: npm ci --foreground-scripts
+      - script: npm ci
         displayName: Install dependencies
-        env:
-          npm_config_build_from_source: true
 
       - script: gulp clean
         displayName: Clean

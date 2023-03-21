@@ -7,7 +7,7 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
-const { downloadZMQ } = require('@vscode/zeromq');
+
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
  * However it expects to be talking to a websocket which is serializing the messages to strings.
@@ -206,6 +206,3 @@ createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
 fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
-downloadZMQ()
-    .then(() => process.exit(0))
-    .catch((ex) => console.error('Failed to download ZMQ', ex));
