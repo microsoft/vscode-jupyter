@@ -224,8 +224,16 @@ async function verifyZmqBinaries() {
     if (filesNotDownloaded.length) {
         throw new Error(`Missing zeromq binaries. ${filesNotDownloaded.join(', ')}`);
     }
+
+    await deleteZMQBuildFolder();
 }
 
+async function deleteZMQBuildFolder() {
+    const buildFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'build');
+    if (fs.existsSync(buildFolder)) {
+        fs.rmSync(buildFolder, { recursive: true, force: true });
+    }
+}
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
         await verifyZmqBinaries();
