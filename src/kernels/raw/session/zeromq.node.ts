@@ -14,17 +14,17 @@ export function getZeroMQ(): typeof import('zeromq') {
     try {
         const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
         const zmq = requireFunc(zeromqModuleName);
-        sendZMQTelemetry(true).catch(noop);
+        sendZMQTelemetry(false).catch(noop);
         return zmq;
     } catch (e) {
         try {
             const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
             const zmq = requireFunc(path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules', 'zeromqold'));
             traceInfo('ZMQ loaded via fallback mechanism.');
-            sendZMQTelemetry(true, true).catch(noop);
+            sendZMQTelemetry(false, true).catch(noop);
             return zmq;
         } catch (e) {
-            sendZMQTelemetry(false, true).catch(noop);
+            sendZMQTelemetry(true, true).catch(noop);
             traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
             throw e;
         }
