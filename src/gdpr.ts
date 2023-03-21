@@ -1406,8 +1406,6 @@
      "alpine": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether alpine or not.","owner":"donjayamanne"},
      "libc": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"libc implementation, from env variable LIBC If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)","owner":"donjayamanne"},
      "armv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arm version","owner":"donjayamanne"},
-     "distro_name": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro name.","owner":"donjayamanne"},
-     "distro_version": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro version.","owner":"donjayamanne"},
      "distro_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro id.","owner":"donjayamanne"},
      "distro_version_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro version id.","owner":"donjayamanne"},
      "${include}": [

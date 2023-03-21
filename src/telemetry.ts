@@ -1937,14 +1937,6 @@ export class IEventNamePropertyMapping {
          */
         armv?: string;
         /**
-         * Linux distro name.
-         */
-        distro_name?: string;
-        /**
-         * Linux distro version.
-         */
-        distro_version: string;
-        /**
          * Linux distro id.
          */
         distro_id: string;
@@ -1970,14 +1962,6 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             armv: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            distro_name: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            distro_version: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },
