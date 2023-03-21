@@ -23,10 +23,11 @@ export function getZeroMQ(): typeof import('zeromq') {
             traceInfo('ZMQ loaded via fallback mechanism.');
             sendZMQTelemetry(false, true).catch(noop);
             return zmq;
-        } catch (e) {
+        } catch (e2) {
             sendZMQTelemetry(true, true).catch(noop);
             traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
-            throw e;
+            traceWarning(`Exception while attempting zmq (fallback) :`, e2.message || e2); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
+            throw e2;
         }
     }
 }
