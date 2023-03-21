@@ -38,7 +38,7 @@ import { traceInfo } from '../../../platform/logging';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/interpreter/types.node';
 
-suite.only('kernel Process', () => {
+suite('kernel Process', () => {
     let kernelProcess: KernelProcess;
     let processServiceFactory: IProcessServiceFactory;
     const connection: IKernelConnection = {
@@ -410,7 +410,7 @@ suite.only('kernel Process', () => {
     });
 });
 
-suite.only('Kernel Process', () => {
+suite('Kernel Process', () => {
     let processService: IProcessService;
     let pythonExecFactory: IPythonExecutionFactory;
     const disposables: IDisposable[] = [];
