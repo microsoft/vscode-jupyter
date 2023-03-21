@@ -98,6 +98,7 @@ const config = {
         'commonjs',
         'electron',
         './node_modules/zeromq',
+        './node_modules/zeromqold',
         './node_modules/@vscode/jupyter-ipywidgets7',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
@@ -125,10 +126,15 @@ const config = {
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
         new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
+        new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromqold.js'], log: false } }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/@aminya/node-gyp-build/**/*' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.js' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.node' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.json' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] }),
         new webpack.DefinePlugin({
             IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
                 typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
