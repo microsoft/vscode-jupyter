@@ -58,7 +58,8 @@ function getPlatformInfo() {
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const vars: Record<string, any> = (process.config && process.config.variables) || {};
-        const arch = process.env.npm_config_arch || os.arch();
+        const npmConfigArch = (process.env.npm_config_arch || '').trim();
+        const arch = npmConfigArch || os.arch();
         const platform = process.env.npm_config_platform || os.platform();
         const alpine = isAlpine(platform);
         const libc = process.env.LIBC || (isAlpine(platform) ? 'musl' : 'glibc');
@@ -67,7 +68,8 @@ function getPlatformInfo() {
         return {
             alpine: alpine,
             libc: String(libc),
-            armv: String(armv)
+            armv: String(armv),
+            zmqarch: arch
         };
     } catch (ex) {
         traceWarning(`Failed to determine platform information used to load zeromq binary.`, ex);
