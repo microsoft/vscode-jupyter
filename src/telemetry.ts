@@ -1936,6 +1936,10 @@ export class IEventNamePropertyMapping {
          */
         libc?: string;
         /**
+         * arch
+         */
+        arch?: string;
+        /**
          * arm version
          */
         armv?: string;
@@ -1961,6 +1965,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             alpine: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            arch: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },

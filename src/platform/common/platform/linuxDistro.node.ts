@@ -43,7 +43,6 @@ const knownDistros = [
     'Gentoo',
     'Kali',
     'KDE',
-    'Kali',
     'Knoppix',
     'Kubuntu',
     'Linux',
