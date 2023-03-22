@@ -68,7 +68,7 @@ function getPlatformInfo() {
             alpine: alpine,
             libc: String(libc),
             armv: String(armv),
-            arch
+            zmqarch: arch
         };
     } catch (ex) {
         traceWarning(`Failed to determine platform information used to load zeromq binary.`, ex);

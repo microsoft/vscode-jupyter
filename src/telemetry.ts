@@ -1938,7 +1938,7 @@ export class IEventNamePropertyMapping {
         /**
          * arch
          */
-        arch?: string;
+        zmqarch?: string;
         /**
          * arm version
          */
@@ -1968,7 +1968,7 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },
-            arch: {
+            zmqarch: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             },
