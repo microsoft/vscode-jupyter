@@ -93,7 +93,8 @@ import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { IInterpreterPackages } from './platform/interpreter/types';
-import { homedir, platform, arch } from 'os';
+import { homedir, platform, arch, userInfo } from 'os';
+import { getUserHomeDir } from './platform/common/utils/platform.node';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -247,7 +248,7 @@ function addConsoleLogger() {
 
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel));
+    registerLogger(new OutputChannelLogger(standardOutputChannel, getUserHomeDir().fsPath, userInfo().username));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
