@@ -54,7 +54,6 @@ import { IServiceContainer } from '../../../platform/ioc/types';
  * Computes and tracks the preferred kernel for a notebook.
  * Preferred is determined from the metadata in the notebook. If no metadata is found, the default kernel is used.
  */
-@injectable()
 export class ControllerPreferredService {
     private preferredControllers = new WeakMap<NotebookDocument, IVSCodeNotebookController>();
     private preferredCancelTokens = new WeakMap<NotebookDocument, CancellationTokenSource>();
