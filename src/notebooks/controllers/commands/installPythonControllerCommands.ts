@@ -33,6 +33,7 @@ import { IControllerRegistration } from '../types';
 export class InstallPythonControllerCommands implements IExtensionSyncActivationService {
     private showInstallPythonExtensionContext: ContextKey;
     private showInstallPythonContext: ContextKey;
+    private interpretersRefreshedOnceBefore = false;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
     private executingCells: WeakSet<NotebookCell> = new WeakSet<NotebookCell>();
     constructor(
@@ -108,7 +109,8 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                 }
 
                 // Python extension is installed, let's wait for interpreters to be detected
-                if (!this.interpreterService.environmentsFound) {
+                if (!this.interpreterService.environmentsFound && !this.interpretersRefreshedOnceBefore) {
+                    this.interpretersRefreshedOnceBefore = true;
                     await this.interpreterService.refreshInterpreters();
                 }
 
