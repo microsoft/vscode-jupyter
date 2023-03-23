@@ -85,7 +85,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         this.disposables.push(this._onDidChangeKernels);
         interpreterService.onDidChangeInterpreters(
             () => {
-                traceVerbose(`refreshData after detecting changes to interpreters`);
+                traceVerbose(`refreshData after detecting changes to interpreters, ${new Error('').stack}`);
                 this.refreshCancellation?.cancel();
                 this.refreshData().catch(noop);
             },
@@ -281,7 +281,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             : [];
 
         traceVerbose(
-            `Listing kernels for ${interpreters.length} interpreters (${interpreters.map((i) => i.id).join(', ')})`
+            `Listing kernels for ${interpreters.length} interpreters (${interpreters.map((i) => i.id).join(', ')}), ${
+                new Error('').stack
+            }`
         );
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.

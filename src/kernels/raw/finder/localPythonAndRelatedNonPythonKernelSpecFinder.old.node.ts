@@ -78,7 +78,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinderOld extends LocalKern
         this.disposables.push(this._onDidChangeKernels);
         interpreterService.onDidChangeInterpreters(
             () => {
-                traceVerbose(`refreshData after detecting changes to interpreters`);
+                traceVerbose(
+                    `refreshData after detecting changes to interpreters (old), called from ${new Error().stack}}`
+                );
                 this.refreshCancellation?.cancel();
                 this.refreshData().catch(noop);
             },

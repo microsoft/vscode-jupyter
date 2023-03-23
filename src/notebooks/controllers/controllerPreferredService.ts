@@ -428,6 +428,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         preferredInterpreter: PythonEnvironment | undefined,
         serverId: string | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
+        traceVerbose(`findPreferredKernelExactMatch, called from ${new Error('').stack}`);
         const uri = notebook.uri;
         let preferredConnection: KernelConnectionMetadata | undefined;
         const rankedConnections = await this.kernelRankHelper.rankKernels(

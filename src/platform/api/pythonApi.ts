@@ -479,6 +479,7 @@ export class InterpreterService implements IInterpreterService {
         );
     }
     public async refreshInterpreters(forceRefresh: boolean = false) {
+        traceVerbose(`refreshInterpreters, Cache clear: ${forceRefresh}, called from ${new Error('').stack}`);
         const promise = (async () => {
             const api = await this.getApi();
             if (!api) {
@@ -673,6 +674,7 @@ export class InterpreterService implements IInterpreterService {
                 }
                 this._interpreters.set(env.id, { resolved });
                 if (triggerChangeEvent) {
+                    traceVerbose(`trackResolvedEnvironment called from ${new Error('').stack}}`);
                     this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
                 }
             }
@@ -685,6 +687,11 @@ export class InterpreterService implements IInterpreterService {
         changeType: 'interpreterChangeEvent' | 'interpretersChangeEvent',
         interpreter?: PythonEnvironment
     ) {
+        traceVerbose(
+            `triggerEventIfAllowed Called for ${interpreter?.id} with value ${JSON.stringify(interpreter)} from ${
+                new Error('').stack
+            }`
+        );
         if (changeType === 'interpreterChangeEvent') {
             this.pendingInterpreterChangeEventTriggers.set(interpreter?.id || '', interpreter);
         } else {
@@ -696,11 +703,16 @@ export class InterpreterService implements IInterpreterService {
         }
     }
     private triggerPendingEvents() {
+        traceVerbose(`triggerPendingEvents Called from ${new Error('').stack}`);
         this.pendingInterpreterChangeEventTriggers.forEach((interpreter) =>
             this.didChangeInterpreter.fire(interpreter)
         );
         this.pendingInterpreterChangeEventTriggers.clear();
         const interpreters = Array.from(this.pendingInterpretersChangeEventTriggers.values());
+        traceVerbose(
+            `triggerPendingEvents for ${interpreters.length} && ${interpreters.filter((item) => !!item).length}`
+        );
+
         if (interpreters.length) {
             const nonEmptyInterpreterList = interpreters.filter((item) => !!item) as PythonEnvironment[];
             if (nonEmptyInterpreterList.length !== interpreters.length && nonEmptyInterpreterList.length === 0) {
@@ -746,6 +758,7 @@ export class InterpreterService implements IInterpreterService {
         cancelToken: CancellationToken,
         recursiveCounter = 0
     ): Promise<PythonEnvironment[]> {
+        traceVerbose(`getInterpretersImpl called from ${new Error('').stack}}`);
         if (!this.workspace.isTrusted) {
             return [];
         }
