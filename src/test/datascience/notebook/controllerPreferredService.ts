@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { INotebookMetadata } from '@jupyterlab/nbformat';
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import {
     CancellationToken,
     CancellationTokenSource,
