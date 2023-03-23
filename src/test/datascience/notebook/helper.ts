@@ -669,7 +669,7 @@ async function selectActiveInterpreterController(notebookEditor: NotebookEditor,
     await waitForCondition(
         () => controllerRegistration.getSelected(notebookEditor.notebook) === controller,
         timeout,
-        `Controller ${controller.id} not selected`
+        `Controller ${controller.id} not selected for ${notebookEditor.notebook.uri.toString()} (1)`
     );
 }
 async function selectPythonRemoteKernelConnectionForActiveInterpreter(
@@ -698,7 +698,7 @@ async function selectPythonRemoteKernelConnectionForActiveInterpreter(
     await waitForCondition(
         () => controllerRegistration.getSelected(notebookEditor.notebook) === controller,
         timeout,
-        `Controller ${controller.id} not selected`
+        `Controller ${controller.id} not selected for ${notebookEditor.notebook.uri.toString()} (2)`
     );
 }
 export async function waitForKernelToGetAutoSelected(

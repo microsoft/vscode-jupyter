@@ -400,7 +400,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                     added.push(controller);
                     controller.onNotebookControllerSelected(
                         (e) => {
-                            traceInfoIfCI(`Controller ${e.controller?.id} selected`);
+                            traceInfoIfCI(`Controller ${e.controller?.id} selected for ${e.notebook.uri.toString()}}`);
                             this.selectedControllers.set(e.notebook.uri.toString(), e.controller);
                             // Now notify out that we have updated a notebooks controller
                             this.selectedEmitter.fire(e);
