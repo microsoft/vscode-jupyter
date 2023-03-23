@@ -16,7 +16,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/a
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { Commands, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
+import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -25,7 +25,6 @@ import { traceError, traceVerbose } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getLanguageOfNotebookDocument } from '../../languages/helpers';
-import { IControllerRegistration } from '../types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
@@ -43,11 +42,9 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(IControllerRegistration) private readonly controllerRegistry: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         // Context keys to control when these commands are shown
         this.showInstallPythonExtensionContext = new ContextKey(
@@ -185,13 +182,7 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                         action: 'success'
                     });
 
-                    if (this.featureManager.features.kernelPickerType === 'Insiders') {
-                        return true;
-                    } else {
-                        // Trigger a load of our notebook controllers, we want to await it here so that any in
-                        // progress executions get passed to the suggested controller
-                        await this.controllerRegistry.loaded;
-                    }
+                    return true;
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {

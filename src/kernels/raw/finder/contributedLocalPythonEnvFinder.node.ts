@@ -17,8 +17,8 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../int
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -56,7 +56,7 @@ export class ContributedLocalPythonEnvFinder
 
     private cache: PythonKernelConnectionMetadata[] = [];
     constructor(
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper)
+        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,

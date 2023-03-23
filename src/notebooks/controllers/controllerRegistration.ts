@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { isPythonNotebook } from '../../kernels/helpers';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -23,20 +22,15 @@ import {
     IConfigurationService,
     IExtensionContext,
     IBrowserService,
-    IFeaturesManager,
-    IDisposable,
-    IsWebExtension
+    IDisposable
 } from '../../platform/common/types';
-import { getNotebookMetadata } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
-import { createActiveInterpreterController } from './helpers';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import {
     IControllerRegistration,
@@ -92,15 +86,12 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {}
     activate(): void {
         // Make sure to reload whenever we do something that changes state
@@ -147,20 +138,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
 
         this.loadControllers();
-        let previousKernelPickerType = this.featuresManager.features.kernelPickerType;
-        this.featuresManager.onDidChangeFeatures(
-            () => {
-                if (previousKernelPickerType === this.featuresManager.features.kernelPickerType) {
-                    return;
-                }
-                previousKernelPickerType = this.featuresManager.features.kernelPickerType;
-                // With the old kernel picker some controllers can get disposed.
-                // Hence to be on the safe side, when switching between the old and new kernel picker, reload the controllers.
-                this.loadControllers();
-            },
-            this,
-            this.disposables
-        );
     }
     private loadControllers() {
         this.controllersPromise = this.loadControllersImpl();
@@ -179,31 +156,9 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         ) {
             return;
         }
-
-        if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
-            const useNewKernelPicker = this.featuresManager.features.kernelPickerType === 'Insiders';
-            // No need to always display active python env in VS Codes controller list.
-            if (!useNewKernelPicker) {
-                // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
-                createActiveInterpreterController(JupyterNotebookView, document.uri, this.interpreters, this).catch(
-                    noop
-                );
-            }
-        }
     }
 
     private async loadControllersImpl() {
-        if (this.extensionChecker.isPythonExtensionInstalled && !this.isWebExtension) {
-            // This is temporary, when we create an MRU list in VS Code or the like, this should go away.
-            // Debt https://github.com/microsoft/vscode-jupyter/issues/11988
-
-            // First thing is to always create the controller for the active interpreter only if we don't have any remote connections.
-            // This reduces flickering (changing controllers from one to another).
-            const useNewKernelPicker = this.featuresManager.features.kernelPickerType === 'Insiders';
-            if (this.serverUriStorage.isLocalLaunch && !useNewKernelPicker) {
-                await createActiveInterpreterController(JupyterNotebookView, undefined, this.interpreters, this);
-            }
-        }
         const connections = this.kernelFinder.kernels;
         traceVerbose(`Found ${connections.length} cached controllers`);
         this.createNotebookControllers(connections);
@@ -287,23 +242,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     }
 
     private onDidChangeUri() {
-        // This logic only applies to old kernel picker which supports local vs remote, not both and not multiple remotes.
-        if (this.featuresManager.features.kernelPickerType === 'Stable') {
-            // Our list of metadata could be out of date. Remove old ones that don't match the uri
-            if (this.serverUriStorage.currentServerId) {
-                this.registered.forEach((c) => {
-                    if (
-                        isRemoteConnection(c.connection) &&
-                        this.serverUriStorage.currentServerId !== c.connection.serverId
-                    ) {
-                        traceWarning(
-                            `Deleting controller ${c.id} as it is associated with a connection that has been removed`
-                        );
-                        c.dispose();
-                    }
-                });
-            }
-        }
         // Update the list of controllers
         this.onDidChangeFilter();
     }
@@ -438,8 +376,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.serviceContainer.get<IBrowserService>(IBrowserService),
                         this.extensionChecker,
                         this.serviceContainer,
-                        this.serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider),
-                        this.featuresManager
+                        this.serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     const controllerDisposables: IDisposable[] = [];
@@ -506,14 +443,8 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         return this.registeredControllers.get(id);
     }
 
-    public isFiltered(metadata: KernelConnectionMetadata): boolean {
-        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-            return false;
-        }
-        const userFiltered = this.kernelFilter.isKernelHidden(metadata);
-        const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
-
-        return userFiltered || urlFiltered;
+    public isFiltered(_metadata: KernelConnectionMetadata): boolean {
+        return false;
     }
 
     private getControllerId(

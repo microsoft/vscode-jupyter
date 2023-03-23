@@ -7,7 +7,7 @@ import { instance, mock, when } from 'ts-mockito';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable, IExtensions, IFeaturesManager } from '../../../platform/common/types';
+import { IDisposable, IExtensions } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { createEventHandler } from '../../../test/common';
@@ -95,8 +95,6 @@ suite('Contributed Python Kernel Finder', () => {
         when(pythonKernelFinder.status).thenReturn('idle');
         when(pythonKernelFinder.onDidChangeKernels).thenReturn(onDidChangePythonKernels.event);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        const featuresManager = mock<IFeaturesManager>();
-        when(featuresManager.features).thenReturn({ kernelPickerType: 'Insiders' });
         finder = new ContributedLocalPythonEnvFinder(
             instance(pythonKernelFinder),
             instance(kernelFinder),

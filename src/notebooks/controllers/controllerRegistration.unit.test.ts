@@ -25,13 +25,7 @@ import {
     IWorkspaceService
 } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import {
-    IBrowserService,
-    IConfigurationService,
-    IDisposable,
-    IExtensionContext,
-    IFeaturesManager
-} from '../../platform/common/types';
+import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -93,7 +87,6 @@ suite('Controller Registration', () => {
     let extensionChecker: IPythonExtensionChecker;
     let interpreters: IInterpreterService;
     let registration: ControllerRegistration;
-    let featureManager: IFeaturesManager;
     let serverUriStorage: IJupyterServerUriStorage;
     let kernelFilter: KernelFilterService;
     let onDidChangeKernels: EventEmitter<void>;
@@ -136,7 +129,6 @@ suite('Controller Registration', () => {
         kernelFinder = mock<IKernelFinder>();
         extensionChecker = mock<IPythonExtensionChecker>();
         interpreters = mock<IInterpreterService>();
-        featureManager = mock<IFeaturesManager>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
         kernelFilter = mock<KernelFilterService>();
         contributedLocalKernelFinder = mock<IContributedKernelFinder>();
@@ -223,7 +215,6 @@ suite('Controller Registration', () => {
         when(interpreters.resolvedEnvironments).thenReturn([activePythonEnv]);
         when(kernelFilter.isKernelHidden(anything())).thenReturn(false);
         when(vscNotebook.notebookDocuments).thenReturn([]);
-        when(featureManager.features).thenReturn({ kernelPickerType: 'Insiders' });
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(interpreters.getActiveInterpreter(anything())).thenResolve(activePythonEnv);
 
@@ -241,15 +232,12 @@ suite('Controller Registration', () => {
                 registration = new ControllerRegistration(
                     instance(vscNotebook),
                     disposables,
-                    instance(featureManager),
                     instance(kernelFilter),
                     instance(workspace),
                     instance(extensionChecker),
                     instance(serviceContainer),
                     instance(serverUriStorage),
-                    instance(kernelFinder),
-                    instance(interpreters),
-                    web
+                    instance(kernelFinder)
                 );
             });
             test('No controllers created if there are no kernels', async () => {
@@ -271,7 +259,6 @@ suite('Controller Registration', () => {
                 if (web) {
                     return this.skip();
                 }
-                when(featureManager.features).thenReturn({ kernelPickerType: 'Insiders' });
                 when(interpreters.getActiveInterpreter(anything())).thenResolve(activePythonEnv);
                 registration.addOrUpdate = () => {
                     addOrUpdateCalled = true;
@@ -286,35 +273,10 @@ suite('Controller Registration', () => {
                 assert.isFalse(addOrUpdateCalled, 'addOrUpdate should not be called');
                 assert.isFalse(stubCtor.called, 'VSCodeNotebookController should not be called');
             });
-            test('Create controller for active interpreter with older kernel picker', async function () {
-                if (web) {
-                    return this.skip();
-                }
-                when(featureManager.features).thenReturn({ kernelPickerType: 'Stable' });
-                when(interpreters.getActiveInterpreter(anything())).thenResolve(activePythonEnv);
-                when(serverUriStorage.isLocalLaunch).thenReturn(true);
-                const controller = mock<IVSCodeNotebookController>();
-                (instance(controller) as any).then = undefined;
-                when(controller.connection).thenReturn(instance(mock<KernelConnectionMetadata>()));
-                registration.addOrUpdate = () => {
-                    addOrUpdateCalled = true;
-                    return [instance(controller)];
-                };
-                const stubCtor = sinon.stub(VSCodeNotebookController, 'create');
-
-                registration.activate();
-                await clock.runAllAsync();
-                await registration.loaded;
-
-                assert.isTrue(addOrUpdateCalled, 'addOrUpdate should be called');
-                assert.isFalse(stubCtor.called, 'VSCodeNotebookController should not be called');
-            });
             test('Create controller for discovered kernels', async function () {
                 if (web) {
                     return this.skip();
                 }
-                when(featureManager.features).thenReturn({ kernelPickerType: 'Stable' });
-                when(featureManager.features).thenReturn({ kernelPickerType: 'Insiders' });
                 when(interpreters.getActiveInterpreter(anything())).thenResolve(undefined);
                 when(kernelFinder.kernels).thenReturn([
                     activePythonConnection,
@@ -345,8 +307,6 @@ suite('Controller Registration', () => {
                 if (web) {
                     return this.skip();
                 }
-                when(featureManager.features).thenReturn({ kernelPickerType: 'Stable' });
-                when(featureManager.features).thenReturn({ kernelPickerType: 'Insiders' });
                 when(interpreters.getActiveInterpreter(anything())).thenResolve(undefined);
                 when(kernelFinder.kernels).thenReturn([
                     activePythonConnection,
@@ -437,8 +397,6 @@ suite('Controller Registration', () => {
                 if (web) {
                     return this.skip();
                 }
-                when(featureManager.features).thenReturn({ kernelPickerType: 'Stable' });
-                when(featureManager.features).thenReturn({ kernelPickerType: 'Insiders' });
                 when(interpreters.getActiveInterpreter(anything())).thenResolve(undefined);
                 when(kernelFinder.kernels).thenReturn([
                     activePythonConnection,

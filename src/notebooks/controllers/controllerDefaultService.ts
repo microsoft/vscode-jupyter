@@ -8,7 +8,7 @@ import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connectio
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { IDisposableRegistry, IFeaturesManager, IsWebExtension, Resource } from '../../platform/common/types';
+import { IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../platform/logging';
@@ -32,8 +32,7 @@ export class ControllerDefaultService implements IControllerDefaultService {
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
-        @inject(IsWebExtension) private readonly isWeb: boolean,
-        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
+        @inject(IsWebExtension) private readonly isWeb: boolean
     ) {}
     public async computeDefaultController(
         resource: Resource,
@@ -69,10 +68,6 @@ export class ControllerDefaultService implements IControllerDefaultService {
                 ? PYTHON_LANGUAGE
                 : metadata.language_info.name;
         const kernelName = metadata ? metadata.kernelspec?.name : undefined;
-        if (this.featureManager.features.kernelPickerType === 'Stable') {
-            // Get all remote kernels
-            await this.registration.loaded;
-        }
         const preferredRemoteKernelId =
             notebook && this.preferredRemoteFinder
                 ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(notebook.uri)

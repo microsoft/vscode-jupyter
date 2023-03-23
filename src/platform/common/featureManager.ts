@@ -45,16 +45,12 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
 export class FeatureManager implements IFeaturesManager {
     private _onDidChangeFeatures = new Emitter<void>();
     readonly onDidChangeFeatures = this._onDidChangeFeatures.event;
-    private _features: IFeatureSet = { kernelPickerType: 'Stable' };
+    private _features: IFeatureSet = {};
     get features(): IFeatureSet {
         return this._features;
     }
 
     set features(newFeatures: IFeatureSet) {
-        if (newFeatures.kernelPickerType === this._features.kernelPickerType) {
-            return;
-        }
-
         this._features = newFeatures;
         this._onDidChangeFeatures.fire();
     }

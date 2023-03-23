@@ -10,7 +10,7 @@ import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { IExtensions, IDisposableRegistry, Resource, IExtensionContext, IFeaturesManager } from '../common/types';
+import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
@@ -399,8 +399,7 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IFeaturesManager) private readonly featureManager: IFeaturesManager
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -649,7 +648,6 @@ export class InterpreterService implements IInterpreterService {
     private trackResolvedEnvironment(env: ResolvedEnvironment | undefined, triggerChangeEvent: boolean) {
         if (env) {
             const displayEmptyCondaEnv =
-                this.featureManager.features.kernelPickerType === 'Insiders' &&
                 this.apiProvider.pythonExtensionVersion &&
                 this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
             const resolved = pythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);

@@ -13,7 +13,7 @@ import {
     JVSC_EXTENSION_ID
 } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import { IControllerRegistration, IVSCodeNotebookController } from '../types';
 import {
@@ -62,13 +62,11 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
-        @inject(IFeaturesManager) private readonly displayDataProvider: ConnectionDisplayDataProvider
+        @inject(ConnectionDisplayDataProvider) private readonly displayDataProvider: ConnectionDisplayDataProvider
     ) {
         this.showingLocalOrWebEmptyContext = new ContextKey('jupyter.showingLocalOrWebEmpty', this.commandManager);
     }
@@ -78,28 +76,15 @@ export class ServerConnectionControllerCommands implements IExtensionSyncActivat
         );
         this.disposables.push(this.serverUriStorage.onDidChangeConnectionType(this.updateContextKeys, this));
         this.updateContextKeys().catch(noop);
-
-        this.disposables.push(this.featuresManager.onDidChangeFeatures(this.updateContextKeys, this));
     }
 
     private async updateContextKeys() {
-        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-            this.showingLocalOrWebEmptyContext.set(false).catch(noop);
-        } else {
-            // const isLocal = this.serverUriStorage.isLocalLaunch;
-            // await (this.isWeb ? this.controllerLoader.loaded : Promise.resolve(true));
-            this.showingLocalOrWebEmptyContext.set(this.isWeb).catch(noop);
-        }
+        this.showingLocalOrWebEmptyContext.set(false).catch(noop);
     }
 
     private async showVsCodeKernelPicker() {
         const activeEditor = this.notebooks.activeNotebookEditor;
         if (activeEditor) {
-            if (this.featuresManager.features.kernelPickerType === 'Stable') {
-                // Need to wait for controller to reupdate after
-                // switching local/remote
-                await this.controllerRegistration.loaded;
-            }
             this.commandManager
                 .executeCommand('notebook.selectKernel', { notebookEditor: activeEditor })
                 .then(noop, noop);

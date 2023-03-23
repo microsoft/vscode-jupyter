@@ -99,27 +99,6 @@ export interface IControllerRegistration {
     isFiltered(metadata: KernelConnectionMetadata): boolean;
 }
 
-export const IControllerPreferredService = Symbol('IControllerPreferredService');
-
-export interface IControllerPreferredService {
-    /**
-     * Given all of the registered controllers, finds the 'preferred' controller for a notebook
-     * @param document
-     * @param serverId
-     */
-    computePreferred(
-        document: vscode.NotebookDocument,
-        serverId?: string,
-        cancelToken?: vscode.CancellationToken
-    ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
-
-    /**
-     * Returns the preferred controller if already computed
-     * @param notebook
-     */
-    getPreferred(notebook: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
-}
-
 export const IKernelRankingHelper = Symbol('IKernelRankingHelper');
 export interface IKernelRankingHelper {
     rankKernels(

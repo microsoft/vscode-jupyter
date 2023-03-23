@@ -4,57 +4,61 @@
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
+import { KernelAPI } from '@jupyterlab/services';
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
+import uuid from 'uuid/v4';
 import {
-    WorkspaceEdit,
-    commands,
+    CancellationTokenSource,
+    CompletionContext,
+    CompletionItem,
+    CompletionTriggerKind,
+    DebugSession,
+    Diagnostic,
+    Event,
+    EventEmitter,
+    Hover,
     Memento,
-    Uri,
-    window,
-    workspace,
     NotebookCell,
-    NotebookDocument,
+    NotebookCellData,
+    NotebookCellExecutionState,
     NotebookCellKind,
     NotebookCellOutputItem,
-    NotebookRange,
-    NotebookCellExecutionState,
-    NotebookCellData,
-    notebooks,
-    Event,
-    env,
-    UIKind,
-    DebugSession,
-    languages,
-    Position,
-    Hover,
-    Diagnostic,
+    NotebookData,
+    NotebookDocument,
     NotebookEdit,
-    CompletionContext,
-    CompletionTriggerKind,
-    CancellationTokenSource,
-    CompletionItem,
+    NotebookEditor,
+    NotebookRange,
+    Position,
+    QuickInputButton,
     QuickPick,
     QuickPickItem,
-    QuickInputButton,
     QuickPickItemButtonEvent,
-    EventEmitter,
-    NotebookEditor,
+    UIKind,
+    Uri,
+    WorkspaceEdit,
+    commands,
     debug,
-    NotebookData
+    env,
+    languages,
+    notebooks,
+    window,
+    workspace
 } from 'vscode';
-import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { DisplayOptions } from '../../../kernels/displayOptions';
 import {
-    defaultNotebookFormat,
-    JupyterNotebookView,
-    JVSC_EXTENSION_ID,
-    MARKDOWN_LANGUAGE,
-    PYTHON_LANGUAGE
-} from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
-import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+    CellOutputMimeTypes,
+    NotebookCellStateTracker,
+    getTextOutputValue,
+    hasErrorOutput
+} from '../../../kernels/execution/helpers';
+import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
+import {
+    IJupyterServerUriStorage,
+    IJupyterSessionManager,
+    IJupyterSessionManagerFactory
+} from '../../../kernels/jupyter/types';
 import {
     IKernelFinder,
     IKernelProvider,
@@ -63,47 +67,43 @@ import {
     PythonKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
-import { noop } from '../../core';
-import { closeActiveWindows, isInsiders } from '../../initialize';
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cellLanguageService';
-import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
-import { INotebookEditorProvider } from '../../../notebooks/types';
 import {
     IControllerRegistration,
-    InteractiveControllerIdSuffix,
-    IVSCodeNotebookController
+    IVSCodeNotebookController,
+    InteractiveControllerIdSuffix
 } from '../../../notebooks/controllers/types';
-import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
-import * as urlPath from '../../../platform/vscode-path/resources';
-import uuid from 'uuid/v4';
-import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
-import { initialize, waitForCondition } from '../../common';
-import { VSCodeNotebook } from '../../../platform/common/application/notebook';
+import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
-import { PythonKernelCompletionProvider } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
-import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
+import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cellLanguageService';
+import { INotebookEditorProvider } from '../../../notebooks/types';
+import { VSCodeNotebook } from '../../../platform/common/application/notebook';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import {
-    NotebookCellStateTracker,
-    hasErrorOutput,
-    CellOutputMimeTypes,
-    getTextOutputValue
-} from '../../../kernels/execution/helpers';
-import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
-import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
-import {
-    IJupyterServerUriStorage,
-    IJupyterSessionManager,
-    IJupyterSessionManagerFactory
-} from '../../../kernels/jupyter/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+    JVSC_EXTENSION_ID,
+    JupyterNotebookView,
+    MARKDOWN_LANGUAGE,
+    PYTHON_LANGUAGE,
+    defaultNotebookFormat
+} from '../../../platform/common/constants';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { DisplayOptions } from '../../../kernels/displayOptions';
-import { KernelAPI } from '@jupyterlab/services';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';
+import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { isWeb } from '../../../platform/common/utils/misc';
-import { ControllerPreferredService } from '../../../notebooks/controllers/controllerPreferredService';
+import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
+import * as urlPath from '../../../platform/vscode-path/resources';
+import { PythonKernelCompletionProvider } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
+import { initialize, waitForCondition } from '../../common';
+import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import { noop } from '../../core';
+import { closeActiveWindows, isInsiders } from '../../initialize';
+import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
+import { ControllerPreferredService } from './controllerPreferredService';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -118,7 +118,7 @@ export async function getServices() {
         controllerRegistration: api.serviceContainer.get<IControllerRegistration>(
             IControllerRegistration
         ) as IControllerRegistration,
-        controllerPreferred: api.serviceContainer.get<ControllerPreferredService>(ControllerPreferredService),
+        controllerPreferred: ControllerPreferredService.create(api.serviceContainer),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
         interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
         kernelFinder: api.serviceContainer.get<IKernelFinder>(IKernelFinder),
@@ -173,7 +173,6 @@ export async function deleteCell(index: number = 0) {
     }
     if (!activeEditor) {
         assert.fail('No active editor');
-        return;
     }
     await chainWithPendingUpdates(activeEditor.notebook, (edit) => {
         const nbEdit = NotebookEdit.deleteCells(new NotebookRange(index, index + 1));

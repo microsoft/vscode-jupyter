@@ -13,7 +13,7 @@ import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { KernelConnectionMetadata, RemoteKernelConnectionMetadata } from '../../kernels/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
-import { IDisposable, IDisposableRegistry, IFeaturesManager } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -56,7 +56,6 @@ export class ConnectionDisplayDataProvider {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService
     ) {}
@@ -115,10 +114,7 @@ export class ConnectionDisplayDataProvider {
         const details: ConnectionDisplayData = this.details.get(connection.id)!;
         this.details.set(connection.id, details);
 
-        if (
-            this.featuresManager.features.kernelPickerType === 'Insiders' &&
-            (connection.kind === 'connectToLiveRemoteKernel' || connection.kind === 'startUsingRemoteKernelSpec')
-        ) {
+        if (connection.kind === 'connectToLiveRemoteKernel' || connection.kind === 'startUsingRemoteKernelSpec') {
             getRemoteServerDisplayName(connection, this.serverUriStorage)
                 .then((displayName) => {
                     if (details.serverDisplayName !== displayName) {
