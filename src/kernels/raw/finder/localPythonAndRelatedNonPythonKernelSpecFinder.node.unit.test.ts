@@ -26,13 +26,12 @@ import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
 import { ResourceMap } from '../../../platform/vscode-path/map';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { uriEquals } from '../../../test/datascience/helpers';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 
 suite(`Local Python and related kernels`, async () => {
-    let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder | LocalPythonAndRelatedNonPythonKernelSpecFinderOld;
+    let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
     let interpreterService: IInterpreterService;
     let fs: IFileSystemNode;
     let workspaceService: IWorkspaceService;
