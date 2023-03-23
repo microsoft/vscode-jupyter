@@ -599,7 +599,9 @@ async function getActiveInterpreterKernelConnection() {
         defaultNotebookTestTimeout,
         () =>
             `Kernel Connection pointing to active interpreter not found.0, active interpreter
-        ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels ${kernelFinder.kernels
+        ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels (${
+                kernelFinder.kernels.length
+            }) ${kernelFinder.kernels
                 .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
                 .join(', ')}`,
         500

@@ -75,10 +75,12 @@ suite('Run By Line @debugger', function () {
         }
     });
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        this.timeout(120_000);
+        traceInfo(`Start Test (1) ${this.currentTest?.title}`);
         sinon.restore();
         const metadata = await getDefaultKernelConnection();
         const controllerRegistry = await api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        traceInfo(`Start Test (2) ${metadata.id}`);
 
         const controller = await waitForCondition(
             () =>
@@ -88,11 +90,14 @@ suite('Run By Line @debugger', function () {
             defaultNotebookTestTimeout,
             `Controller not found for connection ${metadata.id}`
         );
+        traceInfo(`Start Test (3) ${controller.id}`);
         await createEmptyPythonNotebook(disposables, undefined, true);
+        traceInfo(`Start Test (4) ${controller.id}`);
         await commands.executeCommand('notebook.selectKernel', {
             id: controller!.id,
             extension: JVSC_EXTENSION_ID
         });
+        traceInfo(`Start Test (5) ${controller.id}`);
 
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });

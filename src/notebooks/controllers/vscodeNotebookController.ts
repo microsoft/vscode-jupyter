@@ -210,7 +210,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }>();
 
         this.displayData = this.displayDataProvider.getDisplayData(this.connection);
-        traceVerbose(
+        traceInfoIfCI(
             `Creating notebook controller for ${kernelConnection.kind} & view ${_viewType} (id='${kernelConnection.id}') with name '${this.displayData.label}'`
         );
         this.controller = this.notebookApi.createNotebookController(
