@@ -3,7 +3,6 @@
 
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
-import { ServerConnectionControllerCommands } from './commands/serverConnectionControllerCommands';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { ControllerDefaultService } from './controllerDefaultService';
 import { ControllerRegistration } from './controllerRegistration';
@@ -34,10 +33,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelSourceCommandHandler
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        ServerConnectionControllerCommands
     );
     registerWidgetTypes(serviceManager, isDevMode);
 }

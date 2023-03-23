@@ -2,37 +2,24 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookEditor,
-    notebooks,
-    window
-} from 'vscode';
+import { NotebookCell, NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, notebooks } from 'vscode';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
-import { Commands, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
-import { ContextKey } from '../../../platform/common/contextKey';
-import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { Commands, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
+import { IDisposableRegistry } from '../../../platform/common/types';
 import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceError, traceVerbose } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { getLanguageOfNotebookDocument } from '../../languages/helpers';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
 @injectable()
 export class InstallPythonControllerCommands implements IExtensionSyncActivationService {
-    private showInstallPythonExtensionContext: ContextKey;
-    private showInstallPythonContext: ContextKey;
-    private interpretersRefreshedOnceBefore = false;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
     private executingCells: WeakSet<NotebookCell> = new WeakSet<NotebookCell>();
     constructor(
@@ -42,17 +29,8 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(IsWebExtension) private readonly isWeb: boolean,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
-    ) {
-        // Context keys to control when these commands are shown
-        this.showInstallPythonExtensionContext = new ContextKey(
-            'jupyter.showInstallPythonExtensionCommand',
-            this.commandManager
-        );
-        this.showInstallPythonContext = new ContextKey('jupyter.showInstallPythonCommand', this.commandManager);
-    }
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+    ) {}
     public activate() {
         this.disposables.push(
             notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this)
@@ -72,11 +50,6 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                 this
             )
         );
-
-        // Also track active notebook editor change
-        this.disposables.push(window.onDidChangeActiveNotebookEditor(this.onDidChangeActiveNotebookEditor, this));
-
-        this.disposables.push(this.interpreterService.onDidChangeInterpreters(this.onInterpretersChanged, this));
     }
 
     // Track if there are any cells currently executing or pending
@@ -91,44 +64,6 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                 this.executingCells.delete(stateEvent.cell);
             }
         }
-    }
-
-    private async onDidChangeActiveNotebookEditor(editor: NotebookEditor | undefined) {
-        if (!this.isWeb && editor && editor.notebook.notebookType === JupyterNotebookView) {
-            // Make sure we are only showing these for python notebooks or undefined notebooks
-            const lang = getLanguageOfNotebookDocument(editor.notebook);
-            if (!lang || lang === PYTHON_LANGUAGE) {
-                if (!this.extensionChecker.isPythonExtensionInstalled) {
-                    // Python or undefined notebook with no extension, recommend installing extension
-                    await this.showInstallPythonExtensionContext.set(true);
-                    await this.showInstallPythonContext.set(false);
-                    return;
-                }
-
-                // Python extension is installed, let's wait for interpreters to be detected
-                if (!this.interpreterService.environmentsFound && !this.interpretersRefreshedOnceBefore) {
-                    this.interpretersRefreshedOnceBefore = true;
-                    await this.interpreterService.refreshInterpreters();
-                }
-
-                if (!this.interpreterService.environmentsFound) {
-                    // Extension is installed, but we didn't find any python connections
-                    // recommend installing python in this case
-                    await this.showInstallPythonExtensionContext.set(false);
-                    await this.showInstallPythonContext.set(true);
-                    return;
-                }
-            }
-        }
-
-        // Final fallback is to always hide the commands
-        await this.showInstallPythonExtensionContext.set(false);
-        await this.showInstallPythonContext.set(false);
-    }
-
-    // When interpreters change, recalculate our commands as python might have been added or removed
-    private async onInterpretersChanged() {
-        await this.onDidChangeActiveNotebookEditor(window.activeNotebookEditor);
     }
 
     // This is called via the "install python" command in the kernel picker in the case where
