@@ -11,16 +11,16 @@ import {
     IExtensionContext
 } from '../platform/common/types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
-import { InteractiveWindowView } from '../platform/common/constants';
+import { InteractiveScheme, InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import {
     IThirdPartyKernel,
     IKernel,
     INotebookProvider,
-    IStartupCodeProvider,
     ITracebackFormatter,
     KernelOptions,
-    ThirdPartyKernelOptions
+    ThirdPartyKernelOptions,
+    IStartupCodeProviders
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
@@ -42,7 +42,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter)
         private readonly formatters: ITracebackFormatter[],
-        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders
     ) {
         super(asyncDisposables, disposables, notebook);
         disposables.push(jupyterServerUriStorage.onDidRemoveUris(this.handleUriRemoval.bind(this)));
@@ -57,6 +57,10 @@ export class KernelProvider extends BaseCoreKernelProvider {
 
         const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
         const settings = createKernelSettings(this.configService, resourceUri);
+        const notebookType =
+            notebook.uri.scheme === InteractiveScheme || options.resourceUri?.scheme === InteractiveScheme
+                ? InteractiveWindowView
+                : JupyterNotebookView;
 
         const kernel: IKernel = new Kernel(
             resourceUri,
@@ -66,7 +70,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
             settings,
             this.appShell,
             options.controller,
-            this.startupCodeProviders
+            this.startupCodeProviders.getProviders(notebookType)
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(
@@ -103,7 +107,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -118,6 +122,10 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
 
         const resourceUri = uri;
         const settings = createKernelSettings(this.configService, resourceUri);
+        const notebookType =
+            resourceUri.scheme === InteractiveScheme || uri.scheme === InteractiveScheme
+                ? InteractiveWindowView
+                : JupyterNotebookView;
         const kernel: IThirdPartyKernel = new ThirdPartyKernel(
             uri,
             resourceUri,
@@ -125,7 +133,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             this.notebookProvider,
             this.appShell,
             settings,
-            this.startupCodeProviders
+            this.startupCodeProviders.getProviders(notebookType)
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(

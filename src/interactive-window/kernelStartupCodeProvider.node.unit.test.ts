@@ -14,10 +14,11 @@ import { uriEquals } from '../test/datascience/helpers';
 import {
     IJupyterKernelSpec,
     IKernel,
+    IStartupCodeProviders,
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
-} from './types';
+} from '../kernels/types';
 
 suite('KernelWorkingFolder', function () {
     let configService: IConfigurationService;
@@ -34,7 +35,14 @@ suite('KernelWorkingFolder', function () {
         settings = mock<IWatchableJupyterSettings>();
         fs = mock<IFileSystem>();
         workspace = mock<IWorkspaceService>();
-        kernelWorkingFolder = new KernelStartupCodeProvider(instance(configService), instance(fs), instance(workspace));
+        const registry = mock<IStartupCodeProviders>();
+        when(registry.register(anything(), anything())).thenReturn();
+        kernelWorkingFolder = new KernelStartupCodeProvider(
+            instance(configService),
+            instance(fs),
+            instance(workspace),
+            instance(registry)
+        );
         kernel = mock<IKernel>();
         connectionMetadata = mock<KernelConnectionMetadata>();
         kernelSpec = mock<IJupyterKernelSpec>();

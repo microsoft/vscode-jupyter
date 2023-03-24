@@ -2,30 +2,41 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CodeSnippets } from '../platform/common/constants';
+import { CodeSnippets, JupyterNotebookView } from '../platform/common/constants';
 import { format } from '../platform/common/helpers';
 import { splitLines } from '../platform/common/helpers';
 import { getFilePath } from '../platform/common/platform/fs-paths';
-import { IKernel, isLocalConnection, IStartupCodeProvider, StartupCodePriority } from './types';
 import * as path from '../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, Resource } from '../platform/common/types';
-import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
-import { expandWorkingDir } from './jupyter/jupyterUtils';
 import { untildify } from '../platform/common/platform/fileUtils.node';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
+import {
+    IKernel,
+    IStartupCodeProvider,
+    IStartupCodeProviders,
+    StartupCodePriority,
+    isLocalConnection
+} from '../kernels/types';
+import { isLocalHostConnection, isPythonKernelConnection } from '../kernels/helpers';
+import { expandWorkingDir } from '../kernels/jupyter/jupyterUtils';
 
 @injectable()
-export class KernelStartupCodeProvider implements IStartupCodeProvider {
+export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensionSyncActivationService {
     public priority = StartupCodePriority.Base;
 
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IStartupCodeProviders) private readonly registry: IStartupCodeProviders
     ) {}
 
+    activate(): void {
+        this.registry.register(this, JupyterNotebookView);
+    }
     async getCode(kernel: IKernel): Promise<string[]> {
         const suggestedDir = await this.getWorkingDirectory(kernel);
         if (suggestedDir) {
