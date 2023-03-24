@@ -2343,9 +2343,9 @@
         "util": "^0.12.4",
         "uuid-to-hex": "^1.1.1",
         "vscode-dts": "^0.3.2",
-        "webpack": "^5.68.0",
-        "webpack-bundle-analyzer": "^4.5.0",
-        "webpack-cli": "^4.9.2",
+        "webpack": "^5.76.3",
+        "webpack-bundle-analyzer": "^4.8.0",
+        "webpack-cli": "^5.0.1",
         "yargs": "^17.3.1",
         "yargs-parser": "^13.1.2"
     },
