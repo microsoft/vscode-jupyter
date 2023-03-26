@@ -11,7 +11,7 @@ import { IRawNotebookSupportedService } from './raw/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.web';
 import { injectable } from 'inversify';
-import { IKernelDependencyService, IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './types';
+import { IKernelDependencyService, IKernelFinder, IKernelProvider, IStartupCodeProviders, IThirdPartyKernelProvider } from './types';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder';
 import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
@@ -28,6 +28,7 @@ import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarme
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 import { KernelDependencyService } from './kernelDependencyService.web';
+import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.node';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -48,7 +49,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
-
+    serviceManager.addSingleton<IStartupCodeProviders>(IStartupCodeProviders, KernelStartupCodeProviders);
     serviceManager.addSingleton<IKernelVariableRequester>(
         IKernelVariableRequester,
         PythonVariablesRequester,
