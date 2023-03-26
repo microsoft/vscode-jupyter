@@ -88,6 +88,7 @@ export interface IJupyterSettings {
     readonly themeMatplotlibPlots: boolean;
     readonly variableQueries: IVariableQuery[];
     readonly disableJupyterAutoStart: boolean;
+    readonly development: boolean;
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
     readonly interactiveWindowMode: InteractiveWindowMode;
@@ -121,7 +122,7 @@ export interface IWatchableJupyterSettings extends IJupyterSettings {
     createSystemVariables(resource: Resource): ISystemVariables;
 }
 
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose' | 'everything';
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
 
 export interface ILoggingSettings {
     readonly level: LoggingLevelSettingType | 'off';

@@ -106,7 +106,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            traceInfo(`Connecting to server`);
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 1;

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter } from 'vscode';
+import { Disposable, EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
@@ -21,6 +21,7 @@ import { getKernelRegistrationInfo } from '../../helpers';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -58,6 +59,7 @@ export class ContributedLocalKernelSpecFinder
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: LocalKernelConnectionMetadata[] = [];
+    private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
@@ -234,17 +236,24 @@ export class ContributedLocalKernelSpecFinder
             }
 
             if (values.length) {
-                traceVerbose(
-                    `Updating cache with Local kernels ${values
-                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                        .join(', ')}, Added = ${added
-                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                        .join(', ')}, Updated = ${updated
-                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                        .join(', ')}, Removed = ${removed
-                        .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                        .join(', ')}`
-                );
+                if (this.cacheLoggingTimeout) {
+                    clearTimeout(this.cacheLoggingTimeout);
+                }
+                // Reduce the logging, as this can get written a lot,
+                this.cacheLoggingTimeout = setTimeout(() => {
+                    traceVerbose(
+                        `Updating cache with Local kernels ${values
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Added = ${added
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Updated = ${updated
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Removed = ${removed
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}`
+                    );
+                }, 15_000);
+                this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
             }
         } catch (ex) {
             traceError('LocalKernelFinder: Failed to write to cache', ex);

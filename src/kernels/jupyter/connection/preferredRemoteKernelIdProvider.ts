@@ -66,6 +66,7 @@ export class PreferredRemoteKernelIdProvider {
         if (id) {
             requiresUpdate = true;
             list.push({ fileHash, kernelId: id });
+            traceVerbose(`Storing Preferred remote kernel for ${getDisplayPath(uri)} is ${id}`);
         }
 
         // Prune list if too big
@@ -74,7 +75,6 @@ export class PreferredRemoteKernelIdProvider {
             requiresUpdate = true;
             list.shift();
         }
-        traceVerbose(`Storing Preferred remote kernel for ${getDisplayPath(uri)} is ${id}`);
         if (requiresUpdate) {
             await this.globalMemento.update(ActiveKernelIdList, list);
         }

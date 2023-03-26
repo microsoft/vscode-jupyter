@@ -267,11 +267,6 @@ abstract class BaseKernel implements IBaseKernel {
     }
     public async dispose(): Promise<void> {
         traceInfo(`Dispose Kernel '${getDisplayPath(this.uri)}' associated with '${getDisplayPath(this.resourceUri)}'`);
-        traceInfoIfCI(
-            `Dispose Kernel '${getDisplayPath(this.uri)}' associated with '${getDisplayPath(
-                this.resourceUri
-            )}' called from ${new Error('').stack}`
-        );
         this._disposing = true;
         if (this.disposingPromise) {
             return this.disposingPromise;
@@ -311,10 +306,10 @@ abstract class BaseKernel implements IBaseKernel {
     public async restart(): Promise<void> {
         try {
             const resourceType = getResourceType(this.resourceUri);
+            traceInfo(`Restart requested ${getDisplayPath(this.uri)}`);
             await Promise.all(
                 Array.from(this.hooks.get('willRestart') || new Set<Hook>()).map((h) => h(this._jupyterSessionPromise))
             );
-            traceInfo(`Restart requested ${this.uri}`);
             this.startCancellation.cancel(); // Cancel any pending starts.
             this.startCancellation.dispose();
             const stopWatch = new StopWatch();
@@ -389,7 +384,6 @@ abstract class BaseKernel implements IBaseKernel {
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)
     ): Promise<IKernelConnectionSession> {
-        traceVerbose(`Start Jupyter Session in kernel.ts with disableUI = ${options.disableUI}`);
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
@@ -532,18 +526,21 @@ abstract class BaseKernel implements IBaseKernel {
         try {
             // No need to block kernel startup on UI updates.
             let pythonInfo = '';
-            if (this.kernelConnectionMetadata.interpreter) {
+            const interpreter = this.kernelConnectionMetadata.interpreter;
+            if (interpreter) {
                 const info: string[] = [];
-                info.push(`Python Path: ${getDisplayPath(this.kernelConnectionMetadata.interpreter.envPath)}`);
-                info.push(`EnvType: ${this.kernelConnectionMetadata.interpreter.envType}`);
-                info.push(`EnvName: '${this.kernelConnectionMetadata.interpreter.envName}'`);
-                info.push(`Version: ${this.kernelConnectionMetadata.interpreter.version?.raw}`);
-                pythonInfo = ` (${info.join(', ')})`;
+                info.push(`Python Path: ${getDisplayPath(interpreter.uri)}`);
+                info.push(interpreter.envType || '');
+                info.push(interpreter.envName || '');
+                if (interpreter.version) {
+                    info.push(`${interpreter.version.major}.${interpreter.version.minor}.${interpreter.version.patch}`);
+                }
+                pythonInfo = ` (${info.filter((s) => s).join(', ')})`;
             }
             traceInfo(
-                `Starting Jupyter Session ${this.kernelConnectionMetadata.kind}, ${
+                `Starting Kernel ${this.kernelConnectionMetadata.kind}, ${
                     this.kernelConnectionMetadata.id
-                }${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
+                } ${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
@@ -772,7 +769,6 @@ abstract class BaseKernel implements IBaseKernel {
             const version = await this.executeSilently(session, [codeToDetermineIPyWidgetsVersion]).catch((ex) =>
                 traceError('Failed to determine version of IPyWidgets', ex)
             );
-            traceVerbose('Determined IPyKernel Version', JSON.stringify(version));
             if (Array.isArray(version)) {
                 const isVersion8 = version.some((output) =>
                     (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
@@ -782,10 +778,12 @@ abstract class BaseKernel implements IBaseKernel {
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
-                traceVerbose('Determined IPyKernel Version and event fired', JSON.stringify(newVersion));
+                traceVerbose(`Determined IPyKernel Version as ${newVersion} and event fired`);
                 // If user does not have ipywidgets installed, then this event will never get fired.
                 this._ipywidgetsVersion == newVersion;
                 this._onIPyWidgetVersionResolved.fire(newVersion);
+            } else {
+                traceWarning('Failed to determine IPyKernel Version', JSON.stringify(version));
             }
         };
         await determineVersionImpl();
@@ -917,8 +915,11 @@ abstract class BaseKernel implements IBaseKernel {
         code: string[],
         errorOptions?: SilentExecutionErrorOptions
     ) {
-        if (!session || code.join('').trim().length === 0) {
-            traceVerbose(`Not executing startup session: ${session ? 'Object' : 'undefined'}, code: ${code}`);
+        if (code.join('').trim().length === 0) {
+            return;
+        }
+        if (!session) {
+            traceVerbose(`Not executing startup as there is no session, code: ${code}`);
             return;
         }
         return executeSilently(session, code.join('\n'), errorOptions);
