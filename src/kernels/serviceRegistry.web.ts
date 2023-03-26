@@ -28,7 +28,7 @@ import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarme
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 import { KernelDependencyService } from './kernelDependencyService.web';
-import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.node';
+import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
