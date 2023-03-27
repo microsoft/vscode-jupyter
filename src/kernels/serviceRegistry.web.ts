@@ -11,7 +11,13 @@ import { IRawNotebookSupportedService } from './raw/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.web';
 import { injectable } from 'inversify';
-import { IKernelDependencyService, IKernelFinder, IKernelProvider, IStartupCodeProviders, IThirdPartyKernelProvider } from './types';
+import {
+    IKernelDependencyService,
+    IKernelFinder,
+    IKernelProvider,
+    IStartupCodeProviders,
+    IThirdPartyKernelProvider
+} from './types';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder';
 import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
