@@ -22,6 +22,7 @@ import {
     IKernelController,
     IKernelProvider,
     INotebookProvider,
+    IStartupCodeProviders,
     IThirdPartyKernelProvider,
     KernelConnectionMetadata,
     KernelOptions
@@ -55,6 +56,8 @@ suite('Node Kernel Provider', function () {
         controller = createKernelController();
     });
     function createKernelProvider() {
+        const registry = mock<IStartupCodeProviders>();
+        when(registry.getProviders(anything())).thenReturn([]);
         return new KernelProvider(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             asyncDisposables as any,
@@ -66,10 +69,12 @@ suite('Node Kernel Provider', function () {
             instance(context),
             instance(jupyterServerUriStorage),
             [],
-            []
+            instance(registry)
         );
     }
     function create3rdPartyKernelProvider() {
+        const registry = mock<IStartupCodeProviders>();
+        when(registry.getProviders(anything())).thenReturn([]);
         return new ThirdPartyKernelProvider(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             asyncDisposables as any,
@@ -78,7 +83,7 @@ suite('Node Kernel Provider', function () {
             instance(configService),
             instance(appShell),
             instance(vscNotebook),
-            []
+            instance(registry)
         );
     }
     teardown(async () => {
@@ -204,7 +209,8 @@ suite('KernelProvider Node', () => {
             instance(sampleNotebook2),
             instance(sampleNotebook3)
         ]);
-
+        const registry = mock<IStartupCodeProviders>();
+        when(registry.getProviders(anything())).thenReturn([]);
         kernelProvider = new KernelProvider(
             asyncDisposables,
             disposables,
@@ -215,7 +221,7 @@ suite('KernelProvider Node', () => {
             instance(context),
             instance(jupyterServerUriStorage),
             [],
-            []
+            instance(registry)
         );
         thirdPartyKernelProvider = new ThirdPartyKernelProvider(
             asyncDisposables,
@@ -224,7 +230,7 @@ suite('KernelProvider Node', () => {
             instance(configService),
             instance(appShell),
             instance(vscNotebook),
-            []
+            instance(registry)
         );
     });
     teardown(async () => {

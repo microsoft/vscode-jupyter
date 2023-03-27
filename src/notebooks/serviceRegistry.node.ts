@@ -41,6 +41,7 @@ import { ExportUtilBase } from './export/exportUtil';
 import { ExportUtil } from './export/exportUtil.node';
 import { FileConverter } from './export/fileConverter.node';
 import { ExportFormat, IExport, IExportBase, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
+import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
@@ -124,6 +125,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         CellOutputMimeTypeTracker
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelStartupCodeProvider
     );
 
     // File export/import

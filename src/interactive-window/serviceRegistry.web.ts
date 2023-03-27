@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
+import { ITracebackFormatter } from '../kernels/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -68,8 +68,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         undefined,
         [IExtensionSyncActivationService]
     );
-    serviceManager.addSingleton<IStartupCodeProvider>(
-        IStartupCodeProvider,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         InteractiveWindowDebuggingStartupCodeProvider
     );
 }
