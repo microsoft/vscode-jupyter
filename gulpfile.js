@@ -228,6 +228,17 @@ async function verifyZmqBinaries() {
     await deleteZMQBuildFolder();
 }
 
+/**
+ * We do not need to ship the Electron binaries.
+ */
+function deleteElectronBinaries() {
+    const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'prebuilds');
+    glob.sync('**/electron.napi.*.node', { sync: true, cwd: preBuildsFolder }).forEach((file) => {
+        console.log(`Deleting ${file}`);
+        fs.rmSync(path.join(preBuildsFolder, file), { force: true });
+    });
+}
+
 async function deleteZMQBuildFolder() {
     const buildFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'build');
     if (fs.existsSync(buildFolder)) {
@@ -236,6 +247,7 @@ async function deleteZMQBuildFolder() {
 }
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
+        deleteElectronBinaries();
         await verifyZmqBinaries();
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
