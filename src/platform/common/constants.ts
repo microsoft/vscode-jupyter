@@ -469,7 +469,6 @@ export enum Telemetry {
     AmbiguousGlobalKernelSpec = 'GLOBAL_PYTHON_KERNELSPEC',
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
-    KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
     ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
     PythonModuleInstall = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     PythonNotInstalled = 'DS_INTERNAL.PYTHON_NOT_INSTALLED',

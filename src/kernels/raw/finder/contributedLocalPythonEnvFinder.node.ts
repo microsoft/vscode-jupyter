@@ -138,7 +138,6 @@ export class ContributedLocalPythonEnvFinder
     }
 
     @traceDecoratorError('List kernels failed')
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     private async updateCache() {
         try {
             const pythonKernels = this.pythonKernelFinder.kernels.filter(
