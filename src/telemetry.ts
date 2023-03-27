@@ -1634,7 +1634,8 @@ export class IEventNamePropertyMapping {
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
-            | 'download'; // User chose click the download link.
+            | 'download' // User chose click the download link.
+            | 'reload'; // User chose to reload VS Code.
     }> = {
         owner: 'IanMatthewHuff',
         feature: ['KernelPicker'],

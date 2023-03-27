@@ -376,6 +376,7 @@ export namespace DataScience {
     export const pythonNotInstalled = l10n.t(
         'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook. \nOnce installed please reload VS Code.'
     );
+    export const pleaseReloadVSCodeOncePythonHasBeenInstalled = l10n.t('Upon installing Python please reload VS Code.');
     export const jupyterNotebookFailure = (errorMessage: string) =>
         l10n.t('Jupyter notebook failed to launch. \r\n{0}', errorMessage);
     export const remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid = (extensionName: string) =>
