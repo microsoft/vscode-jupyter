@@ -563,31 +563,6 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Time taken to list the kernels.
-     */
-    [Telemetry.KernelListingPerf]: TelemetryEventInfo<{
-        /**
-         * Whether this telemetry is for listing of all kernels or just python or just non-python.
-         * (fetching kernels first time in the session is slower, later its cached).
-         */
-        kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
-        /**
-         * Total time taken to list kernels.
-         */
-        duration: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            kind: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        },
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Mime type of a cell output.
      * Used to detect the popularity of a mime type, that would help determine which mime types are most common.
      * E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,

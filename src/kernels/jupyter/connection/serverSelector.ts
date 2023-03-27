@@ -38,7 +38,6 @@ import { RemoteJupyterServerConnectionError } from '../../../platform/errors/rem
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
 
-const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 interface ISelectUriQuickPickItem extends QuickPickItem {
     newChoice?: boolean;
     provider?: IJupyterUriProvider;
@@ -329,19 +328,19 @@ class JupyterServerSelector_Insiders implements IJupyterServerSelector {
         }
     }
     private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
-        let initialValue = defaultUri;
+        let initialValue = '';
         try {
             const text = await this.clipboard.readText().catch(() => '');
             const parsedUri = Uri.parse(text.trim(), true);
             // Only display http/https uris.
-            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : defaultUri;
+            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
         } catch {
             // We can ignore errors.
         }
         // Ask the user to enter a URI to connect to.
         const uri = await input.showInputBox({
             title: DataScience.jupyterSelectURIPrompt,
-            value: initialValue || defaultUri,
+            value: initialValue || '',
             validate: this.validateSelectJupyterURI,
             prompt: ''
         });
