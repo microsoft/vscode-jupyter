@@ -162,7 +162,7 @@ export namespace DataScience {
         );
 
     export const pythonCondaKernelsWithoutPython = l10n.t(
-        'The Python Runtime and IPyKernel will be automatically installed upon selecting this environment'
+        'The Python Runtime and IPyKernel will be automatically installed upon selecting this environment.'
     );
 
     export const selectJupyterInterpreter = l10n.t('Select an Interpreter to start Jupyter');
