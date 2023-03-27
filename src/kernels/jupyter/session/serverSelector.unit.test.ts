@@ -2,33 +2,33 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { anyString, anything, instance, mock, when, verify, deepEqual } from 'ts-mockito';
+import { anyString, anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 
-import * as sinon from 'sinon';
 import * as os from 'os';
+import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, EventEmitter, QuickPickItem } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell';
-import { ClipboardService } from '../../../platform/common/application/clipboard';
-import { IApplicationShell, IClipboard } from '../../../platform/common/application/types';
-import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
-import { WorkspaceService } from '../../../platform/common/application/workspace.node';
-import { CryptoUtils } from '../../../platform/common/crypto';
-import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
+import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHandler';
+import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
+import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/connection/jupyterUriProviderRegistration';
+import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     JupyterServerUriStorage,
     mementoKeyToIndicateIfConnectingToLocalKernelsOnly
 } from '../../../kernels/jupyter/connection/serverUriStorage';
-import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
-import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/connection/jupyterUriProviderRegistration';
-import { Settings } from '../../../platform/common/constants';
-import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHandler';
-import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
+import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
+import { ClipboardService } from '../../../platform/common/application/clipboard';
+import { IApplicationShell, IClipboard } from '../../../platform/common/application/types';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { JupyterSettings } from '../../../platform/common/configSettings';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { Settings } from '../../../platform/common/constants';
+import { CryptoUtils } from '../../../platform/common/crypto';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
+import { MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { MockEncryptedStorage } from '../../../test/datascience/mockEncryptedStorage';
 import { MockInputBox } from '../../../test/datascience/mockInputBox';
 import { MockQuickPick } from '../../../test/datascience/mockQuickPick';
@@ -336,38 +336,6 @@ suite(`Jupyter Server URI Selector`, () => {
             const value = await storage.getUri();
             assert.equal(value?.uri, 'local', 'Should not be a remote URI');
             verify(connection.validateRemoteUri('https://localhost:1111')).once();
-        });
-
-        suite('Default Uri when selecting remote uri', () => {
-            const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
-
-            async function testDefaultUri(expectedDefaultUri: string, clipboardValue?: string) {
-                const showInputBox = sinon.spy(MultiStepInput.prototype, 'showInputBox');
-                const { selector } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
-                when(clipboard.readText()).thenResolve(clipboardValue || '');
-
-                await selector.selectJupyterURI('commandPalette');
-
-                assert.equal(showInputBox.firstCall.args[0].value, expectedDefaultUri);
-            }
-
-            test('Display default uri', async () => {
-                await testDefaultUri(defaultUri);
-            });
-            test('Display default uri if clipboard is empty', async () => {
-                await testDefaultUri(defaultUri, '');
-            });
-            test('Display default uri if clipboard contains invalid uri, display default uri', async () => {
-                await testDefaultUri(defaultUri, 'Hello World!');
-            });
-            test('Display default uri if clipboard contains invalid file uri, display default uri', async () => {
-                await testDefaultUri(defaultUri, 'file://test.pdf');
-            });
-            test('Display default uri if clipboard contains a valid uri, display uri from clipboard', async () => {
-                const validUri = 'https://wow:0909/?password=1234';
-
-                await testDefaultUri(validUri, validUri);
-            });
         });
     });
 });

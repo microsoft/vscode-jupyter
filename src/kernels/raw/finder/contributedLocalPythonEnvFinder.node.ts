@@ -6,7 +6,6 @@ import { Disposable, EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -132,7 +131,6 @@ export class ContributedLocalPythonEnvFinder
     }
 
     @traceDecoratorError('List kernels failed')
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     private async updateCache() {
         try {
             const pythonKernels = this.pythonKernelFinder.kernels.filter(

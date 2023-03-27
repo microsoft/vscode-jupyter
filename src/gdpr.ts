@@ -1449,16 +1449,6 @@
      ]
    }
  */
-//Telemetry.KernelListingPerf
-/* __GDPR__
-   "DS_INTERNAL.KERNEL_LISTING_PERF" : {
-     "kind": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this telemetry is for listing of all kernels or just python or just non-python. (fetching kernels first time in the session is slower, later its cached).","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.KernelSpecNotFound
 /* __GDPR__
    "DS_INTERNAL.KERNEL_SPEC_NOT_FOUND" : {
