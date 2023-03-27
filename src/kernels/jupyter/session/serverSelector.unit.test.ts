@@ -2,33 +2,33 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { anyString, anything, instance, mock, when, verify, deepEqual } from 'ts-mockito';
+import { anyString, anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 
-import * as sinon from 'sinon';
 import * as os from 'os';
+import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, EventEmitter, QuickPickItem } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell';
-import { ClipboardService } from '../../../platform/common/application/clipboard';
-import { IApplicationShell, IClipboard } from '../../../platform/common/application/types';
-import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
-import { WorkspaceService } from '../../../platform/common/application/workspace.node';
-import { CryptoUtils } from '../../../platform/common/crypto';
-import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
+import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHandler';
+import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
+import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/connection/jupyterUriProviderRegistration';
+import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     JupyterServerUriStorage,
     mementoKeyToIndicateIfConnectingToLocalKernelsOnly
 } from '../../../kernels/jupyter/connection/serverUriStorage';
-import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
-import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/connection/jupyterUriProviderRegistration';
-import { Settings } from '../../../platform/common/constants';
-import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHandler';
-import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
+import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
+import { ClipboardService } from '../../../platform/common/application/clipboard';
+import { IApplicationShell, IClipboard } from '../../../platform/common/application/types';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { JupyterSettings } from '../../../platform/common/configSettings';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { Settings } from '../../../platform/common/constants';
+import { CryptoUtils } from '../../../platform/common/crypto';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
+import { MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { MockEncryptedStorage } from '../../../test/datascience/mockEncryptedStorage';
 import { MockInputBox } from '../../../test/datascience/mockInputBox';
 import { MockQuickPick } from '../../../test/datascience/mockQuickPick';
