@@ -12,7 +12,6 @@ import {
     NotebookDocument,
     NotebookRange,
     Uri,
-    Range,
     workspace,
     WorkspaceEdit,
     NotebookEditor,
@@ -23,7 +22,7 @@ import {
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
+import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
 
@@ -41,7 +40,6 @@ import { InteractiveCellResultError } from '../platform/errors/interactiveCellRe
 import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred } from '../platform/common/utils/async';
 import { IServiceContainer } from '../platform/ioc/types';
-import { SysInfoReason } from '../messageTypes';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IExportDialog, ExportFormat } from '../notebooks/export/types';
@@ -67,9 +65,12 @@ import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { generateMarkdownFromCodeLines, parseForComments } from '../platform/common/utils';
 import { KernelController } from '../kernels/kernelController';
-import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 import { splitLines } from '../platform/common/helpers';
-import { InteractiveWindowController as InteractiveController } from './InteractiveWindowController';
+import {
+    InteractiveWindowController as InteractiveController,
+    InteractiveControllerFactory
+} from './InteractiveWindowController';
+import { SystemInfoCell } from './systemInfoCell';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -100,11 +101,9 @@ export class InteractiveWindow implements IInteractiveWindow {
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent = new EventEmitter<void>();
     private _submitters: Uri[] = [];
-    private fileInKernel: Uri | undefined;
     private cellMatcher: CellMatcher;
 
     private internalDisposables: Disposable[] = [];
-    private _insertSysInfoPromise: Promise<NotebookCell> | undefined;
 
     public readonly notebookUri: Uri;
 
@@ -122,11 +121,11 @@ export class InteractiveWindow implements IInteractiveWindow {
     private readonly isWebExtension: boolean;
     private readonly commandManager: ICommandManager;
     private readonly kernelProvider: IKernelProvider;
+    private readonly controller: InteractiveController;
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
-        public mode: InteractiveWindowMode,
-        private controller: InteractiveController,
+        controllerFactory: InteractiveControllerFactory,
         notebookEditorOrTab: NotebookEditor | InteractiveTab,
         public readonly inputUri: Uri
     ) {
@@ -155,6 +154,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (this._owner) {
             this._submitters.push(this._owner);
         }
+        this.controller = controllerFactory.create(this.errorHandler, this.kernelProvider, this._owner);
 
         window.onDidChangeActiveNotebookEditor((e) => {
             if (e?.notebook.uri.toString() === this.notebookUri.toString()) {
@@ -193,165 +193,12 @@ export class InteractiveWindow implements IInteractiveWindow {
             this.startKernel().catch(noop);
         } else {
             traceInfo('No controller selected for Interactive Window initilization');
-            this.insertInfoMessage(DataScience.selectKernelForEditor).catch(noop);
+            new SystemInfoCell(this.notebookDocument, DataScience.selectKernelForEditor);
         }
     }
 
     public async startKernel(): Promise<IKernel> {
-        if (!this.controller.controller || !this.controller.metadata) {
-            throw new Error('Controller not selected');
-        }
-        if (this.controller.kernel) {
-            return this.controller.kernel.promise;
-        }
-
-        const sysInfoCell = this.insertSysInfoMessage(this.controller.metadata, SysInfoReason.Start);
-        try {
-            const kernel = await this.controller.startKernel(this.owner);
-            const kernelEventHookForRestart = async () => {
-                if (this.notebookDocument && this.controller.metadata) {
-                    this._insertSysInfoPromise = undefined;
-                    // If we're about to restart, insert a 'restarting' message as it happens
-                    this.insertSysInfoMessage(this.controller.metadata, SysInfoReason.Restart).then(noop, noop);
-                }
-            };
-            // Hook pre interrupt so we can stick in a message
-            this.controller.kernelDisposables.push(kernel.addHook('willRestart', kernelEventHookForRestart));
-            // When restart finishes, rerun our initialization code
-            kernel.onRestarted(
-                async () => {
-                    traceVerbose('Restart event handled in IW');
-                    this.fileInKernel = undefined;
-                    const cellPromise = Promise.resolve(
-                        this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1)
-                    );
-                    try {
-                        await this.runInitialization(kernel, this.owner);
-                    } catch (ex) {
-                        traceError(`Failed to run initialization after restarting`);
-                    } finally {
-                        this.finishSysInfoMessage(kernel, cellPromise, SysInfoReason.Restart);
-                    }
-                },
-                this,
-                this.controller.kernelDisposables
-            );
-            this.fileInKernel = undefined;
-            await this.runInitialization(kernel, this.owner);
-            this.finishSysInfoMessage(kernel, sysInfoCell, SysInfoReason.Start);
-            return kernel;
-        } catch (ex) {
-            if (this.owner) {
-                // The actual error will be displayed in the cell, hence no need to display the actual
-                // error here, else we'd just be duplicating the error messages.
-                this.deleteSysInfoCell(sysInfoCell);
-            } else {
-                // We don't have a cell when starting IW without an *.py file,
-                // hence display error where the sysinfo is displayed.
-                await this.finishSysInfoWithFailureMessage(ex, sysInfoCell);
-            }
-            throw ex;
-        }
-    }
-
-    private getSysInfoMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
-        const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
-        return reason === SysInfoReason.Restart
-            ? displayName
-                ? DataScience.restartingKernelCustomHeader(displayName)
-                : DataScience.restartingKernelHeader
-            : displayName
-            ? DataScience.startingNewKernelCustomHeader(displayName)
-            : DataScience.startingNewKernelHeader;
-    }
-
-    private async insertSysInfoMessage(
-        kernelMetadata: KernelConnectionMetadata,
-        reason: SysInfoReason
-    ): Promise<NotebookCell> {
-        const message = this.getSysInfoMessage(kernelMetadata, reason);
-        return this.insertInfoMessage(message);
-    }
-
-    private async insertInfoMessage(message: string): Promise<NotebookCell> {
-        if (!this._insertSysInfoPromise) {
-            const func = async () => {
-                await chainWithPendingUpdates(this.notebookDocument, (edit) => {
-                    const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
-                    markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
-                    const nbEdit = NotebookEdit.insertCells(this.notebookDocument.cellCount, [markdownCell]);
-                    edit.set(this.notebookDocument.uri, [nbEdit]);
-                });
-                // This should be the cell we just inserted into the document
-                return this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1);
-            };
-            this._insertSysInfoPromise = func();
-        }
-        return this._insertSysInfoPromise;
-    }
-
-    private updateSysInfoMessage(newMessage: string, finish: boolean, cellPromise: Promise<NotebookCell>) {
-        if (finish) {
-            this._insertSysInfoPromise = undefined;
-        }
-        cellPromise
-            .then((cell) =>
-                chainWithPendingUpdates(this.notebookDocument, (edit) => {
-                    if (cell.index >= 0) {
-                        if (
-                            cell.kind === NotebookCellKind.Markup &&
-                            cell.metadata.isInteractiveWindowMessageCell &&
-                            cell.metadata.isPlaceholder
-                        ) {
-                            edit.replace(cell.document.uri, new Range(0, 0, cell.document.lineCount, 0), newMessage);
-                            edit.set(this.notebookDocument!.uri, [
-                                NotebookEdit.updateCellMetadata(cell.index, {
-                                    isInteractiveWindowMessageCell: true,
-                                    isPlaceholder: !finish
-                                })
-                            ]);
-                            return;
-                        }
-                    }
-                })
-            )
-            .catch(noop);
-    }
-
-    private deleteSysInfoCell(cellPromise: Promise<NotebookCell>) {
-        this._insertSysInfoPromise = undefined;
-        cellPromise
-            .then((cell) =>
-                chainWithPendingUpdates(this.notebookDocument, (edit) => {
-                    if (cell.index >= 0) {
-                        if (
-                            cell.kind === NotebookCellKind.Markup &&
-                            cell.metadata.isInteractiveWindowMessageCell &&
-                            cell.metadata.isPlaceholder
-                        ) {
-                            const nbEdit = NotebookEdit.deleteCells(new NotebookRange(cell.index, cell.index + 1));
-                            edit.set(this.notebookDocument.uri, [nbEdit]);
-                            return;
-                        }
-                    }
-                })
-            )
-            .catch(noop);
-    }
-
-    private finishSysInfoMessage(kernel: IKernel, cellPromise: Promise<NotebookCell>, reason: SysInfoReason) {
-        const kernelName = 'info' in kernel ? kernel.kernelConnectionMetadata.interpreter?.displayName : '';
-        const kernelInfo = 'info' in kernel && kernel.info?.status === 'ok' ? kernel.info : undefined;
-        const banner = kernelInfo ? kernelInfo.banner.split('\n').join('  \n') : kernel.toString();
-        const message = reason == SysInfoReason.Restart ? DataScience.restartedKernelHeader(kernelName || '') : banner;
-        this.updateSysInfoMessage(message, true, cellPromise);
-    }
-
-    private async finishSysInfoWithFailureMessage(error: Error, cellPromise: Promise<NotebookCell>) {
-        let message = await this.errorHandler.getErrorMessageForDisplayInCell(error, 'start', this.owningResource);
-        // As message is displayed in markdown, ensure linebreaks are formatted accordingly.
-        message = message.split('\n').join('  \n');
-        this.updateSysInfoMessage(message, true, cellPromise);
+        return this.controller.startKernel();
     }
 
     /**
@@ -414,9 +261,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public changeMode(mode: InteractiveWindowMode): void {
-        if (this.mode !== mode) {
-            this.mode = mode;
-        }
+        this.controller.updateMode(mode);
     }
 
     public async addCode(code: string, file: Uri, line: number): Promise<boolean> {
@@ -590,17 +435,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         return success;
     }
 
-    private async runInitialization(kernel: IKernel, fileUri: Resource) {
-        if (!fileUri) {
-            traceInfoIfCI('Unable to run initialization for IW');
-            return;
-        }
-
-        // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-        await this.setFileInKernel(fileUri, kernel!);
-        traceInfoIfCI('file in kernel set for IW');
-    }
-
     public async expandAllCells() {
         await Promise.all(
             this.notebookDocument.getCells().map(async (_cell, index) => {
@@ -651,26 +485,6 @@ export class InteractiveWindow implements IInteractiveWindow {
             return root;
         }
         return undefined;
-    }
-
-    private async setFileInKernel(file: Uri, kernel: IKernel): Promise<void> {
-        // If in perFile mode, set only once
-        const path = getFilePath(file);
-        const execution = this.kernelProvider.getKernelExecution(kernel!);
-        if (this.mode === 'perFile' && !this.fileInKernel) {
-            traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
-            this.fileInKernel = file;
-            await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
-        } else if ((!this.fileInKernel || !this.fs.arePathsSame(this.fileInKernel, file)) && this.mode !== 'perFile') {
-            traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
-            // Otherwise we need to reset it every time
-            this.fileInKernel = file;
-            await execution.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
-        } else {
-            traceInfoIfCI(
-                `Not Initializing __file__ in setFileInKernel with ${path} for mode ${this.mode} currently ${this.fileInKernel}`
-            );
-        }
     }
 
     private updateOwners(file: Uri) {

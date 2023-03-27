@@ -105,7 +105,6 @@ export interface IInteractiveWindow extends IInteractiveBase {
     scrollToCell(id: string): void;
     exportAs(cells?: ICell[]): void;
     export(cells?: ICell[]): void;
-    changeMode(newMode: InteractiveWindowMode): void;
 }
 
 export interface IInteractiveWindowCache {
