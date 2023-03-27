@@ -401,11 +401,6 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                     }
                     return interpreterInArgv;
                 }
-                traceWarning(
-                    `Unable to find a matching interpreter for global Python Kernel Spec '${
-                        kernelSpec.name
-                    }' ${getDisplayPath(kernelSpec.specFile)}`
-                );
                 if (kernelSpec.specFile && !isCreatedByUs) {
                     sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                         kernelSpecHash,
