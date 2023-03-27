@@ -43,8 +43,7 @@ import {
     IDisplayOptions,
     IDisposable,
     IDisposableRegistry,
-    IExtensionContext,
-    IFeaturesManager
+    IExtensionContext
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
@@ -163,8 +162,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         browser: IBrowserService,
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
-        displayDataProvider: ConnectionDisplayDataProvider,
-        featureManager: IFeaturesManager
+        displayDataProvider: ConnectionDisplayDataProvider
     ): IVSCodeNotebookController {
         return new VSCodeNotebookController(
             kernelConnection,
@@ -183,8 +181,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             browser,
             extensionChecker,
             serviceContainer,
-            displayDataProvider,
-            featureManager
+            displayDataProvider
         );
     }
     constructor(
@@ -204,8 +201,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: ConnectionDisplayDataProvider,
-        private readonly featureManager: IFeaturesManager
+        private readonly displayDataProvider: ConnectionDisplayDataProvider
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -214,7 +210,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }>();
 
         this.displayData = this.displayDataProvider.getDisplayData(this.connection);
-        traceVerbose(
+        traceInfoIfCI(
             `Creating notebook controller for ${kernelConnection.kind} & view ${_viewType} (id='${kernelConnection.id}') with name '${this.displayData.label}'`
         );
         this.controller = this.notebookApi.createNotebookController(
@@ -302,7 +298,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private updateDisplayData() {
         this.controller.label = this.displayData.label;
         this.controller.description = this.displayData.description;
-        if (this.featureManager.features.kernelPickerType === 'Insiders' && this.displayData.serverDisplayName) {
+        if (this.displayData.serverDisplayName) {
             // MRU kernel picker doesn't show controller kind/category, so add server name to description
             this.controller.description = this.displayData.description
                 ? `${this.displayData.description} (${this.displayData.serverDisplayName})`
@@ -586,7 +582,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 return;
             }
             await updateNotebookDocumentMetadata(
-                this.featureManager,
                 doc,
                 this.documentManager,
                 kernel.kernelConnectionMetadata,
@@ -631,12 +626,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
 
         // Before we start the notebook, make sure the metadata is set to this new kernel.
-        await updateNotebookDocumentMetadata(
-            this.featureManager,
-            document,
-            this.documentManager,
-            selectedKernelConnectionMetadata
-        );
+        await updateNotebookDocumentMetadata(document, this.documentManager, selectedKernelConnectionMetadata);
 
         if (document.notebookType === InteractiveWindowView) {
             // Possible its an interactive window, in that case we'll create the kernel manually.
@@ -673,14 +663,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 }
 
 async function updateNotebookDocumentMetadata(
-    featureManager: IFeaturesManager,
     document: NotebookDocument,
     editManager: IDocumentManager,
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
     let metadata = getNotebookMetadata(document) || { orig_nbformat: 3 };
-    const { changed } = await updateNotebookMetadata(featureManager, metadata, kernelConnection, kernelInfo);
+    const { changed } = await updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
     if (changed) {
         const edit = new WorkspaceEdit();
         // Create a clone.

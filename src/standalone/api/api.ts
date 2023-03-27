@@ -14,13 +14,12 @@ import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/exte
 import { IExportedKernelService } from './extension';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, Telemetry } from '../../platform/common/constants';
-import { IExtensionContext, IExtensions, IFeaturesManager } from '../../platform/common/types';
+import { IExtensionContext, IExtensions } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
-import { IControllerPreferredService, IControllerRegistration } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
-import { ControllerPreferredService } from '../../notebooks/controllers/controllerPreferredService';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -144,49 +143,12 @@ export function buildApi(
             return kernelServiceFactory.getService();
         },
         getSuggestedController: async (
-            providerId: string,
-            handle: JupyterServerUriHandle,
-            notebook: NotebookDocument
+            _providerId: string,
+            _handle: JupyterServerUriHandle,
+            _notebook: NotebookDocument
         ) => {
             sendApiUsageTelemetry(extensions, 'getSuggestedController');
-            const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-            const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
-            const uri = generateUriFromRemoteProvider(providerId, handle);
-            const serverId = await computeServerId(uri);
-            const featuresManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
-            const preferredService =
-                featuresManager.features.kernelPickerType === 'Stable'
-                    ? serviceContainer.get<IControllerPreferredService>(IControllerPreferredService)
-                    : (() => {
-                          const service = serviceContainer.get<ControllerPreferredService>(ControllerPreferredService);
-                          service.activate();
-                          return service;
-                      })();
-
-            if (
-                controllerRegistration.all.find(
-                    (metadata) =>
-                        (metadata.kind === 'connectToLiveRemoteKernel' ||
-                            metadata.kind === 'startUsingRemoteKernelSpec') &&
-                        metadata.serverId === serverId
-                ) !== undefined
-            ) {
-                // initial kernel detection finished already
-                await connection.updateServerUri(uri);
-                const { controller } = await preferredService.computePreferred(notebook, serverId);
-                return controller?.controller;
-            } else {
-                // initial kernel detection didn't finish yet, wait for the first set of kernels to be registered
-                const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
-                    serverId,
-                    controllerRegistration
-                );
-
-                await connection.updateServerUri(uri);
-                await controllerCreatedPromise;
-                const { controller } = await preferredService.computePreferred(notebook, serverId);
-                return controller?.controller;
-            }
+            return undefined;
         },
         addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {
             sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');

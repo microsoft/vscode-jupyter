@@ -188,7 +188,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
         Uri | SelectJupyterUriCommandSource | undefined,
         NotebookDocument | undefined
     ];
-    [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineNext]: [NotebookCell];
@@ -197,5 +196,4 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
     [DSCommands.InstallPythonViaKernelPicker]: [];
-    [DSCommands.SwitchToRemoteKernels]: [];
 }

@@ -631,13 +631,6 @@
                 "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted"
             },
             {
-                "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                "category": "Jupyter",
-                "icon": "$(debug-disconnect)",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension && config.notebook.kernelPicker.type != mru"
-            },
-            {
                 "command": "jupyter.notebookeditor.addcellbelow",
                 "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
                 "category": "Notebook",
@@ -785,18 +778,6 @@
                 "title": "%DataScience.runInDedicatedExtensionHost%",
                 "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.installPythonExtensionViaKernelPicker",
-                "title": "%DataScience.installPythonExtensionViaKernelPickerTitle%"
-            },
-            {
-                "command": "jupyter.installPythonViaKernelPicker",
-                "title": "%DataScience.installPythonTitle%"
-            },
-            {
-                "command": "jupyter.switchToRemoteKernels",
-                "title": "%DataScience.switchToRemoteKernelsTitle%"
             }
         ],
         "submenus": [
@@ -888,12 +869,6 @@
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation@4",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
-                },
-                {
-                    "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                    "group": "overflow@1000",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true && config.notebook.kernelPicker.type != mru"
                 }
             ],
             "notebook/toolbar": [
@@ -949,20 +924,6 @@
                 {
                     "command": "jupyter.runAndDebugCell",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
-                }
-            ],
-            "notebook/kernelSource": [
-                {
-                    "command": "jupyter.installPythonExtensionViaKernelPicker",
-                    "when": "jupyter.showInstallPythonExtensionCommand && config.notebook.kernelPicker.type != mru"
-                },
-                {
-                    "command": "jupyter.installPythonViaKernelPicker",
-                    "when": "jupyter.showInstallPythonCommand && config.notebook.kernelPicker.type != mru"
-                },
-                {
-                    "command": "jupyter.switchToRemoteKernels",
-                    "when": "jupyter.showingLocalOrWebEmpty && config.notebook.kernelPicker.type != mru"
                 }
             ],
             "interactive/toolbar": [
@@ -1032,14 +993,6 @@
                 }
             ],
             "commandPalette": [
-                {
-                    "command": "jupyter.installPythonExtensionViaKernelPicker",
-                    "when": "false"
-                },
-                {
-                    "command": "jupyter.installPythonViaKernelPicker",
-                    "when": "false"
-                },
                 {
                     "command": "jupyter.replayPylanceLog",
                     "title": "%jupyter.commandPalette.jupyter.replayPylanceLog.title%",
@@ -1412,21 +1365,12 @@
                     "when": "notebookType == jupyter-notebook && isWorkspaceTrusted"
                 },
                 {
-                    "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                    "when": "false"
-                },
-                {
                     "command": "jupyter.interactive.goToCode",
                     "when": "false"
                 },
                 {
                     "command": "jupyter.interactive.clearAllCells",
                     "when": "editorFocus && editorLangId == python || activeEditor == 'workbench.editor.interactive'"
-                },
-                {
-                    "command": "jupyter.switchToRemoteKernels",
-                    "when": "false"
                 },
                 {
                     "command": "jupyter.selectjupyteruri",

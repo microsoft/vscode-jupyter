@@ -48,8 +48,6 @@ import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarme
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinderOld } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 
@@ -100,15 +98,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         LocalPythonAndRelatedNonPythonKernelSpecFinder,
         LocalPythonAndRelatedNonPythonKernelSpecFinder
     );
-    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinderOld>(
-        LocalPythonAndRelatedNonPythonKernelSpecFinderOld,
-        LocalPythonAndRelatedNonPythonKernelSpecFinderOld
-    );
-    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper>(
-        LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper,
-        LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper
-    );
-    serviceManager.addBinding(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper, IExtensionSyncActivationService);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

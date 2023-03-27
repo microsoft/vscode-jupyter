@@ -152,8 +152,6 @@ export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
 
-export type KernelPickerType = 'Stable' | 'Insiders';
-
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -259,9 +257,7 @@ export type DeprecatedFeatureInfo = {
     setting?: DeprecatedSettingAndValue;
 };
 
-export interface IFeatureSet {
-    readonly kernelPickerType: KernelPickerType;
-}
+export interface IFeatureSet {}
 
 export const IFeaturesManager = Symbol('IFeaturesManager');
 

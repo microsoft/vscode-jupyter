@@ -14,7 +14,6 @@ import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
-import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.node';
 import { CommandRegistry } from './debugger/commandRegistry';
 import { DebuggerVariableRegistration } from './debugger/debuggerVariableRegistration.node';
@@ -54,7 +53,6 @@ import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
 
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);

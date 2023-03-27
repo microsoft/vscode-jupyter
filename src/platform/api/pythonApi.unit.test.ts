@@ -8,7 +8,7 @@ import { Disposable, EventEmitter, WorkspaceFoldersChangeEvent } from 'vscode';
 import { createEventHandler } from '../../test/common';
 import { IWorkspaceService } from '../common/application/types';
 import { disposeAllDisposables } from '../common/helpers';
-import { IDisposable, IExtensionContext, IFeaturesManager, KernelPickerType } from '../common/types';
+import { IDisposable, IExtensionContext } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterService } from './pythonApi';
 import {
@@ -19,83 +19,77 @@ import {
 } from './pythonApiTypes';
 import { IPythonApiProvider, IPythonExtensionChecker } from './types';
 
-(['Insiders', 'Stable'] as KernelPickerType[]).forEach((kernelPickerType) => {
-    suite(`Interpreter Service for ${kernelPickerType}`, () => {
-        let clock: fakeTimers.InstalledClock;
-        let interpreterService: IInterpreterService;
-        let apiProvider: IPythonApiProvider;
-        let extensionChecker: IPythonExtensionChecker;
-        let workspace: IWorkspaceService;
-        let context: IExtensionContext;
-        const disposables: IDisposable[] = [];
-        let onDidActivatePythonExtension: EventEmitter<void>;
-        let onDidChangeWorkspaceFolders: EventEmitter<WorkspaceFoldersChangeEvent>;
-        let onDidChangeActiveEnvironmentPath: EventEmitter<ActiveEnvironmentPathChangeEvent>;
-        let onDidChangeEnvironments: EventEmitter<EnvironmentsChangeEvent>;
-        let onDidEnvironmentVariablesChange: EventEmitter<EnvironmentVariablesChangeEvent>;
-        let newPythonApi: ProposedExtensionAPI;
-        let environments: ProposedExtensionAPI['environments'];
-        let featureManager: IFeaturesManager;
-        setup(() => {
-            interpreterService = mock<IInterpreterService>();
-            apiProvider = mock<IPythonApiProvider>();
-            extensionChecker = mock<IPythonExtensionChecker>();
-            workspace = mock<IWorkspaceService>();
-            context = mock<IExtensionContext>();
-            featureManager = mock<IFeaturesManager>();
-            onDidActivatePythonExtension = new EventEmitter<void>();
-            onDidChangeWorkspaceFolders = new EventEmitter<WorkspaceFoldersChangeEvent>();
-            onDidChangeActiveEnvironmentPath = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
-            onDidChangeEnvironments = new EventEmitter<EnvironmentsChangeEvent>();
-            onDidEnvironmentVariablesChange = new EventEmitter<EnvironmentVariablesChangeEvent>();
-            disposables.push(onDidActivatePythonExtension);
-            disposables.push(onDidChangeWorkspaceFolders);
-            disposables.push(onDidChangeActiveEnvironmentPath);
-            disposables.push(onDidChangeEnvironments);
-            disposables.push(onDidEnvironmentVariablesChange);
+suite(`Interpreter Service`, () => {
+    let clock: fakeTimers.InstalledClock;
+    let interpreterService: IInterpreterService;
+    let apiProvider: IPythonApiProvider;
+    let extensionChecker: IPythonExtensionChecker;
+    let workspace: IWorkspaceService;
+    let context: IExtensionContext;
+    const disposables: IDisposable[] = [];
+    let onDidActivatePythonExtension: EventEmitter<void>;
+    let onDidChangeWorkspaceFolders: EventEmitter<WorkspaceFoldersChangeEvent>;
+    let onDidChangeActiveEnvironmentPath: EventEmitter<ActiveEnvironmentPathChangeEvent>;
+    let onDidChangeEnvironments: EventEmitter<EnvironmentsChangeEvent>;
+    let onDidEnvironmentVariablesChange: EventEmitter<EnvironmentVariablesChangeEvent>;
+    let newPythonApi: ProposedExtensionAPI;
+    let environments: ProposedExtensionAPI['environments'];
+    setup(() => {
+        interpreterService = mock<IInterpreterService>();
+        apiProvider = mock<IPythonApiProvider>();
+        extensionChecker = mock<IPythonExtensionChecker>();
+        workspace = mock<IWorkspaceService>();
+        context = mock<IExtensionContext>();
+        onDidActivatePythonExtension = new EventEmitter<void>();
+        onDidChangeWorkspaceFolders = new EventEmitter<WorkspaceFoldersChangeEvent>();
+        onDidChangeActiveEnvironmentPath = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+        onDidChangeEnvironments = new EventEmitter<EnvironmentsChangeEvent>();
+        onDidEnvironmentVariablesChange = new EventEmitter<EnvironmentVariablesChangeEvent>();
+        disposables.push(onDidActivatePythonExtension);
+        disposables.push(onDidChangeWorkspaceFolders);
+        disposables.push(onDidChangeActiveEnvironmentPath);
+        disposables.push(onDidChangeEnvironments);
+        disposables.push(onDidEnvironmentVariablesChange);
 
-            newPythonApi = mock<ProposedExtensionAPI>();
-            environments = mock<ProposedExtensionAPI['environments']>();
-            when(featureManager.features).thenReturn({ kernelPickerType });
-            when(newPythonApi.environments).thenReturn(instance(environments));
-            when(environments.onDidChangeActiveEnvironmentPath).thenReturn(onDidChangeActiveEnvironmentPath.event);
-            when(environments.onDidChangeEnvironments).thenReturn(onDidChangeEnvironments.event);
-            when(environments.onDidEnvironmentVariablesChange).thenReturn(onDidEnvironmentVariablesChange.event);
-            when(environments.known).thenReturn([]);
-            when(environments.getActiveEnvironmentPath(anything())).thenReturn();
-            (instance(newPythonApi) as any).then = undefined;
-            when(apiProvider.getNewApi()).thenResolve(instance(newPythonApi));
-            when(apiProvider.onDidActivatePythonExtension).thenReturn(onDidActivatePythonExtension.event);
-            when(workspace.onDidChangeWorkspaceFolders).thenReturn(onDidChangeWorkspaceFolders.event);
-            when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-            clock = fakeTimers.install();
-            disposables.push(new Disposable(() => clock.uninstall()));
-        });
-        teardown(() => disposeAllDisposables(disposables));
-        function createInterpreterService() {
-            interpreterService = new InterpreterService(
-                instance(apiProvider),
-                instance(extensionChecker),
-                disposables,
-                instance(workspace),
-                instance(context),
-                instance(featureManager)
-            );
-        }
-        test('Progress status triggered upon refresh', async () => {
-            createInterpreterService();
+        newPythonApi = mock<ProposedExtensionAPI>();
+        environments = mock<ProposedExtensionAPI['environments']>();
+        when(newPythonApi.environments).thenReturn(instance(environments));
+        when(environments.onDidChangeActiveEnvironmentPath).thenReturn(onDidChangeActiveEnvironmentPath.event);
+        when(environments.onDidChangeEnvironments).thenReturn(onDidChangeEnvironments.event);
+        when(environments.onDidEnvironmentVariablesChange).thenReturn(onDidEnvironmentVariablesChange.event);
+        when(environments.known).thenReturn([]);
+        when(environments.getActiveEnvironmentPath(anything())).thenReturn();
+        (instance(newPythonApi) as any).then = undefined;
+        when(apiProvider.getNewApi()).thenResolve(instance(newPythonApi));
+        when(apiProvider.onDidActivatePythonExtension).thenReturn(onDidActivatePythonExtension.event);
+        when(workspace.onDidChangeWorkspaceFolders).thenReturn(onDidChangeWorkspaceFolders.event);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        clock = fakeTimers.install();
+        disposables.push(new Disposable(() => clock.uninstall()));
+    });
+    teardown(() => disposeAllDisposables(disposables));
+    function createInterpreterService() {
+        interpreterService = new InterpreterService(
+            instance(apiProvider),
+            instance(extensionChecker),
+            disposables,
+            instance(workspace),
+            instance(context)
+        );
+    }
+    test('Progress status triggered upon refresh', async () => {
+        createInterpreterService();
 
-            const statuses: typeof interpreterService.status[] = [];
-            interpreterService.onDidChangeStatus(() => statuses.push(interpreterService.status));
-            const progressEvent = createEventHandler(interpreterService, 'onDidChangeStatus', disposables);
-            // const deferred = createDeferred<void>();
-            when(environments.refreshEnvironments(anything())).thenReturn(Promise.resolve());
-            await interpreterService.refreshInterpreters();
-            await clock.runAllAsync();
+        const statuses: typeof interpreterService.status[] = [];
+        interpreterService.onDidChangeStatus(() => statuses.push(interpreterService.status));
+        const progressEvent = createEventHandler(interpreterService, 'onDidChangeStatus', disposables);
+        // const deferred = createDeferred<void>();
+        when(environments.refreshEnvironments(anything())).thenReturn(Promise.resolve());
+        await interpreterService.refreshInterpreters();
+        await clock.runAllAsync();
 
-            verify(environments.refreshEnvironments(anything())).once();
-            assert.isAtLeast(progressEvent.count, 2, 'Progress event not triggered at least 2 times');
-            assert.deepEqual(statuses, ['refreshing', 'idle']);
-        });
+        verify(environments.refreshEnvironments(anything())).once();
+        assert.isAtLeast(progressEvent.count, 2, 'Progress event not triggered at least 2 times');
+        assert.deepEqual(statuses, ['refreshing', 'idle']);
     });
 });

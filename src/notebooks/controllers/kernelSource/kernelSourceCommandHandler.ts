@@ -28,7 +28,7 @@ import {
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable, IDisposableRegistry, IFeaturesManager, IsWebExtension } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
@@ -42,13 +42,12 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
     private readonly providerMappings = new Map<string, IDisposable[]>();
     private kernelSpecsSourceRegistered = false;
     constructor(
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService
+        @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
     }
@@ -56,22 +55,6 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         disposeAllDisposables(this.localDisposables);
     }
     activate(): void {
-        const updatePerFeature = () => {
-            if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-                this._activate();
-            } else {
-                // clear disposables and provider mappings.
-                disposeAllDisposables(this.localDisposables);
-                this.localDisposables = [];
-                this.providerMappings.clear();
-                this.kernelSpecsSourceRegistered = false;
-            }
-        };
-
-        this.disposables.push(this.featuresManager.onDidChangeFeatures(() => updatePerFeature()));
-        updatePerFeature();
-    }
-    private _activate() {
         if (!this.isWebExtension) {
             this.localDisposables.push(
                 notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {

@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { IDisposable, IFeaturesManager } from '../../platform/common/types';
+import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
@@ -136,9 +136,6 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     }
 
     protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
-        if (this.serviceContainer.get<IFeaturesManager>(IFeaturesManager).features.kernelPickerType === 'Stable') {
-            await this.controllerRegistration.loaded;
-        }
         const controller = this.controllerRegistration.getSelected(doc);
         let kernel = this.kernelProvider.get(doc);
         if (controller && (!kernel || (kernel && kernel.status === 'unknown'))) {

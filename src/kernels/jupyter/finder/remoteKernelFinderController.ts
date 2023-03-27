@@ -4,13 +4,7 @@
 import { injectable, inject, named } from 'inversify';
 import { Disposable, Memento } from 'vscode';
 import { IKernelFinder, IKernelProvider, INotebookProvider } from '../../types';
-import {
-    GLOBAL_MEMENTO,
-    IDisposableRegistry,
-    IExtensions,
-    IFeaturesManager,
-    IMemento
-} from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import {
     IJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
@@ -112,84 +106,6 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
     }
 }
 
-class SingleServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
-    private _activeServerFinder: { entry: IJupyterServerUriEntry; finder: RemoteKernelFinder } | undefined;
-    constructor(
-        private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        private extensionChecker: IPythonExtensionChecker,
-        private readonly notebookProvider: INotebookProvider,
-        private readonly serverUriStorage: IJupyterServerUriStorage,
-        private readonly globalState: Memento,
-        private readonly env: IApplicationEnvironment,
-        private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
-        private readonly kernelFinder: KernelFinder,
-        private readonly disposables: IDisposableRegistry,
-        private readonly kernelProvider: IKernelProvider,
-        private readonly extensions: IExtensions
-    ) {}
-
-    async activate(): Promise<void> {
-        this.disposables.push(
-            this.serverUriStorage.onDidChangeUri(() => {
-                this.updateRemoteKernelFinder().then(noop, noop);
-            })
-        );
-
-        this.updateRemoteKernelFinder().then(noop, noop);
-    }
-
-    async updateRemoteKernelFinder() {
-        if (this.serverUriStorage.isLocalLaunch) {
-            // no remote kernel finder needed
-            this._activeServerFinder?.finder.dispose();
-            this._activeServerFinder = undefined;
-            return;
-        }
-
-        const uri = await this.serverUriStorage.getRemoteUri();
-        // uri should not be local
-
-        if (!uri || !uri.isValidated) {
-            this._activeServerFinder?.finder.dispose();
-            this._activeServerFinder = undefined;
-            return;
-        }
-
-        if (this._activeServerFinder?.entry.serverId === uri.serverId) {
-            // no op
-            return;
-        }
-
-        this._activeServerFinder?.finder.dispose();
-        const finder = new RemoteKernelFinder(
-            'currentremote',
-            localize.DataScience.remoteKernelFinderDisplayName,
-            RemoteKernelSpecsCacheKey,
-            this.jupyterSessionManagerFactory,
-            this.extensionChecker,
-            this.notebookProvider,
-            this.globalState,
-            this.env,
-            this.cachedRemoteKernelValidator,
-            this.kernelFinder,
-            this.kernelProvider,
-            this.extensions,
-            uri
-        );
-
-        this._activeServerFinder = {
-            entry: uri,
-            finder
-        };
-
-        finder.activate().then(noop, noop);
-    }
-
-    dispose() {
-        this._activeServerFinder?.finder.dispose();
-    }
-}
-
 // This class creates RemoteKernelFinders for all registered Jupyter Server URIs
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
@@ -207,66 +123,27 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         @inject(IJupyterRemoteCachedKernelValidator)
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         @inject(IKernelFinder) private readonly kernelFinder: KernelFinder,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {
-        this._strategy = this.getStrategy();
-        this.disposables.push(this);
-
-        const updatePerFeature = (skipActivation: boolean) => {
-            this._strategy?.dispose();
-            this._localDisposables.forEach((d) => d.dispose());
-            this._localDisposables = [];
-
-            this._strategy = this.getStrategy();
-
-            if (!skipActivation) {
-                this._strategy.activate().then(noop, noop);
-            }
-        };
-
-        this.disposables.push(this.featuresManager.onDidChangeFeatures(() => updatePerFeature(false)));
-
-        updatePerFeature(true);
+        this._strategy = new MultiServerStrategy(
+            this.jupyterSessionManagerFactory,
+            this.extensionChecker,
+            this.notebookProvider,
+            this.serverUriStorage,
+            this.globalState,
+            this.env,
+            this.cachedRemoteKernelValidator,
+            this.kernelFinder,
+            this._localDisposables,
+            this.kernelProvider,
+            this.extensions
+        );
     }
 
     dispose() {
         this._strategy?.dispose();
         this._localDisposables.forEach((d) => d.dispose());
-    }
-
-    private getStrategy(): IRemoteKernelFinderRegistrationStrategy {
-        if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-            return new MultiServerStrategy(
-                this.jupyterSessionManagerFactory,
-                this.extensionChecker,
-                this.notebookProvider,
-                this.serverUriStorage,
-                this.globalState,
-                this.env,
-                this.cachedRemoteKernelValidator,
-                this.kernelFinder,
-                this._localDisposables,
-                this.kernelProvider,
-                this.extensions
-            );
-        } else {
-            return new SingleServerStrategy(
-                this.jupyterSessionManagerFactory,
-                this.extensionChecker,
-                this.notebookProvider,
-                this.serverUriStorage,
-                this.globalState,
-                this.env,
-                this.cachedRemoteKernelValidator,
-                this.kernelFinder,
-                this._localDisposables,
-                this.kernelProvider,
-                this.extensions
-            );
-        }
     }
 
     activate() {
