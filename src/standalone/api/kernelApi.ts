@@ -235,7 +235,7 @@ class JupyterKernelService implements IExportedKernelService {
             if (!item.connection.kernelModel.id || kernelsAlreadyListed.has(item.connection.kernelModel.id)) {
                 return;
             }
-            kernels.push({ metadata: item.connection, uri: undefined });
+            kernels.push({ metadata: item.connection as KernelConnectionMetadata, uri: undefined });
         });
         return kernels;
     }

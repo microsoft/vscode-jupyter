@@ -91,10 +91,7 @@ export function initialize() {
 }
 mockedVSCode.l10n = {
     bundle: undefined,
-    t: (
-        arg1: string | { message: string; args?: string[] | Record<string, string> },
-        ...restOfArguments: unknown[]
-    ) => {
+    t: (arg1: string | { message: string; args?: string[] | Record<string, string> }, ...restOfArguments: string[]) => {
         if (typeof arg1 === 'string') {
             if (restOfArguments.length === 0) {
                 return arg1;
