@@ -12,8 +12,11 @@ import { toCommandArgument } from '../helpers';
  */
 export function logProcess(file: string, args: string[], options?: SpawnOptions) {
     const argsList = args.reduce((accumulator, current, index) => {
-        let formattedArg = toCommandArgument(getDisplayPath(current));
-        if (current[0] === "'" || current[0] === '"') {
+        let formattedArg = toCommandArgument(current);
+        if (
+            (current.startsWith('"') && current.endsWith('"')) ||
+            (current.startsWith("'") && current.endsWith("'") && (current.includes('/') || current.includes('\\')))
+        ) {
             formattedArg = `${current[0]}${getDisplayPath(current.substr(1))}`;
         }
 
