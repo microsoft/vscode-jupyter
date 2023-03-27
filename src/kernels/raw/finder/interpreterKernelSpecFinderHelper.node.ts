@@ -259,7 +259,9 @@ export class InterpreterKernelSpecFinderHelper {
         cancelToken: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
         traceVerbose(
-            `Finding kernel specs for ${interpreter.id} interpreters: ${interpreter.displayName} => ${interpreter.uri}`
+            `Finding kernel specs for ${interpreter.id} interpreters: ${interpreter.displayName} => ${getDisplayPath(
+                interpreter.uri
+            )}`
         );
         // Find all the possible places to look for this resource
         const kernelSearchPath = Uri.file(path.join(interpreter.sysPrefix, baseKernelPath));
@@ -275,7 +277,9 @@ export class InterpreterKernelSpecFinderHelper {
         if (rootSpecPaths.some((uri) => uriPath.isEqual(uri, kernelSearchPath))) {
             return [];
         }
-        traceVerbose(`Searching for kernel specs in interpreter ${interpreter.id} in path ${kernelSearchPath.fsPath}`);
+        traceVerbose(
+            `Searching for kernel specs in interpreter ${interpreter.id} in path ${getDisplayPath(kernelSearchPath)}`
+        );
         const kernelSpecs = await this.kernelSpecFinder.findKernelSpecsInPaths(kernelSearchPath, cancelToken);
         if (cancelToken.isCancellationRequested) {
             return [];
@@ -332,12 +336,6 @@ export class InterpreterKernelSpecFinderHelper {
                 byDisplayName.set(r.display_name, r);
             }
         });
-
-        traceVerbose(
-            `Finding kernel specs for interpreter ${getDisplayPath(interpreter.uri)} unique results: ${uniqueKernelSpecs
-                .map((u) => (u.specFile || u.name)!)
-                .join('\n')}`
-        );
 
         return uniqueKernelSpecs;
     }
@@ -479,15 +477,17 @@ export async function listPythonAndRelatedNonPythonKernelSpecs(
                     traceVerbose(
                         `Hiding default kernel spec '${kernelSpec.display_name}', '${
                             kernelSpec.name
-                        }', ${getDisplayPathFromLocalFile(kernelSpec.argv[0])} for interpreter ${
+                        }', ${getDisplayPath(kernelSpec.argv[0])} for interpreter ${getDisplayPath(
                             kernelSpec.interpreterPath
-                        } and spec ${kernelSpec.specFile}`
+                        )} and spec ${getDisplayPath(kernelSpec.specFile)}`
                     );
                     return false;
                 }
                 if (kernelSpec.specFile && globalKernelSpecsLoadedForPython.has(kernelSpec.specFile)) {
                     traceVerbose(
-                        `Global kernel spec ${kernelSpec.name}${kernelSpec.specFile} already found with a matching Python Env`
+                        `Global kernel spec ${kernelSpec.name}${getDisplayPath(
+                            kernelSpec.specFile
+                        )} already found with a matching Python Env`
                     );
                     return false;
                 }

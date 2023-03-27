@@ -12,13 +12,12 @@ import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
-import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import { TraceOptions } from '../logging/types';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
@@ -97,7 +96,7 @@ export function pythonEnvToJupyterEnv(
                     ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
                     : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
         } else {
-            traceError(`Python environment ${env.id} excluded as Uri is undefined`);
+            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
             return;
         }
     } else {
@@ -372,8 +371,10 @@ type InterpreterId = string;
 export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
     private readonly didChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
+    private readonly _onDidEnvironmentVariablesChange = new EventEmitter<void>();
     private readonly _onDidRemoveInterpreter = new EventEmitter<{ id: string }>();
     public onDidRemoveInterpreter = this._onDidRemoveInterpreter.event;
+    public onDidEnvironmentVariablesChange = this._onDidEnvironmentVariablesChange.event;
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
     private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
@@ -504,10 +505,7 @@ export class InterpreterService implements IInterpreterService {
         await promise;
     }
     private workspaceCachedActiveInterpreter = new Set<string>();
-    @traceDecoratorVerbose(
-        'Get Active Interpreter',
-        TraceOptions.Arguments | TraceOptions.BeforeCall | TraceOptions.ReturnValue
-    )
+    private lastLoggedResourceAndInterpreterId = '';
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         if (!this.workspace.isTrusted) {
             return;
@@ -552,15 +550,21 @@ export class InterpreterService implements IInterpreterService {
             });
         if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
             promise
-                .then((item) =>
+                .then((item) => {
+                    // Reduce excessive logging.
+                    const key = `${getDisplayPath(resource)}'-${getDisplayPath(item?.id)}`;
+                    if (this.lastLoggedResourceAndInterpreterId === key) {
+                        return;
+                    }
+                    this.lastLoggedResourceAndInterpreterId = key;
                     traceInfo(
-                        `Active Interpreter in Python API for resource '${getDisplayPath(
-                            resource
-                        )}' is ${getDisplayPath(item?.uri)}, EnvType: ${item?.envType}, EnvName: '${
-                            item?.envName
-                        }', Version: ${item?.version?.raw}`
-                    )
-                )
+                        `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
+                            item?.id
+                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${
+                            item?.version?.patch
+                        })`
+                    );
+                })
                 .catch(noop);
         }
         return promise;
@@ -570,7 +574,7 @@ export class InterpreterService implements IInterpreterService {
         return this.pythonEnvHashes.get(id);
     }
 
-    @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    private loggedEnvsWithoutInterpreterPath = new Set<string>();
     public async getInterpreterDetails(
         pythonPath: Uri | { path: string } | InterpreterId,
         token?: CancellationToken
@@ -601,16 +605,21 @@ export class InterpreterService implements IInterpreterService {
                 if (matchedPythonEnv) {
                     const env = await api.environments.resolveEnvironment(matchedPythonEnv);
                     const resolved = this.trackResolvedEnvironment(env, false);
-                    traceVerbose(
+                    traceInfoIfCI(
                         `Interpreter details for ${pythonPathForLogging} from Python is ${JSON.stringify(
                             env
                         )} and our mapping is ${JSON.stringify(resolved)}`
                     );
                     return resolved;
                 }
-                traceWarning(
-                    `No interpreter with path ${pythonPathForLogging} found in Python API, will convert Uri path to string as Id ${pythonPathForLogging}`
-                );
+                const key = pythonPathForLogging;
+                // Reduce excessive logging.
+                if (!this.loggedEnvsWithoutInterpreterPath.has(key)) {
+                    this.loggedEnvsWithoutInterpreterPath.add(key);
+                    traceWarning(
+                        `No interpreter with path ${pythonPathForLogging} found in Python API, will convert Uri path to string as Id ${pythonPathForLogging}`
+                    );
+                }
                 if (token?.isCancellationRequested) {
                     return;
                 }
@@ -784,7 +793,7 @@ export class InterpreterService implements IInterpreterService {
                         try {
                             const env = await api.environments.resolveEnvironment(item);
                             const resolved = this.trackResolvedEnvironment(env, true);
-                            traceVerbose(
+                            traceInfoIfCI(
                                 `Python environment for ${item.id} is ${
                                     env?.id
                                 } from Python Extension API is ${JSON.stringify(
@@ -795,11 +804,16 @@ export class InterpreterService implements IInterpreterService {
                             );
                             if (resolved) {
                                 allInterpreters.push(resolved);
-                            } else {
-                                traceError(`Failed to get env details from Python API for ${item.id} without an error`);
+                            } else if (item.executable.uri && item.environment?.type !== EnvironmentType.Conda) {
+                                // Ignore cases where we do not have Uri and its a conda env, as those as conda envs without Python.
+                                traceError(
+                                    `Failed to get env details from Python API for ${getDisplayPath(
+                                        item.id
+                                    )} without an error`
+                                );
                             }
                         } catch (ex) {
-                            traceError(`Failed to get env details from Python API for ${item.id}`, ex);
+                            traceError(`Failed to get env details from Python API for ${getDisplayPath(item.id)}`, ex);
                         }
                     })
                 );
@@ -867,6 +881,13 @@ export class InterpreterService implements IInterpreterService {
             .then((api) => {
                 if (!this.eventHandlerAdded && api) {
                     this.eventHandlerAdded = true;
+                    api.environments.onDidEnvironmentVariablesChange(
+                        () => {
+                            this._onDidEnvironmentVariablesChange.fire();
+                        },
+                        this,
+                        this.disposables
+                    );
                     api.environments.onDidChangeActiveEnvironmentPath(
                         () => {
                             traceVerbose(`Detected change in Active Python environment via Python API`);

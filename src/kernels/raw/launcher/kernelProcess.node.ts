@@ -233,7 +233,12 @@ export class KernelProcess implements IKernelProcess {
                     // Capture stderr, incase kernel doesn't start.
                     stderr += output.out;
 
-                    traceWarning(`StdErr from Kernel Process ${output.out}`);
+                    // No point displaying false positives.
+                    // The message `.../site-packages/traitlets/traitlets.py:2548: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
+                    // always confuses users, and leads them to the assumption that this is the reason for the kernel not starting or the like.
+                    if (!output.out.includes('Supporting extra quotes around strings is deprecated in traitlets')) {
+                        traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
+                    }
                 } else {
                     stdout += output.out;
                     // Strip unwanted stuff from the output, else it just chews up unnecessary space.
@@ -298,9 +303,14 @@ export class KernelProcess implements IKernelProcess {
                 })
             ]);
         } catch (e) {
+            const stdErrToLog = (stderrProc || stderr || '').trim();
             if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {
                 traceError('Disposing kernel process due to an error', e);
-                traceError(stderrProc || stderr);
+                if (e && e instanceof Error && stdErrToLog.length && e.message.includes(stdErrToLog)) {
+                    // No need to log the stderr as it's already part of the error message.
+                } else {
+                    traceError(stdErrToLog);
+                }
             }
             // Make sure to dispose if we never connect.
             await this.dispose();
@@ -313,9 +323,7 @@ export class KernelProcess implements IKernelProcess {
                     traceVerbose('User cancelled the kernel launch');
                 }
                 // If we have the python error message in std outputs, display that.
-                const errorMessage =
-                    getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
-                    (stderrProc || stderr).substring(0, 100);
+                const errorMessage = getErrorMessageFromPythonTraceback(stdErrToLog) || stdErrToLog.substring(0, 100);
                 traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderrProc + '\n' + stderr + '\n');
                 throw new KernelDiedError(
                     DataScience.kernelDied(errorMessage),

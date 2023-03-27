@@ -1423,8 +1423,7 @@
                         "warn",
                         "info",
                         "debug",
-                        "verbose",
-                        "everything"
+                        "verbose"
                     ],
                     "description": "%jupyter.configuration.jupyter.logging.level.description%"
                 },
@@ -2029,7 +2028,7 @@
         "testWebExtension": "node ./build/launchWebTest.js",
         "launchWebExtension": "node ./build/launchWeb.js",
         "testSmoke": "node ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
-        "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true VSC_JUPYTER_LOG_FILE=smoke-test.log node --no-force-async-hooks-checks ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
+        "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true node --no-force-async-hooks-checks ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
         "lint": "eslint -c .eslintrc.js --ext .ts --ext .tsx src",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",

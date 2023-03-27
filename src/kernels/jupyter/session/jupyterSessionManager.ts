@@ -12,7 +12,7 @@ import type {
 import { JSONObject } from '@lumino/coreutils';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import {
     IPersistentState,
     IConfigurationService,
@@ -405,7 +405,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             Headers: this.requestCreator.getHeadersCtor()
         };
 
-        traceInfo(`Creating server with url : ${serverSettings.baseUrl}`);
         return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
     }
 

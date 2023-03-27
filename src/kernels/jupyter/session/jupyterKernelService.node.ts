@@ -174,7 +174,8 @@ export class JupyterKernelService implements IJupyterKernelService {
             };
         }
 
-        traceInfo(
+        traceInfo(`RegisterKernel for ${kernel.id} into ${getDisplayPath(kernelSpecFilePath)}`);
+        traceVerbose(
             `RegisterKernel for ${kernel.id} into ${getDisplayPath(kernelSpecFilePath)} with contents ${JSON.stringify(
                 contents
             )}`
