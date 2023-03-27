@@ -102,7 +102,11 @@ const config = {
         './node_modules/@vscode/jupyter-ipywidgets7',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
-        'applicationinsights-native-metrics'
+        // Ignore telemetry specific packages that are not required.
+        'applicationinsights-native-metrics',
+        '@azure/functions-core',
+        '@azure/opentelemetry-instrumentation-azure-sdk',
+        '@opentelemetry/instrumentation'
     ], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
