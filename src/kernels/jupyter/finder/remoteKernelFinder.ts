@@ -15,7 +15,6 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import {
     IJupyterSessionManagerFactory,
     IJupyterSessionManager,
@@ -327,7 +326,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     // Talk to the remote server to determine sessions
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async listKernelsFromConnection(
         connInfo: INotebookProviderConnection
     ): Promise<RemoteKernelConnectionMetadata[]> {

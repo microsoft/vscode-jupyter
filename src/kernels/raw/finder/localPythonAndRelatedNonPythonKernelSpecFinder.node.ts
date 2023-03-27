@@ -19,7 +19,6 @@ import { traceVerbose, traceError, traceWarning } from '../../../platform/loggin
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, IDisposableRegistry, WORKSPACE_MEMENTO } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { ITrustedKernelPaths } from './types';
@@ -283,15 +282,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         await this.updateCachePromise;
     }
 
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     private async listKernelsImplementation(cancelToken: CancellationToken, forceRefresh: boolean) {
-        // If we don't have Python extension installed,
-        // then list all of the global python kernel specs.
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
-            await this.appendNewKernels(this.listGlobalPythonKernelSpecs(false));
-            return;
-        }
-
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? this.interpreterService.resolvedEnvironments
             : [];
