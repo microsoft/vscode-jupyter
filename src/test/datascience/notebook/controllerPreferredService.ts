@@ -15,11 +15,9 @@ import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNot
 import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../../kernels/telemetry/helper';
 import { KernelConnectionMetadata, isLocalConnection } from '../../../kernels/types';
-import { findKernelSpecMatchingInterpreter } from '../../../notebooks/controllers/kernelRanking/helpers';
 import {
     IControllerDefaultService,
     IControllerRegistration,
-    IKernelRankingHelper,
     IVSCodeNotebookController,
     PreferredKernelExactMatchReason
 } from '../../../notebooks/controllers/types';
@@ -49,6 +47,8 @@ import {
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { IServiceContainer } from '../../../platform/ioc/types';
+import { KernelRankingHelper, findKernelSpecMatchingInterpreter } from './kernelRankingHelper';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 
 /**
  * Computes and tracks the preferred kernel for a notebook.
@@ -68,7 +68,7 @@ export class ControllerPreferredService {
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
+        private readonly kernelRankHelper: KernelRankingHelper,
         @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {}
     private static instance: ControllerPreferredService | undefined;
@@ -81,7 +81,9 @@ export class ControllerPreferredService {
                 serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
                 serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
-                serviceContainer.get<IKernelRankingHelper>(IKernelRankingHelper),
+                new KernelRankingHelper(
+                    serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider)
+                ),
                 serviceContainer.get<boolean>(IsWebExtension)
             );
 

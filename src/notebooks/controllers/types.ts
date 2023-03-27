@@ -4,7 +4,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as vscode from 'vscode';
-import { INotebookMetadata } from '@jupyterlab/nbformat';
 import {
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
@@ -12,7 +11,6 @@ import {
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ContributedKernelFinderKind } from '../../kernels/internalTypes';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
@@ -97,25 +95,6 @@ export interface IControllerRegistration {
      */
     onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
     isFiltered(metadata: KernelConnectionMetadata): boolean;
-}
-
-export const IKernelRankingHelper = Symbol('IKernelRankingHelper');
-export interface IKernelRankingHelper {
-    rankKernels(
-        resource: Resource,
-        kernels: KernelConnectionMetadata[],
-        option?: INotebookMetadata,
-        preferredInterpreter?: PythonEnvironment,
-        cancelToken?: vscode.CancellationToken,
-        serverId?: string
-    ): Promise<KernelConnectionMetadata[] | undefined>;
-
-    // For the given kernel connection, return true if it's an exact match for the notebookMetadata
-    isExactMatch(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        notebookMetadata: INotebookMetadata | undefined
-    ): Promise<boolean>;
 }
 
 export const IControllerDefaultService = Symbol('IControllerDefaultService');

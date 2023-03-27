@@ -7,18 +7,11 @@ import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { ControllerDefaultService } from './controllerDefaultService';
 import { ControllerRegistration } from './controllerRegistration';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.web';
-import { KernelRankingHelper } from './kernelRanking/kernelRankingHelper';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
 import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
-import {
-    IControllerDefaultService,
-    IControllerRegistration,
-    IKernelRankingHelper,
-    INotebookKernelSourceSelector
-} from './types';
+import { IControllerDefaultService, IControllerRegistration, INotebookKernelSourceSelector } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
-    serviceManager.addSingleton<IKernelRankingHelper>(IKernelRankingHelper, KernelRankingHelper);
     serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addBinding(IControllerRegistration, IExtensionSyncActivationService);
     serviceManager.addSingleton<IControllerDefaultService>(IControllerDefaultService, ControllerDefaultService);
