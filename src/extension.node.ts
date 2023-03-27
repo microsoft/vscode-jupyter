@@ -93,6 +93,7 @@ import { initializeGlobals as initializeTelemetryGlobals } from './platform/tele
 import { IInterpreterPackages } from './platform/interpreter/types';
 import { homedir, platform, arch, userInfo } from 'os';
 import { getUserHomeDir } from './platform/common/utils/platform.node';
+import { homePath } from './platform/common/platform/fs-paths.node';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -262,7 +263,9 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
     if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
         standardOutputChannel.appendLine(`No workspace folder opened.`);
     } else if (workspace.workspaceFolders.length === 1) {
-        standardOutputChannel.appendLine(`Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri)}`);
+        standardOutputChannel.appendLine(
+            `Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri)}, Home = ${homePath.fsPath}`
+        );
     } else {
         standardOutputChannel.appendLine(
             `Multiple Workspace folders opened ${workspace.workspaceFolders
