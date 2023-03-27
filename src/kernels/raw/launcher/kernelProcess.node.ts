@@ -459,19 +459,26 @@ export class KernelProcess implements IKernelProcess {
             // Remember, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
             // See https://github.com/microsoft/vscode-jupyter/issues/7203
-            const connectionFile = this.connectionFile.includes(' ')
+            const quotedConnectionFile = this.connectionFile.includes(' ')
                 ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
                 : this.connectionFile;
             if (this.launchKernelSpec.argv[indexOfConnectionFile].includes('--connection-file')) {
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
-                ].replace(connectionFilePlaceholder, connectionFile);
-            } else {
-                // Even though we don't have `--connection-file` don't assume it won't be `--config-file` for other kernels.
-                // E.g. in Python the name of the argument is `-f` and in.
+                ].replace(connectionFilePlaceholder, quotedConnectionFile);
+            } else if (
+                this.launchKernelSpec.argv[indexOfConnectionFile].includes(`=${connectionFilePlaceholder}`) &&
+                !this.launchKernelSpec.argv[indexOfConnectionFile].trim().startsWith('=')
+            ) {
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
-                ].replace(connectionFilePlaceholder, connectionFile);
+                ].replace(connectionFilePlaceholder, quotedConnectionFile);
+            } else {
+                // Even though we don't have `--connection-file=${connection_file}` don't assume it won't be `--config-file=${connection_file}` for other kernels.
+                // E.g. in Python the name of the argument is `-f` instead of `--connection-file`.
+                this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
+                    indexOfConnectionFile
+                ].replace(connectionFilePlaceholder, this.connectionFile);
             }
         }
     }

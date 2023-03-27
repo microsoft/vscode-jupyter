@@ -210,7 +210,7 @@ suite('kernel Process', () => {
         verify(pythonExecFactory.createActivatedEnvironment(anything())).never();
         verify(pythonProcess.execObservable(anything(), anything())).never();
         assert.strictEqual(capture(processService.execObservable).first()[0], 'dotnet');
-        assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', `"${tempFile}"`]);
+        assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', tempFile]);
     });
     test('Ensure connection file is created in jupyter runtime directory (.net kernel)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -234,10 +234,7 @@ suite('kernel Process', () => {
         await kernelProcess.launch('', 0, token.token);
 
         assert.strictEqual(capture(processService.execObservable).first()[0], 'dotnet');
-        assert.deepStrictEqual(capture(processService.execObservable).first()[1], [
-            'csharp',
-            `"${expectedConnectionFile}"`
-        ]);
+        assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', expectedConnectionFile]);
 
         // Verify it gets deleted.
         await kernelProcess.dispose();
@@ -270,7 +267,7 @@ suite('kernel Process', () => {
         await kernelProcess.launch('', 0, token.token);
 
         assert.strictEqual(capture(processService.execObservable).first()[0], 'dotnet');
-        assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', `"${tempFile}"`]);
+        assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', tempFile]);
 
         // Verify it gets deleted.
         await kernelProcess.dispose();
@@ -574,6 +571,41 @@ suite('Kernel Process', () => {
         );
         await kernelProcess.dispose();
     });
+    test('Launch from kernelspec (linux with space in file name and file name is a separate arg)', async function () {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
+            id: '1',
+            kernelSpec: {
+                argv: [
+                    '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java',
+                    '--add-opens',
+                    'java.base/jdk.internal.misc=ALL-UNNAMED',
+                    '--illegal-access=permit',
+                    '-Djava.awt.headless=true',
+                    '-Djdk.disableLastUsageTracking=true',
+                    '-Dmaven.repo.local=/Users/jdoe/Notebooks/.venv/share/jupyter/repository',
+                    '-jar',
+                    '/Users/jdoe/.m2/repository/ganymede/ganymede/2.0.0-SNAPSHOT/ganymede-2.0.0-SNAPSHOT.jar',
+                    '--connection-file',
+                    '{connection_file}'
+                ],
+                language: 'java',
+                interrupt_mode: 'message',
+                display_name: '',
+                name: '',
+                executable: ''
+            }
+        });
+        const kernelProcess = launchKernel(metadata, 'wow/connection config.json');
+        await kernelProcess.launch('', 10_000, token.token);
+        const args = capture(processService.execObservable).first();
+
+        assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
+        assert.deepStrictEqual(
+            args[1],
+            metadata.kernelSpec.argv.slice(1, metadata.kernelSpec.argv.length - 1).concat('wow/connection config.json')
+        );
+        await kernelProcess.dispose();
+    });
     test('Launch from kernelspec (windows)', async function () {
         const metadata = LocalKernelSpecConnectionMetadata.create({
             id: '1',
@@ -639,6 +671,41 @@ suite('Kernel Process', () => {
             metadata.kernelSpec.argv
                 .slice(1, metadata.kernelSpec.argv.length - 1)
                 .concat('--connection-file="D:\\hello\\connection config.json"')
+        );
+        await kernelProcess.dispose();
+    });
+    test('Launch from kernelspec (windows with space in file name when file name is a separate arg)', async function () {
+        const metadata = LocalKernelSpecConnectionMetadata.create({
+            id: '1',
+            kernelSpec: {
+                argv: [
+                    'C:\\Program Files\\AdoptOpenJDK\\jdk-16.0.1.9-hotspot\\bin\\java.exe',
+                    '--illegal-access=permit',
+                    '--add-opens',
+                    'java.base/jdk.internal.misc=ALL-UNNAMED',
+                    '-jar',
+                    'C:\\Users\\abc\\AppData\\Roaming\\jupyter\\kernels\\ganymede-1.1.0.20210614-java-16kernel.jar',
+                    '--runtime-dir=C:\\Users\\abc\\AppData\\Roaming\\jupyter\\runtime',
+                    '--connection-file',
+                    '{connection_file}'
+                ],
+                language: 'java',
+                interrupt_mode: 'message',
+                display_name: '',
+                name: '',
+                executable: ''
+            }
+        });
+        const kernelProcess = launchKernel(metadata, 'D:\\hello\\connection config.json');
+        await kernelProcess.launch('', 10_000, token.token);
+        const args = capture(processService.execObservable).first();
+
+        assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
+        assert.deepStrictEqual(
+            args[1],
+            metadata.kernelSpec.argv
+                .slice(1, metadata.kernelSpec.argv.length - 1)
+                .concat('D:\\hello\\connection config.json')
         );
         await kernelProcess.dispose();
     });
