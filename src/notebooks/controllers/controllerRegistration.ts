@@ -160,7 +160,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
 
     private async loadControllersImpl() {
         const connections = this.kernelFinder.kernels;
-        traceVerbose(`Found ${connections.length} cached controllers`);
         this.createNotebookControllers(connections);
 
         traceInfoIfCI(
@@ -206,7 +205,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         if (kernelConnections.length === 0) {
             return;
         }
-        traceVerbose(`Creating ${kernelConnections?.length} controllers`);
 
         try {
             this.batchAdd(kernelConnections, [JupyterNotebookView, InteractiveWindowView]);

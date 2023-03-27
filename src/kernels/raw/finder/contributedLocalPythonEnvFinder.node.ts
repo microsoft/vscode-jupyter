@@ -99,14 +99,6 @@ export class ContributedLocalPythonEnvFinder
         updateCombinedStatus();
         this.pythonKernelFinder.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
         this.interpreters.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
-        this.interpreters.onDidChangeInterpreters(
-            async () => {
-                traceVerbose(`loadData after detecting changes to interpreters`);
-                this.loadData().then(noop, noop);
-            },
-            this,
-            this.disposables
-        );
         this.extensions.onDidChange(
             () => {
                 // If we just installed the Python extension and we fetched the controllers, then fetch it again.
