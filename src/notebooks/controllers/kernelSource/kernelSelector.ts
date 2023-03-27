@@ -115,6 +115,7 @@ export class KernelSelector implements IDisposable {
         this.installPythonItem = {
             label: DataScience.installPythonQuickPickTitle,
             tooltip: DataScience.installPythonQuickPickToolTip,
+            detail: DataScience.pleaseReloadVSCodeOncePythonHasBeenInstalled,
             command: async () => {
                 // Timeout as we want the quick pick to close before we start this process.
                 setTimeout(() => commands.executeCommand(Commands.InstallPythonViaKernelPicker).then(noop, noop));

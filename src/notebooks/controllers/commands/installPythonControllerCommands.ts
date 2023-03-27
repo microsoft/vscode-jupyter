@@ -20,6 +20,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 // the Python Extension or installing Python
 @injectable()
 export class InstallPythonControllerCommands implements IExtensionSyncActivationService {
+    private installedOnceBefore?: boolean;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
     private executingCells: WeakSet<NotebookCell> = new WeakSet<NotebookCell>();
     constructor(
@@ -73,16 +74,21 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
     // when this command is installed, user will have to manually install python and rerun the cell
     private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
+        const buttons = this.installedOnceBefore ? [Common.install, Common.reload] : [Common.install];
         const selection = await this.appShell.showErrorMessage(
             DataScience.pythonNotInstalled,
             { modal: true },
-            Common.install
+            ...buttons
         );
 
         if (selection === Common.install) {
+            this.installedOnceBefore = true;
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
             // Activate the python extension command to show how to install python
             await this.commandManager.executeCommand('python.installPython');
+        } else if (selection === Common.reload) {
+            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'reload' });
+            await this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired);
         } else {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
         }
