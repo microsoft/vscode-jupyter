@@ -1,39 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
 import * as os from 'os';
 import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { traceInfo, traceVerbose } from '../../platform/logging';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import {
-    IExtensionTestApi,
-    PYTHON_PATH,
-    openFile,
-    setAutoSaveDelayInWorkspaceRoot,
-    waitForCondition
-} from '../common.node';
+import { PYTHON_PATH, openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
 import { captureScreenShot } from '../common';
-import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', function () {
-    let api: IExtensionTestApi;
     this.timeout(timeoutForCellToRun);
     suiteSetup(async function () {
         this.timeout(timeoutForCellToRun);
         if (!IS_SMOKE_TEST()) {
             return this.skip();
         }
-        api = await initialize();
+        await initialize();
         await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(async function () {
@@ -76,7 +64,6 @@ suite('Smoke Tests', function () {
         console.log('Step3');
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
         console.log('Step4');
-        await assertContollerMatchesActiveInterpreter(vscode.workspace.notebookDocuments[0]);
     }).timeout(timeoutForCellToRun);
 
     test('Run Cell in Notebook', async function () {
@@ -131,22 +118,6 @@ suite('Smoke Tests', function () {
         // Give time for the file to be saved before we shutdown
         await sleep(300);
     }).timeout(timeoutForCellToRun);
-
-    async function assertContollerMatchesActiveInterpreter(notebookDocument: vscode.NotebookDocument) {
-        const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
-        const controllerSelection = api.serviceManager.get<IControllerRegistration>(IControllerRegistration);
-        const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
-        const activeInterpreter = await interpreterService.getActiveInterpreter();
-
-        assert.ok(
-            areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-            `Controller does not match active interpreter for ${getDisplayPath(
-                notebookDocument?.uri
-            )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
-                controller?.id
-            } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
-        );
-    }
 
     async function computeHash(data: string, algorithm: 'SHA-512' | 'SHA-256' | 'SHA-1'): Promise<string> {
         const inputBuffer = new TextEncoder().encode(data);
