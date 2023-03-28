@@ -23,4 +23,4 @@ suite('Extension localization files', () => {
         expect(filesFailed).to.be.lengthOf(0, `Failed to load JSON for ${filesFailed.join(', ')}`);
     });
 });
-1
+1;
