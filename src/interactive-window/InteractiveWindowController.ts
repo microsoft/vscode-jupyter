@@ -29,6 +29,7 @@ export class InteractiveWindowController {
     constructor(
         private readonly controllerService: IInteractiveControllerHelper,
         private mode: InteractiveWindowMode,
+        private workspaceRoot: Resource,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly kernelProvider: IKernelProvider,
         private owner: Resource
@@ -36,6 +37,12 @@ export class InteractiveWindowController {
 
     public updateMode(mode: InteractiveWindowMode) {
         this.mode = mode;
+    }
+
+    updateOwner(file: Uri) {
+        if (!this.owner) {
+            this.owner = file;
+        }
     }
 
     public get kernelDisposables() {
@@ -65,7 +72,7 @@ export class InteractiveWindowController {
 
         this.setInfoMessageCell(this.metadata, SysInfoReason.Start);
         try {
-            const kernel = await this.startKernelInternal(this.owner);
+            const kernel = await this.startKernelInternal();
             const kernelEventHookForRestart = async () => {
                 if (this.notebook && this.metadata) {
                     this.systemInfoCell = undefined;
@@ -81,7 +88,7 @@ export class InteractiveWindowController {
                     traceVerbose('Restart event handled in IW');
                     this.fileInKernel = undefined;
                     try {
-                        await this.runInitialization(kernel, this.owner);
+                        await this.setFileInKernel(kernel);
                     } catch (ex) {
                         traceError(`Failed to run initialization after restarting`);
                     } finally {
@@ -92,7 +99,7 @@ export class InteractiveWindowController {
                 this.kernelDisposables
             );
             this.fileInKernel = undefined;
-            await this.runInitialization(kernel, this.owner);
+            await this.setFileInKernel(kernel);
             this.finishSysInfoMessage(kernel, SysInfoReason.Start);
             return kernel;
         } catch (ex) {
@@ -109,7 +116,7 @@ export class InteractiveWindowController {
         }
     }
 
-    private async startKernelInternal(owner?: Resource): Promise<IKernel> {
+    private async startKernelInternal(): Promise<IKernel> {
         if (this.kernel) {
             return this.kernel.promise;
         }
@@ -126,7 +133,7 @@ export class InteractiveWindowController {
             const { kernel, actualController } = await this.controllerService.createKernel(
                 this.metadata,
                 this.controller,
-                owner,
+                this.calculateKernelFile(),
                 this.notebook!,
                 this.kernelDisposables
             );
@@ -143,18 +150,22 @@ export class InteractiveWindowController {
         }
     }
 
-    private async runInitialization(kernel: IKernel, fileUri: Resource) {
-        if (!fileUri) {
+    private calculateKernelFile() {
+        if (this.owner) {
+            return this.owner;
+        }
+        if (this.workspaceRoot && this.notebook) {
+            return Uri.joinPath(this.workspaceRoot, this.notebook.uri.path);
+        }
+        return undefined;
+    }
+
+    private async setFileInKernel(kernel: IKernel): Promise<void> {
+        const file = this.calculateKernelFile();
+        if (!file) {
             traceInfoIfCI('Unable to run initialization for IW');
             return;
         }
-
-        // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-        await this.setFileInKernel(fileUri, kernel!);
-        traceInfoIfCI('file in kernel set for IW');
-    }
-
-    private async setFileInKernel(file: Uri, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
         const path = getFilePath(file);
         const execution = this.kernelProvider.getKernelExecution(kernel!);
@@ -266,10 +277,18 @@ export class InteractiveWindowController {
 export class InteractiveControllerFactory {
     constructor(
         private readonly controllerService: IInteractiveControllerHelper,
-        private readonly mode: InteractiveWindowMode
+        private readonly mode: InteractiveWindowMode,
+        private readonly workspaceRoot: Resource
     ) {}
 
     public create(errorHandler: IDataScienceErrorHandler, kernelProvider: IKernelProvider, owner: Resource) {
-        return new InteractiveWindowController(this.controllerService, this.mode, errorHandler, kernelProvider, owner);
+        return new InteractiveWindowController(
+            this.controllerService,
+            this.mode,
+            this.workspaceRoot,
+            errorHandler,
+            kernelProvider,
+            owner
+        );
     }
 }

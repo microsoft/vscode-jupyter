@@ -491,6 +491,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         // Update the owner for this window if not already set
         if (!this._owner) {
             this._owner = file;
+            this.controller.updateOwner(file);
         }
 
         // Add to the list of 'submitters' for this window.

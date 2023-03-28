@@ -126,7 +126,7 @@ export class InteractiveWindowProvider
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
-                new InteractiveControllerFactory(this.controllerHelper, mode),
+                new InteractiveControllerFactory(this.controllerHelper, mode, this.workspaceService.rootFolder),
                 tab,
                 Uri.parse(iw.inputBoxUriString)
             );
@@ -215,7 +215,7 @@ export class InteractiveWindowProvider
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 resource,
-                new InteractiveControllerFactory(this.controllerHelper, mode),
+                new InteractiveControllerFactory(this.controllerHelper, mode, this.workspaceService.rootFolder),
                 editor,
                 inputUri
             );
