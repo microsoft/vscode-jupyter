@@ -9,11 +9,20 @@ import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { IExtensionTestApi, PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
+import {
+    IExtensionTestApi,
+    PYTHON_PATH,
+    openFile,
+    setAutoSaveDelayInWorkspaceRoot,
+    waitForCondition
+} from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
 import { captureScreenShot } from '../common';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', function () {
@@ -42,32 +51,33 @@ suite('Smoke Tests', function () {
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
     });
 
-    // test('Run Cell in interactive window', async () => {
-    //     const file = path.join(
-    //         EXTENSION_ROOT_DIR_FOR_TESTS,
-    //         'src',
-    //         'test',
-    //         'pythonFiles',
-    //         'datascience',
-    //         'simple_note_book.py'
-    //     );
-    //     const outputFile = path.join(path.dirname(file), 'ds.log');
-    //     if (await fs.pathExists(outputFile)) {
-    //         await fs.unlink(outputFile);
-    //     }
-    //     const textDocument = await openFile(file);
+    test('Run Cell in interactive window', async () => {
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'pythonFiles',
+            'datascience',
+            'simple_note_book.py'
+        );
+        const outputFile = path.join(path.dirname(file), 'ds.log');
+        if (await fs.pathExists(outputFile)) {
+            await fs.unlink(outputFile);
+        }
+        const textDocument = await openFile(file);
 
-    //     // Wait for code lenses to get detected.
-    //     console.log('Step0');
-    //     await sleep(1_000);
-    //     console.log('Step1');
-    //     await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
-    //     console.log('Step2');
-    //     const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-    //     console.log('Step3');
-    //     await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
-    //     console.log('Step4');
-    // }).timeout(timeoutForCellToRun);
+        // Wait for code lenses to get detected.
+        console.log('Step0');
+        await sleep(1_000);
+        console.log('Step1');
+        await vscode.commands.executeCommand<void>('jupyter.runallcells', textDocument.uri);
+        console.log('Step2');
+        const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
+        console.log('Step3');
+        await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
+        console.log('Step4');
+        await assertContollerMatchesActiveInterpreter(vscode.workspace.notebookDocuments[0]);
+    }).timeout(timeoutForCellToRun);
 
     test('Run Cell in Notebook', async function () {
         const file = path.join(
@@ -122,42 +132,22 @@ suite('Smoke Tests', function () {
         await sleep(300);
     }).timeout(timeoutForCellToRun);
 
-    test('Interactive window should always pick up current active interpreter', async function () {
-        return this.skip(); // See https://github.com/microsoft/vscode-jupyter/issues/5478
-
-        // Make an interactive window
-        await vscode.commands.executeCommand<void>('jupyter.createnewinteractive');
-        assert.ok(vscode.workspace.notebookDocuments.length === 1, 'Unexpected number of notebook documents created');
-        // const currentWindow = provider.windows[0];
-        // const interpreterForCurrentWindow = currentWindow.notebook?.getMatchingInterpreter();
-        // assert.ok(interpreterForCurrentWindow !== undefined, 'Unable to get matching interpreter for current window');
-
-        // Now change active interpreter
+    async function assertContollerMatchesActiveInterpreter(notebookDocument: vscode.NotebookDocument) {
         const interpreterService = api.serviceManager.get<IInterpreterService>(IInterpreterService);
-        await waitForCondition(
-            async () => interpreterService.resolvedEnvironments.length > 0,
-            15_000,
-            'Waiting for interpreters to be discovered'
-        );
+        const controllerSelection = api.serviceManager.get<IControllerRegistration>(IControllerRegistration);
+        const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
+        const activeInterpreter = await interpreterService.getActiveInterpreter();
 
         assert.ok(
-            interpreterService.resolvedEnvironments.length > 1,
-            'Not enough interpreters to run interactive window smoke test'
+            areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
+            `Controller does not match active interpreter for ${getDisplayPath(
+                notebookDocument?.uri
+            )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
+                controller?.id
+            } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
         );
-        // const differentInterpreter = allInterpreters.find((interpreter) => interpreter !== interpreterForCurrentWindow);
-        // await vscode.commands.executeCommand<void>('python.setInterpreter', differentInterpreter); // Requires change to Python extension
+    }
 
-        // // Now make another interactive window and confirm it's using the newly selected interpreter
-        // await vscode.commands.executeCommand<void>('jupyter.createnewinteractive');
-        // assert.ok(provider.windows.length === 2, 'Unexpected number of interactive windows created');
-        // const newWindow = provider.windows.find((window) => window !== currentWindow);
-        // const interpreterForNewWindow = newWindow?.notebook?.getMatchingInterpreter();
-        // assert.ok(interpreterForNewWindow !== undefined, 'Unable to get matching interpreter for current window');
-        // assert.ok(
-        //     interpreterForNewWindow === differentInterpreter,
-        //     'Interactive window not created with newly selected interpreter'
-        // );
-    });
     async function computeHash(data: string, algorithm: 'SHA-512' | 'SHA-256' | 'SHA-1'): Promise<string> {
         const inputBuffer = new TextEncoder().encode(data);
         const hashBuffer = await require('node:crypto').webcrypto.subtle.digest({ name: algorithm }, inputBuffer);
