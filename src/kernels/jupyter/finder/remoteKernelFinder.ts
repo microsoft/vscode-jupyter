@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, CancellationTokenSource, EventEmitter, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, EventEmitter, Memento } from 'vscode';
 import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
@@ -15,7 +15,6 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import {
     IJupyterSessionManagerFactory,
     IJupyterSessionManager,
@@ -37,6 +36,7 @@ import { removeOldCachedItems } from '../../common/commonFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -69,7 +69,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     kind: ContributedKernelFinderKind.Remote = ContributedKernelFinderKind.Remote;
     private _cacheUpdateCancelTokenSource: CancellationTokenSource | undefined;
     private cache: RemoteKernelConnectionMetadata[] = [];
-
+    private cacheLoggingTimeout?: NodeJS.Timer | number;
     private _onDidChangeKernels = new EventEmitter<{
         added?: RemoteKernelConnectionMetadata[];
         updated?: RemoteKernelConnectionMetadata[];
@@ -326,7 +326,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     // Talk to the remote server to determine sessions
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async listKernelsFromConnection(
         connInfo: INotebookProviderConnection
     ): Promise<RemoteKernelConnectionMetadata[]> {
@@ -393,7 +392,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 const items = [...filtered, ...mappedSpecs];
                 return items;
             } catch (ex) {
-                traceError(`Error fetching remote kernels:`, ex);
+                traceError(
+                    `Error fetching kernels from ${connInfo.baseUrl} (${connInfo.displayName}, ${connInfo.type}):`,
+                    ex
+                );
                 throw ex;
             } finally {
                 if (sessionManager) {
@@ -430,17 +432,26 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             if (added.length || updated.length || removed.length) {
                 this._onDidChangeKernels.fire({ added, updated, removed });
             }
-            traceVerbose(
-                `Updating cache with Remote kernels ${values
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Added = ${added
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Updated = ${updated
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Removed = ${removed
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}`
-            );
+            if (values.length) {
+                if (this.cacheLoggingTimeout) {
+                    clearTimeout(this.cacheLoggingTimeout);
+                }
+                // Reduce the logging, as this can get written a lot,
+                this.cacheLoggingTimeout = setTimeout(() => {
+                    traceVerbose(
+                        `Updating cache with Remote kernels ${values
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Added = ${added
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Updated = ${updated
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Removed = ${removed
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}`
+                    );
+                }, 15_000);
+                this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
+            }
         } catch (ex) {
             traceError('UniversalRemoteKernelFinder: Failed to write to cache', ex);
         }

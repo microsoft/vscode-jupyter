@@ -35,7 +35,7 @@ export class JupyterInterpreterSelector {
      */
     public async selectInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         const currentPythonPath = this.interpreterSelectionState.selectedPythonPath
-            ? getDisplayPath(this.interpreterSelectionState.selectedPythonPath, this.workspace.workspaceFolders)
+            ? getDisplayPath(this.interpreterSelectionState.selectedPythonPath, this.workspace.workspaceFolders || [])
             : undefined;
 
         const suggestions = await this.interpreterSelector.getSuggestions(undefined);

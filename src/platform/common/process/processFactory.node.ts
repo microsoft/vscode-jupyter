@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../application/types';
 import { IDisposableRegistry, Resource } from '../types';
 import { ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc.node';
-import { IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
+import { IProcessService, IProcessServiceFactory } from './types.node';
 
 /**
  * Factory for creating ProcessService objects. Get the current interpreter from a URI to determine the starting environment.
@@ -19,7 +19,6 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
     constructor(
         @inject(ICustomEnvironmentVariablesProvider)
         private readonly envVarsService: ICustomEnvironmentVariablesProvider,
-        @inject(IProcessLogger) private readonly processLogger: IProcessLogger,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
@@ -36,6 +35,6 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         );
         const proc: IProcessService = new ProcessService(customEnvVars);
         this.disposableRegistry.push(proc);
-        return proc.on('exec', this.processLogger.logProcess.bind(this.processLogger));
+        return proc;
     }
 }

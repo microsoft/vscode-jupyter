@@ -140,10 +140,36 @@ export class PythonKernelInterruptDaemon {
             await new Promise<void>((resolve, reject) => {
                 let started = false;
                 const subscription = proc.out.subscribe((out) => {
-                    traceInfoIfCI(`Output from interrupt daemon started = ${started}, output = ${out.out} ('END)`);
+                    traceInfoIfCI(
+                        `Output from interrupt daemon started = ${started}, output (${out.source}) = ${out.out} ('END)`
+                    );
                     if (out.source === 'stdout' && out.out.trim().includes('DAEMON_STARTED:') && !started) {
                         started = true;
                         resolve();
+                    } else if (
+                        out.source === 'stderr' &&
+                        out.out.includes('INTERRUPT:') &&
+                        out.out.includes('ERROR: handling command :INITIALIZE_INTERRUPT:') &&
+                        started
+                    ) {
+                        splitLines(out.out, { trim: true, removeEmptyEntries: true })
+                            .filter((output) => output.includes('INTERRUPT:'))
+                            .forEach((output) => {
+                                try {
+                                    const parts = output.split(':');
+                                    const id = parseInt(parts[parts.indexOf('INITIALIZE_INTERRUPT') + 1], 10);
+                                    const deferred = this.messages.get(id);
+                                    if (deferred) {
+                                        traceError(`Failed to initialize interrupt daemon for ${id}, ${out.out}`);
+                                        deferred.deferred.reject(
+                                            new Error(`Failed to start interrupt daemon ${out.out}`)
+                                        );
+                                        this.messages.delete(id);
+                                    }
+                                } catch (ex) {
+                                    traceError(`Failed to parse interrupt daemon response, ${out.out}`, ex);
+                                }
+                            });
                     } else if (out.source === 'stdout' && out.out.includes('INTERRUPT:') && started) {
                         splitLines(out.out, { trim: true, removeEmptyEntries: true })
                             .filter((output) => output.includes('INTERRUPT:'))

@@ -563,31 +563,6 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Time taken to list the kernels.
-     */
-    [Telemetry.KernelListingPerf]: TelemetryEventInfo<{
-        /**
-         * Whether this telemetry is for listing of all kernels or just python or just non-python.
-         * (fetching kernels first time in the session is slower, later its cached).
-         */
-        kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
-        /**
-         * Total time taken to list kernels.
-         */
-        duration: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            kind: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        },
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Mime type of a cell output.
      * Used to detect the popularity of a mime type, that would help determine which mime types are most common.
      * E.g. if we see widget mimetype, then we know how many use ipywidgets and the like and helps us prioritize widget issues,
@@ -1634,7 +1609,8 @@ export class IEventNamePropertyMapping {
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
-            | 'download'; // User chose click the download link.
+            | 'download' // User chose click the download link.
+            | 'reload'; // User chose to reload VS Code.
     }> = {
         owner: 'IanMatthewHuff',
         feature: ['KernelPicker'],
@@ -1912,6 +1888,83 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A'
+    };
+    /**
+     * Information used to determine the zmq binary support.
+     * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
+     */
+    [Telemetry.ZMQSupport]: TelemetryEventInfo<{
+        /**
+         * Failed to support zmq.
+         */
+        failed: boolean;
+        /**
+         * Whether we tried a fallback to to the older versions of the binaries.
+         */
+        fallbackTried?: boolean;
+        /**
+         * Whether alpine or not.
+         */
+        alpine?: boolean;
+        /**
+         * libc implementation, from env variable LIBC
+         * If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)
+         */
+        libc?: string;
+        /**
+         * arch
+         */
+        zmqarch?: string;
+        /**
+         * arm version
+         */
+        armv?: string;
+        /**
+         * Linux distro id.
+         */
+        distro_id: string;
+        /**
+         * Linux distro version id.
+         */
+        distro_version_id: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            fallbackTried: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            alpine: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            zmqarch: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            libc: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            armv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_version_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.

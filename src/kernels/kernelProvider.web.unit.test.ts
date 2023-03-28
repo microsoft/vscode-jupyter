@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { instance, mock } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../platform/common/types';
@@ -13,7 +13,7 @@ import { createKernelController, TestNotebookDocument } from '../test/datascienc
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { KernelProvider } from './kernelProvider.web';
 import { Kernel, ThirdPartyKernel } from './kernel';
-import { IKernelController, INotebookProvider, KernelConnectionMetadata } from './types';
+import { IKernelController, INotebookProvider, IStartupCodeProviders, KernelConnectionMetadata } from './types';
 import { ThirdPartyKernelProvider } from './kernelProvider.node';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { noop } from '../test/core';
@@ -40,6 +40,8 @@ suite('Web Kernel Provider', function () {
         controller = createKernelController();
     });
     function createKernelProvider() {
+        const registry = mock<IStartupCodeProviders>();
+        when(registry.getProviders(anything())).thenReturn([]);
         return new KernelProvider(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             asyncDisposables as any,
@@ -51,10 +53,12 @@ suite('Web Kernel Provider', function () {
             instance(context),
             instance(jupyterServerUriStorage),
             [],
-            []
+            instance(registry)
         );
     }
     function create3rdPartyKernelProvider() {
+        const registry = mock<IStartupCodeProviders>();
+        when(registry.getProviders(anything())).thenReturn([]);
         return new ThirdPartyKernelProvider(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             asyncDisposables as any,
@@ -63,7 +67,7 @@ suite('Web Kernel Provider', function () {
             instance(configService),
             instance(appShell),
             instance(vscNotebook),
-            []
+            instance(registry)
         );
     }
     teardown(async () => {

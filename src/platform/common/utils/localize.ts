@@ -145,12 +145,26 @@ export namespace DataScience {
         pythonEnvName: string,
         pythonModuleName: string
     ) => l10n.t("Running cells with '{0}' requires the {1} package.", pythonEnvName, pythonModuleName);
+    export const pythonRequiredToLaunchJupyterNotInstalledInConda = (pythonEnvName: string, pythonModuleName: string) =>
+        l10n.t("Running cells with '{0}' requires Python and the {0} package.", pythonEnvName, pythonModuleName);
+
     export const installPackageInstructions = (pythonModuleName: string, commandId: string) =>
         l10n.t(
             "Run the following command to install '{0}' into the Python environment. \nCommand: '{1}'",
             pythonModuleName,
             commandId
         );
+    export const installPythonAndCondaPackageInstructions = (pythonModuleName: string, commandId: string) =>
+        l10n.t(
+            "Run the following command to install Python and '{0}' into the Conda environment. \nCommand: '{1}'",
+            pythonModuleName,
+            commandId
+        );
+
+    export const pythonCondaKernelsWithoutPython = l10n.t(
+        'The Python Runtime and IPyKernel will be automatically installed upon selecting this environment.'
+    );
+
     export const selectJupyterInterpreter = l10n.t('Select an Interpreter to start Jupyter');
     export const jupyterInstall = l10n.t('Install');
     export const currentlySelectedJupyterInterpreterForPlaceholder = (pythonEnvPath: string) =>
@@ -309,6 +323,12 @@ export namespace DataScience {
                 'Do not translate the link https://aka.ms/vscodeJupyterKernelCrash'
             ]
         });
+    export const failedToStartKernelAsPythonIsNotInstalledInCondaEnv = (kernelName: string, condaEnvName: string) =>
+        l10n.t(
+            "The kernel '{0}' was not started as Python is not installed in the Conda Environment '{0}'.  \nClick [here](https://aka.ms/KernelFailurePythonNotInstalledInConda) for further details, optionally install Python into the Conda Environment using the command `conda install -n {0} python -y`.",
+            kernelName,
+            condaEnvName
+        );
     export const kernelCrashedDueToCodeInCurrentOrPreviousCell = l10n.t({
         message:
             "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
@@ -351,9 +371,12 @@ export namespace DataScience {
     export const jupyterRenameServer = l10n.t('Change Server Display Name (Leave Blank To Use URL)');
     export const jupyterSelectUserPrompt = l10n.t('Enter your user name');
     export const jupyterSelectPasswordPrompt = l10n.t('Enter your password');
+    export const jupyterSelectPasswordTitle = (jupyterServer: string) =>
+        l10n.t('Enter your password for the Jupyter Server {0}', jupyterServer);
     export const pythonNotInstalled = l10n.t(
         'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook. \nOnce installed please reload VS Code.'
     );
+    export const pleaseReloadVSCodeOncePythonHasBeenInstalled = l10n.t('Upon installing Python please reload VS Code.');
     export const jupyterNotebookFailure = (errorMessage: string) =>
         l10n.t('Jupyter notebook failed to launch. \r\n{0}', errorMessage);
     export const remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid = (extensionName: string) =>
@@ -503,7 +526,6 @@ export namespace DataScience {
         'Please reload the window when changing the Jupyter command line.'
     );
     export const jupyterCommandLineReloadAnswer = l10n.t('Reload');
-    export const connectingToJupyterUri = (hostName: string) => l10n.t('Connecting to Jupyter server at {0}', hostName);
     export const createdNewNotebook = (hostName: string) => l10n.t('{0}: Creating new notebook ', hostName);
 
     export const createdNewKernel = (hostName: string, sessionId: string) =>
@@ -580,6 +602,7 @@ export namespace DataScience {
     export const kernelCategoryForRemoteJupyterKernel = (kernelSpecName: string) =>
         l10n.t('({0}) Jupyter Kernel', kernelSpecName);
     export const kernelCategoryForConda = l10n.t('Conda Env');
+    export const kernelCategoryForCondaWithoutPython = l10n.t('Conda Env Without Python');
     export const kernelCategoryForPoetry = l10n.t('Poetry Env');
     export const kernelCategoryForPipEnv = l10n.t('Pipenv Env');
     export const kernelCategoryForPyEnv = l10n.t('PyEnv Env');

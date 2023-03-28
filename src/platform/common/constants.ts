@@ -214,7 +214,6 @@ export namespace Commands {
     export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
     export const SelectJupyterURI = 'jupyter.selectjupyteruri';
-    export const SelectNativeJupyterUriFromToolBar = 'jupyter.selectNativeJupyterUriFromToolBar';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
@@ -283,7 +282,6 @@ export namespace Commands {
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
-    export const SwitchToRemoteKernels = 'jupyter.switchToRemoteKernels';
 }
 
 export namespace CodeLensCommands {
@@ -397,6 +395,7 @@ export enum Telemetry {
     FailedToCreateNotebookCellExecution = 'DATASCIENCE.FAILED_TO_CREATE_CELL_EXECUTION',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
+    ZMQSupport = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT',
     JupyterServerZMQStreamError = 'DS_INTERNAL.JUPYTER_SERVER_ZMQ_STREAM_ERROR',
     ConnectRemoteJupyterViaLocalHost = 'DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST',
     ConnectFailedJupyter = 'DS_INTERNAL.CONNECTFAILEDJUPYTER',

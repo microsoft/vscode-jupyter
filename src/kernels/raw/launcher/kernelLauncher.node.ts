@@ -11,7 +11,14 @@ import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceDecoratorVerbose, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
+import {
+    ignoreLogging,
+    logValue,
+    traceDecoratorVerbose,
+    traceInfo,
+    traceVerbose,
+    traceWarning
+} from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
@@ -37,9 +44,10 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { TraceOptions } from '../../../platform/logging/types';
 import { getResourceType } from '../../../platform/common/utils';
-import { format } from '../../../platform/common/helpers';
+import { format, splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { UsedPorts } from '../../common/usedPorts';
+import { isPythonKernelConnection } from '../../helpers';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -105,11 +113,12 @@ export class KernelLauncher implements IKernelLauncher {
 
     @traceDecoratorVerbose('Kernel Launcher. launch', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async launch(
+        @logValue<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>('id')
         kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        cancelToken: CancellationToken
+        @ignoreLogging() cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const stopWatch = new StopWatch();
         const promise = (async () => {
@@ -143,7 +152,11 @@ export class KernelLauncher implements IKernelLauncher {
         token: CancellationToken
     ) {
         const interpreter = kernelConnectionMetadata.interpreter;
-        if (!isLocalConnection(kernelConnectionMetadata) || !interpreter) {
+        if (
+            !isLocalConnection(kernelConnectionMetadata) ||
+            !isPythonKernelConnection(kernelConnectionMetadata) ||
+            !interpreter
+        ) {
             return;
         }
         const service = await this.pythonExecFactory.createActivatedEnvironment({
@@ -178,8 +191,11 @@ export class KernelLauncher implements IKernelLauncher {
             }
         }
         if (output.stderr) {
+            const formattedOutput = splitLines(output.stderr.trim(), { removeEmptyEntries: true, trim: true })
+                .map((l, i) => (i === 0 ? l : `    ${l}`))
+                .join('\n');
             traceWarning(
-                `Stderr output when getting ipykernel version & path ${output.stderr.trim()} for ${displayInterpreterPath}`
+                `Stderr output when getting ipykernel version & path ${formattedOutput} for ${displayInterpreterPath}`
             );
         }
     }
@@ -202,9 +218,10 @@ export class KernelLauncher implements IKernelLauncher {
         // Create a new output channel for this kernel
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
-        const outputChannel = jupyterSettings.logKernelOutputSeparately
-            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel(baseName))
-            : undefined;
+        const outputChannel =
+            jupyterSettings.logKernelOutputSeparately || jupyterSettings.development
+                ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel(baseName), 'log')
+                : undefined;
         outputChannel?.clear();
 
         // Create the process
@@ -224,6 +241,7 @@ export class KernelLauncher implements IKernelLauncher {
             this.platformService
         );
 
+        kernelProcess.exited(() => outputChannel?.dispose(), this, this.disposables);
         try {
             await Promise.race([
                 kernelProcess.launch(workingDirectory, timeout, cancelToken),

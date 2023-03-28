@@ -71,11 +71,6 @@ export class KernelDependencyService implements IKernelDependencyService {
         cannotChangeKernels?: boolean;
         installWithoutPrompting?: boolean;
     }): Promise<KernelInterpreterDependencyResponse> {
-        traceInfo(
-            `installMissingDependencies ${
-                kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
-            }, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
-        );
         if (
             !isLocalConnection(kernelConnection) ||
             !isPythonKernelConnection(kernelConnection) ||
@@ -84,6 +79,11 @@ export class KernelDependencyService implements IKernelDependencyService {
             return KernelInterpreterDependencyResponse.ok;
         }
 
+        traceInfo(
+            `Check & install missing Kernel dependencies for ${getDisplayPath(
+                kernelConnection.interpreter?.uri
+            )}, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
+        );
         const checkForPackages = async () => {
             const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
                 resource,

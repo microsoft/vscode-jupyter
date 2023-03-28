@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { INotebookMetadata } from '@jupyterlab/nbformat';
-import { injectable, inject } from 'inversify';
+import { inject } from 'inversify';
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -11,25 +11,31 @@ import {
     NotebookDocument,
     workspace
 } from 'vscode';
-import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNotebook } from '../../kernels/helpers';
-import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
-import { isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IPythonExtensionChecker } from '../../platform/api/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNotebook } from '../../../kernels/helpers';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
+import { trackKernelResourceInformation } from '../../../kernels/telemetry/helper';
+import { KernelConnectionMetadata, isLocalConnection } from '../../../kernels/types';
 import {
-    JupyterNotebookView,
+    IControllerDefaultService,
+    IControllerRegistration,
+    IVSCodeNotebookController,
+    PreferredKernelExactMatchReason
+} from '../../../notebooks/controllers/types';
+import { getLanguageOfNotebookDocument } from '../../../notebooks/languages/helpers';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import {
     InteractiveWindowView,
+    JupyterNotebookView,
     PYTHON_LANGUAGE,
     Telemetry
-} from '../../platform/common/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposable, IsWebExtension, Resource } from '../../platform/common/types';
-import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../platform/common/utils';
-import { noop } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
+} from '../../../platform/common/constants';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { IDisposable, IDisposableRegistry, IsWebExtension, Resource } from '../../../platform/common/types';
+import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../../platform/common/utils';
+import { noop } from '../../../platform/common/utils/misc';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     logValue,
     traceDecoratorVerbose,
@@ -37,26 +43,18 @@ import {
     traceInfo,
     traceInfoIfCI,
     traceVerbose
-} from '../../platform/logging';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
-import { getLanguageOfNotebookDocument } from '../languages/helpers';
-import { findKernelSpecMatchingInterpreter } from './kernelRanking/helpers';
-import {
-    IControllerDefaultService,
-    IControllerPreferredService,
-    IControllerRegistration,
-    IKernelRankingHelper,
-    IVSCodeNotebookController,
-    PreferredKernelExactMatchReason
-} from './types';
+} from '../../../platform/logging';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { KernelRankingHelper, findKernelSpecMatchingInterpreter } from './kernelRankingHelper';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 
 /**
  * Computes and tracks the preferred kernel for a notebook.
  * Preferred is determined from the metadata in the notebook. If no metadata is found, the default kernel is used.
  */
-@injectable()
-export class ControllerPreferredService implements IControllerPreferredService, IExtensionSyncActivationService {
+export class ControllerPreferredService {
     private preferredControllers = new WeakMap<NotebookDocument, IVSCodeNotebookController>();
     private preferredCancelTokens = new WeakMap<NotebookDocument, CancellationTokenSource>();
     private get isLocalLaunch(): boolean {
@@ -70,9 +68,30 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IKernelRankingHelper) private readonly kernelRankHelper: IKernelRankingHelper,
+        private readonly kernelRankHelper: KernelRankingHelper,
         @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {}
+    private static instance: ControllerPreferredService | undefined;
+    public static create(serviceContainer: IServiceContainer) {
+        if (!ControllerPreferredService.instance) {
+            ControllerPreferredService.instance = new ControllerPreferredService(
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IControllerDefaultService>(IControllerDefaultService),
+                serviceContainer.get<IInterpreterService>(IInterpreterService),
+                serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
+                serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
+                serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
+                new KernelRankingHelper(
+                    serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider)
+                ),
+                serviceContainer.get<boolean>(IsWebExtension)
+            );
+
+            serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(ControllerPreferredService.instance);
+            ControllerPreferredService.instance.activate();
+        }
+        return ControllerPreferredService.instance;
+    }
     public activate() {
         // Sign up for document either opening or closing
         this.disposables.add(this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));

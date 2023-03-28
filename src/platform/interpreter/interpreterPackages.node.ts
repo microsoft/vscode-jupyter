@@ -11,10 +11,9 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getComparisonKey } from '../vscode-path/resources';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../telemetry/helpers';
 import { IWorkspaceService } from '../common/application/types';
-import { traceDecoratorVerbose, traceError, traceWarning } from '../logging';
+import { traceError, traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IInterpreterPackages } from './types';
-import { TraceOptions } from '../logging/types';
 import { IPythonExecutionFactory } from './types.node';
 
 const interestedPackages = new Set(
@@ -177,11 +176,10 @@ export class InterpreterPackages implements IInterpreterPackages {
         this.pendingInterpreterInformation.set(key, promise);
     }
 
-    @traceDecoratorVerbose(
-        'interpreterPackages getPackageInformation',
-        TraceOptions.BeforeCall | TraceOptions.Arguments
-    )
     private async getPackageInformation({ interpreter }: { interpreter: PythonEnvironment }) {
+        if (interpreter.isCondaEnvWithoutPython) {
+            return;
+        }
         const service = await this.executionFactory.createActivatedEnvironment({
             interpreter
         });

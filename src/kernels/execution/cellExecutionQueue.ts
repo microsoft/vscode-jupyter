@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { traceInfo, traceError, traceVerbose, traceWarning } from '../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
@@ -173,9 +173,20 @@ export class CellExecutionQueue implements Disposable {
                 executionResult === NotebookCellRunState.Error
             ) {
                 this.cancelledOrCompletedWithErrors = true;
-                traceInfo(
-                    `Cancel all remaining cells ${this.cancelledOrCompletedWithErrors} || ${executionResult} || ${notebookClosed}`
-                );
+                const reasons: string[] = [];
+                if (this.cancelledOrCompletedWithErrors) {
+                    reasons.push('cancellation or failure in execution');
+                }
+                if (notebookClosed) {
+                    reasons.push('Notebook being closed');
+                }
+                if (typeof executionResult === 'number' && executionResult === NotebookCellRunState.Error) {
+                    reasons.push('failure in cell execution');
+                }
+                if (reasons.length === 0) {
+                    reasons.push('an unknown reason');
+                }
+                traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
                 await this.cancel();
                 break;
             }

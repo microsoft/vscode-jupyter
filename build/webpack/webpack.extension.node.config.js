@@ -98,10 +98,15 @@ const config = {
         'commonjs',
         'electron',
         './node_modules/zeromq',
+        './node_modules/zeromqold',
         './node_modules/@vscode/jupyter-ipywidgets7',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
-        'applicationinsights-native-metrics'
+        // Ignore telemetry specific packages that are not required.
+        'applicationinsights-native-metrics',
+        '@azure/functions-core',
+        '@azure/opentelemetry-instrumentation-azure-sdk',
+        '@opentelemetry/instrumentation'
     ], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
@@ -125,9 +130,14 @@ const config = {
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
         new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
+        new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromqold.js'], log: false } }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@aminya/node-gyp-build/**/*' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.js' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.node' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.json' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] }),
         new webpack.DefinePlugin({
             IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(

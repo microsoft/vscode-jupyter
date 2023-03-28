@@ -24,7 +24,7 @@ import { IContributedKernelFinder } from './internalTypes';
 import { isWeb, noop } from '../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
-import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
@@ -280,6 +280,9 @@ export class PythonKernelConnectionMetadata {
             interpreter: serializePythonEnvironment(this.interpreter),
             kind: this.kind
         };
+    }
+    public updateInterpreter(interpreter: PythonEnvironment) {
+        Object.assign(this.interpreter, interpreter);
     }
     public static fromJSON(options: Record<string, unknown> | PythonKernelConnectionMetadata) {
         return BaseKernelConnectionMetadata.fromJSON(options) as PythonKernelConnectionMetadata;
@@ -877,7 +880,18 @@ export const enum StartupCodePriority {
 /**
  * Startup code provider provides code snippets that are run right after the kernel is started but before running any code.
  */
-export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
+export const IStartupCodeProviders = Symbol('IStartupCodeProviders');
+export interface IStartupCodeProviders {
+    getProviders(notebookViewType: typeof JupyterNotebookView | typeof InteractiveWindowView): IStartupCodeProvider[];
+    register(
+        provider: IStartupCodeProvider,
+        notebookViewType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): void;
+}
+
+/**
+ * Startup code provider provides code snippets that are run right after the kernel is started but before running any code.
+ */
 export interface IStartupCodeProvider {
     priority: StartupCodePriority;
     getCode(kernel: IBaseKernel): Promise<string[]>;

@@ -8,6 +8,7 @@
  */
 export abstract class BaseError extends Error {
     public stdErr?: string;
+    public isJupyterError = true;
     constructor(public readonly category: ErrorCategory, message: string) {
         super(message);
     }

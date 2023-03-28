@@ -5,7 +5,7 @@ import { Uri } from 'vscode';
 import { disposeAllDisposables, splitLines, trimQuotes } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../../platform/common/types';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../../platform/logging';
+import { traceError, traceInfoIfCI, traceWarning } from '../../../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { IKernel, isLocalConnection } from '../../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -163,7 +163,7 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 }
                 traceWarning(message);
             }
-            traceVerbose(
+            traceInfoIfCI(
                 `Extracted require.config entry for ${widgetFolderName} from ${getDisplayPath(
                     script
                 )} for ${baseUrl.toString()} is ${JSON.stringify(config)}`
@@ -182,8 +182,8 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
             this.getWidgetEntryPoints(),
             this.getNbExtensionsParentPath()
         ]);
-        traceVerbose(`Widget Entry points = ${JSON.stringify(entryPoints)}`);
-        traceVerbose(`Widget baseUrl = ${baseUrl?.toString()}`);
+        traceInfoIfCI(`Widget Entry points = ${JSON.stringify(entryPoints)}`);
+        traceInfoIfCI(`Widget baseUrl = ${baseUrl?.toString()}`);
         if (!baseUrl) {
             return;
         }
@@ -205,7 +205,7 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 )}`
             );
         }
-        traceVerbose(`Widget config = ${JSON.stringify(config)}`);
+        traceInfoIfCI(`Widget config = ${JSON.stringify(config)}`);
         sendTelemetryEvent(
             Telemetry.DiscoverIPyWidgetNamesPerf,
             { duration: stopWatch.elapsedTime },

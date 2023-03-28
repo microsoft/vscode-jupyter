@@ -14,7 +14,6 @@ import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
-import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.node';
 import { CommandRegistry } from './debugger/commandRegistry';
 import { DebuggerVariableRegistration } from './debugger/debuggerVariableRegistration.node';
@@ -42,6 +41,7 @@ import { ExportUtilBase } from './export/exportUtil';
 import { ExportUtil } from './export/exportUtil.node';
 import { FileConverter } from './export/fileConverter.node';
 import { ExportFormat, IExport, IExportBase, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
+import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
@@ -54,7 +54,6 @@ import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, RemoteSwitcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
 
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
@@ -126,6 +125,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         CellOutputMimeTypeTracker
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelStartupCodeProvider
     );
 
     // File export/import

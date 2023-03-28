@@ -36,7 +36,7 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../test/core';
 import {
-    ConnectionDisplayData,
+    IConnectionDisplayData,
     ConnectionDisplayDataProvider,
     getKernelConnectionCategorySync
 } from '../connectionDisplayData';
@@ -225,13 +225,16 @@ suite('Kernel Selector', () => {
         when(serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)).thenReturn(
             instance(pythonChecker)
         );
+        const onDidChange = new EventEmitter<IConnectionDisplayData>();
+        disposables.push(onDidChange);
         when(displayDataProvider.getDisplayData(anything())).thenCall((c: KernelConnectionMetadata) => {
-            return <ConnectionDisplayData>{
+            return <IConnectionDisplayData>{
                 category: getKernelConnectionCategorySync(c),
                 label: getDisplayNameOrNameOfKernelConnection(c),
                 connectionId: c.id,
                 description: c.id,
-                detail: c.id
+                detail: c.id,
+                onDidChange: onDidChange.event
             };
         });
         when(pythonChecker.isPythonExtensionInstalled).thenReturn(true);

@@ -12,7 +12,6 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/co
 import { traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -74,7 +73,6 @@ export class LocalKnownPathKernelSpecFinder
             cancellation.dispose();
         }
     }
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
     private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
         const fn = async () => {
             const kernelSpecs = await this.findKernelSpecs(cancelToken);

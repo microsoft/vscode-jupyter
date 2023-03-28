@@ -2,28 +2,29 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import * as path from '../platform/vscode-path/path';
 import { anything, instance, mock, when } from 'ts-mockito';
+import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
+import * as path from '../platform/vscode-path/path';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../platform/common/types';
 import { uriEquals } from '../test/datascience/helpers';
-import { KernelWorkingFolder } from './kernelWorkingFolder.node';
 import {
     IJupyterKernelSpec,
     IKernel,
+    IStartupCodeProviders,
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
-} from './types';
+} from '../kernels/types';
 
 suite('KernelWorkingFolder', function () {
     let configService: IConfigurationService;
     let fs: IFileSystem;
     let workspace: IWorkspaceService;
-    let kernelWorkingFolder: KernelWorkingFolder;
+    let kernelWorkingFolder: KernelStartupCodeProvider;
     let kernel: IKernel;
     let connectionMetadata: KernelConnectionMetadata;
     let kernelSpec: IJupyterKernelSpec;
@@ -34,7 +35,14 @@ suite('KernelWorkingFolder', function () {
         settings = mock<IWatchableJupyterSettings>();
         fs = mock<IFileSystem>();
         workspace = mock<IWorkspaceService>();
-        kernelWorkingFolder = new KernelWorkingFolder(instance(configService), instance(fs), instance(workspace));
+        const registry = mock<IStartupCodeProviders>();
+        when(registry.register(anything(), anything())).thenReturn();
+        kernelWorkingFolder = new KernelStartupCodeProvider(
+            instance(configService),
+            instance(fs),
+            instance(workspace),
+            instance(registry)
+        );
         kernel = mock<IKernel>();
         connectionMetadata = mock<KernelConnectionMetadata>();
         kernelSpec = mock<IJupyterKernelSpec>();

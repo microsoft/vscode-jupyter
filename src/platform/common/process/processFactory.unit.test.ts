@@ -6,10 +6,8 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 
-import { ProcessLogger } from '../../../platform/common/process/logger.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { ProcessServiceFactory } from '../../../platform/common/process/processFactory.node';
-import { IProcessLogger } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
@@ -17,29 +15,14 @@ import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/va
 suite('Process - ProcessServiceFactory', () => {
     let factory: ProcessServiceFactory;
     let envVariablesProvider: ICustomEnvironmentVariablesProvider;
-    let processLogger: IProcessLogger;
-    let processService: ProcessService;
     let disposableRegistry: IDisposableRegistry;
 
     setup(() => {
         envVariablesProvider = mock(CustomEnvironmentVariablesProvider);
-        processLogger = mock(ProcessLogger);
-        when(processLogger.logProcess('', [], {})).thenReturn();
-        processService = mock(ProcessService);
-        when(
-            processService.on('exec', () => {
-                return;
-            })
-        ).thenReturn(processService);
         disposableRegistry = [];
         const workspace = mock<IWorkspaceService>();
         when(workspace.isTrusted).thenReturn(true);
-        factory = new ProcessServiceFactory(
-            instance(envVariablesProvider),
-            instance(processLogger),
-            disposableRegistry,
-            instance(workspace)
-        );
+        factory = new ProcessServiceFactory(instance(envVariablesProvider), disposableRegistry, instance(workspace));
     });
 
     teardown(() => {

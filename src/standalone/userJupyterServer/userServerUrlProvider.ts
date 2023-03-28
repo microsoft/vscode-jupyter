@@ -31,7 +31,6 @@ import {
     IConfigurationService,
     IDisposable,
     IDisposableRegistry,
-    IFeaturesManager,
     IMemento,
     IsWebExtension
 } from '../../platform/common/types';
@@ -64,27 +63,12 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.disposables.push(this);
     }
 
     activate() {
-        const updatePerFeature = () => {
-            if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-                this._activateProvider();
-            } else {
-                this._localDisposables.forEach((d) => d.dispose());
-                this._localDisposables = [];
-            }
-        };
-
-        this.disposables.push(this.featuresManager.onDidChangeFeatures(() => updatePerFeature()));
-        updatePerFeature();
-    }
-
-    private _activateProvider() {
         this._localDisposables.push(this.uriProviderRegistration.registerProvider(this));
         this._servers = [];
 
@@ -275,12 +259,11 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         }
                         input.validationMessage = message;
                     } else {
-                        // // Offer the user a chance to pick a display name for the server
-                        // // Leaving it blank will use the URI as the display name
-                        // const displayName = await this.applicationShell.showInputBox({
-                        //     title: DataScience.jupyterRenameServer
-                        // });
-                        const displayName = '';
+                        // Offer the user a chance to pick a display name for the server
+                        // Leaving it blank will use the URI as the display name
+                        const displayName = await this.applicationShell.showInputBox({
+                            title: DataScience.jupyterRenameServer
+                        });
 
                         const serverInfo = this.parseUri(uri, (displayName || '').trim());
                         if (serverInfo) {

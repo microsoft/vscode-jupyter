@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';
+import type TelemetryReporter from '@vscode/extension-telemetry';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../common/constants';
-import { traceError, traceEverything } from '../logging';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution } from '../common/constants';
+import { traceError } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { ExcludeType, noop, PickType, UnionToIntersection } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
@@ -78,14 +78,9 @@ export async function getTelemetryReporter(): Promise<TelemetryReporter> {
     if (telemetryReporter) {
         return telemetryReporter;
     }
-    const extensionId = JVSC_EXTENSION_ID;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const extensions = (require('vscode') as typeof import('vscode')).extensions;
-    const extension = extensions.getExtension(extensionId)!;
-    const extensionVersion = extension.packageJSON.version;
 
     const reporterCtor = (await import('@vscode/extension-telemetry')).default;
-    return (telemetryReporter = new reporterCtor(extensionId, extensionVersion, AppinsightsKey, true));
+    return (telemetryReporter = new reporterCtor(AppinsightsKey));
 }
 
 export function setTelemetryReporter(reporter: TelemetryReporter) {
@@ -242,11 +237,6 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
 
         reporter.then((r) => r.sendTelemetryEvent(eventNameSent, customProperties, measures)).catch(noop);
     }
-    traceEverything(
-        `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-            customProperties
-        )} `
-    );
 }
 
 // Type-parameterized form of MethodDecorator in lib.es5.d.ts.

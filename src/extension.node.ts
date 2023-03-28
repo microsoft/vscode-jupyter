@@ -89,11 +89,11 @@ import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
-import { FileLogger } from './platform/logging/fileLogger.node';
-import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 import { IInterpreterPackages } from './platform/interpreter/types';
-import { homedir } from 'os';
+import { homedir, platform, arch, userInfo } from 'os';
+import { getUserHomeDir } from './platform/common/utils/platform.node';
+import { homePath } from './platform/common/platform/fs-paths.node';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -237,21 +237,15 @@ function addConsoleLogger() {
 
         registerLogger(new ConsoleLogger(label));
     }
-
-    // For tests also log to a file.
-    if (isCI && process.env.VSC_JUPYTER_LOG_FILE) {
-        const fileLogger = new FileLogger(createWriteStream(process.env.VSC_JUPYTER_LOG_FILE));
-        registerLogger(fileLogger);
-    }
 }
 
-function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter);
-    registerLogger(new OutputChannelLogger(standardOutputChannel));
+function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager) {
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
+    registerLogger(new OutputChannelLogger(standardOutputChannel, getUserHomeDir().fsPath, userInfo().username));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
-        getJupyterOutputChannel(isDevMode, context.subscriptions, standardOutputChannel),
+        getJupyterOutputChannel(context.subscriptions),
         JUPYTER_OUTPUT_CHANNEL
     );
     serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);
@@ -265,10 +259,13 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
     } else {
         standardOutputChannel.appendLine('Python Extension not installed.');
     }
+    standardOutputChannel.appendLine(`Platform: ${platform()} (${arch()}).`);
     if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
         standardOutputChannel.appendLine(`No workspace folder opened.`);
     } else if (workspace.workspaceFolders.length === 1) {
-        standardOutputChannel.appendLine(`Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri)}`);
+        standardOutputChannel.appendLine(
+            `Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri)}, Home = ${homePath.fsPath}`
+        );
     } else {
         standardOutputChannel.appendLine(
             `Multiple Workspace folders opened ${workspace.workspaceFolders
@@ -318,7 +315,7 @@ async function activateLegacy(
     // Setup the console logger if asked to
     addConsoleLogger();
     // Output channel is special. We need it before everything else
-    addOutputChannel(context, serviceManager, isDevMode);
+    addOutputChannel(context, serviceManager);
 
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager);

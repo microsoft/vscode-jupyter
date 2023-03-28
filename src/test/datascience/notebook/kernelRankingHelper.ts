@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as nbformat from '@jupyterlab/nbformat';
+import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { CancellationToken } from 'vscode';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
+import * as nbformat from '@jupyterlab/nbformat';
 import {
     createInterpreterKernelSpec,
     getKernelId,
@@ -12,7 +14,12 @@ import {
     isPythonKernelConnection,
     isPythonNotebook
 } from '../../../kernels/helpers';
-import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import {
+    isLocalConnection,
+    IJupyterKernelSpec,
+    KernelConnectionMetadata,
+    PythonKernelConnectionMetadata
+} from '../../../kernels/types';
 import { isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { Resource } from '../../../platform/common/types';
@@ -971,4 +978,57 @@ function interpreterMatchesThatInNotebookMetadata(
         kernelConnection.interpreter &&
         interpreterHashForKernel === vscodeInfo.interpreter?.hash
     );
+}
+
+export class KernelRankingHelper {
+    constructor(private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider) {}
+
+    public async rankKernels(
+        resource: Resource,
+        kernels: KernelConnectionMetadata[],
+        notebookMetadata?: INotebookMetadata | undefined,
+        preferredInterpreter?: PythonEnvironment,
+        cancelToken?: CancellationToken,
+        serverId?: string
+    ): Promise<KernelConnectionMetadata[] | undefined> {
+        try {
+            // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
+            if (serverId) {
+                kernels = kernels.filter((kernel) => !isLocalConnection(kernel) && kernel.serverId === serverId);
+            }
+            const preferredRemoteKernelId =
+                resource && this.preferredRemoteFinder
+                    ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
+                    : undefined;
+            if (cancelToken?.isCancellationRequested) {
+                return;
+            }
+            let rankedKernels = await rankKernels(
+                kernels,
+                resource,
+                notebookMetadata,
+                preferredInterpreter,
+                preferredRemoteKernelId,
+                cancelToken
+            );
+
+            return rankedKernels;
+        } catch (ex) {
+            traceError(`RankKernels crashed`, ex);
+            return undefined;
+        }
+    }
+
+    public async isExactMatch(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        notebookMetadata: INotebookMetadata | undefined
+    ): Promise<boolean> {
+        const preferredRemoteKernelId =
+            resource && this.preferredRemoteFinder
+                ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)
+                : undefined;
+
+        return isExactMatch(kernelConnection, notebookMetadata, preferredRemoteKernelId);
+    }
 }

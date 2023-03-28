@@ -1400,6 +1400,22 @@
      ]
    }
  */
+//Telemetry.ZMQSupport
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_ZMQ_SUPPORT" : {
+     "fallbackTried": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether we tried a fallback to to the older versions of the binaries.","owner":"donjayamanne"},
+     "alpine": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether alpine or not.","owner":"donjayamanne"},
+     "zmqarch": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arch","owner":"donjayamanne"},
+     "libc": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"libc implementation, from env variable LIBC If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)","owner":"donjayamanne"},
+     "armv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arm version","owner":"donjayamanne"},
+     "distro_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro id.","owner":"donjayamanne"},
+     "distro_version_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro version id.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.StartJupyter
 /* __GDPR__
    "DS_INTERNAL.JUPYTERSTARTUPCOST" : {
@@ -1427,16 +1443,6 @@
 /* __GDPR__
    "DS_INTERNAL.KERNEL_LAUNCHER_PERF" : {
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.KernelListingPerf
-/* __GDPR__
-   "DS_INTERNAL.KERNEL_LISTING_PERF" : {
-     "kind": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this telemetry is for listing of all kernels or just python or just non-python. (fetching kernels first time in the session is slower, later its cached).","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

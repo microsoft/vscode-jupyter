@@ -11,6 +11,9 @@ import * as path from '../../vscode-path/path';
 import { translateProductToModule } from './utils';
 import { fileToCommandArgument, toCommandArgument } from '../../common/helpers';
 import { getPinnedPackages } from './pinnedPackages';
+import { CancellationTokenSource } from 'vscode';
+import { IPythonExtensionChecker } from '../../api/types';
+import { IInterpreterService } from '../contracts';
 
 /**
  * A Python module installer for a conda environment.
@@ -61,6 +64,29 @@ export class CondaInstaller extends ModuleInstaller {
         }
         // Now we need to check if the current environment is a conda environment or not.
         return interpreter.envType === EnvironmentType.Conda;
+    }
+
+    public override async installModule(
+        productOrModuleName: Product | string,
+        interpreter: PythonEnvironment,
+        cancelTokenSource: CancellationTokenSource,
+        flags?: ModuleInstallFlags
+    ): Promise<void> {
+        await super.installModule(productOrModuleName, interpreter, cancelTokenSource, flags);
+
+        // If we just installed a package into a conda env without python init, then Python may have gotten installed
+        // We now need to ensure the conda env gets updated as a result of this.
+        if (interpreter.envType === EnvironmentType.Conda && interpreter.isCondaEnvWithoutPython) {
+            const pythonExt = this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+            if (!pythonExt.isPythonExtensionActive) {
+                return;
+            }
+            const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+            const updatedCondaEnv = await interpreterService.getInterpreterDetails(interpreter.id);
+            if (updatedCondaEnv && !updatedCondaEnv.isCondaEnvWithoutPython) {
+                Object.assign(interpreter, updatedCondaEnv);
+            }
+        }
     }
 
     /**

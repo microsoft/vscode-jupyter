@@ -10,7 +10,6 @@ import { Deprecated } from './utils/localize';
 import {
     DeprecatedFeatureInfo,
     DeprecatedSettingAndValue,
-    IConfigurationService,
     IFeaturesManager,
     IFeatureSet,
     IPersistentStateFactory
@@ -46,16 +45,12 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
 export class FeatureManager implements IFeaturesManager {
     private _onDidChangeFeatures = new Emitter<void>();
     readonly onDidChangeFeatures = this._onDidChangeFeatures.event;
-    private _features: IFeatureSet = { kernelPickerType: 'Stable' };
+    private _features: IFeatureSet = {};
     get features(): IFeatureSet {
         return this._features;
     }
 
     set features(newFeatures: IFeatureSet) {
-        if (newFeatures.kernelPickerType === this._features.kernelPickerType) {
-            return;
-        }
-
         this._features = newFeatures;
         this._onDidChangeFeatures.fire();
     }
@@ -64,17 +59,11 @@ export class FeatureManager implements IFeaturesManager {
     constructor(
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(ICommandManager) private cmdMgr: ICommandManager,
-        @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
         this._updateFeatures();
 
-        this.disposables.push(
-            this.configService.getSettings().onDidChange(() => {
-                this._updateFeatures();
-            })
-        );
         this.disposables.push(
             this.workspace.onDidChangeConfiguration(() => {
                 this._updateFeatures();
@@ -83,11 +72,8 @@ export class FeatureManager implements IFeaturesManager {
     }
 
     private _updateFeatures() {
-        const kernelPickerType =
-            this.workspace.getConfiguration('notebook.kernelPicker').get('type') === 'mru' ? 'Insiders' : 'Stable';
-
         this.features = {
-            kernelPickerType
+            kernelPickerType: 'Insiders'
         };
     }
 

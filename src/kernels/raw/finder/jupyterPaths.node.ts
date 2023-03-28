@@ -7,7 +7,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { ignoreLogging, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
+import { ignoreLogging, logValue, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -24,6 +24,8 @@ import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { TraceOptions } from '../../../platform/logging/types';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -145,19 +147,16 @@ export class JupyterPaths {
     public async getDataDirs(options: { resource: Resource; interpreter?: PythonEnvironment }): Promise<Uri[]> {
         const key = options.interpreter ? options.interpreter.uri.toString() : '';
         if (!this.cachedDataDirs.has(key)) {
-            this.cachedDataDirs.set(key, this.getDataDirsImpl(options));
+            this.cachedDataDirs.set(key, this.getDataDirsImpl(options.resource, options.interpreter));
         }
         return this.cachedDataDirs.get(key)!;
     }
 
     @traceDecoratorVerbose('getDataDirsImpl', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    private async getDataDirsImpl({
-        resource,
-        interpreter
-    }: {
-        resource: Resource;
-        interpreter?: PythonEnvironment;
-    }): Promise<Uri[]> {
+    private async getDataDirsImpl(
+        resource: Resource,
+        @logValue<PythonEnvironment>('id') interpreter?: PythonEnvironment
+    ): Promise<Uri[]> {
         // When adding paths keep distinct values and preserve the order.
         const dataDir = new ResourceMap<number>();
 
@@ -284,12 +283,27 @@ export class JupyterPaths {
             }
         }
     }
+    private cachedKernelSpecRootPaths?: { promise: Promise<Uri[]>; stopWatch: StopWatch };
     /**
      * This list comes from the docs here:
      * https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
-    @traceDecoratorVerbose('Get KernelSpec root path')
     public async getKernelSpecRootPaths(cancelToken: CancellationToken): Promise<Uri[]> {
+        if (this.cachedKernelSpecRootPaths?.promise && this.cachedKernelSpecRootPaths.stopWatch.elapsedTime <= 60_000) {
+            return this.cachedKernelSpecRootPaths.promise;
+        }
+        const stopWatch = new StopWatch();
+        const promise = this.getKernelSpecRootPathsImpl(cancelToken);
+        this.cachedKernelSpecRootPaths = { promise, stopWatch };
+        const disposable = cancelToken.onCancellationRequested(() => {
+            if (this.cachedKernelSpecRootPaths?.promise === promise) {
+                this.cachedKernelSpecRootPaths = undefined;
+            }
+        }, this);
+        promise.finally(() => disposable.dispose());
+        return promise;
+    }
+    private async getKernelSpecRootPathsImpl(cancelToken: CancellationToken): Promise<Uri[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
         const paths = new ResourceSet(await this.getJupyterPathKernelPaths(cancelToken));
         if (cancelToken.isCancellationRequested) {
@@ -318,10 +332,14 @@ export class JupyterPaths {
             }
         }
 
+        traceVerbose(
+            `Kernel Spec Root Paths, ${Array.from(paths)
+                .map((uri) => getDisplayPath(uri))
+                .join(', ')}`
+        );
         return Array.from(paths);
     }
 
-    @traceDecoratorVerbose('Get Jupyter Kernel Paths')
     private async getJupyterPathKernelPaths(@ignoreLogging() cancelToken?: CancellationToken): Promise<Uri[]> {
         this.cachedJupyterKernelPaths =
             this.cachedJupyterKernelPaths || this.getJupyterPathSubPaths(cancelToken, 'kernels');
@@ -330,13 +348,9 @@ export class JupyterPaths {
                 this.updateCachedPaths(value).then(noop, noop);
             }
         }, noop);
-        if (this.getCachedPaths().length > 0) {
-            return this.getCachedPaths();
-        }
-        return this.cachedJupyterKernelPaths;
+        return this.getCachedPaths().length > 0 ? this.getCachedPaths() : this.cachedJupyterKernelPaths;
     }
 
-    @traceDecoratorVerbose('Get Jupyter Paths')
     private async getJupyterPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
         this.cachedJupyterPaths = this.cachedJupyterPaths || this.getJupyterPathSubPaths(cancelToken);
         return this.cachedJupyterPaths;
@@ -347,11 +361,7 @@ export class JupyterPaths {
      * We need to look at the 'kernels' sub-directory and these paths are supposed to come first in the searching
      * https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
      */
-    @traceDecoratorVerbose('Get Jupyter Sub Paths')
-    private async getJupyterPathSubPaths(
-        @ignoreLogging() cancelToken?: CancellationToken,
-        subDir?: string
-    ): Promise<Uri[]> {
+    private async getJupyterPathSubPaths(cancelToken?: CancellationToken, subDir?: string): Promise<Uri[]> {
         const paths = new ResourceSet();
         const vars = await this.envVarsProvider.getEnvironmentVariables(undefined, 'RunPythonCode');
         if (cancelToken?.isCancellationRequested) {
@@ -375,6 +385,7 @@ export class JupyterPaths {
             });
         }
 
+        traceVerbose(`Jupyter Paths ${getDisplayPath(subDir)}: ${Array.from(paths).map((uri) => getDisplayPath(uri))}`);
         return Array.from(paths);
     }
 

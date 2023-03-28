@@ -83,10 +83,10 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             // versions of Python and Pylance support the experiment.
             this._isEnabled = false;
             if (languageServer !== 'Pylance' && languageServer !== 'Default') {
-                traceInfo(`LSP Notebooks experiment is disabled -- not using Pylance`);
+                traceInfo(`Not using Pylance`);
             } else {
                 this._isEnabled = true;
-                traceInfo(`LSP Notebooks experiment is enabled`);
+                traceInfo(`Using Pylance`);
             }
         }
 
