@@ -56,6 +56,12 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensi
             return;
         }
 
+        // workaround for 13057: provide a dummy workspace file when there is no .py file owner since IW resources are in the root
+        const launchingFile =
+            kernel.resourceUri?.scheme === 'vscode-interactive' && this.workspace.rootFolder
+                ? Uri.joinPath(this.workspace.rootFolder, kernel.resourceUri.path)
+                : kernel.resourceUri;
+
         let suggestedDir = await this.calculateWorkingDirectory(kernel.resourceUri);
         if (suggestedDir && (await this.fs.exists(suggestedDir))) {
             return suggestedDir;
@@ -68,9 +74,9 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensi
             suggestedDir = Uri.file(
                 expandWorkingDir(
                     getFilePath(suggestedDir),
-                    kernel.resourceUri,
+                    launchingFile,
                     this.workspace,
-                    this.configService.getSettings(kernel.resourceUri)
+                    this.configService.getSettings(launchingFile)
                 )
             );
             if (suggestedDir && (await this.fs.exists(suggestedDir))) {
