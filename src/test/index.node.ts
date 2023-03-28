@@ -198,7 +198,7 @@ export async function run(): Promise<void> {
             : options.testFilesSuffix;
         glob(
             `**/*${pattern}.js`,
-            { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'].concat(ignoreGlob), cwd: testsRoot },
+            { ignore: ['**/**.unit.test.js'].concat(ignoreGlob), cwd: testsRoot },
             (error, files) => {
                 if (error) {
                     return reject(error);
