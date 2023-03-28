@@ -503,18 +503,18 @@ export class CellExecutionMessageHandler implements IDisposable {
             return;
         }
         traceCellMessage(this.cell, 'Update output');
-        // Clear if necessary
-        this.clearOutputIfNecessary(this.execution);
-        // Keep track of the display_id against the output item, we might need this to update this later.
-        if (displayId) {
-            CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
-        }
-
         // Append to the data (we would push here but VS code requires a recreation of the array)
         // Possible execution of cell has completed (the task would have been disposed).
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         let task = new Lazy(() => this.execution || this.createTemporaryTask());
+        // Clear if necessary
+        this.clearOutputIfNecessary(task.getValue());
+        // Keep track of the display_id against the output item, we might need this to update this later.
+        if (displayId) {
+            CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
+        }
+
         this.clearLastUsedStreamOutput();
         traceCellMessage(this.cell, 'Append output in addToCellData');
         // If the output belongs to a widget, then add the output to that specific widget (i.e. just below the widget).
