@@ -38,6 +38,10 @@ export class InteractiveWindowController {
         this.mode = mode;
     }
 
+    public updateOwners(file: Uri) {
+        this.owner = file;
+    }
+
     public get kernelDisposables() {
         return this.disposables;
     }
@@ -65,7 +69,7 @@ export class InteractiveWindowController {
 
         this.setInfoMessageCell(this.metadata, SysInfoReason.Start);
         try {
-            const kernel = await this.startKernelInternal(this.owner);
+            const kernel = await this.createKernel();
             const kernelEventHookForRestart = async () => {
                 if (this.notebook && this.metadata) {
                     this.systemInfoCell = undefined;
@@ -81,7 +85,7 @@ export class InteractiveWindowController {
                     traceVerbose('Restart event handled in IW');
                     this.fileInKernel = undefined;
                     try {
-                        await this.runInitialization(kernel, this.owner);
+                        await this.setFileInKernel(kernel);
                     } catch (ex) {
                         traceError(`Failed to run initialization after restarting`);
                     } finally {
@@ -92,7 +96,7 @@ export class InteractiveWindowController {
                 this.kernelDisposables
             );
             this.fileInKernel = undefined;
-            await this.runInitialization(kernel, this.owner);
+            await this.setFileInKernel(kernel);
             this.finishSysInfoMessage(kernel, SysInfoReason.Start);
             return kernel;
         } catch (ex) {
@@ -109,7 +113,7 @@ export class InteractiveWindowController {
         }
     }
 
-    private async startKernelInternal(owner?: Resource): Promise<IKernel> {
+    private async createKernel(): Promise<IKernel> {
         if (this.kernel) {
             return this.kernel.promise;
         }
@@ -126,7 +130,7 @@ export class InteractiveWindowController {
             const { kernel, actualController } = await this.controllerService.createKernel(
                 this.metadata,
                 this.controller,
-                owner,
+                this.owner,
                 this.notebook!,
                 this.kernelDisposables
             );
@@ -143,18 +147,12 @@ export class InteractiveWindowController {
         }
     }
 
-    private async runInitialization(kernel: IKernel, fileUri: Resource) {
-        if (!fileUri) {
+    private async setFileInKernel(kernel: IKernel): Promise<void> {
+        const file = this.owner;
+        if (!file) {
             traceInfoIfCI('Unable to run initialization for IW');
             return;
         }
-
-        // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-        await this.setFileInKernel(fileUri, kernel!);
-        traceInfoIfCI('file in kernel set for IW');
-    }
-
-    private async setFileInKernel(file: Uri, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
         const path = getFilePath(file);
         const execution = this.kernelProvider.getKernelExecution(kernel!);
@@ -177,11 +175,6 @@ export class InteractiveWindowController {
         }
     }
 
-    /**
-     * Inform the controller that a cell is being added and it should wait before adding any others to the execution queue.
-     * @param cellAddedPromise - Promise that resolves when the cell execution has been queued
-     */
-    // TODO: pending cell add only deals with IW, so move that all in here.
     public setPendingCellAdd(cellAddedPromise: Promise<void>) {
         if (this.metadata && this.notebook) {
             const controller = this.controllerService.getRegisteredController(this.metadata);
