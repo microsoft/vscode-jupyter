@@ -121,7 +121,7 @@ suite('IPyWidget Script Manager @widgets', function () {
             } else {
                 const expectedDir = Uri.joinPath(
                     context.extensionUri,
-                    'tmp',
+                    'temp',
                     'scripts',
                     await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
                     'jupyter'
@@ -141,7 +141,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         }
         const expectedDir = Uri.joinPath(
             context.extensionUri,
-            'tmp',
+            'temp',
             'scripts',
             await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
             'jupyter'

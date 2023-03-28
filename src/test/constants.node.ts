@@ -14,13 +14,13 @@ export const EXTENSION_TEST_DIR_FOR_FILES = path.join(
     'src',
     'test',
     'datascience',
-    'tmp'
+    'temp'
 );
 export const JVSC_EXTENSION_ID_FOR_TESTS = 'ms-toolsai.jupyter';
 
 export const SMOKE_TEST_EXTENSIONS_DIR = path.join(
     EXTENSION_ROOT_DIR_FOR_TESTS,
-    'tmp',
+    'temp',
     'ext',
     'smokeTestExtensionsFolder'
 );
