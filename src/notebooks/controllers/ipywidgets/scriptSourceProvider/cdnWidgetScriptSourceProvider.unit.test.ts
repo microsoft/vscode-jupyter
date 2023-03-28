@@ -66,7 +66,7 @@ suite('ipywidget - CDN', () => {
 
     async function generateScriptName(moduleName: string, moduleVersion: string) {
         const hash = sanitize(await computeHash(`${moduleName}${moduleVersion}`, 'SHA-256'));
-        return Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hash, 'index.js')).toString();
+        return Uri.file(path.join(EXTENSION_ROOT_DIR, 'temp', 'scripts', hash, 'index.js')).toString();
     }
     test('Prompt to use CDN', async () => {
         when(appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())).thenResolve();

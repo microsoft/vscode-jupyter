@@ -123,7 +123,7 @@ export class WebviewPanelProvider implements IWebviewPanelProvider {
     public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {
         // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
         // Used by widgets to place files that are not otherwise accessible.
-        const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'tmp'))];
+        const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'temp'))];
         if (Array.isArray(options.additionalPaths)) {
             additionalRootPaths.push(...options.additionalPaths);
         }

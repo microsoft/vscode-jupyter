@@ -91,7 +91,7 @@ suite('Dummy14', () => {
 //         teardown(async function () {
 //             if (this.test && this.test.state === 'failed') {
 //                 const imageName = `${sanitize(this.currentTest?.title)}.png`;
-//                 await notebookUi.captureScreenshot(path.join(os.tmpdir(), 'tmp', 'screenshots', imageName));
+//                 await notebookUi.captureScreenshot(path.join(os.tmpdir(), 'temp', 'screenshots', imageName));
 //             }
 //         });
 //         function getIpynbFilePath(fileName: string) {

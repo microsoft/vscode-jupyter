@@ -88,7 +88,7 @@ export function takeSnapshot() {
 export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
     noop(); // Stick breakpoint here when generating heap snapshots
     // const diff = snapshot.end();
-    // const file = path.join(EXTENSION_ROOT_DIR, 'tmp', `SD-${snapshotCounter}-${prefix}.json`);
+    // const file = path.join(EXTENSION_ROOT_DIR, 'temp', `SD-${snapshotCounter}-${prefix}.json`);
     // snapshotCounter += 1;
     // fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).catch(noop);
 }
