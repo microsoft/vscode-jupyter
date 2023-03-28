@@ -14,7 +14,6 @@ import {
 import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
-import { DataScience } from './utils/localize';
 import { splitLines } from './helpers';
 
 // Can't figure out a better way to do this. Enumerate
@@ -130,25 +129,6 @@ export function translateKernelLanguageToMonaco(language: string): string {
         return `${language.substring(0, 1)}sharp`;
     }
     return jupyterLanguageToMonacoLanguageMapping.get(language) || language;
-}
-
-export function generateNewNotebookUri(
-    counter: number,
-    rootFolder: string | undefined,
-    tmpDir: string,
-    forVSCodeNotebooks?: boolean
-): Uri {
-    // However if there are files already on disk, we should be able to overwrite them because
-    // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
-    const fileName = `${DataScience.untitledNotebookFileName}-${counter}.ipynb`;
-    // Turn this back into an untitled
-    if (forVSCodeNotebooks) {
-        return Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
-    } else {
-        return Uri.joinPath(rootFolder ? Uri.file(rootFolder) : Uri.file(tmpDir), fileName).with({
-            scheme: 'untitled'
-        });
-    }
 }
 
 /**

@@ -9,5 +9,3 @@ export async function sleep(milliseconds: number) {
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
 export function noop() {}
-
-export const isWindows = /^win/.test(process.platform);

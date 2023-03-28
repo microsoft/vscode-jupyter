@@ -72,7 +72,7 @@ export interface IJupyterNotebookProvider {
     createNotebook(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
 }
 
-export type INotebookServerLocalOptions = {
+type INotebookServerLocalOptions = {
     resource: Resource;
     ui: IDisplayOptions;
     /**
@@ -80,7 +80,7 @@ export type INotebookServerLocalOptions = {
      */
     localJupyter: true;
 };
-export type INotebookServerRemoteOptions = {
+type INotebookServerRemoteOptions = {
     serverId: string;
     resource: Resource;
     ui: IDisplayOptions;

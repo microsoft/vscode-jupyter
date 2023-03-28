@@ -293,7 +293,7 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
 }
 
 // Output stream can only have stderr or stdout so just check the first output. Undefined if no outputs
-export function getOutputStreamType(output: NotebookCellOutput): string | undefined {
+function getOutputStreamType(output: NotebookCellOutput): string | undefined {
     if (output.items.length > 0) {
         return output.items[0].mime === CellOutputMimeTypes.stderr ? 'stderr' : 'stdout';
     }
@@ -310,7 +310,7 @@ type JupyterOutput =
  * Metadata we store in VS Code cells.
  * This contains the original metadata from the Jupyuter cells.
  */
-export type CellMetadata = {
+type CellMetadata = {
     /**
      * Stores attachments for cells.
      */
@@ -324,7 +324,7 @@ export type CellMetadata = {
  * Metadata we store in VS Code cell output items.
  * This contains the original metadata from the Jupyuter Outputs.
  */
-export type CellOutputMetadata = {
+type CellOutputMetadata = {
     /**
      * Cell output metadata.
      */
@@ -622,7 +622,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
  * As we're displaying the error in the statusbar, we don't want this dup error in output.
  * Hence remove this.
  */
-export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutput {
+function translateErrorOutput(output?: nbformat.IError): NotebookCellOutput {
     output = output || { output_type: 'error', ename: '', evalue: '', traceback: [] };
     return new NotebookCellOutput(
         [
