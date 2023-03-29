@@ -57,6 +57,7 @@ export class ApplicationShell implements IApplicationShell {
         ...items: T[]
     ): Thenable<T>;
     public showInformationMessage(message: string, options?: any, ...items: any[]): Thenable<any> {
+        traceInfoIfCI(`Show Information Message ${message}, ${JSON.stringify(options)}, ${JSON.stringify(items)}`);
         return window.showInformationMessage(message, options, ...items);
     }
 
@@ -69,6 +70,7 @@ export class ApplicationShell implements IApplicationShell {
         ...items: T[]
     ): Thenable<T>;
     public showWarningMessage(message: any, options?: any, ...items: any[]) {
+        traceInfoIfCI(`Show Warning Message ${message}, ${JSON.stringify(options)}, ${JSON.stringify(items)}`);
         return window.showWarningMessage(message, options, ...items);
     }
 
@@ -79,9 +81,9 @@ export class ApplicationShell implements IApplicationShell {
         message: string,
         options: MessageOptions,
         ...items: T[]
-    ): Thenable<T>;
-    public showErrorMessage(message: any, options?: any, ...items: any[]) {
-        traceInfoIfCI(`Show Error Message ${message}, ${JSON.stringify(items)}`);
+        ): Thenable<T>;
+        public showErrorMessage(message: any, options?: any, ...items: any[]) {
+        traceInfoIfCI(`Show Error Message ${message}, ${JSON.stringify(options)}, ${JSON.stringify(items)}`);
         return window.showErrorMessage(message, options, ...items);
     }
 
