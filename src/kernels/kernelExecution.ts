@@ -2,7 +2,15 @@
 // Licensed under the MIT License.
 
 import { IOutput } from '@jupyterlab/nbformat';
-import { NotebookCell, EventEmitter, notebooks, NotebookCellExecutionState, NotebookDocument, workspace } from 'vscode';
+import {
+    NotebookCell,
+    EventEmitter,
+    notebooks,
+    NotebookCellExecutionState,
+    NotebookDocument,
+    workspace,
+    Memento
+} from 'vscode';
 import { NotebookCellKind } from 'vscode-languageserver-protocol';
 import { IApplicationShell } from '../platform/common/application/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -46,13 +54,15 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         appShell: IApplicationShell,
         context: IExtensionContext,
         formatters: ITracebackFormatter[],
-        private readonly notebook: NotebookDocument
+        private readonly notebook: NotebookDocument,
+        workspaceStorage: Memento
     ) {
         const requestListener = new CellExecutionMessageHandlerService(
             appShell,
             kernel.controller,
             context,
-            formatters
+            formatters,
+            workspaceStorage
         );
         this.disposables.push(requestListener);
         this.executionFactory = new CellExecutionFactory(kernel.controller, requestListener);
@@ -78,6 +88,33 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         return this.documentExecutions.get(this.notebook)?.queue || [];
     }
 
+    public async resumeCellExecution(cell: NotebookCell, msg_id: string): Promise<NotebookCellRunState> {
+        traceCellMessage(cell, `KernelExecution.resumeCellExecution (1), ${getDisplayPath(cell.notebook.uri)}`);
+        if (cell.kind == NotebookCellKind.Markup) {
+            throw new Error('Invalid cell type');
+        }
+
+        traceCellMessage(cell, `kernel.resumeCellExecution, ${getDisplayPath(cell.notebook.uri)}`);
+        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+            this.kernel.resourceUri,
+            this.kernel.kernelConnectionMetadata
+        );
+        // sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell);
+        const sessionPromise = this.kernel.start(new DisplayOptions(false));
+
+        // If we're restarting, wait for it to finish
+        await this.kernel.restarting;
+
+        traceCellMessage(cell, `KernelExecution.resumeCellExecution (2), ${getDisplayPath(cell.notebook.uri)}`);
+        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
+        executionQueue.resumeCell(cell, msg_id);
+        const result = await executionQueue.waitForCompletion([cell]);
+
+        traceCellMessage(cell, `KernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`);
+        traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
+
+        return result[0];
+    }
     public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `KernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
         if (cell.kind == NotebookCellKind.Markup) {

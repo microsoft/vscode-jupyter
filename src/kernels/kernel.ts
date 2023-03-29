@@ -687,7 +687,6 @@ abstract class BaseKernel implements IBaseKernel {
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
         session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
-
         if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
             // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
             // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)

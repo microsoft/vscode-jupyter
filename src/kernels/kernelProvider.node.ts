@@ -93,7 +93,14 @@ export class KernelProvider extends BaseCoreKernelProvider {
 
         this.executions.set(
             kernel,
-            new NotebookKernelExecution(kernel, this.appShell, this.context, this.formatters, notebook)
+            new NotebookKernelExecution(
+                kernel,
+                this.appShell,
+                this.context,
+                this.formatters,
+                notebook,
+                this.workspaceStorage
+            )
         );
         this.asyncDisposables.push(kernel);
         this.storeKernel(notebook, options, kernel);

@@ -420,6 +420,7 @@ export interface INotebookKernelExecution {
      * @param codeOverride Override the code to execute
      */
     executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
+    resumeCellExecution(cell: NotebookCell, msg_id: string): Promise<NotebookCellRunState>;
     /**
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */

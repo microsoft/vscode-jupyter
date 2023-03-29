@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { Event, EventEmitter, Memento, NotebookDocument } from 'vscode';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -22,7 +22,9 @@ import {
     IConfigurationService,
     IExtensionContext,
     IBrowserService,
-    IDisposable
+    IDisposable,
+    IMemento,
+    WORKSPACE_MEMENTO
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -378,7 +380,8 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.serviceContainer.get<IBrowserService>(IBrowserService),
                         this.extensionChecker,
                         this.serviceContainer,
-                        this.serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)
+                        this.serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider),
+                        this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO)
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     const controllerDisposables: IDisposable[] = [];

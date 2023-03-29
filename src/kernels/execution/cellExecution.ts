@@ -44,9 +44,21 @@ export class CellExecutionFactory {
         private readonly requestListener: CellExecutionMessageHandlerService
     ) {}
 
-    public create(cell: NotebookCell, code: string | undefined, metadata: Readonly<KernelConnectionMetadata>) {
+    public create(
+        cell: NotebookCell,
+        code: string | undefined,
+        metadata: Readonly<KernelConnectionMetadata>,
+        resumeExecutionMsgId?: string
+    ) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return CellExecution.fromCell(cell, code, metadata, this.controller, this.requestListener);
+        return CellExecution.fromCell(
+            cell,
+            code,
+            metadata,
+            this.controller,
+            this.requestListener,
+            resumeExecutionMsgId
+        );
     }
 }
 
@@ -88,7 +100,8 @@ export class CellExecution implements IDisposable {
         private readonly codeOverride: string | undefined,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         private readonly controller: IKernelController,
-        private readonly requestListener: CellExecutionMessageHandlerService
+        private readonly requestListener: CellExecutionMessageHandlerService,
+        private readonly resumeExecutionMsgId?: string
     ) {
         workspace.onDidCloseTextDocument(
             (e) => {
@@ -134,11 +147,55 @@ export class CellExecution implements IDisposable {
         code: string | undefined,
         metadata: Readonly<KernelConnectionMetadata>,
         controller: IKernelController,
-        requestListener: CellExecutionMessageHandlerService
+        requestListener: CellExecutionMessageHandlerService,
+        resumeExecutionMsgId?: string
     ) {
-        return new CellExecution(cell, code, metadata, controller, requestListener);
+        return new CellExecution(cell, code, metadata, controller, requestListener, resumeExecutionMsgId);
+    }
+    public async resume(session: IKernelConnectionSession) {
+        if (this.cancelHandled) {
+            traceCellMessage(this.cell, 'Not resuming as it was cancelled');
+            return;
+        }
+        traceCellMessage(this.cell, 'Start resuming execution');
+        traceInfoIfCI(`Cell Exec (resuming) contents ${this.cell.document.getText().substring(0, 50)}...`);
+        if (!this.canExecuteCell()) {
+            // End state is bool | undefined not optional. Undefined == not success or failure
+            this.execution?.end(undefined);
+            this.execution = undefined;
+            this._result.resolve();
+            return;
+        }
+        if (this.started) {
+            traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
+            traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
+            // TODO: Send telemetry this should never happen, if it does we have problems.
+            return this.result;
+        }
+        this.started = true;
+
+        this.startTime = new Date().getTime();
+        activeNotebookCellExecution.set(this.cell.notebook, this.execution);
+        this.execution?.start(this.startTime);
+        NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Executing);
+        this.stopWatch.reset();
+
+        this.cellExecutionHandler = this.requestListener.registerListenerForResumingExecution(this.cell, {
+            kernel: session.kernel!,
+            cellExecution: this.execution!,
+            msg_id: this.resumeExecutionMsgId!,
+            onErrorHandlingExecuteRequestIOPubMessage: (error) => {
+                traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
+                // If not a restart error, then tell the subscriber
+                this.completedWithErrors(error);
+            }
+        });
+        this.cellExecutionHandler.completed.finally(() => this.completedSuccessfully());
     }
     public async start(session: IKernelConnectionSession) {
+        if (this.resumeExecutionMsgId) {
+            return this.resume(session);
+        }
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
             return;
@@ -348,7 +405,7 @@ export class CellExecution implements IDisposable {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
         }
-        this.cellExecutionHandler = this.requestListener.registerListener(this.cell, {
+        this.cellExecutionHandler = this.requestListener.registerListenerForExecution(this.cell, {
             kernel: session.kernel!,
             cellExecution: this.execution!,
             request: this.request,
