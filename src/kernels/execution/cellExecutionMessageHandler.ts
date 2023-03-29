@@ -40,7 +40,6 @@ import { noop } from '../../platform/common/utils/misc';
 import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
-import { Lazy } from '../../platform/common/utils/lazy';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 
 // Helper interface for the set_next_input execute reply payload
@@ -503,18 +502,18 @@ export class CellExecutionMessageHandler implements IDisposable {
             return;
         }
         traceCellMessage(this.cell, 'Update output');
+        // Append to the data (we would push here but VS code requires a recreation of the array)
+        // Possible execution of cell has completed (the task would have been disposed).
+        // This message could have come from a background thread.
+        // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
+        const task = this.execution || this.createTemporaryTask();
         // Clear if necessary
-        this.clearOutputIfNecessary(this.execution);
+        this.clearOutputIfNecessary(task);
         // Keep track of the display_id against the output item, we might need this to update this later.
         if (displayId) {
             CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
         }
 
-        // Append to the data (we would push here but VS code requires a recreation of the array)
-        // Possible execution of cell has completed (the task would have been disposed).
-        // This message could have come from a background thread.
-        // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-        let task = new Lazy(() => this.execution || this.createTemporaryTask());
         this.clearLastUsedStreamOutput();
         traceCellMessage(this.cell, 'Append output in addToCellData');
         // If the output belongs to a widget, then add the output to that specific widget (i.e. just below the widget).
@@ -542,7 +541,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                         .handlingCommId,
                     outputToAppend: cellOutput
                 },
-                task.getValue()
+                task
             );
 
             if (result?.outputAdded) {
@@ -550,7 +549,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             }
         }
         if (outputShouldBeAppended) {
-            task.getValue()?.appendOutput([cellOutput]).then(noop, noop);
+            task?.appendOutput([cellOutput]).then(noop, noop);
         }
         this.endTemporaryTask();
     }
