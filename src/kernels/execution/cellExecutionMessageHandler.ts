@@ -41,6 +41,7 @@ import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import { createDeferred } from '../../platform/common/utils/async';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -166,6 +167,10 @@ export class CellExecutionMessageHandler implements IDisposable {
      * or for any subsequent requests as a result of outputs sending custom messages.
      */
     private readonly ownedRequestMsgIds = new Set<string>();
+    private readonly _completed = createDeferred<void>();
+    public get completed() {
+        return this._completed.promise;
+    }
     constructor(
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
@@ -173,11 +178,15 @@ export class CellExecutionMessageHandler implements IDisposable {
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
         private readonly kernel: Kernel.IKernelConnection,
-        request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>,
-        cellExecution: NotebookCellExecution
+        private readonly request:
+            | Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
+            | undefined,
+        cellExecution: NotebookCellExecution,
+        executionMessageId: string
     ) {
-        this.executeRequestMessageId = request.msg.header.msg_id;
-        this.ownedRequestMsgIds.add(request.msg.header.msg_id);
+        this._completed.promise.catch(noop);
+        this.executeRequestMessageId = executionMessageId;
+        this.ownedRequestMsgIds.add(executionMessageId);
         workspace.onDidChangeNotebookDocument(
             (e) => {
                 if (!isJupyterNotebook(e.notebook)) {
@@ -203,27 +212,29 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.kernel.anyMessage.connect(this.onKernelAnyMessage, this);
         this.kernel.iopubMessage.connect(this.onKernelIOPubMessage, this);
 
-        request.onIOPub = () => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed && !this.completedExecution) {
-                request.dispose();
-            }
-        };
-        request.onReply = (msg) => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed) {
-                request.dispose();
-                return;
-            }
-            this.handleReply(msg);
-        };
-        request.onStdin = this.handleInputRequest.bind(this);
-        request.done
-            .finally(() => {
-                this.completedExecution = true;
-                this.endCellExecution();
-            })
-            .catch(noop);
+        if (request) {
+            request.onIOPub = () => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed && !this.completedExecution) {
+                    request.dispose();
+                }
+            };
+            request.onReply = (msg) => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed) {
+                    request.dispose();
+                    return;
+                }
+                this.handleReply(msg);
+            };
+            request.onStdin = this.handleInputRequest.bind(this);
+            request.done
+                .finally(() => {
+                    this.completedExecution = true;
+                    this.endCellExecution();
+                })
+                .catch(noop);
+        }
     }
     /**
      * This method is called when all execution has been completed (successfully or failed).
@@ -254,12 +265,24 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.prompts.clear();
         this.clearLastUsedStreamOutput();
         this.execution = undefined;
+        this._completed.resolve();
     }
     private onKernelAnyMessage(_: unknown, { direction, msg }: Kernel.IAnyMessageArgs) {
         if (this.cell.document.isClosed) {
             return this.endCellExecution();
         }
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.log((msg as any).msg_type);
+        if (
+            !this.request &&
+            'msg_type' in msg &&
+            (msg.msg_type === 'kernel_info_reply' ||
+                msg.msg_type === 'execute_input' ||
+                msg.msg_type === 'execute_reply')
+        ) {
+            this.completedExecution = true;
+            return this.endCellExecution();
+        }
         // We're only interested in messages after execution has completed.
         // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
         if (direction !== 'send' || !this.completedExecution) {

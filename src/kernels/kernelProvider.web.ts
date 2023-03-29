@@ -1,15 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, multiInject } from 'inversify';
+import { inject, injectable, multiInject, named } from 'inversify';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
 import { InteractiveScheme, InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
-import { NotebookDocument, Uri } from 'vscode';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExtensionContext
+    IExtensionContext,
+    IMemento,
+    WORKSPACE_MEMENTO
 } from '../platform/common/types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
 import { Kernel, ThirdPartyKernel } from './kernel';
@@ -41,7 +43,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
-        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
         disposables.push(jupyterServerUriStorage.onDidRemoveUris(this.handleUriRemoval.bind(this)));
@@ -80,7 +83,14 @@ export class KernelProvider extends BaseCoreKernelProvider {
         );
         this.executions.set(
             kernel,
-            new NotebookKernelExecution(kernel, this.appShell, this.context, this.formatters, notebook)
+            new NotebookKernelExecution(
+                kernel,
+                this.appShell,
+                this.context,
+                this.formatters,
+                notebook,
+                this.workspaceStorage
+            )
         );
         this.asyncDisposables.push(kernel);
         this.storeKernel(notebook, options, kernel);

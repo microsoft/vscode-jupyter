@@ -98,7 +98,10 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
                         extension: JVSC_EXTENSION_ID
                     });
                     const selected = this.controllerRegistration.getSelected(n);
-                    return selected?.connection.id === kernel.id;
+                    if (selected?.connection.id === kernel.id) {
+                        selected.restoreConnection(n).catch(noop);
+                        return true;
+                    }
                 }
                 return false;
             },

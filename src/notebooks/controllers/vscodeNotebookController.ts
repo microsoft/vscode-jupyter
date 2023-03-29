@@ -7,6 +7,7 @@ import {
     EventEmitter,
     ExtensionMode,
     languages,
+    Memento,
     NotebookCell,
     NotebookCellExecution,
     NotebookCellKind,
@@ -162,7 +163,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         browser: IBrowserService,
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
-        displayDataProvider: ConnectionDisplayDataProvider
+        displayDataProvider: ConnectionDisplayDataProvider,
+        workspaceStorage: Memento
     ): IVSCodeNotebookController {
         return new VSCodeNotebookController(
             kernelConnection,
@@ -181,7 +183,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             browser,
             extensionChecker,
             serviceContainer,
-            displayDataProvider
+            displayDataProvider,
+            workspaceStorage
         );
     }
     constructor(
@@ -201,7 +204,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: ConnectionDisplayDataProvider
+        private readonly displayDataProvider: ConnectionDisplayDataProvider,
+        private readonly workspaceStorage: Memento
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -239,6 +243,41 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this,
             this.disposables
         );
+    }
+    public async restoreConnection(notebook: NotebookDocument) {
+        console.error('Done');
+        const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
+        const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
+        const lastExecutionInfo = this.workspaceStorage.get<
+            | {
+                  index: number;
+                  msg_id: string;
+              }
+            | undefined
+        >(`LAST_EXECUTED_CELL_${notebook.uri.toString()}`, undefined);
+
+        // kernelExecution.executeCell(cell);
+        if (
+            kernel.session?.kernel &&
+            !kernelExecution.pendingCells.length &&
+            lastExecutionInfo &&
+            typeof lastExecutionInfo.index === 'number'
+        ) {
+            kernel.session.kernel.anyMessage.connect((_, msg) => {
+                if (
+                    msg.direction === 'recv' &&
+                    msg.msg.parent_header &&
+                    'msg_id' in msg.msg.parent_header &&
+                    msg.msg.parent_header.msg_id === lastExecutionInfo.msg_id
+                ) {
+                    kernelExecution
+                        .resumeCellExecution(notebook.cellAt(lastExecutionInfo.index), lastExecutionInfo.msg_id)
+                        .catch(noop);
+                    console.log(msg);
+                }
+            });
+        }
+        console.error('Done', kernel.uri, kernelExecution.pendingCells.length);
     }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
         if (kernelConnection.kind !== 'connectToLiveRemoteKernel') {
