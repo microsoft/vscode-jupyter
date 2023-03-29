@@ -228,6 +228,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             }
 
             let inputWasHidden = false;
+            let promptingForServerName = false;
             disposables.push(
                 input.onDidAccept(async () => {
                     const uri = input.value;
@@ -259,6 +260,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         }
                         input.validationMessage = message;
                     } else {
+                        promptingForServerName = true;
                         // Offer the user a chance to pick a display name for the server
                         // Leaving it blank will use the URI as the display name
                         const displayName = await this.applicationShell.showInputBox({
@@ -282,7 +284,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 }),
                 input.onDidHide(() => {
                     inputWasHidden = true;
-                    if (!JupyterPasswordConnect.prompt) {
+                    if (!JupyterPasswordConnect.prompt && !promptingForServerName) {
                         resolve(undefined);
                     }
                 })
