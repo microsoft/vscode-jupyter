@@ -81,8 +81,8 @@ export class ApplicationShell implements IApplicationShell {
         message: string,
         options: MessageOptions,
         ...items: T[]
-        ): Thenable<T>;
-        public showErrorMessage(message: any, options?: any, ...items: any[]) {
+    ): Thenable<T>;
+    public showErrorMessage(message: any, options?: any, ...items: any[]) {
         traceInfoIfCI(`Show Error Message ${message}, ${JSON.stringify(options)}, ${JSON.stringify(items)}`);
         return window.showErrorMessage(message, options, ...items);
     }
