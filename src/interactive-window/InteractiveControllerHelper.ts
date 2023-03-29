@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Disposable, Memento, NotebookController, NotebookDocument } from 'vscode';
+import { Disposable, Memento, NotebookController, NotebookDocument, Event } from 'vscode';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
 import { IKernel, KernelAction, KernelConnectionMetadata } from '../kernels/types';
 import { createActiveInterpreterController, isActiveInterpreter } from '../notebooks/controllers/helpers';
 import { KernelConnector } from '../notebooks/controllers/kernelConnector';
-import { IControllerRegistration } from '../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { InteractiveWindowView } from '../platform/common/constants';
 import { IDisposableRegistry, IMemento, Resource, WORKSPACE_MEMENTO } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
@@ -24,8 +24,16 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento
-    ) {}
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer
+    ) {
+        this.onControllerSelected = this.controllerRegistration.onControllerSelected;
+    }
+
+    public readonly onControllerSelected: Event<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+    }>;
 
     public async getInitialController(resource: Resource, preferredConnection?: KernelConnectionMetadata) {
         // If given a preferred connection, use that if it exists
@@ -54,8 +62,12 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         );
     }
 
-    public getSelected(notebookDocument: NotebookDocument) {
+    public getSelectedController(notebookDocument: NotebookDocument): IVSCodeNotebookController | undefined {
         return this.controllerRegistration.getSelected(notebookDocument);
+    }
+
+    public getRegisteredController(metadata: KernelConnectionMetadata): IVSCodeNotebookController | undefined {
+        return this.controllerRegistration.get(metadata, 'interactive');
     }
 
     public async createKernel(
@@ -63,8 +75,7 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         controller: NotebookController,
         resource: Resource,
         notebookDocument: NotebookDocument,
-        disposables: Disposable[],
-        serviceContainer: IServiceContainer
+        disposables: Disposable[]
     ): Promise<{ kernel: IKernel; actualController: NotebookController }> {
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(resource, metadata);
 
@@ -82,7 +93,7 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
 
         const kernel = await KernelConnector.connectToNotebookKernel(
             metadata,
-            serviceContainer,
+            this.serviceContainer,
             { resource: resource || notebookDocument.uri, notebook: notebookDocument, controller },
             new DisplayOptions(false),
             disposables,

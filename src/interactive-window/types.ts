@@ -15,7 +15,6 @@ import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
-import { IServiceContainer } from '../platform/ioc/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
 export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebookEditor: NotebookEditor };
@@ -66,18 +65,22 @@ export interface IInteractiveWindowProvider {
 
 export const IInteractiveControllerHelper = Symbol('IInteractiveControllerHelper');
 export interface IInteractiveControllerHelper {
+    onControllerSelected: Event<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+    }>;
     getInitialController(
         resource: Resource,
         connection?: KernelConnectionMetadata
     ): Promise<IVSCodeNotebookController | undefined>;
-    getSelected(notebookDocument: NotebookDocument): IVSCodeNotebookController | undefined;
+    getSelectedController(notebookDocument: NotebookDocument): IVSCodeNotebookController | undefined;
+    getRegisteredController(metadata: KernelConnectionMetadata): IVSCodeNotebookController | undefined;
     createKernel(
         metadata: KernelConnectionMetadata,
         controller: NotebookController,
         resource: Resource,
         notebookDocument: NotebookDocument,
-        disposables: Disposable[],
-        serviceContainer: IServiceContainer
+        disposables: Disposable[]
     ): Promise<{ kernel: IKernel; actualController: NotebookController }>;
 }
 
@@ -102,7 +105,6 @@ export interface IInteractiveWindow extends IInteractiveBase {
     scrollToCell(id: string): void;
     exportAs(cells?: ICell[]): void;
     export(cells?: ICell[]): void;
-    changeMode(newMode: InteractiveWindowMode): void;
 }
 
 export interface IInteractiveWindowCache {

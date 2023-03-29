@@ -10,7 +10,7 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
 import { IEnvironmentVariablesService } from '../../../platform/common/variables/types';
 import { initialize } from '../../initialize';
-import { IExtensionContext, IHttpClient } from '../../../platform/common/types';
+import { IHttpClient } from '../../../platform/common/types';
 
 use(chaiAsPromised);
 
@@ -33,10 +33,7 @@ suite('Environment Variables Service', () => {
     let variablesService: IEnvironmentVariablesService;
     setup(async () => {
         const api = await initialize();
-        const fs = new FileSystem(
-            api.serviceManager.get<IExtensionContext>(IExtensionContext),
-            api.serviceManager.get<IHttpClient>(IHttpClient)
-        );
+        const fs = new FileSystem(api.serviceManager.get<IHttpClient>(IHttpClient));
         variablesService = new EnvironmentVariablesService(fs);
     });
 

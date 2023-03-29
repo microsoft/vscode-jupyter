@@ -52,6 +52,7 @@ import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isInteractiveInputTab } from './helpers';
 import { Schemas } from '../platform/vscode-path/utils';
 import { sendTelemetryEvent } from '../telemetry';
+import { InteractiveControllerFactory } from './InteractiveWindowController';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -120,19 +121,19 @@ export class InteractiveWindowProvider
                 return;
             }
 
+            const mode = this.configService.getSettings(tab.input.uri).interactiveWindowMode;
+
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
-                iw.mode,
-                undefined,
+                new InteractiveControllerFactory(this.controllerHelper, mode),
                 tab,
-                Uri.parse(iw.inputBoxUriString),
-                this.controllerHelper
+                Uri.parse(iw.inputBoxUriString)
             );
             sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
                 hasKernel: false,
                 hasOwner: !!iw.owner,
-                mode: iw.mode,
+                mode: mode,
                 restored: true
             });
             this._windows.push(result);
@@ -211,16 +212,12 @@ export class InteractiveWindowProvider
                 `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
             );
 
-            let controller = this.controllerHelper.getSelected(editor.notebook);
-
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 resource,
-                mode,
-                controller,
+                new InteractiveControllerFactory(this.controllerHelper, mode),
                 editor,
-                inputUri,
-                this.controllerHelper
+                inputUri
             );
             sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
                 hasKernel: !!initialController,
@@ -326,7 +323,6 @@ export class InteractiveWindowProvider
             (iw) =>
                 ({
                     owner: iw.owner,
-                    mode: iw.mode,
                     uriString: iw.notebookUri.toString(),
                     inputBoxUriString: iw.inputUri.toString()
                 } as IInteractiveWindowCache)
