@@ -79,29 +79,25 @@ export async function run(): Promise<void> {
     }
     // Run the tests.
     await new Promise<void>((resolve, reject) => {
-        glob(
-            `**/**.${testFilesGlob}.js`,
-            { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot },
-            (error, files) => {
-                if (error) {
-                    return reject(error);
-                }
-                try {
-                    files.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
-                    initializationScript()
-                        .then(() =>
-                            mocha.run((failures) =>
-                                failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
-                            )
-                        )
-                        .finally(() => {
-                            stopJupyterServer().catch(noop);
-                        })
-                        .catch(reject);
-                } catch (error) {
-                    return reject(error);
-                }
+        glob(`**/**.${testFilesGlob}.js`, { ignore: ['**/**.unit.test.js'], cwd: testsRoot }, (error, files) => {
+            if (error) {
+                return reject(error);
             }
-        );
+            try {
+                files.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
+                initializationScript()
+                    .then(() =>
+                        mocha.run((failures) =>
+                            failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
+                        )
+                    )
+                    .finally(() => {
+                        stopJupyterServer().catch(noop);
+                    })
+                    .catch(reject);
+            } catch (error) {
+                return reject(error);
+            }
+        });
     });
 }
