@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Memento, NotebookDocument } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { Event, EventEmitter, Memento, NotebookCell, NotebookDocument, commands, notebooks, window } from 'vscode';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -16,7 +16,7 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
+import { JupyterNotebookView, InteractiveWindowView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import {
     IDisposableRegistry,
     IConfigurationService,
@@ -93,7 +93,8 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {}
     activate(): void {
         // Make sure to reload whenever we do something that changes state
@@ -140,6 +141,71 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
 
         this.loadControllers();
+        this.disposables.push(
+            commands.registerCommand(
+                'jupyter.runAndCaptureOutput',
+                async (cell: NotebookCell | undefined) => {
+                    const controller = cell ? this.getSelected(cell.notebook) : undefined;
+                    if (!controller || !cell || cell.document.languageId !== PYTHON_LANGUAGE) {
+                        return;
+                    }
+                    const newCode = ['%%vsccapture c', cell.document.getText()].join('\n');
+                    this.workspaceStorage
+                        .update(`LAST_SLOW_EXECUTED_CELL${cell.notebook.uri.toString()}`, {
+                            index: cell.index,
+                            completed: false
+                        })
+                        .then(noop, noop);
+                    await controller.executeCell(cell.notebook, cell, newCode);
+                    this.workspaceStorage
+                        .update(`LAST_SLOW_EXECUTED_CELL${cell.notebook.uri.toString()}`, undefined)
+                        .then(noop, noop);
+                },
+                this
+            )
+        );
+
+        const restoreOutputs = async (notebook: NotebookDocument) => {
+            const slowInfo = this.workspaceStorage.get<
+                | {
+                      index: number;
+                      completed: boolean;
+                  }
+                | undefined
+            >(`LAST_SLOW_EXECUTED_CELL${notebook.uri.toString()}`, undefined);
+            if (!slowInfo || slowInfo.completed) {
+                return;
+            }
+            const cell = notebook.cellAt(slowInfo.index);
+            const controller = cell ? this.getSelected(cell.notebook) : undefined;
+            if (!controller || !cell || cell.document.languageId !== PYTHON_LANGUAGE) {
+                return;
+            }
+            await controller.restoreOutput(cell.notebook);
+        };
+
+        const messageChannel = notebooks.createRendererMessaging('jupyter-output-restore-renderer');
+        if (messageChannel) {
+            traceInfoIfCI(`Adding comm message handler`);
+            const disposable = messageChannel.onDidReceiveMessage(async ({ editor }) => {
+                restoreOutputs(editor.notebook).catch(noop);
+            });
+            this.disposables.push(disposable);
+        }
+
+        this.disposables.push(
+            commands.registerCommand(
+                'jupyter.restoreOutput',
+                async () => {
+                    const notebook = window.activeNotebookEditor?.notebook;
+                    if (!notebook) {
+                        return;
+                    }
+                    await restoreOutputs(notebook);
+                },
+                this
+            )
+        );
     }
     private loadControllers() {
         this.controllersPromise = this.loadControllersImpl();

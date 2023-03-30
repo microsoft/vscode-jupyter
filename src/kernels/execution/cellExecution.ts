@@ -48,7 +48,8 @@ export class CellExecutionFactory {
         cell: NotebookCell,
         code: string | undefined,
         metadata: Readonly<KernelConnectionMetadata>,
-        resumeExecutionMsgId?: string
+        resumeExecutionMsgId?: string,
+        restoreOutput?: boolean
     ) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return CellExecution.fromCell(
@@ -57,7 +58,8 @@ export class CellExecutionFactory {
             metadata,
             this.controller,
             this.requestListener,
-            resumeExecutionMsgId
+            resumeExecutionMsgId,
+            restoreOutput
         );
     }
 }
@@ -101,7 +103,8 @@ export class CellExecution implements IDisposable {
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         private readonly controller: IKernelController,
         private readonly requestListener: CellExecutionMessageHandlerService,
-        private readonly resumeExecutionMsgId?: string
+        private readonly resumeExecutionMsgId?: string,
+        private readonly restoreOutput?: boolean
     ) {
         workspace.onDidCloseTextDocument(
             (e) => {
@@ -148,9 +151,18 @@ export class CellExecution implements IDisposable {
         metadata: Readonly<KernelConnectionMetadata>,
         controller: IKernelController,
         requestListener: CellExecutionMessageHandlerService,
-        resumeExecutionMsgId?: string
+        resumeExecutionMsgId?: string,
+        restoreOutput?: boolean
     ) {
-        return new CellExecution(cell, code, metadata, controller, requestListener, resumeExecutionMsgId);
+        return new CellExecution(
+            cell,
+            code,
+            metadata,
+            controller,
+            requestListener,
+            resumeExecutionMsgId,
+            restoreOutput
+        );
     }
     public async resume(session: IKernelConnectionSession) {
         if (this.cancelHandled) {
@@ -392,11 +404,11 @@ export class CellExecution implements IDisposable {
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = session.requestExecute(
                 {
-                    code: code,
+                    code: this.restoreOutput ? 'c()' : code,
                     silent: false,
                     stop_on_error: false,
                     allow_stdin: true,
-                    store_history: true
+                    store_history: this.restoreOutput ? false : true
                 },
                 false,
                 metadata

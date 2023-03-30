@@ -291,6 +291,13 @@
                 "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
             },
             {
+                "command": "jupyter.runAndCaptureOutput",
+                "title": "Run a time consuming operation",
+                "icon": "$(debug-alt-small)",
+                "category": "Jupyter",
+                "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
+            },
+            {
                 "command": "jupyter.runByLineNext",
                 "title": "%jupyter.command.jupyter.runByLineNext.title%",
                 "icon": "$(debug-line-by-line)",
@@ -778,6 +785,11 @@
                 "title": "%DataScience.runInDedicatedExtensionHost%",
                 "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.restoreOutput",
+                "title": "Restore Cell Output",
+                "category": "Jupyter"
             }
         ],
         "submenus": [
@@ -924,6 +936,10 @@
                 {
                     "command": "jupyter.runAndDebugCell",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
+                },
+                {
+                    "command": "jupyter.runAndCaptureOutput",
+                    "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && resource not in jupyter.notebookeditor.debugDocuments || !notebookKernel && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted"
                 }
             ],
             "interactive/toolbar": [
@@ -988,6 +1004,10 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.restoreOutput",
+                    "title": "Restore Cell Output"
+                },
                 {
                     "command": "jupyter.replayPylanceLog",
                     "title": "%jupyter.commandPalette.jupyter.replayPylanceLog.title%",
@@ -1929,6 +1949,15 @@
                 "displayName": "%jupyter.notebookRenderer.IPyWidget.displayName%",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
+                ],
+                "requiresMessaging": "always"
+            },
+            {
+                "id": "jupyter-output-restore-renderer",
+                "entrypoint": "./src/webviews/webview-side/output-restore/index.js",
+                "displayName": "Partial Output",
+                "mimeTypes": [
+                    "application/vnd.jupyter.partial.output"
                 ],
                 "requiresMessaging": "always"
             }

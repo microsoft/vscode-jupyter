@@ -142,6 +142,31 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
 
         return result[0];
     }
+    public async restoreCellOutput(cell: NotebookCell): Promise<void> {
+        traceCellMessage(cell, `KernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
+        if (cell.kind == NotebookCellKind.Markup) {
+            return;
+        }
+
+        traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
+        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+            this.kernel.resourceUri,
+            this.kernel.kernelConnectionMetadata
+        );
+        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell);
+        const sessionPromise = this.kernel.start(new DisplayOptions(false));
+
+        // If we're restarting, wait for it to finish
+        await this.kernel.restarting;
+
+        traceCellMessage(cell, `KernelExecution.executeCell (2), ${getDisplayPath(cell.notebook.uri)}`);
+        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
+        executionQueue.restoreOutput(cell);
+        const result = await executionQueue.waitForCompletion([cell]);
+
+        traceCellMessage(cell, `KernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`);
+        traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
+    }
     executeHidden(code: string): Promise<IOutput[]> {
         const sessionPromise = this.kernel.start();
         return sessionPromise.then((session) => executeSilently(session, code));
