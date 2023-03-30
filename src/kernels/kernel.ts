@@ -685,18 +685,35 @@ abstract class BaseKernel implements IBaseKernel {
         // Restart sessions and retries might make this hard to do correctly otherwise.
         session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-        // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
-        // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
-        // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
-        await this.determineVersionOfIPyWidgets(session);
+        if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
+            // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
+            // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
+            // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
+            this.determineVersionOfIPyWidgets(session).catch((ex) =>
+                traceError(`Failed to determine IPyWidget version`, ex)
+            );
 
-        // Gather all of the startup code at one time and execute as one cell
-        const startupCode = await this.gatherInternalStartupCode();
-        await this.executeSilently(session, startupCode, {
-            traceErrors: true,
-            traceErrorsMessage: 'Error executing jupyter extension internal startup code'
-        });
-        if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
+            // Gather all of the startup code at one time and execute as one cell
+            this.gatherInternalStartupCode()
+                .then((startupCode) =>
+                    this.executeSilently(session, startupCode, {
+                        traceErrors: true,
+                        traceErrorsMessage: 'Error executing jupyter extension internal startup code'
+                    })
+                )
+                .catch((ex) => traceError(`Failed to execute internal startup code`, ex));
+        } else {
+            // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
+            // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
+            // And the longer we wait, the more data we need to hold onto in memory that later needs to be sent to the kernel in renderer.
+            await this.determineVersionOfIPyWidgets(session);
+
+            // Gather all of the startup code at one time and execute as one cell
+            const startupCode = await this.gatherInternalStartupCode();
+            await this.executeSilently(session, startupCode, {
+                traceErrors: true,
+                traceErrorsMessage: 'Error executing jupyter extension internal startup code'
+            });
             // Run user specified startup commands
             await this.executeSilently(session, this.getUserStartupCommands(), { traceErrors: false });
         }
