@@ -449,8 +449,14 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let serverSecurePromise = JupyterSessionManager.secureServers.get(connInfo.baseUrl);
 
         if (serverSecurePromise === undefined) {
-            serverSecurePromise = this.insecureServerWarningPrompt();
-            JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            if (connInfo.serverId && connInfo.serverId.startsWith('_builtin')) {
+                // If a Jupyter URI provider is providing this URI, then we trust it.
+                serverSecurePromise = Promise.resolve(true);
+                JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            } else {
+                serverSecurePromise = this.insecureServerWarningPrompt();
+                JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            }
         }
 
         // If our server is not secure, throw here to bail out on the process
