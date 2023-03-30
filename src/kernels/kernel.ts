@@ -704,6 +704,20 @@ abstract class BaseKernel implements IBaseKernel {
                     })
                 )
                 .catch((ex) => traceError(`Failed to execute internal startup code`, ex));
+
+            // const startupCode = [
+            //     'import sys',
+            //     "sys.path.append('/Users/donjayamanne/Desktop/development/vsc/vscode-jupyter/pythonFiles/vscMagics')"
+            //     // '%load_ext vscodeMagics'
+            // ];
+            // this.executeSilently(session, startupCode, {
+            //     traceErrors: true,
+            //     traceErrorsMessage: 'Error executing jupyter extension internal startup code'
+            // }).catch(noop);
+            // this.executeSilently(session, ['%load_ext vscodeMagics'], {
+            //     traceErrors: true,
+            //     traceErrorsMessage: 'Error executing jupyter extension internal startup code'
+            // }).catch(noop);
         } else {
             // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
             // This must happen early on as the state of the kernel needs to be synced with the Kernel in the webview (renderer)
@@ -712,7 +726,18 @@ abstract class BaseKernel implements IBaseKernel {
 
             // Gather all of the startup code at one time and execute as one cell
             const startupCode = await this.gatherInternalStartupCode();
+            // startupCode.push(
+            //     ...[
+            //         'import sys',
+            //         "sys.path.append('/Users/donjayamanne/Desktop/development/vsc/vscode-jupyter/pythonFiles/vscMagics')"
+            //         // '%load_ext vscodeMagics'
+            //     ]
+            // );
             await this.executeSilently(session, startupCode, {
+                traceErrors: true,
+                traceErrorsMessage: 'Error executing jupyter extension internal startup code'
+            });
+            await this.executeSilently(session, ['%load_ext vscodeMagics'], {
                 traceErrors: true,
                 traceErrorsMessage: 'Error executing jupyter extension internal startup code'
             });
@@ -889,6 +914,13 @@ abstract class BaseKernel implements IBaseKernel {
             );
         }
 
+        // result.push(
+        //     ...[
+        //         'import sys',
+        //         "sys.path.append('/Users/donjayamanne/Desktop/development/vsc/vscode-jupyter/pythonFiles/vscMagics')"
+        //         // '%load_ext vscodeMagics'
+        //     ]
+        // );
         return result;
     }
 

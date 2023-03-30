@@ -96,6 +96,25 @@ export class CellExecutionQueue implements Disposable {
         // Start executing the cells.
         this.startExecutingCells();
     }
+
+    /**
+     * Queue the cell for execution & start processing it immediately.
+     */
+    public restoreOutput(cell: NotebookCell): void {
+        const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
+        if (existingCellExecution) {
+            traceCellMessage(cell, 'Use existing cell execution');
+            return;
+        }
+        const cellExecution = this.executionFactory.create(cell, '', this.metadata, undefined, true);
+        this.disposables.push(cellExecution);
+        this.queueOfCellsToExecute.push(cellExecution);
+
+        traceCellMessage(cell, 'User queued cell for execution');
+
+        // Start executing the cells.
+        this.startExecutingCells();
+    }
     /**
      * Cancel all cells that have been queued & wait for them to complete.
      * @param {boolean} [forced=false]

@@ -11,6 +11,8 @@ import {
     NotebookCell,
     NotebookCellExecution,
     NotebookCellKind,
+    NotebookCellOutput,
+    NotebookCellOutputItem,
     NotebookController,
     NotebookDocument,
     NotebookEdit,
@@ -246,6 +248,29 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
     }
     private readonly restoredConnections = new WeakSet<NotebookDocument>();
+    private readonly pendingOutuptsOfNotebooks = new WeakSet<NotebookDocument>();
+    public async restoreOutput(notebook: NotebookDocument) {
+        console.error('Done');
+        const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
+        const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
+        const slowInfo = this.workspaceStorage.get<
+            | {
+                  index: number;
+                  completed: boolean;
+              }
+            | undefined
+        >(`LAST_SLOW_EXECUTED_CELL${notebook.uri.toString()}`, undefined);
+
+        // kernelExecution.executeCell(cell);
+        if (slowInfo && !slowInfo?.completed && this.pendingOutuptsOfNotebooks.has(notebook)) {
+            this.workspaceStorage
+                .update(`LAST_SLOW_EXECUTED_CELL${notebook.uri.toString()}`, undefined)
+                .then(noop, noop);
+            this.pendingOutuptsOfNotebooks.add(notebook);
+            kernelExecution.restoreCellOutput(notebook.cellAt(slowInfo.index)).catch(noop);
+        }
+        console.error('Done', kernel.uri, kernelExecution.pendingCells.length);
+    }
     public async restoreConnection(notebook: NotebookDocument) {
         if (this.restoredConnections.has(notebook)) {
             return;
@@ -265,9 +290,30 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
               }
             | undefined
         >(`LAST_EXECUTED_CELL_${notebook.uri.toString()}`, undefined);
+        const slowInfo = this.workspaceStorage.get<
+            | {
+                  index: number;
+                  completed: boolean;
+              }
+            | undefined
+        >(`LAST_SLOW_EXECUTED_CELL${notebook.uri.toString()}`, undefined);
 
         // kernelExecution.executeCell(cell);
-        if (
+        if (slowInfo && !slowInfo?.completed && !this.pendingOutuptsOfNotebooks.has(notebook)) {
+            this.pendingOutuptsOfNotebooks.add(notebook);
+            const cell = notebook.cellAt(slowInfo.index);
+            if (cell.outputs.every((o) => o.items.every((i) => i.mime !== 'application/vnd.jupyter.partial.output'))) {
+                const task = this.controller.createNotebookCellExecution(cell);
+                const outputItem = NotebookCellOutputItem.text(
+                    '<button>The cell completed execution while this notebook was closed, click to refresh the outupts</button>',
+                    // 'text/html'
+                    'application/vnd.jupyter.partial.output'
+                );
+                task.start();
+                task.appendOutput(new NotebookCellOutput([outputItem])).then(noop, noop);
+                task.end(true);
+            }
+        } else if (
             kernel.session?.kernel &&
             !kernelExecution.pendingCells.length &&
             lastExecutionInfo &&
@@ -545,7 +591,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         return currentExecution;
     }
 
-    private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
+    public async executeCell(doc: NotebookDocument, cell: NotebookCell, codeOverride?: string) {
         traceVerbose(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
         let exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
@@ -567,7 +613,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             }
-            return await this.kernelProvider.getKernelExecution(kernel).executeCell(cell);
+            return await this.kernelProvider.getKernelExecution(kernel).executeCell(cell, codeOverride);
         } catch (ex) {
             if (!isCancellationError(ex)) {
                 traceError(`Error in execution`, ex);
