@@ -191,7 +191,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         this.internalDisposables.push(this.controller.listenForControllerSelection());
 
         if (this.controller.controller) {
-            this.controller.enableAutoStart();
             this.startKernel().catch(noop);
         } else {
             traceInfo('No controller selected for Interactive Window initilization');

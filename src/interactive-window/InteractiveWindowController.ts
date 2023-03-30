@@ -20,7 +20,6 @@ export class InteractiveWindowController {
     public kernel: Deferred<IKernel> | undefined;
     public controller: NotebookController | undefined;
     public metadata: KernelConnectionMetadata | undefined;
-    private autoStart = false;
     private disposables: Disposable[] = [];
     private systemInfoCell: SystemInfoCell | undefined;
     private fileInKernel: Uri | undefined;
@@ -44,10 +43,6 @@ export class InteractiveWindowController {
 
     public updateOwners(file: Uri) {
         this.owner = file;
-    }
-
-    public enableAutoStart() {
-        this.autoStart = true;
     }
 
     public async startKernel(): Promise<IKernel> {
@@ -185,11 +180,7 @@ export class InteractiveWindowController {
                     this.disconnect();
                     this.controller = e.controller.controller;
                     this.metadata = e.controller.connection;
-
-                    // don't start the kernel if the IW has only been restored from a previous session
-                    if (this.autoStart) {
-                        this.startKernel().catch(noop);
-                    }
+                    this.startKernel().catch(noop);
                 }
             },
             this
