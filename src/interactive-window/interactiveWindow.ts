@@ -70,7 +70,6 @@ import {
     InteractiveWindowController as InteractiveController,
     InteractiveControllerFactory
 } from './InteractiveWindowController';
-import { SystemInfoCell } from './systemInfoCell';
 
 /**
  * ViewModel for an interactive window from the Jupyter extension's point of view.
@@ -121,11 +120,11 @@ export class InteractiveWindow implements IInteractiveWindow {
     private readonly isWebExtension: boolean;
     private readonly commandManager: ICommandManager;
     private readonly kernelProvider: IKernelProvider;
-    private readonly controller: InteractiveController;
+    private controller: InteractiveController;
     constructor(
         private readonly serviceContainer: IServiceContainer,
         private _owner: Resource,
-        controllerFactory: InteractiveControllerFactory,
+        private readonly controllerFactory: InteractiveControllerFactory,
         notebookEditorOrTab: NotebookEditor | InteractiveTab,
         public readonly inputUri: Uri
     ) {
@@ -154,7 +153,6 @@ export class InteractiveWindow implements IInteractiveWindow {
         if (this._owner) {
             this._submitters.push(this._owner);
         }
-        this.controller = controllerFactory.create(this.errorHandler, this.kernelProvider, this._owner);
 
         window.onDidChangeActiveNotebookEditor((e) => {
             if (e?.notebook.uri.toString() === this.notebookUri.toString()) {
@@ -171,8 +169,6 @@ export class InteractiveWindow implements IInteractiveWindow {
             this._onDidChangeViewState.fire();
         }
 
-        this.internalDisposables.push(this.controller.listenForControllerSelection());
-
         this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
         if (this.notebookDocument) {
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
@@ -186,14 +182,20 @@ export class InteractiveWindow implements IInteractiveWindow {
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
 
-        this.controller.setController(this.notebookDocument);
+        this.controller = this.controllerFactory.create(
+            this.notebookDocument,
+            this.errorHandler,
+            this.kernelProvider,
+            this._owner
+        );
+        this.internalDisposables.push(this.controller.listenForControllerSelection());
 
         if (this.controller.controller) {
             this.controller.enableAutoStart();
             this.startKernel().catch(noop);
         } else {
             traceInfo('No controller selected for Interactive Window initilization');
-            new SystemInfoCell(this.notebookDocument, DataScience.selectKernelForEditor);
+            this.controller.setInfoMessageCell(DataScience.selectKernelForEditor);
         }
     }
 
