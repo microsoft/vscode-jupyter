@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Event } from 'vscode';
-import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
+import { IAsyncDisposable, IDisplayOptions, Resource } from '../../platform/common/types';
 import {
     IKernelConnectionSession,
     KernelConnectionMetadata,
@@ -52,14 +52,6 @@ export interface IKernelProcess extends IAsyncDisposable {
      * This method is to be used only if `canInterrupt` is true.
      */
     interrupt(): Promise<void>;
-}
-
-/**
- * The daemon responsible for the Python Kernel.
- */
-export interface IPythonKernelDaemon extends IDisposable {
-    interrupt(): Promise<void>;
-    kill(): Promise<void>;
 }
 
 // Provides a service to determine if raw notebook is supported or not

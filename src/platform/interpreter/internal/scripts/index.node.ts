@@ -3,7 +3,6 @@
 
 import * as path from '../../../vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../../../constants.node';
-import { fileToCommandArgument } from '../../../common/helpers';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
 export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
@@ -55,34 +54,6 @@ export function normalizeSelection(): [string[], (out: string) => string] {
     function parse(out: string) {
         // The text will be used as-is.
         return out;
-    }
-
-    return [args, parse];
-}
-
-//============================
-// printEnvVariables.py
-
-export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessEnv] {
-    const script = fileToCommandArgument(path.join(SCRIPTS_DIR, 'printEnvVariables.py'));
-    const args = [script];
-
-    function parse(out: string): NodeJS.ProcessEnv {
-        return JSON.parse(out);
-    }
-
-    return [args, parse];
-}
-
-//============================
-// printEnvVariablesToFile.py
-
-export function printEnvVariablesToFile(filename: string): [string[], (out: string) => NodeJS.ProcessEnv] {
-    const script = path.join(SCRIPTS_DIR, 'printEnvVariablesToFile.py');
-    const args = [script, fileToCommandArgument(filename)];
-
-    function parse(out: string): NodeJS.ProcessEnv {
-        return JSON.parse(out);
     }
 
     return [args, parse];
