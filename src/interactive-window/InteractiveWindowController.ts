@@ -50,7 +50,7 @@ export class InteractiveWindowController {
             return this.kernel.promise;
         }
         if (!this.controller || !this.metadata) {
-            throw new Error('Controller not selected');
+            throw new Error('Interactive Window kernel not selected');
         }
 
         this.setInfoMessage(this.metadata, SysInfoReason.Start);

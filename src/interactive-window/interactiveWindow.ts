@@ -182,24 +182,22 @@ export class InteractiveWindow implements IInteractiveWindow {
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
 
-        this.controller = this.controllerFactory.create(
-            this.notebookDocument,
-            this.errorHandler,
-            this.kernelProvider,
-            this._owner
-        );
-        this.internalDisposables.push(this.controller.listenForControllerSelection());
+        if (!this.controller) {
+            this.controller = this.controllerFactory.create(
+                this.notebookDocument,
+                this.errorHandler,
+                this.kernelProvider,
+                this._owner
+            );
+            this.internalDisposables.push(this.controller.listenForControllerSelection());
+        }
 
         if (this.controller.controller) {
-            this.startKernel().catch(noop);
+            this.controller.startKernel().catch(noop);
         } else {
             traceInfo('No controller selected for Interactive Window initilization');
             this.controller.setInfoMessageCell(DataScience.selectKernelForEditor);
         }
-    }
-
-    public async startKernel(): Promise<IKernel> {
-        return this.controller.startKernel();
     }
 
     /**
@@ -393,7 +391,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     private async createExecutionPromise(notebookCellPromise: Promise<NotebookCell>, isDebug: boolean) {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         // Kick of starting kernels early.
-        const kernelPromise = this.startKernel();
+        const kernelPromise = this.controller.startKernel();
         const cell = await notebookCellPromise;
 
         let success = true;
@@ -579,7 +577,7 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     public async exportAs() {
-        const kernel = await this.startKernel();
+        const kernel = await this.controller.startKernel();
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
