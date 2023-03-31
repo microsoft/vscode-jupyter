@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { INotebookMetadata } from '@jupyterlab/nbformat';
-import { inject } from 'inversify';
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -62,14 +61,14 @@ export class ControllerPreferredService {
     }
     private disposables = new Set<IDisposable>();
     constructor(
-        @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IControllerDefaultService) private readonly defaultService: IControllerDefaultService,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        private readonly registration: IControllerRegistration,
+        private readonly defaultService: IControllerDefaultService,
+        private readonly interpreters: IInterpreterService,
+        private readonly notebook: IVSCodeNotebook,
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly serverUriStorage: IJupyterServerUriStorage,
         private readonly kernelRankHelper: KernelRankingHelper,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        private readonly isWebExtension: boolean
     ) {}
     private static instance: ControllerPreferredService | undefined;
     public static create(serviceContainer: IServiceContainer) {
