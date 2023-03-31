@@ -938,11 +938,6 @@
                     "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
-                    "command": "jupyter.interruptkernel",
-                    "group": "navigation@2",
-                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
-                },
-                {
                     "command": "jupyter.openVariableView",
                     "group": "navigation@3",
                     "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
@@ -1198,12 +1193,6 @@
                     "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.interruptkernel",
-                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.restartkernel",
