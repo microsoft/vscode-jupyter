@@ -1590,6 +1590,12 @@
                     "description": "%jupyter.configuration.jupyter.decorateCells.description%",
                     "scope": "resource"
                 },
+                "jupyter.interactiveWindow.cellMarker.decorateAllCells": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%jupyter.configuration.jupyter.decorateAllCells.description%",
+                    "scope": "resource"
+                },
                 "jupyter.enableCellCodeLens": {
                     "type": "boolean",
                     "default": true,

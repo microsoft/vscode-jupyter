@@ -137,15 +137,23 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
                         currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
                     const rangeBottom =
                         currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
+                    const nonCurrentCells: vscode.Range[] = [];
+                    if (settings.decorateAllCells)
+                        cells.forEach((cell) => {
+                            const cellTop = cell.range.start;
+                            if (cellTop !== currentRange[0].start && cellTop.line - 1 !== currentRange[0].end.line) {
+                                nonCurrentCells.push(new vscode.Range(cellTop, cellTop));
+                            }
+                        });
                     if (this.documentManager.activeTextEditor === editor) {
                         editor.setDecorations(this.currentCellTop, rangeTop);
                         editor.setDecorations(this.currentCellBottom, rangeBottom);
-                        editor.setDecorations(this.currentCellTopUnfocused, []);
+                        editor.setDecorations(this.currentCellTopUnfocused, nonCurrentCells);
                         editor.setDecorations(this.currentCellBottomUnfocused, []);
                     } else {
                         editor.setDecorations(this.currentCellTop, []);
                         editor.setDecorations(this.currentCellBottom, []);
-                        editor.setDecorations(this.currentCellTopUnfocused, rangeTop);
+                        editor.setDecorations(this.currentCellTopUnfocused, [...nonCurrentCells, ...rangeTop]);
                         editor.setDecorations(this.currentCellBottomUnfocused, rangeBottom);
                     }
                 } else {

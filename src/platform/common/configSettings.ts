@@ -58,6 +58,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public ignoreVscodeTheme: boolean = false;
     public variableExplorerExclude: string = '';
     public decorateCells: boolean = false;
+    public decorateAllCells: boolean = false;
     public enableCellCodeLens: boolean = false;
     public askForLargeDataFrames: boolean = false;
     public enableAutoMoveToNextCell: boolean = false;
@@ -217,7 +218,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
         // The rest are all the same.
         const replacer = (k: string, config: WorkspaceConfiguration) => {
-            const newKey = ConfigMigration.migratedSettings[k];
+            const newKey = ConfigMigration.fullSettingIds[k];
             // Configuration migration is asyncronous, so check the old configuration key if the new one isn't set
             const configValue = newKey && config.get(newKey) !== undefined ? config.get(newKey) : config.get(k);
             const val = systemVariables.resolveAny(configValue);

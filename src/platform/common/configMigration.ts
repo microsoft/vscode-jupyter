@@ -28,6 +28,11 @@ export class ConfigMigration {
         defaultCellMarker: 'interactiveWindow.cellMarker.default'
     };
 
+    public static readonly fullSettingIds: Record<string, string> = {
+        ...this.migratedSettings,
+        decorateAllCells: 'interactiveWindow.cellMarker.decorateAllCells'
+    };
+
     constructor(private readonly jupyterConfig: WorkspaceConfiguration) {}
 
     public async migrateSettings() {
