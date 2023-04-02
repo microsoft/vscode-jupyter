@@ -246,6 +246,11 @@
         ],
         "commands": [
             {
+                "command": "jupyter.helloWorld",
+                "title": "History",
+                "category": "Jupyter (Dev)"
+            },
+            {
                 "command": "dataScience.ClearCache",
                 "title": "%jupyter.command.dataScience.clearCache.title%",
                 "category": "Jupyter (Dev)",
@@ -1007,6 +1012,10 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.helloWorld",
+                    "title": "History"
+                },
                 {
                     "command": "jupyter.restoreOutput",
                     "title": "Restore Cell Output"
