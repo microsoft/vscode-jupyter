@@ -469,6 +469,44 @@ class OutStream(TextIOBase):
         return old_buffer
 
 
+class CapturingDisplayHook(object):
+    def __init__(self, shell, outputs=None, echo=None):
+        self.shell = shell
+        if outputs is None:
+            outputs = []
+        self.outputs = outputs
+        self.echo = echo
+
+    def __call__(self, result=None):
+        if result is None:
+            return
+        format_dict, md_dict = self.shell.display_formatter.format(result)
+        self.outputs.append({ 'data': format_dict, 'metadata': md_dict })
+        if self.echo is not None:
+            self.echo(result)
+
+
+from IPython.core.displaypub import DisplayPublisher
+from traitlets import List
+
+class CapturingDisplayPublisher(DisplayPublisher):
+    """A DisplayPublisher that stores"""
+    outputs = List()
+    def __init__(self, echo=None, *args, **kwargs):
+        super(CapturingDisplayPublisher, self).__init__(*args, **kwargs)
+        self.echo = echo
+
+    def publish(self, data, metadata=None, source=None, *, transient=None, update=False):
+        self.outputs.append({'data':data, 'metadata':metadata,
+                             'transient':transient, 'update':update})
+        if self.echo is not None:
+            self.echo.publish(data, metadata=metadata, transient=transient, update=update)
+
+    def clear_output(self, wait=False):
+        if self.echo is not None:
+            self.echo.clear_output(wait=wait)
+        self.outputs.clear()
+
 
 class capture_output(object):
     """context manager for capturing stdout/err"""
@@ -484,8 +522,8 @@ class capture_output(object):
 
     def __enter__(self):
         from IPython.core.getipython import get_ipython
-        from IPython.core.displaypub import CapturingDisplayPublisher
-        from IPython.core.displayhook import CapturingDisplayHook
+        # from IPython.core.displaypub import CapturingDisplayPublisher
+        # from IPython.core.displayhook import CapturingDisplayHook
 
         self.sys_stdout = sys.stdout
         self.sys_stderr = sys.stderr
@@ -509,11 +547,11 @@ class capture_output(object):
             sys.stderr = stderr
         if self.display:
             self.save_display_pub = self.shell.display_pub
-            self.shell.display_pub = CapturingDisplayPublisher()
+            self.shell.display_pub = CapturingDisplayPublisher(echo=self.shell.display_pub)
             outputs = self.shell.display_pub.outputs
             self.save_display_hook = sys.displayhook
             sys.displayhook = CapturingDisplayHook(shell=self.shell,
-                                                   outputs=outputs)
+                                                   outputs=outputs, echo=sys.displayhook)
 
         return CapturedIO(stdout, stderr, outputs)
 

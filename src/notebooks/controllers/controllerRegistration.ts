@@ -94,6 +94,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {}
     activate(): void {
@@ -160,6 +161,29 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                     this.workspaceStorage
                         .update(`LAST_SLOW_EXECUTED_CELL${cell.notebook.uri.toString()}`, undefined)
                         .then(noop, noop);
+                },
+                this
+            )
+        );
+        this.disposables.push(
+            commands.registerCommand(
+                'jupyter.helloWorld',
+                async () => {
+                    const notebook = window.activeNotebookEditor?.notebook;
+                    if (!notebook) {
+                        return;
+                    }
+                    const kernel = this.kernelProvider.get(notebook);
+                    if (!kernel) {
+                        return;
+                    }
+                    const result = await kernel.session?.kernel?.requestHistory({
+                        hist_access_type: 'tail',
+                        n: 2,
+                        output: true,
+                        raw: true
+                    });
+                    console.error(result);
                 },
                 this
             )
