@@ -247,6 +247,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
     }
     private readonly pendingOutuptsOfNotebooks = new WeakSet<NotebookDocument>();
+    private readonly restoredConnections = new WeakSet<NotebookDocument>();
     public async restoreOutput(notebook: NotebookDocument) {
         console.error('Done');
         const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
@@ -270,6 +271,10 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         console.error('Done', kernel.uri, kernelExecution.pendingCells.length);
     }
     public async restoreConnection(notebook: NotebookDocument) {
+        if (this.restoredConnections.has(notebook)) {
+            return;
+        }
+        this.restoredConnections.add(notebook);
         console.error('Done');
         const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
         const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
@@ -309,13 +314,20 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             lastExecutionInfo &&
             typeof lastExecutionInfo.index === 'number'
         ) {
+            let resumed = false;
+            kernel.session.kernel.statusChanged.connect((_, status) => {
+                console.log(status);
+            });
             kernel.session.kernel.anyMessage.connect((_, msg) => {
+                if (msg.direction === 'send' || resumed) {
+                    return;
+                }
                 if (
-                    msg.direction === 'recv' &&
                     msg.msg.parent_header &&
                     'msg_id' in msg.msg.parent_header &&
                     msg.msg.parent_header.msg_id === lastExecutionInfo.msg_id
                 ) {
+                    resumed = true;
                     kernelExecution
                         .resumeCellExecution(notebook.cellAt(lastExecutionInfo.index), lastExecutionInfo.msg_id)
                         .catch(noop);

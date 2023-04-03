@@ -75,6 +75,26 @@ export class CellExecutionMessageHandlerService {
         );
         // This object must be kept in memory has it monitors the kernel messages.
         this.messageHandlers.set(cell, handler);
+        handler.completed.finally(() => {
+            const info = this.workspaceStorage.get<
+                | {
+                      index: number;
+                      msg_id: string;
+                  }
+                | undefined
+            >(`LAST_EXECUTED_CELL_${cell.notebook.uri.toString()}`, undefined);
+            if (
+                !info ||
+                info.index !== cell.index ||
+                cell.document.isClosed ||
+                info?.msg_id !== options.request?.msg.header.msg_id
+            ) {
+                return;
+            }
+            this.workspaceStorage
+                .update(`LAST_EXECUTED_CELL_${cell.notebook.uri.toString()}`, undefined)
+                .then(noop, noop);
+        });
         return handler;
     }
     public registerListenerForResumingExecution(
