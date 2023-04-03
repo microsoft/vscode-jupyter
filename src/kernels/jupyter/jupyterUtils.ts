@@ -116,6 +116,7 @@ export function createRemoteConnectionInfo(
     return {
         type: 'jupyter',
         baseUrl,
+        serverId,
         token,
         hostName,
         localLaunch: false,
