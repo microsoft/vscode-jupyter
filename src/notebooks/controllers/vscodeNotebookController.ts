@@ -249,6 +249,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
     private readonly restoredConnections = new WeakSet<NotebookDocument>();
     private readonly pendingOutuptsOfNotebooks = new WeakSet<NotebookDocument>();
+    private readonly restoredConnections = new WeakSet<NotebookDocument>();
     public async restoreOutput(notebook: NotebookDocument) {
         console.error('Done');
         const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
@@ -276,6 +277,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             return;
         }
         this.restoredConnections.add(notebook);
+        console.error('Done');
         const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
         if (this.kernelConnection.kind === 'connectToLiveRemoteKernel') {
             const indicator = new RemoteKernelReconnectBusyIndicator(kernel, this.controller, notebook);
@@ -319,13 +321,20 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             lastExecutionInfo &&
             typeof lastExecutionInfo.index === 'number'
         ) {
+            let resumed = false;
+            kernel.session.kernel.statusChanged.connect((_, status) => {
+                console.log(status);
+            });
             kernel.session.kernel.anyMessage.connect((_, msg) => {
+                if (msg.direction === 'send' || resumed) {
+                    return;
+                }
                 if (
-                    msg.direction === 'recv' &&
                     msg.msg.parent_header &&
                     'msg_id' in msg.msg.parent_header &&
                     msg.msg.parent_header.msg_id === lastExecutionInfo.msg_id
                 ) {
+                    resumed = true;
                     kernelExecution
                         .resumeCellExecution(notebook.cellAt(lastExecutionInfo.index), lastExecutionInfo.msg_id)
                         .catch(noop);
