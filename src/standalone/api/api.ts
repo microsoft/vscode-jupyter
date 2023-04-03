@@ -197,14 +197,16 @@ export function buildApi(
             if (!id) {
                 throw new Error(`Kernel ${kernelId} not found.`);
             }
-            const notebook = await workspace.openNotebookDocument(uri);
-            const notebookEditor = await window.showNotebookDocument(notebook);
+            const notebookEditor =
+                window.activeNotebookEditor?.notebook?.uri?.toString() === uri.toString()
+                    ? window.activeNotebookEditor
+                    : await window.showNotebookDocument(await workspace.openNotebookDocument(uri));
             await commands.executeCommand('notebook.selectKernel', {
                 notebookEditor,
                 id,
                 extension: JVSC_EXTENSION_ID
             });
-            return notebook;
+            return notebookEditor.notebook;
         }
     };
 
