@@ -116,6 +116,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
               | { id: string; extension: string }
               // This set of args will display the kernel picker.
               | { notebookEditor: NotebookEditor }
+              // Open a specific notebook with a specific kernel.
+              | { notebookEditor: NotebookEditor; id: string; extension: string }
           ]
         | [];
     ['undo']: [];
