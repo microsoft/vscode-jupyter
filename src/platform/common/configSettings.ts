@@ -57,8 +57,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public errorBackgroundColor: string = '';
     public ignoreVscodeTheme: boolean = false;
     public variableExplorerExclude: string = '';
-    public decorateCells: boolean = false;
-    public decorateAllCells: boolean = false;
+    public decorateCells: 'currentCell' | 'allCells' | 'disabled' = 'currentCell';
     public enableCellCodeLens: boolean = false;
     public askForLargeDataFrames: boolean = false;
     public enableAutoMoveToNextCell: boolean = false;

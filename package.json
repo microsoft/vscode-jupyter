@@ -1585,15 +1585,14 @@
                     "scope": "resource"
                 },
                 "jupyter.interactiveWindow.cellMarker.decorateCells": {
-                    "type": "boolean",
-                    "default": true,
+                    "type": "string",
+                    "enum": [
+                        "currentCell",
+                        "allCells",
+                        "None"
+                    ],
+                    "default": "currentCell",
                     "description": "%jupyter.configuration.jupyter.decorateCells.description%",
-                    "scope": "resource"
-                },
-                "jupyter.interactiveWindow.cellMarker.decorateAllCells": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "%jupyter.configuration.jupyter.decorateAllCells.description%",
                     "scope": "resource"
                 },
                 "jupyter.enableCellCodeLens": {

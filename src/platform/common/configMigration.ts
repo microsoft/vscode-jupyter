@@ -29,8 +29,7 @@ export class ConfigMigration {
     };
 
     public static readonly fullSettingIds: Record<string, string> = {
-        ...this.migratedSettings,
-        decorateAllCells: 'interactiveWindow.cellMarker.decorateAllCells'
+        ...this.migratedSettings
     };
 
     constructor(private readonly jupyterConfig: WorkspaceConfiguration) {}
