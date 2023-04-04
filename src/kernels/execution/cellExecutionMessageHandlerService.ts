@@ -50,6 +50,7 @@ export class CellExecutionMessageHandlerService {
             kernel: Kernel.IKernelConnection;
             request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
             cellExecution: NotebookCellExecution;
+            startTime: number;
             onErrorHandlingExecuteRequestIOPubMessage: (error: Error) => void;
         }
     ): CellExecutionMessageHandler {
@@ -59,9 +60,37 @@ export class CellExecutionMessageHandlerService {
         this.workspaceStorage
             .update(`LAST_EXECUTED_CELL_${cell.notebook.uri.toString()}`, {
                 index: cell.index,
-                msg_id: options.request?.msg.header.msg_id
+                msg_id: options.request?.msg.header.msg_id,
+                startTime: options.startTime
             })
             .then(noop, noop);
+        const iopubMessageHandler = (_: unknown, msg: KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>) => {
+            if (
+                'execution_count' in msg.content &&
+                typeof msg.content.execution_count === 'number' &&
+                'msg_id' in msg.parent_header &&
+                msg.parent_header.msg_id === options.request.msg.header.msg_id
+            ) {
+                const currentInfo = this.workspaceStorage.get<
+                    | {
+                          index: number;
+                          msg_id: string;
+                          startTime: number;
+                          execution_count: number;
+                      }
+                    | undefined
+                >(`LAST_EXECUTED_CELL_${cell.notebook.uri.toString()}`, undefined);
+                if (currentInfo?.msg_id === options.request.msg.header.msg_id) {
+                    this.workspaceStorage
+                        .update(`LAST_EXECUTED_CELL_${cell.notebook.uri.toString()}`, {
+                            ...currentInfo,
+                            execution_count: msg.content.execution_count
+                        })
+                        .then(noop, noop);
+                }
+            }
+        };
+        options.kernel.iopubMessage.connect(iopubMessageHandler);
         const handler = new CellExecutionMessageHandler(
             cell,
             this.appShell,
@@ -76,6 +105,7 @@ export class CellExecutionMessageHandlerService {
         // This object must be kept in memory has it monitors the kernel messages.
         this.messageHandlers.set(cell, handler);
         handler.completed.finally(() => {
+            options.kernel.iopubMessage.disconnect(iopubMessageHandler);
             const info = this.workspaceStorage.get<
                 | {
                       index: number;
