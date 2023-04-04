@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as path from '../../platform/vscode-path/path';
 import { inject, injectable } from 'inversify';
 import { Disposable, extensions, Uri, workspace, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
@@ -126,7 +127,8 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             return undefined;
         }
 
-        const notebookPath = `${textDocumentUri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
+        const inputBoxPrefix = path.sep + 'InteractiveInput-';
+        const notebookPath = `${textDocumentUri.fsPath.replace(inputBoxPrefix, 'Interactive-')}.interactive`;
         const notebookUri = textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
         let result: string | undefined = undefined;
         window.tabGroups.all.find((group) => {
