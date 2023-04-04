@@ -10,7 +10,7 @@ import {
     RemoteKernelConnectionMetadata
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
-import { IDisposable, Resource } from '../../platform/common/types';
+import { IDisposable } from '../../platform/common/types';
 import { ContributedKernelFinderKind } from '../../kernels/internalTypes';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
@@ -95,18 +95,6 @@ export interface IControllerRegistration {
      */
     onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
     isFiltered(metadata: KernelConnectionMetadata): boolean;
-}
-
-export const IControllerDefaultService = Symbol('IControllerDefaultService');
-export interface IControllerDefaultService {
-    /**
-     * Creates the default controller for a notebook or interactive window
-     * @param resource
-     */
-    computeDefaultController(
-        resource: Resource,
-        viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
-    ): Promise<IVSCodeNotebookController | undefined>;
 }
 
 // Flag enum for the reason why a kernel was logged as an exact match

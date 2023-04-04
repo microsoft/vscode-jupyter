@@ -15,7 +15,6 @@ import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../../kernels/telemetry/helper';
 import { KernelConnectionMetadata, isLocalConnection } from '../../../kernels/types';
 import {
-    IControllerDefaultService,
     IControllerRegistration,
     IVSCodeNotebookController,
     PreferredKernelExactMatchReason
@@ -48,6 +47,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { KernelRankingHelper, findKernelSpecMatchingInterpreter } from './kernelRankingHelper';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
+import { ControllerDefaultService } from './controllerDefaultService';
 
 /**
  * Computes and tracks the preferred kernel for a notebook.
@@ -62,7 +62,7 @@ export class ControllerPreferredService {
     private disposables = new Set<IDisposable>();
     constructor(
         private readonly registration: IControllerRegistration,
-        private readonly defaultService: IControllerDefaultService,
+        private readonly defaultService: ControllerDefaultService,
         private readonly interpreters: IInterpreterService,
         private readonly notebook: IVSCodeNotebook,
         private readonly extensionChecker: IPythonExtensionChecker,
@@ -75,7 +75,7 @@ export class ControllerPreferredService {
         if (!ControllerPreferredService.instance) {
             ControllerPreferredService.instance = new ControllerPreferredService(
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
-                serviceContainer.get<IControllerDefaultService>(IControllerDefaultService),
+                ControllerDefaultService.create(serviceContainer),
                 serviceContainer.get<IInterpreterService>(IInterpreterService),
                 serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
