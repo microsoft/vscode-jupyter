@@ -125,6 +125,9 @@ async function createSettings(): Promise<string> {
         // New Kernel Picker.
         'notebook.kernelPicker.type': 'mru'
     };
+    if (IS_SMOKE_TEST()) {
+        defaultSettings['python.languageServer'] = 'None';
+    }
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
     return userDataDirectory;
