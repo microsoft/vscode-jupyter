@@ -66,7 +66,7 @@ export interface IJupyterSettings {
     readonly errorBackgroundColor: string;
     readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
-    readonly decorateCells: boolean;
+    readonly decorateCells: 'currentCell' | 'allCells' | 'disabled';
     readonly enableCellCodeLens: boolean;
     askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;

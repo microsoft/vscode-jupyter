@@ -213,10 +213,16 @@ export class PythonKernelInterruptDaemon {
             this.disposableRegistry.push(new Disposable(() => swallowExceptions(() => proc.proc?.kill())));
             // Added for logging to see if this process dies.
             // We can remove this later if there are no more flaky test failures.
-            proc.proc?.on('close', () => traceInfoIfCI('Interrupt daemon closed'));
+            proc.proc?.on('close', () => {
+                traceInfoIfCI('Interrupt daemon closed');
+                this.startupPromise = undefined;
+            });
             // Added for logging to see if this process dies.
             // We can remove this later if there are no more flaky test failures.
-            proc.proc?.on('exit', () => traceInfoIfCI('Interrupt daemon exited'));
+            proc.proc?.on('exit', () => {
+                traceInfoIfCI('Interrupt daemon exited');
+                this.startupPromise = undefined;
+            });
             return proc;
         })();
         promise.catch((ex) => traceError(`Failed to start interrupt daemon for (${pythonEnvironment.id})`, ex));

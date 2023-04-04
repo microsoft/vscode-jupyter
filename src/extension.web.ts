@@ -138,7 +138,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             showDataViewer: () => Promise.resolve(),
             getKernelService: () => Promise.resolve(undefined),
             getSuggestedController: () => Promise.resolve(undefined),
-            addRemoteJupyterServer: () => Promise.resolve(undefined)
+            addRemoteJupyterServer: () => Promise.resolve(undefined),
+            openNotebook: () => Promise.reject()
         };
     }
 }

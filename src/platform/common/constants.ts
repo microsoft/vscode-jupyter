@@ -3,17 +3,12 @@
 
 export const PYTHON_LANGUAGE = 'python';
 export const MARKDOWN_LANGUAGE = 'markdown';
-export const JUPYTER_LANGUAGE = 'jupyter';
-
 export const NotebookCellScheme = 'vscode-notebook-cell';
 export const PYTHON_UNTITLED = { scheme: 'untitled', language: PYTHON_LANGUAGE };
 export const PYTHON_FILE = { scheme: 'file', language: PYTHON_LANGUAGE };
 export const PYTHON_FILE_ANY_SCHEME = { language: PYTHON_LANGUAGE };
 export const PYTHON_CELL = { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE };
 export const PYTHON = [PYTHON_UNTITLED, PYTHON_FILE, PYTHON_CELL];
-export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
-export const GITHUB_ISSUE_MARKDOWN_FILE = [{ language: MARKDOWN_LANGUAGE, scheme: 'untitled', pattern: '**/issue.md' }];
-
 export const InteractiveInputScheme = 'vscode-interactive-input';
 export const InteractiveScheme = 'vscode-interactive';
 export const JupyterNotebookView = 'jupyter-notebook';
@@ -28,8 +23,6 @@ export const NOTEBOOK_SELECTOR = [
 
 export const JVSC_EXTENSION_ID = 'ms-toolsai.jupyter';
 export const AppinsightsKey = '0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255';
-
-export const DEFAULT_INTERPRETER_SETTING = 'python';
 
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
@@ -100,19 +93,6 @@ export namespace Identifiers {
 }
 
 export namespace CodeSnippets {
-    export const ChangeDirectory = [
-        '{0}',
-        '{1}',
-        'import os as _VSCODE_os',
-        'try:',
-        "\t_VSCODE_os.chdir(_VSCODE_os.path.join(_VSCODE_os.getcwd(), '{2}'))",
-        '\tprint(_VSCODE_os.getcwd())',
-        'except:',
-        '\tpass',
-        'del _VSCODE_os',
-        ''
-    ];
-    export const ChangeDirectoryCommentIdentifier = '# ms-toolsai.jupyter added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
     export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n`;
     export const AppendSVGFigureFormat = `import matplotlib_inline.backend_inline\n${Identifiers.MatplotLibFigureFormats} = matplotlib_inline.backend_inline.InlineBackend.instance().figure_formats\n${Identifiers.MatplotLibFigureFormats}.add('svg')\nmatplotlib_inline.backend_inline.set_matplotlib_formats(*${Identifiers.MatplotLibFigureFormats})`;
@@ -123,7 +103,6 @@ export namespace CodeSnippets {
 
 // Identifier for the output panel that will display the output from the Jupyter Server.
 export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
-export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 
 export const DefaultTheme = 'Default Light+';
 
@@ -149,16 +128,6 @@ export const LanguagesSupportedByPythonkernel = [
     'perl', // %%perl
     'raw' // raw cells (no formatting)
 ];
-
-// List of 'language' names that we know about. All should be lower case as that's how we compare.
-export const KnownKernelLanguageAliases = new Map<string, string>([
-    ['qsharp', 'q#'],
-    ['csharp', 'c#'],
-    ['fsharp', 'f#'],
-    ['c++11', 'c++'],
-    ['c++12', 'c++'],
-    ['c++14', 'c++']
-]);
 export const jupyterLanguageToMonacoLanguageMapping = new Map([
     ['bash', 'shellscript'],
     ['c#', 'csharp'],
@@ -324,12 +293,6 @@ export namespace RegExpValues {
     export const PythonMarkdownCellMarker = /^(#\s*%%\s*\[markdown\]|#\s*\<markdowncell\>)/;
     export const UrlPatternRegEx =
         '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
-    export interface IUrlPatternGroupType {
-        LOCAL: string | undefined;
-        PREFIX: string | undefined;
-        REST: string | undefined;
-        IP: string | undefined;
-    }
     export const HttpPattern = /https?:\/\//;
     export const ShapeSplitterRegEx = /.*,\s*(\d+).*/;
     export const SvgHeightRegex = /(\<svg.*height=\")(.*?)\"/;

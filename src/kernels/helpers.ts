@@ -637,6 +637,14 @@ export async function executeSilently(
                     .join()
                     .substring(0, 100)}}`
             );
+            if (errorOptions?.traceErrors) {
+                const errorMessage = `${
+                    errorOptions.traceErrorsMessage || 'Failed to execute (silent) code against the kernel'
+                }, \nCode = ${code}\nError details: `;
+                traceError(
+                    `${errorMessage} ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback.join()}`
+                );
+            }
             const output: nbformat.IError = {
                 ename: msg.content.ename,
                 evalue: msg.content.evalue,

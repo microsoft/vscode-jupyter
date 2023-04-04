@@ -215,7 +215,7 @@ export class InteractiveWindowProvider
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 resource,
-                new InteractiveControllerFactory(this.controllerHelper, mode),
+                new InteractiveControllerFactory(this.controllerHelper, mode, initialController),
                 editor,
                 inputUri
             );

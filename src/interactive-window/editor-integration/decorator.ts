@@ -8,7 +8,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IJupyterSettings } from '../../platform/common/types';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 import { generateCellRangesFromDocument } from './cellFactory';
 
@@ -107,6 +107,15 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
         });
     }
 
+    private cellDecorationEnabled(settings: IJupyterSettings) {
+        // check old true/false value for this setting
+        if ((settings.decorateCells as unknown as boolean) === false) {
+            return false;
+        }
+
+        return settings.decorateCells === 'currentCell' || settings.decorateCells === 'allCells';
+    }
+
     /**
      *
      * @param editor The editor to update cell decorations in.
@@ -128,7 +137,7 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
                 this.extensionChecker.isPythonExtensionInstalled
             ) {
                 const settings = this.configuration.getSettings(editor.document.uri);
-                if (settings.decorateCells) {
+                if (this.cellDecorationEnabled(settings)) {
                     // Find all of the cells
                     const cells = generateCellRangesFromDocument(editor.document, settings);
                     // Find the range for our active cell.
@@ -137,15 +146,23 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
                         currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
                     const rangeBottom =
                         currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
+                    const nonCurrentCells: vscode.Range[] = [];
+                    if (settings.decorateCells === 'allCells')
+                        cells.forEach((cell) => {
+                            const cellTop = cell.range.start;
+                            if (cellTop !== currentRange[0].start && cellTop.line - 1 !== currentRange[0].end.line) {
+                                nonCurrentCells.push(new vscode.Range(cellTop, cellTop));
+                            }
+                        });
                     if (this.documentManager.activeTextEditor === editor) {
                         editor.setDecorations(this.currentCellTop, rangeTop);
                         editor.setDecorations(this.currentCellBottom, rangeBottom);
-                        editor.setDecorations(this.currentCellTopUnfocused, []);
+                        editor.setDecorations(this.currentCellTopUnfocused, nonCurrentCells);
                         editor.setDecorations(this.currentCellBottomUnfocused, []);
                     } else {
                         editor.setDecorations(this.currentCellTop, []);
                         editor.setDecorations(this.currentCellBottom, []);
-                        editor.setDecorations(this.currentCellTopUnfocused, rangeTop);
+                        editor.setDecorations(this.currentCellTopUnfocused, [...nonCurrentCells, ...rangeTop]);
                         editor.setDecorations(this.currentCellBottomUnfocused, rangeBottom);
                     }
                 } else {

@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.76.0"
+        "vscode": "^1.78.0"
     },
     "l10n": "./l10n",
     "keywords": [
@@ -938,11 +938,6 @@
                     "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
                 },
                 {
-                    "command": "jupyter.interruptkernel",
-                    "group": "navigation@2",
-                    "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
-                },
-                {
                     "command": "jupyter.openVariableView",
                     "group": "navigation@3",
                     "when": "isWorkspaceTrusted && notebookKernel =~ /^ms-toolsai.jupyter\\// || isWorkspaceTrusted && !notebookKernel"
@@ -1198,12 +1193,6 @@
                     "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.interruptkernel",
-                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
-                    "category": "Jupyter",
-                    "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.restartkernel",
@@ -1596,8 +1585,13 @@
                     "scope": "resource"
                 },
                 "jupyter.interactiveWindow.cellMarker.decorateCells": {
-                    "type": "boolean",
-                    "default": true,
+                    "type": "string",
+                    "enum": [
+                        "currentCell",
+                        "allCells",
+                        "None"
+                    ],
+                    "default": "currentCell",
                     "description": "%jupyter.configuration.jupyter.decorateCells.description%",
                     "scope": "resource"
                 },
@@ -2191,7 +2185,7 @@
         "@typescript-eslint/parser": "^5.47.0",
         "@vscode/test-electron": "^2.2.0",
         "@vscode/test-web": "^0.0.29",
-        "@vscode/zeromq": "^0.0.6",
+        "@vscode/zeromq": "^0.0.9",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "bufferutil": "^4.0.6",

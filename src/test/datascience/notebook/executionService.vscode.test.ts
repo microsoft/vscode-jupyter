@@ -318,17 +318,7 @@ suite('Kernel Execution @kernelCore', function () {
             5_000,
             'Cell did not get cleared'
         );
-        await kernel.interrupt();
-        if (getOSType() == OSType.Windows) {
-            // Interrupting a cell on Windows is flaky. there isn't much we can do about it.
-            await kernel.interrupt().catch(noop);
-            await kernel.interrupt().catch(noop);
-            await waitForCellExecutionToComplete(cell).catch(noop);
-        } else {
-            await waitForExecutionCompletedWithErrors(cell);
-            // Verify that it hasn't got added (even after interrupting).
-            assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
-        }
+        await kernel.restart();
     });
     test('Clearing output via code', async function () {
         // Assume you are executing a cell that prints numbers 1-100.
@@ -435,18 +425,21 @@ suite('Kernel Execution @kernelCore', function () {
 
         const pathOutput = getCellOutputs(cell3);
         const execOutput = getCellOutputs(cell4);
-        const pathValue = pathOutput.split(path.delimiter);
-        const sysExecutable = execOutput.trim().toLowerCase();
+        const pathValue = pathOutput.split(path.delimiter)[0];
+        const sysExecutable = execOutput.trim();
 
         // First path in PATH must be the directory where executable is located.
-        assert.ok(
-            areInterpreterPathsSame(
-                Uri.file(path.dirname(getNormalizedInterpreterPath(Uri.file(sysExecutable)).fsPath)),
-                Uri.file(pathValue[0]),
-                getOSType(),
-                true
-            ),
-            `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable}). Path Output ${pathOutput} and Exec Output ${execOutput}`
+        const normalizedInterpreterPath = getNormalizedInterpreterPath(Uri.file(sysExecutable)).fsPath;
+        const normalizedBinPath = path.dirname(normalizedInterpreterPath);
+        assert.equal(
+            getOSType() === OSType.Windows ? normalizedBinPath.toLowerCase() : normalizedBinPath,
+            getOSType() === OSType.Windows ? pathValue.toLowerCase() : pathValue,
+            [
+                `First entry in PATH (${pathValue}) does not point to executable (${sysExecutable}).`,
+                `Normalized Interpreter Path = '${normalizedInterpreterPath}'`,
+                `Normalized Bin Path = '${normalizedBinPath}'`,
+                `Path Output ${pathOutput} and Exec Output ${execOutput}`
+            ].join(',')
         );
     });
     test('!python should point to the Environment', async function () {

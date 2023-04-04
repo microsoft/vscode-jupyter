@@ -5,7 +5,7 @@ import { buildPythonExecInfo, PythonExecInfo } from '../pythonEnvironments/exec'
 import { getExecutablePath } from '../pythonEnvironments/info/executable.node';
 import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from '../common/process/types.node';
-import { compare, SemVer } from 'semver';
+import { SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../pythonEnvironments/info';
 import { getFilePath } from '../common/platform/fs-paths';
 import { Uri } from 'vscode';
@@ -92,12 +92,6 @@ export function createPythonEnv(
     return new PythonEnvironment(interpreter, deps);
 }
 
-export function condaVersionSupportsLiveStreaming(version?: SemVer): boolean {
-    if (!version) {
-        return false;
-    }
-    return compare(version.raw, '4.9.0') >= 0;
-}
 export function createCondaEnv(
     condaFile: string,
     condaInfo: {

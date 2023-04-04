@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ExtensionMode, NotebookController, NotebookDocument } from 'vscode';
+import { ExtensionMode, NotebookController, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
@@ -13,7 +13,7 @@ import {
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './extension';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
-import { isTestExecution, Telemetry } from '../../platform/common/constants';
+import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { IExtensionContext, IExtensions } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
@@ -70,6 +70,13 @@ export interface IExtensionApi {
      * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
      */
     addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
+    /**
+     * Opens a notebook with a specific kernel as the active kernel.
+     * @param {Uri} uri Uri of the notebook to open.
+     * @param {String} kernelId Id of the kernel, retrieved from getKernelService().getKernelSpecifications()
+     * @returns {Promise<NotebookDocument>} Promise that resolves to the notebook document.
+     */
+    openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
 }
 
 function waitForNotebookControllersCreationForServer(
@@ -182,6 +189,24 @@ export function buildApi(
                     resolve();
                 }
             });
+        },
+        openNotebook: async (uri: Uri, kernelId: string) => {
+            sendApiUsageTelemetry(extensions, 'openNotebook');
+            const controllers = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+            const id = controllers.all.find((controller) => controller.id === kernelId)?.id;
+            if (!id) {
+                throw new Error(`Kernel ${kernelId} not found.`);
+            }
+            const notebookEditor =
+                window.activeNotebookEditor?.notebook?.uri?.toString() === uri.toString()
+                    ? window.activeNotebookEditor
+                    : await window.showNotebookDocument(await workspace.openNotebookDocument(uri));
+            await commands.executeCommand('notebook.selectKernel', {
+                notebookEditor,
+                id,
+                extension: JVSC_EXTENSION_ID
+            });
+            return notebookEditor.notebook;
         }
     };
 

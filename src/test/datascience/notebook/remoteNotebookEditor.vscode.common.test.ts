@@ -30,7 +30,8 @@ import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../consta
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
-import { IControllerDefaultService, IControllerRegistration } from '../../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
+import { ControllerDefaultService } from './controllerDefaultService';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Remote Execution @kernelCore', function () {
@@ -43,7 +44,7 @@ suite('Remote Execution @kernelCore', function () {
     let globalMemento: Memento;
     let encryptedStorage: IEncryptedStorage;
     let controllerRegistration: IControllerRegistration;
-    let controllerDefault: IControllerDefaultService;
+    let controllerDefault: ControllerDefaultService;
 
     suiteSetup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
@@ -58,7 +59,7 @@ suite('Remote Execution @kernelCore', function () {
         encryptedStorage = api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage);
         globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        controllerDefault = api.serviceContainer.get<IControllerDefaultService>(IControllerDefaultService);
+        controllerDefault = ControllerDefaultService.create(api.serviceContainer);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {

@@ -5,7 +5,7 @@ import * as Redux from 'redux';
 import { InteractiveWindowMessages, SharedMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
 import { BaseReduxActionPayload } from '../../../types';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
-import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
+import { CommonActionType } from './reducers/types';
 
 const AllowedMessages = [
     ...Object.values(InteractiveWindowMessages),
@@ -26,23 +26,6 @@ type ReducerArg = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload?: BaseReduxActionPayload<any>;
 };
-
-export function queueIncomingActionWithPayload<
-    M extends IInteractiveWindowMapping & CommonActionTypeMapping,
-    K extends keyof M
->(originalReducerArg: ReducerArg, type: K, data: M[K]): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const action = { type, payload: { data, messageDirection: 'incoming' } as any } as any;
-    originalReducerArg.queueAction(action);
-}
-
-export function queueIncomingAction<M extends IInteractiveWindowMapping & CommonActionTypeMapping, K extends keyof M>(
-    originalReducerArg: ReducerArg,
-    type: K
-): void {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    queueIncomingActionWithPayload(originalReducerArg, type as any, undefined);
-}
 
 /**
  * Post a message to the extension (via dispatcher actions).

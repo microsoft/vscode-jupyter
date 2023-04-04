@@ -125,6 +125,9 @@ async function createSettings(): Promise<string> {
         // New Kernel Picker.
         'notebook.kernelPicker.type': 'mru'
     };
+    if (IS_SMOKE_TEST()) {
+        defaultSettings['python.languageServer'] = 'None';
+    }
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
     return userDataDirectory;
@@ -167,6 +170,7 @@ async function start() {
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
             .concat(['--disable-extension', 'ms-python.isort']) // We don't need this, also has a lot of errors on CI and floods CI logs unnecessarily.
+            .concat(IS_SMOKE_TEST() ? ['--disable-extension', 'ms-python.vscode-pylance'] : []) // For some reason pylance crashes and takes down the entire test run. See https://github.com/microsoft/vscode-jupyter/issues/13200
             .concat(['--extensions-dir', extensionsDir])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.

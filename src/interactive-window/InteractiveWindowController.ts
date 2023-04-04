@@ -20,8 +20,6 @@ export class InteractiveWindowController {
     public kernel: Deferred<IKernel> | undefined;
     public controller: NotebookController | undefined;
     public metadata: KernelConnectionMetadata | undefined;
-    private notebook: NotebookDocument | undefined;
-    private autoStart = false;
     private disposables: Disposable[] = [];
     private systemInfoCell: SystemInfoCell | undefined;
     private fileInKernel: Uri | undefined;
@@ -29,10 +27,15 @@ export class InteractiveWindowController {
     constructor(
         private readonly controllerService: IInteractiveControllerHelper,
         private mode: InteractiveWindowMode,
+        private readonly notebook: NotebookDocument,
         private readonly errorHandler: IDataScienceErrorHandler,
         private readonly kernelProvider: IKernelProvider,
-        private owner: Resource
-    ) {}
+        private owner: Resource,
+        controller: IVSCodeNotebookController | undefined
+    ) {
+        this.controller = controller?.controller;
+        this.metadata = controller?.connection;
+    }
 
     public updateMode(mode: InteractiveWindowMode) {
         this.mode = mode;
@@ -42,43 +45,26 @@ export class InteractiveWindowController {
         this.owner = file;
     }
 
-    public get kernelDisposables() {
-        return this.disposables;
-    }
-
-    public enableAutoStart() {
-        this.autoStart = true;
-    }
-
-    public setController(notebook: NotebookDocument) {
-        if (!this.controller || !this.metadata) {
-            this.notebook = notebook;
-            const selected = this.controllerService.getSelectedController(notebook);
-            this.controller = selected?.controller;
-            this.metadata = selected?.connection;
-        }
-    }
-
     public async startKernel(): Promise<IKernel> {
         if (this.kernel) {
             return this.kernel.promise;
         }
         if (!this.controller || !this.metadata) {
-            throw new Error('Controller not selected');
+            throw new Error('Interactive Window kernel not selected');
         }
 
-        this.setInfoMessageCell(this.metadata, SysInfoReason.Start);
+        this.setInfoMessage(this.metadata, SysInfoReason.Start);
         try {
             const kernel = await this.createKernel();
             const kernelEventHookForRestart = async () => {
                 if (this.notebook && this.metadata) {
                     this.systemInfoCell = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
-                    this.setInfoMessageCell(this.metadata, SysInfoReason.Restart);
+                    this.setInfoMessage(this.metadata, SysInfoReason.Restart);
                 }
             };
             // Hook pre interrupt so we can stick in a message
-            this.kernelDisposables.push(kernel.addHook('willRestart', kernelEventHookForRestart));
+            this.disposables.push(kernel.addHook('willRestart', kernelEventHookForRestart));
             // When restart finishes, rerun our initialization code
             kernel.onRestarted(
                 async () => {
@@ -93,7 +79,7 @@ export class InteractiveWindowController {
                     }
                 },
                 this,
-                this.kernelDisposables
+                this.disposables
             );
             this.fileInKernel = undefined;
             await this.setFileInKernel(kernel);
@@ -132,12 +118,12 @@ export class InteractiveWindowController {
                 this.controller,
                 this.owner,
                 this.notebook!,
-                this.kernelDisposables
+                this.disposables
             );
             this.metadata = kernel.kernelConnectionMetadata;
             this.controller = actualController;
 
-            this.kernelDisposables.push(kernel);
+            this.disposables.push(kernel);
             kernelPromise.resolve(kernel);
             return kernel;
         } catch (ex) {
@@ -194,29 +180,31 @@ export class InteractiveWindowController {
                     this.disconnect();
                     this.controller = e.controller.controller;
                     this.metadata = e.controller.connection;
-
-                    // don't start the kernel if the IW has only been restored from a previous session
-                    if (this.autoStart) {
-                        this.startKernel().catch(noop);
-                    }
+                    this.startKernel().catch(noop);
                 }
             },
             this
         );
     }
 
-    private setInfoMessageCell(metadata: KernelConnectionMetadata, reason: SysInfoReason) {
+    public setInfoMessageCell(message: string) {
         if (!this.notebook) {
             return;
         }
-        const message = getSysInfoMessage(metadata, reason);
         if (!this.systemInfoCell) {
             this.systemInfoCell = new SystemInfoCell(this.notebook, message);
         } else {
             this.systemInfoCell
                 .updateMessage(message)
-                .catch((error) => traceWarning(`could not update kernel ${reason} info message: ${error}`));
+                .catch((error) =>
+                    traceWarning(`could not update info cell with message: "${message}", error: ${error}`)
+                );
         }
+    }
+
+    private setInfoMessage(metadata: KernelConnectionMetadata, reason: SysInfoReason) {
+        const message = getSysInfoMessage(metadata, reason);
+        this.setInfoMessageCell(message);
     }
 
     private finishSysInfoMessage(kernel: IKernel, reason: SysInfoReason) {
@@ -259,10 +247,30 @@ export class InteractiveWindowController {
 export class InteractiveControllerFactory {
     constructor(
         private readonly controllerService: IInteractiveControllerHelper,
-        private readonly mode: InteractiveWindowMode
+        private readonly mode: InteractiveWindowMode,
+        private readonly initialController?: IVSCodeNotebookController
     ) {}
 
-    public create(errorHandler: IDataScienceErrorHandler, kernelProvider: IKernelProvider, owner: Resource) {
-        return new InteractiveWindowController(this.controllerService, this.mode, errorHandler, kernelProvider, owner);
+    public create(
+        notebook: NotebookDocument,
+        errorHandler: IDataScienceErrorHandler,
+        kernelProvider: IKernelProvider,
+        owner: Resource
+    ) {
+        let controller = this.initialController;
+        const selected = this.controllerService.getSelectedController(notebook);
+        if (selected) {
+            controller = selected;
+        }
+
+        return new InteractiveWindowController(
+            this.controllerService,
+            this.mode,
+            notebook,
+            errorHandler,
+            kernelProvider,
+            owner,
+            controller
+        );
     }
 }

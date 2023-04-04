@@ -189,7 +189,7 @@
     "jupyter.configuration.jupyter.ignoreVscodeTheme.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
     "jupyter.configuration.jupyter.ignoreVscodeTheme.description": "Don't use the VS Code theme in the Interactive window (requires reload of VS Code). This forces the Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
     "jupyter.configuration.jupyter.themeMatplotlibPlots.description": "In the Interactive window and Notebook Editor theme matplotlib outputs to match the VS Code editor theme.",
-    "jupyter.configuration.jupyter.decorateCells.description": "Draw a highlight behind the currently active cell.",
+    "jupyter.configuration.jupyter.decorateCells.description": "Draw a highlight behind the currently active cell, or all cells, in a python file.",
     "jupyter.configuration.jupyter.decorateCells.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.cellMarker.decorateCells.",
     "jupyter.configuration.jupyter.enableCellCodeLens.description": "Enables code lens for 'cells' in a python file.",
     "jupyter.configuration.jupyter.enableCellCodeLens.deprecationMessage": "This setting has been deprecated in favor of jupyter.interactiveWindow.codeLens.enable.",

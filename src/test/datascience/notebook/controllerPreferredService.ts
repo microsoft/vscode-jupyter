@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { INotebookMetadata } from '@jupyterlab/nbformat';
-import { inject } from 'inversify';
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -16,7 +15,6 @@ import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../../kernels/telemetry/helper';
 import { KernelConnectionMetadata, isLocalConnection } from '../../../kernels/types';
 import {
-    IControllerDefaultService,
     IControllerRegistration,
     IVSCodeNotebookController,
     PreferredKernelExactMatchReason
@@ -49,6 +47,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { KernelRankingHelper, findKernelSpecMatchingInterpreter } from './kernelRankingHelper';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
+import { ControllerDefaultService } from './controllerDefaultService';
 
 /**
  * Computes and tracks the preferred kernel for a notebook.
@@ -62,21 +61,21 @@ export class ControllerPreferredService {
     }
     private disposables = new Set<IDisposable>();
     constructor(
-        @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IControllerDefaultService) private readonly defaultService: IControllerDefaultService,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        private readonly registration: IControllerRegistration,
+        private readonly defaultService: ControllerDefaultService,
+        private readonly interpreters: IInterpreterService,
+        private readonly notebook: IVSCodeNotebook,
+        private readonly extensionChecker: IPythonExtensionChecker,
+        private readonly serverUriStorage: IJupyterServerUriStorage,
         private readonly kernelRankHelper: KernelRankingHelper,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        private readonly isWebExtension: boolean
     ) {}
     private static instance: ControllerPreferredService | undefined;
     public static create(serviceContainer: IServiceContainer) {
         if (!ControllerPreferredService.instance) {
             ControllerPreferredService.instance = new ControllerPreferredService(
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
-                serviceContainer.get<IControllerDefaultService>(IControllerDefaultService),
+                ControllerDefaultService.create(serviceContainer),
                 serviceContainer.get<IInterpreterService>(IInterpreterService),
                 serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
