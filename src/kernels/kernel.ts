@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type * as nbformat from '@jupyterlab/nbformat';
+import * as nbformat from '@jupyterlab/nbformat';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
@@ -12,7 +12,8 @@ import {
     ColorThemeKind,
     Disposable,
     Uri,
-    NotebookDocument
+    NotebookDocument,
+    Memento
 } from 'vscode';
 import {
     CodeSnippets,
@@ -169,7 +170,8 @@ abstract class BaseKernel implements IBaseKernel {
         protected readonly kernelSettings: IKernelSettings,
         protected readonly appShell: IApplicationShell,
         protected readonly startupCodeProviders: IStartupCodeProvider[],
-        public readonly _creator: KernelActionSource
+        public readonly _creator: KernelActionSource,
+        private readonly workspaceMemento: Memento
     ) {
         this.disposables.push(this._onStatusChanged);
         this.disposables.push(this._onRestarted);
@@ -762,10 +764,29 @@ abstract class BaseKernel implements IBaseKernel {
                 protocol_version: '',
                 status: 'ok'
             };
-            promises.push(session.requestKernelInfo().then((item) => item?.content));
+            const kernelInfoPromise = session.requestKernelInfo().then((item) => item?.content);
+            if (
+                this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
+                this.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
+            ) {
+                kernelInfoPromise
+                    .then((content) =>
+                        this.workspaceMemento.update(`KERNEL_INFO_${this.kernelConnectionMetadata.id}`, content)
+                    )
+                    .catch(noop);
+            }
+            promises.push(kernelInfoPromise);
             // If this doesn't complete in 5 seconds for remote kernels, assume the kernel is busy & provide some default content.
             if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
-                promises.push(sleep(5_000).then(() => defaultResponse));
+                const cachedInfo = this.workspaceMemento.get<KernelMessage.IInfoReply | undefined>(
+                    `KERNEL_INFO_${this.kernelConnectionMetadata.id}`,
+                    undefined
+                );
+                if (cachedInfo) {
+                    promises.push(Promise.resolve(cachedInfo));
+                } else {
+                    promises.push(sleep(5_000).then(() => defaultResponse));
+                }
             }
             const content = await Promise.race(promises);
             if (content === defaultResponse) {
@@ -985,7 +1006,8 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
         notebookProvider: INotebookProvider,
         appShell: IApplicationShell,
         kernelSettings: IKernelSettings,
-        startupCodeProviders: IStartupCodeProvider[]
+        startupCodeProviders: IStartupCodeProvider[],
+        workspaceMemento: Memento
     ) {
         super(
             uri,
@@ -995,7 +1017,8 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
             kernelSettings,
             appShell,
             startupCodeProviders,
-            '3rdPartyExtension'
+            '3rdPartyExtension',
+            workspaceMemento
         );
     }
 }
@@ -1016,7 +1039,8 @@ export class Kernel extends BaseKernel implements IKernel {
         kernelSettings: IKernelSettings,
         appShell: IApplicationShell,
         public readonly controller: IKernelController,
-        startupCodeProviders: IStartupCodeProvider[]
+        startupCodeProviders: IStartupCodeProvider[],
+        workspaceMemento: Memento
     ) {
         super(
             notebook.uri,
@@ -1026,7 +1050,8 @@ export class Kernel extends BaseKernel implements IKernel {
             kernelSettings,
             appShell,
             startupCodeProviders,
-            'jupyterExtension'
+            'jupyterExtension',
+            workspaceMemento
         );
     }
 }

@@ -9,7 +9,8 @@ import {
     NotebookCellExecutionState,
     NotebookDocument,
     workspace,
-    Memento
+    Memento,
+    CancellationToken
 } from 'vscode';
 import { NotebookCellKind } from 'vscode-languageserver-protocol';
 import { IApplicationShell } from '../platform/common/application/types';
@@ -32,6 +33,7 @@ import {
     ITracebackFormatter,
     NotebookCellRunState
 } from './types';
+import { noop } from '../platform/common/utils/misc';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -88,26 +90,29 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         return this.documentExecutions.get(this.notebook)?.queue || [];
     }
 
-    public async resumeCellExecution(cell: NotebookCell, msg_id: string): Promise<NotebookCellRunState> {
+    public async resumeCellExecution(
+        cell: NotebookCell,
+        msg_id: string,
+        token: CancellationToken,
+        startTime: number,
+        executionCount: number
+    ): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `KernelExecution.resumeCellExecution (1), ${getDisplayPath(cell.notebook.uri)}`);
         if (cell.kind == NotebookCellKind.Markup) {
             throw new Error('Invalid cell type');
         }
 
         traceCellMessage(cell, `kernel.resumeCellExecution, ${getDisplayPath(cell.notebook.uri)}`);
-        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
             this.kernel.resourceUri,
             this.kernel.kernelConnectionMetadata
-        );
+        ).catch(noop);
         // sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ExecuteCell);
         const sessionPromise = this.kernel.start(new DisplayOptions(false));
 
-        // If we're restarting, wait for it to finish
-        await this.kernel.restarting;
-
         traceCellMessage(cell, `KernelExecution.resumeCellExecution (2), ${getDisplayPath(cell.notebook.uri)}`);
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
-        executionQueue.resumeCell(cell, msg_id);
+        executionQueue.resumeCell(cell, msg_id, token, startTime, executionCount);
         const result = await executionQueue.waitForCompletion([cell]);
 
         traceCellMessage(cell, `KernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`);

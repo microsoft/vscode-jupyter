@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, extensions, Uri, workspace, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IPythonApiProvider } from '../../platform/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { PylanceExtension } from '../../platform/common/constants';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -26,6 +26,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
 
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
@@ -36,7 +37,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     }
 
     public async activate() {
-        if (!this.isUsingPylance()) {
+        if (!this.isUsingPylance() || !this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
 

@@ -3,6 +3,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import {
+    CancellationTokenSource,
     Disposable,
     EventEmitter,
     ExtensionMode,
@@ -282,6 +283,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             | {
                   index: number;
                   msg_id: string;
+                  startTime: number;
+                  execution_count: number;
               }
             | undefined
         >(`LAST_EXECUTED_CELL_${notebook.uri.toString()}`, undefined);
@@ -315,11 +318,34 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             typeof lastExecutionInfo.index === 'number'
         ) {
             let resumed = false;
+            const cancellation = new CancellationTokenSource();
+            this.disposables.push(cancellation);
             kernel.session.kernel.statusChanged.connect((_, status) => {
                 console.log(status);
             });
             kernel.session.kernel.anyMessage.connect((_, msg) => {
-                if (msg.direction === 'send' || resumed) {
+                if (msg.direction === 'send') {
+                    return;
+                }
+                if (msg.msg.parent_header && 'msg_id' in msg.msg.parent_header && resumed) {
+                    console.log(msg);
+                    if (msg.msg.parent_header.msg_id !== lastExecutionInfo.msg_id) {
+                        cancellation.cancel();
+                        cancellation.dispose();
+                        return;
+                    }
+                    if (
+                        'msg_type' in msg.msg &&
+                        msg.msg.msg_type === 'status' &&
+                        'execution_state' in msg.msg.content &&
+                        msg.msg.content.execution_state === 'idle'
+                    ) {
+                        cancellation.cancel();
+                        cancellation.dispose();
+                    }
+                    return;
+                }
+                if (resumed) {
                     return;
                 }
                 if (
@@ -329,7 +355,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 ) {
                     resumed = true;
                     kernelExecution
-                        .resumeCellExecution(notebook.cellAt(lastExecutionInfo.index), lastExecutionInfo.msg_id)
+                        .resumeCellExecution(
+                            notebook.cellAt(lastExecutionInfo.index),
+                            lastExecutionInfo.msg_id,
+                            cancellation.token,
+                            lastExecutionInfo.startTime,
+                            lastExecutionInfo.execution_count
+                        )
                         .catch(noop);
                     console.log(msg);
                 }

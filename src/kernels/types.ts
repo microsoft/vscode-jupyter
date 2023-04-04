@@ -421,7 +421,13 @@ export interface INotebookKernelExecution {
      */
     executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
     restoreCellOutput(cell: NotebookCell): Promise<void>;
-    resumeCellExecution(cell: NotebookCell, msg_id: string): Promise<NotebookCellRunState>;
+    resumeCellExecution(
+        cell: NotebookCell,
+        msg_id: string,
+        token: CancellationToken,
+        startTime: number,
+        executionCount: number
+    ): Promise<NotebookCellRunState>;
     /**
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */

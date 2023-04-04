@@ -71,7 +71,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
             settings,
             this.appShell,
             options.controller,
-            this.startupCodeProviders.getProviders(notebookType)
+            this.startupCodeProviders.getProviders(notebookType),
+            this.workspaceStorage
         ) as IKernel;
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
@@ -109,7 +110,8 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -134,7 +136,8 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             this.notebookProvider,
             this.appShell,
             settings,
-            this.startupCodeProviders.getProviders(notebookType)
+            this.startupCodeProviders.getProviders(notebookType),
+            this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

@@ -8,7 +8,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { NotebookProvider } from './notebookProvider';
 import { DisplayOptions } from '../../displayOptions';
-import { IJupyterNotebookProvider, IJupyterServerUriStorage } from '../types';
+import { IJupyterNotebookProvider } from '../types';
 import { IRawNotebookProvider } from '../../raw/types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -32,17 +32,13 @@ suite('NotebookProvider', () => {
         when(rawNotebookProvider.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        const uriStorage = mock<IJupyterServerUriStorage>();
-        when(uriStorage.isLocalLaunch).thenReturn(true);
         const onDidChangeEvent = new vscode.EventEmitter<void>();
         disposables.push(onDidChangeEvent);
-        when(uriStorage.onDidChangeConnectionType).thenReturn(onDidChangeEvent.event);
 
         notebookProvider = new NotebookProvider(
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
             instance(extensionChecker),
-            instance(uriStorage)
         );
     });
     teardown(() => disposeAllDisposables(disposables));
