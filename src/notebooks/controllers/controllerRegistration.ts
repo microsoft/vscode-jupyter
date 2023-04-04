@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, NotebookDocument } from 'vscode';
+import { inject, injectable, named } from 'inversify';
+import { Event, EventEmitter, Memento, NotebookCell, NotebookDocument, commands, notebooks, window } from 'vscode';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -16,13 +16,15 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
+import { JupyterNotebookView, InteractiveWindowView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import {
     IDisposableRegistry,
     IConfigurationService,
     IExtensionContext,
     IBrowserService,
-    IDisposable
+    IDisposable,
+    IMemento,
+    WORKSPACE_MEMENTO
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -91,7 +93,9 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {}
     activate(): void {
         // Make sure to reload whenever we do something that changes state
@@ -138,6 +142,94 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook).catch(noop));
 
         this.loadControllers();
+        this.disposables.push(
+            commands.registerCommand(
+                'jupyter.runAndCaptureOutput',
+                async (cell: NotebookCell | undefined) => {
+                    const controller = cell ? this.getSelected(cell.notebook) : undefined;
+                    if (!controller || !cell || cell.document.languageId !== PYTHON_LANGUAGE) {
+                        return;
+                    }
+                    const newCode = ['%%vsccapture c', cell.document.getText()].join('\n');
+                    this.workspaceStorage
+                        .update(`LAST_SLOW_EXECUTED_CELL${cell.notebook.uri.toString()}`, {
+                            index: cell.index,
+                            completed: false
+                        })
+                        .then(noop, noop);
+                    await controller.executeCell(cell.notebook, cell, newCode);
+                    this.workspaceStorage
+                        .update(`LAST_SLOW_EXECUTED_CELL${cell.notebook.uri.toString()}`, undefined)
+                        .then(noop, noop);
+                },
+                this
+            )
+        );
+        this.disposables.push(
+            commands.registerCommand(
+                'jupyter.helloWorld',
+                async () => {
+                    const notebook = window.activeNotebookEditor?.notebook;
+                    if (!notebook) {
+                        return;
+                    }
+                    const kernel = this.kernelProvider.get(notebook);
+                    if (!kernel) {
+                        return;
+                    }
+                    const result = await kernel.session?.kernel?.requestHistory({
+                        hist_access_type: 'tail',
+                        n: 2,
+                        output: true,
+                        raw: true
+                    });
+                    console.error(result);
+                },
+                this
+            )
+        );
+
+        const restoreOutputs = async (notebook: NotebookDocument) => {
+            const slowInfo = this.workspaceStorage.get<
+                | {
+                      index: number;
+                      completed: boolean;
+                  }
+                | undefined
+            >(`LAST_SLOW_EXECUTED_CELL${notebook.uri.toString()}`, undefined);
+            if (!slowInfo || slowInfo.completed) {
+                return;
+            }
+            const cell = notebook.cellAt(slowInfo.index);
+            const controller = cell ? this.getSelected(cell.notebook) : undefined;
+            if (!controller || !cell || cell.document.languageId !== PYTHON_LANGUAGE) {
+                return;
+            }
+            await controller.restoreOutput(cell.notebook);
+        };
+
+        const messageChannel = notebooks.createRendererMessaging('jupyter-output-restore-renderer');
+        if (messageChannel) {
+            traceInfoIfCI(`Adding comm message handler`);
+            const disposable = messageChannel.onDidReceiveMessage(async ({ editor }) => {
+                restoreOutputs(editor.notebook).catch(noop);
+            });
+            this.disposables.push(disposable);
+        }
+
+        this.disposables.push(
+            commands.registerCommand(
+                'jupyter.restoreOutput',
+                async () => {
+                    const notebook = window.activeNotebookEditor?.notebook;
+                    if (!notebook) {
+                        return;
+                    }
+                    await restoreOutputs(notebook);
+                },
+                this
+            )
+        );
     }
     private loadControllers() {
         this.controllersPromise = this.loadControllersImpl();
@@ -374,7 +466,8 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.serviceContainer.get<IBrowserService>(IBrowserService),
                         this.extensionChecker,
                         this.serviceContainer,
-                        this.serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)
+                        this.serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider),
+                        this.serviceContainer.get<Memento>(IMemento, WORKSPACE_MEMENTO)
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     const controllerDisposables: IDisposable[] = [];
