@@ -7,7 +7,13 @@ import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import * as tmp from 'tmp';
-import { PythonExtension, PylanceExtension, setTestExecution, RendererExtension } from '../platform/common/constants';
+import {
+    PythonExtension,
+    PylanceExtension,
+    setTestExecution,
+    RendererExtension,
+    isCI
+} from '../platform/common/constants';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
@@ -178,7 +184,25 @@ async function start() {
         extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
     });
 }
-start().catch((ex) => {
-    console.error('End Standard tests (with errors)', ex);
-    process.exit(1);
-});
+
+const markerFile = path.join(__dirname, 'started.test');
+if (isCI && fs.existsSync(markerFile)) {
+    // On CI sometimes VS Code crashes or there are network issues and tests do not even start
+    // We will create a simple file to indcicate whether tests started
+    // if this file isn't created, then we know its an infrastrucure issue and we can retry tests once again
+    fs.unlinkSync(markerFile);
+}
+start()
+    .catch((ex) => {
+        console.error('End Standard tests (with errors)', ex);
+        // If we failed and could not start the tests, then try again
+        // Could be some flaky network issue or the like.
+        if (isCI && !fs.existsSync(markerFile)) {
+            return start();
+        }
+        process.exit(1);
+    })
+    .catch((ex) => {
+        console.error('End Standard tests (with errors)', ex);
+        process.exit(1);
+    });
