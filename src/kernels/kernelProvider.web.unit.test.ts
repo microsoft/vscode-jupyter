@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, Memento } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
 import { IConfigurationService, IDisposable, IExtensionContext } from '../platform/common/types';
 import { createEventHandler } from '../test/common';
@@ -29,6 +29,7 @@ suite('Web Kernel Provider', function () {
     let jupyterServerUriStorage: IJupyterServerUriStorage;
     let metadata: KernelConnectionMetadata;
     let controller: IKernelController;
+    let workspaceMemento: Memento;
     setup(() => {
         notebookProvider = mock<INotebookProvider>();
         configService = mock<IConfigurationService>();
@@ -38,6 +39,11 @@ suite('Web Kernel Provider', function () {
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         metadata = mock<KernelConnectionMetadata>();
         controller = createKernelController();
+        workspaceMemento = mock<Memento>();
+        when(workspaceMemento.update(anything(), anything())).thenResolve();
+        when(workspaceMemento.get(anything(), anything())).thenCall(
+            (_: unknown, defaultValue: unknown) => defaultValue
+        );
     });
     function createKernelProvider() {
         const registry = mock<IStartupCodeProviders>();
@@ -53,7 +59,8 @@ suite('Web Kernel Provider', function () {
             instance(context),
             instance(jupyterServerUriStorage),
             [],
-            instance(registry)
+            instance(registry),
+            instance(workspaceMemento)
         );
     }
     function create3rdPartyKernelProvider() {
@@ -67,7 +74,8 @@ suite('Web Kernel Provider', function () {
             instance(configService),
             instance(appShell),
             instance(vscNotebook),
-            instance(registry)
+            instance(registry),
+            instance(workspaceMemento)
         );
     }
     teardown(async () => {
