@@ -143,6 +143,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         return result[0];
     }
     public async restoreCellOutput(cell: NotebookCell): Promise<void> {
+        return;
         traceCellMessage(cell, `KernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
         if (cell.kind == NotebookCellKind.Markup) {
             return;
