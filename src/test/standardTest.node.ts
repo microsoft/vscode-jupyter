@@ -185,19 +185,19 @@ async function start() {
     });
 }
 
-const markerFile = path.join(__dirname, 'started.test');
-if (isCI && fs.existsSync(markerFile)) {
+const webTestSummaryJsonFile = path.join(__dirname, '..', '..', 'logs', 'testresults.json');
+if (isCI && fs.existsSync(webTestSummaryJsonFile)) {
     // On CI sometimes VS Code crashes or there are network issues and tests do not even start
-    // We will create a simple file to indcicate whether tests started
-    // if this file isn't created, then we know its an infrastrucure issue and we can retry tests once again
-    fs.unlinkSync(markerFile);
+    // We will create a simple file to indicate whether tests started
+    // if this file isn't created, then we know its an infrastructure issue and we can retry tests once again
+    fs.unlinkSync(webTestSummaryJsonFile);
 }
 start()
     .catch((ex) => {
         console.error('End Standard tests (with errors)', ex);
         // If we failed and could not start the tests, then try again
         // Could be some flaky network issue or the like.
-        if (isCI && !fs.existsSync(markerFile)) {
+        if (isCI && !fs.existsSync(webTestSummaryJsonFile)) {
             return start();
         }
         process.exit(1);
