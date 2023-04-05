@@ -16,7 +16,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './const
 class TestRunner {
     public async start() {
         console.log('Start Test Runner');
-        await this.enableLanguageServer(true);
         await this.extractLatestExtension(SMOKE_TEST_EXTENSIONS_DIR);
         await this.launchSmokeTests();
     }
@@ -27,25 +26,6 @@ class TestRunner {
         };
 
         await this.launchTest(env);
-    }
-    private async enableLanguageServer(enable: boolean) {
-        // When running smoke tests, we won't have access to unbundled files.
-        const settings = `{ "python.languageServer": ${enable ? '"Microsoft"' : '"Jedi"'} }`;
-        await fs.ensureDir(
-            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'testMultiRootWkspc', 'smokeTests', '.vscode')
-        );
-        await fs.writeFile(
-            path.join(
-                EXTENSION_ROOT_DIR_FOR_TESTS,
-                'src',
-                'test',
-                'testMultiRootWkspc',
-                'smokeTests',
-                '.vscode',
-                'settings.json'
-            ),
-            settings
-        );
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
         console.log('Launch tests in test runner');
