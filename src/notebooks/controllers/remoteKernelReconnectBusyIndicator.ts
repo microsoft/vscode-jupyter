@@ -18,6 +18,10 @@ export class RemoteKernelReconnectBusyIndicator extends Disposables {
         if (kernel.status !== 'busy' && kernel.status !== 'unknown') {
             return;
         }
+        if (!controller.createNotebookExecution) {
+            // Older version of VS Code will not have this API, e.g. older insiders.
+            return;
+        }
         vscNotebook.onDidCloseNotebookDocument(
             (e) => {
                 if (e === notebook) {
@@ -37,20 +41,26 @@ export class RemoteKernelReconnectBusyIndicator extends Disposables {
             this.disposables
         );
         const sessionKernel = kernel.session?.kernel;
-        if (sessionKernel){
+        if (sessionKernel) {
             const statusChanged = () => {
-                if (sessionKernel.status !== 'busy' && sessionKernel.status !== 'unknown'){
+                if (sessionKernel.status !== 'busy' && sessionKernel.status !== 'unknown') {
                     this.dispose();
                 }
             };
             sessionKernel.connectionStatusChanged.connect(statusChanged);
-            this.disposables.push(new Disposable(() => sessionKernel.connectionStatusChanged.disconnect(statusChanged)));
+            this.disposables.push(
+                new Disposable(() => sessionKernel.connectionStatusChanged.disconnect(statusChanged))
+            );
         }
-        kernel.onStatusChanged(() => {
-            if (kernel.status !== 'busy' && kernel.status !== 'unknown'){
-                this.dispose();
-            }
-        }, this, this.disposables)
+        kernel.onStatusChanged(
+            () => {
+                if (kernel.status !== 'busy' && kernel.status !== 'unknown') {
+                    this.dispose();
+                }
+            },
+            this,
+            this.disposables
+        );
 
         const execution = controller.createNotebookExecution(notebook);
         execution.start();
