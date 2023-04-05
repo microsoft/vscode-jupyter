@@ -161,12 +161,6 @@ function activateExtensionScript() {
  * @returns {Promise<void>}
  */
 export async function run(): Promise<void> {
-    if (IS_CI_SERVER) {
-        // On CI sometimes VS Code crashes or there are network issues and tests do not even start
-        // We will create a simple file to indcicate whether tests started
-        // if this file isn't created, then we know its an infrastrucure issue and we can retry tests once again
-        fs.writeFileSync(path.join(__dirname, 'started.test'), '');
-    }
     // Enable gc during tests
     v8.setFlagsFromString('--expose_gc');
     const options = configure();
