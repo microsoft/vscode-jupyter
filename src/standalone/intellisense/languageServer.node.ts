@@ -25,7 +25,7 @@ import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/consta
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,7 +119,7 @@ export class LanguageServer implements Disposable {
         if (!this._client) {
             return;
         }
-
+        traceInfoIfCI(`Disposing Language Server for ${getDisplayPath(this.interpreter.id)}`);
         const client = this._client;
 
         // Stop exposing language client so that no one can access it while stopping.
