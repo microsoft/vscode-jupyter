@@ -1,20 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, NotebookController, NotebookDocument } from 'vscode';
+import { Disposable, NotebookController, NotebookDocument, workspace } from 'vscode';
 import { IKernel } from '../../kernels/types';
 import { Disposables } from '../../platform/common/utils';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
 
 export class RemoteKernelReconnectBusyIndicator extends Disposables {
     constructor(
-        kernel: IKernel,
-        controller: NotebookController,
-        notebook: NotebookDocument,
-        vscNotebook: IVSCodeNotebook
+        private readonly kernel: IKernel,
+        private readonly controller: NotebookController,
+        private readonly notebook: NotebookDocument
     ) {
         super();
-
+    }
+    public initialize() {
+        const kernel = this.kernel;
+        const controller = this.controller;
+        const notebook = this.notebook;
+        if (kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
+            return;
+        }
         if (kernel.status !== 'busy' && kernel.status !== 'unknown') {
             return;
         }
@@ -22,7 +27,7 @@ export class RemoteKernelReconnectBusyIndicator extends Disposables {
             // Older version of VS Code will not have this API, e.g. older insiders.
             return;
         }
-        vscNotebook.onDidCloseNotebookDocument(
+        workspace.onDidCloseNotebookDocument(
             (e) => {
                 if (e === notebook) {
                     this.dispose();
@@ -40,28 +45,15 @@ export class RemoteKernelReconnectBusyIndicator extends Disposables {
             this,
             this.disposables
         );
-        const sessionKernel = kernel.session?.kernel;
-        if (sessionKernel) {
-            const statusChanged = () => {
-                if (sessionKernel.status !== 'busy' && sessionKernel.status !== 'unknown') {
-                    this.dispose();
-                }
-            };
-            sessionKernel.connectionStatusChanged.connect(statusChanged);
-            this.disposables.push(
-                new Disposable(() => sessionKernel.connectionStatusChanged.disconnect(statusChanged))
-            );
-        }
         kernel.onStatusChanged(
-            () => {
-                if (kernel.status !== 'busy' && kernel.status !== 'unknown') {
+            (status) => {
+                if (status !== 'busy' && status !== 'unknown') {
                     this.dispose();
                 }
             },
             this,
             this.disposables
         );
-
         const execution = controller.createNotebookExecution(notebook);
         execution.start();
         this.disposables.push(new Disposable(() => execution.end()));

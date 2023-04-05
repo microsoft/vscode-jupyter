@@ -249,9 +249,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.restoredConnections.add(notebook);
         const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
         if (this.kernelConnection.kind === 'connectToLiveRemoteKernel') {
-            this.disposables.push(
-                new RemoteKernelReconnectBusyIndicator(kernel, this.controller, notebook, this.notebookApi)
-            );
+            const indicator = new RemoteKernelReconnectBusyIndicator(kernel, this.controller, notebook);
+            this.disposables.push(indicator);
+            indicator.initialize();
         }
     }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
