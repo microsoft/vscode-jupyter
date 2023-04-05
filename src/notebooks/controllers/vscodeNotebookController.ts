@@ -86,6 +86,7 @@ import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
 import { ConnectionDisplayDataProvider, IConnectionDisplayData } from './connectionDisplayData';
+import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -239,6 +240,19 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this,
             this.disposables
         );
+    }
+    private readonly restoredConnections = new WeakSet<NotebookDocument>();
+    public async restoreConnection(notebook: NotebookDocument) {
+        if (this.restoredConnections.has(notebook)) {
+            return;
+        }
+        this.restoredConnections.add(notebook);
+        const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
+        if (this.kernelConnection.kind === 'connectToLiveRemoteKernel') {
+            this.disposables.push(
+                new RemoteKernelReconnectBusyIndicator(kernel, this.controller, notebook, this.notebookApi)
+            );
+        }
     }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
         if (kernelConnection.kind !== 'connectToLiveRemoteKernel') {
