@@ -1137,6 +1137,7 @@
      "hasOwner": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the window was created for a text file","owner":"amunger"},
      "mode": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Creation mode: multiple, perfile or single","owner":"amunger"},
      "restored": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the window restored from a previous session","owner":"amunger"},
+     "windowCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of active interactive windows the user has open","owner":"amunger","isMeasurement":true},
      "${include}": [
        "${F1}"
 
