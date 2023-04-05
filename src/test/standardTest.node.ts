@@ -185,7 +185,9 @@ async function start() {
     });
 }
 
-const webTestSummaryJsonFile = path.join(__dirname, '..', '..', 'logs', 'testresults.json');
+const webTestSummaryJsonFile = IS_SMOKE_TEST()
+    ? path.join(__dirname, '..', '..', 'logs', 'testresults.json')
+    : path.join(__dirname, '..', '..', 'temp', 'ext', 'smokeTestExtensionsFolder', 'logs', 'testresults.json');
 if (isCI && fs.existsSync(webTestSummaryJsonFile)) {
     // On CI sometimes VS Code crashes or there are network issues and tests do not even start
     // We will create a simple file to indicate whether tests started
@@ -205,4 +207,11 @@ start()
     .catch((ex) => {
         console.error('End Standard tests (with errors)', ex);
         process.exit(1);
+    })
+    .finally(() => {
+        console.log(
+            `Log file ${webTestSummaryJsonFile} ${
+                fs.existsSync(webTestSummaryJsonFile) ? 'has' : 'has not'
+            } been created`
+        );
     });
