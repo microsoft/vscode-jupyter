@@ -124,7 +124,7 @@ suite('Remote Kernel Reconnect Busy Indicator', () => {
                 verify(controller.createNotebookExecution(anything())).once();
                 verify(execution.start()).once();
 
-                onDidChangeSelectedNotebooks.fire({notebook: instance(notebook), selected: false});
+                onDidChangeSelectedNotebooks.fire({ notebook: instance(notebook), selected: false });
 
                 verify(execution.end()).once();
             });
@@ -137,7 +137,7 @@ suite('Remote Kernel Reconnect Busy Indicator', () => {
                 verify(controller.createNotebookExecution(anything())).once();
                 verify(execution.start()).once();
 
-                onDidChangeSelectedNotebooks.fire({notebook: instance(notebook), selected: true});
+                onDidChangeSelectedNotebooks.fire({ notebook: instance(notebook), selected: true });
 
                 verify(execution.end()).never();
             });
