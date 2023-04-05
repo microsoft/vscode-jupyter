@@ -130,13 +130,18 @@ export class InteractiveWindowProvider
                 tab,
                 Uri.parse(iw.inputBoxUriString)
             );
-            sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
-                hasKernel: false,
-                hasOwner: !!iw.owner,
-                mode: mode,
-                restored: true
-            });
+
             this._windows.push(result);
+            sendTelemetryEvent(
+                Telemetry.CreateInteractiveWindow,
+                { windowCount: this._windows.length },
+                {
+                    hasKernel: false,
+                    hasOwner: !!iw.owner,
+                    mode: mode,
+                    restored: true
+                }
+            );
 
             const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
             this.disposables.push(result);
@@ -219,13 +224,17 @@ export class InteractiveWindowProvider
                 editor,
                 inputUri
             );
-            sendTelemetryEvent(Telemetry.CreateInteractiveWindow, undefined, {
-                hasKernel: !!initialController,
-                hasOwner: !!resource,
-                mode: mode,
-                restored: false
-            });
             this._windows.push(result);
+            sendTelemetryEvent(
+                Telemetry.CreateInteractiveWindow,
+                { windowCount: this._windows.length },
+                {
+                    hasKernel: !!initialController,
+                    hasOwner: !!resource,
+                    mode: mode,
+                    restored: false
+                }
+            );
             this._updateWindowCache();
 
             // This is the last interactive window at the moment (as we're about to create it)

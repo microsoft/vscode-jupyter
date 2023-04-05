@@ -2301,6 +2301,7 @@ export class IEventNamePropertyMapping {
         hasOwner: boolean;
         mode: string;
         restored: boolean;
+        windowCount: number;
     }> = {
         owner: 'amunger',
         feature: ['InteractiveWindow'],
@@ -2325,6 +2326,14 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight',
                 comment: 'Was the window restored from a previous session'
+            }
+        },
+        measures: {
+            windowCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Number of active interactive windows the user has open',
+                isMeasurement: true
             }
         }
     };
