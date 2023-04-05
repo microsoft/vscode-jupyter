@@ -25,6 +25,7 @@ import { CompletionRequest } from 'vscode-languageclient';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
+import { traceInfoIfCI } from '../../platform/logging';
 
 const EmptyWorkspaceKey = '';
 
@@ -256,6 +257,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
 
     private onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (event.affectsConfiguration('python.languageServer')) {
+            traceInfoIfCI('Dispose all language servers due to changes in configuration');
             // Dispose all servers and start over for each open notebook
             this.servers.forEach((p) => p.then((s) => s?.dispose()));
             this.servers.clear();
