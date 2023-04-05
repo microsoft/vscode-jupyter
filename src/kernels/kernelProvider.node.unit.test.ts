@@ -5,7 +5,14 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, NotebookCellExecutionStateChangeEvent, NotebookController, NotebookDocument, Uri } from 'vscode';
+import {
+    EventEmitter,
+    Memento,
+    NotebookCellExecutionStateChangeEvent,
+    NotebookController,
+    NotebookDocument,
+    Uri
+} from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
 import {
     IConfigurationService,
@@ -45,6 +52,7 @@ suite('Node Kernel Provider', function () {
     let jupyterServerUriStorage: IJupyterServerUriStorage;
     let metadata: KernelConnectionMetadata;
     let controller: IKernelController;
+    let workspaceMemento: Memento;
     setup(() => {
         notebookProvider = mock<INotebookProvider>();
         configService = mock<IConfigurationService>();
@@ -54,6 +62,11 @@ suite('Node Kernel Provider', function () {
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
         metadata = mock<KernelConnectionMetadata>();
         controller = createKernelController();
+        workspaceMemento = mock<Memento>();
+        when(workspaceMemento.update(anything(), anything())).thenResolve();
+        when(workspaceMemento.get(anything(), anything())).thenCall(
+            (_: unknown, defaultValue: unknown) => defaultValue
+        );
     });
     function createKernelProvider() {
         const registry = mock<IStartupCodeProviders>();
@@ -69,7 +82,8 @@ suite('Node Kernel Provider', function () {
             instance(context),
             instance(jupyterServerUriStorage),
             [],
-            instance(registry)
+            instance(registry),
+            instance(workspaceMemento)
         );
     }
     function create3rdPartyKernelProvider() {
@@ -83,7 +97,8 @@ suite('Node Kernel Provider', function () {
             instance(configService),
             instance(appShell),
             instance(vscNotebook),
-            instance(registry)
+            instance(registry),
+            instance(workspaceMemento)
         );
     }
     teardown(async () => {
@@ -211,6 +226,12 @@ suite('KernelProvider Node', () => {
         ]);
         const registry = mock<IStartupCodeProviders>();
         when(registry.getProviders(anything())).thenReturn([]);
+        const workspaceMemento = mock<Memento>();
+        when(workspaceMemento.update(anything(), anything())).thenResolve();
+        when(workspaceMemento.get(anything(), anything())).thenCall(
+            (_: unknown, defaultValue: unknown) => defaultValue
+        );
+
         kernelProvider = new KernelProvider(
             asyncDisposables,
             disposables,
@@ -221,7 +242,8 @@ suite('KernelProvider Node', () => {
             instance(context),
             instance(jupyterServerUriStorage),
             [],
-            instance(registry)
+            instance(registry),
+            instance(workspaceMemento)
         );
         thirdPartyKernelProvider = new ThirdPartyKernelProvider(
             asyncDisposables,
@@ -230,7 +252,8 @@ suite('KernelProvider Node', () => {
             instance(configService),
             instance(appShell),
             instance(vscNotebook),
-            instance(registry)
+            instance(registry),
+            instance(workspaceMemento)
         );
     });
     teardown(async () => {
