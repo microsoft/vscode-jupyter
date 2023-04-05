@@ -150,8 +150,7 @@ export function getNotebookUriFromInputBoxUri(textDocumentUri: Uri): Uri | undef
         return undefined;
     }
 
-    // Temporarily remove fix to verify that tests fail on Linux
-    const inputBoxPrefix = '\\InteractiveInput-';
+    const inputBoxPrefix = path.sep + 'InteractiveInput-';
     const notebookPath = `${textDocumentUri.fsPath.replace(inputBoxPrefix, 'Interactive-')}.interactive`;
     return textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
 }
