@@ -68,6 +68,7 @@ import {
     IKernelController,
     IKernelProvider,
     isLocalConnection,
+    isRemoteConnection,
     KernelConnectionMetadata
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
