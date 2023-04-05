@@ -63,7 +63,8 @@ process.on('unhandledRejection', (ex: Error, _a) => {
         msg.includes('Error: custom request failed') ||
         msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
         msg.includes('ms-python.isort') || // We don't care about unhanded promise rejections from the Python related extensions.
-        msg.includes('extensions/git/dist/main.js') // git extension often throws errors from calling extension APIs after EH has been disconnected
+        msg.includes('extensions/git/dist/main.js') || // git extension often throws errors from calling extension APIs after EH has been disconnected
+        msg.includes('@vscode/lsp-notebook-concat/dist/index.js') // Flaky LSP issues.
     ) {
         // Some error from VS Code, we can ignore this.
         return;
@@ -160,6 +161,12 @@ function activateExtensionScript() {
  * @returns {Promise<void>}
  */
 export async function run(): Promise<void> {
+    if (IS_CI_SERVER) {
+        // On CI sometimes VS Code crashes or there are network issues and tests do not even start
+        // We will create a simple file to indcicate whether tests started
+        // if this file isn't created, then we know its an infrastrucure issue and we can retry tests once again
+        fs.writeFileSync(path.join(__dirname, 'started.test'), '');
+    }
     // Enable gc during tests
     v8.setFlagsFromString('--expose_gc');
     const options = configure();
