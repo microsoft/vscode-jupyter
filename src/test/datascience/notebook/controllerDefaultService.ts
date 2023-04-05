@@ -1,39 +1,52 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { isPythonNotebook } from '../../kernels/helpers';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
-import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
-import { getNotebookMetadata } from '../../platform/common/utils';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../platform/logging';
-import { isEqual } from '../../platform/vscode-path/resources';
-import { createActiveInterpreterController } from './helpers';
-import { IControllerDefaultService, IControllerRegistration, IVSCodeNotebookController } from './types';
+import { isPythonNotebook } from '../../../kernels/helpers';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { IDisposableRegistry, IsWebExtension, Resource } from '../../../platform/common/types';
+import { getNotebookMetadata } from '../../../platform/common/utils';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../../platform/logging';
+import { isEqual } from '../../../platform/vscode-path/resources';
+import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 /**
  * Determines the 'default' kernel for a notebook. Default is what kernel should be used if there's no metadata in a notebook.
  */
-@injectable()
-export class ControllerDefaultService implements IControllerDefaultService {
+export class ControllerDefaultService {
     private get isLocalLaunch(): boolean {
         return this.serverUriStorage.isLocalLaunch;
     }
     constructor(
-        @inject(IControllerRegistration) private readonly registration: IControllerRegistration,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(PreferredRemoteKernelIdProvider)
+        private readonly registration: IControllerRegistration,
+        private readonly interpreters: IInterpreterService,
+        private readonly notebook: IVSCodeNotebook,
+        readonly disposables: IDisposableRegistry,
+        private readonly serverUriStorage: IJupyterServerUriStorage,
         private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
-        @inject(IsWebExtension) private readonly isWeb: boolean
+        private readonly isWeb: boolean
     ) {}
+    private static _instance: ControllerDefaultService;
+    public static create(serviceContainer: IServiceContainer) {
+        if (!ControllerDefaultService._instance) {
+            ControllerDefaultService._instance = new ControllerDefaultService(
+                serviceContainer.get<IControllerRegistration>(IControllerRegistration),
+                serviceContainer.get<IInterpreterService>(IInterpreterService),
+                serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
+                serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
+                serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
+                serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider),
+                serviceContainer.get<boolean>(IsWebExtension, IsWebExtension)
+            );
+        }
+        return ControllerDefaultService._instance;
+    }
     public async computeDefaultController(
         resource: Resource,
         viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
