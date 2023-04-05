@@ -2,7 +2,17 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Event, EventEmitter, Memento, NotebookCell, NotebookDocument, commands, notebooks, window } from 'vscode';
+import {
+    Event,
+    EventEmitter,
+    Memento,
+    NotebookCell,
+    NotebookDocument,
+    NotebookExecution,
+    commands,
+    notebooks,
+    window
+} from 'vscode';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -405,6 +415,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         const { added, existing } = this.addImpl(metadata, types, true);
         return added.concat(existing);
     }
+    private readonly executions = new WeakMap<NotebookDocument, NotebookExecution>();
     addImpl(
         metadata: KernelConnectionMetadata,
         types: ('jupyter-notebook' | 'interactive')[],
@@ -495,6 +506,18 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                             this.selectedControllers.set(e.notebook.uri.toString(), e.controller);
                             // Now notify out that we have updated a notebooks controller
                             this.selectedEmitter.fire(e);
+
+                            const existing = this.executions.get(e.notebook);
+                            if (existing) {
+                                existing.end();
+                            }
+                            try {
+                                const x = e.controller.controller.createNotebookExecution(e.notebook);
+                                x.start();
+                                console.error(x);
+                            } catch (ex) {
+                                console.error(ex);
+                            }
                         },
                         this,
                         controllerDisposables

@@ -68,6 +68,7 @@ import {
     IKernelController,
     IKernelProvider,
     isLocalConnection,
+    isRemoteConnection,
     KernelConnectionMetadata
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
@@ -90,6 +91,7 @@ import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
 import { ConnectionDisplayDataProvider, IConnectionDisplayData } from './connectionDisplayData';
+import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -278,6 +280,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.restoredConnections.add(notebook);
         console.error('Done');
         const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
+        if (this.kernelConnection.kind !== 'connectToLiveRemoteKernel') {
+            this.disposables.push(
+                new RemoteKernelReconnectBusyIndicator(kernel, this.controller, notebook, this.notebookApi)
+            );
+            return;
+        }
+
         const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
         const lastExecutionInfo = this.workspaceStorage.get<
             | {
