@@ -86,13 +86,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                     this.interruptKernel(context?.notebookEditor?.notebookUri)
             )
         );
-        // this.disposableRegistry.push(
-        //     commandManager.registerCommand(
-        //         Commands.RestartKernel,
-        //         (context?: { notebookEditor: { notebookUri: Uri } }) =>
-        //             this.restartKernel(context?.notebookEditor?.notebookUri)
-        //     )
-        // );
     }
 
     private runAllCells() {
