@@ -188,7 +188,6 @@ export namespace Commands {
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel'; // TODO: keep this
     export const NotebookEditorRemoveAllCells = 'jupyter.notebookeditor.removeallcells';
-    // ! export const NotebookEditorRestartKernel = 'jupyter.notebookeditor.restartkernel'; // TODO: This is going away
     export const NotebookEditorRunAllCells = 'jupyter.notebookeditor.runallcells';
     export const NotebookEditorRunSelectedCell = 'jupyter.notebookeditor.runselectedcell';
     export const NotebookEditorAddCellBelow = 'jupyter.notebookeditor.addcellbelow';
