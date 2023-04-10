@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as path from '../../platform/vscode-path/path';
 import { inject, injectable } from 'inversify';
 import { Disposable, extensions, Uri, workspace, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IPythonApiProvider } from '../../platform/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { PylanceExtension } from '../../platform/common/constants';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -26,6 +27,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
 
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
@@ -36,7 +38,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     }
 
     public async activate() {
-        if (!this.isUsingPylance()) {
+        if (!this.isUsingPylance() || !this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
 
@@ -122,12 +124,11 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     }
 
     private _getNotebookUriForTextDocumentUri(textDocumentUri: Uri): Uri | undefined {
-        if (textDocumentUri.scheme !== 'vscode-interactive-input') {
+        const notebookUri = getNotebookUriFromInputBoxUri(textDocumentUri);
+        if (!notebookUri) {
             return undefined;
         }
 
-        const notebookPath = `${textDocumentUri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
-        const notebookUri = textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
         let result: string | undefined = undefined;
         window.tabGroups.all.find((group) => {
             group.tabs.find((tab) => {
@@ -142,4 +143,14 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         });
         return result;
     }
+}
+
+export function getNotebookUriFromInputBoxUri(textDocumentUri: Uri): Uri | undefined {
+    if (textDocumentUri.scheme !== 'vscode-interactive-input') {
+        return undefined;
+    }
+
+    const inputBoxPrefix = path.sep + 'InteractiveInput-';
+    const notebookPath = `${textDocumentUri.fsPath.replace(inputBoxPrefix, 'Interactive-')}.interactive`;
+    return textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
 }

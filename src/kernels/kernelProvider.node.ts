@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, multiInject } from 'inversify';
-import { NotebookDocument, Uri } from 'vscode';
+import { inject, injectable, multiInject, named } from 'inversify';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExtensionContext
+    IExtensionContext,
+    IMemento,
+    WORKSPACE_MEMENTO
 } from '../platform/common/types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
 import { InteractiveScheme, InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
@@ -42,7 +44,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter)
         private readonly formatters: ITracebackFormatter[],
-        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
         disposables.push(jupyterServerUriStorage.onDidRemoveUris(this.handleUriRemoval.bind(this)));
@@ -70,7 +73,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
             settings,
             this.appShell,
             options.controller,
-            this.startupCodeProviders.getProviders(notebookType)
+            this.startupCodeProviders.getProviders(notebookType),
+            this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(
@@ -107,7 +111,8 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -133,7 +138,8 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             this.notebookProvider,
             this.appShell,
             settings,
-            this.startupCodeProviders.getProviders(notebookType)
+            this.startupCodeProviders.getProviders(notebookType),
+            this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(
