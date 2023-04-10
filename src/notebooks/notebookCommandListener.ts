@@ -69,7 +69,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
-                Commands.NotebookEditorRestartKernel,
+                Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
                         this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
@@ -86,13 +86,13 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                     this.interruptKernel(context?.notebookEditor?.notebookUri)
             )
         );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(
-                Commands.RestartKernel,
-                (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.restartKernel(context?.notebookEditor?.notebookUri)
-            )
-        );
+        // this.disposableRegistry.push(
+        //     commandManager.registerCommand(
+        //         Commands.RestartKernel,
+        //         (context?: { notebookEditor: { notebookUri: Uri } }) =>
+        //             this.restartKernel(context?.notebookEditor?.notebookUri)
+        //     )
+        // );
     }
 
     private runAllCells() {
