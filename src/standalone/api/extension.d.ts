@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { CancellationToken, Event, Uri } from 'vscode';
+import { CancellationToken, Event, NotebookDocument, Uri } from 'vscode';
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
 import type { Session } from '@jupyterlab/services';
 
@@ -20,6 +20,13 @@ export interface JupyterAPI {
      * There are a specific set of extensions that are currently allowed to access this API.
      */
     getKernelService(): Promise<IExportedKernelService | undefined>;
+    /**
+     * Opens a notebook with a specific kernel as the active kernel.
+     * @param {Uri} uri Uri of the notebook to open.
+     * @param {String} kernelId Id of the kernel, retrieved from getKernelService().getKernelSpecifications()
+     * @returns {Promise<NotebookDocument>} Promise that resolves to the notebook document.
+     */
+    openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
 }
 
 /**
