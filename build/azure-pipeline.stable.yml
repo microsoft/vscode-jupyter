@@ -25,9 +25,9 @@ extends:
   parameters:
     l10nSourcePaths: ./src
     publishExtension: ${{ parameters.publishExtension }}
-    buildPlatforms:
-      - name: Linux
-        vsceTarget: ''
+    # buildPlatforms:
+    #   - name: Linux
+    #     vsceTarget: ''
     #   - name: Linux
     #     packageArch: arm64
     #     vsceTarget: linux-arm64
