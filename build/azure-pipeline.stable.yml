@@ -24,6 +24,7 @@ extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
     l10nSourcePaths: ./src
+    publishExtension: ${{ parameters.publishExtension }}
     buildPlatforms:
       - name: Linux
         vsceTarget: ''
