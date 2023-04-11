@@ -200,7 +200,31 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
 }
 
 async function downloadZmqBinaries() {
-    await downloadZMQ();
+    const arch = env.vsc_package_arch || '';
+    const target = env.vsc_vsce_target || '';
+    let options = undefined;
+    if (target.includes('linux')) {
+        if (target.includes('x64')) {
+            options = { linux: ['x64'] };
+        } else if (target.includes('arm64')) {
+            options = { linux: ['arm64'] };
+        } else if (target.includes('armhf')) {
+            options = { linux: ['armhf'] };
+        }
+    } else if (target.includes('darwin')) {
+        if (target.includes('x64')) {
+            options = { darwin: ['x64'] };
+        } else if (target.includes('arm64')) {
+            options = { darwin: ['arm64'] };
+        }
+    } else if (target.includes('win32')) {
+        if (target.includes('x64')) {
+            options = { win32: ['x64'] };
+        } else if (target.includes('ia32')) {
+            options = { darwin: ['ia32'] };
+        }
+    }
+    await downloadZMQ(options);
 }
 
 fixUIFabricForTS49();
