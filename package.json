@@ -606,7 +606,7 @@
                     "light": "resources/light/interrupt.svg",
                     "dark": "resources/dark/interrupt.svg"
                 },
-                "enablement": "isWorkspaceTrusted && (jupyter.interactive.canInterruptNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
+                "enablement": "isWorkspaceTrusted && jupyter.interactive.canInterruptNotebookKernel"
             },
             {
                 "command": "jupyter.restartkernel",
@@ -617,7 +617,7 @@
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
                 },
-                "enablement": "isWorkspaceTrusted && jupyter.interactive.canRestartNotebookKernel"
+                "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
             },
             {
                 "command": "jupyter.notebookeditor.addcellbelow",
