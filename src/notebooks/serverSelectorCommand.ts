@@ -3,12 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import {
-    IApplicationEnvironment,
-    IApplicationShell,
-    ICommandManager,
-    IVSCodeNotebook
-} from '../platform/common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../platform/common/application/types';
 import { Commands } from '../platform/common/constants';
 import { IBrowserService, IDisposable } from '../platform/common/types';
 import { traceInfo } from '../platform/logging';
