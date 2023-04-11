@@ -63,6 +63,7 @@ extends:
         env:
           npm_config_arch: ${{ variables.packageArch }}
           npm_config_build_from_source: true
+          vsc_package_arch: ${{ variables.packageArch }}
 
       - script: gulp clean
         displayName: Clean
