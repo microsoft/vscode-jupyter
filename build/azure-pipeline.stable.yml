@@ -50,9 +50,6 @@ extends:
         packageArch: x64
         vsceTarget: win32-x64
     buildSteps:
-      - script: echo "${{ variables.packageArch }}"
-        displayName: Debug (variable)
-
       - script: |
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
@@ -64,9 +61,8 @@ extends:
       - script: npm ci --foreground-scripts
         displayName: Install dependencies
         env:
+          npm_config_arch: ${{ variables.packageArch }}
           npm_config_build_from_source: true
-          # vsc_package_arch: ${{ parameters.packageArch }}
-          #   vsc_vsce_target: ${{ parameters.vsceTarget }}
 
       - script: gulp clean
         displayName: Clean
