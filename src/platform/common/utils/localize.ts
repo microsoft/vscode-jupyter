@@ -538,7 +538,9 @@ export namespace DataScience {
     export const jupyterSelectURIQuickPickTitleRemoteOnly = l10n.t('Pick an already running Jupyter server');
     export const jupyterSelectURIRemoteDetail = l10n.t('Specify the URL of an existing server');
     export const removeRemoteJupyterServerEntryInQuickPick = l10n.t('Remove');
-    export const specifyLocalOrRemoteJupyterServerForConnections = l10n.t('Specify Jupyter Server for Connections (deprecated)');
+    export const specifyLocalOrRemoteJupyterServerForConnections = l10n.t(
+        'Specify Jupyter Server for Connections (deprecated)'
+    );
     export const jupyterNativeNotebookUriStatusLabelForLocal = l10n.t('Jupyter Server: Local');
     export const jupyterNativeNotebookUriStatusLabelForRemote = l10n.t('Jupyter Server: Remote');
 
@@ -730,7 +732,9 @@ export namespace DataScience {
     export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail = l10n.t(
         'Ensure the server is running and reachable.'
     );
-    export const enterRemoteJupyterUrlsThroughTheKernelPicker = l10n.t("Entering Remote Jupyter Urls through the command palette has been deprecated. Please use the option 'Select Another Kernel -> Existing Jupyter Server' in the Kernel Picker.");
+    export const enterRemoteJupyterUrlsThroughTheKernelPicker = l10n.t(
+        "Entering Remote Jupyter Urls through the command palette has been deprecated. Please use the option 'Select Another Kernel -> Existing Jupyter Server' in the Kernel Picker."
+    );
 }
 export namespace WebViews {
     export const collapseSingle = l10n.t('Collapse');
