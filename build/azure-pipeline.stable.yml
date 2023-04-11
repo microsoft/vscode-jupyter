@@ -23,62 +23,126 @@ parameters:
 extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
-    l10nSourcePaths: ./src
-    publishExtension: ${{ parameters.publishExtension }}
     buildPlatforms:
-    #   - name: Linux
-    #     vsceTarget: ''
+      - name: Linux
+        vsceTarget: ''
+      - name: Linux
+        packageArch: x64
+        vsceTarget: linux-alpine
       - name: Linux
         packageArch: arm64
         vsceTarget: linux-arm64
-    #   - name: Linux
-    #     packageArch: arm
-    #     vsceTarget: linux-armhf
-    #   - name: Linux
-    #     packageArch: x64
-    #     vsceTarget: linux-x64
-    #   - name: MacOS
-    #     packageArch: arm64
-    #     vsceTarget: darwin-arm64
-    #   - name: MacOS
-    #     packageArch: x64
-    #     vsceTarget: darwin-x64
-    #   - name: Windows
-    #     packageArch: ia32
-    #     vsceTarget: win32-ia32
-    #   - name: Windows
-    #     packageArch: x64
-    #     vsceTarget: win32-x64
+      - name: Linux
+        packageArch: arm
+        vsceTarget: linux-armhf
+      - name: Linux
+        packageArch: x64
+        vsceTarget: linux-x64
+      - name: MacOS
+        packageArch: arm64
+        vsceTarget: darwin-arm64
+      - name: MacOS
+        packageArch: x64
+        vsceTarget: darwin-x64
+      - name: Windows
+        packageArch: arm
+        vsceTarget: win32-arm64
+      - name: Windows
+        packageArch: ia32
+        vsceTarget: win32-ia32
+      - name: Windows
+        packageArch: x64
+        vsceTarget: win32-x64
+
     buildSteps:
-      - script: |
-          sudo apt-get update
-          sudo apt-get install libpango1.0-dev libgif-dev
-        displayName: Install dependencies for zeromq.js
-
-      - script: npm i -g npm@8.15.1
-        displayName: Install npm 8.15.1
-
-      - script: npm ci --foreground-scripts
-        displayName: Install dependencies
+      - script: npm ci
         env:
-          npm_config_build_from_source: true
-          vsc_package_arch: ${{ parameters.packageArch }}
-        #   vsc_vsce_target: ${{ parameters.vsceTarget }}
+          npm_config_arch: ${{ parameters.packageArch }}
+        displayName: Install dependencies
 
-      - script: gulp clean
-        displayName: Clean
+    publishExtension: ${{ parameters.publishExtension }}
 
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: '3.8'
-          addToPath: true
-          architecture: 'x64'
+# trigger: none
+# #   branches:
+# #     include:
+# #       - release/*
+# #   tags:
+# #     include: ['*']
+# pr: none
 
-      - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-        displayName: Install Python libs
+# resources:
+#   repositories:
+#     - repository: templates
+#       type: github
+#       name: microsoft/vscode-engineering
+#       ref: main
+#       endpoint: Monaco
 
-      - script: npm run updateBuildNumber
-        displayName: Update build number
+# parameters:
+#   - name: publishExtension
+#     displayName: 🚀 Publish Extension
+#     type: boolean
+#     default: false
 
-      - script: npm run prePublishBundleStable
-        displayName: Build
+# extends:
+#   template: azure-pipelines/extension/stable.yml@templates
+#   parameters:
+#     l10nSourcePaths: ./src
+#     publishExtension: ${{ parameters.publishExtension }}
+#     buildPlatforms:
+#     #   - name: Linux
+#     #     vsceTarget: ''
+#       - name: Linux
+#         packageArch: arm64
+#         vsceTarget: linux-arm64
+#     #   - name: Linux
+#     #     packageArch: arm
+#     #     vsceTarget: linux-armhf
+#     #   - name: Linux
+#     #     packageArch: x64
+#     #     vsceTarget: linux-x64
+#     #   - name: MacOS
+#     #     packageArch: arm64
+#     #     vsceTarget: darwin-arm64
+#     #   - name: MacOS
+#     #     packageArch: x64
+#     #     vsceTarget: darwin-x64
+#     #   - name: Windows
+#     #     packageArch: ia32
+#     #     vsceTarget: win32-ia32
+#     #   - name: Windows
+#     #     packageArch: x64
+#     #     vsceTarget: win32-x64
+#     buildSteps:
+#       - script: |
+#           sudo apt-get update
+#           sudo apt-get install libpango1.0-dev libgif-dev
+#         displayName: Install dependencies for zeromq.js
+
+#       - script: npm i -g npm@8.15.1
+#         displayName: Install npm 8.15.1
+
+#       - script: npm ci --foreground-scripts
+#         displayName: Install dependencies
+#         env:
+#           npm_config_build_from_source: true
+#           vsc_package_arch: ${{ parameters.packageArch }}
+#         #   vsc_vsce_target: ${{ parameters.vsceTarget }}
+
+#       - script: gulp clean
+#         displayName: Clean
+
+#       - task: UsePythonVersion@0
+#         inputs:
+#           versionSpec: '3.8'
+#           addToPath: true
+#           architecture: 'x64'
+
+#       - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+#         displayName: Install Python libs
+
+#       - script: npm run updateBuildNumber
+#         displayName: Update build number
+
+#       - script: npm run prePublishBundleStable
+#         displayName: Build
