@@ -29,9 +29,6 @@ extends:
       - name: Linux
         vsceTarget: ''
       - name: Linux
-        packageArch: x64
-        vsceTarget: linux-alpine
-      - name: Linux
         packageArch: arm64
         vsceTarget: linux-arm64
       - name: Linux
