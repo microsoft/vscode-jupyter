@@ -11,7 +11,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: main
+      ref: lszomoru/packageArch
       endpoint: Monaco
 
 parameters:
@@ -50,8 +50,8 @@ extends:
         packageArch: x64
         vsceTarget: win32-x64
     buildSteps:
-      - script: echo ${{ parameters.packageArch }}
-        displayName: Debug ${{ parameters.packageArch }}
+    #   - script: echo ${{ parameters.packageArch }}
+    #     displayName: Debug ${{ parameters.packageArch }}
 
       - script: |
           sudo apt-get update
