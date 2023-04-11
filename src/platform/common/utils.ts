@@ -13,8 +13,8 @@ import {
 } from './constants';
 import { traceError, traceInfo } from '../logging';
 
-import { ICell } from './types';
-import { splitLines } from './helpers';
+import { ICell, IDisposable } from './types';
+import { disposeAllDisposables, splitLines } from './helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -411,5 +411,12 @@ export function parseSemVer(versionString: string): SemVer | undefined {
         const minor = parseInt(versionMatch[2], 10);
         const build = parseInt(versionMatch[3], 10);
         return parse(`${major}.${minor}.${build}`, true) ?? undefined;
+    }
+}
+
+export abstract class Disposables implements IDisposable {
+    protected readonly disposables: IDisposable[] = [];
+    public dispose(): void {
+        disposeAllDisposables(this.disposables);
     }
 }
