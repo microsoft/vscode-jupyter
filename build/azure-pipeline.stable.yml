@@ -62,8 +62,8 @@ extends:
         displayName: Install dependencies
         env:
           npm_config_build_from_source: true
-          vsc_package_arch: ${{ parameters.packageArch }}
-        #   vsc_vsce_target: ${{ parameters.vsceTarget }}
+          # vsc_package_arch: ${{ parameters.packageArch }}
+          #   vsc_vsce_target: ${{ parameters.vsceTarget }}
 
       - script: gulp clean
         displayName: Clean
