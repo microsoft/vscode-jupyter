@@ -50,6 +50,9 @@ extends:
         packageArch: x64
         vsceTarget: win32-x64
     buildSteps:
+      - script: echo ${{ parameters.packageArch }}
+        displayName: Debug ${{ parameters.packageArch }}
+
       - script: |
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
