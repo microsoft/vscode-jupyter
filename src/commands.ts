@@ -17,14 +17,22 @@ import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { Channel } from './platform/common/application/types';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 
-export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
+export type CommandIds = keyof ICommandNameArgumentTypeMapping;
+
+type ContextKeyPrimitiveValue = null | undefined | boolean | number | string | Uri;
+
+export type ContextKeyValue =
+    | ContextKeyPrimitiveValue
+    | Array<ContextKeyPrimitiveValue>
+    | Record<string, ContextKeyPrimitiveValue>;
 
 /**
- * Mapping between commands and list or arguments.
- * These commands do NOT have any arguments.
- * @interface ICommandNameWithoutArgumentTypeMapping
+ * Mapping between commands and list of arguments.
+ * Used to provide strong typing for command & args.
+ * @export
+ * @interface ICommandNameArgumentTypeMapping
  */
-interface ICommandNameWithoutArgumentTypeMapping {
+export interface ICommandNameArgumentTypeMapping {
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
@@ -62,23 +70,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];
     ['notebook.cell.expandCellOutput']: [];
-}
-
-type ContextKeyPrimitiveValue = null | undefined | boolean | number | string | Uri;
-
-export type ContextKeyValue =
-    | ContextKeyPrimitiveValue
-    | Array<ContextKeyPrimitiveValue>
-    | Record<string, ContextKeyPrimitiveValue>;
-
-/**
- * Mapping between commands and list of arguments.
- * Used to provide strong typing for command & args.
- * @export
- * @interface ICommandNameArgumentTypeMapping
- * @extends {ICommandNameWithoutArgumentTypeMapping}
- */
-export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     ['vscode.openWith']: [Uri, string];
     ['jupyter.filterKernels']: [never];
     ['workbench.action.quickOpen']: [string];
