@@ -198,6 +198,31 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
         throw new Error(`Moment is being used by other packages (${otherPackagesUsingMoment.join(', ')}).`);
     }
 }
+/**
+ * Copies the prebuilds from zeromq to zeromqold along with the dlls.
+ * On windows machines some of the dlls will not exist in the path, and zmq will fail to load.
+ * We use the fallback mechanism to ensure the dlls are copied over into the fallback folder and then delete the dlls from the original folder.
+ * This way
+ * - If users have the required dlls, then zmq will load from the original folder with the dlls from the users machine.
+ * - If users do not have the required dlls, then zmq will load from the fallback folder with the dlls from the extension.
+ *
+ * I.e we always try to use the dlls from the users machine, and only use the dlls from the extension as a fallback.
+ */
+function downloadWin64BinaryWithDlls() {
+    const source = path.join(constants.ExtensionRootDir, 'node_modules', 'zeromq', 'prebuilds', 'win32-x64');
+    const target = path.join(constants.ExtensionRootDir, 'node_modules', 'zeromqold', 'prebuilds', 'win32-x64');
+    fs.copySync(source, target, { recursive: true });
+    // Now that we have copied the fallback, delete the dlls from the main directory.
+    fs.readdirSync(source).forEach((file) => {
+        if (file.toLowerCase().endsWith('.dll')) {
+            fs.unlinkSync(path.join(source, file));
+        }
+    });
+}
+async function downloadZmqBinaries() {
+    await downloadZMQ();
+    downloadWin64BinaryWithDlls();
+}
 
 fixUIFabricForTS49();
 fixJupyterLabRenderers();
@@ -206,6 +231,6 @@ createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
 fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
-downloadZMQ()
+downloadZmqBinaries()
     .then(() => process.exit(0))
     .catch((ex) => console.error('Failed to download ZMQ', ex));
