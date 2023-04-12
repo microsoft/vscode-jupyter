@@ -133,6 +133,7 @@ const config = {
         new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromqold.js'], log: false } }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.dll' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/@aminya/node-gyp-build/**/*' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.js' }] }),
