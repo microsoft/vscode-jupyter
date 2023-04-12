@@ -4,12 +4,13 @@
 import * as path from '../../../platform/vscode-path/path';
 import * as os from 'os';
 import * as fs from 'fs-extra';
-import { traceInfo, traceWarning } from '../../../platform/logging';
+import { traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { noop } from '../../../platform/common/utils/misc';
 import { DistroInfo, getDistroInfo } from '../../../platform/common/platform/linuxDistro.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { Memento } from 'vscode';
+import { getExtensionVersion } from '../../../platform/common/application/applicationEnvironment.base';
 
 const VCRT_DLLS_COPIED_KEY = 'VCRT_DLLS_COPIED';
 
@@ -32,8 +33,8 @@ export function getZeroMQ(memento: Memento): typeof import('zeromq') {
             );
         } catch (e2) {
             sendZMQTelemetry(true, true, true, memento).catch(noop);
-            traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
-            traceWarning(`Exception while attempting zmq (fallback) :`, e2.message || e2); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
+            traceWarning(`Exception while loading zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
+            traceWarning(`Exception while loading zmq (with the fallback) :`, e2.message || e2); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
             throw e2;
         }
     }
@@ -49,11 +50,13 @@ function loadZmqWithFallbackForWindows(
         const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
         const zmq = requireFunc(zeromqModuleName);
         sendZMQTelemetry(false, isFallback, false, memento).catch(noop);
-        traceInfo(`ZMQ loaded ${isFallback ? 'with' : 'without'} fallback mechanism.`);
+        traceInfo(`ZMQ loaded ${isFallback ? 'with' : 'without'} the fallback mechanism.`);
         return zmq;
     } catch (e) {
-        traceWarning(
-            `Failed to load ${isFallback ? 'fallback' : ''} ZMQ from ${moduleDirectory} due to ${e.message || e}}`
+        traceVerbose(
+            `Failed to load ZMQ ${isFallback ? 'with' : 'without'} the fallback from ${moduleDirectory} due to ${
+                e.message || e
+            }}`
         );
         if (os.platform() !== 'win32' || !moduleDirectory) {
             throw e;
@@ -67,27 +70,36 @@ function loadZmqWithFallbackForWindows(
         fs.copySync(dllsDir, targetDir, { overwrite: false });
         const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
         const zmq = requireFunc(zeromqModuleName);
-        memento.update(VCRT_DLLS_COPIED_KEY, true).then(noop, noop);
+        // Keep track of the version and the fact that it was copied (so that the telemetry sent later has accurate information).
+        memento.update(VCRT_DLLS_COPIED_KEY, { copied: true, version: getExtensionVersion() }).then(noop, noop);
         sendZMQTelemetry(false, isFallback, true, memento).catch(noop);
-        traceInfo(`ZMQ loaded ${isFallback ? 'with' : 'without'} fallback mechanism and after copying files.`);
+        traceInfo(`ZMQ loaded after copying files, ${isFallback ? 'with' : 'without'} the fallback mechanism.`);
         return zmq;
     }
 }
 async function sendZMQTelemetry(failed: boolean, fallbackTried: boolean, vcRtCopied: boolean, memento: Memento) {
-    const info = await getDistroInfo().catch(() => <DistroInfo>{ id: '', version_id: '' });
-    vcRtCopied = vcRtCopied || memento.get(VCRT_DLLS_COPIED_KEY, false);
-    const telemetryInfo = {
-        ...getPlatformInfo(),
-        fallbackTried,
-        distro_id: info.id,
-        distro_version_id: info.version_id,
+    const distro = await getDistroInfo().catch(() => <DistroInfo>{ id: '', version_id: '' });
+    // Possible the dlls were copied in a previous session.
+    const previouslyCopiedInfo = memento.get<{ copied: boolean; version: string }>(VCRT_DLLS_COPIED_KEY, {
+        copied: false,
+        version: ''
+    });
+    vcRtCopied = vcRtCopied || (previouslyCopiedInfo.copied && previouslyCopiedInfo.version === getExtensionVersion());
+    const platformInfo = getPlatformInfo();
+    sendTelemetryEvent(Telemetry.ZMQSupport, undefined, {
+        distro_id: distro.id,
+        distro_version_id: distro.version_id,
         failed,
-        vcRtCopied
-    };
-    sendTelemetryEvent(Telemetry.ZMQSupport, undefined, telemetryInfo);
+        vcRtCopied,
+        fallbackTried,
+        alpine: platformInfo.alpine,
+        libc: platformInfo.libc,
+        armv: platformInfo.armv,
+        zmqarch: platformInfo.zmqarch
+    });
 }
 function isAlpine(platform: string) {
-    return platform === 'linux' && fs.existsSync('/etc/alpine-release');
+    return platform === 'linux' && fs.existsSync('/etc/alpine-release') ? true : false;
 }
 
 /**
@@ -108,7 +120,7 @@ function getPlatformInfo() {
         const armv = process.env.ARM_VERSION || (arch === 'arm64' ? '8' : vars.arm_version) || '';
 
         return {
-            alpine: alpine,
+            alpine,
             libc: String(libc),
             armv: String(armv),
             zmqarch: arch
