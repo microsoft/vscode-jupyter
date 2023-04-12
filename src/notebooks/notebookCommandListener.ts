@@ -96,7 +96,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                         this.restartKernelAndRunAllCells(context).catch(noop);
                     }
                 }
-
             )
         );
     }
