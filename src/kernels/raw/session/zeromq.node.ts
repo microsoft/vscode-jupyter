@@ -59,7 +59,7 @@ function loadZmqWithFallbackForWindows(zeromqModuleName: string, moduleDirectory
         return zmq;
     }
 }
-async function sendZMQTelemetry(failed: boolean, fallbackTried: boolean = false, vcrtCopied: boolean = false) {
+async function sendZMQTelemetry(failed: boolean, fallbackTried: boolean, vcRtCopied: boolean) {
     const info = await getDistroInfo().catch(() => <DistroInfo>{ id: '', version_id: '' });
 
     const telemetryInfo = {
@@ -68,7 +68,7 @@ async function sendZMQTelemetry(failed: boolean, fallbackTried: boolean = false,
         distro_id: info.id,
         distro_version_id: info.version_id,
         failed,
-        vcrtCopied
+        vcRtCopied
     };
     sendTelemetryEvent(Telemetry.ZMQSupport, undefined, telemetryInfo);
 }
