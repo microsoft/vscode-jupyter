@@ -198,14 +198,6 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
         throw new Error(`Moment is being used by other packages (${otherPackagesUsingMoment.join(', ')}).`);
     }
 }
-function deleteFallbackZmqFiles() {
-    const dir = path.join(constants.ExtensionRootDir, 'node_modules', 'zeromqold', 'prebuilds');
-    ['darwin-x64', 'linux-x64', 'win32-x64', 'win32-ia32'].forEach((platform) => {
-        if (fs.existsSync(path.join(dir, platform))) {
-            fs.rmdirSync(path.join(dir, platform), { recursive: true });
-        }
-    });
-}
 
 fixUIFabricForTS49();
 fixJupyterLabRenderers();
@@ -214,7 +206,6 @@ createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
 fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
-deleteFallbackZmqFiles();
 downloadZMQ()
     .then(() => process.exit(0))
     .catch((ex) => console.error('Failed to download ZMQ', ex));
