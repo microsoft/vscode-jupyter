@@ -221,7 +221,7 @@ async function verifyZmqBinaries() {
         )
     );
 
-    if (filesNotDownloaded.length) {
+    if (filesNotDownloaded.length && typeof process.env.VSC_VSCE_TARGET !== 'string') {
         throw new Error(`Missing zeromq binaries. ${filesNotDownloaded.join(', ')}`);
     }
 

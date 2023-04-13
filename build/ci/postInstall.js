@@ -200,8 +200,10 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
 }
 
 async function downloadZmqBinaries() {
-    const arch = env.vsc_package_arch || '';
-    const target = env.vsc_vsce_target || '';
+    const arch = process.env.VSC_PACKAGE_ARCH || '';
+    const target = process.env.VSC_VSCE_TARGET || '';
+    console.error('vsc_package_arch', arch);
+    console.error('vsc_vsce_target', target);
     let options = undefined;
     if (target.includes('linux')) {
         if (target.includes('x64')) {

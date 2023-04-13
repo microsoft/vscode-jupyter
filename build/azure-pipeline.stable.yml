@@ -11,7 +11,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: main
+      ref: logging
       endpoint: Monaco
 
 parameters:
@@ -24,10 +24,13 @@ extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
     l10nSourcePaths: ./src
+    l10nShouldProcess: false
     publishExtension: ${{ parameters.publishExtension }}
     buildPlatforms:
       - name: Linux
         vsceTarget: ''
+      - name: Linux
+        vsceTarget: 'web'
       - name: Linux
         packageArch: arm64
         vsceTarget: linux-arm64
@@ -54,6 +57,7 @@ extends:
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
         displayName: Install dependencies for zeromq.js
+        condition: or(eq($(vsceTarget), ''), contains($(vsceTarget), 'linux'), contains($(vsceTarget), 'web'))
 
       - script: npm i -g npm@8.15.1
         displayName: Install npm 8.15.1
@@ -63,7 +67,8 @@ extends:
         env:
           npm_config_arch: ${{ variables.packageArch }}
           npm_config_build_from_source: true
-          vsc_package_arch: ${{ variables.packageArch }}
+          VSC_PACKAGE_ARCH: $(packageArch)
+          VSC_VSCE_TARGET: $(vsceTarget)
 
       - script: gulp clean
         displayName: Clean
@@ -82,3 +87,6 @@ extends:
 
       - script: npm run prePublishBundleStable
         displayName: Build
+        env:
+          VSC_PACKAGE_ARCH: $(packageArch)
+          VSC_VSCE_TARGET: $(vsceTarget)
