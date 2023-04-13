@@ -198,6 +198,28 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
         throw new Error(`Moment is being used by other packages (${otherPackagesUsingMoment.join(', ')}).`);
     }
 }
+/**
+ * Copies the vcrt dlls from zeromq to vcrt.
+ * On windows machines some of the dlls will not exist in the path, and zmq will fail to load.
+ * We use the fallback mechanism to ensure the dlls are copied over into the directory with the native modules only as and when requried.
+ * I.e we always try to use the dlls from the users machine, and only use the dlls from the extension as a fallback.
+ * Copying of files back into the native modules folder is done when attempting to load the native module fails.
+ */
+function copyWin64VCRTDlls() {
+    const source = path.join(constants.ExtensionRootDir, 'node_modules', 'zeromq', 'prebuilds', 'win32-x64');
+    const target = path.join(constants.ExtensionRootDir, 'node_modules', 'zeromq', 'vcrt');
+    fs.ensureDir(target);
+    fs.readdirSync(source).forEach((file) => {
+        if (file.toLowerCase().endsWith('.dll')) {
+            fs.copySync(path.join(source, file), path.join(target, file));
+            fs.unlinkSync(path.join(source, file));
+        }
+    });
+}
+async function downloadZmqBinaries() {
+    await downloadZMQ();
+    copyWin64VCRTDlls();
+}
 
 fixUIFabricForTS49();
 fixJupyterLabRenderers();
@@ -206,6 +228,6 @@ createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
 fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
-downloadZMQ()
+downloadZmqBinaries()
     .then(() => process.exit(0))
     .catch((ex) => console.error('Failed to download ZMQ', ex));
