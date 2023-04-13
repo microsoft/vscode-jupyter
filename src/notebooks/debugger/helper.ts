@@ -29,7 +29,9 @@ builtins.print(ipykernel.__version__)`;
 
     // It is necessary to traverse all the output to determine the version of ipykernel, some jupyter servers may return extra status metadata
     for (const line of output) {
-        const lineText = line.text?.toString() ?? '';
+        if (line.output_type !== 'stream') continue;
+
+        const lineText = line.text?.toString().trim() ?? '';
         const matches: RegExpMatchArray | null = lineText.match(versionRegex);
         if (matches) {
             const majorVersion: string = matches[1];
