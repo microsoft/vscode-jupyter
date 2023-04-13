@@ -92,7 +92,7 @@
     "jupyter.command.jupyter.gotoNextCellInFile.title": "Go to Next Cell",
     "jupyter.command.jupyter.gotoPrevCellInFile.title": "Go to Previous Cell",
     "jupyter.command.jupyter.createnewinteractive.title": "Create Interactive Window",
-    "jupyter.command.jupyter.selectjupyteruri.title": "Specify Jupyter Server for Connections",
+    "jupyter.command.jupyter.selectjupyteruri.title": "Specify Jupyter Server for Connections (deprecated)",
     "jupyter.command.jupyter.importnotebook.title": {
         "message": "Import Jupyter Notebook",
         "comment": [
@@ -136,6 +136,8 @@
     "jupyter.command.jupyter.interruptkernel.shorttitle": "Interrupt",
     "jupyter.command.jupyter.restartkernel.title": "Restart Kernel",
     "jupyter.command.jupyter.restartkernel.shorttitle": "Restart",
+    "jupyter.command.jupyter.restartkernelandrunallcells.title": "Restart Kernel and Run All Cells",
+    "jupyter.command.jupyter.restartkernelandrunallcells.shorttitle": "Restart and Run All",
     "jupyter.command.jupyter.expandallcells.title": "Expand All Interactive Cells",
     "jupyter.command.jupyter.collapseallcells.title": "Collapse All Interactive Cells",
     "jupyter.command.jupyter.expandallcells.shorttitle": "Expand",

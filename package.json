@@ -617,18 +617,14 @@
                     "light": "resources/light/restart-kernel.svg",
                     "dark": "resources/dark/restart-kernel.svg"
                 },
-                "enablement": "isWorkspaceTrusted && jupyter.interactive.canRestartNotebookKernel"
+                "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
             },
             {
-                "command": "jupyter.notebookeditor.restartkernel",
-                "title": "%jupyter.command.jupyter.restartkernel.title%",
-                "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
-                "category": "Notebook",
-                "icon": {
-                    "light": "resources/light/restart-kernel.svg",
-                    "dark": "resources/dark/restart-kernel.svg"
-                },
-                "enablement": "notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel && isWorkspaceTrusted"
+                "command": "jupyter.restartkernelandrunallcells",
+                "title": "%jupyter.command.jupyter.restartkernelandrunallcells.title%",
+                "shortTitle": "%jupyter.command.jupyter.restartkernelandrunallcells.shorttitle%",
+                "category": "Jupyter",
+                "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
             },
             {
                 "command": "jupyter.notebookeditor.addcellbelow",
@@ -847,7 +843,7 @@
             ],
             "editor/title": [
                 {
-                    "command": "jupyter.notebookeditor.restartkernel",
+                    "command": "jupyter.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
@@ -873,7 +869,7 @@
             ],
             "notebook/toolbar": [
                 {
-                    "command": "jupyter.notebookeditor.restartkernel",
+                    "command": "jupyter.restartkernel",
                     "group": "navigation/execute@1",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
                 },
@@ -1198,19 +1194,13 @@
                     "command": "jupyter.restartkernel",
                     "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Jupyter",
-                    "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
+                    "when": "(jupyter.ispythonorinteractiveeactive || jupyter.isnativeactive) && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.removeallcells",
                     "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
                     "category": "Notebook",
                     "when": "jupyter.havenativecells && jupyter.isnativeactive && isWorkspaceTrusted"
-                },
-                {
-                    "command": "jupyter.notebookeditor.restartkernel",
-                    "title": "%jupyter.command.jupyter.restartkernel.title%",
-                    "category": "Notebook",
-                    "when": "jupyter.isnativeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.addcellbelow",
@@ -1980,7 +1970,8 @@
         "notebookKernelSource",
         "interactiveWindow",
         "notebookControllerAffinityHidden",
-        "quickPickItemTooltip"
+        "quickPickItemTooltip",
+        "notebookExecution"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
@@ -2185,7 +2176,7 @@
         "@typescript-eslint/parser": "^5.47.0",
         "@vscode/test-electron": "^2.2.0",
         "@vscode/test-web": "^0.0.29",
-        "@vscode/zeromq": "^0.0.9",
+        "@vscode/zeromq": "^0.1.0",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "bufferutil": "^4.0.6",

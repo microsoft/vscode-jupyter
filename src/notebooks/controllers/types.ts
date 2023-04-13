@@ -34,6 +34,7 @@ export interface IVSCodeNotebookController extends IDisposable {
     postMessage(message: any, editor?: vscode.NotebookEditor): Thenable<boolean>;
     asWebviewUri(localResource: vscode.Uri): vscode.Uri;
     isAssociatedWithDocument(notebook: vscode.NotebookDocument): boolean;
+    restoreConnection(notebook: vscode.NotebookDocument): Promise<void>;
     updateConnection(connection: KernelConnectionMetadata): void;
     setPendingCellAddition(notebook: vscode.NotebookDocument, promise: Promise<void>): void;
 }

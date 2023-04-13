@@ -90,15 +90,18 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
         traceVerbose(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
         // Do this in a loop as it may fail
+        await this.commandManager.executeCommand('notebook.selectKernel', {
+            id: kernel.id,
+            extension: JVSC_EXTENSION_ID
+        });
         const success = await waitForCondition(
             async () => {
                 if (this.vscNotebook.activeNotebookEditor?.notebook === n) {
-                    await this.commandManager.executeCommand('notebook.selectKernel', {
-                        id: kernel.id,
-                        extension: JVSC_EXTENSION_ID
-                    });
                     const selected = this.controllerRegistration.getSelected(n);
-                    return selected?.connection.id === kernel.id;
+                    if (selected?.connection.id === kernel.id) {
+                        selected.restoreConnection(n).catch(noop);
+                        return true;
+                    }
                 }
                 return false;
             },

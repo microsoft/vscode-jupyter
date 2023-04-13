@@ -1411,6 +1411,7 @@
      "armv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arm version","owner":"donjayamanne"},
      "distro_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro id.","owner":"donjayamanne"},
      "distro_version_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro version id.","owner":"donjayamanne"},
+     "vcRtCopied": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the VC runtime dlls were copied into the directory where the native modules are located.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

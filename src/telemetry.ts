@@ -1927,6 +1927,10 @@ export class IEventNamePropertyMapping {
          * Linux distro version id.
          */
         distro_version_id: string;
+        /**
+         * Whether the VC runtime dlls were copied into the directory where the native modules are located.
+         */
+        vcRtCopied: boolean;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -1961,6 +1965,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             distro_version_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            vcRtCopied: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
