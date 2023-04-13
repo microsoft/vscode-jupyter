@@ -620,6 +620,13 @@
                 "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
             },
             {
+                "command": "jupyter.restartkernelandrunallcells",
+                "title": "%jupyter.command.jupyter.restartkernelandrunallcells.title%",
+                "shortTitle": "%jupyter.command.jupyter.restartkernelandrunallcells.shorttitle%",
+                "category": "Jupyter",
+                "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
+            },
+            {
                 "command": "jupyter.notebookeditor.addcellbelow",
                 "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
                 "category": "Notebook",

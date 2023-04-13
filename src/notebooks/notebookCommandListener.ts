@@ -62,10 +62,10 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
         );
         this.disposableRegistry.push(
-            this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, this.collapseAll, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, () => this.collapseAll())
         );
         this.disposableRegistry.push(
-            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, () => this.expandAll())
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
@@ -84,6 +84,18 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 Commands.InterruptKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } }) =>
                     this.interruptKernel(context?.notebookEditor?.notebookUri)
+            )
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(
+                Commands.RestartKernelAndRunAllCells,
+                (context?: { notebookEditor: { notebookUri: Uri } }) => {
+                    if (context && 'notebookEditor' in context) {
+                        this.restartKernelAndRunAllCells(context?.notebookEditor?.notebookUri).catch(noop);
+                    } else {
+                        this.restartKernelAndRunAllCells(context).catch(noop);
+                    }
+                }
             )
         );
     }
@@ -158,7 +170,12 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         await this.wrapKernelMethod('interrupt', kernel);
     }
 
-    private async restartKernel(notebookUri: Uri | undefined) {
+    private async restartKernelAndRunAllCells(notebookUri: Uri | undefined) {
+        await this.restartKernel(notebookUri);
+        this.runAllCells();
+    }
+
+    private async restartKernel(notebookUri: Uri | undefined): Promise<void> {
         const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
