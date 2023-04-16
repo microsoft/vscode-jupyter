@@ -200,6 +200,10 @@ gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderer
  * We need to ensure we never run into this, else only some of the binaries will be downloaded and the vsix will contain partial binaries.
  */
 async function verifyZmqBinaries() {
+    if (process.env.VSC_VSCE_TARGET === 'web') {
+        // We don't need to verify this on web.
+        return;
+    }
     const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromq', 'prebuilds');
     const files = [
         path.join('darwin-arm64', 'node.napi.glibc.node'),

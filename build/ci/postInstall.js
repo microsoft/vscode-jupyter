@@ -224,6 +224,9 @@ async function downloadZmqBinaries() {
         } else if (target.includes('ia32')) {
             options = { darwin: ['ia32'] };
         }
+    } else if (target.includes('web')) {
+        // No need to download zmq binaries for web.
+        return;
     }
     await downloadZMQ(options);
 }
