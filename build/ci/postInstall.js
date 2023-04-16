@@ -198,7 +198,6 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
         throw new Error(`Moment is being used by other packages (${otherPackagesUsingMoment.join(', ')}).`);
     }
 }
-
 async function downloadZmqBinaries() {
     const arch = process.env.VSC_PACKAGE_ARCH || '';
     const target = process.env.VSC_VSCE_TARGET || '';
@@ -207,11 +206,11 @@ async function downloadZmqBinaries() {
     let options = undefined;
     if (target.includes('linux')) {
         if (target.includes('x64')) {
-            options = { linux: ['x64'] };
+            options = { linux: [] };
         } else if (target.includes('arm64')) {
             options = { linux: ['arm64'] };
         } else if (target.includes('armhf')) {
-            options = { linux: ['armhf'] };
+            options = { linux: [] };
         }
     } else if (target.includes('darwin')) {
         if (target.includes('x64')) {
