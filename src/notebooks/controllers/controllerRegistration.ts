@@ -16,7 +16,7 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
+import { JupyterNotebookView, InteractiveWindowView, isCI } from '../../platform/common/constants';
 import {
     IDisposableRegistry,
     IConfigurationService,
@@ -171,9 +171,13 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         );
         // Look for any controllers that we have disposed (no longer found when fetching)
         const disposedControllers = Array.from(this.registered).filter((controller) => {
-            const connectionIsStillValid = connections.some((connection) => {
-                return connection.id === controller.connection.id;
-            });
+            const connectionIsStillValid =
+                connections.some((connection) => {
+                    return connection.id === controller.connection.id;
+                }) ||
+                // On CI (tests), do not dispose of the active interpreter controller.
+                // See https://github.com/microsoft/vscode-jupyter/issues/13335
+                (isCI && this._activeInterpreterControllerIds.has(controller.id));
 
             // Never remove remote kernels that don't exist.
             // Always leave them there for user to select, and if the connection is not available/not valid,
@@ -282,7 +286,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
             }
         });
     }
-    batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
+    private batchAdd(metadatas: KernelConnectionMetadata[], types: ('jupyter-notebook' | 'interactive')[]) {
         const addedList: IVSCodeNotebookController[] = [];
         metadatas.forEach((metadata) => {
             const { added } = this.addImpl(metadata, types, false);
