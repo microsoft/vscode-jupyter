@@ -233,7 +233,7 @@ async function verifyZmqBinaries() {
  */
 function deleteElectronBinaries() {
     const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'prebuilds');
-    glob.sync('**/electron.*node', { sync: true, cwd: preBuildsFolder }).forEach((file) => {
+    glob.sync('**/electron.napi.*.node', { sync: true, cwd: preBuildsFolder }).forEach((file) => {
         console.log(`Deleting ${file}`);
         fs.rmSync(path.join(preBuildsFolder, file), { force: true });
     });

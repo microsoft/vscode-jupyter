@@ -13,7 +13,7 @@ import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
 import { IKernelConnection } from '../types';
 import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
-import { EventEmitter, Memento } from 'vscode';
+import { EventEmitter } from 'vscode';
 import { getZeroMQ } from './zeromq.node';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
@@ -53,8 +53,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     constructor(
         private connection: IKernelConnection,
         private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
-        private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage,
-        private readonly globalMemento: Memento
+        private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
@@ -159,7 +158,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
     private generateChannels(connection: IKernelConnection): IChannels {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const zmq = getZeroMQ(this.globalMemento);
+        const zmq = getZeroMQ();
 
         // Need a routing id for them to share.
         const routingId = uuid();

@@ -1,20 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
-import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../../../platform/common/types';
+import { inject, injectable } from 'inversify';
+import { IConfigurationService } from '../../../platform/common/types';
 import { IRawNotebookSupportedService } from '../types';
 import { getZeroMQ } from './zeromq.node';
-import { Memento } from 'vscode';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine
 @injectable()
 export class RawNotebookSupportedService implements IRawNotebookSupportedService {
     private _isSupported?: boolean;
-    constructor(
-        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
-    ) {}
+    constructor(@inject(IConfigurationService) private readonly configuration: IConfigurationService) {}
 
     // Check to see if we have all that we need for supporting raw kernel launch
     public get isSupported(): boolean {
@@ -40,7 +36,7 @@ export class RawNotebookSupportedService implements IRawNotebookSupportedService
             return false;
         }
         try {
-            getZeroMQ(this.memento);
+            getZeroMQ();
             this._isSupported = true;
         } catch (e) {
             this._isSupported = false;

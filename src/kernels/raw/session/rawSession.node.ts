@@ -15,7 +15,6 @@ import { IKernelProcess } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel.node';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { noop } from '../../../platform/common/utils/misc';
-import { Memento } from 'vscode';
 
 /*
 RawSession class implements a jupyterlab ISession object
@@ -58,7 +57,7 @@ export class RawSession implements ISessionWithSocket {
     }
 
     // RawSession owns the lifetime of the kernel process and will dispose it
-    constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource, globalMemento: Memento) {
+    constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
         this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = (this.signaling = require('@lumino/signaling') as typeof import('@lumino/signaling'));
@@ -77,7 +76,7 @@ export class RawSession implements ISessionWithSocket {
         this._clientID = uuid();
 
         // Connect our kernel and hook up status changes
-        this._kernel = createRawKernel(kernelProcess, this._clientID, globalMemento);
+        this._kernel = createRawKernel(kernelProcess, this._clientID);
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
         this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
         this._kernel.connectionStatusChanged.connect(this.onKernelConnectionStatus, this);

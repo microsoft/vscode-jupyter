@@ -3,11 +3,7 @@
 
 import * as vscode from 'vscode';
 import { Channel, IApplicationEnvironment } from './types';
-import { JVSC_EXTENSION_ID } from '../constants';
 
-export function getExtensionVersion(): string | undefined {
-    return vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON.version;
-}
 /**
  * Wrapper around the vscode.env object and some other properties related to the VS code instance.
  */
