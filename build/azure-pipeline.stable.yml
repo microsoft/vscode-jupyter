@@ -53,6 +53,15 @@ extends:
         packageArch: x64
         vsceTarget: win32-x64
     buildSteps:
+      - script: |
+          echo "Hello There $(vsceTarget)"
+        displayName: Install dependencies for zeromq.js1a111
+        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'web'))
+
+      - script: |
+          echo "Hello There $(vsceTarget)"
+        displayName: Install dependencies for zeromq.js1a222
+        condition: contains(variables.vsceTarget, 'win32')
 
       - script: |
           echo 'Hello World' && echo $(packageArch) and $(vsceTarget)
@@ -73,37 +82,19 @@ extends:
         displayName: Install dependencies2
 
       - bash: |
-          echo "##vso[task.setvariable variable=Sauce;]$(vsceTarget)"
+          echo "##vso[task.setvariable variable=vsceTarget;]$(vsceTarget)"
         target:
           settableVariables:
-            - sauce
-        name: SetVars
+            - vsceTarget
       - bash:
-          echo "Sauce is $(sauce)"
+          echo "Sauce is $(vsceTarget)"
         name: OutputVars
 
-      - ${{ if or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'web')) }}:
-        - script: |
-            echo "Inside"
-          displayName: Install dependencies for zeromq.js1
-            # sudo apt-get update
-            # sudo apt-get install libpango1.0-dev libgif-dev
-        #   condition: or(eq($(printVsceTarget.OutputValue), ''), contains($(printVsceTarget.OutputValue), 'linux'), contains($(printVsceTarget.OutputValue), 'web'))
-
       - script: |
-          echo "Inside 1"
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
         displayName: Install dependencies for zeromq.js1a
-        # sudo apt-get update
-        # sudo apt-get install libpango1.0-dev libgif-dev
-        condition: or(eq(variables.sauce, ''), contains(variables.sauce, 'linux'), contains(variables.sauce, 'web'))
-
-      - ${{ if or(eq(variables.sauce, ''), contains(variables.sauce, 'linux'), contains(variables.sauce, 'web')) }}:
-        - script: |
-            echo "Inside"
-          displayName: Install dependencies for zeromq.js2
-            # sudo apt-get update
-            # sudo apt-get install libpango1.0-dev libgif-dev
-        #   condition: or(eq($(printVsceTarget.OutputValue), ''), contains($(printVsceTarget.OutputValue), 'linux'), contains($(printVsceTarget.OutputValue), 'web'))
+        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'web'))
 
     #   - script: npm i -g npm@8.15.1
     #     displayName: Install npm 8.15.1
