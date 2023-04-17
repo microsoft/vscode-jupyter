@@ -57,36 +57,36 @@ extends:
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
         displayName: Install dependencies for zeromq.js
-        condition: or(eq('${{variables.vsceTarget}}', ''), contains('${{variables.vsceTarget}}', 'linux'), contains('${{variables.vsceTarget}}', 'web'))
+        condition: or(eq('${{ variables.vsceTarget }}', ''), contains('${{ variables.vsceTarget }}', 'linux'), contains('${{ variables.vsceTarget }}', 'web'))
 
-      - script: npm i -g npm@8.15.1
-        displayName: Install npm 8.15.1
+    #   - script: npm i -g npm@8.15.1
+    #     displayName: Install npm 8.15.1
 
-      - script: npm ci --foreground-scripts
-        displayName: Install dependencies
-        env:
-          npm_config_arch: ${{ variables.packageArch }}
-          npm_config_build_from_source: true
-          VSC_PACKAGE_ARCH: $(packageArch)
-          VSC_VSCE_TARGET: $(vsceTarget)
+    #   - script: npm ci --foreground-scripts
+    #     displayName: Install dependencies
+    #     env:
+    #       npm_config_arch: ${{ variables.packageArch }}
+    #       npm_config_build_from_source: true
+    #       VSC_PACKAGE_ARCH: $(packageArch)
+    #       VSC_VSCE_TARGET: $(vsceTarget)
 
-      - script: gulp clean
-        displayName: Clean
+    #   - script: gulp clean
+    #     displayName: Clean
 
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: '3.8'
-          addToPath: true
-          architecture: 'x64'
+    #   - task: UsePythonVersion@0
+    #     inputs:
+    #       versionSpec: '3.8'
+    #       addToPath: true
+    #       architecture: 'x64'
 
-      - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
-        displayName: Install Python libs
+    #   - script: python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+    #     displayName: Install Python libs
 
-      - script: npm run updateBuildNumber
-        displayName: Update build number
+    #   - script: npm run updateBuildNumber
+    #     displayName: Update build number
 
-      - script: npm run prePublishBundleStable
-        displayName: Build
-        env:
-          VSC_PACKAGE_ARCH: $(packageArch)
-          VSC_VSCE_TARGET: $(vsceTarget)
+    #   - script: npm run prePublishBundleStable
+    #     displayName: Build
+    #     env:
+    #       VSC_PACKAGE_ARCH: $(packageArch)
+    #       VSC_VSCE_TARGET: $(vsceTarget)
