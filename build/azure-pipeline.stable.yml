@@ -69,7 +69,7 @@ extends:
         name: Echo
 
       - bash: echo $(vscVsceTarget.output)
-        name: Echo
+        name: Echo1
 
       # - script: |
       #     echo 'Hello World' && echo $PACKAGEARCH && echo $VSCETARGET
