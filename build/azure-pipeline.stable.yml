@@ -65,12 +65,12 @@ extends:
       - script: |
           echo 'Hello World' && echo ${{ variables.packageArch }} && echo ${{ variables.vsceTarget }}
         displayName: Install dependencies
-
-      - script: |
-          sudo apt-get update
-          sudo apt-get install libpango1.0-dev libgif-dev
-        displayName: Install dependencies for zeromq.js
-        condition: or(eq('${{ variables.vsceTarget }}', ''), contains('${{ variables.vsceTarget }}', 'linux'), contains('${{ variables.vsceTarget }}', 'web'))
+      - ${{ if or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'web')) }}:
+        - script: |
+            sudo apt-get update
+            sudo apt-get install libpango1.0-dev libgif-dev
+          displayName: Install dependencies for zeromq.js
+          condition: or(eq('${{ variables.vsceTarget }}', ''), contains('${{ variables.vsceTarget }}', 'linux'), contains('${{ variables.vsceTarget }}', 'web'))
 
     #   - script: npm i -g npm@8.15.1
     #     displayName: Install npm 8.15.1
