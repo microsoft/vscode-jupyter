@@ -82,12 +82,12 @@ extends:
           echo "Sauce is $(sauce)"
         name: OutputVars
 
-      - ${{ if or(eq($(printVsceTarget.OutputValue), ''), contains($(printVsceTarget.OutputValue), 'linux'), contains($(printVsceTarget.OutputValue), 'web')) }}:
+      - ${{ if or(eq(${{ variables.sauce }}, ''), contains(${{ variables.sauce }}, 'linux'), contains(${{ variables.sauce }}, 'web')) }}:
         - script: |
             sudo apt-get update
             sudo apt-get install libpango1.0-dev libgif-dev
           displayName: Install dependencies for zeromq.js
-          condition: or(eq($(printVsceTarget.OutputValue), ''), contains($(printVsceTarget.OutputValue), 'linux'), contains($(printVsceTarget.OutputValue), 'web'))
+        #   condition: or(eq($(printVsceTarget.OutputValue), ''), contains($(printVsceTarget.OutputValue), 'linux'), contains($(printVsceTarget.OutputValue), 'web'))
 
     #   - script: npm i -g npm@8.15.1
     #     displayName: Install npm 8.15.1
