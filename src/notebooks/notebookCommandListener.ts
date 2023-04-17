@@ -98,6 +98,18 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 }
             )
         );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(
+                Commands.RestartKernelAndRunUpToSelectedCell,
+                (context?: { notebookEditor: { notebookUri: Uri } }) => {
+                    if (context && 'notebookEditor' in context) {
+                        this.RestartKernelAndRunUpToSelectedCell(context?.notebookEditor?.notebookUri).catch(noop);
+                    } else {
+                        this.RestartKernelAndRunUpToSelectedCell(context).catch(noop);
+                    }
+                }
+            )
+        );
     }
 
     private runAllCells() {
@@ -173,6 +185,20 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     private async restartKernelAndRunAllCells(notebookUri: Uri | undefined) {
         await this.restartKernel(notebookUri);
         this.runAllCells();
+    }
+
+    private async RestartKernelAndRunUpToSelectedCell(notebookUri: Uri | undefined) {
+        const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
+
+        await this.restartKernel(uri);
+        if (this.notebooks.activeNotebookEditor) {
+            this.commandManager
+                .executeCommand('notebook.cell.execute', {
+                    ranges: [{ start: 0, end: this.notebooks.activeNotebookEditor.selection.end }],
+                    document: uri
+                })
+                .then(noop, noop);
+        }
     }
 
     private async restartKernel(notebookUri: Uri | undefined): Promise<void> {

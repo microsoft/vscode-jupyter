@@ -188,6 +188,7 @@ export namespace Commands {
     export const InterruptKernel = 'jupyter.interruptkernel';
     export const RestartKernel = 'jupyter.restartkernel';
     export const RestartKernelAndRunAllCells = 'jupyter.restartkernelandrunallcells';
+    export const RestartKernelAndRunUpToSelectedCell = 'jupyter.restartkernelandrunuptoselectedcell';
     export const NotebookEditorRemoveAllCells = 'jupyter.notebookeditor.removeallcells';
     export const NotebookEditorRunAllCells = 'jupyter.notebookeditor.runallcells';
     export const NotebookEditorRunSelectedCell = 'jupyter.notebookeditor.runselectedcell';
