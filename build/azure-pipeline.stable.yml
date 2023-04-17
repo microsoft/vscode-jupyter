@@ -61,14 +61,14 @@ extends:
       - bash: echo "##vso[task.setvariable variable=myStageOutputVar;isOutput=true]$(vsceTarget)"
         name: printvar
 
-      - script: echo "##vso[task.setvariable variable=output;isOutput=true]$(vsceTarget)"
+      - script: echo "##vso[task.setvariable variable=value;isOutput=true]$(vsceTarget)"
         name: vscVsceTarget
         displayName: Install dependenciesa
 
       - bash: echo $(printvar.myStageOutputVar)
         name: Echo
 
-      - bash: echo $(vscVsceTarget.output)
+      - bash: echo $(vscVsceTarget.value)
         name: Echo1
 
       # - script: |
