@@ -199,17 +199,18 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
     }
 }
 async function downloadZmqBinaries() {
-    const arch = process.env.VSC_PACKAGE_ARCH || '';
     const target = process.env.VSC_VSCE_TARGET || '';
-    console.error('vsc_package_arch', arch);
-    console.error('vsc_vsce_target', target);
     let options = undefined;
     if (target.includes('linux')) {
         if (target.includes('x64')) {
-            options = { linux: [] };
+            options = { linux: ['x64'] };
         } else if (target.includes('arm64')) {
             options = { linux: ['arm64'] };
-        } else if (target.includes('armhf')) {
+        } else if (target.includes('arm') && !target.includes('armhf')) {
+            options = { linux: ['arm'] };
+        } else if (target.includes('alpine')) {
+            options = { linux: ['alpine'] };
+        } else {
             options = { linux: [] };
         }
     } else if (target.includes('darwin')) {
