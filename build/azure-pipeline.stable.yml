@@ -58,6 +58,13 @@ extends:
           echo 'Hello World' && echo $(packageArch) and $(vsceTarget)
         displayName: Install dependencies1
 
+      - script: |
+          echo "##vso[task.setvariable variable=VSC_VSCE_TARGET;isOutput=true]$(vsceTarget)"
+        displayName: Install dependenciesa
+
+      - bash: |
+          echo "my environment variable is $VSC_VSCE_TARGET"
+
       # - script: |
       #     echo 'Hello World' && echo $PACKAGEARCH && echo $VSCETARGET
       #   displayName: Install dependencies
