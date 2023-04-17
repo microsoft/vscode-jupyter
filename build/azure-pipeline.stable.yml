@@ -90,6 +90,13 @@ extends:
             # sudo apt-get install libpango1.0-dev libgif-dev
         #   condition: or(eq($(printVsceTarget.OutputValue), ''), contains($(printVsceTarget.OutputValue), 'linux'), contains($(printVsceTarget.OutputValue), 'web'))
 
+      - script: |
+          echo "Inside 1"
+        displayName: Install dependencies for zeromq.js1a
+        # sudo apt-get update
+        # sudo apt-get install libpango1.0-dev libgif-dev
+        condition: or(eq(variables.sauce, ''), contains(variables.sauce, 'linux'), contains(variables.sauce, 'web'))
+
       - ${{ if or(eq(variables.sauce, ''), contains(variables.sauce, 'linux'), contains(variables.sauce, 'web')) }}:
         - script: |
             echo "Inside"
