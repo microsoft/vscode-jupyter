@@ -59,11 +59,12 @@ extends:
         displayName: Install dependencies1
 
       - script: |
-          echo "##vso[task.setvariable variable=VSC_VSCE_TARGET;isOutput=true]$(vsceTarget)"
+          echo "##vso[task.setvariable variable=value;isOutput=true]$(vsceTarget)"
+        name: vscVsceTarget
         displayName: Install dependenciesa
 
       - bash: |
-          echo "my environment variable is $VSC_VSCE_TARGET"
+          echo "my environment variable is $(vscVsceTarget.value)"
 
       # - script: |
       #     echo 'Hello World' && echo $PACKAGEARCH && echo $VSCETARGET
