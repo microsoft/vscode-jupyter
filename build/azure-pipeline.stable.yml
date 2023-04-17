@@ -58,11 +58,17 @@ extends:
           echo 'Hello World' && echo $(packageArch) and $(vsceTarget)
         displayName: Install dependencies1
 
-      - script: echo "##vso[task.setvariable variable=value;isOutput=true]$(vsceTarget)"
+      - bash: echo "##vso[task.setvariable variable=myStageOutputVar;isOutput=true]$(vsceTarget)"
+        name: printvar
+
+      - script: echo "##vso[task.setvariable variable=output;isOutput=true]$(vsceTarget)"
         name: vscVsceTarget
         displayName: Install dependenciesa
 
-      - bash: echo $(vscVsceTarget.value)
+      - bash: echo $(printvar.myStageOutputVar)
+        name: Echo
+
+      - bash: echo $(vscVsceTarget.output)
         name: Echo
 
       # - script: |
