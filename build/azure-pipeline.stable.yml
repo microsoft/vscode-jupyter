@@ -55,16 +55,17 @@ extends:
     buildSteps:
 
       - script: |
-          echo 'Hello World' && echo $(packageArch)
-        displayName: Install dependencies
+          echo 'Hello World' && echo $(packageArch) and $(vsceTarget)
+        displayName: Install dependencies1
 
       # - script: |
       #     echo 'Hello World' && echo $PACKAGEARCH && echo $VSCETARGET
       #   displayName: Install dependencies
 
       - script: |
-          echo 'Hello World' && echo ${{ variables.packageArch }} && echo ${{ variables.vsceTarget }}
-        displayName: Install dependencies
+          echo 'Hello World' && echo $(packageArch) and $(vsceTarget)
+        displayName: Install dependencies2
+
       - ${{ if or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'web')) }}:
         - script: |
             sudo apt-get update
