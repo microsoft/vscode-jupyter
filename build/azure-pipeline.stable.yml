@@ -53,6 +53,23 @@ extends:
         packageArch: x64
         vsceTarget: win32-x64
     buildSteps:
+
+      - script: |
+          echo 'Hello World' && echo $(packageArch)
+        displayName: Install dependencies
+
+      # - script: |
+      #     echo 'Hello World' && echo $PACKAGEARCH && echo $VSCETARGET
+      #   displayName: Install dependencies
+
+      - script: |
+          echo 'Hello World' && echo ${{ variables.packageArch }} && echo ${{ variables.vsceTarget }}
+        displayName: Install dependencies
+
+      - script: |
+          echo 'Hello World' && echo ${{ parameters.packageArch }} && echo ${{ variables.vsceTarget }}
+        displayName: Install dependencies
+
       - script: |
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
