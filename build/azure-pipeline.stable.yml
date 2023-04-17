@@ -64,7 +64,7 @@ extends:
         displayName: Install dependenciesa
 
       - bash: |
-          echo "my environment variable is $(vscVsceTarget.value)"
+          echo $(vscVsceTarget.value)
 
       # - script: |
       #     echo 'Hello World' && echo $PACKAGEARCH && echo $VSCETARGET
