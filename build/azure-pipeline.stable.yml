@@ -72,6 +72,16 @@ extends:
           echo 'Hello World' && echo $(packageArch) and $(vsceTarget)
         displayName: Install dependencies2
 
+      - bash: |
+          echo "##vso[task.setvariable variable=Sauce;]$(vsceTarget)"
+        target:
+          settableVariables:
+            - sauce
+        name: SetVars
+      - bash:
+          echo "Sauce is $(sauce)"
+        name: OutputVars
+
       - ${{ if or(eq($(printVsceTarget.OutputValue), ''), contains($(printVsceTarget.OutputValue), 'linux'), contains($(printVsceTarget.OutputValue), 'web')) }}:
         - script: |
             sudo apt-get update
