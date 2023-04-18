@@ -11,7 +11,6 @@ const constants = require('../constants');
 const targetFile = path.join(
     constants.ExtensionRootDir,
     'node_modules',
-    'node_modules',
     '@vscode',
     'zeromq',
     'lib',
