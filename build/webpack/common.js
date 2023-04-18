@@ -62,5 +62,43 @@ function getBundleConfiguration() {
     }
 }
 
+function getZeroMQPreBuildsFoldersToKeep() {
+    if (process.env.VSC_VSCE_TARGET === 'web') {
+        return [];
+    } else if (process.env.VSC_VSCE_TARGET === undefined) {
+        // These all the prebuilds folders for zmq v6 beta 6
+        return ['darwin-x64', 'linux-arm', 'linux-arm64', 'linux-x64', 'win32-ia32', 'win32-x64'];
+    } else if (process.env.VSC_VSCE_TARGET.includes('win32')) {
+        if (process.env.VSC_VSCE_TARGET.includes('ia32')) {
+            return ['win32-ia32'];
+        } else if (process.env.VSC_VSCE_TARGET.includes('x64')) {
+            return ['win32-x64'];
+        } else {
+            return ['win32-ia32', 'win32-x64'];
+        }
+    } else if (process.env.VSC_VSCE_TARGET.includes('linux')) {
+        if (process.env.VSC_VSCE_TARGET.includes('arm64')) {
+            return ['linux-arm64'];
+        } else if (process.env.VSC_VSCE_TARGET.includes('x64')) {
+            return ['linux-x64'];
+        } else if (process.env.VSC_VSCE_TARGET.includes('arm')) {
+            return ['linux-arm'];
+        } else if (process.env.VSC_VSCE_TARGET.includes('alpine')) {
+            return ['linux-x64'];
+        } else {
+            return ['linux-arm64', 'linux-x64', 'linux-arm', 'linux-x64'];
+        }
+    } else {
+        if (process.env.VSC_VSCE_TARGET.includes('arm64')) {
+            return [];
+        } else if (process.env.VSC_VSCE_TARGET.includes('x64')) {
+            return ['darwin-x64'];
+        } else {
+            return ['darwin-x64'];
+        }
+    }
+}
+
 exports.bundleConfiguration = bundleConfiguration;
+exports.getZeroMQPreBuildsFoldersToKeep = getZeroMQPreBuildsFoldersToKeep;
 exports.getBundleConfiguration = getBundleConfiguration;

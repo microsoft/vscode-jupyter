@@ -201,7 +201,7 @@ gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderer
  * We need to ensure we never run into this, else only some of the binaries will be downloaded and the vsix will contain partial binaries.
  */
 async function verifyZmqBinaries() {
-    if (process.env.VSC_VSCE_TARGET === 'web') {
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
         // We don't need to verify this on web.
         return;
     }
@@ -217,13 +217,17 @@ async function verifyZmqBinaries() {
         path.join('linux-x64', 'node.napi.glibc.node'),
         path.join('win32-x64', 'node.napi.glibc.node')
     ].map((file) => path.join(preBuildsFolder, file));
+    const preBuildsFoldersToKeep = common.getZeroMQPreBuildsFoldersToKeep();
+
     const filesNotDownloaded = [];
     await Promise.all(
-        files.map((file) =>
-            fs
-                .pathExists(file)
-                .then((found) => (found ? undefined : filesNotDownloaded.push(file.replace(preBuildsFolder, ''))))
-        )
+        files
+            .filter((file) => preBuildsFoldersToKeep.some((preBuildsFolderName) => file.includes(preBuildsFolderName)))
+            .map((file) =>
+                fs
+                    .pathExists(file)
+                    .then((found) => (found ? undefined : filesNotDownloaded.push(file.replace(preBuildsFolder, ''))))
+            )
     );
 
     if (filesNotDownloaded.length && typeof process.env.VSC_VSCE_TARGET !== 'string') {
@@ -238,9 +242,33 @@ async function verifyZmqBinaries() {
  */
 function deleteElectronBinaries() {
     const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'prebuilds');
-    glob.sync('**/electron.napi.*.node', { sync: true, cwd: preBuildsFolder }).forEach((file) => {
+    glob.sync('**/electron.*.node', { sync: true, cwd: preBuildsFolder }).forEach((file) => {
         console.log(`Deleting ${file}`);
         fs.rmSync(path.join(preBuildsFolder, file), { force: true });
+    });
+}
+
+/**
+ * If building platform dependencies, then delete the unwanted files.
+ */
+function keepOnlyPlatformSpecificFallbackZmqBinaries() {
+    const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'prebuilds');
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
+        return;
+    }
+    const preBuildsFoldersToKeep = common.getZeroMQPreBuildsFoldersToKeep();
+    console.log(`ZMQ PreBuilds folders to keep ${preBuildsFoldersToKeep.join(', ')}`);
+    if (preBuildsFoldersToKeep.length === 0) {
+        return;
+    }
+    glob.sync('**/*.node', { sync: true, cwd: preBuildsFolder }).forEach((file) => {
+        if (preBuildsFoldersToKeep.some((preBuildsFolderName) => file.includes(preBuildsFolderName))) {
+            return;
+        }
+        if (fs.existsSync(file)) {
+            console.log(`Deleting folder ${path.dirname(file)}`);
+            fs.rmSync(path.join(preBuildsFolder, file), { force: true, recursive: true });
+        }
     });
 }
 
@@ -253,6 +281,7 @@ async function deleteZMQBuildFolder() {
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
         deleteElectronBinaries();
+        keepOnlyPlatformSpecificFallbackZmqBinaries();
         await verifyZmqBinaries();
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
