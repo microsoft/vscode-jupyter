@@ -56,14 +56,14 @@ extends:
       - script: |
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
-        displayName: Install dependencies for zeromq.js
+        displayName: Install zmq dependencies
         condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'))
 
       - script: npm i -g npm@8.15.1
-        displayName: Install npm 8.15.1
+        displayName: npm 8.15.1
 
       - script: npm ci --foreground-scripts
-        displayName: Install dependencies
+        displayName: npm ci
         env:
           npm_config_build_from_source: true
           VSC_PACKAGE_ARCH: $(packageArch)
