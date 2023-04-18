@@ -211,11 +211,12 @@ async function downloadZmqBinaries() {
             options = { linux: ['arm64'] };
         } else if (target.includes('arm') && !target.includes('armhf')) {
             options = { linux: ['arm'] };
-        } else if (target.includes('alpine')) {
-            options = { linux: ['alpine'] };
         } else {
             options = { linux: [] };
         }
+    } else if (target.includes('alpine')) {
+        // We do not have alpine binaries for linux arm64.
+        options = { linux: ['alpine'] };
     } else if (target.includes('darwin')) {
         if (target.includes('x64')) {
             options = { darwin: ['x64'] };
@@ -230,6 +231,7 @@ async function downloadZmqBinaries() {
         } else if (target.includes('ia32')) {
             options = { win32: ['ia32'] };
         } else {
+            // We do not have arm64 binaries for win32 arm64.
             options = { win32: [] };
         }
     } else if (target.includes('web')) {

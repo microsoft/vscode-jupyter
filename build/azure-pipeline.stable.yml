@@ -38,7 +38,9 @@ extends:
         packageArch: arm
         vsceTarget: linux-armhf
       - name: Linux
-        vsceTarget: linux-alpine
+        vsceTarget: alpine-x64
+      - name: Linux
+        vsceTarget: alpine-arm64
       - name: Linux
         packageArch: x64
         vsceTarget: linux-x64
