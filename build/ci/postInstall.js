@@ -244,4 +244,7 @@ fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
 downloadZmqBinaries()
     .then(() => process.exit(0))
-    .catch((ex) => console.error('Failed to download ZMQ', ex));
+    .catch((ex) => {
+        console.error('Failed to download ZMQ', ex);
+        process.exit(1);
+    });
