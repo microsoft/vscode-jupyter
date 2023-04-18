@@ -8,14 +8,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
 
-const targetFile = path.join(
-    constants.ExtensionRootDir,
-    'node_modules',
-    '@vscode',
-    'zeromq',
-    'lib',
-    'download.js'
-);
+const targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'lib', 'download.js');
 fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'download.js')));
 const { downloadZMQ } = require('@vscode/zeromq');
 /**
