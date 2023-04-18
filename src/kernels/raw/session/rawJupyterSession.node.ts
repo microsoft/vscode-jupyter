@@ -3,7 +3,7 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
-import { CancellationError, CancellationTokenSource, Memento, Uri } from 'vscode';
+import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import {
     Cancellation,
@@ -57,8 +57,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         workingDirectory: Uri,
         interruptTimeout: number,
         kernelConnection: KernelConnectionMetadata,
-        private readonly launchTimeout: number,
-        private readonly globalMemento: Memento
+        private readonly launchTimeout: number
     ) {
         super(resource, kernelConnection, workingDirectory, interruptTimeout);
     }
@@ -238,7 +237,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         process: IKernelProcess
     ): Promise<RawSession> {
         // Create our raw session, it will own the process lifetime
-        const result = new RawSession(process, this.resource, this.globalMemento);
+        const result = new RawSession(process, this.resource);
 
         try {
             // Wait for it to be ready

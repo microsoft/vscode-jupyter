@@ -144,13 +144,16 @@ export class Decorator implements IExtensionSyncActivationService, IDisposable {
                     const currentRange = cells.map((c) => c.range).filter((r) => r.contains(editor.selection.anchor));
                     const rangeTop =
                         currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
+                    // no need to decorate the bottom if we're decorating all cells
                     const rangeBottom =
-                        currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
+                        settings.decorateCells !== 'allCells' && currentRange.length > 0
+                            ? [new vscode.Range(currentRange[0].end, currentRange[0].end)]
+                            : [];
                     const nonCurrentCells: vscode.Range[] = [];
                     if (settings.decorateCells === 'allCells')
                         cells.forEach((cell) => {
                             const cellTop = cell.range.start;
-                            if (cellTop !== currentRange[0].start && cellTop.line - 1 !== currentRange[0].end.line) {
+                            if (cellTop !== currentRange[0].start) {
                                 nonCurrentCells.push(new vscode.Range(cellTop, cellTop));
                             }
                         });

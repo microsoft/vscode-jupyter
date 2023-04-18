@@ -3,7 +3,7 @@
 
 import * as vscode from 'vscode';
 import uuid from 'uuid/v4';
-import { injectable, inject, named } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -12,9 +12,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     Resource,
-    IDisplayOptions,
-    IMemento,
-    GLOBAL_MEMENTO
+    IDisplayOptions
 } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -46,8 +44,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
         @inject(IRawNotebookSupportedService)
         private readonly rawNotebookSupportedService: IRawNotebookSupportedService,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: vscode.Memento
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
     }
@@ -89,8 +86,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 vscode.Uri.file(workingDirectory),
                 interruptTimeout,
                 kernelConnection,
-                launchTimeout,
-                this.memento
+                launchTimeout
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec

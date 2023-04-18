@@ -461,7 +461,7 @@ make this extension useful:
 1. Validate remote Jupyter Server connections when attempting to start a kernel.
    ([#8043](https://github.com/Microsoft/vscode-jupyter/issues/8043))
 1. Fix to provide autocomplete inside of quoted strings. This fix also enabled a setting to allow the use of Jedi for completions in a kernel, but should be used with caution. Jedi can hang the kernel preventing exeuction from happening.
-   ([#8893](https://github.com/Microsoft/vscode-jupyter/issues/8893))
+   ([#8983](https://github.com/Microsoft/vscode-jupyter/issues/8983))
 1. Clear locally saved connection info when we run the server clear command.
    ([#8956](https://github.com/Microsoft/vscode-jupyter/issues/8956))
 1. Ensure the format progress message disappears once export has completed.

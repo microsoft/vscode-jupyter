@@ -16,7 +16,6 @@ import { IKernelSocket } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
 import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
-import { Memento } from 'vscode';
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
@@ -67,8 +66,7 @@ export class RawKernel implements Kernel.IKernelConnection {
     constructor(
         private realKernel: Kernel.IKernelConnection,
         socket: IKernelSocket & IWebSocketLike & IDisposable,
-        private kernelProcess: IKernelProcess,
-        private readonly globalMemento: Memento
+        private kernelProcess: IKernelProcess
     ) {
         // Save this raw socket as our kernel socket. It will be
         // used to watch and respond to kernel messages.
@@ -86,7 +84,7 @@ export class RawKernel implements Kernel.IKernelConnection {
     public clone(
         options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>
     ): Kernel.IKernelConnection {
-        return createRawKernel(this.kernelProcess, options?.clientId || this.clientId, this.globalMemento);
+        return createRawKernel(this.kernelProcess, options?.clientId || this.clientId);
     }
 
     public async shutdown(): Promise<void> {
@@ -272,7 +270,7 @@ export class RawKernel implements Kernel.IKernelConnection {
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
-export function createRawKernel(kernelProcess: IKernelProcess, clientId: string, globalMemento: Memento): RawKernel {
+export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
@@ -281,12 +279,7 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string,
     let socketInstance: any;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(
-                kernelProcess.connection,
-                jupyterLabSerialize.serialize,
-                jupyterLabSerialize.deserialize,
-                globalMemento
-            );
+            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
             socketInstance = this;
         }
     }
@@ -317,5 +310,5 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string,
     });
 
     // Use this real kernel in result.
-    return new RawKernel(realKernel, socketInstance, kernelProcess, globalMemento);
+    return new RawKernel(realKernel, socketInstance, kernelProcess);
 }
