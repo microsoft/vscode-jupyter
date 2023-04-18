@@ -189,7 +189,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
 
     private async restartKernelAndRunUpToSelectedCell(notebookUri: Uri | undefined) {
         const activeNBE = this.notebookEditorProvider.activeNotebookEditor;
-        if(activeNBE) {
+        if (activeNBE) {
             const uri = notebookUri ?? activeNBE.notebook.uri;
             await this.restartKernel(uri);
             this.commandManager
