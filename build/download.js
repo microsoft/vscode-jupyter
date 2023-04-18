@@ -70,8 +70,8 @@ function downloadWin(url, dest, opts) {
     });
 }
 
-async function download(_url, dest, opts) {
-    const proxy = proxy_from_env.getProxyForUrl(url.parse(_url));
+async function download(url, dest, opts) {
+    const proxy = proxy_from_env.getProxyForUrl(url.parse(url));
     if (proxy !== '') {
         var HttpsProxyAgent = require('https-proxy-agent');
         opts = {
@@ -88,10 +88,10 @@ async function download(_url, dest, opts) {
     if (isWindows) {
         // This alternative strategy shouldn't be necessary but sometimes on Windows the file does not get closed,
         // so unzipping it fails, and I don't know why.
-        return downloadWin(_url, dest, opts);
+        return downloadWin(url, dest, opts);
     }
 
-    if (opts.headers && opts.headers.authorization && !isGithubUrl(_url)) {
+    if (opts.headers && opts.headers.authorization && !isGithubUrl(url)) {
         delete opts.headers.authorization;
     }
 
@@ -99,7 +99,7 @@ async function download(_url, dest, opts) {
         console.log(`Download options: ${JSON.stringify(opts)}`);
         const outFile = fs.createWriteStream(dest);
         const mergedOpts = {
-            ...url.parse(_url),
+            ...url.parse(url),
             ...opts
         };
         https
@@ -108,7 +108,7 @@ async function download(_url, dest, opts) {
                     console.log('Following redirect to: ' + response.headers.location);
                     return download(response.headers.location, dest, opts).then(resolve, reject);
                 } else if (response.statusCode !== 200) {
-                    reject(new Error('Download failed with ' + response.statusCode));
+                    reject(new Error(`Download ${url} failed with ${response.statusCode}`));
                     return;
                 }
 
