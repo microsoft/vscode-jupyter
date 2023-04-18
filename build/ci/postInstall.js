@@ -7,6 +7,17 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
+
+const targetFile = path.join(
+    constants.ExtensionRootDir,
+    'node_modules',
+    'node_modules',
+    '@vscode',
+    'zeromq',
+    'lib',
+    'download.js'
+);
+fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'download.js')));
 const { downloadZMQ } = require('@vscode/zeromq');
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
