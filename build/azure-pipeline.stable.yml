@@ -57,7 +57,7 @@ extends:
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
         displayName: Install dependencies for zeromq.js
-        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'web'))
+        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'))
 
       - script: npm i -g npm@8.15.1
         displayName: Install npm 8.15.1
