@@ -265,7 +265,7 @@ function keepOnlyPlatformSpecificFallbackZmqBinaries() {
         if (preBuildsFoldersToKeep.some((preBuildsFolderName) => file.includes(preBuildsFolderName))) {
             return;
         }
-        if (fs.existsSync(file)) {
+        if (fs.existsSync(path.join(preBuildsFolder, file))) {
             console.log(`Deleting folder ${path.dirname(file)}`);
             fs.rmSync(path.join(preBuildsFolder, file), { force: true, recursive: true });
         }
