@@ -69,7 +69,7 @@ extends:
           VSC_PACKAGE_ARCH: $(packageArch)
           VSC_VSCE_TARGET: $(vsceTarget)
 
-      - script: npx gulp clean
+      - script: npm run clean
         displayName: Clean
 
       - task: UsePythonVersion@0
