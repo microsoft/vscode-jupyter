@@ -38,3 +38,29 @@ function getListOfExistingModulesInOutDir() {
     return files.map((filePath) => `./${filePath.slice(0, -3)}`);
 }
 exports.getListOfExistingModulesInOutDir = getListOfExistingModulesInOutDir;
+
+const bundleConfiguration = {
+    // We are bundling for both Web and Desktop.
+    webAndDesktop: 'webAndDesktop',
+    // We are bundling for both Web only.
+    web: 'web',
+    // We are bundling for both Desktop only.
+    desktop: 'desktop'
+};
+/**
+ * Gets the bundle configuration based on the environment variable.
+ * @return {'webAndDesktop' | 'web' | 'desktop'}
+ */
+function getBundleConfiguration() {
+    if (process.env.VSC_VSCE_TARGET === 'web') {
+        return bundleConfiguration.web;
+    } else if (process.env.VSC_VSCE_TARGET === undefined) {
+        // Building locally or on Github actions, when we're not creating platform specific bundles.
+        return bundleConfiguration.webAndDesktop;
+    } else {
+        return bundleConfiguration.desktop;
+    }
+}
+
+exports.bundleConfiguration = bundleConfiguration;
+exports.getBundleConfiguration = getBundleConfiguration;

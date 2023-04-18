@@ -24,6 +24,7 @@ const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 const { dumpTestSummary } = require('./build/webTestReporter');
 const { Validator } = require('jsonschema');
 const { stripVTControlCharacters } = require('util');
+const common = require('./build/webpack/common');
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -260,6 +261,10 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
 }
 
 gulp.task('webpack-dependencies', async () => {
+    // No need to build dependencies for web.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
+        return;
+    }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
 });
 
