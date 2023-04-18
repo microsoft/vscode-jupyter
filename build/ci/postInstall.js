@@ -221,12 +221,16 @@ async function downloadZmqBinaries() {
             options = { darwin: ['x64'] };
         } else if (target.includes('arm64')) {
             options = { darwin: ['arm64'] };
+        } else {
+            options = { darwin: [] };
         }
     } else if (target.includes('win32')) {
         if (target.includes('x64')) {
             options = { win32: ['x64'] };
         } else if (target.includes('ia32')) {
-            options = { darwin: ['ia32'] };
+            options = { win32: ['ia32'] };
+        } else {
+            options = { win32: [] };
         }
     } else if (target.includes('web')) {
         // No need to download zmq binaries for web.
