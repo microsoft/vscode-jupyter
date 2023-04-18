@@ -468,6 +468,7 @@ function getAssetsToDownload(assets, platformOptions) {
     console.log(
         `Filtered ${assets.length} assets (${assets.map((a) => a.name).join(', ')}) to be downloaded for vscode-zeromq`
     );
+    return assets;
 }
 
 module.exports.getAssetsToDownload = getAssetsToDownload;
