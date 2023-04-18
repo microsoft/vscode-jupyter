@@ -103,9 +103,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 Commands.RestartKernelAndRunUpToSelectedCell,
                 (context?: { notebookEditor: { notebookUri: Uri } }) => {
                     if (context && 'notebookEditor' in context) {
-                        this.RestartKernelAndRunUpToSelectedCell(context?.notebookEditor?.notebookUri).catch(noop);
+                        this.restartKernelAndRunUpToSelectedCell(context?.notebookEditor?.notebookUri).catch(noop);
                     } else {
-                        this.RestartKernelAndRunUpToSelectedCell(context).catch(noop);
+                        this.restartKernelAndRunUpToSelectedCell(context).catch(noop);
                     }
                 }
             )
@@ -187,14 +187,14 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         this.runAllCells();
     }
 
-    private async RestartKernelAndRunUpToSelectedCell(notebookUri: Uri | undefined) {
-        const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
-
-        await this.restartKernel(uri);
-        if (this.notebooks.activeNotebookEditor) {
+    private async restartKernelAndRunUpToSelectedCell(notebookUri: Uri | undefined) {
+        const activeNBE = this.notebookEditorProvider.activeNotebookEditor;
+        if(activeNBE) {
+            const uri = notebookUri ?? activeNBE.notebook.uri;
+            await this.restartKernel(uri);
             this.commandManager
                 .executeCommand('notebook.cell.execute', {
-                    ranges: [{ start: 0, end: this.notebooks.activeNotebookEditor.selection.end }],
+                    ranges: [{ start: 0, end: activeNBE.selection.end }],
                     document: uri
                 })
                 .then(noop, noop);
