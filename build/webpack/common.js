@@ -63,39 +63,50 @@ function getBundleConfiguration() {
 }
 
 function getZeroMQPreBuildsFoldersToKeep() {
-    if (process.env.VSC_VSCE_TARGET === 'web') {
+    // Possible values of 'VSC_VSCE_TARGET' include platforms supported by `vsce package --target`
+    // See here https://code.visualstudio.com/api/working-with-extensions/publishing-extension#platformspecific-extensions
+    const vsceTarget = process.env.VSC_VSCE_TARGET;
+    if (!vsceTarget) {
+        // Keep all of them, as we're not building platform specific bundles.
         return [];
-    } else if (process.env.VSC_VSCE_TARGET === undefined) {
-        // These all the prebuilds folders for zmq v6 beta 6
-        return ['darwin-x64', 'linux-arm', 'linux-arm64', 'linux-x64', 'win32-ia32', 'win32-x64'];
-    } else if (process.env.VSC_VSCE_TARGET.includes('win32')) {
-        if (process.env.VSC_VSCE_TARGET.includes('ia32')) {
+    } else if (vsceTarget === 'web') {
+        throw new Error('Not supported when targeting the Web');
+    } else if (vsceTarget.includes('win32')) {
+        if (vsceTarget.includes('ia32')) {
             return ['win32-ia32'];
-        } else if (process.env.VSC_VSCE_TARGET.includes('x64')) {
+        } else if (vsceTarget.includes('x64')) {
             return ['win32-x64'];
         } else {
             return ['win32-ia32', 'win32-x64'];
         }
-    } else if (process.env.VSC_VSCE_TARGET.includes('linux')) {
-        if (process.env.VSC_VSCE_TARGET.includes('arm64')) {
+    } else if (vsceTarget.includes('linux')) {
+        if (vsceTarget.includes('arm64')) {
             return ['linux-arm64'];
-        } else if (process.env.VSC_VSCE_TARGET.includes('x64')) {
+        } else if (vsceTarget.includes('x64')) {
             return ['linux-x64'];
-        } else if (process.env.VSC_VSCE_TARGET.includes('arm')) {
+        } else if (vsceTarget.includes('arm')) {
             return ['linux-arm'];
-        } else if (process.env.VSC_VSCE_TARGET.includes('alpine')) {
+        } else {
+            return ['linux-arm64', 'linux-x64', 'linux-arm'];
+        }
+    } else if (vsceTarget.includes('alpine')) {
+        if (vsceTarget.includes('arm64')) {
+            return ['linux-arm64'];
+        } else if (vsceTarget.includes('x64')) {
             return ['linux-x64'];
         } else {
-            return ['linux-arm64', 'linux-x64', 'linux-arm', 'linux-x64'];
+            return ['linux-arm64', 'linux-x64', 'linux-arm'];
+        }
+   } else if (vsceTarget.includes('darwin')) {
+        if (vsceTarget.includes('arm64')) {
+            return ['darwin-arm64'];
+        } else if (vsceTarget.includes('x64')) {
+            return ['darwin-x64'];
+        } else {
+            return ['darwin-x64', 'darwin-arm64'];
         }
     } else {
-        if (process.env.VSC_VSCE_TARGET.includes('arm64')) {
-            return [];
-        } else if (process.env.VSC_VSCE_TARGET.includes('x64')) {
-            return ['darwin-x64'];
-        } else {
-            return ['darwin-x64'];
-        }
+        throw new Error(`Unknown platform '${vsceTarget}'}`);
     }
 }
 

@@ -7,6 +7,7 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
+const common = require('../webpack/common');
 
 const targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'lib', 'download.js');
 fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'download.js')));
@@ -202,43 +203,20 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
     }
 }
 async function downloadZmqBinaries() {
-    const target = process.env.VSC_VSCE_TARGET || '';
-    let options = undefined;
-    if (target.includes('linux')) {
-        if (target.includes('x64')) {
-            options = { linux: ['x64'] };
-        } else if (target.includes('arm64')) {
-            options = { linux: ['arm64'] };
-        } else if (target.includes('arm') && !target.includes('armhf')) {
-            options = { linux: ['arm'] };
-        } else {
-            options = { linux: [] };
-        }
-    } else if (target.includes('alpine')) {
-        // We do not have alpine binaries for linux arm64.
-        options = { linux: ['alpine'] };
-    } else if (target.includes('darwin')) {
-        if (target.includes('x64')) {
-            options = { darwin: ['x64'] };
-        } else if (target.includes('arm64')) {
-            options = { darwin: ['arm64'] };
-        } else {
-            options = { darwin: [] };
-        }
-    } else if (target.includes('win32')) {
-        if (target.includes('x64')) {
-            options = { win32: ['x64'] };
-        } else if (target.includes('ia32')) {
-            options = { win32: ['ia32'] };
-        } else {
-            // We do not have arm64 binaries for win32 arm64.
-            options = { win32: [] };
-        }
-    } else if (target.includes('web')) {
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
         // No need to download zmq binaries for web.
         return;
     }
+    const target = process.env.VSC_VSCE_TARGET || '';
+    let options = undefined;
+    if (target.includes('win32')) {
+        // Non-window binaries are archived as .tar.gz,
+        // hence we need to download just the binaries for windows.
+        options = { win32: [] };
+    }
     await downloadZMQ(options);
+
+    await downloadZMQ();
 }
 
 fixUIFabricForTS49();
