@@ -138,6 +138,7 @@
     "jupyter.command.jupyter.restartkernel.shorttitle": "Restart",
     "jupyter.command.jupyter.restartkernelandrunallcells.title": "Restart Kernel and Run All Cells",
     "jupyter.command.jupyter.restartkernelandrunallcells.shorttitle": "Restart and Run All",
+    "jupyter.command.jupyter.restartkernelandrunuptoselectedcell.title": "Restart Kernel and Run Up To Selected Cell",
     "jupyter.command.jupyter.expandallcells.title": "Expand All Interactive Cells",
     "jupyter.command.jupyter.collapseallcells.title": "Collapse All Interactive Cells",
     "jupyter.command.jupyter.expandallcells.shorttitle": "Expand",

@@ -68,6 +68,13 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, () => this.expandAll())
         );
         this.disposableRegistry.push(
+            // TODO: if contributed anywhere, add context support
+            this.commandManager.registerCommand(Commands.RestartKernelAndRunUpToSelectedCell, () =>
+                this.restartKernelAndRunUpToSelectedCell()
+            )
+        );
+
+        this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
@@ -173,6 +180,20 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     private async restartKernelAndRunAllCells(notebookUri: Uri | undefined) {
         await this.restartKernel(notebookUri);
         this.runAllCells();
+    }
+
+    private async restartKernelAndRunUpToSelectedCell() {
+        const activeNBE = this.notebookEditorProvider.activeNotebookEditor;
+
+        if (activeNBE) {
+            await this.restartKernel(activeNBE.notebook.uri);
+            this.commandManager
+                .executeCommand('notebook.cell.execute', {
+                    ranges: [{ start: 0, end: activeNBE.selection.end }],
+                    document: activeNBE.notebook.uri
+                })
+                .then(noop, noop);
+        }
     }
 
     private async restartKernel(notebookUri: Uri | undefined): Promise<void> {
