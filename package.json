@@ -631,7 +631,7 @@
                 "title": "%jupyter.command.jupyter.restartkernelandrunuptoselectedcell.title%",
                 "shortTitle": "%jupyter.command.jupyter.restartkernelandrunuptoselectedcell.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && (jupyter.interactive.canRestartNotebookKernel || (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel))"
+                "enablement": "isWorkspaceTrusted && (notebookKernel =~ /^ms-toolsai.jupyter\\// && jupyter.notebookeditor.canrestartNotebookkernel)"
             },
             {
                 "command": "jupyter.notebookeditor.addcellbelow",

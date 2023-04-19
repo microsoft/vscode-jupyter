@@ -68,6 +68,13 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, () => this.expandAll())
         );
         this.disposableRegistry.push(
+            // TODO: if contributed anywhere, add context support
+            this.commandManager.registerCommand(Commands.RestartKernelAndRunUpToSelectedCell, () =>
+                this.restartKernelAndRunUpToSelectedCell()
+            )
+        );
+
+        this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
@@ -94,18 +101,6 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                         this.restartKernelAndRunAllCells(context?.notebookEditor?.notebookUri).catch(noop);
                     } else {
                         this.restartKernelAndRunAllCells(context).catch(noop);
-                    }
-                }
-            )
-        );
-        this.disposableRegistry.push(
-            commandManager.registerCommand(
-                Commands.RestartKernelAndRunUpToSelectedCell,
-                (context?: { notebookEditor: { notebookUri: Uri } }) => {
-                    if (context && 'notebookEditor' in context) {
-                        this.restartKernelAndRunUpToSelectedCell(context?.notebookEditor?.notebookUri).catch(noop);
-                    } else {
-                        this.restartKernelAndRunUpToSelectedCell(context).catch(noop);
                     }
                 }
             )
@@ -187,15 +182,15 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         this.runAllCells();
     }
 
-    private async restartKernelAndRunUpToSelectedCell(notebookUri: Uri | undefined) {
+    private async restartKernelAndRunUpToSelectedCell() {
         const activeNBE = this.notebookEditorProvider.activeNotebookEditor;
+
         if (activeNBE) {
-            const uri = notebookUri ?? activeNBE.notebook.uri;
-            await this.restartKernel(uri);
+            await this.restartKernel(activeNBE.notebook.uri);
             this.commandManager
                 .executeCommand('notebook.cell.execute', {
                     ranges: [{ start: 0, end: activeNBE.selection.end }],
-                    document: uri
+                    document: activeNBE.notebook.uri
                 })
                 .then(noop, noop);
         }
