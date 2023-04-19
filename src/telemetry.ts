@@ -1967,6 +1967,99 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Information used to determine the zmq binary support.
+     * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
+     */
+    [Telemetry.ZMQSupportFailure]: TelemetryEventInfo<{
+        /**
+         * Failed to support zmq.
+         */
+        failed: boolean;
+        /**
+         * Whether we tried a fallback to to the older versions of the binaries.
+         */
+        fallbackTried?: boolean;
+        /**
+         * Whether alpine or not.
+         */
+        alpine?: boolean;
+        /**
+         * libc implementation, from env variable LIBC
+         * If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)
+         */
+        libc?: string;
+        /**
+         * arch
+         */
+        zmqarch?: string;
+        /**
+         * arm version
+         */
+        armv?: string;
+        /**
+         * Linux distro id.
+         */
+        distro_id: string;
+        /**
+         * Linux distro version id.
+         */
+        distro_version_id: string;
+        /**
+         * Error message when azure build module fails to load.
+         */
+        errorMessage?: string;
+        /**
+         * Error message when fallback module fails to load.
+         */
+        fallbackErrorMessage?: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            fallbackTried: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            alpine: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            zmqarch: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            libc: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            armv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_version_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            errorMessage: {
+                classification: 'CallstackOrException',
+                purpose: 'FeatureInsight'
+            },
+            fallbackErrorMessage: {
+                classification: 'CallstackOrException',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
      * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
      */
     [Telemetry.JupyterInstalledButNotKernelSpecModule]: TelemetryEventInfo<never | undefined> = {

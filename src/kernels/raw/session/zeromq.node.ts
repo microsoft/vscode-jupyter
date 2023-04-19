@@ -21,10 +21,10 @@ export function getZeroMQ(): typeof import('zeromq') {
             const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
             const zmq = requireFunc(path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules', 'zeromqold'));
             traceInfo('ZMQ loaded via fallback mechanism.');
-            sendZMQTelemetry(false, true).catch(noop);
+            sendZMQTelemetry(false, true, e.message || e.toString()).catch(noop);
             return zmq;
         } catch (e2) {
-            sendZMQTelemetry(true, true).catch(noop);
+            sendZMQTelemetry(true, true, e.message || e.toString(), e2.message || e2.toString()).catch(noop);
             traceWarning(`Exception while attempting zmq :`, e.message || e); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
             traceWarning(`Exception while attempting zmq (fallback) :`, e2.message || e2); // No need to display the full stack (when this fails we know why if fails, hence a stack is not useful)
             throw e2;
@@ -32,7 +32,12 @@ export function getZeroMQ(): typeof import('zeromq') {
     }
 }
 
-async function sendZMQTelemetry(failed: boolean, fallbackTried: boolean = false) {
+async function sendZMQTelemetry(
+    failed: boolean,
+    fallbackTried: boolean = false,
+    errorMessage = '',
+    fallbackErrorMessage = ''
+) {
     const distro = await getDistroInfo().catch(() => <DistroInfo>{ id: '', version_id: '' });
     const platformInfo = getPlatformInfo();
     sendTelemetryEvent(Telemetry.ZMQSupport, undefined, {
@@ -44,6 +49,18 @@ async function sendZMQTelemetry(failed: boolean, fallbackTried: boolean = false)
         libc: platformInfo.libc,
         armv: platformInfo.armv,
         zmqarch: platformInfo.zmqarch
+    });
+    sendTelemetryEvent(Telemetry.ZMQSupportFailure, undefined, {
+        distro_id: distro.id,
+        distro_version_id: distro.version_id,
+        failed,
+        fallbackTried,
+        alpine: platformInfo.alpine,
+        libc: platformInfo.libc,
+        armv: platformInfo.armv,
+        zmqarch: platformInfo.zmqarch,
+        errorMessage,
+        fallbackErrorMessage
     });
 }
 function isAlpine(platform: string) {
