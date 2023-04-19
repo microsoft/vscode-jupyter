@@ -215,8 +215,6 @@ async function downloadZmqBinaries() {
         options = { win32: [] };
     }
     await downloadZMQ(options);
-
-    await downloadZMQ();
 }
 
 fixUIFabricForTS49();
