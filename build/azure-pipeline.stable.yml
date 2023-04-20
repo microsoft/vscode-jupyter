@@ -58,6 +58,13 @@ extends:
         vsceTarget: win32-x64
     buildSteps:
       - script: ls
+      - script: |
+          mkdir -p temp
+          tar -xf beats-internal.tar.gz -C ./temp
+        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
+      - bash: ls -LR
+        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
+        workingDirectory: ./temp
 
       - script: |
           sudo apt-get update
