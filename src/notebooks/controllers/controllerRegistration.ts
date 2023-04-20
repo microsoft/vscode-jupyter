@@ -169,6 +169,9 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                 .map((c) => `${c.connection.kind}:${c.connection.id}`)
                 .join('\n')}`
         );
+        traceInfoIfCI(
+            `Active Interpreter Kernels include ${Array.from(this._activeInterpreterControllerIds).join('\n')}`
+        );
         // Look for any controllers that we have disposed (no longer found when fetching)
         const disposedControllers = Array.from(this.registered).filter((controller) => {
             const connectionIsStillValid =
