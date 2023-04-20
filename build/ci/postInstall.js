@@ -8,15 +8,6 @@ const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
 const common = require('../webpack/common');
-
-let targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'lib', 'download.js');
-fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'download.js')));
-targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'build', 'download.js');
-fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'downloadBuild.js')));
-targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'build', 'prePublish.js');
-fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'prePublish.js')));
-targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'lib', 'index.js');
-fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'zmqIndex.js')));
 const { downloadZMQ } = require('@vscode/zeromq');
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
@@ -213,16 +204,6 @@ async function downloadZmqBinaries() {
         // No need to download zmq binaries for web.
         return;
     }
-    const prePublish = path.join(
-        constants.ExtensionRootDir,
-        'node_modules',
-        '@vscode',
-        'zeromq',
-        'build',
-        'prePublish.js'
-    );
-    console.log(prePublish);
-    await require(prePublish).downloadZMQ();
     await downloadZMQ();
 }
 
