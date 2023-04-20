@@ -16,8 +16,15 @@ const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.exten
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 const buildBundle = common.getBundleConfiguration() !== common.bundleConfiguration.web;
 
-function shouldCopyFileFromZmqFolder(resourcePath) {
+function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
+    console.error(parentFolder, resourcePath);
     resourcePath = (resourcePath || '').toLowerCase();
+    // We do not need to bundle these folders
+    const foldersToIgnore = ['build', 'script', 'src', 'node_modules', 'vendor'];
+    if (foldersToIgnore.some((folder) => resourcePath.includes(path.join(parentFolder, folder)))) {
+        return;
+    }
+
     if (
         resourcePath.endsWith('.js') ||
         resourcePath.endsWith('.json') ||
@@ -168,12 +175,12 @@ const config = {
                           { from: './node_modules/@aminya/node-gyp-build/**/*' },
                           {
                               from: './node_modules/zeromq/**/*',
-                              filter: shouldCopyFileFromZmqFolder
+                              filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromq')
                           },
                           // Copy files from fallback zmq package.
                           {
                               from: './node_modules/zeromqold/**/*',
-                              filter: shouldCopyFileFromZmqFolder
+                              filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromqold')
                           },
                           { from: './node_modules/node-gyp-build/**/*' }
                       ]

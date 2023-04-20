@@ -27,9 +27,4 @@ async function downloadZMQ() {
   await download(downloadOptions);
 }
 
-downloadZMQ()
-  .then(() => process.exit(0))
-  .catch((ex) => {
-    console.error("Failed to download ZMQ", ex);
-    process.exit(1);
-  });
+module.exports.downloadZMQ = downloadZMQ;

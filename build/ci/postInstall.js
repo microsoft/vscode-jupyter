@@ -13,7 +13,7 @@ let targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode'
 fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'download.js')));
 targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'build', 'download.js');
 fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'downloadBuild.js')));
-targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'build', 'prePublis.js');
+targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'build', 'prePublish.js');
 fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'prePublish.js')));
 targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'lib', 'index.js');
 fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'zmqIndex.js')));
@@ -213,7 +213,16 @@ async function downloadZmqBinaries() {
         // No need to download zmq binaries for web.
         return;
     }
-    await require(path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'build', 'prePublish.js')).downloadZMQ();
+    const prePublish = path.join(
+        constants.ExtensionRootDir,
+        'node_modules',
+        '@vscode',
+        'zeromq',
+        'build',
+        'prePublish.js'
+    );
+    console.log(prePublish);
+    await require(prePublish).downloadZMQ();
     await downloadZMQ();
 }
 

@@ -33,16 +33,8 @@ module.exports.downloadZMQ = async (options, force) => {
       )})`
     );
   }
-  await Promise.all([
-    // Delete to ensure we always download (this guarantees the fact that the binaries are what we expect them to be).
-    deleteZmqFolder("prebuilds"),
-    // Delete folders that should not be shipped with the package.
-    deleteZmqFolder("build"),
-    deleteZmqFolder("script"),
-    deleteZmqFolder("script"),
-    deleteZmqFolder("src"),
-    deleteZmqFolder("node_modules"),
-  ]);
+  // Delete to ensure we always download (this guarantees the fact that the binaries are what we expect them to be).
+  await deleteZmqFolder("prebuilds");
 
   const downloadOptions = {
     destination,
