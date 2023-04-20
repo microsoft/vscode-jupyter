@@ -17,7 +17,6 @@ import { IDisposable } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
 import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
-import { OS } from '../platform/vscode-path/platform';
 
 export { createEventHandler } from './common';
 
