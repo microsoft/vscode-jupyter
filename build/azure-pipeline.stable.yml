@@ -61,9 +61,15 @@ extends:
       - script: |
           mkdir -p temp
           tar -xf beats-internal.tar.gz -C ./temp
-        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
+        condition: and(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
       - bash: ls -LR
-        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
+        condition: and(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
+        workingDirectory: ./temp
+      - bash: cat LICENSE.txt
+        condition: and(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
+        workingDirectory: ./temp
+      - bash: cat NOTICE.txt
+        condition: and(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
         workingDirectory: ./temp
 
       - script: |
