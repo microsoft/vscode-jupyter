@@ -18,6 +18,7 @@ docs/**
 .nvmrc
 .nycrc
 .travis.yml
+beats-internal.tar.gz
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
 CONTRIBUTING.md

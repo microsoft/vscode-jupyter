@@ -57,38 +57,20 @@ extends:
         packageArch: x64
         vsceTarget: win32-x64
     buildSteps:
-      - script: ls
-      - script: |
-          mkdir -p temp
-          tar -xf beats-internal.tar.gz -C ./temp
-        condition: and(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
-      - bash: ls -LR
-        condition: and(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
-        workingDirectory: ./temp
-      - bash: cat LICENSE.txt
-        condition: and(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
-        workingDirectory: ./temp
-      - bash: cat NOTICE.txt
-        condition: and(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'darwin'))
-        workingDirectory: ./temp
-
       - script: |
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
         displayName: Install zmq dependencies
-        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'))
+        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'alpine'))
 
-      - script: ls
       - script: npm i -g npm@8.15.1
         displayName: npm 8.15.1
-      - script: ls
 
       - script: npm ci --foreground-scripts
         displayName: npm ci
         env:
           npm_config_build_from_source: true
           VSC_VSCE_TARGET: $(vsceTarget)
-      - script: ls
 
       - script: npm run clean
         displayName: Clean
@@ -109,5 +91,3 @@ extends:
         displayName: Build
         env:
           VSC_VSCE_TARGET: $(vsceTarget)
-
-      - script: ls
