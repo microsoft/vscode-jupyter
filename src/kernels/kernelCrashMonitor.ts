@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { NotebookCell } from 'vscode';
@@ -57,7 +56,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         if (kernel.session.kind === 'localRaw' && kernel.status === 'dead') {
             this.applicationShell
                 .showErrorMessage(
-                    DataScience.kernelDiedWithoutError().format(
+                    DataScience.kernelDiedWithoutError(
                         getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
                     )
                 )
@@ -72,7 +71,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         if (kernel.session.kind !== 'localRaw' && kernel.status === 'autorestarting') {
             this.applicationShell
                 .showErrorMessage(
-                    DataScience.kernelDiedWithoutErrorAndAutoRestarting().format(
+                    DataScience.kernelDiedWithoutErrorAndAutoRestarting(
                         getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
                     )
                 )
@@ -90,7 +89,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         return endCellAndDisplayErrorsInCell(
             lastExecutedCell,
             kernel.controller,
-            DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell(),
+            DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell,
             false
         );
     }

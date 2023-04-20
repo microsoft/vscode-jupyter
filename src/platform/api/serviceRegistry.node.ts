@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IExtensionSyncActivationService } from '../activation/types';
-import { EnvironmentActivationService } from '../common/process/environmentActivationService.node';
+import { EnvironmentActivationService } from '../interpreter/environmentActivationService.node';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';

@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
+import { LocalizedMessages } from '../../../messageTypes';
+
 // The react code can't use the localize.ts module because it reads from
 // disk. This isn't allowed inside a browser, so we pass the collection
 // through the javascript.
-let loadedCollection: Record<string, string> | undefined;
+let loadedCollection: LocalizedMessages | undefined;
 
-export function getLocString(key: string, defValue: string): string {
+export function getLocString(key: keyof LocalizedMessages, defValue: string): string {
     if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
         return loadedCollection[key];
     }
@@ -15,7 +16,7 @@ export function getLocString(key: string, defValue: string): string {
     return defValue;
 }
 
-export function storeLocStrings(collection: Record<string, string>) {
+export function storeLocStrings(collection: LocalizedMessages) {
     loadedCollection = collection;
 }
 

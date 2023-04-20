@@ -7,7 +7,6 @@ import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { INotebookImporter } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../platform/common/process/types.node';
 
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
@@ -16,6 +15,7 @@ import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './ty
 import { ExportUtil } from './exportUtil.node';
 import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../platform/interpreter/types.node';
 
 /**
  * Base class for using nbconvert to perform different export operations on node
@@ -136,8 +136,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
     ): Promise<IPythonExecutionService | undefined> {
         return this.pythonExecutionFactory.createActivatedEnvironment({
             resource: source,
-            interpreter,
-            allowEnvironmentFetchExceptions: false
+            interpreter
         });
     }
 }

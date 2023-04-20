@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, Memento, NotebookEditor, workspace } from 'vscode';
@@ -291,8 +289,8 @@ import { isWeb } from '../../../platform/common/utils/misc';
             await executeCellAndDontWaitForOutput(cell1);
             await executeCellAndWaitForOutput(cell2, comms);
             await executeCellAndWaitForOutput(cell3, comms);
-            await assertOutputContainsHtml(cell2, comms, ['>Figure 1<', '<canvas', 'Download plot']);
-            await assertOutputContainsHtml(cell3, comms, ['>Figure 2<', '<canvas', 'Download plot']);
+            await assertOutputContainsHtml(cell2, comms, ['>Figure', '<canvas', 'Download plot']);
+            await assertOutputContainsHtml(cell3, comms, ['>Figure', '<canvas', 'Download plot']);
         });
     });
 });

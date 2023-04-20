@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import {
     debug,
@@ -33,7 +31,7 @@ import { traceInfo } from '../../platform/logging';
 import { ResourceSet } from '../../platform/vscode-path/map';
 import * as path from '../../platform/vscode-path/path';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IControllerLoader, IControllerRegistration } from '../controllers/types';
+import { IControllerRegistration } from '../controllers/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from './constants';
 import { DebugCellController } from './controllers/debugCellController';
 import { RestartController } from './controllers/restartController';
@@ -59,7 +57,6 @@ export class DebuggingManager
 
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(IControllerLoader) controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
@@ -69,15 +66,7 @@ export class DebuggingManager
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(
-            kernelProvider,
-            controllerLoader,
-            controllerRegistration,
-            commandManager,
-            appShell,
-            vscNotebook,
-            serviceContainer
-        );
+        super(kernelProvider, controllerRegistration, commandManager, appShell, vscNotebook, serviceContainer);
         this.runByLineCells = new ContextKey(EditorContexts.RunByLineCells, commandManager);
         this.runByLineDocuments = new ContextKey(EditorContexts.RunByLineDocuments, commandManager);
         this.debugDocuments = new ContextKey(EditorContexts.DebugDocuments, commandManager);
@@ -113,15 +102,15 @@ export class DebuggingManager
             rblDocumentUris.push(controller.debugCell.notebook.uri);
         });
 
-        this.runByLineCells.set(rblCellUris).ignoreErrors();
-        this.runByLineDocuments.set(rblDocumentUris).ignoreErrors();
+        this.runByLineCells.set(rblCellUris).catch(noop);
+        this.runByLineDocuments.set(rblDocumentUris).catch(noop);
     }
 
     private updateDebugContextKey() {
         const debugDocumentUris = new ResourceSet();
         this.notebookToDebugAdapter.forEach((_, notebook) => debugDocumentUris.add(notebook.uri));
         this.notebookInProgress.forEach((notebook) => debugDocumentUris.add(notebook.uri));
-        this.debugDocuments.set(Array.from(debugDocumentUris.values())).ignoreErrors();
+        this.debugDocuments.set(Array.from(debugDocumentUris.values())).catch(noop);
     }
 
     public async tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell, skipIpykernelCheck = false) {
@@ -265,7 +254,7 @@ export class DebuggingManager
 
             return new DebugAdapterInlineImplementation(adapter);
         } else {
-            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted()).then(noop, noop);
+            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted).then(noop, noop);
         }
 
         return;

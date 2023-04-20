@@ -138,7 +138,7 @@ suite('Kernel Connector', () => {
             KernelInterpreterDependencyResponse.failed
         );
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenReturn(
-            Promise.resolve(DataScience.restartKernel())
+            Promise.resolve(DataScience.restartKernel)
         );
         await KernelConnector.connectToNotebookKernel(
             pythonConnection,
@@ -156,9 +156,7 @@ suite('Kernel Connector', () => {
         verify(kernel.restart()).once();
         verify(
             appShell.showErrorMessage(
-                DataScience.cannotRunCellKernelIsDead().format(
-                    getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)
-                ),
+                DataScience.cannotRunCellKernelIsDead(getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)),
                 deepEqual({ modal: true }),
                 anything(),
                 anything()
@@ -189,9 +187,7 @@ suite('Kernel Connector', () => {
         verify(kernel.restart()).never();
         verify(
             appShell.showErrorMessage(
-                DataScience.cannotRunCellKernelIsDead().format(
-                    getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)
-                ),
+                DataScience.cannotRunCellKernelIsDead(getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)),
                 deepEqual({ modal: true }),
                 anything(),
                 anything()

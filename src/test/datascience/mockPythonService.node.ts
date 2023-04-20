@@ -1,13 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import {
-    ExecutionResult,
-    IPythonExecutionService,
-    ObservableExecutionResult,
-    SpawnOptions
-} from '../../platform/common/process/types.node';
+import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../../platform/common/process/types.node';
+import { IPythonExecutionService } from '../../platform/interpreter/types.node';
 import { InterpreterInformation, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { MockProcessService } from './mockProcessService';
 

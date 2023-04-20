@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
@@ -138,21 +137,21 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
     private updateNativeNotebookCellContext() {
         // Separate for debugging.
         const hasNativeCells = (this.vscNotebook.activeNotebookEditor?.notebook.cellCount || 0) > 0;
-        this.hasNativeNotebookCells.set(hasNativeCells).ignoreErrors();
+        this.hasNativeNotebookCells.set(hasNativeCells).catch(noop);
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
-        this.interactiveContext.set(!!e).ignoreErrors();
+        this.interactiveContext.set(!!e).catch(noop);
         this.updateNativeNotebookInteractiveWindowOpenContext();
         this.updateMergedContexts();
         this.updateContextOfActiveInteractiveWindowKernel();
     }
     private onDidChangeActiveNotebookEditor(e?: NotebookEditor) {
         const isJupyterNotebookDoc = e ? e.notebook.notebookType === JupyterNotebookView : false;
-        this.nativeContext.set(isJupyterNotebookDoc).ignoreErrors();
+        this.nativeContext.set(isJupyterNotebookDoc).catch(noop);
 
         this.isPythonNotebook
             .set(e && isJupyterNotebookDoc ? isPythonNotebook(getNotebookMetadata(e.notebook)) : false)
-            .ignoreErrors();
+            .catch(noop);
         this.updateContextOfActiveNotebookKernel(e);
         this.updateContextOfActiveInteractiveWindowKernel();
         this.updateNativeNotebookInteractiveWindowOpenContext();
@@ -166,7 +165,7 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
                     (nb) => nb.notebookType === JupyterNotebookView || nb.notebookType === InteractiveWindowView
                 )
             )
-            .ignoreErrors();
+            .catch(noop);
     }
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
         const kernel =
@@ -175,19 +174,19 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
                 : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
-            this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
+            this.canRestartNotebookKernelContext.set(!!canStart).catch(noop);
             const canInterrupt = kernel.status === 'busy';
-            this.canInterruptNotebookKernelContext.set(!!canInterrupt).ignoreErrors();
+            this.canInterruptNotebookKernelContext.set(!!canInterrupt).catch(noop);
         } else {
-            this.canRestartNotebookKernelContext.set(false).ignoreErrors();
-            this.canInterruptNotebookKernelContext.set(false).ignoreErrors();
+            this.canRestartNotebookKernelContext.set(false).catch(noop);
+            this.canInterruptNotebookKernelContext.set(false).catch(noop);
         }
         this.updateSelectedKernelContext();
     }
     private updateSelectedKernelContext() {
         const document =
             this.vscNotebook.activeNotebookEditor?.notebook ||
-            this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookEditor?.notebook;
+            this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookDocument;
         if (document && isJupyterNotebook(document) && this.controllers.getSelected(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
@@ -195,16 +194,16 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         }
     }
     private updateContextOfActiveInteractiveWindowKernel() {
-        const notebook = this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookEditor?.notebook;
+        const notebook = this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookDocument;
         const kernel = notebook ? this.kernelProvider.get(notebook) : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
-            this.canRestartInteractiveWindowKernelContext.set(!!canStart).ignoreErrors();
+            this.canRestartInteractiveWindowKernelContext.set(!!canStart).catch(noop);
             const canInterrupt = kernel.status === 'busy';
-            this.canInterruptInteractiveWindowKernelContext.set(!!canInterrupt).ignoreErrors();
+            this.canInterruptInteractiveWindowKernelContext.set(!!canInterrupt).catch(noop);
         } else {
-            this.canRestartInteractiveWindowKernelContext.set(false).ignoreErrors();
-            this.canInterruptInteractiveWindowKernelContext.set(false).ignoreErrors();
+            this.canRestartInteractiveWindowKernelContext.set(false).catch(noop);
+            this.canInterruptInteractiveWindowKernelContext.set(false).catch(noop);
         }
         this.updateSelectedKernelContext();
     }
@@ -228,18 +227,18 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
     private updateMergedContexts() {
         this.interactiveOrNativeContext
             .set(this.nativeContext.value === true || this.interactiveContext.value === true)
-            .ignoreErrors();
+            .catch(noop);
         this.pythonOrNativeContext
             .set(this.nativeContext.value === true || this.isPythonFileActive === true)
-            .ignoreErrors();
+            .catch(noop);
         this.pythonOrInteractiveContext
             .set(this.interactiveContext.value === true || this.isPythonFileActive === true)
-            .ignoreErrors();
+            .catch(noop);
         this.pythonOrInteractiveOrNativeContext
             .set(
                 this.nativeContext.value === true ||
                     (this.interactiveContext.value === true && this.isPythonFileActive === true)
             )
-            .ignoreErrors();
+            .catch(noop);
     }
 }

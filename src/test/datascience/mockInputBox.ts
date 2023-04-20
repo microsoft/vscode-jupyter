@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { Event, EventEmitter, InputBox, QuickInputButton } from 'vscode';
 
 export class MockInputBox implements InputBox {

@@ -1,17 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../../../../platform/common/extensions';
-
 import { CancellationToken } from 'vscode-jsonrpc';
-import { inject, named } from 'inversify';
+import { inject } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
 import { traceInfo, traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
 import {
     IAsyncDisposableRegistry,
-    IOutputChannel,
     IDisposableRegistry,
     Resource,
     IDisposable,
@@ -47,7 +42,6 @@ export class HostJupyterServer implements INotebookServer {
     constructor(
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         public connection: IJupyterConnection,
         private sessionManager: JupyterSessionManager
@@ -57,8 +51,8 @@ export class HostJupyterServer implements INotebookServer {
         this.connectionInfoDisconnectHandler = this.connection.disconnected((c) => {
             try {
                 this.serverExitCode = c;
-                traceError(DataScience.jupyterServerCrashed().format(c.toString()));
-                this.shutdown().ignoreErrors();
+                traceError(DataScience.jupyterServerCrashed(c));
+                this.shutdown().catch(noop);
             } catch {
                 noop();
             }
@@ -178,7 +172,7 @@ export class HostJupyterServer implements INotebookServer {
         );
         this.throwIfDisposedOrCancelled(cancelToken);
         const baseUrl = this.connection?.baseUrl || '';
-        this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
+        traceVerbose(DataScience.createdNewNotebook(baseUrl));
         return session;
     }
 
@@ -234,7 +228,7 @@ export class HostJupyterServer implements INotebookServer {
     public getDisposedError(): Error {
         // We may have been disposed because of a crash. See if our connection info is indicating shutdown
         if (this.serverExitCode) {
-            return new Error(DataScience.jupyterServerCrashed().format(this.serverExitCode.toString()));
+            return new Error(DataScience.jupyterServerCrashed(this.serverExitCode));
         }
 
         // Default is just say session was disposed
@@ -249,11 +243,5 @@ export class HostJupyterServer implements INotebookServer {
 
         // Save the notebook
         this.sessions.add(sessionPromise);
-    }
-
-    private logRemoteOutput(output: string) {
-        if (!this.connection?.localLaunch) {
-            this.jupyterOutputChannel.appendLine(output);
-        }
     }
 }

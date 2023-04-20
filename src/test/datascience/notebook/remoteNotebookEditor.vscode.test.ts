@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, Uri, workspace } from 'vscode';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import { RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -230,7 +230,7 @@ suite('Remote Kernel Execution', function () {
         const prompt = await hijackPrompt(
             'showErrorMessage',
             { contains: 'certificate' },
-            { result: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
+            { result: DataScience.jupyterSelfCertEnable, clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
 

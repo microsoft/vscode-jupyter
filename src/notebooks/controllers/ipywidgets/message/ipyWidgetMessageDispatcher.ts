@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type { KernelMessage } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
@@ -17,6 +15,7 @@ import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../messag
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { IKernel, IKernelProvider, KernelSocketInformation } from '../../../../kernels/types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from '../types';
+import { shouldMessageBeMirroredWithRenderer } from '../../../../kernels/kernel';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
@@ -239,6 +238,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             const msg = this.deserialize(data) as KernelMessage.IExecuteRequestMsg;
             if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
+                if (!shouldMessageBeMirroredWithRenderer(msg)) {
+                    return;
+                }
                 const promise = this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
                 // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
                 if (this.isUsingIPyWidgets) {
@@ -290,7 +292,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
 
         if (typeof data === 'string') {
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
+            if (shouldMessageBeMirroredWithRenderer(data)) {
+                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
+            }
         } else {
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_binary_msg, {
                 id: msgUuid,
@@ -309,6 +313,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             data.includes('comm_msg');
         if (mustDeserialize) {
             const message = this.deserialize(data as any) as any;
+            if (!shouldMessageBeMirroredWithRenderer(message)) {
+                return;
+            }
 
             // Check for hints that would indicate whether ipywidgest are used in outputs.
             if (

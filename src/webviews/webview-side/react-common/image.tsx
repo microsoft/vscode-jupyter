@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as React from 'react';
 // eslint-disable-next-line ,
 import InlineSVG from 'svg-inline-react';

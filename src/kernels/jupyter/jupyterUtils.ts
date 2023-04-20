@@ -1,21 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../../platform/common/extensions';
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
 import { IJupyterServerUri, JupyterServerUriHandle } from './types';
-import { getJupyterConnectionDisplayName } from './launcher/helpers';
+import { getJupyterConnectionDisplayName } from './helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
+import { traceError } from '../../platform/logging';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -48,10 +47,10 @@ export async function handleSelfCertsError(
     message: string
 ): Promise<boolean> {
     // On a self cert error, warn the user and ask if they want to change the setting
-    const enableOption: string = DataScience.jupyterSelfCertEnable();
-    const closeOption: string = DataScience.jupyterSelfCertClose();
+    const enableOption: string = DataScience.jupyterSelfCertEnable;
+    const closeOption: string = DataScience.jupyterSelfCertClose;
     const value = await appShell.showErrorMessage(
-        DataScience.jupyterSelfCertFail().format(message),
+        DataScience.jupyterSelfCertFail(message),
         { modal: true },
         enableOption,
         closeOption
@@ -72,10 +71,10 @@ export async function handleExpiredCertsError(
     message: string
 ): Promise<boolean> {
     // On a self cert error, warn the user and ask if they want to change the setting
-    const enableOption: string = DataScience.jupyterSelfCertEnable();
-    const closeOption: string = DataScience.jupyterSelfCertClose();
+    const enableOption: string = DataScience.jupyterSelfCertEnable;
+    const closeOption: string = DataScience.jupyterSelfCertClose;
     const value = await appShell.showErrorMessage(
-        DataScience.jupyterExpiredCertFail().format(message),
+        DataScience.jupyterExpiredCertFail(message),
         { modal: true },
         enableOption,
         closeOption
@@ -92,7 +91,7 @@ export async function handleExpiredCertsError(
 
 export function createRemoteConnectionInfo(
     uri: string,
-    getJupyterServerUri: (uri: string) => IJupyterServerUri | undefined
+    getJupyterServerUri: (uri: string) => { server: IJupyterServerUri; serverId: string } | undefined
 ): IJupyterConnection {
     let url: URL;
     try {
@@ -102,7 +101,9 @@ export function createRemoteConnectionInfo(
         throw err;
     }
 
-    const serverUri = getJupyterServerUri(uri);
+    const info = getJupyterServerUri(uri);
+    const serverUri = info?.server;
+    const serverId = info?.serverId || '';
 
     const baseUrl = serverUri
         ? serverUri.baseUrl
@@ -115,6 +116,7 @@ export function createRemoteConnectionInfo(
     return {
         type: 'jupyter',
         baseUrl,
+        serverId,
         token,
         hostName,
         localLaunch: false,
@@ -128,7 +130,11 @@ export function createRemoteConnectionInfo(
         dispose: noop,
         rootDirectory: Uri.file(''),
         workingDirectory: serverUri?.workingDirectory,
-        getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined,
+        // For remote jupyter servers that are managed by us, we can provide the auth header.
+        // Its crucial this is set to undefined, else password retrieval will not be attempted.
+        getAuthHeader: serverUri && !serverId.startsWith('_builtin') ? () => serverUri?.authorizationHeader : undefined,
+        getWebsocketProtocols:
+            serverUri && !serverId.startsWith('_builtin') ? () => serverUri?.webSocketProtocols || [] : () => [],
         url: uri
     };
 }
@@ -147,10 +153,14 @@ export function generateUriFromRemoteProvider(id: string, result: JupyterServerU
 export function extractJupyterServerHandleAndId(
     uri: string
 ): { handle: JupyterServerUriHandle; id: string } | undefined {
-    const url: URL = new URL(uri);
+    try {
+        const url: URL = new URL(uri);
 
-    // Id has to be there too.
-    const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
-    const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-    return id && uriHandle ? { handle: uriHandle, id } : undefined;
+        // Id has to be there too.
+        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
+        const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
+        return id && uriHandle ? { handle: uriHandle, id } : undefined;
+    } catch (ex) {
+        traceError('Failed to parse remote URI', uri, ex);
+    }
 }

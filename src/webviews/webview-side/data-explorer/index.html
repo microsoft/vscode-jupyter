@@ -254,7 +254,7 @@
 --vscode-titleBar-activeForeground: #333333;
 --vscode-titleBar-inactiveBackground: rgba(221, 221, 221, 0.6);
 --vscode-titleBar-inactiveForeground: rgba(51, 51, 51, 0.6);
---vscode-widget-shadow: #a8a8a8; 
+--vscode-widget-shadow: #a8a8a8;
 --code-font-family: 'Comic-Sans';
 --code-font-size: 15px;
 }
@@ -347,8 +347,7 @@
                         return "<%= htmlWebpackPlugin.options.imageBaseUrl %>" + relativePath;
                     }
                     function getInitialSettings() {
-                        return { allowInput: true,
-                                extraSettings: { editorCursor: 'block', editorCursorBlink: 'blink' }
+                        return { extraSettings: { editorCursor: 'block', editorCursorBlink: 'blink' }
                                };
                     }
                 </script>

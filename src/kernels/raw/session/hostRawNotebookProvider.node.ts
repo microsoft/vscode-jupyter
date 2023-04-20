@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../../../platform/common/extensions';
-
 import * as vscode from 'vscode';
 import uuid from 'uuid/v4';
 import { injectable, inject } from 'inversify';
@@ -79,7 +76,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
 
         try {
             const kernelConnectionProvided = !!kernelConnection;
-            traceVerbose(`Computing working directory for resource '${getDisplayPath(resource)}'`);
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
@@ -105,7 +101,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             if (rawSession.isConnected) {
                 sessionPromise.resolve(rawSession);
             } else {
-                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
+                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError));
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process

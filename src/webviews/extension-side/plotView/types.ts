@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { NotebookDocument } from 'vscode';
 
 export const IPlotSaveHandler = Symbol('IPlotSaveHandler');

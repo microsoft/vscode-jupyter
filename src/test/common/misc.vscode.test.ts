@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { expect } from 'chai';
 import { isTestExecution } from '../../platform/common/constants';
 

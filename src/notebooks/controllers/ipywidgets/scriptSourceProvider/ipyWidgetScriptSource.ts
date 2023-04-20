@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';
@@ -72,7 +71,7 @@ export class IPyWidgetScriptSource {
             return this.uriTranslationRequests.get(resource)!.promise;
         });
         // Don't leave dangling promises.
-        this.isWebViewOnline.promise.ignoreErrors();
+        this.isWebViewOnline.promise.catch(noop);
         disposables.push(this);
         this.kernelProvider.onDidStartKernel(
             (e) => {
@@ -100,7 +99,7 @@ export class IPyWidgetScriptSource {
             }
         } else if (message === IPyWidgetMessages.IPyWidgets_Ready) {
             this.sendBaseUrl();
-            this.sendWidgetScriptSources().ignoreErrors();
+            this.sendWidgetScriptSources().catch(noop);
         } else if (message === IPyWidgetMessages.IPyWidgets_IsOnline) {
             const isOnline = (payload as { isOnline: boolean }).isOnline;
             this.isWebViewOnline.resolve(isOnline);

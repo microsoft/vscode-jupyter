@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import './progressBar.css';
 
 import * as React from 'react';
@@ -18,7 +17,7 @@ export const ProgressBar = (props: IEmptyRowsProps) => {
     const style: React.CSSProperties = {
         width: percentText
     };
-    const message = getLocString('DataScience.fetchingDataViewer', 'Fetching data ...');
+    const message = getLocString('fetchingDataViewer', 'Fetching data ...');
 
     return (
         <div className="progress-container">

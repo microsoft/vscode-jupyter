@@ -86,6 +86,14 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             this.kernelsStartedSuccessfully.add(kernel);
             this.kernelConnectionToKernelMapping.set(kernel.session.kernel, kernel);
             kernel.session?.kernel?.connectionStatusChanged.connect(this.onKernelStatusChanged, this);
+            kernel.onDisposed(
+                () => {
+                    this.kernelReconnectProgress.get(kernel)?.dispose();
+                    this.kernelReconnectProgress.delete(kernel);
+                },
+                this,
+                this.disposableRegistry
+            );
             kernel.addHook(
                 'willRestart',
                 async () => {
@@ -109,19 +117,21 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         }
         switch (connectionStatus) {
             case 'connected': {
+                this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);
                 return;
             }
             case 'disconnected': {
                 if (this.kernelReconnectProgress.has(kernel)) {
+                    this.kernelReconnectProgress.get(kernel)?.dispose();
                     this.kernelReconnectProgress.delete(kernel);
-                    this.onKernelDisconnected(kernel)?.ignoreErrors();
+                    this.onKernelDisconnected(kernel)?.catch(noop);
                 }
                 return;
             }
             case 'connecting':
                 if (!this.kernelReconnectProgress.has(kernel)) {
-                    this.onKernelConnecting(kernel)?.ignoreErrors();
+                    this.onKernelConnecting(kernel)?.catch(noop);
                 }
                 return;
             default:
@@ -144,7 +154,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             }
         }
 
-        const message = DataScience.automaticallyReconnectingToAKernelProgressMessage().format(
+        const message = DataScience.automaticallyReconnectingToAKernelProgressMessage(
             getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
         );
         this.appShell
@@ -175,10 +185,8 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         }
 
         const message = isLocalConnection(kernel.kernelConnectionMetadata)
-            ? DataScience.kernelDisconnected().format(
-                  getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-              )
-            : DataScience.remoteJupyterConnectionFailedWithServer().format(kernel.kernelConnectionMetadata.baseUrl);
+            ? DataScience.kernelDisconnected(getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata))
+            : DataScience.remoteJupyterConnectionFailedWithServer(kernel.kernelConnectionMetadata.baseUrl);
 
         this.appShell.showErrorMessage(message).then(noop, noop);
 
@@ -196,6 +204,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             await kernel.dispose();
         }
     }
+
     private async handleRemoteServerReinitiate(
         kernel: IKernel,
         metadata: RemoteKernelConnectionMetadata

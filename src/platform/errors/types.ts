@@ -8,6 +8,7 @@
  */
 export abstract class BaseError extends Error {
     public stdErr?: string;
+    public isJupyterError = true;
     constructor(public readonly category: ErrorCategory, message: string) {
         super(message);
     }
@@ -67,6 +68,7 @@ export type ErrorCategory =
     | 'jupyterconnection'
     | 'jupyterinstall'
     | 'jupyterselfcert'
+    | 'jupyterpassword'
     | 'jupyterexpiredcert'
     | 'jupyterselfexpiredcert'
     | 'invalidkernel'
@@ -81,7 +83,10 @@ export type ErrorCategory =
     | 'localjupyterserverconnection'
     | 'remotejupyterserveruriprovider'
     | 'invalidremotejupyterserverurihandle'
+    | 'jupyternotebooknotinstalled'
+    | 'jupytercannotbelaunchedwitheroot'
     | 'pythonExtension'
+    | 'windowsLongPathNotEnabled'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.

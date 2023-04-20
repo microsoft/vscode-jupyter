@@ -4,7 +4,7 @@
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../../platform/common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
 import { Common, DataScience } from '../../platform/common/utils/localize';
@@ -41,11 +41,13 @@ export class ApiAccessService {
         extensionId: string;
         displayName: string;
     }): Promise<{ extensionId: string; accessAllowed: boolean }> {
-        const publisherId = info.extensionId.split('.')[0];
-        if (this.context.extensionMode === ExtensionMode.Test) {
+        const publisherId =
+            !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
+        if (this.context.extensionMode === ExtensionMode.Test || !publisherId) {
+            traceError(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
                 this.appShell
-                    .showInformationMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs())
+                    .showInformationMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs)
                     .then(noop, noop);
             }
             return { extensionId: info.extensionId, accessAllowed: true };
@@ -81,17 +83,17 @@ export class ApiAccessService {
         }
 
         const promise = (async () => {
-            const msg = DataScience.allowExtensionToUseJupyterKernelApi().format(
+            const msg = DataScience.allowExtensionToUseJupyterKernelApi(
                 `${info.displayName} (${info.extensionId})`,
-                Common.bannerLabelYes()
+                Common.bannerLabelYes
             );
             const selection = await this.appShell.showInformationMessage(
                 msg,
                 { modal: true },
-                Common.bannerLabelYes(),
-                Common.bannerLabelNo()
+                Common.bannerLabelYes,
+                Common.bannerLabelNo
             );
-            const allow = selection === Common.bannerLabelYes();
+            const allow = selection === Common.bannerLabelYes;
             this.promiseChain
                 .chainFinally(async () => {
                     let extensionPermissions = [...this.globalState.get<ApiExtensionInfo>(API_ACCESS_GLOBAL_KEY, [])];

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../../kernels/variables/types';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
 import {

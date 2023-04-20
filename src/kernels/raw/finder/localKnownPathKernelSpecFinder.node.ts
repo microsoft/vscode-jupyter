@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, env, Memento } from 'vscode';
 import { getKernelId } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
@@ -14,12 +12,14 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/co
 import { traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { sendKernelSpecTelemetry } from './helper';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 
-const LocalKernelSpecsCacheKey = 'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10';
+function localKernelSpecsCacheKey() {
+    const LocalKernelSpecsCacheKey = 'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2023_2';
+    return `${LocalKernelSpecsCacheKey}:${env.appHost}:${env.remoteName || ''}`;
+}
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -44,7 +44,7 @@ export class LocalKnownPathKernelSpecFinder
         super(fs, workspaceService, extensionChecker, memento, disposables, env, jupyterPaths);
     }
     activate(): void {
-        this.listKernelsFirstTimeFromMemento(LocalKernelSpecsCacheKey)
+        this.listKernelsFirstTimeFromMemento(localKernelSpecsCacheKey())
             .then((kernels) => {
                 // If we found kernels even before the cache was restored, then ignore the cached data.
                 if (this._kernels.size === 0 && kernels.length) {
@@ -52,7 +52,7 @@ export class LocalKnownPathKernelSpecFinder
                     this._onDidChangeKernels.fire();
                 }
             })
-            .ignoreErrors();
+            .catch(noop);
         this.refresh().then(noop, noop);
     }
     public get kernels(): LocalKernelSpecConnectionMetadata[] {
@@ -73,7 +73,6 @@ export class LocalKnownPathKernelSpecFinder
             cancellation.dispose();
         }
     }
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
     private async listKernelSpecs(cancelToken: CancellationToken): Promise<LocalKernelSpecConnectionMetadata[]> {
         const fn = async () => {
             const kernelSpecs = await this.findKernelSpecs(cancelToken);
@@ -104,7 +103,7 @@ export class LocalKnownPathKernelSpecFinder
                 JSON.stringify(oldSortedKernels) !== JSON.stringify(newSortedKernels)
             ) {
                 this._onDidChangeKernels.fire();
-                this.writeToMementoCache(Array.from(this._kernels.values()), LocalKernelSpecsCacheKey).ignoreErrors();
+                this.writeToMementoCache(Array.from(this._kernels.values()), localKernelSpecsCacheKey()).catch(noop);
             }
             if (deletedKernels.length) {
                 traceVerbose(

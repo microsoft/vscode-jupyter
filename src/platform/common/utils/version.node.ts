@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as semver from 'semver';
 
 export function parseVersion(raw: string): semver.SemVer {

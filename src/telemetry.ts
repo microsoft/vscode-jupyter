@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Telemetry } from './platform/common/constants';
 import { CheckboxState, EventName, SliceOperationSource } from './platform/telemetry/constants';
@@ -18,7 +16,7 @@ import {
 } from './kernels/types';
 // eslint-disable-next-line
 import { IExportedKernelService } from './standalone/api/extension';
-import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
+import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
@@ -314,6 +312,10 @@ function commonClassificationForResourceSpecificTelemetryProperties(): PropertyM
                 comment: '',
                 purpose: 'PerformanceAndHealth'
             },
+            kernelSpecHash: {
+                classification: 'EndUserPseudonymizedInformation',
+                purpose: 'FeatureInsight'
+            },
             kernelId: {
                 classification: 'PublicNonPersonalData',
                 comment: '',
@@ -372,6 +374,10 @@ export type ResourceSpecificTelemetryProperties = ResourceTypeTelemetryProperty 
          * Common to most of the events.
          */
         kernelId: string;
+        /**
+         * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
+         */
+        kernelSpecHash: string;
         /**
          * Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not.
          * If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel)
@@ -552,31 +558,6 @@ export class IEventNamePropertyMapping {
             firstTime: {
                 classification: 'SystemMetaData',
                 purpose: 'PerformanceAndHealth'
-            }
-        },
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Time taken to list the kernels.
-     */
-    [Telemetry.KernelListingPerf]: TelemetryEventInfo<{
-        /**
-         * Whether this telemetry is for listing of all kernels or just python or just non-python.
-         * (fetching kernels first time in the session is slower, later its cached).
-         */
-        kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
-        /**
-         * Total time taken to list kernels.
-         */
-        duration: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            kind: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
             }
         },
         measures: commonClassificationForDurationProperties()
@@ -933,6 +914,90 @@ export class IEventNamePropertyMapping {
         },
         measures: commonClassificationForDurationProperties()
     };
+    /**
+     * Used to capture time taken to get environment variables for a python environment.
+     * Also lets us know whether it worked or not.
+     */
+    [Telemetry.KernelSpec]: TelemetryEventInfo<{
+        /**
+         * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
+         */
+        kernelSpecHash: string;
+        /**
+         * Hash of the Kernel Connection id.
+         */
+        kernelId: string;
+        /**
+         * What kind of kernel spec did we fail to create.
+         */
+        kernelConnectionType:
+            | 'startUsingPythonInterpreter'
+            | 'startUsingLocalKernelSpec'
+            | 'startUsingRemoteKernelSpec'
+            | 'connectToLiveRemoteKernel';
+        /**
+         * Language of the kernel spec.
+         */
+        kernelLanguage: string | undefined;
+        /**
+         * Type of the Python environment.
+         */
+        envType?: EnvironmentType;
+        /**
+         * Whether the argv0 is same as the interpreter.
+         */
+        isArgv0SameAsInterpreter?: boolean;
+        /**
+         * First argument of the kernelSpec argv (without the full path)
+         * Helps determine if we have python/conda executables used for kernelSpecs.
+         */
+        argv0?: string;
+        /**
+         * argv of KernelSpec
+         * Helps determine if we have ipykernel, ipykernel_launcher, etc and other combinations
+         * In the case of paths, all path values are stripped, exe names are not.
+         */
+        argv?: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            kernelSpecHash: {
+                classification: 'EndUserPseudonymizedInformation',
+                purpose: 'FeatureInsight'
+            },
+            kernelId: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            kernelConnectionType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            kernelLanguage: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            envType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            isArgv0SameAsInterpreter: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            argv0: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            argv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+
     /**
      * Sent when we fail to update the kernel spec json file.
      */
@@ -1544,7 +1609,8 @@ export class IEventNamePropertyMapping {
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
-            | 'download'; // User chose click the download link.
+            | 'download' // User chose click the download link.
+            | 'reload'; // User chose to reload VS Code.
     }> = {
         owner: 'IanMatthewHuff',
         feature: ['KernelPicker'],
@@ -1807,14 +1873,6 @@ export class IEventNamePropertyMapping {
         source: 'User Action'
     };
     /**
-     * Command to create a new Interactive Window.
-     */
-    [Telemetry.CreateNewInteractive]: TelemetryEventInfo<never | undefined> = {
-        owner: 'amunger',
-        feature: ['InteractiveWindow'],
-        source: 'N/A'
-    };
-    /**
      * Time taken to start the Jupyter server.
      */
     [Telemetry.StartJupyter]: TelemetryEventInfo<DurationMeasurement> = {
@@ -1822,6 +1880,184 @@ export class IEventNamePropertyMapping {
         feature: 'N/A',
         source: 'N/A',
         measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Whether we ran into the ZMQ Error as identified here https://github.com/microsoft/vscode-jupyter/issues/12775
+     */
+    [Telemetry.JupyterServerZMQStreamError]: TelemetryEventInfo<undefined> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A'
+    };
+    /**
+     * Information used to determine the zmq binary support.
+     * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
+     */
+    [Telemetry.ZMQSupport]: TelemetryEventInfo<{
+        /**
+         * Failed to support zmq.
+         */
+        failed: boolean;
+        /**
+         * Whether we tried a fallback to to the older versions of the binaries.
+         */
+        fallbackTried?: boolean;
+        /**
+         * Whether alpine or not.
+         */
+        alpine?: boolean;
+        /**
+         * libc implementation, from env variable LIBC
+         * If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)
+         */
+        libc?: string;
+        /**
+         * arch
+         */
+        zmqarch?: string;
+        /**
+         * arm version
+         */
+        armv?: string;
+        /**
+         * Linux distro id.
+         */
+        distro_id: string;
+        /**
+         * Linux distro version id.
+         */
+        distro_version_id: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            fallbackTried: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            alpine: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            zmqarch: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            libc: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            armv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_version_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Information used to determine the zmq binary support.
+     * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
+     */
+    [Telemetry.ZMQSupportFailure]: TelemetryEventInfo<{
+        /**
+         * Failed to support zmq.
+         */
+        failed: boolean;
+        /**
+         * Whether we tried a fallback to to the older versions of the binaries.
+         */
+        fallbackTried?: boolean;
+        /**
+         * Whether alpine or not.
+         */
+        alpine?: boolean;
+        /**
+         * libc implementation, from env variable LIBC
+         * If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)
+         */
+        libc?: string;
+        /**
+         * arch
+         */
+        zmqarch?: string;
+        /**
+         * arm version
+         */
+        armv?: string;
+        /**
+         * Linux distro id.
+         */
+        distro_id: string;
+        /**
+         * Linux distro version id.
+         */
+        distro_version_id: string;
+        /**
+         * Error message when azure build module fails to load.
+         */
+        errorMessage?: string;
+        /**
+         * Error message when fallback module fails to load.
+         */
+        fallbackErrorMessage?: string;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            fallbackTried: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            alpine: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            zmqarch: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            libc: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            armv: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            distro_version_id: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            errorMessage: {
+                classification: 'CallstackOrException',
+                purpose: 'FeatureInsight'
+            },
+            fallbackErrorMessage: {
+                classification: 'CallstackOrException',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
@@ -1914,6 +2150,14 @@ export class IEventNamePropertyMapping {
          * selectAnotherInterpreter - Selected another interpreter.
          */
         result?: 'notSelected' | 'selected' | 'installationCancelled' | 'selectAnotherInterpreter';
+        /**
+         * Type of the Python environment.
+         */
+        envType?: EnvironmentType;
+        /**
+         * Python version. (only contains the numbers, no letters and empty if version is not available)
+         */
+        envVersion?: string;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -1921,6 +2165,14 @@ export class IEventNamePropertyMapping {
         tags: ['KernelStartup'],
         properties: {
             result: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            envType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            envVersion: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
@@ -2011,6 +2263,10 @@ export class IEventNamePropertyMapping {
      */
     [Telemetry.AmbiguousGlobalKernelSpec]: TelemetryEventInfo<{
         /**
+         * Whether kernel was started using kernel spec, interpreter, etc.
+         */
+        kernelConnectionType: KernelConnectionMetadata['kind'];
+        /**
          * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
          */
         kernelSpecHash: string;
@@ -2026,11 +2282,24 @@ export class IEventNamePropertyMapping {
          * Language of the target notebook or interactive window
          */
         language: string;
+        /**
+         * First argument of the kernelSpec argv (without the full path)
+         * Helps determine if we have python/conda executables used for kernelSpecs.
+         */
+        argv0?: string;
+        /**
+         * Whether this is a kernelspec created by us.
+         */
+        isCreatedByUs: boolean;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A',
         properties: {
+            kernelConnectionType: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
             pythonPathDefined: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
@@ -2045,6 +2314,14 @@ export class IEventNamePropertyMapping {
             },
             kernelSpecHash: {
                 classification: 'EndUserPseudonymizedInformation',
+                purpose: 'FeatureInsight'
+            },
+            argv0: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            isCreatedByUs: {
+                classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
         }
@@ -2111,6 +2388,47 @@ export class IEventNamePropertyMapping {
         owner: 'amunger',
         feature: ['InteractiveWindow'],
         source: 'N/A'
+    };
+    [Telemetry.CreateInteractiveWindow]: TelemetryEventInfo<{
+        hasKernel: boolean;
+        hasOwner: boolean;
+        mode: string;
+        restored: boolean;
+        windowCount: number;
+    }> = {
+        owner: 'amunger',
+        feature: ['InteractiveWindow'],
+        source: 'N/A',
+        properties: {
+            hasKernel: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'If the kernel was known at the time of creation'
+            },
+            hasOwner: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'If the window was created for a text file'
+            },
+            mode: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Creation mode: multiple, perfile or single'
+            },
+            restored: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Was the window restored from a previous session'
+            }
+        },
+        measures: {
+            windowCount: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight',
+                comment: 'Number of active interactive windows the user has open',
+                isMeasurement: true
+            }
+        }
     };
     /**
      * Telemetry event sent with name of a Widget that is used.
@@ -2950,7 +3268,6 @@ export class IEventNamePropertyMapping {
              */
             kind:
                 | 'startUsingPythonInterpreter'
-                | 'startUsingDefaultKernel'
                 | 'startUsingLocalKernelSpec'
                 | 'startUsingRemoteKernelSpec'
                 | 'connectToLiveRemoteKernel';
@@ -2993,6 +3310,10 @@ export class IEventNamePropertyMapping {
                * kernelConnectionNotCreated - Kernel connection not created via the kernel finder.
                */
               reason: 'cancelled' | 'kernelConnectionNotCreated';
+              /**
+               * Type of the Python environment.
+               */
+              envType?: EnvironmentType;
           }
         | /* Creation succeeded */ {
               /**
@@ -3011,6 +3332,10 @@ export class IEventNamePropertyMapping {
             },
             reason: { classification: 'SystemMetaData', purpose: 'PerformanceAndHealth' },
             dependenciesInstalled: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            envType: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }

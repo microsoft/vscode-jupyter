@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import {
     CancellationToken,
@@ -25,6 +24,8 @@ import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { CompletionRequest } from 'vscode-languageclient';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
+import { noop } from '../../platform/common/utils/misc';
+import { traceInfoIfCI } from '../../platform/logging';
 
 const EmptyWorkspaceKey = '';
 
@@ -60,7 +61,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         this.notebooks.onDidCloseNotebookDocument(this.closedNotebook, this, this.disposables);
 
         // For all currently open notebooks, launch their language server
-        this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).ignoreErrors());
+        this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).catch(noop));
 
         // Track active interpreter, but synchronously. We need synchronously so we
         // can compare during intellisense operations.
@@ -123,13 +124,13 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
                 .then((a) => {
                     this.activeInterpreterCache.set(key, a);
                 })
-                .ignoreErrors();
+                .catch(noop);
         }
         return this.activeInterpreterCache.get(key);
     }
 
     private async controllerChanged(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
-        if (!this.notebookPythonPathService.isPylanceUsingLspNotebooks()) {
+        if (!this.notebookPythonPathService.isUsingPylance()) {
             // Create the language server for this connection
             const newServer = await this.ensureLanguageServer(e.controller.connection.interpreter, e.notebook);
 
@@ -160,7 +161,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         if (
             isJupyterNotebook(n) &&
             this.extensionChecker.isPythonExtensionInstalled &&
-            !this.notebookPythonPathService.isPylanceUsingLspNotebooks()
+            !this.notebookPythonPathService.isUsingPylance()
         ) {
             // Create a language server as soon as we open. Otherwise intellisense will wait until we run.
             const controller = this.controllerRegistration.getSelected(n);
@@ -256,12 +257,13 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
 
     private onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (event.affectsConfiguration('python.languageServer')) {
+            traceInfoIfCI('Dispose all language servers due to changes in configuration');
             // Dispose all servers and start over for each open notebook
             this.servers.forEach((p) => p.then((s) => s?.dispose()));
             this.servers.clear();
 
             // For all currently open notebooks, launch their language server
-            this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).ignoreErrors());
+            this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).catch(noop));
         }
     }
 }

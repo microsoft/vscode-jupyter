@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// 'use strict';
-
+//
 // /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 // import { assert } from 'chai';
 // import * as sinon from 'sinon';
@@ -70,7 +69,7 @@
 // //         await hijackPrompt(
 //             'showErrorMessage',
 //             { endsWith: expectedPromptMessageSuffix },
-//             { text: Common.install(), clickImmediately: true },
+//             { text: Common.install, clickImmediately: true },
 //             disposables
 //         );
 

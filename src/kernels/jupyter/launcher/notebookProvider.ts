@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import {
@@ -17,7 +15,7 @@ import {
 import { Cancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
-import { IJupyterNotebookProvider, IJupyterServerUriStorage } from '../types';
+import { IJupyterNotebookProvider } from '../types';
 import { PythonExtensionNotInstalledError } from '../../../platform/errors/pythonExtNotInstalledError';
 
 /**
@@ -32,8 +30,7 @@ export class NotebookProvider implements INotebookProvider {
         private readonly rawNotebookProvider: IRawNotebookProvider | undefined,
         @inject(IJupyterNotebookProvider)
         private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
     // Attempt to connect to our server provider, and if we do, return the connection info
@@ -50,11 +47,11 @@ export class NotebookProvider implements INotebookProvider {
         options.ui = this.startupUi;
         if (this.rawNotebookProvider?.isSupported && options.localJupyter) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
-        } else if (this.extensionChecker.isPythonExtensionInstalled || !this.uriStorage.isLocalLaunch) {
+        } else if (this.extensionChecker.isPythonExtensionInstalled || !options.localJupyter) {
             return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
-            if (!this.startupUi.disableUI) {
+            if (!this.startupUi.disableUI && options.localJupyter) {
                 await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
             }
             throw new PythonExtensionNotInstalledError();

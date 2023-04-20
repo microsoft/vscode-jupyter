@@ -39,9 +39,9 @@ import {
     uninstallIPyKernel
 } from '../../helpers.node';
 import { WrappedError } from '../../../../platform/errors/types';
-import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
-import { ProductNames } from '../../../../kernels/installer/productNames';
-import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
+import { clearInstalledIntoInterpreterMemento } from '../../../../platform/interpreter/installer/productInstaller';
+import { ProductNames } from '../../../../platform/interpreter/installer/productNames';
+import { Product, IInstaller, InstallerResponse } from '../../../../platform/interpreter/installer/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
     hijackPrompt,
@@ -162,7 +162,8 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         // Update hash in notebook metadata.
-        fs.writeFileSync(nbFile.fsPath, fs.readFileSync(nbFile.fsPath).toString('utf8').replace('<id>', env!.id));
+        const id = Uri.parse(env!.id).toString();
+        fs.writeFileSync(nbFile.fsPath, fs.readFileSync(nbFile.fsPath).toString('utf8').replace('<id>', id));
         await Promise.all([
             installIPyKernel(venvKernelPath.fsPath),
             uninstallIPyKernel(venvNoKernelPath.fsPath),
@@ -198,9 +199,10 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
     test('Test Install IPyKernel prompt message', async () => {
         // Confirm the message has not changed.
         assert.ok(
-            DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter()
-                .format('', ProductNames.get(Product.ipykernel)!)
-                .endsWith(`${expectedPromptMessageSuffix}.`),
+            DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter(
+                '',
+                ProductNames.get(Product.ipykernel)!
+            ).endsWith(`${expectedPromptMessageSuffix}.`),
             'Message has changed, please update this test'
         );
     });
@@ -337,7 +339,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Next, lets try to run again, but select a kernel that doesn't have ipykernel.
         // At this point we should get the prompt again for this new kernel.
         const promptOptions: WindowPromptStubButtonClickOptions = {
-            result: DataScience.selectKernel(),
+            result: DataScience.selectKernel,
             clickImmediately: true
         };
         prompt = await hijackPrompt(
@@ -353,11 +355,8 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
             promptOptions.dismissPrompt = true;
             delete promptOptions.result;
             // In tests, things hang as the IW isn't focused.
-            activeInteractiveWindow.show(false).then(noop, noop);
-            await waitForKernelToChange(
-                { interpreterPath: venvNoRegPath, isInteractiveController: true },
-                activeInteractiveWindow.notebookEditor
-            );
+            let editor = await activeInteractiveWindow.showInteractiveEditor();
+            await waitForKernelToChange({ interpreterPath: venvNoRegPath, isInteractiveController: true }, editor);
             return true;
         } as any);
         disposables.push({ dispose: () => stub.restore() });
@@ -412,7 +411,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Now install ipykernel and ensure we can run a cell & that it runs against the right environment.
         prompt.reset();
         promptOptions.dismissPrompt = false;
-        promptOptions.result = Common.install();
+        promptOptions.result = Common.install;
 
         await activeInteractiveWindow
             .addCode(`import sys${EOL}print(sys.executable)`, untitledPythonFile.uri, 0)
@@ -462,7 +461,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         await verifyIPyKernelPromptDisplayed(prompt, venvNoKernelPath.fsPath);
 
         // Now lets install, all cells should run successfully.
-        prompt.clickButton(Common.install());
+        prompt.clickButton(Common.install);
 
         // Wait for the 3 cells to run successfully.
         const [cell1, cell2, cell3] = notebookDocument!
@@ -562,7 +561,8 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvNoKernelPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
-    test('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
+    // https://github.com/microsoft/vscode-jupyter/issues/12766
+    test.skip('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
@@ -644,7 +644,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         const prompt = await hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { result: DataScience.selectKernel(), clickImmediately: true },
+            { result: DataScience.selectKernel, clickImmediately: true },
             disposables
         );
 
@@ -752,7 +752,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         return hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { result: DataScience.selectKernel(), clickImmediately: true },
+            { result: DataScience.selectKernel, clickImmediately: true },
             disposables
         );
     }
@@ -760,7 +760,7 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         return hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { result: Common.install(), clickImmediately: true },
+            { result: Common.install, clickImmediately: true },
             disposables
         );
     }

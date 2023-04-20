@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { DataScience } from '../../platform/common/utils/localize';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../types';
@@ -24,7 +22,7 @@ export class JupyterKernelDependencyError extends BaseKernelError {
     ) {
         super(
             'noipykernel',
-            DataScience.kernelInvalid().format(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
+            DataScience.kernelInvalid(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
             kernelConnectionMetadata
         );
     }

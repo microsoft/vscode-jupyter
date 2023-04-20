@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IKernel } from '../../../../kernels/types';
 import {
     IIPyWidgetScriptManagerFactory,

@@ -6,7 +6,14 @@ const glob = require('glob');
 const path = require('path');
 const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
 const constants = require('../constants');
-exports.nodeModulesToExternalize = ['pdfkit/js/pdfkit.standalone', 'crypto-js', 'fontkit', 'png-js', 'zeromq'];
+exports.nodeModulesToExternalize = [
+    'pdfkit/js/pdfkit.standalone',
+    'crypto-js',
+    'fontkit',
+    'png-js',
+    'zeromq',
+    'zeromqold'
+];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
     const plugins = [];

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { JSONObject } from '@lumino/coreutils';
@@ -17,14 +15,17 @@ import type {
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
+import * as path from '../platform/vscode-path/path';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
-import { isWeb } from '../platform/common/utils/misc';
+import { isWeb, noop } from '../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
+import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import { sendTelemetryEvent } from '../telemetry';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -58,25 +59,26 @@ export class BaseKernelConnectionMetadata {
             | ReadWrite<RemoteKernelSpecConnectionMetadata>
             | ReadWrite<PythonKernelConnectionMetadata>
     ) {
-        if (json.interpreter) {
+        const clone = Object.assign(json, {});
+        if (clone.interpreter) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            json.interpreter = deserializePythonEnvironment(json.interpreter as any, '')!;
+            clone.interpreter = deserializePythonEnvironment(clone.interpreter as any, '')!;
         }
         switch (json.kind) {
             case 'startUsingLocalKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LocalKernelSpecConnectionMetadata.create(json as LocalKernelSpecConnectionMetadata);
+                return LocalKernelSpecConnectionMetadata.create(clone as LocalKernelSpecConnectionMetadata);
             case 'connectToLiveRemoteKernel':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LiveRemoteKernelConnectionMetadata.create(json as LiveRemoteKernelConnectionMetadata);
+                return LiveRemoteKernelConnectionMetadata.create(clone as LiveRemoteKernelConnectionMetadata);
             case 'startUsingRemoteKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return RemoteKernelSpecConnectionMetadata.create(json as RemoteKernelSpecConnectionMetadata);
+                return RemoteKernelSpecConnectionMetadata.create(clone as RemoteKernelSpecConnectionMetadata);
             case 'startUsingPythonInterpreter':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return PythonKernelConnectionMetadata.create(json as PythonKernelConnectionMetadata);
+                return PythonKernelConnectionMetadata.create(clone as PythonKernelConnectionMetadata);
             default:
-                throw new Error(`Invalid object to be deserialized into a connection, kind = ${json.kind}`);
+                throw new Error(`Invalid object to be deserialized into a connection, kind = ${clone.kind}`);
         }
     }
 }
@@ -110,6 +112,7 @@ export class LiveRemoteKernelConnectionMetadata {
         this.baseUrl = options.baseUrl;
         this.id = options.id;
         this.serverId = options.serverId;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         kernelModel: LiveKernelModel;
@@ -164,6 +167,7 @@ export class LocalKernelSpecConnectionMetadata {
         this.kernelSpec = options.kernelSpec;
         this.interpreter = options.interpreter;
         this.id = options.id;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         kernelSpec: IJupyterKernelSpec;
@@ -218,6 +222,7 @@ export class RemoteKernelSpecConnectionMetadata {
         this.baseUrl = options.baseUrl;
         this.id = options.id;
         this.serverId = options.serverId;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
@@ -260,6 +265,7 @@ export class PythonKernelConnectionMetadata {
         this.kernelSpec = options.kernelSpec;
         this.interpreter = options.interpreter;
         this.id = options.id;
+        sendKernelTelemetry(this);
     }
     public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
         return new PythonKernelConnectionMetadata(options);
@@ -274,6 +280,9 @@ export class PythonKernelConnectionMetadata {
             interpreter: serializePythonEnvironment(this.interpreter),
             kind: this.kind
         };
+    }
+    public updateInterpreter(interpreter: PythonEnvironment) {
+        Object.assign(this.interpreter, interpreter);
     }
     public static fromJSON(options: Record<string, unknown> | PythonKernelConnectionMetadata) {
         return BaseKernelConnectionMetadata.fromJSON(options) as PythonKernelConnectionMetadata;
@@ -321,6 +330,8 @@ export type KernelHooks =
     | 'didStart'
     | 'willCancel';
 export interface IBaseKernel extends IAsyncDisposable {
+    readonly ipywidgetsVersion?: 7 | 8;
+    readonly onIPyWidgetVersionResolved: Event<7 | 8 | undefined>;
     readonly uri: Uri;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
@@ -506,11 +517,16 @@ export interface IJupyterConnection extends Disposable {
     // Jupyter specific members
     readonly baseUrl: string;
     readonly token: string;
+    readonly serverId?: string;
     readonly hostName: string;
     readonly rootDirectory: Uri; // Directory where the notebook server was started.
     readonly url: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getAuthHeader?(): any; // Snould be a json object
+    /**
+     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
+     */
+    getWebsocketProtocols?(): string[];
     readonly workingDirectory?: string;
 }
 
@@ -865,7 +881,18 @@ export const enum StartupCodePriority {
 /**
  * Startup code provider provides code snippets that are run right after the kernel is started but before running any code.
  */
-export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
+export const IStartupCodeProviders = Symbol('IStartupCodeProviders');
+export interface IStartupCodeProviders {
+    getProviders(notebookViewType: typeof JupyterNotebookView | typeof InteractiveWindowView): IStartupCodeProvider[];
+    register(
+        provider: IStartupCodeProvider,
+        notebookViewType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): void;
+}
+
+/**
+ * Startup code provider provides code snippets that are run right after the kernel is started but before running any code.
+ */
 export interface IStartupCodeProvider {
     priority: StartupCodePriority;
     getCode(kernel: IBaseKernel): Promise<string[]>;
@@ -885,3 +912,55 @@ export type IKernelController = {
     id: string;
     createNotebookCellExecution(cell: NotebookCell): NotebookCellExecution;
 };
+
+const capturedTelemetry = new Set<string>();
+function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
+    if (capturedTelemetry.has(kernel.id)) {
+        return;
+    }
+    capturedTelemetry.add(kernel.id);
+    const kernelSpec = 'kernelSpec' in kernel ? kernel.kernelSpec : undefined;
+    const language =
+        kernelSpec?.language || (kernel.kind === 'startUsingPythonInterpreter' ? PYTHON_LANGUAGE : undefined);
+    let argv0 = '';
+    let argv = '';
+    const interpreter = 'interpreter' in kernel ? kernel.interpreter : undefined;
+    const separator = `<#>`;
+    let isArgv0SameAsInterpreter: undefined | boolean = undefined;
+    if (kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0) {
+        argv0 = kernelSpec.argv[0];
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        isArgv0SameAsInterpreter = argv0.toLowerCase() === interpreter?.uri?.fsPath?.toLowerCase();
+        if (path.basename(argv0) !== argv0) {
+            argv0 = `<P>${path.basename(argv0)}`;
+        }
+        argv = kernelSpec.argv
+            .map((arg) => {
+                if (arg.includes('/') || arg.includes('\\')) {
+                    return `<P>${path.basename(arg)}`;
+                }
+                return arg;
+            })
+            .join(separator);
+    }
+
+    const kernelSpecHashPromise =
+        'kernelSpec' in kernel && kernel.kernelSpec.specFile
+            ? getTelemetrySafeHashedString(kernel.kernelSpec.specFile)
+            : Promise.resolve('');
+    const kernelIdHash = getTelemetrySafeHashedString(kernel.id);
+    Promise.all([kernelSpecHashPromise, kernelIdHash])
+        .then(([kernelSpecHash, kernelId]) =>
+            sendTelemetryEvent(Telemetry.KernelSpec, undefined, {
+                kernelId,
+                kernelSpecHash,
+                kernelConnectionType: kernel.kind,
+                kernelLanguage: language,
+                envType: interpreter?.envType,
+                isArgv0SameAsInterpreter,
+                argv0,
+                argv
+            })
+        )
+        .catch(noop);
+}

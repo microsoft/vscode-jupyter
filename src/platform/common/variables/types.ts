@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Event, Uri } from 'vscode';
+import { CancellationToken, Event, Uri } from 'vscode';
 import { ClassType } from '../../ioc/types';
 import { Resource } from '../types';
 
@@ -62,13 +62,15 @@ export interface ICustomEnvironmentVariablesProvider {
      */
     getEnvironmentVariables(
         resource: Resource,
-        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+        purpose: 'RunPythonCode' | 'RunNonPythonCode',
+        token?: CancellationToken
     ): Promise<EnvironmentVariables>;
     /**
      * Gets the env variables defined in the .env file.
      */
     getCustomEnvironmentVariables(
         resource: Resource,
-        purpose: 'RunPythonCode' | 'RunNonPythonCode'
+        purpose: 'RunPythonCode' | 'RunNonPythonCode',
+        token?: CancellationToken
     ): Promise<EnvironmentVariables | undefined>;
 }

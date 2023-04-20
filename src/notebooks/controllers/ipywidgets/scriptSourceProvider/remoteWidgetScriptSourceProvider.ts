@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Uri } from 'vscode';
 import { IKernel, RemoteKernelConnectionMetadata } from '../../../../kernels/types';
 import {

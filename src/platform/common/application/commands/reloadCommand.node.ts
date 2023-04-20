@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../../activation/types';
 import { Common } from '../../utils/localize';
@@ -22,8 +20,8 @@ export class ReloadVSCodeCommandHandler implements IExtensionSyncActivationServi
         this.commandManager.registerCommand('jupyter.reloadVSCode', this.onReloadVSCode, this);
     }
     private async onReloadVSCode(message: string) {
-        const item = await this.appShell.showInformationMessage(message, Common.reload());
-        if (item === Common.reload()) {
+        const item = await this.appShell.showInformationMessage(message, Common.reload);
+        if (item === Common.reload) {
             this.commandManager.executeCommand('workbench.action.reloadWindow').then(noop, noop);
         }
     }

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
@@ -243,11 +241,14 @@ export abstract class LocalKernelSpecFinderBase<
     protected async listKernelsFirstTimeFromMemento(cacheKey: string): Promise<T[]> {
         const promise = (async () => {
             // Check memento too
-            const cache = this.memento.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
-                kernels: [],
-                extensionVersion: ''
-            });
-
+            const jsonStr = this.memento.get<string>(
+                cacheKey,
+                JSON.stringify({
+                    kernels: [],
+                    extensionVersion: ''
+                })
+            );
+            const cache: { kernels: T[]; extensionVersion: string } = JSON.parse(jsonStr);
             let kernels: T[] = [];
             /**
              * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
@@ -278,13 +279,15 @@ export abstract class LocalKernelSpecFinderBase<
     }
 
     protected async writeToMementoCache(values: T[], cacheKey: string) {
-        const serialized = values.map((item) => item.toJSON());
         await Promise.all([
             removeOldCachedItems(this.memento),
-            this.memento.update(cacheKey, {
-                kernels: serialized,
-                extensionVersion: this.env.extensionVersion
-            })
+            this.memento.update(
+                cacheKey,
+                JSON.stringify({
+                    kernels: values.map((item) => item.toJSON()),
+                    extensionVersion: this.env.extensionVersion
+                })
+            )
         ]);
     }
     protected async isValidCachedKernel(kernel: LocalKernelConnectionMetadata): Promise<boolean> {
@@ -384,7 +387,8 @@ export async function loadKernelSpec(
 
     // Possible user deleted the underlying interpreter.
     const interpreterPath = interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path;
-    if (interpreterPath && !(await fs.exists(Uri.file(interpreterPath)))) {
+    const isEmptyCondaEnv = interpreter?.isCondaEnvWithoutPython ? true : false;
+    if (interpreterPath && !isEmptyCondaEnv && !(await fs.exists(Uri.file(interpreterPath)))) {
         return;
     }
 

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { QuickPickOptions } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -37,7 +35,7 @@ export class JupyterInterpreterSelector {
      */
     public async selectInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         const currentPythonPath = this.interpreterSelectionState.selectedPythonPath
-            ? getDisplayPath(this.interpreterSelectionState.selectedPythonPath, this.workspace.workspaceFolders)
+            ? getDisplayPath(this.interpreterSelectionState.selectedPythonPath, this.workspace.workspaceFolders || [])
             : undefined;
 
         const suggestions = await this.interpreterSelector.getSuggestions(undefined);
@@ -48,7 +46,7 @@ export class JupyterInterpreterSelector {
             matchOnDetail: true,
             matchOnDescription: true,
             placeHolder: currentPythonPath
-                ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder().format(currentPythonPath)
+                ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder(currentPythonPath)
                 : ''
         };
 

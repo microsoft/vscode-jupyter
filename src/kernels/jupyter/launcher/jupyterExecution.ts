@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
@@ -25,7 +24,7 @@ import {
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { JupyterConnection } from '../jupyterConnection';
+import { JupyterConnection } from '../connection/jupyterConnection';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
@@ -83,7 +82,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public async getNotebookError(): Promise<string> {
         return this.jupyterInterpreterService
             ? this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported()
-            : DataScience.webNotSupported();
+            : DataScience.webNotSupported;
     }
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
@@ -107,7 +106,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            traceInfo(`Connecting to server`);
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 1;

@@ -141,7 +141,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
         return {
             dispose: () => {
                 try {
-                    if (!progressInfo?.reporter) {
+                    if (!progressInfo) {
                         return;
                     }
                     // Find the list of progress messages just before this one.
@@ -152,7 +152,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                     // If we have previous messages, display the last item.
                     if (progressInfo.progressList.length > 0) {
                         const message = progressInfo.progressList[progressInfo.progressList.length - 1];
-                        if (message !== progressInfo.title) {
+                        if (message !== progressInfo.title && progressInfo.reporter) {
                             progressInfo.reporter.report({
                                 message
                             });

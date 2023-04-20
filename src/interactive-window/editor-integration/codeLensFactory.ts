@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import {
     CodeLens,
@@ -40,18 +39,18 @@ type PerNotebookData = {
 };
 
 // localized code lense text
-const runCurrentandAllBelowTitle = localize.DataScience.runCurrentCellAndAddBelow();
-const addCellBelowTitle = localize.DataScience.addCellBelowCommandTitle();
-const debugCurrentCellTitle = localize.DataScience.debugCellCommandTitle();
-const debugCellTitle = localize.DataScience.debugCellCommandTitle();
-const debugStepOverTitle = localize.DataScience.debugStepOverCommandTitle();
-const DebugContinueTitle = localize.DataScience.debugContinueCommandTitle();
-const debugStopTitle = localize.DataScience.debugStopCommandTitle();
-const runCellTitle = localize.DataScience.runCellLensCommandTitle();
-const runAllCellsTitle = localize.DataScience.runAllCellsLensCommandTitle();
-const runAllAboveTitle = localize.DataScience.runAllCellsAboveLensCommandTitle();
-const runAllBelowTitle = localize.DataScience.runCellAndAllBelowLensCommandTitle();
-const scrollToCellFormat = localize.DataScience.scrollToCellTitleFormatMessage();
+const runCurrentandAllBelowTitle = localize.DataScience.runCurrentCellAndAddBelow;
+const addCellBelowTitle = localize.DataScience.addCellBelowCommandTitle;
+const debugCurrentCellTitle = localize.DataScience.debugCellCommandTitle;
+const debugCellTitle = localize.DataScience.debugCellCommandTitle;
+const debugStepOverTitle = localize.DataScience.debugStepOverCommandTitle;
+const DebugContinueTitle = localize.DataScience.debugContinueCommandTitle;
+const debugStopTitle = localize.DataScience.debugStopCommandTitle;
+const runCellTitle = localize.DataScience.runCellLensCommandTitle;
+const runAllCellsTitle = localize.DataScience.runAllCellsLensCommandTitle;
+const runAllAboveTitle = localize.DataScience.runAllCellsAboveLensCommandTitle;
+const runAllBelowTitle = localize.DataScience.runCellAndAllBelowLensCommandTitle;
+const scrollToCellFormat = localize.DataScience.scrollToCellTitleFormatMessage;
 
 /**
  * This class is a singleton that generates code lenses for any document the user opens. It listens
@@ -426,7 +425,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                     return this.generateCodeLens(
                         range,
                         Commands.ScrollToCell,
-                        scrollToCellFormat.format(matchingExecutionCount.toString()),
+                        scrollToCellFormat(matchingExecutionCount),
                         [document.uri, rangeMatch.id]
                     );
                 }

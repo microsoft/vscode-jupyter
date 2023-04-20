@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
-import { IPythonExecutionFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
+import { ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { inject, injectable } from 'inversify';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -13,6 +11,8 @@ import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Disposable, Uri } from 'vscode';
 import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { splitLines } from '../../../platform/common/helpers';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 function isBestPythonInterpreterForAnInterruptDaemon(interpreter: PythonEnvironment) {
     // Give preference to globally installed python environments.
     // The assumption is that users are more likely to uninstall/delete local python environments
@@ -140,13 +140,38 @@ export class PythonKernelInterruptDaemon {
             await new Promise<void>((resolve, reject) => {
                 let started = false;
                 const subscription = proc.out.subscribe((out) => {
-                    traceInfoIfCI(`Output from interrupt daemon started = ${started}, output = ${out.out} ('END)`);
+                    traceInfoIfCI(
+                        `Output from interrupt daemon started = ${started}, output (${out.source}) = ${out.out} ('END)`
+                    );
                     if (out.source === 'stdout' && out.out.trim().includes('DAEMON_STARTED:') && !started) {
                         started = true;
                         resolve();
+                    } else if (
+                        out.source === 'stderr' &&
+                        out.out.includes('INTERRUPT:') &&
+                        out.out.includes('ERROR: handling command :INITIALIZE_INTERRUPT:') &&
+                        started
+                    ) {
+                        splitLines(out.out, { trim: true, removeEmptyEntries: true })
+                            .filter((output) => output.includes('INTERRUPT:'))
+                            .forEach((output) => {
+                                try {
+                                    const parts = output.split(':');
+                                    const id = parseInt(parts[parts.indexOf('INITIALIZE_INTERRUPT') + 1], 10);
+                                    const deferred = this.messages.get(id);
+                                    if (deferred) {
+                                        traceError(`Failed to initialize interrupt daemon for ${id}, ${out.out}`);
+                                        deferred.deferred.reject(
+                                            new Error(`Failed to start interrupt daemon ${out.out}`)
+                                        );
+                                        this.messages.delete(id);
+                                    }
+                                } catch (ex) {
+                                    traceError(`Failed to parse interrupt daemon response, ${out.out}`, ex);
+                                }
+                            });
                     } else if (out.source === 'stdout' && out.out.includes('INTERRUPT:') && started) {
-                        out.out
-                            .splitLines({ trim: true, removeEmptyEntries: true })
+                        splitLines(out.out, { trim: true, removeEmptyEntries: true })
                             .filter((output) => output.includes('INTERRUPT:'))
                             .forEach((output) => {
                                 try {
@@ -188,10 +213,16 @@ export class PythonKernelInterruptDaemon {
             this.disposableRegistry.push(new Disposable(() => swallowExceptions(() => proc.proc?.kill())));
             // Added for logging to see if this process dies.
             // We can remove this later if there are no more flaky test failures.
-            proc.proc?.on('close', () => traceInfoIfCI('Interrupt daemon closed'));
+            proc.proc?.on('close', () => {
+                traceInfoIfCI('Interrupt daemon closed');
+                this.startupPromise = undefined;
+            });
             // Added for logging to see if this process dies.
             // We can remove this later if there are no more flaky test failures.
-            proc.proc?.on('exit', () => traceInfoIfCI('Interrupt daemon exited'));
+            proc.proc?.on('exit', () => {
+                traceInfoIfCI('Interrupt daemon exited');
+                this.startupPromise = undefined;
+            });
             return proc;
         })();
         promise.catch((ex) => traceError(`Failed to start interrupt daemon for (${pythonEnvironment.id})`, ex));

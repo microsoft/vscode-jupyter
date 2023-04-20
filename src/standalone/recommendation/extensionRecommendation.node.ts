@@ -106,28 +106,28 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
             return;
         }
         this.recommendedInSession.add(extensionId);
-        const message = DataScience.recommendExtensionForNotebookLanguage().format(
+        const message = DataScience.recommendExtensionForNotebookLanguage(
             `[${extensionInfo.displayName}](${extensionInfo.extensionLink})`,
             language
         );
         sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'displayed' });
         const selection = await this.appShell.showInformationMessage(
             message,
-            Common.bannerLabelYes(),
-            Common.bannerLabelNo(),
-            Common.doNotShowAgain()
+            Common.bannerLabelYes,
+            Common.bannerLabelNo,
+            Common.doNotShowAgain
         );
         switch (selection) {
-            case Common.bannerLabelYes(): {
+            case Common.bannerLabelYes: {
                 sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'ok' });
                 this.commandManager.executeCommand('extension.open', extensionId).then(noop, noop);
                 break;
             }
-            case Common.bannerLabelNo(): {
+            case Common.bannerLabelNo: {
                 sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'cancel' });
                 break;
             }
-            case Common.doNotShowAgain(): {
+            case Common.doNotShowAgain: {
                 sendTelemetryEvent(Telemetry.RecommendExtension, undefined, { extensionId, action: 'doNotShowAgain' });
                 const list = this.globalMemento.get<string[]>(mementoKeyToNeverPromptExtensionAgain, []);
                 if (!list.includes(extensionId)) {

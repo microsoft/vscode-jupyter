@@ -1,5 +1,4 @@
 def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
-
     import pandas as _VSCODE_pd
     import builtins as _VSCODE_builtins
     import json as _VSCODE_json

@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
-import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
+import { Resource, IOutputChannel, IDisplayOptions, ReadWrite } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
@@ -141,6 +140,14 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
 
         return newSession;
     }
+    protected override setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo?: boolean) {
+        // When we restart a remote session, the socket information is different, hence reset it.
+        const socket = this.requestCreator.getWebsocket(this.kernelConnectionMetadata.id);
+        if (session?.kernelSocketInformation?.socket && forceUpdateKernelSocketInfo && socket) {
+            (session.kernelSocketInformation as ReadWrite<typeof session.kernelSocketInformation>).socket = socket;
+        }
+        return super.setSession(session, forceUpdateKernelSocketInfo);
+    }
     protected async createRestartSession(
         disableUI: boolean,
         session: ISessionWithSocket,
@@ -163,7 +170,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         } catch (exc) {
             traceWarning(`Error waiting for restart session: ${exc}`);
             if (result) {
-                this.shutdownSession(result, undefined, true).ignoreErrors();
+                this.shutdownSession(result, undefined, true).catch(noop);
             }
             result = undefined;
             throw exc;
@@ -212,7 +219,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                 content: JSON.parse(contents),
                 type: 'notebook'
             })
-            .ignoreErrors();
+            .catch(noop);
 
         await handler({
             filePath: backingFile.filePath,
@@ -220,7 +227,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         });
 
         await backingFile.dispose();
-        await this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+        await this.contentsManager.delete(backingFile.filePath).catch(noop);
     }
 
     async createTempfile(ext: string): Promise<string> {
@@ -283,7 +290,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
                 if (this.connInfo && backingFile) {
-                    this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+                    this.contentsManager.delete(backingFile.filePath).catch(noop);
                 }
                 throw ex;
             }
@@ -317,7 +324,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                     .then(async (session) => {
                         if (session.kernel) {
                             this.logRemoteOutput(
-                                DataScience.createdNewKernel().format(this.connInfo.baseUrl, session?.kernel?.id || '')
+                                DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || '')
                             );
                             const sessionWithSocket = session as ISessionWithSocket;
 
@@ -347,7 +354,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(async () => {
                         if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+                            this.contentsManager.delete(backingFile.filePath).catch(noop);
                         }
                     }),
             options.token

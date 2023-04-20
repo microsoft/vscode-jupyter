@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, NotebookDocument, Uri, workspace } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -37,7 +35,7 @@ export class FileConverter implements IFileConverter {
     ) {}
 
     async importIpynb(source: Uri): Promise<void> {
-        const reporter = this.progressReporter.createProgressIndicator(localize.DataScience.importingIpynb(), true);
+        const reporter = this.progressReporter.createProgressIndicator(localize.DataScience.importingIpynb, true);
         try {
             // Open the source as a NotebookDocument, note that this doesn't actually show an editor, and we don't need
             // a specific close action as VS Code owns the lifetime
@@ -55,7 +53,7 @@ export class FileConverter implements IFileConverter {
         candidateInterpreter?: PythonEnvironment
     ): Promise<undefined> {
         const reporter = this.progressReporter.createProgressIndicator(
-            localize.DataScience.exportingToFormat().format(format.toString()),
+            localize.DataScience.exportingToFormat(format.toString()),
             true
         );
 
@@ -89,10 +87,10 @@ export class FileConverter implements IFileConverter {
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
 
             if (format === ExportFormat.pdf) {
-                traceError(localize.DataScience.exportToPDFDependencyMessage());
+                traceError(localize.DataScience.exportToPDFDependencyMessage);
             }
 
-            this.showExportFailed(localize.DataScience.exportFailedGeneralMessage());
+            this.showExportFailed(localize.DataScience.exportFailedGeneralMessage);
         }
     }
 
@@ -180,6 +178,6 @@ export class FileConverter implements IFileConverter {
 
     private showExportFailed(msg: string) {
         // eslint-disable-next-line
-        this.applicationShell.showErrorMessage(`${localize.DataScience.failedExportMessage()} ${msg}`).then();
+        this.applicationShell.showErrorMessage(`${localize.DataScience.failedExportMessage} ${msg}`).then;
     }
 }

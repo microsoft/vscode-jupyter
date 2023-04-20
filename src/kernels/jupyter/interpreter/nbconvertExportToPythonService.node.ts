@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { traceError } from '../../../platform/logging';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { reportAction } from '../../../platform/progress/decorator';
 import { ReportableAction } from '../../../platform/progress/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -26,7 +24,6 @@ export class NbConvertExportToPythonService {
         token?: CancellationToken
     ): Promise<string> {
         const daemon = await this.pythonExecutionFactory.createActivatedEnvironment({
-            allowEnvironmentFetchExceptions: true,
             resource: file,
             interpreter: interpreter
         });

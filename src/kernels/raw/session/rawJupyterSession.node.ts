@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
@@ -216,9 +215,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         this.terminatingStatus = undefined;
         const process = await KernelProgressReporter.wrapAndReportProgress(
             this.resource,
-            DataScience.connectingToKernel().format(
-                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-            ),
+            DataScience.connectingToKernel(getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)),
             () =>
                 this.kernelLauncher.launch(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -231,7 +228,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         );
         return KernelProgressReporter.wrapAndReportProgress(
             this.resource,
-            DataScience.waitingForJupyterSessionToBeIdle(),
+            DataScience.waitingForJupyterSessionToBeIdle,
             () => this.postStartRawSession(options, process)
         );
     }

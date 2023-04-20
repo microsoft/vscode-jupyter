@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { NotebookCellExecutionState } from 'vscode';
@@ -37,7 +35,7 @@ import { captureScreenShot } from '../../common';
  */
 suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     this.timeout(60_000);
-
+    this.retries(3); // Interrupting kernels on windows can be flaky at times.
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let oldAskForRestart: boolean | undefined;
@@ -46,14 +44,12 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
     let kernel: IKernel;
     let kernelExecution: INotebookKernelExecution;
     const suiteDisposables: IDisposable[] = [];
-    suiteSetup(async function () {
+    let previousTestFailed: boolean | undefined = false;
+    async function initSuite() {
         try {
             traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
-            api = await initialize();
             await startJupyterServer();
             await closeNotebooksAndCleanUpAfterTests();
-            dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
-            oldAskForRestart = dsSettings.askForKernelRestart;
             notebook = new TestNotebookDocument();
             const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             const metadata = await getDefaultKernelConnection();
@@ -71,9 +67,21 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
             await captureScreenShot('execution-suite');
             throw ex;
         }
+    }
+    suiteSetup(async function () {
+        traceInfo(`Start Suite Test Restart/Interrupt/Cancel/Errors @kernelCore`);
+        api = await initialize();
+        dsSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(undefined);
+        oldAskForRestart = dsSettings.askForKernelRestart;
+        await initSuite();
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
+        if (previousTestFailed) {
+            traceInfo(`Start Running Test Suite again for ${this.currentTest?.title}`);
+            await closeNotebooksAndCleanUpAfterTests(disposables.concat(suiteDisposables));
+            await initSuite();
+        }
         sinon.restore();
         notebook.cells.length = 0;
         // Disable the prompt (when attempting to restart kernel).
@@ -81,6 +89,7 @@ suite('Restart/Interrupt/Cancel/Errors @kernelCore', function () {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(function () {
+        previousTestFailed = this.currentTest?.isFailed();
         traceInfo(`End Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => {

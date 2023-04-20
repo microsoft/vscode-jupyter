@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
 import * as os from 'os';
 import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
-import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IExtensionTestApi, PYTHON_PATH, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
@@ -19,9 +16,11 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize.no
 import { captureScreenShot } from '../common';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
-suite('Smoke Tests', () => {
+suite('Smoke Tests', function () {
     let api: IExtensionTestApi;
+    this.timeout(timeoutForCellToRun);
     suiteSetup(async function () {
+        this.timeout(timeoutForCellToRun);
         if (!IS_SMOKE_TEST()) {
             return this.skip();
         }
@@ -92,14 +91,21 @@ suite('Smoke Tests', () => {
 
         // Wait for 15 seconds for notebook to launch.
         // Unfortunately there's no way to know for sure it has completely loaded.
-        await sleep(15_000);
+        await sleep(60_000);
 
         let controllerId = '';
         let pythonPath = PYTHON_PATH;
-        if (os.platform() !== 'darwin' && os.platform() !== 'linux') {
+        let hash = await getInterpreterHash(vscode.Uri.file(pythonPath));
+        traceInfo(`Hash of old path ${pythonPath} is ${hash}`);
+        if (os.platform() === 'darwin' || os.platform() === 'linux') {
+            if (pythonPath.endsWith('/bin/python')) {
+                // have a look at the code in getNormalizedInterpreterPath
+                pythonPath = pythonPath.replace('/bin/python', '/python');
+            }
+        } else {
             pythonPath = `${PYTHON_PATH.substring(0, 1).toLowerCase()}${PYTHON_PATH.substring(1)}`;
         }
-        const hash = await getInterpreterHash(vscode.Uri.file(pythonPath));
+        hash = await getInterpreterHash(vscode.Uri.file(pythonPath));
         controllerId = `.jvsc74a57bd0${hash}.${pythonPath}.${pythonPath}.-m#ipykernel_launcher`;
         traceVerbose(`Before selected kernel ${controllerId}`);
         await vscode.commands.executeCommand('notebook.selectKernel', {
@@ -121,8 +127,7 @@ suite('Smoke Tests', () => {
 
         // Make an interactive window
         await vscode.commands.executeCommand<void>('jupyter.createnewinteractive');
-        const provider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        assert.ok(provider.windows.length === 1, 'Unexpected number of interactive windows created');
+        assert.ok(vscode.workspace.notebookDocuments.length === 1, 'Unexpected number of notebook documents created');
         // const currentWindow = provider.windows[0];
         // const interpreterForCurrentWindow = currentWindow.notebook?.getMatchingInterpreter();
         // assert.ok(interpreterForCurrentWindow !== undefined, 'Unable to get matching interpreter for current window');

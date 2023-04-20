@@ -38,16 +38,6 @@ const config = {
             {
                 test: /\.ts$/,
                 use: [
-                    ...(process.env.BUILD_WITH_VSCODE_NLS
-                        ? [
-                              {
-                                  loader: 'vscode-nls-dev/lib/webpack-loader',
-                                  options: {
-                                      base: constants.ExtensionRootDir
-                                  }
-                              }
-                          ]
-                        : []),
                     {
                         loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
                     }
@@ -58,7 +48,10 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: 'ts-loader'
+                        loader: 'ts-loader',
+                        options: {
+                            configFile: 'src/tsconfig.extension.node.json'
+                        }
                     }
                 ]
             },
@@ -105,10 +98,15 @@ const config = {
         'commonjs',
         'electron',
         './node_modules/zeromq',
+        './node_modules/zeromqold',
         './node_modules/@vscode/jupyter-ipywidgets7',
         ...existingModulesInOutDir,
         '@opentelemetry/tracing',
-        'applicationinsights-native-metrics'
+        // Ignore telemetry specific packages that are not required.
+        'applicationinsights-native-metrics',
+        '@azure/functions-core',
+        '@azure/opentelemetry-instrumentation-azure-sdk',
+        '@opentelemetry/instrumentation'
     ], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
@@ -132,15 +130,16 @@ const config = {
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
         new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
+        new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromqold.js'], log: false } }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.dll' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@aminya/node-gyp-build/**/*' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.js' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.node' }] }),
+        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.json' }] }),
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets7/dist/*.js' }] }),
-        new webpack.IgnorePlugin({
-            resourceRegExp: /^\.\/locale$/,
-            contextRegExp: /moment$/
-        }),
         new webpack.DefinePlugin({
             IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
                 typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
@@ -154,7 +153,8 @@ const config = {
             // Pointing pdfkit to a dummy js file so webpack doesn't fall over.
             // Since pdfkit has been externalized (it gets updated with the valid code by copying the pdfkit files
             // into the right destination).
-            pdfkit: path.resolve(__dirname, 'pdfkit.js')
+            pdfkit: path.resolve(__dirname, 'pdfkit.js'),
+            moment: path.join(__dirname, 'moment.js')
         },
         extensions: ['.ts', '.js'],
         plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
@@ -162,6 +162,10 @@ const config = {
             util: require.resolve('util/')
         }
     },
+    // Uncomment this to not minify chunk file names to easily identify them
+    // optimization: {
+    //     chunkIds: 'named'
+    // },
     output: {
         filename: '[name].node.js',
         path: path.resolve(constants.ExtensionRootDir, 'out'),

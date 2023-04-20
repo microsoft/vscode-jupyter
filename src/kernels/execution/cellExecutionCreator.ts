@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import {
     CancellationToken,
     NotebookCell,
@@ -11,6 +9,7 @@ import {
     NotebookCellOutputItem,
     TextDocument
 } from 'vscode';
+import { traceVerbose } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernelController } from '../types';
 
@@ -21,6 +20,7 @@ import { IKernelController } from '../types';
  */
 export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     public started: boolean = false;
+    private _startTime?: number;
     constructor(
         private readonly _impl: NotebookCellExecution,
         public controllerId: string,
@@ -43,12 +43,19 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         if (!this.started) {
             this.started = true;
             this._impl.start(startTime);
+            this._startTime = startTime;
+            traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime}`);
         }
     }
     end(success: boolean | undefined, endTime?: number): void {
         if (this._endCallback) {
             try {
                 this._impl.end(success, endTime);
+                traceVerbose(
+                    `End cell ${this.cell.index} execution @ ${endTime}, started @ ${this._startTime}, elapsed time = ${
+                        ((endTime || 0) - (this._startTime || 0)) / 1000
+                    }s`
+                );
             } finally {
                 this._endCallback();
                 this._endCallback = undefined;

@@ -44,7 +44,6 @@ export interface IFileSystem {
     stat(uri: vscode.Uri): Promise<vscode.FileStat>;
     writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void>;
     getFiles(dir: vscode.Uri): Promise<vscode.Uri[]>;
-    createTemporaryFile(options: { fileExtension?: string; prefix?: string }): Promise<TemporaryFileUri>;
     exists(uri: vscode.Uri, fileType?: vscode.FileType): Promise<boolean>;
     getFileHash(filename: vscode.Uri): Promise<string>;
 }

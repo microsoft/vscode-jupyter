@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type {
     ContentsManager,
     KernelSpecManager,
@@ -13,7 +12,7 @@ import type {
 import { JSONObject } from '@lumino/coreutils';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import {
     IPersistentState,
     IConfigurationService,
@@ -43,6 +42,7 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
+import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -271,8 +271,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 // At this point wait for the specs to change
                 const disposables: IDisposable[] = [];
                 const promise = createDeferred();
-                specsManager.specsChanged.connect(promise.resolve);
-                disposables.push(new Disposable(() => specsManager.specsChanged.disconnect(promise.resolve)));
+                const resolve = promise.resolve.bind(promise);
+                specsManager.specsChanged.connect(resolve);
+                disposables.push(new Disposable(() => specsManager.specsChanged.disconnect(resolve)));
                 const allPromises = Promise.all([
                     promise.promise,
                     specsManager.ready,
@@ -372,8 +373,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             } else if (pwSettings) {
                 serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
-                // Failed to get password info, notify the user
-                throw new Error(DataScience.passwordFailure());
+                throw new JupyterInvalidPasswordError();
             }
         } else {
             serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
@@ -396,7 +396,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             WebSocket: this.requestCreator.getWebsocketCtor(
                 cookieString,
                 allowUnauthorized,
-                connInfo.getAuthHeader
+                connInfo.getAuthHeader,
+                connInfo.getWebsocketProtocols?.bind(connInfo)
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any,
             fetch: this.requestCreator.getFetchMethod(),
@@ -404,27 +405,26 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             Headers: this.requestCreator.getHeadersCtor()
         };
 
-        traceInfo(`Creating server with url : ${serverSettings.baseUrl}`);
         return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
     }
 
     // If connecting on HTTP without a token prompt the user that this connection may not be secure
     private async insecureServerWarningPrompt(): Promise<boolean> {
-        const insecureMessage = DataScience.insecureSessionMessage();
-        const insecureLabels = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
+        const insecureMessage = DataScience.insecureSessionMessage;
+        const insecureLabels = [Common.bannerLabelYes, Common.bannerLabelNo, Common.doNotShowAgain];
         const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
 
         switch (response) {
-            case Common.bannerLabelYes():
+            case Common.bannerLabelYes:
                 // On yes just proceed as normal
                 return true;
 
-            case Common.doNotShowAgain():
+            case Common.doNotShowAgain:
                 // For don't ask again turn on the global true
                 await this.userAllowsInsecureConnections.updateValue(true);
                 return true;
 
-            case Common.bannerLabelNo():
+            case Common.bannerLabelNo:
             default:
                 // No or for no choice return back false to block
                 return false;
@@ -440,7 +440,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
 
         // If they are local launch, https, or have a token, then they are secure
-        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token !== 'null') {
+        const isEmptyToken = connInfo.token === '' || connInfo.token === 'null';
+        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || !isEmptyToken) {
             return;
         }
 
@@ -448,13 +449,19 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let serverSecurePromise = JupyterSessionManager.secureServers.get(connInfo.baseUrl);
 
         if (serverSecurePromise === undefined) {
-            serverSecurePromise = this.insecureServerWarningPrompt();
-            JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            if (connInfo.serverId && !connInfo.serverId.startsWith('_builtin')) {
+                // If a Jupyter URI provider is providing this URI, then we trust it.
+                serverSecurePromise = Promise.resolve(true);
+                JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            } else {
+                serverSecurePromise = this.insecureServerWarningPrompt();
+                JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            }
         }
 
         // If our server is not secure, throw here to bail out on the process
         if (!(await serverSecurePromise)) {
-            throw new Error(DataScience.insecureSessionDenied());
+            throw new Error(DataScience.insecureSessionDenied);
         }
     }
 }

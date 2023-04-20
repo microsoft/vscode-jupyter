@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../platform/common/extensions';
-
 import { inject, injectable } from 'inversify';
 
 import {
@@ -65,19 +62,26 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
         );
         this.disposableRegistry.push(
-            this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, this.collapseAll, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorCollapseAllCells, () => this.collapseAll())
         );
         this.disposableRegistry.push(
-            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, this.expandAll, this)
+            this.commandManager.registerCommand(Commands.NotebookEditorExpandAllCells, () => this.expandAll())
         );
+        this.disposableRegistry.push(
+            // TODO: if contributed anywhere, add context support
+            this.commandManager.registerCommand(Commands.RestartKernelAndRunUpToSelectedCell, () =>
+                this.restartKernelAndRunUpToSelectedCell()
+            )
+        );
+
         this.disposableRegistry.push(
             commandManager.registerCommand(
-                Commands.NotebookEditorRestartKernel,
+                Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        this.restartKernel(context?.notebookEditor?.notebookUri).ignoreErrors();
+                        this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
                     } else {
-                        this.restartKernel(context).ignoreErrors();
+                        this.restartKernel(context).catch(noop);
                     }
                 }
             )
@@ -91,9 +95,14 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         );
         this.disposableRegistry.push(
             commandManager.registerCommand(
-                Commands.RestartKernel,
-                (context?: { notebookEditor: { notebookUri: Uri } }) =>
-                    this.restartKernel(context?.notebookEditor?.notebookUri)
+                Commands.RestartKernelAndRunAllCells,
+                (context?: { notebookEditor: { notebookUri: Uri } }) => {
+                    if (context && 'notebookEditor' in context) {
+                        this.restartKernelAndRunAllCells(context?.notebookEditor?.notebookUri).catch(noop);
+                    } else {
+                        this.restartKernelAndRunAllCells(context).catch(noop);
+                    }
+                }
             )
         );
     }
@@ -168,7 +177,26 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         await this.wrapKernelMethod('interrupt', kernel);
     }
 
-    private async restartKernel(notebookUri: Uri | undefined) {
+    private async restartKernelAndRunAllCells(notebookUri: Uri | undefined) {
+        await this.restartKernel(notebookUri);
+        this.runAllCells();
+    }
+
+    private async restartKernelAndRunUpToSelectedCell() {
+        const activeNBE = this.notebookEditorProvider.activeNotebookEditor;
+
+        if (activeNBE) {
+            await this.restartKernel(activeNBE.notebook.uri);
+            this.commandManager
+                .executeCommand('notebook.cell.execute', {
+                    ranges: [{ start: 0, end: activeNBE.selection.end }],
+                    document: activeNBE.notebook.uri
+                })
+                .then(noop, noop);
+        }
+    }
+
+    private async restartKernel(notebookUri: Uri | undefined): Promise<void> {
         const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
@@ -182,9 +210,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             traceVerbose(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
-                const message = DataScience.restartKernelMessage();
-                const yes = DataScience.restartKernelMessageYes();
-                const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
+                const message = DataScience.restartKernelMessage;
+                const yes = DataScience.restartKernelMessageYes;
+                const dontAskAgain = DataScience.restartKernelMessageDontAskAgain;
 
                 const response = await this.applicationShell.showInformationMessage(
                     message,
@@ -194,12 +222,12 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
-                    this.wrapKernelMethod('restart', kernel).ignoreErrors();
+                    this.wrapKernelMethod('restart', kernel).catch(noop);
                 } else if (response === yes) {
-                    this.wrapKernelMethod('restart', kernel).ignoreErrors();
+                    this.wrapKernelMethod('restart', kernel).catch(noop);
                 }
             } else {
-                this.wrapKernelMethod('restart', kernel).ignoreErrors();
+                this.wrapKernelMethod('restart', kernel).catch(noop);
             }
         }
     }
@@ -265,7 +293,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         if (settings) {
             this.configurationService
                 .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
-                .ignoreErrors();
+                .catch(noop);
         }
     }
 }

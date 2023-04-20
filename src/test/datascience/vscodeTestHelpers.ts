@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { createDeferred } from '../../platform/common/utils/async';
 
 // Basic shape that something needs to support to hook up to this

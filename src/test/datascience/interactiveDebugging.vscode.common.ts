@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
@@ -26,7 +24,7 @@ import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { pythonIWKernelDebugAdapter } from '../../notebooks/debugger/constants';
 import { isWeb, noop } from '../../platform/common/utils/misc';
-import { IControllerDefaultService } from '../../notebooks/controllers/types';
+import { ControllerDefaultService } from './notebook/controllerDefaultService';
 
 export type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 
@@ -68,9 +66,10 @@ export function sharedIWDebuggerTests(
                     await startJupyterServer();
                 }
                 if (!isWeb() && !IS_REMOTE_NATIVE_TEST()) {
-                    await api.serviceContainer
-                        .get<IControllerDefaultService>(IControllerDefaultService)
-                        .computeDefaultController(undefined, 'interactive');
+                    await ControllerDefaultService.create(api.serviceContainer).computeDefaultController(
+                        undefined,
+                        'interactive'
+                    );
                 }
                 await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory('python', tracker));

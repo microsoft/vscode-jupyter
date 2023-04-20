@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../../../platform/common/extensions';
-
 import { inject, injectable, named } from 'inversify';
 import { EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
@@ -92,7 +89,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             (c, v, d) => new DataViewerMessageListener(c, v, d),
             dataExplorerDir,
             [joinPath(dataExplorerDir, 'dataExplorer.js')],
-            localize.DataScience.dataExplorerTitle(),
+            localize.DataScience.dataExplorerTitle,
             globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One
         );
         this.onDidDispose(this.dataViewerDisposed, this);
@@ -125,7 +122,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             }
 
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).catch(noop);
         }
     }
 
@@ -161,7 +158,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
         traceInfo(`Refreshing data viewer for variable ${dataFrameInfo.name}`);
         // Send a message with our data
-        this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+        this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).catch(noop);
     }
 
     public override dispose(): void {
@@ -189,19 +186,19 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     protected override onMessage(message: string, payload: any) {
         switch (message) {
             case DataViewerMessages.GetAllRowsRequest:
-                this.getAllRows(payload as string).ignoreErrors();
+                this.getAllRows(payload as string).catch(noop);
                 break;
 
             case DataViewerMessages.GetRowsRequest:
-                this.getRowChunk(payload as IGetRowsRequest).ignoreErrors();
+                this.getRowChunk(payload as IGetRowsRequest).catch(noop);
                 break;
 
             case DataViewerMessages.GetSliceRequest:
-                this.getSlice(payload as IGetSliceRequest).ignoreErrors();
+                this.getSlice(payload as IGetSliceRequest).catch(noop);
                 break;
 
             case DataViewerMessages.RefreshDataViewer:
-                this.refreshData().ignoreErrors();
+                this.refreshData().catch(noop);
                 void sendTelemetryEvent(Telemetry.RefreshDataViewer);
                 break;
 
@@ -298,9 +295,9 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         } catch (e) {
             if (e instanceof JupyterDataRateLimitError) {
                 traceError(e.message);
-                const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
+                const actionTitle = localize.DataScience.pythonInteractiveHelpLink;
                 this.applicationShell
-                    .showErrorMessage(localize.DataScience.jupyterDataRateExceeded(), actionTitle)
+                    .showErrorMessage(localize.DataScience.jupyterDataRateExceeded, actionTitle)
                     .then((v) => {
                         // User clicked on the link, open it.
                         if (v === actionTitle) {

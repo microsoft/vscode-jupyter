@@ -194,11 +194,63 @@ gulp.task('compile-webextension', async () => {
 });
 gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
 
+/**
+ * On CI we download the binaries from gitbhub.
+ * Sometimes there can be too many requests and we get a 403.
+ * We need to ensure we never run into this, else only some of the binaries will be downloaded and the vsix will contain partial binaries.
+ */
+async function verifyZmqBinaries() {
+    const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromq', 'prebuilds');
+    const files = [
+        path.join('darwin-arm64', 'node.napi.glibc.node'),
+        path.join('darwin-arm64', 'node.napi.glibc.node'),
+        path.join('darwin-x64', 'node.napi.glibc.node'),
+        path.join('linux-arm', 'node.napi.glibc.node'),
+        path.join('linux-arm64', 'node.napi.glibc.node'),
+        path.join('linux-x64', 'node.napi.musl.node'),
+        path.join('win32-ia32', 'node.napi.glibc.node'),
+        path.join('linux-x64', 'node.napi.glibc.node'),
+        path.join('win32-x64', 'node.napi.glibc.node')
+    ].map((file) => path.join(preBuildsFolder, file));
+    const filesNotDownloaded = [];
+    await Promise.all(
+        files.map((file) =>
+            fs
+                .pathExists(file)
+                .then((found) => (found ? undefined : filesNotDownloaded.push(file.replace(preBuildsFolder, ''))))
+        )
+    );
+
+    if (filesNotDownloaded.length) {
+        throw new Error(`Missing zeromq binaries. ${filesNotDownloaded.join(', ')}`);
+    }
+
+    await deleteZMQBuildFolder();
+}
+
+/**
+ * We do not need to ship the Electron binaries.
+ */
+function deleteElectronBinaries() {
+    const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'prebuilds');
+    glob.sync('**/electron.napi.*.node', { sync: true, cwd: preBuildsFolder }).forEach((file) => {
+        console.log(`Deleting ${file}`);
+        fs.rmSync(path.join(preBuildsFolder, file), { force: true });
+    });
+}
+
+async function deleteZMQBuildFolder() {
+    const buildFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'build');
+    if (fs.existsSync(buildFolder)) {
+        fs.rmSync(buildFolder, { recursive: true, force: true });
+    }
+}
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
+        deleteElectronBinaries();
+        await verifyZmqBinaries();
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
-        console.log('Building ipywidgets in dev mode');
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
@@ -281,19 +333,19 @@ async function buildWebPack(webpackConfigName, args, env) {
         env
     );
     const stdOutLines = stdOut
-        .split(os.EOL)
-        .map((item) => item.trim())
+        .split('\n')
+        .map((item) => stripVTControlCharacters(item).trim())
         .filter((item) => item.length > 0);
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines
-        .filter((item) => stripVTControlCharacters(item).startsWith('WARNING in '))
+        .filter((item) => item.startsWith('WARNING in '))
         .filter(
             (item) =>
                 allowedWarnings.findIndex((allowedWarning) =>
-                    stripVTControlCharacters(item).toLowerCase().startsWith(allowedWarning.toLowerCase())
+                    item.toLowerCase().startsWith(allowedWarning.toLowerCase())
                 ) == -1
         );
-    const errors = stdOutLines.some((item) => stripVTControlCharacters(item).startsWith('ERROR in'));
+    const errors = stdOutLines.some((item) => item.startsWith('ERROR in'));
     if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
@@ -431,7 +483,7 @@ gulp.task('validateTelemetry', async () => {
 gulp.task('validatePackageLockJson', async () => {
     const fileName = path.join(__dirname, 'package-lock.json');
     const oldContents = fs.readFileSync(fileName).toString();
-    spawnSync('npm', ['install']);
+    spawnSync('npm', ['install', '--prefer-offline']);
     const newContents = fs.readFileSync(fileName).toString();
     if (oldContents.trim() !== newContents.trim()) {
         throw new Error('package-lock.json has changed after running `npm install`');

@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../../../platform/common/extensions';
-
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs/Subscription';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
@@ -18,9 +15,12 @@ import { RegExpValues } from '../../../platform/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
-import { getJupyterConnectionDisplayName } from './helpers';
+import { getJupyterConnectionDisplayName } from '../helpers';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
+import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 
 const urlMatcher = new RegExp(RegExpValues.UrlPatternRegEx);
 
@@ -41,6 +41,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         private readonly rootDir: Uri,
         private readonly getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         serviceContainer: IServiceContainer,
+        private readonly interpreter: PythonEnvironment | undefined,
         private cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -62,9 +63,9 @@ export class JupyterConnectionWaiter implements IDisposable {
         }, jupyterLaunchTimeout);
 
         // Listen for crashes
-        let exitCode = '0';
+        let exitCode = 0;
         if (launchResult.proc) {
-            launchResult.proc.on('exit', (c) => (exitCode = c ? c.toString() : '0'));
+            launchResult.proc.on('exit', (c) => (exitCode = c ? c : 0));
         }
         let stderr = '';
         // Listen on stderr for its connection information
@@ -81,7 +82,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                 },
                 (e) => this.rejectStartPromise(e),
                 // If the process dies, we can't extract connection information.
-                () => this.rejectStartPromise(DataScience.jupyterServerCrashed().format(exitCode))
+                () => this.rejectStartPromise(DataScience.jupyterServerCrashed(exitCode))
             )
         );
     }
@@ -155,7 +156,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             } catch (err) {
                 traceError(`Failed to parse ${uriString}`, err);
                 // Failed to parse the url either via server infos or the string
-                this.rejectStartPromise(DataScience.jupyterLaunchNoURL());
+                this.rejectStartPromise(DataScience.jupyterLaunchNoURL);
                 return;
             }
 
@@ -189,7 +190,7 @@ export class JupyterConnectionWaiter implements IDisposable {
 
     private launchTimedOut = () => {
         if (!this.startPromise.completed) {
-            this.rejectStartPromise(DataScience.jupyterLaunchTimedOut());
+            this.rejectStartPromise(DataScience.jupyterLaunchTimedOut);
         }
     };
 
@@ -214,11 +215,18 @@ export class JupyterConnectionWaiter implements IDisposable {
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.resolved) {
             message = typeof message === 'string' ? message : message.message;
-            this.startPromise.reject(
-                Cancellation.isCanceled(this.cancelToken)
-                    ? new CancellationError()
-                    : new JupyterConnectError(message, this.stderr.join('\n'))
-            );
+            let error: Error;
+            const stderr = this.stderr.join('\n');
+            if (Cancellation.isCanceled(this.cancelToken)) {
+                error = new CancellationError();
+            } else if (stderr.includes('Jupyter command `jupyter-notebook` not found')) {
+                error = new JupyterNotebookNotInstalled(message, stderr, this.interpreter);
+            } else if (stderr.includes('Running as root is not recommended. Use --allow-root to bypass')) {
+                error = new JupyterCannotBeLaunchedWithRootError(message, stderr, this.interpreter);
+            } else {
+                error = new JupyterConnectError(message, stderr, this.interpreter);
+            }
+            this.startPromise.reject(error);
         }
     };
 }

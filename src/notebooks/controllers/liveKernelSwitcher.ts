@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceVerbose } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { waitForCondition } from '../../platform/common/utils/async';
@@ -89,17 +88,20 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     }
 
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
-        traceInfo(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
+        traceVerbose(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
         // Do this in a loop as it may fail
+        await this.commandManager.executeCommand('notebook.selectKernel', {
+            id: kernel.id,
+            extension: JVSC_EXTENSION_ID
+        });
         const success = await waitForCondition(
             async () => {
                 if (this.vscNotebook.activeNotebookEditor?.notebook === n) {
-                    await this.commandManager.executeCommand('notebook.selectKernel', {
-                        id: kernel.id,
-                        extension: JVSC_EXTENSION_ID
-                    });
                     const selected = this.controllerRegistration.getSelected(n);
-                    return selected?.connection.id === kernel.id;
+                    if (selected?.connection.id === kernel.id) {
+                        selected.restoreConnection(n).catch(noop);
+                        return true;
+                    }
                 }
                 return false;
             },

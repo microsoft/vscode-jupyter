@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, optional } from 'inversify';
 import {
     CodeLens,
@@ -240,7 +238,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             if (possibleDocuments && possibleDocuments.length === 1) {
                 return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
             } else if (possibleDocuments && possibleDocuments.length > 1) {
-                throw new Error(DataScience.documentMismatch().format(getFilePath(file)));
+                throw new Error(DataScience.documentMismatch(getFilePath(file)));
             }
         }
 
@@ -251,7 +249,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const previousValue = this.configService.getSettings().logging.level;
         if (previousValue !== 'debug') {
             await this.configService.updateSetting('logging.level', 'debug', undefined, ConfigurationTarget.Global);
-            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired()).then(noop, noop);
+            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
         }
     }
 
@@ -259,7 +257,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         const previousValue = this.configService.getSettings().logging.level;
         if (previousValue !== 'error') {
             await this.configService.updateSetting('logging.level', 'error', undefined, ConfigurationTarget.Global);
-            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired()).then(noop, noop);
+            this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired).then(noop, noop);
         }
     }
 
@@ -422,7 +420,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession && this.interactiveWindowProvider) {
             // Attempt to get the interactive window for this file
-            const iw = this.interactiveWindowProvider.windows.find((w) => w.owner?.toString() == uri.toString());
+            const iw = this.interactiveWindowProvider.get(uri);
             if (iw && iw.notebookDocument) {
                 const kernel = this.kernelProvider.get(iw.notebookDocument);
                 if (kernel) {
@@ -640,14 +638,14 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook, undefined, 1));
                             }
                         },
-                        DataScience.exportingFormat(),
+                        DataScience.exportingFormat,
                         getDisplayPath(file)
                     );
                     // When all done, show a notice that it completed.
                     if (uri && filePath) {
-                        const openQuestion1 = DataScience.exportOpenQuestion1();
+                        const openQuestion1 = DataScience.exportOpenQuestion1;
                         const selection = await this.applicationShell.showInformationMessage(
-                            DataScience.exportDialogComplete().format(getDisplayPath(file)),
+                            DataScience.exportDialogComplete(getDisplayPath(file)),
                             openQuestion1
                         );
                         if (selection === openQuestion1) {
@@ -692,7 +690,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook, undefined, 1));
                             }
                         },
-                        DataScience.exportingFormat(),
+                        DataScience.exportingFormat,
                         getDisplayPath(file)
                     );
                     // Next open this notebook & execute it.
@@ -705,15 +703,13 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             }
         } else {
             await this.dataScienceErrorHandler.handleError(
-                new JupyterInstallError(
-                    DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
-                )
+                new JupyterInstallError(DataScience.jupyterNotSupported(await this.jupyterExecution.getNotebookError()))
             );
         }
     }
 
     private async expandAllCells(uri?: Uri) {
-        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         traceInfo(`Expanding all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
             await interactiveWindow.expandAllCells();
@@ -721,7 +717,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private async collapseAllCells(uri?: Uri) {
-        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         traceInfo(`Collapsing all cells in interactive window with uri ${interactiveWindow?.notebookUri}`);
         if (interactiveWindow) {
             await interactiveWindow.collapseAllCells();
@@ -736,42 +732,41 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private exportAs(uri?: Uri) {
-        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         if (interactiveWindow) {
             interactiveWindow.exportAs();
         }
     }
 
     private export(uri?: Uri) {
-        const interactiveWindow = this.getTargetInteractiveWindow(uri);
+        const interactiveWindow = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(uri);
         if (interactiveWindow) {
             interactiveWindow.export();
         }
     }
 
-    @captureUsageTelemetry(Telemetry.CreateNewInteractive)
     private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
         await this.interactiveWindowProvider?.getOrCreate(undefined, connection);
     }
 
     private waitForStatus<T>(
         promise: () => Promise<T>,
-        format: string,
-        file?: string,
+        formatMessage: (arg1: string) => string,
+        file: string,
         canceled?: () => void
     ): Promise<T> {
-        const message = file ? format.format(file) : format;
+        const message = formatMessage(file || '');
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
 
     @captureUsageTelemetry(Telemetry.ImportNotebook, { scope: 'command' })
     private async importNotebook(): Promise<void> {
-        const filtersKey = DataScience.importDialogFilter();
+        const filtersKey = DataScience.importDialogFilter;
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
 
         const uris = await this.applicationShell.showOpenDialog({
-            openLabel: DataScience.importDialogTitle(),
+            openLabel: DataScience.importDialogTitle,
             filters: filtersObject
         });
 
@@ -781,7 +776,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 async () => {
                     await this.fileConverter.importIpynb(uris[0]);
                 },
-                DataScience.importingFormat(),
+                DataScience.importingFormat,
                 getDisplayPath(uris[0])
             );
         }
@@ -795,7 +790,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                 async () => {
                     await this.fileConverter.importIpynb(file);
                 },
-                DataScience.importingFormat(),
+                DataScience.importingFormat,
                 getDisplayPath(file)
             );
         }
@@ -804,9 +799,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     private async scrollToCell(file: Uri, id: string): Promise<void> {
         if (id && file) {
             // Find the interactive windows that have this file as a submitter
-            const possibles = this.interactiveWindowProvider.windows.filter(
-                (w) => w.submitters.findIndex((s) => this.fileSystem.arePathsSame(s, file)) >= 0
-            );
+            const possibles = this.interactiveWindowProvider.getInteractiveWindowsWithSubmitter(file);
 
             // Scroll to cell in the one that has the cell. We need this so
             // we don't activate all of them.
@@ -821,7 +814,10 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     }
 
     private async clearAllCellsInInteractiveWindow(context?: { notebookEditor: { notebookUri: Uri } }): Promise<void> {
-        const uri = this.getTargetInteractiveWindow(context?.notebookEditor?.notebookUri)?.notebookUri;
+        const uri = this.interactiveWindowProvider.getInteractiveWindowWithNotebook(
+            context?.notebookEditor?.notebookUri
+        )?.notebookUri;
+
         if (!uri) {
             return;
         }
@@ -864,17 +860,5 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             ].join('\n');
             await this.clipboard.writeText(source);
         }
-    }
-
-    private getTargetInteractiveWindow(notebookUri: Uri | undefined) {
-        let targetInteractiveWindow;
-        if (notebookUri !== undefined) {
-            targetInteractiveWindow = this.interactiveWindowProvider.windows.find(
-                (w) => w.notebookUri?.toString() === notebookUri.toString()
-            );
-        } else {
-            targetInteractiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
-        }
-        return targetInteractiveWindow;
     }
 }

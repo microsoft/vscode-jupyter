@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
@@ -11,6 +9,7 @@ import { IVSCodeNotebook } from '../platform/common/application/types';
 import { Telemetry } from '../platform/common/constants';
 import { IDisposableRegistry } from '../platform/common/types';
 import { getNotebookFormat, isJupyterNotebook } from '../platform/common/utils';
+import { noop } from '../platform/common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService.node';
 import { IRawNotebookSupportedService } from './raw/types';
@@ -42,14 +41,14 @@ export class Activation implements IExtensionSyncActivationService {
 
         if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
-            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
+            this.jupyterInterpreterService.setInitialInterpreter().catch(noop);
         }
     }
 
     private onDidChangeInterpreter() {
         if (this.notebookOpened && !this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
-            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
+            this.jupyterInterpreterService.setInitialInterpreter().catch(noop);
         }
     }
 }

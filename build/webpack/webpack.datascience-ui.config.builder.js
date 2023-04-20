@@ -9,7 +9,6 @@ const common = require('./common');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -28,7 +27,8 @@ function getEntry(bundle) {
             };
         case 'ipywidgetsKernel':
             return {
-                ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`]
+                ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`],
+                dummy: [`./src/webviews/webview-side/ipywidgets/dummy.ts`]
             };
         case 'ipywidgetsRenderer':
             // This is only used in tests (not shipped with extension).

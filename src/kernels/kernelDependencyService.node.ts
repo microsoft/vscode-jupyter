@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
@@ -15,17 +13,26 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { Telemetry } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
-import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
-import { ProductNames } from './installer/productNames';
-import { IInstaller, Product, InstallerResponse } from './installer/types';
-import { IKernelDependencyService, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './types';
+import {
+    isModulePresentInEnvironmentCache,
+    trackPackageInstalledIntoInterpreter
+} from '../platform/interpreter/installer/productInstaller';
+import { ProductNames } from '../platform/interpreter/installer/productNames';
+import { IInstaller, Product, InstallerResponse } from '../platform/interpreter/installer/types';
+import {
+    IKernelDependencyService,
+    isLocalConnection,
+    KernelConnectionMetadata,
+    KernelInterpreterDependencyResponse
+} from './types';
 import { noop } from '../platform/common/utils/misc';
 import { getResourceType } from '../platform/common/utils';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { IRawNotebookSupportedService } from './raw/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
-import { isModulePresentInEnvironment } from './installer/productInstaller.node';
+import { isModulePresentInEnvironment } from '../platform/interpreter/installer/productInstaller.node';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
+import { isPythonKernelConnection } from './helpers';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -64,23 +71,23 @@ export class KernelDependencyService implements IKernelDependencyService {
         cannotChangeKernels?: boolean;
         installWithoutPrompting?: boolean;
     }): Promise<KernelInterpreterDependencyResponse> {
-        traceInfo(
-            `installMissingDependencies ${
-                kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
-            }, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
-        );
         if (
-            kernelConnection.kind === 'connectToLiveRemoteKernel' ||
-            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
-            kernelConnection.interpreter === undefined
+            !isLocalConnection(kernelConnection) ||
+            !isPythonKernelConnection(kernelConnection) ||
+            !kernelConnection.interpreter
         ) {
             return KernelInterpreterDependencyResponse.ok;
         }
 
+        traceInfo(
+            `Check & install missing Kernel dependencies for ${getDisplayPath(
+                kernelConnection.interpreter?.uri
+            )}, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
+        );
         const checkForPackages = async () => {
             const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
                 resource,
-                DataScience.validatingKernelDependencies(),
+                DataScience.validatingKernelDependencies,
                 () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
             );
             if (alreadyInstalled) {
@@ -113,7 +120,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             });
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
-                DataScience.installingMissingDependencies(),
+                DataScience.installingMissingDependencies,
                 async () => {
                     if (installWithoutPrompting) {
                         const result = await checkForPackages();
@@ -234,12 +241,12 @@ export class KernelDependencyService implements IKernelDependencyService {
             return KernelInterpreterDependencyResponse.cancel;
         }
         const messageFormat = isModulePresent
-            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
-            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
+            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate
+            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter;
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
-        const message = messageFormat.format(
+        const message = messageFormat(
             interpreter.displayName || interpreter.uri.fsPath,
-            products.map((product) => ProductNames.get(product)!).join(` ${Common.and()} `)
+            products.map((product) => ProductNames.get(product)!).join(` ${Common.and} `)
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
@@ -258,9 +265,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         });
 
         // Build our set of prompt actions
-        const installOption = Common.install();
-        const selectKernelOption = DataScience.selectKernel();
-        const moreInfoOption = Common.moreInfo();
+        const installOption = Common.install;
+        const selectKernelOption = DataScience.selectKernel;
+        const moreInfoOption = Common.moreInfo;
         const options = [installOption];
         if (resource && !cannotChangeKernels) {
             // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.

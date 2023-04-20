@@ -8,7 +8,7 @@ import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/
 import { IExtensions, IDisposableRegistry, InterpreterUri } from '../../platform/common/types';
 import { isResource, noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { IInstaller, Product } from '../../kernels/installer/types';
+import { IInstaller, Product } from '../../platform/interpreter/installer/types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../controllers/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { IInterpreterPackages } from '../../platform/interpreter/types';

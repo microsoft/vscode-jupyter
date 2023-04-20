@@ -6,22 +6,20 @@ import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerWeb } from '../errors/kernelErrorHandler.web';
 import { IDataScienceErrorHandler } from '../errors/types';
 import { INotebookProvider } from '../types';
-import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
-import { CommandRegistry } from './commands/commandRegistry';
-import { JupyterConnection } from './jupyterConnection';
-import { JupyterKernelService } from './jupyterKernelService.web';
-import { JupyterRemoteCachedKernelValidator } from './jupyterRemoteCachedKernelValidator';
-import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
+import { JupyterConnection } from './connection/jupyterConnection';
+import { JupyterKernelService } from './session/jupyterKernelService.web';
+import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
+import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
-import { JupyterPasswordConnect } from './launcher/jupyterPasswordConnect';
+import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
 import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServerFactory';
 import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
-import { JupyterServerUriStorage } from './launcher/serverUriStorage';
-import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
-import { JupyterServerSelector } from './serverSelector';
+import { JupyterServerUriStorage } from './connection/serverUriStorage';
+import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
+import { JupyterServerSelector } from './connection/serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.web';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
@@ -40,7 +38,6 @@ import {
     ILiveRemoteKernelConnectionUsageTracker,
     IJupyterRemoteCachedKernelValidator
 } from './types';
-import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
@@ -61,12 +58,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
-    serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(
-        JupyterCommandLineSelectorCommand,
-        JupyterCommandLineSelectorCommand
-    );
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
@@ -81,10 +73,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterRemoteCachedKernelValidator
     );
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandlerWeb);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        CellOutputMimeTypeTracker
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteKernelFinderController

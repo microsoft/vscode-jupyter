@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -322,7 +321,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
                             }
                         }
                     })
-                    .ignoreErrors();
+                    .catch(noop);
             }, delay);
         } else {
             this.currentProducer = undefined;
@@ -337,7 +336,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
                 .then((r) => {
                     swallowExceptions(() => this.onReply((<any>r.message) as KernelMessage.IShellMessage));
                 })
-                .ignoreErrors();
+                .catch(noop);
 
             // Then the done message
             const shellProducer = new SimpleMessageProducer('done' as any, { status: 'success' }, 'shell');
@@ -346,7 +345,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
                 .then((r) => {
                     this.deferred.resolve((<any>r.message) as KernelMessage.IShellMessage);
                 })
-                .ignoreErrors();
+                .catch(noop);
         }
     }
 }
@@ -468,7 +467,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                             }
                         }
                     })
-                    .ignoreErrors();
+                    .catch(noop);
             }, delay);
         } else {
             this.currentProducer = undefined;
@@ -483,7 +482,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                 .then((r) => {
                     swallowExceptions(() => this.onReply((<any>r.message) as KernelMessage.IShellMessage));
                 })
-                .ignoreErrors();
+                .catch(noop);
 
             // Then the done message
             const shellProducer = new SimpleMessageProducer('done' as any, { status: 'success' }, 'shell');
@@ -492,7 +491,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                 .then((r) => {
                     this.deferred.resolve((<any>r.message) as KernelMessage.IShellMessage);
                 })
-                .ignoreErrors();
+                .catch(noop);
         }
     }
 }

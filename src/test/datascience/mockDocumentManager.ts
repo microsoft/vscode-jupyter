@@ -3,7 +3,6 @@
 
 /* eslint-disable local-rules/dont-use-fspath */
 
-'use strict';
 import * as path from '../../platform/vscode-path/path';
 import {
     DecorationRenderOptions,

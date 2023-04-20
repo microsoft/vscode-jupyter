@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IDisposable } from '../../../platform/common/types';
 import { Event } from 'vscode';
 import { SharedMessages } from '../../../messageTypes';

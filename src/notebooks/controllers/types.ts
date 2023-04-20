@@ -4,15 +4,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as vscode from 'vscode';
-import { INotebookMetadata } from '@jupyterlab/nbformat';
 import {
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
-import { IDisposable, Resource } from '../../platform/common/types';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { IDisposable } from '../../platform/common/types';
 import { ContributedKernelFinderKind } from '../../kernels/internalTypes';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
@@ -36,6 +34,7 @@ export interface IVSCodeNotebookController extends IDisposable {
     postMessage(message: any, editor?: vscode.NotebookEditor): Thenable<boolean>;
     asWebviewUri(localResource: vscode.Uri): vscode.Uri;
     isAssociatedWithDocument(notebook: vscode.NotebookDocument): boolean;
+    restoreConnection(notebook: vscode.NotebookDocument): Promise<void>;
     updateConnection(connection: KernelConnectionMetadata): void;
     setPendingCellAddition(notebook: vscode.NotebookDocument, promise: Promise<void>): void;
 }
@@ -48,6 +47,10 @@ export interface IVSCodeNotebookControllerUpdateEvent {
 export const IControllerRegistration = Symbol('IControllerRegistration');
 
 export interface IControllerRegistration {
+    /**
+     * Promise resolved when controllers are done being loaded (refresh makes this promise update)
+     */
+    readonly loaded: Promise<void>;
     /**
      * Gets the registered list of all of the controllers (the ones shown by VS code)
      */
@@ -71,16 +74,6 @@ export interface IControllerRegistration {
      * These are very special controllers, as they are created out of band even before kernel discovery completes.
      */
     trackActiveInterpreterControllers(controllers: IVSCodeNotebookController[]): void;
-    canControllerBeDisposed(controller: IVSCodeNotebookController): boolean;
-    /**
-     * Batch registers new controllers. Disposing a controller unregisters it.
-     * @param a list of metadatas
-     * @param types Types of notebooks to create the controller for
-     */
-    batchAdd(
-        metadatas: KernelConnectionMetadata[],
-        types: (typeof JupyterNotebookView | typeof InteractiveWindowView)[]
-    ): void;
     /**
      * Registers a new controller or updates one. Disposing a controller unregisters it.
      * @return Returns the added and updated controller(s)
@@ -103,67 +96,6 @@ export interface IControllerRegistration {
      */
     onDidChange: vscode.Event<IVSCodeNotebookControllerUpdateEvent>;
     isFiltered(metadata: KernelConnectionMetadata): boolean;
-}
-
-export const IControllerPreferredService = Symbol('IControllerPreferredService');
-
-export interface IControllerPreferredService {
-    /**
-     * Given all of the registered controllers, finds the 'preferred' controller for a notebook
-     * @param document
-     * @param serverId
-     */
-    computePreferred(
-        document: vscode.NotebookDocument,
-        serverId?: string,
-        cancelToken?: vscode.CancellationToken
-    ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
-
-    /**
-     * Returns the preferred controller if already computed
-     * @param notebook
-     */
-    getPreferred(notebook: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
-}
-
-export const IKernelRankingHelper = Symbol('IKernelRankingHelper');
-export interface IKernelRankingHelper {
-    rankKernels(
-        resource: Resource,
-        kernels: KernelConnectionMetadata[],
-        option?: INotebookMetadata,
-        preferredInterpreter?: PythonEnvironment,
-        cancelToken?: vscode.CancellationToken,
-        serverId?: string
-    ): Promise<KernelConnectionMetadata[] | undefined>;
-
-    // For the given kernel connection, return true if it's an exact match for the notebookMetadata
-    isExactMatch(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        notebookMetadata: INotebookMetadata | undefined
-    ): Promise<boolean>;
-}
-
-export const IControllerDefaultService = Symbol('IControllerDefaultService');
-export interface IControllerDefaultService {
-    /**
-     * Creates the default controller for a notebook or interactive window
-     * @param resource
-     */
-    computeDefaultController(
-        resource: Resource,
-        viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
-    ): Promise<IVSCodeNotebookController | undefined>;
-}
-
-export const IControllerLoader = Symbol('IControllerLoader');
-
-export interface IControllerLoader {
-    /**
-     * Promise resolved when controllers are done being loaded (refresh makes this promise update)
-     */
-    readonly loaded: Promise<void>;
 }
 
 // Flag enum for the reason why a kernel was logged as an exact match

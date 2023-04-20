@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
-import '../common/extensions';
-
 import {
     ConfigurationChangeEvent,
     EventEmitter,
@@ -15,17 +11,18 @@ import {
     WorkspaceConfiguration
 } from 'vscode';
 import { IWebview, IWorkspaceService } from '../common/application/types';
-import { DefaultTheme, isTestExecution, PythonExtension, Telemetry } from '../common/constants';
+import { DefaultTheme, PythonExtension, Telemetry } from '../common/constants';
 import { traceInfo } from '../logging';
 import { Resource, IConfigurationService, IDisposable } from '../common/types';
 import { Deferred, createDeferred } from '../common/utils/async';
 import { testOnlyMethod } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
 import { StopWatch } from '../common/utils/stopWatch';
-import { InteractiveWindowMessages, SharedMessages } from '../../messageTypes';
+import { InteractiveWindowMessages, LocalizedMessages, SharedMessages } from '../../messageTypes';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IJupyterExtraSettings } from './types';
 import { getOSType, OSType } from '../common/utils/platform';
+import { noop } from '../common/utils/misc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -89,7 +86,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     private getHTMLById(id: string): Promise<string> {
         if (!this.activeHTMLRequest) {
             this.activeHTMLRequest = createDeferred<string>();
-            this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).ignoreErrors();
+            this.postMessageInternal(InteractiveWindowMessages.GetHTMLByIdRequest, id).catch(noop);
         } else {
             throw new Error('getHTMLById request already in progress');
         }
@@ -127,7 +124,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected onDataScienceSettingsChanged = async () => {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
-        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).catch(noop);
     };
 
     protected asWebviewUri(localResource: Uri) {
@@ -195,10 +192,10 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
 
         // Send the first settings message
-        this.onDataScienceSettingsChanged().ignoreErrors();
+        this.onDataScienceSettingsChanged().catch(noop);
 
         // Send the loc strings (skip during testing as it takes up a lot of memory)
-        this.sendLocStrings().ignoreErrors();
+        this.sendLocStrings().catch(noop);
     }
 
     protected async generateDataScienceExtraSettings(): Promise<IJupyterExtraSettings> {
@@ -235,8 +232,45 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     protected async sendLocStrings() {
-        const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
-        this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
+        const locStrings: LocalizedMessages = {
+            collapseSingle: localize.WebViews.collapseSingle,
+            expandSingle: localize.WebViews.expandSingle,
+            openExportFileYes: localize.DataScience.openExportFileYes,
+            openExportFileNo: localize.DataScience.openExportFileNo,
+            noRowsInDataViewer: localize.WebViews.noRowsInDataViewer,
+            sliceIndexError: localize.WebViews.sliceIndexError,
+            sliceMismatchedAxesError: localize.WebViews.sliceMismatchedAxesError,
+            filterRowsTooltip: localize.WebViews.sliceMismatchedAxesError,
+            fetchingDataViewer: localize.WebViews.fetchingDataViewer,
+            dataViewerHideFilters: localize.WebViews.dataViewerHideFilters,
+            dataViewerShowFilters: localize.WebViews.dataViewerShowFilters,
+            refreshDataViewer: localize.WebViews.refreshDataViewer,
+            clearFilters: localize.WebViews.refreshDataViewer,
+            sliceSummaryTitle: localize.WebViews.sliceSummaryTitle,
+            sliceData: localize.WebViews.sliceData,
+            sliceSubmitButton: localize.WebViews.sliceSubmitButton,
+            sliceDropdownAxisLabel: localize.WebViews.sliceDropdownAxisLabel,
+            sliceDropdownIndexLabel: localize.WebViews.sliceDropdownIndexLabel,
+            variableExplorerNameColumn: localize.WebViews.variableExplorerNameColumn,
+            variableExplorerTypeColumn: localize.WebViews.variableExplorerTypeColumn,
+            variableExplorerCountColumn: localize.WebViews.variableExplorerCountColumn,
+            variableExplorerValueColumn: localize.WebViews.variableExplorerValueColumn,
+            collapseVariableExplorerLabel: localize.WebViews.collapseVariableExplorerLabel,
+            variableLoadingValue: localize.WebViews.variableLoadingValue,
+            showDataExplorerTooltip: localize.WebViews.showDataExplorerTooltip,
+            noRowsInVariableExplorer: localize.WebViews.noRowsInVariableExplorer,
+            loadingRowsInVariableExplorer: localize.WebViews.loadingRowsInVariableExplorer,
+            previousPlot: localize.WebViews.previousPlot,
+            nextPlot: localize.WebViews.nextPlot,
+            panPlot: localize.WebViews.panPlot,
+            zoomInPlot: localize.WebViews.zoomInPlot,
+            zoomOutPlot: localize.WebViews.zoomOutPlot,
+            exportPlot: localize.WebViews.exportPlot,
+            deletePlot: localize.WebViews.deletePlot,
+            selectedImageListLabel: localize.WebViews.selectedImageListLabel,
+            selectedImageLabel: localize.WebViews.selectedImageLabel
+        };
+        this.postMessageInternal(SharedMessages.LocInit, JSON.stringify(locStrings)).catch(noop);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -264,8 +298,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         }
 
         // On started, resend our init data.
-        this.sendLocStrings().ignoreErrors();
-        this.onDataScienceSettingsChanged().ignoreErrors();
+        this.sendLocStrings().catch(noop);
+        this.onDataScienceSettingsChanged().catch(noop);
     }
 
     // If our webview fails to load then just dispose ourselves
@@ -304,7 +338,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             const newSettings = await this.generateDataScienceExtraSettings();
             if (newSettings) {
                 const dsSettings = JSON.stringify(newSettings);
-                this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+                this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).catch(noop);
             }
         }
     };

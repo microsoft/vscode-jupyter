@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import {
     NotebookCell,
@@ -16,7 +14,6 @@ import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemet
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { isCI, isTestExecution, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import '../../platform/common/extensions';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -90,7 +87,7 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
         this.vscNotebook.onDidChangeNotebookCellExecutionState(
             (e) => {
                 if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
-                    this.checkNotebookCell(e.cell, 'onExecution').ignoreErrors();
+                    this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
                 }
             },
             this,

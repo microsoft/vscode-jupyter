@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
@@ -10,7 +8,7 @@ import { parseSemVer } from '../../../platform/common/utils';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ResourceSet } from '../../../platform/vscode-path/map';
 import { JupyterCommands } from '../../../telemetry';
-import { IInstaller, Product } from '../../installer/types';
+import { IInstaller, Product } from '../../../platform/interpreter/installer/types';
 import { INbConvertInterpreterDependencyChecker } from '../types';
 import { IJupyterCommandFactory } from '../types.node';
 

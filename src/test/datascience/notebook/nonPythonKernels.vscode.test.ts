@@ -1,32 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import * as path from '../../../platform/vscode-path/path';
-import * as sinon from 'sinon';
 import assert from 'assert';
+import * as sinon from 'sinon';
 import { Uri } from 'vscode';
+import { IKernelProvider } from '../../../kernels/types';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
+import { traceInfo } from '../../../platform/logging';
+import * as path from '../../../platform/vscode-path/path';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_TEST } from '../../constants.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { noop } from '../../core';
 import { initialize } from '../../initialize.node';
+import { ControllerPreferredService } from './controllerPreferredService';
+import { TestNotebookDocument, createKernelController } from './executionHelper';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    waitForExecutionCompletedSuccessfully,
-    waitForTextOutput,
     createTemporaryNotebookFromFile,
-    defaultNotebookTestTimeout
+    defaultNotebookTestTimeout,
+    waitForExecutionCompletedSuccessfully,
+    waitForTextOutput
 } from './helper.node';
-import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IControllerPreferredService, IControllerRegistration } from '../../../notebooks/controllers/types';
-import { createKernelController, TestNotebookDocument } from './executionHelper';
-import { IKernelProvider } from '../../../kernels/types';
-import { noop } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Non-Python Kernel @nonPython ', async function () {
@@ -45,7 +44,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
     let testJuliaNb: Uri;
     let testJavaNb: Uri;
     let testCSharpNb: Uri;
-    let controllerPreferred: IControllerPreferredService;
+    let controllerPreferred: ControllerPreferredService;
     let kernelProvider: IKernelProvider;
     let pythonChecker: IPythonExtensionChecker;
     let controllerRegistration: IControllerRegistration;
@@ -66,7 +65,7 @@ suite('Non-Python Kernel @nonPython ', async function () {
         }
         sinon.restore();
         verifyPromptWasNotDisplayed();
-        controllerPreferred = api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
+        controllerPreferred = ControllerPreferredService.create(api.serviceContainer);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);

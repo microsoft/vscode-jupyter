@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
+import { CancellationToken } from 'vscode';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 
@@ -11,6 +10,6 @@ export interface IEnvironmentActivationService {
     getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter: PythonEnvironment,
-        allowExceptions?: boolean
+        token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined>;
 }

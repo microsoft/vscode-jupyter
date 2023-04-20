@@ -55,7 +55,6 @@ import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../messageTypes';
 import {
-    getRemoteKernelSessionInformation,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
     areKernelConnectionsEqual
@@ -86,7 +85,8 @@ import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
+import { ConnectionDisplayDataProvider, IConnectionDisplayData } from './connectionDisplayData';
+import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -143,8 +143,48 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     public isAssociatedWithDocument(doc: NotebookDocument) {
         return this.associatedDocuments.has(doc);
     }
+    private readonly displayData: IConnectionDisplayData;
 
     private readonly associatedDocuments = new WeakMap<NotebookDocument, Promise<void>>();
+    public static create(
+        kernelConnection: KernelConnectionMetadata,
+        id: string,
+        _viewType: string,
+        notebookApi: IVSCodeNotebook,
+        commandManager: ICommandManager,
+        kernelProvider: IKernelProvider,
+        context: IExtensionContext,
+        disposableRegistry: IDisposableRegistry,
+        languageService: NotebookCellLanguageService,
+        workspace: IWorkspaceService,
+        configuration: IConfigurationService,
+        documentManager: IDocumentManager,
+        appShell: IApplicationShell,
+        browser: IBrowserService,
+        extensionChecker: IPythonExtensionChecker,
+        serviceContainer: IServiceContainer,
+        displayDataProvider: ConnectionDisplayDataProvider
+    ): IVSCodeNotebookController {
+        return new VSCodeNotebookController(
+            kernelConnection,
+            id,
+            _viewType,
+            notebookApi,
+            commandManager,
+            kernelProvider,
+            context,
+            disposableRegistry,
+            languageService,
+            workspace,
+            configuration,
+            documentManager,
+            appShell,
+            browser,
+            extensionChecker,
+            serviceContainer,
+            displayDataProvider
+        );
+    }
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -165,32 +205,21 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly displayDataProvider: ConnectionDisplayDataProvider
     ) {
         disposableRegistry.push(this);
-        displayDataProvider.onDidChange(
-            (e) => {
-                if (e.connectionId === this.connection.id) {
-                    this.updateDisplayData();
-                }
-            },
-            this,
-            this.disposables
-        );
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
             controller: VSCodeNotebookController;
         }>();
 
-        const displayData = this.displayDataProvider.getDisplayData(this.connection);
-        traceVerbose(
-            `Creating notebook controller for ${kernelConnection.kind} & view ${_viewType} (id='${kernelConnection.id}') with name '${displayData.label}'`
-        );
+        this.displayData = this.displayDataProvider.getDisplayData(this.connection);
         this.controller = this.notebookApi.createNotebookController(
             id,
             _viewType,
-            displayData.label,
+            this.displayData.label,
             this.handleExecution.bind(this),
             this.getRendererScripts(),
             []
         );
+        this.displayData.onDidChange(this.updateDisplayData, this, this.disposables);
         this.updateDisplayData();
 
         // Fill in extended info for our controller
@@ -212,10 +241,21 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this.disposables
         );
     }
+    private readonly restoredConnections = new WeakSet<NotebookDocument>();
+    public async restoreConnection(notebook: NotebookDocument) {
+        if (this.restoredConnections.has(notebook)) {
+            return;
+        }
+        this.restoredConnections.add(notebook);
+        const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
+        if (this.kernelConnection.kind === 'connectToLiveRemoteKernel') {
+            const indicator = new RemoteKernelReconnectBusyIndicator(kernel, this.controller, notebook);
+            this.disposables.push(indicator);
+            indicator.initialize();
+        }
+    }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
-        if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
-            this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
-        } else {
+        if (kernelConnection.kind !== 'connectToLiveRemoteKernel') {
             this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
         }
     }
@@ -267,11 +307,14 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         disposeAllDisposables(this.disposables);
     }
     private updateDisplayData() {
-        const displayData = this.displayDataProvider.getDisplayData(this.connection);
-        this.controller.label = displayData.label;
-        this.controller.description = displayData.description;
-        this.controller.detail = displayData.detail;
-        this.controller.kind = displayData.category;
+        this.controller.label = this.displayData.label;
+        this.controller.description = this.displayData.description;
+        if (this.displayData.serverDisplayName) {
+            // MRU kernel picker doesn't show controller kind/category, so add server name to description
+            this.controller.description = this.displayData.description
+                ? `${this.displayData.description} (${this.displayData.serverDisplayName})`
+                : this.displayData.serverDisplayName;
+        }
     }
     // Handle the execution of notebook cell
     @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
@@ -318,12 +361,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
             this.appShell
-                .showWarningMessage(
-                    DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion(),
-                    Common.learnMore()
-                )
+                .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
                 .then((selection) => {
-                    if (selection !== Common.learnMore()) {
+                    if (selection !== Common.learnMore) {
                         return;
                     }
                     return this.browser.launch('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
@@ -429,48 +469,17 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 Uri.joinPath(
                     this.context.extensionUri,
                     'out',
-                    'webviews/webview-side',
+                    'webviews',
+                    'webview-side',
                     'widgetTester',
                     'widgetTester.js'
                 )
             );
-
-            // In development mode, ipywidgets is not under the 'out' folder.
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'node_modules',
-                    '@vscode',
-                    'jupyter-ipywidgets7',
-                    'dist',
-                    'ipywidgets.js'
-                )
-            );
-        } else {
-            // Normal package mode, ipywidgets ends up next to extension.ts
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'node_modules',
-                    '@vscode',
-                    'jupyter-ipywidgets7',
-                    'dist',
-                    'ipywidgets.js'
-                )
-            );
         }
+
+        // See comments on dummy.ts for more details.
         scripts.push(
-            ...[
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'webviews',
-                    'webview-side',
-                    'ipywidgetsKernel',
-                    'ipywidgetsKernel.js'
-                )
-            ]
+            Uri.joinPath(this.context.extensionUri, 'out', 'webviews', 'webview-side', 'ipywidgetsKernel', 'dummy.js')
         );
         return scripts.map((uri) => new NotebookRendererScript(uri));
     }

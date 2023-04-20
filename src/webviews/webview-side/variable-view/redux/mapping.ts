@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { InteractiveWindowMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
 import { BaseReduxActionPayload } from '../../../types';
 import { IMainState } from '../../interactive-common/mainState';

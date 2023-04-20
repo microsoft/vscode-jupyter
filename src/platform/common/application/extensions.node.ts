@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { Event, Extension, extensions, Uri } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
-import * as stacktrace from 'stack-trace';
 import { EXTENSION_ROOT_DIR } from '../../constants.node';
 import { IFileSystem } from '../platform/types';
+import { parseStack } from '../../errors';
+import { unknownExtensionId } from '../constants';
+import { traceError } from '../../logging';
 
 /**
  * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
@@ -49,7 +49,8 @@ export class Extensions implements IExtensions {
                         (ext) => item!.includes(ext.extensionUri.path) || item!.includes(ext.extensionUri.fsPath)
                     )
                 ) as string[];
-            stacktrace.parse(new Error('Ex')).forEach((item) => {
+            // Work around for https://github.com/microsoft/vscode-jupyter/issues/12550
+            parseStack(new Error('Ex')).forEach((item) => {
                 const fileName = item.getFileName();
                 if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
                     frames.push(fileName);
@@ -65,7 +66,10 @@ export class Extensions implements IExtensions {
                         const text = await this.fs.readFile(possiblePackageJson);
                         try {
                             const json = JSON.parse(text);
-                            return { extensionId: `${json.publisher}.${json.name}`, displayName: json.displayName };
+                            // Possible we have another package.json file. Make sure it has an extension id
+                            if (json.publisher && json.name && json.displayName) {
+                                return { extensionId: `${json.publisher}.${json.name}`, displayName: json.displayName };
+                            }
                         } catch {
                             // If parse fails, then not the extension
                         }
@@ -74,7 +78,8 @@ export class Extensions implements IExtensions {
                     dirName = path.dirname(dirName);
                 }
             }
+            traceError(`Unable to determine the caller of the extension API for trace stack.`, stack);
         }
-        return { extensionId: DataScience.unknownPackage(), displayName: DataScience.unknownPackage() };
+        return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
     }
 }

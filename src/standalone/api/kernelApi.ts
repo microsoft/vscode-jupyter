@@ -116,6 +116,7 @@ class JupyterKernelService implements IExportedKernelService {
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
+        this._status = this.kernelFinder.status;
         this.kernelFinder.onDidChangeStatus(
             () => {
                 this._status = this.kernelFinder.status;
@@ -234,7 +235,7 @@ class JupyterKernelService implements IExportedKernelService {
             if (!item.connection.kernelModel.id || kernelsAlreadyListed.has(item.connection.kernelModel.id)) {
                 return;
             }
-            kernels.push({ metadata: item.connection, uri: undefined });
+            kernels.push({ metadata: item.connection as KernelConnectionMetadata, uri: undefined });
         });
         return kernels;
     }

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import {
     CancellationToken,
     NotebookCell,
@@ -17,16 +15,24 @@ import { IShowDataViewerFromVariablePanel } from './messageTypes';
 import { Commands as DSCommands, CommandSource } from './platform/common/constants';
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { Channel } from './platform/common/application/types';
-import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
+import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 
-export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
+export type CommandIds = keyof ICommandNameArgumentTypeMapping;
+
+type ContextKeyPrimitiveValue = null | undefined | boolean | number | string | Uri;
+
+export type ContextKeyValue =
+    | ContextKeyPrimitiveValue
+    | Array<ContextKeyPrimitiveValue>
+    | Record<string, ContextKeyPrimitiveValue>;
 
 /**
- * Mapping between commands and list or arguments.
- * These commands do NOT have any arguments.
- * @interface ICommandNameWithoutArgumentTypeMapping
+ * Mapping between commands and list of arguments.
+ * Used to provide strong typing for command & args.
+ * @export
+ * @interface ICommandNameArgumentTypeMapping
  */
-interface ICommandNameWithoutArgumentTypeMapping {
+export interface ICommandNameArgumentTypeMapping {
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
@@ -43,8 +49,9 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CreateNewInteractive]: [];
     [DSCommands.InterruptKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
     [DSCommands.RestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
+    [DSCommands.RestartKernelAndRunAllCells]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
+    [DSCommands.RestartKernelAndRunUpToSelectedCell]: [{ notebookEditor: { notebookUri: Uri } } | undefined];
     [DSCommands.NotebookEditorRemoveAllCells]: [];
-    [DSCommands.NotebookEditorRestartKernel]: [{ notebookEditor: { notebookUri: Uri } } | undefined | Uri];
     [DSCommands.NotebookEditorRunAllCells]: [];
     [DSCommands.NotebookEditorAddCellBelow]: [];
     [DSCommands.ExpandAllCells]: [];
@@ -65,23 +72,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['notebook.cell.executeAndSelectBelow']: [];
     ['notebook.cell.collapseCellOutput']: [];
     ['notebook.cell.expandCellOutput']: [];
-}
-
-type ContextKeyPrimitiveValue = null | undefined | boolean | number | string | Uri;
-
-export type ContextKeyValue =
-    | ContextKeyPrimitiveValue
-    | Array<ContextKeyPrimitiveValue>
-    | Record<string, ContextKeyPrimitiveValue>;
-
-/**
- * Mapping between commands and list of arguments.
- * Used to provide strong typing for command & args.
- * @export
- * @interface ICommandNameArgumentTypeMapping
- * @extends {ICommandNameWithoutArgumentTypeMapping}
- */
-export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     ['vscode.openWith']: [Uri, string];
     ['jupyter.filterKernels']: [never];
     ['workbench.action.quickOpen']: [string];
@@ -118,6 +108,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
               | { id: string; extension: string }
               // This set of args will display the kernel picker.
               | { notebookEditor: NotebookEditor }
+              // Open a specific notebook with a specific kernel.
+              | { notebookEditor: NotebookEditor; id: string; extension: string }
           ]
         | [];
     ['undo']: [];
@@ -178,7 +170,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportToPDF]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.Export]: [NotebookDocument | undefined, string | undefined, PythonEnvironment | undefined];
     [DSCommands.NativeNotebookExport]: [Uri | undefined | { notebookEditor: { notebookUri: Uri } }];
-    [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.LatestExtension]: [string];
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
@@ -191,7 +182,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
         Uri | SelectJupyterUriCommandSource | undefined,
         NotebookDocument | undefined
     ];
-    [DSCommands.SelectNativeJupyterUriFromToolBar]: [];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineNext]: [NotebookCell];
@@ -200,5 +190,4 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
     [DSCommands.InstallPythonViaKernelPicker]: [];
-    [DSCommands.SwitchToRemoteKernels]: [];
 }

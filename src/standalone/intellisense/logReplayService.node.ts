@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { injectable, inject } from 'inversify';
 import * as os from 'os';
 import * as vscode from 'vscode';

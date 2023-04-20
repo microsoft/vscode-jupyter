@@ -4,8 +4,6 @@
 /* eslint-disable no-void */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as fakeTimers from '@sinonjs/fake-timers';
@@ -38,8 +36,10 @@ import { TestNotebookDocument } from '../../test/datascience/notebook/executionH
 import { KernelConnector } from './kernelConnector';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
-suite('Notebook Controller', function () {
+suite(`Notebook Controller`, function () {
     let controller: NotebookController;
     let kernelConnection: KernelConnectionMetadata;
     let vscNotebookApi: IVSCodeNotebook;
@@ -68,6 +68,7 @@ suite('Notebook Controller', function () {
     let jupyterSettings: IWatchableJupyterSettings;
     let trustedPaths: ITrustedKernelPaths;
     let displayDataProvider: ConnectionDisplayDataProvider;
+    let interpreterService: IInterpreterService;
     setup(async function () {
         kernelConnection = mock<KernelConnectionMetadata>();
         vscNotebookApi = mock<IVSCodeNotebook>();
@@ -92,8 +93,12 @@ suite('Notebook Controller', function () {
         }>();
         jupyterSettings = mock<IWatchableJupyterSettings>();
         trustedPaths = mock<ITrustedKernelPaths>();
+        interpreterService = mock<IInterpreterService>();
+        const onDidChangeInterpreters = new EventEmitter<PythonEnvironment[]>();
+        when(interpreterService.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
         onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
         disposables.push(onDidChangeSelectedNotebooks);
+        disposables.push(onDidChangeInterpreters);
         disposables.push(onDidCloseNotebookDocument);
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
@@ -136,7 +141,8 @@ suite('Notebook Controller', function () {
             instance(workspace),
             instance(platform),
             instance(jupyterUriStorage),
-            disposables
+            disposables,
+            instance(interpreterService)
         );
     });
     teardown(() => disposeAllDisposables(disposables));

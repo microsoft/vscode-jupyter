@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import {
     debug,
     DebugSession,
@@ -17,12 +15,12 @@ import {
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { IDisposable, IFeaturesManager } from '../../platform/common/types';
+import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IControllerLoader, IControllerRegistration } from '../controllers/types';
+import { IControllerRegistration } from '../controllers/types';
 import { DebuggingTelemetry } from './constants';
 import { Debugger } from './debugger';
 import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
@@ -44,7 +42,6 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
 
     public constructor(
         protected readonly kernelProvider: IKernelProvider,
-        private readonly notebookControllerLoader: IControllerLoader,
         private readonly controllerRegistration: IControllerRegistration,
         protected readonly commandManager: ICommandManager,
         protected readonly appShell: IApplicationShell,
@@ -108,7 +105,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
             await debug.startDebugging(undefined, config, options);
         } catch (err) {
             traceError(`Can't start debugging (${err})`);
-            this.appShell.showErrorMessage(DataScience.cantStartDebugging()).then(noop, noop);
+            this.appShell.showErrorMessage(DataScience.cantStartDebugging).then(noop, noop);
         }
     }
 
@@ -139,9 +136,6 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     }
 
     protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
-        if (this.serviceContainer.get<IFeaturesManager>(IFeaturesManager).features.kernelPickerType === 'Stable') {
-            await this.notebookControllerLoader.loaded;
-        }
         const controller = this.controllerRegistration.getSelected(doc);
         let kernel = this.kernelProvider.get(doc);
         if (controller && (!kernel || (kernel && kernel.status === 'unknown'))) {
@@ -172,7 +166,7 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
     ): Promise<IpykernelCheckResult> {
         const editor = this.findEditorForCell(cell);
         if (!editor) {
-            this.appShell.showErrorMessage(DataScience.noNotebookToDebug()).then(noop, noop);
+            this.appShell.showErrorMessage(DataScience.noNotebookToDebug).then(noop, noop);
             return IpykernelCheckResult.Unknown;
         }
 
@@ -225,12 +219,12 @@ export abstract class DebuggingManagerBase implements IDisposable, IDebuggingMan
 
     private async promptInstallIpykernel6() {
         const response = await this.appShell.showInformationMessage(
-            DataScience.needIpykernel6(),
+            DataScience.needIpykernel6,
             { modal: true },
-            DataScience.setup()
+            DataScience.setup
         );
 
-        if (response === DataScience.setup()) {
+        if (response === DataScience.setup) {
             sendTelemetryEvent(DebuggingTelemetry.clickedOnSetup);
             this.appShell.openUrl(
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'

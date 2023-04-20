@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { CancellationError, CancellationToken, CancellationTokenSource } from 'vscode';
 import { disposeAllDisposables } from './helpers';
 import { IDisposable } from './types';
@@ -18,7 +16,7 @@ export function isCancellationError(ex: Error, includeErrorsWithTheMessageCancel
     }
     if (
         includeErrorsWithTheMessageCanceled &&
-        (ex.message.includes('Canceled') || ex.message.includes(Common.canceled()))
+        (ex.message.includes('Canceled') || ex.message.includes(Common.canceled))
     ) {
         return true;
     }

@@ -7,7 +7,13 @@ import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import * as tmp from 'tmp';
-import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
+import {
+    PythonExtension,
+    PylanceExtension,
+    setTestExecution,
+    RendererExtension,
+    isCI
+} from '../platform/common/constants';
 import { DownloadPlatform } from '@vscode/test-electron/out/download';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
@@ -89,6 +95,17 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
             stdio: 'inherit'
         }
     );
+
+    // Make sure renderers is there too as we'll use it for widget tests
+    console.info(`Installing Renderer Extension to ${extensionsDir}`);
+    spawnSync(
+        cliPath,
+        ['--install-extension', RendererExtension, '--extensions-dir', extensionsDir, '--disable-telemetry'],
+        {
+            encoding: 'utf-8',
+            stdio: 'inherit'
+        }
+    );
 }
 
 async function createSettings(): Promise<string> {
@@ -110,8 +127,13 @@ async function createSettings(): Promise<string> {
         // Disable the restart ask so that restart just happens
         'jupyter.askForKernelRestart': false,
         // To get widgets working.
-        'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com']
+        'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com'],
+        // New Kernel Picker.
+        'notebook.kernelPicker.type': 'mru'
     };
+    if (IS_SMOKE_TEST()) {
+        defaultSettings['python.languageServer'] = 'None';
+    }
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
     return userDataDirectory;
@@ -153,6 +175,8 @@ async function start() {
             .concat(['--skip-release-notes'])
             .concat(['--enable-proposed-api'])
             .concat(['--timeout', '5000'])
+            .concat(['--disable-extension', 'ms-python.isort']) // We don't need this, also has a lot of errors on CI and floods CI logs unnecessarily.
+            .concat(IS_SMOKE_TEST() ? ['--disable-extension', 'ms-python.vscode-pylance'] : []) // For some reason pylance crashes and takes down the entire test run. See https://github.com/microsoft/vscode-jupyter/issues/13200
             .concat(['--extensions-dir', extensionsDir])
             .concat(['--user-data-dir', userDataDirectory]),
         // .concat(['--verbose']), // Too much logging from VS Code, enable this to see what's going on in VSC.
@@ -160,7 +184,34 @@ async function start() {
         extensionTestsEnv: { ...process.env, DISABLE_INSIDERS_EXTENSION: '1' }
     });
 }
-start().catch((ex) => {
-    console.error('End Standard tests (with errors)', ex);
-    process.exit(1);
-});
+
+const webTestSummaryJsonFile = IS_SMOKE_TEST()
+    ? path.join(__dirname, '..', '..', 'logs', 'testresults.json')
+    : path.join(__dirname, '..', '..', 'temp', 'ext', 'smokeTestExtensionsFolder', 'logs', 'testresults.json');
+if (isCI && fs.existsSync(webTestSummaryJsonFile)) {
+    // On CI sometimes VS Code crashes or there are network issues and tests do not even start
+    // We will create a simple file to indicate whether tests started
+    // if this file isn't created, then we know its an infrastructure issue and we can retry tests once again
+    fs.unlinkSync(webTestSummaryJsonFile);
+}
+start()
+    .catch((ex) => {
+        console.error('End Standard tests (with errors)', ex);
+        // If we failed and could not start the tests, then try again
+        // Could be some flaky network issue or the like.
+        if (isCI && !fs.existsSync(webTestSummaryJsonFile)) {
+            return start();
+        }
+        process.exit(1);
+    })
+    .catch((ex) => {
+        console.error('End Standard tests (with errors)', ex);
+        process.exit(1);
+    })
+    .finally(() => {
+        console.log(
+            `Log file ${webTestSummaryJsonFile} ${
+                fs.existsSync(webTestSummaryJsonFile) ? 'has' : 'has not'
+            } been created`
+        );
+    });

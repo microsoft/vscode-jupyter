@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { disposeAllDisposables, splitLines, trimQuotes } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../../platform/common/types';
-import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../../../platform/logging';
+import { traceError, traceInfoIfCI, traceWarning } from '../../../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { IKernel, isLocalConnection } from '../../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../../platform/telemetry/helpers';
@@ -66,7 +66,7 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
     // We cannot eval as thats dangerous, and we cannot use JSON.parse either as it not JSON.
     // Lets just extract what we need.
     configStr = stripComments(configStr, { language: 'javascript' });
-    configStr = configStr.splitLines({ trim: true, removeEmptyEntries: true }).join('');
+    configStr = splitLines(configStr, { trim: true, removeEmptyEntries: true }).join('');
     // Now that we have just valid JS, extract contents between the third '{' and corresponding ending '}'
     const mappings = configStr
         .split('{')[3]
@@ -89,8 +89,8 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
     // Go through each and extract the key and the value.
     mappings.forEach((mapping) => {
         const parts = mapping.split(':');
-        const key = parts[0].trim().trimQuotes().trim();
-        const value = parts[1].trim().trimQuotes().trim();
+        const key = trimQuotes(parts[0].trim()).trim();
+        const value = trimQuotes(parts[1].trim()).trim();
         requireConfig[key] = Uri.joinPath(baseUrl, value);
     });
 
@@ -163,7 +163,7 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 }
                 traceWarning(message);
             }
-            traceVerbose(
+            traceInfoIfCI(
                 `Extracted require.config entry for ${widgetFolderName} from ${getDisplayPath(
                     script
                 )} for ${baseUrl.toString()} is ${JSON.stringify(config)}`
@@ -182,8 +182,8 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
             this.getWidgetEntryPoints(),
             this.getNbExtensionsParentPath()
         ]);
-        traceVerbose(`Widget Entry points = ${JSON.stringify(entryPoints)}`);
-        traceVerbose(`Widget baseUrl = ${baseUrl?.toString()}`);
+        traceInfoIfCI(`Widget Entry points = ${JSON.stringify(entryPoints)}`);
+        traceInfoIfCI(`Widget baseUrl = ${baseUrl?.toString()}`);
         if (!baseUrl) {
             return;
         }
@@ -205,7 +205,7 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
                 )}`
             );
         }
-        traceVerbose(`Widget config = ${JSON.stringify(config)}`);
+        traceInfoIfCI(`Widget config = ${JSON.stringify(config)}`);
         sendTelemetryEvent(
             Telemetry.DiscoverIPyWidgetNamesPerf,
             { duration: stopWatch.elapsedTime },

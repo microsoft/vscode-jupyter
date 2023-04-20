@@ -19,7 +19,9 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 // processes
 
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+    const service = await internalServiceContainer
+        .get<IProcessServiceFactory>(IProcessServiceFactory)
+        .create(undefined);
     return service.shellExec(command, options);
 }
 
@@ -42,21 +44,6 @@ export function readFileSync(filePath: string): string {
 }
 
 export const untildify: (value: string) => string = (value) => untilidfyCommon(value, homedir());
-
-/**
- * Returns true if given file path exists within the given parent directory, false otherwise.
- * @param filePath File path to check for
- * @param parentPath The potential parent path to check for
- */
-export function isParentPath(filePath: string, parentPath: string): boolean {
-    if (!parentPath.endsWith(path.sep)) {
-        parentPath += path.sep;
-    }
-    if (!filePath.endsWith(path.sep)) {
-        filePath += path.sep;
-    }
-    return normCasePath(filePath).startsWith(normCasePath(parentPath));
-}
 
 /**
  * Returns the value for setting `python.<name>`.

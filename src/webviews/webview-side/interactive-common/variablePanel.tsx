@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as React from 'react';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 

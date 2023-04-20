@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento } from 'vscode';
 import { IApplicationShell } from '../../../../platform/common/application/types';
@@ -132,7 +130,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     ): Promise<WidgetScriptSource> {
         // If the webview is not online, then we cannot use the CDN.
         if (isWebViewOnline === false) {
-            this.warnIfNoAccessToInternetFromWebView(moduleName).ignoreErrors();
+            this.warnIfNoAccessToInternetFromWebView(moduleName).catch(noop);
             return {
                 moduleName
             };
@@ -193,7 +191,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
 
         traceError(`Widget Script ${moduleName}#${moduleVersion} was not found on on any cdn`);
-        this.handleWidgetSourceNotFound(moduleName, moduleVersion).ignoreErrors();
+        this.handleWidgetSourceNotFound(moduleName, moduleVersion).catch(noop);
         return { moduleName };
     }
 
@@ -219,18 +217,15 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         this.notifiedUserAboutWidgetScriptNotFound.add(moduleName);
         const selection = await this.appShell.showWarningMessage(
-            DataScience.cdnWidgetScriptNotAccessibleWarningMessage().format(
-                moduleName,
-                JSON.stringify(this.cdnProviders)
-            ),
-            Common.ok(),
-            Common.doNotShowAgain(),
-            Common.moreInfo()
+            DataScience.cdnWidgetScriptNotAccessibleWarningMessage(moduleName, JSON.stringify(this.cdnProviders)),
+            Common.ok,
+            Common.doNotShowAgain,
+            Common.moreInfo
         );
         switch (selection) {
-            case Common.doNotShowAgain():
+            case Common.doNotShowAgain:
                 return this.globalMemento.update(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, true);
-            case Common.moreInfo():
+            case Common.moreInfo:
                 return this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
             default:
                 noop();
@@ -252,16 +247,16 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         this.configurationPromise = createDeferred();
         sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDN);
         const selection = await this.appShell.showInformationMessage(
-            DataScience.useCDNForWidgetsNoInformation(),
+            DataScience.useCDNForWidgetsNoInformation,
             { modal: true },
-            Common.ok(),
-            Common.doNotShowAgain(),
-            Common.moreInfo()
+            Common.ok,
+            Common.doNotShowAgain,
+            Common.moreInfo
         );
 
         let selectionForTelemetry: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain' = 'dismissed';
         switch (selection) {
-            case Common.ok(): {
+            case Common.ok: {
                 selectionForTelemetry = 'ok';
                 // always search local interpreter or attempt to fetch scripts from remote jupyter server as backups.
                 await Promise.all([
@@ -270,7 +265,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 ]);
                 break;
             }
-            case Common.doNotShowAgain(): {
+            case Common.doNotShowAgain: {
                 selectionForTelemetry = 'doNotShowAgain';
                 // At a minimum search local interpreter or attempt to fetch scripts from remote jupyter server.
                 await Promise.all([
@@ -279,12 +274,12 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 ]);
                 break;
             }
-            case Common.moreInfo(): {
+            case Common.moreInfo: {
                 this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
                 break;
             }
             default:
-                selectionForTelemetry = selection === Common.cancel() ? 'cancel' : 'dismissed';
+                selectionForTelemetry = selection === Common.cancel ? 'cancel' : 'dismissed';
                 break;
         }
 
@@ -310,19 +305,19 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         this.notifiedUserAboutWidgetScriptNotFound.add(moduleName);
         const selection = await this.appShell.showWarningMessage(
-            DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
+            DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork(
                 moduleName,
                 version,
                 JSON.stringify(this.cdnProviders)
             ),
-            Common.ok(),
-            Common.doNotShowAgain(),
-            Common.reportThisIssue()
+            Common.ok,
+            Common.doNotShowAgain,
+            Common.reportThisIssue
         );
         switch (selection) {
-            case Common.doNotShowAgain():
+            case Common.doNotShowAgain:
                 return this.globalMemento.update(GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN, true);
-            case Common.reportThisIssue():
+            case Common.reportThisIssue:
                 return this.appShell.openUrl('https://aka.ms/CreatePVSCDataScienceIssue');
             default:
                 noop();

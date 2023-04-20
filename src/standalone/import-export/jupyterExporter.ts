@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 
@@ -46,9 +45,9 @@ export class JupyterExporter implements INotebookExporter {
             if (!showOpenPrompt) {
                 return;
             }
-            const openQuestion1 = DataScience.exportOpenQuestion1();
+            const openQuestion1 = DataScience.exportOpenQuestion1;
             this.applicationShell
-                .showInformationMessage(DataScience.exportDialogComplete().format(file), openQuestion1)
+                .showInformationMessage(DataScience.exportDialogComplete(file), openQuestion1)
                 .then(async (str: string | undefined) => {
                     try {
                         if (str === openQuestion1) {
@@ -64,7 +63,7 @@ export class JupyterExporter implements INotebookExporter {
             this.applicationShell
                 .showInformationMessage(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    DataScience.exportDialogFailed().format(exc as any)
+                    DataScience.exportDialogFailed(exc as any)
                 )
                 .then(noop, noop);
         }
