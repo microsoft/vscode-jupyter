@@ -97,7 +97,7 @@ function getZeroMQPreBuildsFoldersToKeep() {
         } else {
             return ['linux-arm64', 'linux-x64', 'linux-arm'];
         }
-   } else if (vsceTarget.includes('darwin')) {
+    } else if (vsceTarget.includes('darwin')) {
         if (vsceTarget.includes('arm64')) {
             return ['darwin-arm64'];
         } else if (vsceTarget.includes('x64')) {
