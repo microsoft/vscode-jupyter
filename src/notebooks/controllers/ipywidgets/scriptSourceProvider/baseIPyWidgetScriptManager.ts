@@ -14,20 +14,21 @@ import { IIPyWidgetScriptManager } from '../types';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { isCI } from '../../../../platform/common/constants';
 
+const REQUIRE_PATTERNS = [
+    'require.config({',
+    'requirejs.config({',
+    '["require"].config({',
+    "['require'].config({",
+    '["requirejs"].config({',
+    "['requirejs'].config({",
+    '["require"]["config"]({',
+    "['require']['config']({",
+    '["requirejs"]["config"]({',
+    "['requirejs']['config']({"
+];
 export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderName: string, contents: string) {
     // Look for `require.config(` or `window["require"].config` or `window['requirejs'].config`
-    const patternsToLookFor = [
-        'require.config({',
-        'requirejs.config({',
-        '["require"].config({',
-        "['require'].config({",
-        '["requirejs"].config({',
-        "['requirejs'].config({",
-        '["require"]["config"]({',
-        "['require']['config']({",
-        '["requirejs"]["config"]({',
-        "['requirejs']['config']({"
-    ];
+    let patternsToLookFor = [...REQUIRE_PATTERNS];
     const widgetFolderNameHash = await getTelemetrySafeHashedString(widgetFolderName);
     let indexOfRequireConfig = 0;
     let patternUsedToRegisterRequireConfig: string | undefined;
@@ -37,6 +38,18 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
             break;
         }
         indexOfRequireConfig = contents.indexOf(patternUsedToRegisterRequireConfig);
+    }
+
+    if (indexOfRequireConfig < 0) {
+        // Try without the `{`
+        let patternsToLookFor = [...REQUIRE_PATTERNS].map((pattern) => pattern.substring(0, pattern.length - 2));
+        while (indexOfRequireConfig <= 0 && patternsToLookFor.length) {
+            patternUsedToRegisterRequireConfig = patternsToLookFor.pop();
+            if (!patternUsedToRegisterRequireConfig) {
+                break;
+            }
+            indexOfRequireConfig = contents.indexOf(patternUsedToRegisterRequireConfig);
+        }
     }
 
     if (indexOfRequireConfig < 0) {
@@ -69,8 +82,8 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
     configStr = splitLines(configStr, { trim: true, removeEmptyEntries: true }).join('');
     // Now that we have just valid JS, extract contents between the third '{' and corresponding ending '}'
     const mappings = configStr
-        .split('{')[3]
-        .split('}')[0]
+        .split('{')
+        [configStr.split('{').length - 1].split('}')[0]
         .split(',')
         .map((entry) => entry.trim())
         .filter((entry) => entry.length && entry.includes(':'));
@@ -84,14 +97,13 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
     ''
     ]
     */
-
     const requireConfig: Record<string, Uri> = {};
     // Go through each and extract the key and the value.
     mappings.forEach((mapping) => {
         const parts = mapping.split(':');
         const key = trimQuotes(parts[0].trim()).trim();
-        const value = trimQuotes(parts[1].trim()).trim();
-        requireConfig[key] = Uri.joinPath(baseUrl, value);
+        const value = trimQuotes(mapping.substring(mapping.indexOf(':') + 1).trim()).trim();
+        requireConfig[key] = value.startsWith('http') ? Uri.parse(value) : Uri.joinPath(baseUrl, value);
     });
 
     if (!requireConfig || !Object.keys(requireConfig).length) {
