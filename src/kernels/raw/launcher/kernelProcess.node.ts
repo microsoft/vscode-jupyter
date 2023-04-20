@@ -170,10 +170,11 @@ export class KernelProcess implements IKernelProcess {
         deferred.promise.catch(noop);
         exeObs.proc!.on('exit', (exitCode) => {
             exitCode = exitCode || providedExitCode;
-            traceVerbose('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
             if (this.disposed) {
+                traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
                 return;
             }
+            traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`, stderrProc);
             if (!exitEventFired) {
                 this.exitEvent.fire({
                     exitCode: exitCode || undefined,
@@ -187,56 +188,37 @@ export class KernelProcess implements IKernelProcess {
             }
         });
 
-        exeObs.proc!.stdout?.on('data', (data: Buffer | string) => {
-            // We get these from execObs.out.subscribe.
-            // Hence log only using traceLevel = verbose.
-            // But only useful if daemon doesn't start for any reason.
-            traceVerbose(`KernelProcess output: ${(data || '').toString()}`);
-            this.sendToOutput((data || '').toString());
-        });
+        if (exeObs.proc) {
+            exeObs.proc.stdout?.on('data', (data: Buffer | string) => {
+                // We get these from execObs.out.subscribe.
+                // Hence log only using traceLevel = verbose.
+                // But only useful if daemon doesn't start for any reason.
+                traceVerbose(`KernelProcess output: ${(data || '').toString()}`);
+                this.sendToOutput((data || '').toString());
+            });
 
-        exeObs.proc!.stderr?.on('data', (data: Buffer | string) => {
-            // We get these from execObs.out.subscribe.
-            // Hence log only using traceLevel = verbose.
-            // But only useful if daemon doesn't start for any reason.
-            stderrProc += data.toString();
-            traceVerbose(`KernelProcess error: ${(data || '').toString()}`);
-            this.sendToOutput((data || '').toString());
-        });
+            exeObs.proc.stderr?.on('data', (data: Buffer | string) => {
+                // We get these from execObs.out.subscribe.
+                // Hence log only using traceLevel = verbose.
+                // But only useful if daemon doesn't start for any reason.
+                const output = stripUnwantedMessages((data || '').toString());
+                stderrProc += output;
+                if (output.trim().length) {
+                    traceVerbose(`KernelProcess error: ${output}`);
+                }
+                this.sendToOutput(output);
+            });
+        }
 
         let sawKernelConnectionFile = false;
         exeObs.out.subscribe(
             (output) => {
                 if (output.source === 'stderr') {
-                    if (!sawKernelConnectionFile) {
-                        // We would like to remove the unnecessary warning from ipykernel that ends up confusing users when things go wrong.
-                        // The message we want to remove is:
-                        //          '..../site-packages/traitlets/traitlets.py:2202: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.
-                        //          warn(
-                        ///         .../site-packages/traitlets/traitlets.py:2157: FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use '841dde17-f6aa-4ea7-9c02-b3bb414b28b3' instead of 'b"841dde17-f6aa-4ea7-9c02-b3bb414b28b3"'.
-                        //          warn(
-                        const lines = splitLines(output.out, { trim: true, removeEmptyEntries: true });
-                        if (
-                            lines.length === 4 &&
-                            lines[0].endsWith(
-                                `FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
-                            ) &&
-                            lines[1] === 'warn(' &&
-                            lines[2].includes(
-                                `FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use`
-                            ) &&
-                            lines[3] === 'warn('
-                        ) {
-                            return;
-                        }
-                    }
+                    output.out = stripUnwantedMessages(output.out);
                     // Capture stderr, incase kernel doesn't start.
                     stderr += output.out;
 
-                    // No point displaying false positives.
-                    // The message `.../site-packages/traitlets/traitlets.py:2548: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
-                    // always confuses users, and leads them to the assumption that this is the reason for the kernel not starting or the like.
-                    if (!output.out.includes('Supporting extra quotes around strings is deprecated in traitlets')) {
+                    if (output.out.trim().length) {
                         traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
                     }
                 } else {
@@ -638,4 +620,41 @@ export class KernelProcess implements IKernelProcess {
         }
         return this.interrupter.handle;
     }
+}
+
+function stripUnwantedMessages(output: string) {
+    // We would like to remove the unnecessary warning from ipykernel that ends up confusing users when things go wrong.
+    // The message we want to remove is:
+    //          '..../site-packages/traitlets/traitlets.py:2202: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.
+    //          warn(
+    ///         .../site-packages/traitlets/traitlets.py:2157: FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use '841dde17-f6aa-4ea7-9c02-b3bb414b28b3' instead of 'b"841dde17-f6aa-4ea7-9c02-b3bb414b28b3"'.
+    //          warn(
+    let lines = splitLines(output, { trim: true, removeEmptyEntries: true });
+    if (
+        lines.some((line) =>
+            line.includes(`FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0.`)
+        ) &&
+        lines.some((line) => line.trim() === 'warn(') &&
+        lines.some((line) =>
+            line.includes(`FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0.`)
+        )
+    ) {
+        // No point displaying false positives.
+        // The message `.../site-packages/traitlets/traitlets.py:2548: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
+        // always confuses users, and leads them to the assumption that this is the reason for the kernel not starting or the like.
+        return lines
+            .filter((line) => {
+                return (
+                    !line.endsWith(
+                        `FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
+                    ) &&
+                    line.trim() !== 'warn(' &&
+                    !line.includes(
+                        `FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use`
+                    )
+                );
+            })
+            .join(os.EOL);
+    }
+    return output;
 }
