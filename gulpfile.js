@@ -194,61 +194,8 @@ gulp.task('compile-webextension', async () => {
 });
 gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
 
-/**
- * On CI we download the binaries from gitbhub.
- * Sometimes there can be too many requests and we get a 403.
- * We need to ensure we never run into this, else only some of the binaries will be downloaded and the vsix will contain partial binaries.
- */
-async function verifyZmqBinaries() {
-    const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromq', 'prebuilds');
-    const files = [
-        path.join('darwin-arm64', 'node.napi.glibc.node'),
-        path.join('darwin-arm64', 'node.napi.glibc.node'),
-        path.join('darwin-x64', 'node.napi.glibc.node'),
-        path.join('linux-arm', 'node.napi.glibc.node'),
-        path.join('linux-arm64', 'node.napi.glibc.node'),
-        path.join('linux-x64', 'node.napi.musl.node'),
-        path.join('win32-ia32', 'node.napi.glibc.node'),
-        path.join('linux-x64', 'node.napi.glibc.node'),
-        path.join('win32-x64', 'node.napi.glibc.node')
-    ].map((file) => path.join(preBuildsFolder, file));
-    const filesNotDownloaded = [];
-    await Promise.all(
-        files.map((file) =>
-            fs
-                .pathExists(file)
-                .then((found) => (found ? undefined : filesNotDownloaded.push(file.replace(preBuildsFolder, ''))))
-        )
-    );
-
-    if (filesNotDownloaded.length) {
-        throw new Error(`Missing zeromq binaries. ${filesNotDownloaded.join(', ')}`);
-    }
-
-    await deleteZMQBuildFolder();
-}
-
-/**
- * We do not need to ship the Electron binaries.
- */
-function deleteElectronBinaries() {
-    const preBuildsFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'prebuilds');
-    glob.sync('**/electron.napi.*.node', { sync: true, cwd: preBuildsFolder }).forEach((file) => {
-        console.log(`Deleting ${file}`);
-        fs.rmSync(path.join(preBuildsFolder, file), { force: true });
-    });
-}
-
-async function deleteZMQBuildFolder() {
-    const buildFolder = path.join(__dirname, 'node_modules', 'zeromqold', 'build');
-    if (fs.existsSync(buildFolder)) {
-        fs.rmSync(buildFolder, { recursive: true, force: true });
-    }
-}
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
-        deleteElectronBinaries();
-        await verifyZmqBinaries();
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);

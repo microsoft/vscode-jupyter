@@ -11,9 +11,43 @@ const constants = require('../constants');
 const common = require('./common');
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.extension.node.json');
-// Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
+// Some modules will be pre-generated and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
+
+function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
+    console.error(parentFolder, resourcePath);
+    resourcePath = (resourcePath || '').toLowerCase();
+    // We do not need to bundle these folders
+    const foldersToIgnore = ['build', 'script', 'src', 'node_modules', 'vendor'];
+    if (foldersToIgnore.some((folder) => resourcePath.includes(path.join(parentFolder, folder)))) {
+        return;
+    }
+
+    if (
+        resourcePath.endsWith('.js') ||
+        resourcePath.endsWith('.json') ||
+        resourcePath.endsWith('.md') ||
+        resourcePath.endsWith('license')
+    ) {
+        return true;
+    }
+    if (!resourcePath.includes('prebuilds')) {
+        // We do not ship any other sub directory.
+        return false;
+    }
+    if (resourcePath.includes('electron.') && resourcePath.endsWith('.node')) {
+        // We do not ship electron binaries.
+        return false;
+    }
+    const preBuildsFoldersToCopy = common.getZeroMQPreBuildsFoldersToKeep();
+    if (preBuildsFoldersToCopy.length === 0) {
+        // Copy everything from all prebuilds folders.
+        return resourcePath.includes('prebuilds');
+    }
+    // Copy if this is a prebuilds folder that needs to be copied across.
+    return preBuildsFoldersToCopy.some((folder) => resourcePath.includes(folder));
+}
 const config = {
     mode: 'production',
     target: 'node',
@@ -131,15 +165,22 @@ const config = {
         // so at runtime we pick up the original structure.
         new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
         new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromqold.js'], log: false } }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.js' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.node' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.dll' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromq/**/*.json' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/@aminya/node-gyp-build/**/*' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.js' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.node' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/zeromqold/**/*.json' }] }),
-        new copyWebpackPlugin({ patterns: [{ from: './node_modules/node-gyp-build/**/*' }] }),
+        new copyWebpackPlugin({
+            patterns: [
+                // Copy files from latest zmq package.
+                { from: './node_modules/@aminya/node-gyp-build/**/*' },
+                {
+                    from: './node_modules/zeromq/**/*',
+                    filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromq')
+                },
+                // Copy files from fallback zmq package.
+                {
+                    from: './node_modules/zeromqold/**/*',
+                    filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromqold')
+                },
+                { from: './node_modules/node-gyp-build/**/*' }
+            ]
+        }),
         new webpack.DefinePlugin({
             IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
                 typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
