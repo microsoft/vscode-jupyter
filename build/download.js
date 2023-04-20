@@ -193,11 +193,7 @@ async function getAssetsFromGithubApi(opts) {
     if (!jsonRelease.assets) {
         throw new Error('Bad API response: ' + JSON.stringify(release));
     }
-    const assets = jsonRelease.assets.filter(
-        (a) =>
-            (a.name.includes('win32-') && a.name.endsWith('.zip')) ||
-            ((a.name.includes('linux-') || a.name.includes('darwin-')) && a.name.endsWith('.tar.gz'))
-    );
+    const assets = jsonRelease.assets.filter((a) => a.name.endsWith('.zip'));
     if (!assets.length) {
         throw new Error('No assets found to download');
     }
@@ -320,10 +316,11 @@ function parseAsset(asset) {
 
     const archs = new Set();
     ['x64', 'arm64', 'arm', 'ia32'].forEach((item) => {
-        if (asset.name.includes('musl')) {
-            archs.add('alpine');
-        } else if (!asset.name.includes(item)) {
+        if (!asset.name.includes(item)) {
             return;
+        } else if (asset.name.includes('musl')) {
+            platform = 'alpine';
+            archs.add(item);
         } else if (item === 'arm' && !asset.name.includes('arm64')) {
             archs.add(item);
         } else if (item !== 'arm') {
@@ -404,37 +401,17 @@ function sanitizePathForPowershell(path) {
     return path;
 }
 
-function untar(zipPath, destinationDir) {
-    return new Promise((resolve, reject) => {
-        const unzipProc = child_process.spawn('tar', ['xvf', zipPath, '-C', destinationDir], { stdio: 'inherit' });
-        unzipProc.on('error', (err) => {
-            reject(err);
-        });
-        unzipProc.on('close', (code) => {
-            console.log(`tar xvf exited with ${code}`);
-            if (code !== 0) {
-                reject(new Error(`tar xvf exited with ${code}`));
-                return;
-            }
-
-            resolve();
-        });
-    });
-}
-
 async function unzipFiles(zipPath, destinationDir) {
     if (isWindows) {
         await unzipWindows(zipPath, destinationDir);
-    } else if (zipPath.toLowerCase().endsWith('.zip')) {
-        await unzipLinux(zipPath, destinationDir);
     } else {
-        await untar(zipPath, destinationDir);
+        await unzipLinux(zipPath, destinationDir);
     }
 }
 
 /**
  * @param {{ name: string; url: string; }[]} assets
- * @param {{ 'win32'?: ('x64' | 'ia32' | 'arm64')[]; 'linux'?: ('arm' | 'x64' | 'arm64' | 'armhf' | 'alpine')[]; 'darwin'?: ('x64' | 'arm64')[]; }} platformOptions If not provided, then downloads all binaries for all platforms and archs.
+ * @param {{ 'win32'?: ('x64' | 'ia32' | 'arm64')[]; 'linux'?: ('arm' | 'x64' | 'arm64' | 'armhf')[]; 'darwin'?: ('x64' | 'arm64')[]; 'alpine'?: ('x64' | 'arm64')[]; }} platformOptions If not provided, then downloads all binaries for all platforms and archs.
  * @return {{ name: string; url: string; }[]} Assets to download
  */
 function getAssetsToDownload(assets, platformOptions) {
@@ -476,7 +453,7 @@ module.exports.parseAsset = parseAsset;
 
 /**
  * @param {{ force: boolean; token: string; version: string; destination: string; }} opts
- * @param {{ 'win32'?: ('x64' | 'ia32' | 'arm64')[]; 'linux'?: ('arm' | 'x64' | 'arm64' | 'armhf' | 'alpine')[]; 'darwin'?: ('x64' | 'arm64')[] }} platformOptions If not provided, then downloads all binaries for all platforms and archs.
+ * @param {{ 'win32'?: ('x64' | 'ia32' | 'arm64')[]; 'linux'?: ('arm' | 'x64' | 'arm64' | 'armhf')[]; 'darwin'?: ('x64' | 'arm64')[]; 'alpine'?: ('x64' | 'arm64')[] }} platformOptions If not provided, then downloads all binaries for all platforms and archs.
  * @return {Promise<void>} File path to the downloaded asset
  */
 module.exports.download = async (opts, platformOptions) => {
