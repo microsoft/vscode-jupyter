@@ -9,8 +9,12 @@ const path = require('path');
 const constants = require('../constants');
 const common = require('../webpack/common');
 
-const targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'lib', 'download.js');
+let targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'lib', 'download.js');
 fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'download.js')));
+targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'build', 'prePublis.js');
+fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'prePublish.js')));
+targetFile = path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'lib', 'index.js');
+fs.writeFileSync(targetFile, fs.readFileSync(path.join(constants.ExtensionRootDir, 'build', 'zmqIndex.js')));
 const { downloadZMQ } = require('@vscode/zeromq');
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
@@ -207,14 +211,8 @@ async function downloadZmqBinaries() {
         // No need to download zmq binaries for web.
         return;
     }
-    const target = process.env.VSC_VSCE_TARGET || '';
-    let options = undefined;
-    if (target.includes('win32')) {
-        // Non-window binaries are archived as .tar.gz,
-        // hence we need to download just the binaries for windows.
-        options = { win32: [] };
-    }
-    await downloadZMQ(options);
+    await require(path.join(constants.ExtensionRootDir, 'node_modules', '@vscode', 'zeromq', 'build', 'prePublis.js')).downloadZMQ();
+    await downloadZMQ();
 }
 
 fixUIFabricForTS49();
