@@ -4,10 +4,10 @@
 "use strict";
 
 const path = require("path");
-const { download } = require("../lib/download");
+const { download } = require("./download");
 const fs = require("fs");
 
-const VERSION = require("../lib/index").VERSION;
+const VERSION = "6.0.0-beta.16.5";
 
 /**
  * Downloads the ZMQ binaries.
@@ -27,4 +27,9 @@ async function downloadZMQ() {
   await download(downloadOptions);
 }
 
-module.exports.downloadZMQ = downloadZMQ;
+downloadZMQ()
+  .then(() => process.exit(0))
+  .catch((ex) => {
+    console.error("Failed to download ZMQ", ex);
+    process.exit(1);
+  });

@@ -10,9 +10,6 @@ const promisfy = require("util").promisify;
 const FSRmDir = promisfy(fs.rm);
 const FSStat = promisfy(fs.stat);
 
-const VERSION = "6.0.0-beta.16.5";
-module.exports.VERSION = VERSION;
-
 /**
  * Downloads the ZMQ binaries.
  *
@@ -48,10 +45,7 @@ module.exports.downloadZMQ = async (options, force) => {
   ]);
 
   const downloadOptions = {
-    version: VERSION,
-    token: process.env["GITHUB_TOKEN"],
     destination,
-		force
   };
   await download(downloadOptions, options);
 };
