@@ -69,6 +69,12 @@ suite('ipywidget - CDN', () => {
             config: {
                 'nglview-js-widgets': 'nbextensions/nglview-js-widgets/index'
             }
+        },
+        {
+            file: 'jupyter-require',
+            config: {
+                'js-logger': 'https://unpkg.com/js-logger/src/logger.min'
+            }
         }
     ].forEach((item) => {
         test(`Extract require.js configuration mapping for ${item.file}`, async () => {
@@ -88,7 +94,9 @@ suite('ipywidget - CDN', () => {
 
             const expectedConfig: Record<string, any> = item.config;
             Object.keys(item.config).forEach((key) => {
-                expectedConfig[key] = Uri.file(path.join(nbExtensionsFolder, expectedConfig[key])).toString();
+                if (!expectedConfig[key].startsWith('http')) {
+                    expectedConfig[key] = Uri.file(path.join(nbExtensionsFolder, expectedConfig[key])).toString();
+                }
             });
             assert.deepEqual(config, expectedConfig);
         });
