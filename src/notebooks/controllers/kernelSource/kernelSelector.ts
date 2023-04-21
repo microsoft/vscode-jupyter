@@ -109,12 +109,10 @@ export class KernelSelector implements IDisposable {
         this.extensionChecker = ServiceContainer.instance.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         this.createPythonEnvQuickPickItem = {
             label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`,
-            tooltip: DataScience.createPythonEnvironmentInQuickPickTooltip,
             command: this.onCreatePythonEnvironment.bind(this)
         };
         this.installPythonItem = {
             label: DataScience.installPythonQuickPickTitle,
-            tooltip: DataScience.installPythonQuickPickToolTip,
             detail: DataScience.pleaseReloadVSCodeOncePythonHasBeenInstalled,
             command: async () => {
                 // Timeout as we want the quick pick to close before we start this process.
@@ -124,7 +122,6 @@ export class KernelSelector implements IDisposable {
         };
         this.installPythonExtension = {
             label: DataScience.installPythonExtensionViaKernelPickerTitle,
-            tooltip: DataScience.installPythonExtensionViaKernelPickerToolTip,
             command: async () => {
                 // TODO: Once user installs Python wait here and refresh this UI so we display the Python Envs.
                 const installed = await commands.executeCommand(Commands.InstallPythonExtensionViaKernelPicker);
@@ -570,7 +567,6 @@ export class KernelSelector implements IDisposable {
                 return;
             }
             item.label = this.connectionToQuickPick(kernel, item.isRecommended).label;
-            item.tooltip = this.connectionToQuickPick(kernel, item.isRecommended).tooltip;
             item.detail = this.connectionToQuickPick(kernel, item.isRecommended).detail;
             item.description = this.connectionToQuickPick(kernel, item.isRecommended).description;
             item.isRecommended = this.connectionToQuickPick(kernel, item.isRecommended).isRecommended;
@@ -594,7 +590,6 @@ export class KernelSelector implements IDisposable {
             isRecommended: recommended,
             detail: displayData.detail,
             description: displayData.description,
-            tooltip: connection.interpreter?.isCondaEnvWithoutPython ? DataScience.pythonCondaKernelsWithoutPython : '',
             connection: connection
         };
     }

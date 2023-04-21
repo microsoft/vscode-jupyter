@@ -11,11 +11,8 @@ import {
     Event,
     EventEmitter,
     NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
     NotebookCellKind,
     NotebookDocument,
-    notebooks,
     Uri,
     workspace
 } from 'vscode';
@@ -94,24 +91,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 })
             );
         }
-
-        this.disposables.push(
-            notebooks.onDidChangeNotebookCellExecutionState(
-                (cellStateChange: NotebookCellExecutionStateChangeEvent) => {
-                    // If a cell has moved to idle, stop the debug session
-                    if (
-                        this.configuration.__cellIndex === cellStateChange.cell.index &&
-                        cellStateChange.state === NotebookCellExecutionState.Idle &&
-                        !this.disconnected
-                    ) {
-                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                        this.disconnect().catch(noop);
-                    }
-                },
-                this,
-                this.disposables
-            )
-        );
 
         this.disposables.push(
             workspace.onDidChangeNotebookDocument(

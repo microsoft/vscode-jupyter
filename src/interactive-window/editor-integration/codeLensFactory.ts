@@ -2,25 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    CodeLens,
-    Command,
-    Event,
-    EventEmitter,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    Range,
-    TextDocument
-} from 'vscode';
+import { CodeLens, Command, Event, EventEmitter, Range, TextDocument } from 'vscode';
 
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { traceWarning, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
-import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
-import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platform/common/constants';
+import { CodeLensCommands, Commands } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { CodeLensPerfMeasures, ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -69,7 +59,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
+        @inject(IVSCodeNotebook) _notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IGeneratedCodeStorageFactory)
         private readonly generatedCodeStorageFactory: IGeneratedCodeStorageFactory,
@@ -78,7 +68,6 @@ export class CodeLensFactory implements ICodeLensFactory {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
         this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
-        notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
         kernelProvider.onDidDisposeKernel(
             (kernel) => {
                 this.notebookData.delete(kernel.notebook.uri.toString());
@@ -215,28 +204,6 @@ export class CodeLensFactory implements ICodeLensFactory {
         return [...this.notebookData.values()]
             .map((d) => d.documentExecutionCounts.get(key))
             .filter((n) => n !== undefined) as number[];
-    }
-    private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent) {
-        if (e.cell.notebook.notebookType !== InteractiveWindowView) {
-            return;
-        }
-        if (e.state !== NotebookCellExecutionState.Idle || !e.cell.executionSummary?.executionOrder) {
-            return;
-        }
-        const metadata = getInteractiveCellMetadata(e.cell);
-        let data = this.notebookData.get(e.cell.notebook.uri.toString());
-        if (!data) {
-            data = {
-                cellExecutionCounts: new Map<string, number>(),
-                documentExecutionCounts: new Map<string, number>()
-            };
-            this.notebookData.set(e.cell.notebook.uri.toString(), data);
-        }
-        if (data !== undefined && metadata !== undefined) {
-            data.cellExecutionCounts.set(metadata.id, e.cell.executionSummary.executionOrder);
-            data.documentExecutionCounts.set(metadata.interactive.uristring, e.cell.executionSummary.executionOrder);
-            this.updateEvent.fire();
-        }
     }
     private onClosedDocument(doc: TextDocument) {
         this.codeLensCache.delete(doc.uri.toString());
@@ -389,7 +356,6 @@ export class CodeLensFactory implements ICodeLensFactory {
                         range.start.character
                     ]);
                 }
-                break;
             case Commands.RunCellAndAllBelowPalette:
             case Commands.RunCellAndAllBelow:
                 return this.generateCodeLens(range, Commands.RunCellAndAllBelow, runAllBelowTitle, [

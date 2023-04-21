@@ -3,12 +3,11 @@
 
 import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import { Disposable, NotebookCell, NotebookCellExecutionState, notebooks, ProgressLocation } from 'vscode';
+import { Disposable, NotebookCell, ProgressLocation } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IApplicationShell } from '../platform/common/application/types';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { createDeferred } from '../platform/common/utils/async';
-import { isJupyterNotebook } from '../platform/common/utils';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { Telemetry } from '../telemetry';
@@ -52,22 +51,6 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
                 this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);
             }, this)
-        );
-        this.disposableRegistry.push(
-            notebooks.onDidChangeNotebookCellExecutionState((e) => {
-                if (!isJupyterNotebook(e.cell.notebook)) {
-                    return;
-                }
-                if (e.state !== NotebookCellExecutionState.Idle) {
-                    return;
-                }
-                const kernel = this.kernelProvider.get(e.cell.notebook);
-                if (!kernel || this.lastExecutedCellPerKernel.get(kernel) !== e.cell) {
-                    return;
-                }
-                // Ok, the cell has completed.
-                this.lastExecutedCellPerKernel.delete(kernel);
-            })
         );
     }
     private onDidStartKernel(kernel: IKernel) {

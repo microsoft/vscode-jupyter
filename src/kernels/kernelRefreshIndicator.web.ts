@@ -3,9 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import uuid from 'uuid/v4';
-import { notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { traceVerbose } from '../platform/logging';
@@ -58,22 +56,5 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         const id = uuid();
         counter += 1;
         traceVerbose(`Create Notebook Controller Detection Task ${id}, total detections = ${counter}`);
-        const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
-        const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
-        this.disposables.push(taskNb);
-        this.disposables.push(taskIW);
-
-        this.kernelFinder.onDidChangeStatus(
-            () => {
-                if (this.kernelFinder.status === 'idle') {
-                    counter -= 1;
-                    traceVerbose(`Complete Notebook Controller Detection Task ${id}, total detections = ${counter}`);
-                    taskNb.dispose();
-                    taskIW.dispose();
-                }
-            },
-            this,
-            this.disposables
-        );
     }
 }

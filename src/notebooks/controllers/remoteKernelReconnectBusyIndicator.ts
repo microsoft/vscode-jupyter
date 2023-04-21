@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, NotebookController, NotebookDocument, workspace } from 'vscode';
+import { NotebookController, NotebookDocument, workspace } from 'vscode';
 import { IKernel } from '../../kernels/types';
 import { Disposables } from '../../platform/common/utils';
 
@@ -21,10 +21,6 @@ export class RemoteKernelReconnectBusyIndicator extends Disposables {
             return;
         }
         if (kernel.status !== 'busy' && kernel.status !== 'unknown') {
-            return;
-        }
-        if (!controller.createNotebookExecution) {
-            // Older version of VS Code will not have this API, e.g. older insiders.
             return;
         }
         workspace.onDidCloseNotebookDocument(
@@ -54,8 +50,5 @@ export class RemoteKernelReconnectBusyIndicator extends Disposables {
             this,
             this.disposables
         );
-        const execution = controller.createNotebookExecution(notebook);
-        execution.start();
-        this.disposables.push(new Disposable(() => execution.end()));
     }
 }

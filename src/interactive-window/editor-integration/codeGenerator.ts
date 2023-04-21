@@ -3,7 +3,6 @@
 
 import {
     Disposable,
-    NotebookCellExecutionStateChangeEvent,
     NotebookDocument,
     Position,
     Range,
@@ -13,7 +12,7 @@ import {
 } from 'vscode';
 
 import { splitMultilineString } from '../../platform/common/utils';
-import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { uncommentMagicCommands } from './cellFactory';
@@ -34,13 +33,11 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         private readonly configService: IConfigurationService,
         private readonly storage: IGeneratedCodeStore,
         private readonly notebook: NotebookDocument,
-        notebooks: IVSCodeNotebook,
         disposables: IDisposableRegistry
     ) {
         disposables.push(this);
         // Watch document changes so we can update our generated code
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument, this, this.disposables);
-        notebooks.onDidChangeNotebookCellExecutionState(this.onDidCellStateChange, this, this.disposables);
     }
 
     public dispose() {
@@ -105,20 +102,6 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
             return { lines, executableLines: lines.slice(1) };
         }
         return { lines, executableLines: lines };
-    }
-
-    private onDidCellStateChange(e: NotebookCellExecutionStateChangeEvent) {
-        if (
-            e.cell.notebook !== this.notebook ||
-            !e.cell.executionSummary?.executionOrder ||
-            this.cellIndexesCounted[e.cell.index]
-        ) {
-            return;
-        }
-        // A cell executed that we haven't counted yet, likely from the input box, so bump the execution count
-        // Cancelled cells (from earlier cells in the queue) don't have an execution order and shoud not increase the execution count
-        this.executionCount += 1;
-        this.cellIndexesCounted[e.cell.index] = true;
     }
 
     private async generateCodeImpl(

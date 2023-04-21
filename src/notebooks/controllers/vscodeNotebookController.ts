@@ -4,8 +4,8 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import {
     Disposable,
+    Event,
     EventEmitter,
-    ExtensionMode,
     languages,
     NotebookCell,
     NotebookCellExecution,
@@ -14,7 +14,6 @@ import {
     NotebookDocument,
     NotebookEdit,
     NotebookEditor,
-    NotebookRendererScript,
     Uri,
     WorkspaceEdit
 } from 'vscode';
@@ -42,8 +41,7 @@ import {
     IConfigurationService,
     IDisplayOptions,
     IDisposable,
-    IDisposableRegistry,
-    IExtensionContext
+    IDisposableRegistry
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
@@ -128,14 +126,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         return this._viewType as typeof InteractiveWindowView | typeof JupyterNotebookView;
     }
 
-    get onNotebookControllerSelected() {
-        return this._onNotebookControllerSelected.event;
-    }
     get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
-    }
-    get onDidReceiveMessage() {
-        return this.controller.onDidReceiveMessage;
     }
     get onDidDispose() {
         return this._onDidDispose.event;
@@ -153,7 +145,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         notebookApi: IVSCodeNotebook,
         commandManager: ICommandManager,
         kernelProvider: IKernelProvider,
-        context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
         languageService: NotebookCellLanguageService,
         workspace: IWorkspaceService,
@@ -172,7 +163,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             notebookApi,
             commandManager,
             kernelProvider,
-            context,
             disposableRegistry,
             languageService,
             workspace,
@@ -192,7 +182,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,
-        private readonly context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
         private readonly languageService: NotebookCellLanguageService,
         private readonly workspace: IWorkspaceService,
@@ -215,9 +204,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             id,
             _viewType,
             this.displayData.label,
-            this.handleExecution.bind(this),
-            this.getRendererScripts(),
-            []
+            this.handleExecution.bind(this)
         );
         this.displayData.onDidChange(this.updateDisplayData, this, this.disposables);
         this.updateDisplayData();
@@ -241,6 +228,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this.disposables
         );
     }
+    onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: IVSCodeNotebookController }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onDidReceiveMessage: Event<{ editor: NotebookEditor; message: any }>;
     private readonly restoredConnections = new WeakSet<NotebookDocument>();
     public async restoreConnection(notebook: NotebookDocument) {
         if (this.restoredConnections.has(notebook)) {
@@ -260,13 +250,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
     }
     public asWebviewUri(localResource: Uri): Uri {
-        return this.controller.asWebviewUri(localResource);
+        return localResource;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public postMessage(message: any, editor?: NotebookEditor): Thenable<boolean> {
+    public async postMessage(message: any, _editor?: NotebookEditor): Promise<boolean> {
         const messageType = message && 'message' in message ? message.message : '';
         traceInfoIfCI(`${ConsoleForegroundColors.Green}Posting message to Notebook UI ${messageType}`);
-        return this.controller.postMessage(message, editor);
+        return true;
     }
     /**
      * A cell has been added to the notebook, so wait for the execution to be queued before handling any more execution requests.
@@ -457,33 +447,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 })
         );
     }
-    private getRendererScripts(): NotebookRendererScript[] {
-        const scripts: Uri[] = [];
-
-        // Only used in tests & while debugging.
-        if (
-            this.context.extensionMode === ExtensionMode.Development ||
-            this.context.extensionMode === ExtensionMode.Test
-        ) {
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'webviews',
-                    'webview-side',
-                    'widgetTester',
-                    'widgetTester.js'
-                )
-            );
-        }
-
-        // See comments on dummy.ts for more details.
-        scripts.push(
-            Uri.joinPath(this.context.extensionUri, 'out', 'webviews', 'webview-side', 'ipywidgetsKernel', 'dummy.js')
-        );
-        return scripts.map((uri) => new NotebookRendererScript(uri));
-    }
-
     private handleInterrupt(notebook: NotebookDocument) {
         traceVerbose(`VS Code interrupted kernel for ${getDisplayPath(notebook.uri)}`);
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));

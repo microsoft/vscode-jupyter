@@ -70,11 +70,11 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
         return this._onDidReceiveMessage.event;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public postMessage(message: any): Thenable<boolean> {
-        return this.controller!.postMessage(message, this.editor);
+    public async postMessage(_message: any): Promise<boolean> {
+        return true;
     }
     public asWebviewUri(localResource: Uri): Uri {
-        return this.controller!.asWebviewUri(localResource);
+        return localResource;
     }
     private sendPendingMessages() {
         if (this.pendingMessages.length) {

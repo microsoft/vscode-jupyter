@@ -2,14 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellKind,
-    NotebookDocument,
-    TextDocument,
-    Uri
-} from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookDocument, TextDocument, Uri } from 'vscode';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent } from '../../telemetry';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
@@ -83,15 +76,6 @@ export class ImportTracker implements IExtensionSyncActivationService, IDisposab
         this.vscNotebook.onDidSaveNotebookDocument(
             (t) => this.onOpenedOrClosedNotebookDocument(t, 'onOpenCloseOrSave'),
             this.disposables
-        );
-        this.vscNotebook.onDidChangeNotebookCellExecutionState(
-            (e) => {
-                if (e.state == NotebookCellExecutionState.Pending && !this.isTelemetryDisabled) {
-                    this.checkNotebookCell(e.cell, 'onExecution').catch(noop);
-                }
-            },
-            this,
-            disposables
         );
     }
 

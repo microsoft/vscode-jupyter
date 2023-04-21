@@ -2,15 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
-import {
-    NotebookCell,
-    NotebookCellExecution,
-    workspace,
-    NotebookCellOutput,
-    NotebookCellExecutionState,
-    Event,
-    EventEmitter
-} from 'vscode';
+import { NotebookCell, NotebookCellExecution, workspace, NotebookCellOutput, Event, EventEmitter } from 'vscode';
 
 import { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -32,7 +24,7 @@ import {
     KernelConnectionMetadata,
     NotebookCellRunState
 } from '../../kernels/types';
-import { NotebookCellStateTracker, traceCellMessage } from './helpers';
+import { traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 /**
@@ -109,7 +101,6 @@ export class CellExecution implements IDisposable {
             this,
             this.disposables
         );
-        NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Idle);
         const execution = CellExecutionCreator.get(cell);
         if (this.canExecuteCell()) {
             // This has been queued for execution, hence clear all the output.
@@ -122,7 +113,6 @@ export class CellExecution implements IDisposable {
             // void tempTask.clearOutput();
             // void tempTask.end(undefined);
             this.execution = CellExecutionCreator.getOrCreate(cell, this.controller);
-            NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Pending);
         } else if (execution) {
             execution.start();
             execution.end(undefined);
@@ -163,7 +153,6 @@ export class CellExecution implements IDisposable {
         this.startTime = new Date().getTime();
         activeNotebookCellExecution.set(this.cell.notebook, this.execution);
         this.execution?.start(this.startTime);
-        NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Executing);
         // Await here, so that the UI updates on the progress & we clear the output.
         // Else when running cells with existing outputs, the outputs don't get cleared & it doesn't look like its running.
         // Ideally we shouldn't have any awaits, but here we want the UI to get updated.
@@ -287,7 +276,6 @@ export class CellExecution implements IDisposable {
         if (activeNotebookCellExecution.get(this.cell.notebook) === this.execution) {
             activeNotebookCellExecution.set(this.cell.notebook, undefined);
         }
-        NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Idle);
         this.execution = undefined;
     }
 

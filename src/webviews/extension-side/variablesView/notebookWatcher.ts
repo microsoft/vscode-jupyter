@@ -2,15 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    Event,
-    EventEmitter,
-    NotebookCell,
-    NotebookCellExecutionState,
-    NotebookCellExecutionStateChangeEvent,
-    NotebookDocument,
-    NotebookEditor
-} from 'vscode';
+import { Event, EventEmitter, NotebookCell, NotebookDocument, NotebookEditor } from 'vscode';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
@@ -97,11 +89,6 @@ export class NotebookWatcher implements INotebookWatcher {
             this,
             this.disposables
         );
-        notebooks.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
     }
     private getActiveInteractiveWindowDocument() {
         const interactiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
@@ -111,52 +98,6 @@ export class NotebookWatcher implements INotebookWatcher {
         return this.notebooks.notebookDocuments.find(
             (notebookDocument) => notebookDocument === interactiveWindow?.notebookDocument
         );
-    }
-
-    // Handle when a cell finishes execution
-    private onDidChangeNotebookCellExecutionState(cellStateChange: NotebookCellExecutionStateChangeEvent) {
-        if (!isJupyterNotebook(cellStateChange.cell.notebook)) {
-            return;
-        }
-
-        // If a cell has moved to idle, update our state
-        if (cellStateChange.state === NotebookCellExecutionState.Idle) {
-            // Convert to the old KernelStateEventArgs format
-            this.handleExecute({
-                notebook: cellStateChange.cell.notebook,
-                state: KernelState.executed,
-                cell: cellStateChange.cell
-            });
-        }
-    }
-
-    // Handle a kernel execution event
-    private handleExecute(kernelStateEvent: KernelStateEventArgs) {
-        // We are not interested in silent executions
-        if (this.isNonSilentExecution(kernelStateEvent)) {
-            // First, update our execution counts, regardless of if this is the active document
-            if (kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined) {
-                this._executionCountTracker.set(
-                    kernelStateEvent.notebook,
-                    kernelStateEvent.cell.executionSummary?.executionOrder
-                );
-            }
-
-            // Next, if this is the active document, send out our notifications
-            if (
-                this.isActiveNotebookEvent(kernelStateEvent) &&
-                kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined
-            ) {
-                const doneExecuting =
-                    this.activeKernel &&
-                    this.kernelProvider.getKernelExecution(this.activeKernel).pendingCells.length === 0;
-                if (doneExecuting) {
-                    this._onDidFinisheExecutingActiveNotebook.fire({
-                        executionCount: kernelStateEvent.cell.executionSummary?.executionOrder
-                    });
-                }
-            }
-        }
     }
 
     // Handle a kernel restart event
@@ -185,19 +126,6 @@ export class NotebookWatcher implements INotebookWatcher {
         }
 
         this._onDidChangeActiveNotebook.fire(changeEvent);
-    }
-
-    // Check to see if this is a non-silent execution that we want to update on
-    private isNonSilentExecution(kernelStateEvent: KernelStateEventArgs): boolean {
-        if (
-            kernelStateEvent.state === KernelState.executed &&
-            kernelStateEvent.cell &&
-            kernelStateEvent.cell.executionSummary?.executionOrder
-        ) {
-            return true;
-        }
-
-        return false;
     }
 
     // Check to see if this event was on the active notebook

@@ -7,8 +7,7 @@ import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Cancellation } from '../../platform/common/cancellation';
-import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
-import { traceError } from '../../platform/logging';
+import { Identifiers, Telemetry } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 
 import { sleep } from '../../platform/common/utils/async';
@@ -17,7 +16,6 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
-import { getInteractiveCellMetadata } from '../helpers';
 
 /**
  * Provides hover support in python files based on the state of a jupyter kernel. Files that are
@@ -37,36 +35,11 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {}
     public activate() {
-        this.notebook.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
         this.kernelProvider.onDidRestartKernel(() => this.runFiles.clear(), this, this.disposables);
     }
     public dispose() {
         if (this.hoverProviderRegistration) {
             this.hoverProviderRegistration.dispose();
-        }
-    }
-    private async onDidChangeNotebookCellExecutionState(
-        e: vscode.NotebookCellExecutionStateChangeEvent
-    ): Promise<void> {
-        try {
-            if (e.cell.notebook.notebookType !== InteractiveWindowView) {
-                return;
-            }
-            const size = this.runFiles.size;
-            const metadata = getInteractiveCellMetadata(e.cell);
-            if (metadata !== undefined) {
-                this.runFiles.add(metadata.interactive.uristring);
-            }
-            if (size !== this.runFiles.size) {
-                await this.initializeHoverProvider();
-            }
-        } catch (exc) {
-            // Don't let exceptions in a preExecute mess up normal operation
-            traceError(exc);
         }
     }
 
@@ -87,13 +60,6 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         );
         return result;
     }
-
-    private async initializeHoverProvider() {
-        if (!this.hoverProviderRegistration) {
-            this.hoverProviderRegistration = vscode.languages.registerHoverProvider(PYTHON, this);
-        }
-    }
-
     private getVariableHover(
         document: vscode.TextDocument,
         position: vscode.Position,

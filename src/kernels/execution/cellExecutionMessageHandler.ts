@@ -24,7 +24,6 @@ import {
 
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
-import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
@@ -168,7 +167,6 @@ export class CellExecutionMessageHandler implements IDisposable {
     private readonly ownedRequestMsgIds = new Set<string>();
     constructor(
         public readonly cell: NotebookCell,
-        private readonly applicationService: IApplicationShell,
         private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
@@ -217,7 +215,6 @@ export class CellExecutionMessageHandler implements IDisposable {
             }
             this.handleReply(msg);
         };
-        request.onStdin = this.handleInputRequest.bind(this);
         request.done
             .finally(() => {
                 this.completedExecution = true;
@@ -654,27 +651,12 @@ export class CellExecutionMessageHandler implements IDisposable {
                 this.outputsAreSpecificToAWidget.length - 1
             ].clearOutputOnNextUpdateToOutput = false;
         }
-        const newOutputs = cell.outputs.slice().filter((item) => {
-            if (clearWidgetOutput) {
-                // If we're supposed to clear the output, then clear all of the output that's
-                // specific to this widget.
-                // These are tracked further below.
-                return !outputsOwnedByWidgetModel.has(item.id);
-            } else {
-                return true;
-            }
-        });
+        const newOutputs = cell.outputs.slice();
 
         const outputsUptoWidget = newOutputs.slice(0, newOutputs.indexOf(widgetOutput) + 1);
         const outputsAfterWidget = newOutputs.slice(newOutputs.indexOf(widgetOutput) + 1);
 
         CellExecutionMessageHandler.outputsOwnedByWidgetModel.set(expectedModelId, outputsOwnedByWidgetModel);
-        if (outputToAppend) {
-            // Keep track of the output added that belongs to the widget.
-            // Next time when we need to clear the output belonging to this widget, all we need to do is
-            // filter out (exclude) these outputs.
-            outputsOwnedByWidgetModel.add(outputToAppend.id);
-        }
 
         // Ensure the new output is added just after the widget.
         const newOutput = outputToAppend
@@ -691,29 +673,6 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         return { outputAdded: true };
     }
-    private async handleInputRequest(msg: KernelMessage.IStdinMessage) {
-        // Ask the user for input
-        if (msg.content && 'prompt' in msg.content) {
-            const cancelToken = new CancellationTokenSource();
-            this.prompts.add(cancelToken);
-            const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
-            await this.applicationService
-                .showInputBox(
-                    {
-                        prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
-                        ignoreFocusOut: true,
-                        password: hasPassword
-                    },
-                    cancelToken.token
-                )
-                .then((v) => {
-                    this.kernel.sendInputReply({ value: v || '', status: 'ok' });
-                }, noop);
-
-            this.prompts.delete(cancelToken);
-        }
-    }
-
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg) {

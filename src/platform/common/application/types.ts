@@ -61,14 +61,12 @@ import {
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
     NotebookDocumentContentOptions,
-    NotebookRendererScript,
     NotebookController,
     NotebookCell,
     NotebookSerializer,
     NotebookData,
     NotebookDocumentShowOptions,
-    ColorTheme,
-    NotebookCellExecutionStateChangeEvent
+    ColorTheme
 } from 'vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
@@ -1215,7 +1213,6 @@ export interface IClipboard {
 
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
-    readonly onDidChangeNotebookCellExecutionState: Event<NotebookCellExecutionStateChangeEvent>;
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
@@ -1240,7 +1237,6 @@ export interface IVSCodeNotebook {
             notebook: NotebookDocument,
             controller: NotebookController
         ) => void | Thenable<void>,
-        rendererScripts?: NotebookRendererScript[],
         additionalLocalResourceRoots?: Uri[]
     ): NotebookController;
     openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;

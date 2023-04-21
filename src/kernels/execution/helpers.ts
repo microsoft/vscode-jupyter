@@ -2,24 +2,16 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import {
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    NotebookCell,
-    NotebookCellData,
-    NotebookCellKind,
-    NotebookCellExecutionState
-} from 'vscode';
+import { NotebookCellOutput, NotebookCellOutputItem, NotebookCell, NotebookCellData, NotebookCellKind } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import type { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep from 'lodash/cloneDeep';
 import fastDeepEqual from 'fast-deep-equal';
 import * as path from '../../platform/vscode-path/path';
-import * as uriPath from '../../platform/vscode-path/resources';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { concatMultilineString, splitMultilineString } from '../../platform/common/utils';
-import { traceInfoIfCI, traceError, traceWarning } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -30,7 +22,6 @@ import {
     kernelConnectionMetadataHasKernelModel,
     getKernelRegistrationInfo
 } from '../helpers';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -142,37 +133,7 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
     });
 }
 
-/**
- * This class is used to track state of cells, used in logging & tests.
- */
-export class NotebookCellStateTracker {
-    private static cellStates = new WeakMap<
-        NotebookCell,
-        { stateTransition: string[]; state: NotebookCellExecutionState; start: StopWatch }
-    >();
-    public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
-        return NotebookCellStateTracker.cellStates.get(cell)?.state;
-    }
-    public static getCellStatus(cell: NotebookCell): string {
-        return (NotebookCellStateTracker.cellStates.get(cell)?.stateTransition || []).join(', ') || '';
-    }
-    public static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
-        const stopWatch = NotebookCellStateTracker.cellStates.get(cell)?.start || new StopWatch();
-        const previousState = NotebookCellStateTracker.cellStates.get(cell)?.stateTransition || [];
-        previousState.push(`${state} ${previousState.length === 0 ? '@ start' : `After ${stopWatch.elapsedTime}ms`}`);
-        NotebookCellStateTracker.cellStates.set(cell, { stateTransition: previousState, state, start: stopWatch });
-    }
-}
-
-export function traceCellMessage(cell: NotebookCell, message: string) {
-    traceInfoIfCI(
-        `Cell Index:${cell.index}, of document ${uriPath.basename(
-            cell.notebook.uri
-        )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${
-            cell.executionSummary?.executionOrder
-        }. ${message}.`
-    );
-}
+export function traceCellMessage(_cell: NotebookCell, _message: string) {}
 
 const cellOutputMappers = new Map<nbformat.OutputType, (output: nbformat.IOutput) => NotebookCellOutput>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

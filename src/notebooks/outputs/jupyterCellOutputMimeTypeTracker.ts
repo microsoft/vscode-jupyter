@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument } from 'vscode';
+import { NotebookCell, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
@@ -34,21 +34,10 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
         this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         this.vscNotebook.onDidCloseNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
         this.vscNotebook.onDidSaveNotebookDocument(this.onDidOpenCloseDocument, this, this.disposables);
-        this.vscNotebook.onDidChangeNotebookCellExecutionState(
-            this.onDidChangeNotebookCellExecutionState,
-            this,
-            this.disposables
-        );
     }
 
     public dispose() {
         disposeAllDisposables(this.disposables);
-    }
-    public async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
-        if (!isJupyterNotebook(e.cell.notebook) || this.isTelemetryDisabled) {
-            return;
-        }
-        this.checkCell(e.cell, 'onExecution');
     }
     private onDidOpenCloseDocument(doc: NotebookDocument) {
         if (!isJupyterNotebook(doc) || this.isTelemetryDisabled) {

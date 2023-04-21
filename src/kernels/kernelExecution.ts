@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { IOutput } from '@jupyterlab/nbformat';
-import { NotebookCell, EventEmitter, notebooks, NotebookCellExecutionState, NotebookDocument, workspace } from 'vscode';
+import { NotebookCell, EventEmitter, NotebookDocument, workspace } from 'vscode';
 import { NotebookCellKind } from 'vscode-languageserver-protocol';
-import { IApplicationShell } from '../platform/common/application/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IDisposable, IExtensionContext } from '../platform/common/types';
 import { traceInfo, traceVerbose } from '../platform/logging';
@@ -43,30 +42,14 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
 
     constructor(
         private readonly kernel: IKernel,
-        appShell: IApplicationShell,
         context: IExtensionContext,
         formatters: ITracebackFormatter[],
         private readonly notebook: NotebookDocument
     ) {
-        const requestListener = new CellExecutionMessageHandlerService(
-            appShell,
-            kernel.controller,
-            context,
-            formatters
-        );
+        const requestListener = new CellExecutionMessageHandlerService(kernel.controller, context, formatters);
         this.disposables.push(requestListener);
         this.executionFactory = new CellExecutionFactory(kernel.controller, requestListener);
 
-        notebooks.onDidChangeNotebookCellExecutionState((e) => {
-            if (e.cell.notebook === kernel.notebook) {
-                if (e.state === NotebookCellExecutionState.Idle && e.cell.executionSummary?.executionOrder) {
-                    this._visibleExecutionCount = Math.max(
-                        this._visibleExecutionCount,
-                        e.cell.executionSummary.executionOrder
-                    );
-                }
-            }
-        });
         kernel.onRestarted(() => (this._visibleExecutionCount = 0), this, this.disposables);
         kernel.onStarted(() => (this._visibleExecutionCount = 0), this, this.disposables);
         kernel.addHook('willInterrupt', this.onWillInterrupt, this, this.disposables);

@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCell, NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, notebooks } from 'vscode';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
-import { Commands, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
+import { Commands, Telemetry } from '../../../platform/common/constants';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
@@ -22,7 +21,6 @@ import { sendTelemetryEvent } from '../../../telemetry';
 export class InstallPythonControllerCommands implements IExtensionSyncActivationService {
     private installedOnceBefore?: boolean;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
-    private executingCells: WeakSet<NotebookCell> = new WeakSet<NotebookCell>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -33,9 +31,6 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {}
     public activate() {
-        this.disposables.push(
-            notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this)
-        );
         // Register our commands that will handle installing the python extension or python via the kernel picker
         this.disposables.push(
             this.commandManager.registerCommand(
@@ -52,21 +47,6 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
             )
         );
     }
-
-    // Track if there are any cells currently executing or pending
-    private onDidChangeNotebookCellExecutionState(stateEvent: NotebookCellExecutionStateChangeEvent) {
-        if (stateEvent.cell.notebook.notebookType === JupyterNotebookView) {
-            if (
-                stateEvent.state === NotebookCellExecutionState.Pending ||
-                stateEvent.state === NotebookCellExecutionState.Executing
-            ) {
-                this.executingCells.add(stateEvent.cell);
-            } else if (stateEvent.state === NotebookCellExecutionState.Idle) {
-                this.executingCells.delete(stateEvent.cell);
-            }
-        }
-    }
-
     // This is called via the "install python" command in the kernel picker in the case where
     // we have the python extension installed, but 0 valid python kernels / interpreters found
     // just pop up a dialog box to prompt the user on how to install python

@@ -11,7 +11,6 @@ import {
     NotebookDocument,
     NotebookEditor,
     NotebookEditorSelectionChangeEvent,
-    NotebookRendererScript,
     window,
     workspace,
     NotebookCell,
@@ -19,7 +18,6 @@ import {
     NotebookDocumentContentOptions,
     Uri,
     NotebookDocumentShowOptions,
-    NotebookCellExecutionStateChangeEvent,
     commands,
     EventEmitter
 } from 'vscode';
@@ -41,9 +39,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     public readonly onDidChangeVisibleNotebookEditors: Event<readonly NotebookEditor[]>;
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
-    public get onDidChangeNotebookCellExecutionState(): Event<NotebookCellExecutionStateChangeEvent> {
-        return notebooks.onDidChangeNotebookCellExecutionState;
-    }
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
         return workspace.notebookDocuments;
     }
@@ -98,15 +93,13 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             notebook: NotebookDocument,
             controller: NotebookController
         ) => void | Thenable<void>,
-        rendererScripts?: NotebookRendererScript[],
         _additionalLocalResourceRoots?: Uri[]
     ): NotebookController {
         return notebooks.createNotebookController(
             id,
             viewType,
             label,
-            handler,
-            rendererScripts
+            handler
             // Not suported yet. See https://github.com/microsoft/vscode/issues/149868
             // additionalLocalResourceRoots
         );

@@ -93,7 +93,6 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                 quickPick.items = items;
                 quickPick.matchOnDescription = true;
                 quickPick.matchOnDetail = true;
-                quickPick.sortByLabel = true; // Doesnt work, hence we sort manually.
                 quickPick.selectedItems = items.filter((item) => item.picked);
                 quickPick.placeholder = DataScience.kernelFilterPlaceholder;
                 quickPick.enabled = true;

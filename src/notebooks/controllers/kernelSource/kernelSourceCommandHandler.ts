@@ -2,17 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    CancellationTokenSource,
-    commands,
-    EventEmitter,
-    NotebookControllerAffinity,
-    NotebookDocument,
-    NotebookKernelSourceAction,
-    notebooks,
-    Uri,
-    window
-} from 'vscode';
+import { CancellationTokenSource, commands, NotebookControllerAffinity, NotebookDocument, window } from 'vscode';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
@@ -29,7 +19,6 @@ import { IExtensionSyncActivationService } from '../../../platform/activation/ty
 import { InteractiveWindowView, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError, traceWarning } from '../../../platform/logging';
@@ -56,69 +45,9 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
     }
     activate(): void {
         if (!this.isWebExtension) {
-            this.localDisposables.push(
-                notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
-                    provideNotebookKernelSourceActions: () => {
-                        return [
-                            {
-                                label: DataScience.localPythonEnvironments,
-                                documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerPythonEnv'),
-                                command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                            }
-                        ];
-                    }
-                })
-            );
-            this.localDisposables.push(
-                notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
-                    provideNotebookKernelSourceActions: () => {
-                        return [
-                            {
-                                label: DataScience.localPythonEnvironments,
-                                documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerPythonEnv'),
-                                command: 'jupyter.kernel.selectLocalPythonEnvironment'
-                            }
-                        ];
-                    }
-                })
-            );
-
-            let kernelSpecActions: NotebookKernelSourceAction[] = [];
-            const kernelSpecActionChangeEmitter = new EventEmitter<void>();
-            this.localDisposables.push(
-                notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
-                    onDidChangeNotebookKernelSourceActions: kernelSpecActionChangeEmitter.event,
-                    provideNotebookKernelSourceActions: () => {
-                        return kernelSpecActions;
-                    }
-                })
-            );
-
-            this.localDisposables.push(
-                notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
-                    onDidChangeNotebookKernelSourceActions: kernelSpecActionChangeEmitter.event,
-                    provideNotebookKernelSourceActions: () => {
-                        return kernelSpecActions;
-                    }
-                })
-            );
-
             const registerKernelSpecsSource = () => {
                 if (this.kernelSpecsSourceRegistered) {
                     return;
-                }
-
-                if (this.kernelFinder.kernels.some((k) => k.kind === 'startUsingLocalKernelSpec')) {
-                    this.kernelSpecsSourceRegistered = true;
-                    kernelSpecActions = [
-                        {
-                            label: DataScience.localKernelSpecs,
-                            documentation: Uri.parse('https://aka.ms/vscodeJupyterExtKernelPickerJupyterKernels'),
-                            command: 'jupyter.kernel.selectLocalKernelSpec'
-                        }
-                    ];
-
-                    kernelSpecActionChangeEmitter.fire();
                 }
             };
 
@@ -161,47 +90,6 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     if (this.providerMappings.has(provider.id)) {
                         return;
                     }
-                    const providerItemNb = notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
-                        provideNotebookKernelSourceActions: () => {
-                            return [
-                                {
-                                    label:
-                                        provider.displayName ??
-                                        (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
-                                    documentation: provider.id.startsWith('_builtin')
-                                        ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
-                                        : undefined,
-                                    command: {
-                                        command: 'jupyter.kernel.selectJupyterServerKernel',
-                                        arguments: [provider.id],
-                                        title: provider.displayName ?? provider.id
-                                    }
-                                }
-                            ];
-                        }
-                    });
-                    const providerItemIW = notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
-                        provideNotebookKernelSourceActions: () => {
-                            return [
-                                {
-                                    label:
-                                        provider.displayName ??
-                                        (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
-                                    documentation: provider.id.startsWith('_builtin')
-                                        ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
-                                        : undefined,
-                                    command: {
-                                        command: 'jupyter.kernel.selectJupyterServerKernel',
-                                        arguments: [provider.id],
-                                        title: provider.displayName ?? provider.id
-                                    }
-                                }
-                            ];
-                        }
-                    });
-                    this.localDisposables.push(providerItemNb);
-                    this.localDisposables.push(providerItemIW);
-                    this.providerMappings.set(provider.id, [providerItemNb, providerItemIW]);
                 });
                 this.providerMappings.forEach((disposables, providerId) => {
                     if (!existingItems.has(providerId)) {

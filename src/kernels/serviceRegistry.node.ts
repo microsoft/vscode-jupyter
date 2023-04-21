@@ -23,7 +23,6 @@ import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.node';
 import { KernelStartupTelemetry } from './kernelStartupTelemetry.node';
 import { KernelStatusProvider } from './kernelStatusProvider';
-import { PortAttributesProviders } from './portAttributeProvider.node';
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
 import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
@@ -53,10 +52,6 @@ import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ServerPreload);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        PortAttributesProviders
-    );
     serviceManager.addSingleton<IRawNotebookSupportedService>(
         IRawNotebookSupportedService,
         RawNotebookSupportedService

@@ -34,7 +34,6 @@ export class ExportUtilBase {
         const cellData = cells.map((c) => {
             const data = new NotebookCellData(c.kind, c.document.getText(), c.document.languageId);
             data.metadata = c.metadata;
-            data.mime = c.mime;
             data.outputs = [...c.outputs];
             return data;
         });

@@ -17,13 +17,7 @@ import {
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterNotebookView, InteractiveWindowView, isCI } from '../../platform/common/constants';
-import {
-    IDisposableRegistry,
-    IConfigurationService,
-    IExtensionContext,
-    IBrowserService,
-    IDisposable
-} from '../../platform/common/types';
+import { IDisposableRegistry, IConfigurationService, IBrowserService, IDisposable } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
@@ -371,7 +365,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.notebook,
                         this.serviceContainer.get<ICommandManager>(ICommandManager),
                         this.serviceContainer.get<IKernelProvider>(IKernelProvider),
-                        this.serviceContainer.get<IExtensionContext>(IExtensionContext),
                         this.disposables,
                         this.serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService),
                         this.workspace,
