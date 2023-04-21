@@ -25,36 +25,6 @@ extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
     l10nSourcePaths: ./src
-    buildPlatforms:
-      - name: Linux
-        vsceTarget: ''
-      - name: Linux
-        vsceTarget: 'web'
-      - name: Linux
-        packageArch: arm64
-        vsceTarget: linux-arm64
-      - name: Linux
-        packageArch: arm
-        vsceTarget: linux-armhf
-      - name: Linux
-        vsceTarget: alpine-x64
-      - name: Linux
-        vsceTarget: alpine-arm64
-      - name: Linux
-        packageArch: x64
-        vsceTarget: linux-x64
-      - name: MacOS
-        packageArch: arm64
-        vsceTarget: darwin-arm64
-      - name: MacOS
-        packageArch: x64
-        vsceTarget: darwin-x64
-      - name: Windows
-        packageArch: ia32
-        vsceTarget: win32-ia32
-      - name: Windows
-        packageArch: x64
-        vsceTarget: win32-x64
     buildSteps:
       - script: |
           sudo apt-get update
