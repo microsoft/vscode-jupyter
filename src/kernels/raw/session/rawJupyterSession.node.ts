@@ -79,11 +79,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             // Notebook Provider level will handle the thrown error
             newSession = await this.startRawSession({ ...options, purpose: 'start' });
             Cancellation.throwIfCanceled(options.token);
-            traceInfo(
-                `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
-                    newSession.kernelProcess.pid
-                })`
-            );
             this.setSession(newSession);
 
             // Listen for session status changes
@@ -125,6 +120,13 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
     }
 
     protected override setSession(session: RawSession | undefined) {
+        if (session) {
+            traceInfo(
+                `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
+                    session.kernelProcess.pid
+                })`
+            );
+        }
         super.setSession(session);
         if (!session) {
             return;
