@@ -95,7 +95,9 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         }, 10 * 60 * 1000);
     }
 
-    public activate() {}
+    public activate() {
+        //
+    }
 
     public async showBanner(type: BannerType): Promise<void> {
         const show = this.shouldShowBanner(type);

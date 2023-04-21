@@ -133,7 +133,9 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
     });
 }
 
-export function traceCellMessage(_cell: NotebookCell, _message: string) {}
+export function traceCellMessage(_cell: NotebookCell, _message: string) {
+    //
+}
 
 const cellOutputMappers = new Map<nbformat.OutputType, (output: nbformat.IOutput) => NotebookCellOutput>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
