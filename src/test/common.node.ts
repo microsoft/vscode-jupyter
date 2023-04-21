@@ -137,9 +137,10 @@ function getNormalizedInterpreterPath(fsPath: string) {
     // They are both the same.
     // To ensure we treat them as the same, lets drop the `bin` on unix.
     // We need to exclude paths such as `/usr/bin/python`
-    const filePath = fsPath.endsWith('/bin/python') && fsPath.split('/').length > 4
-        ? fsPath.replace('/bin/python', '/python')
-        : fsPath;
+    const filePath =
+        fsPath.endsWith('/bin/python') && fsPath.split('/').length > 4
+            ? fsPath.replace('/bin/python', '/python')
+            : fsPath;
     return fs.existsSync(filePath) ? filePath : fsPath;
 }
 
