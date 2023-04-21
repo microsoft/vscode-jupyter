@@ -310,8 +310,8 @@ function getBuildDate() {
     const buildParts = vscBuildId.split('_');
     if (buildParts.length >= 3) {
         return new Date(
-            parseInt(buildParts[0].substring(0, 3), 10),
-            parseInt(buildParts[0].substring(0, 3), 10) - 1,
+            parseInt(buildParts[0].substring(0, 4), 10),
+            parseInt(buildParts[0].substring(4, 6), 10) - 1,
             parseInt(buildParts[0].substring(6), 10),
             parseInt(buildParts[1], 10),
             parseInt(buildParts[2], 10)
