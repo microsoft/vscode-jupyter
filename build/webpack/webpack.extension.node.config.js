@@ -53,7 +53,7 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: buildBundle ? './src/extension.node.ts' : './src/extension.dummy.ts'
+        extension: buildBundle ? './src/extension.node.ts' : './src/extension.mock.ts'
     },
     devtool: 'source-map',
     node: {
