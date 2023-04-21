@@ -58,4 +58,3 @@ extends:
 
       - script: npm run prePublishBundlePreRelease
         displayName: Build
-        env:
