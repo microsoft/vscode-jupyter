@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // File without any dependencies on VS Code.
 
 export async function sleep(milliseconds: number) {
@@ -11,5 +9,3 @@ export async function sleep(milliseconds: number) {
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
 export function noop() {}
-
-export const isWindows = /^win/.test(process.platform);

@@ -12,11 +12,6 @@ export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
     const interpreterPath = getNormalizedInterpreterPath(interpreter.uri);
     return getTelemetrySafeHashedString(interpreterPath.path);
 }
-
-export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: PythonEnvironment | undefined) {
-    return areInterpreterPathsSame(i1?.uri, i2?.uri) && i1?.displayName == i2?.displayName;
-}
-
 /**
  * Sometimes on CI, we have paths such as (this could happen on user machines as well)
  *  - /opt/hostedtoolcache/Python/3.8.11/x64/python

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as vscode from 'vscode';
 
 /*
@@ -30,7 +28,7 @@ interface INodeJSError extends IError {
 //================================
 // "system" errors
 
-export namespace vscErrors {
+namespace vscErrors {
     const FILE_NOT_FOUND = vscode.FileSystemError.FileNotFound().name;
     const FILE_EXISTS = vscode.FileSystemError.FileExists().name;
     const IS_DIR = vscode.FileSystemError.FileIsADirectory().name;
@@ -54,18 +52,6 @@ export namespace vscErrors {
     export function isFileNotFound(err: Error): boolean | undefined {
         return errorMatches(err, FILE_NOT_FOUND);
     }
-    export function isFileExists(err: Error): boolean | undefined {
-        return errorMatches(err, FILE_EXISTS);
-    }
-    export function isFileIsDir(err: Error): boolean | undefined {
-        return errorMatches(err, IS_DIR);
-    }
-    export function isNotDir(err: Error): boolean | undefined {
-        return errorMatches(err, NOT_DIR);
-    }
-    export function isNoPermissions(err: Error): boolean | undefined {
-        return errorMatches(err, NO_PERM);
-    }
 }
 
 interface ISystemError extends INodeJSError {
@@ -78,7 +64,7 @@ interface ISystemError extends INodeJSError {
     port?: string;
 }
 
-export function isSystemError(err: Error, expectedCode: string): boolean | undefined {
+function isSystemError(err: Error, expectedCode: string): boolean | undefined {
     const code = (err as ISystemError).code;
     if (!code) {
         return undefined;

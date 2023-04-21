@@ -1,6 +1,6 @@
 pytest < 6.0.0; python_version > '2.7' # Tests do not support pytest 6 yet.
 # Python 2.7 compatibility (pytest)
-pytest==6.1.1; python_version == '2.7'
+pytest==7.2.1; python_version == '2.7'
 # Requirements needed to run install_debugpy.py
 packaging
 # List of requirements for ipython tests
@@ -12,7 +12,11 @@ jupyter
 livelossplot
 versioneer
 pythreejs
-ipysheet
+# Pinned per ipywidget 8 support: https://github.com/microsoft/vscode-jupyter/issues/11598
+ipywidgets==7.7.2
+ipysheet==0.5.0
+jupyter_client<8
+pyzmq<25
 ipyvolume
 beakerx
 beakerx_kernel_java
@@ -20,6 +24,6 @@ py4j
 bqplot
 K3D
 ipyleaflet
-jinja2==3.0.3 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039
+jinja2==3.1.2 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039
 matplotlib
 ipympl

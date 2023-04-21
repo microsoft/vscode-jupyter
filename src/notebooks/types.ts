@@ -13,7 +13,6 @@ import {
 } from 'vscode';
 import { Resource } from '../platform/common/types';
 
-export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 export const INotebookCompletionProvider = Symbol('INotebookCompletionProvider');
 
 export interface INotebookCompletionProvider {

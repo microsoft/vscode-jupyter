@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
-import { Disposable } from 'vscode';
-
 export type Progress = { action: ReportableAction; phase: 'started' | 'completed' };
 export interface IProgressReporter {
     report(progress: Progress): void;
@@ -45,14 +41,4 @@ export enum ReportableAction {
     InstallingMissingDependencies = 'InstallingMissingDependencies',
     ExportNotebookToPython = 'ExportNotebookToPython',
     PerformingExport = 'PerformingExport'
-}
-
-export const IStatusProvider = Symbol('IStatusProvider');
-export interface IStatusProvider {
-    // call this function to set the new status on the active
-    // interactive window. Dispose of the returned object when done.
-    set(message: string, timeout?: number, canceled?: () => void): Disposable;
-
-    // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void): Promise<T>;
 }

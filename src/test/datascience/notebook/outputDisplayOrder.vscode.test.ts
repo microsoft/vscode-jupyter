@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as path from '../../../platform/vscode-path/path';
 import { assert } from 'chai';
@@ -16,7 +14,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { cellOutputToVSCCellOutput } from '../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
+suite('Validate Output order', function () {
     const templateIPynb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',

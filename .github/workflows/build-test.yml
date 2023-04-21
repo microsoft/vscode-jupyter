@@ -24,6 +24,7 @@ on:
       - 'release-*'
   schedule:
     - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
+  workflow_dispatch:
 
 env:
   NODE_VERSION: 16.14.2
@@ -45,10 +46,8 @@ env:
   IPYWIDGET_SCREENSHOT_PATH: '*-screenshot.png'
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
-  VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
-  VSC_JUPYTER_PYTHON_EXTENSION_VERSION: 'stable'
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
-  DOTNET_VERSION: 6.0.x
+  DOTNET_VERSION: 7.0.x
 
 jobs:
   # Make sure to cancel previous runs on a push
@@ -56,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.10.0
+        uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ github.token }}
 
@@ -66,10 +65,15 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Install dependencies for native modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -94,7 +98,7 @@ jobs:
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
 
-      - run: npm i -g vsce
+      - run: npm i -g @vscode/vsce
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
@@ -111,7 +115,20 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Install dependencies for native modules
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{env.NODE_VERSION}}
+
+      - name: Use Npm ${{env.NPM_VERSION}}
+        run: npm i -g npm@${{env.NPM_VERSION}}
 
       - name: Cache pip files
         uses: actions/cache@v3
@@ -125,12 +142,8 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: Verify linting is turned on for changed files
-        uses: ./.github/actions/check-ignore-list
-        id: check-ignore-list
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: Verify Translation files
         run: npm run validateTranslationFiles
@@ -160,7 +173,7 @@ jobs:
         run: npm run prePublishNonBundle
 
       - name: Cache the out/ directory
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
@@ -170,14 +183,6 @@ jobs:
 
       - name: Check changes to package-lock.json
         run: npx gulp validatePackageLockJson
-
-      - name: 'Check for telemetry edit'
-        uses: brettcannon/check-for-changed-files@v1.1.0
-        with:
-          prereq-pattern: './src/telemetry/index.ts'
-          file-pattern: 'telemetry.md'
-          skip-label: 'skip telemetry'
-          failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
 
       - name: Validate TELEMETRY files
         run: npm run validateTelemetry
@@ -193,10 +198,16 @@ jobs:
         test-suite: [ts-unit]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -235,8 +246,8 @@ jobs:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: Compile if not cached
         run: npm run prePublishNonBundle
@@ -250,14 +261,6 @@ jobs:
 
       - name: Verify there are no unhandled errors
         run: npm run verifyUnhandledErrors
-
-      - name: Publish Test Report
-        uses: scacap/action-surefire-report@v1
-        if: steps.test_unittests.outcome == 'failure' && failure()
-        with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Ts-Unit Test Report
 
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
@@ -281,61 +284,95 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jupyter: [raw, local]
-        python: [nonConda, conda]
-        pythonVersion: ['3.9', '3.10']
-        webOrDesktop: ['']
+        jupyterConnection: [raw] # valid values include raw = uzing zqm, local = using local jupyter, remote = using remote jupyter, web = using remote jupyter in web mode
+        python: [python]  # valid values include python,conda,noPython
+        pythonVersion: ['3.10']
         # Whether we're using stable (<empty>) or pre-release versions of Python packages.
         # When installing pre-release versions, we're only focused on jupyter & related packages.
         # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
         packageVersion: ['']
+        tags: ['^[^@]+$|@mandatory', '@kernelCore', '@widgets', '@iw', '@webview|@export|@lsp|@variableViewer', '@debugger', '@kernelPicker|@python|@jupyter', '@kernelInstall']
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
+        ipywidgetsVersion: ['']
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
         include:
-          - jupyter: remote # We don't care how remote is started (we only want to test connecting to it)
-            python: nonConda
-            pythonVersion: '3.9'
-            webOrDesktop: 'desktop'
-            os: ubuntu-latest
-          - jupyter: remote
-            python: nonConda
-            pythonVersion: '3.9'
-            webOrDesktop: 'web'
-            os: ubuntu-latest
-          - jupyter: raw
-            python: noPython
-            os: ubuntu-latest
-          - jupyter: raw
-            python: nonConda
+        # Mandatory tests
+          - jupyterConnection: remote
+            python: python
             pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+          - jupyterConnection: web
+            python: python
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
             os: windows-latest
-          - jupyter: local
-            python: nonConda
-            pythonVersion: '3.9'
-            packageVersion: 'prerelease'
-            os: ubuntu-latest
-          - jupyter: raw
-            python: nonConda
-            pythonVersion: '3.9'
-            packageVersion: 'prerelease'
-            os: ubuntu-latest
-        exclude:
-          - python: conda # Conda does't seem to support 3.10 yet.
+            ipywidgetsVersion: ''
+        # IPyWidgets 8
+          - jupyterConnection: raw
+            python: python
             pythonVersion: '3.10'
-        #   - pythonVersion: '3.9'
-        #     python: nonConda
-        #     jupyter: raw
-        #     os: windows-latest
+            tags: '@widgets'
+            os: ubuntu-latest
+            ipywidgetsVersion: '8'
+        # Conda
+          - jupyterConnection: raw
+            python: conda
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory|@python'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+        # Pre-Release Versions
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            packageVersion: 'prerelease'
+            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+        # Without Python
+          - jupyterConnection: raw
+            python: noPython
+            tags: '@nonPython'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+        # Misc
+          - jupyterConnection: local
+            python: python
+            pythonVersion: '3.10'
+            tags: '@kernelCore|@kernelInstall'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            tags: '@kernelPicker|@kernelCore'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Download Python VSIX
-        run: az storage blob download --file ${{env.VSIX_NAME_PYTHON}} --account-name pvsc --container-name extension-builds --name ${{ env.VSIX_NAME_PYTHON }}
+      - name: Generate Tag Variable
+        run:
+          echo "TAGSVAR=${{ matrix.tags }}}" >> $GITHUB_ENV
+
+      - name: Generate Friendly Variable
+        run:
+          # Generate a file friendly tag name for the test run (used for the artifacts)
+          echo "TAGS_NAME=${TAGSVAR//[^a-zA-Z]/_}" >> $GITHUB_ENV
 
       - name: Use Python ${{matrix.pythonVersion}}
         uses: actions/setup-python@v4
@@ -343,23 +380,15 @@ jobs:
         with:
           python-version: ${{matrix.pythonVersion}}
 
-      - name: Cache conda on linux
-        uses: actions/cache@v2
+      - name: Install Conda environment from environment.yml
+        uses: mamba-org/provision-with-micromamba@f347426e5745fe3dfc13ec5baf20496990d0281f
         if: matrix.python == 'conda'
         with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{
-            hashFiles('./build/conda-test-requirements.yml') }}
-
-      - name: Use Conda Python ${{matrix.pythonVersion}}
-        uses: conda-incubator/setup-miniconda@v2
-        if: matrix.python == 'conda'
-        with:
-          auto-update-conda: true
-          activate-environment: functional_test_env
-          channels: conda-forge,default
+          cache-downloads: true
+          environment-name: functional_test_env
           environment-file: ./build/conda-test-requirements.yml
-          python-version: ${{matrix.pythonVersion}}
+          extra-specs: |
+            python=${{matrix.pythonVersion}}
 
       - name: Set CI Path
         uses: ./.github/actions/set-python
@@ -379,8 +408,14 @@ jobs:
         run: python -m pip install -U pip
         if: matrix.python != 'conda' && matrix.python != 'noPython'
 
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
+
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -393,30 +428,57 @@ jobs:
       # Caching (https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Cache pip on linux
         uses: actions/cache@v3
-        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on linux
+        uses: actions/cache@v3
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on mac
         uses: actions/cache@v3
-        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~/Library/Caches/pip
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on mac
+        uses: actions/cache@v3
+        if: matrix.os == 'macos-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       - name: Cache pip on windows
         uses: actions/cache@v3
-        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         with:
           path: ~\AppData\Local\pip\Cache
           key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-requirements.txt')}}
           restore-keys: |
-            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-7
+
+      - name: Cache pip on windows
+        uses: actions/cache@v3
+        if: matrix.os == 'windows-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-${{ hashFiles('requirements.txt') }}-${{hashFiles('build/venv-test-ipywidgets8-requirements.txt')}}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-8
 
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
@@ -465,7 +527,7 @@ jobs:
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
-        if: matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion != '8'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
@@ -474,20 +536,29 @@ jobs:
           python ./pythonFiles/install_debugpy.py
           python -m ipykernel install --user
 
+      - name: Install Python Libs (IPyWidget 8)
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.ipywidgetsVersion == '8'
+        run: |
+          python --version
+          python -c "import sys;print(sys.executable)"
+          python -m pip install ipywidgets -U
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
+          python -m pip --disable-pip-version-check install -r build/venv-test-ipywidgets8-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+          python -m ipykernel install --user
+
       - name: Install Python Libs for conda
         shell: bash -l {0}
         if: matrix.python == 'conda'
         run: |
-          conda init bash
-          conda activate functional_test_env
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/conda-nonconda-test-requirements.txt
           python ./pythonFiles/install_debugpy.py
           beakerx_kernel_java install
-          conda install pytorch cpuonly -c pytorch
+          micromamba install pytorch cpuonly -c pytorch
 
       - name: Install pythreejs and matplotlib widgets into user and system paths
-        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease'
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease' && matrix.tags != '^[^@]+$|@mandatory'
         # This test will ensure widgets work when installed in 3 places
         # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
         # 2. In user's home folder (pythreejs will be installed in there)
@@ -503,8 +574,8 @@ jobs:
             sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
         # This step is slow.
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: Install screen capture dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -516,17 +587,18 @@ jobs:
         if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       # Used by tests for non-python kernels.
       # Test are enabled via env variable `VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST`
       - name: Install Julia
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         uses: julia-actions/setup-julia@v1
         with:
           version: ${{env.JULIA_VERSION}}
 
       - name: Install Julia Kernel
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         shell: bash
         run: |
           julia -e '
@@ -534,29 +606,48 @@ jobs:
             Pkg.add("IJulia")'
 
       - name: Install Dot.net
-        if: matrix.os != 'windows-latest'
-        uses: actions/setup-dotnet@v2.1.0
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
+        uses: actions/setup-dotnet@v3.0.3
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
       - name: Install .NET Interactive
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         shell: bash -l {0}
         run: dotnet tool install -g --add-source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" Microsoft.dotnet-interactive
 
       - name: Install .NET Kernel
-        if: matrix.os != 'windows-latest'
+        if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
         shell: bash -l {0}
         run: dotnet interactive jupyter install
 
       - name: Create Virtual Env for Tests
         uses: ./.github/actions/create-venv-for-tests
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyter != 'remote'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion != '8'
+
+      - name: Create Virtual Env for Tests (ipywidgets 8)
+        uses: ./.github/actions/create-venv-for-tests
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.os != 'windows-latest' && matrix.jupyterConnection != 'remote' && matrix.tags != '^[^@]+$|@mandatory' && matrix.ipywidgetsVersion == '8'
+        with:
+          IPyWidgetVersion: '8'
+
+      - name: Create temp folder for user data dir
+        run: |
+          echo "VSC_JUPYTER_USER_DATA_DIR=$env:USERPROFILE\AppData\Local\Temp" >> $Env:GITHUB_ENV
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+
+      - name: Print temp folder for user data dir
+        run: |
+          echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
 
       - name: Create temp folder for user data dir
         run: |
           echo "VSC_JUPYTER_USER_DATA_DIR=$(mktemp -d)" >> $GITHUB_ENV
           echo ${{env.VSC_JUPYTER_USER_DATA_DIR}} is user data dir
+        if: matrix.os != 'windows-latest'
 
       # Set the correct xvfb commands to run vscode tests
       # https://code.visualstudio.com/api/working-with-extensions/continuous-integration
@@ -574,17 +665,20 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web'
 
       - name: Build web bundle for testing
         run: npm run compile-web-test
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
+        env:
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@v1.4
@@ -594,13 +688,14 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'web' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection != 'web' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebook_vscode_web
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection == 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (windows)
         run: |
@@ -609,15 +704,15 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
-          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
-          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyterConnection == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyterConnection == 'local' }}
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
-        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.webOrDesktop != 'web'
+        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.jupyterConnection != 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
@@ -627,6 +722,7 @@ jobs:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
@@ -646,7 +742,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: failure()
         with:
-          name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: VSCodeLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
@@ -658,7 +754,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: TestLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
+          name: TestLogs-${{matrix.jupyterConnection}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.os}}-${{env.TAGS_NAME}}
           path: './logs/*'
           retention-days: 60
 
@@ -678,10 +774,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: [3.9]
+        python: ['3.10']
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v4
@@ -698,7 +794,7 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
@@ -710,8 +806,20 @@ jobs:
         with:
           name: 'ms-toolsai-jupyter-insiders.vsix'
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+      - name: Install libsodium and gnutls
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install libsodium gnutls
+        shell: bash
+
+      - name: Install dependencies for native modules
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libpango1.0-dev libgif-dev
+
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: pip install system test requirements
         run: |
@@ -727,16 +835,19 @@ jobs:
       - name: Run desktop smoke tests
         env:
           DISPLAY: 10
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testSmokeLogged
 
-      - name: Upload smoke-test log
+      - name: Upload test result, screenshots files
         uses: actions/upload-artifact@v3
-        if: failure()
+        if: always()
         with:
-          name: smoke-test-${{matrix.os}}.log
-          path: './smoke-test.log'
+          name: TestLogs-Smoke-${{matrix.python}}-${{matrix.os}}
+          path: './logs/*'
+          retention-days: 60
 
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
@@ -750,96 +861,22 @@ jobs:
           path: .nyc_output
           retention-days: 1
 
-  perf-tests:
-    timeout-minutes: 30
-    name: Performance tests
-    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
-    runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-jupyter'
-    needs: [build-vsix]
-    env:
-      VSIX_NAME: 'ms-toolsai-jupyter-insiders.vsix'
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python: [3.9]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{matrix.python}}
-
-      - name: Set CI Path
-        uses: ./.github/actions/set-python
-        id: set-python
-        with:
-          PYTHON_VERSION: ${{matrix.python}}
-
-      - name: Upgrade pip
-        run: python -m pip install -U pip
-
-      - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      - name: Use Npm ${{env.NPM_VERSION}}
-        run: npm i -g npm@${{env.NPM_VERSION}}
-
-      - name: Download VSIX
-        uses: actions/download-artifact@v3
-        with:
-          name: 'ms-toolsai-jupyter-insiders.vsix'
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: pip install system test requirements
-        run: |
-          python -m pip install --upgrade -r build/venv-test-requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-        shell: bash
-
-      # Compile the test files.
-      - name: Prepare for perf tests
-        run: npx tsc -p ./
-        shell: bash
-
-      - name: Run desktop perf tests
-        env:
-          DISPLAY: 10
-        uses: GabrielBB/xvfb-action@v1.4
-        with:
-          run: npm run testPerformance
-
-      - name: Upload test result, screenshots files
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: TestResults-Screenshots-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.packageVersion}}-${{matrix.webOrDesktop}}-${{matrix.os}}
-          path: './logs/*'
-          retention-days: 10
-
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
-    if: "(success() || failure()) && !contains(github.ref, 'refs/heads/release')"
+    if: (success() || failure()) && !contains(github.ref, 'refs/heads/release') && github.event_name != 'pull_request'
     needs: [ts_tests, vscodeTests, smoke-tests]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Node
-        uses: actions/setup-node@v2.4.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{env.NODE_VERSION}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+      - name: npm ci
+        uses: ./.github/actions/npm-ci
 
       - name: Cache compiled TS files
         id: out-cache

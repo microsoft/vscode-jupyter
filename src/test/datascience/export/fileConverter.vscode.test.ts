@@ -3,8 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
@@ -18,7 +16,7 @@ import { FileConverter } from '../../../notebooks/export/fileConverter.node';
 import { INbConvertExport, IExport, IExportDialog, ExportFormat } from '../../../notebooks/export/types';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 
-suite('DataScience - File Converter', () => {
+suite('File Converter @export', () => {
     let fileConverter: FileConverter;
     let exportPython: INbConvertExport;
     let exportHtml: INbConvertExport;

@@ -1,20 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IServiceManager } from '../platform/ioc/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';
 import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
+import { registerTypes as registerInterpreterTypes } from './interpreter/serviceRegistry.node';
 import { DataScienceStartupTime } from './common/constants';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
-import { PreReleaseChecker } from './common/prereleaseChecker.node';
+import { IExtensionSyncActivationService } from './activation/types';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
-import { StatusProvider } from './progress/statusProvider';
-import { IStatusProvider } from './progress/types';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
 import {
@@ -32,11 +28,6 @@ import { WorkspaceService } from './common/application/workspace.node';
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { WebviewViewProvider } from './webviews/webviewViewProvider';
 import { WebviewPanelProvider } from './webviews/webviewPanelProvider';
-import { IInterpreterPackages, IReservedPythonNamedProvider } from './interpreter/types';
-import { ReservedNamedProvider } from './interpreter/reservedNamedProvider.node';
-import { InterpreterPackages } from './interpreter/interpreterPackages.node';
-import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterTracker';
-import { InterpreterCountTracker } from './interpreter/interpreterCountTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -50,32 +41,18 @@ export function registerTypes(serviceManager: IServiceManager) {
     registerApiTypes(serviceManager);
     registerCommonTypes(serviceManager);
     registerTerminalTypes(serviceManager);
+    registerInterpreterTypes(serviceManager);
 
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
-    serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelProgressReporter
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        PreReleaseChecker
-    );
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
 
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
     serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
-    serviceManager.addSingleton<IReservedPythonNamedProvider>(IReservedPythonNamedProvider, ReservedNamedProvider);
-    serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        WorkspaceInterpreterTracker
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InterpreterCountTracker
-    );
 }

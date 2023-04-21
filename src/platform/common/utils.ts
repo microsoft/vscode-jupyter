@@ -1,17 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
-import { InteractiveWindowView, jupyterLanguageToMonacoLanguageMapping, JupyterNotebookView } from './constants';
+import {
+    InteractiveWindowView,
+    jupyterLanguageToMonacoLanguageMapping,
+    JupyterNotebookView,
+    WIDGET_STATE_MIMETYPE
+} from './constants';
 import { traceError, traceInfo } from '../logging';
 
-import { ICell } from './types';
-import { DataScience } from './utils/localize';
+import { ICell, IDisposable } from './types';
+import { disposeAllDisposables, splitLines } from './helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -48,6 +51,7 @@ export function getResourceType(uri?: Uri): 'notebook' | 'interactive' {
     if (!uri) {
         return 'interactive';
     }
+    // this returns `interactive` for any resource that isn't *.ipynb - that seems wrong
     return uriPath.extname(uri).toLowerCase().endsWith('ipynb') ? 'notebook' : 'interactive';
 }
 
@@ -127,25 +131,6 @@ export function translateKernelLanguageToMonaco(language: string): string {
     return jupyterLanguageToMonacoLanguageMapping.get(language) || language;
 }
 
-export function generateNewNotebookUri(
-    counter: number,
-    rootFolder: string | undefined,
-    tmpDir: string,
-    forVSCodeNotebooks?: boolean
-): Uri {
-    // However if there are files already on disk, we should be able to overwrite them because
-    // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
-    const fileName = `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
-    // Turn this back into an untitled
-    if (forVSCodeNotebooks) {
-        return Uri.file(fileName).with({ scheme: 'untitled', path: fileName });
-    } else {
-        return Uri.joinPath(rootFolder ? Uri.file(rootFolder) : Uri.file(tmpDir), fileName).with({
-            scheme: 'untitled'
-        });
-    }
-}
-
 /**
  * Whether this is a Notebook we created/manage/use.
  * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
@@ -160,12 +145,61 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
         return option.notebookType === JupyterNotebookView || option.notebookType === InteractiveWindowView;
     }
 }
+export type NotebookMetadata = nbformat.INotebookMetadata & {
+    /**
+     * We used to store interpreter at this level.
+     * @deprecated
+     */
+    interpreter?: { hash?: string };
+    /**
+     * As per docs in Jupyter, custom metadata should go into a separate namespace.
+     */
+    vscode?: {
+        /**
+         * If we've selected a Python env for this notebook, then this is the hash of the interpreter.
+         */
+        interpreter?: {
+            /**
+             * Hash of the interpreter executable path.
+             */
+            hash?: string;
+        };
+    };
+    widgets?: {
+        [WIDGET_STATE_MIMETYPE]?: {
+            state: Record<
+                string,
+                {
+                    model_module: '@jupyter-widgets/base' | '@jupyter-widgets/controls' | string;
+                    model_module_version: string;
+                    model_name: string;
+                    state: {};
+                }
+            >;
+            version_major: number;
+            version_minor: number;
+        };
+    };
+};
 
-export function getNotebookMetadata(document: NotebookDocument | NotebookData): nbformat.INotebookMetadata | undefined {
+export function getNotebookMetadata(document: NotebookDocument | NotebookData): NotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
     // Create a clone.
     return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+}
+
+export function getNotebookFormat(document: NotebookDocument): {
+    nbformat: number | undefined;
+    nbformat_minor: number | undefined;
+} {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+    // Create a clone.
+    return {
+        nbformat: notebookContent?.nbformat,
+        nbformat_minor: notebookContent?.nbformat_minor
+    };
 }
 
 export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
@@ -317,7 +351,7 @@ export function parseForComments(
 export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
-        str.splitLines({ trim: false, removeEmptyEntries: false }),
+        splitLines(str, { trim: false, removeEmptyEntries: false }),
         (_s) => {
             // Do nothing
         },
@@ -365,7 +399,7 @@ export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
 }
 
 export function removeLinesFromFrontAndBack(code: string | string[]): string {
-    const lines = Array.isArray(code) ? code : code.splitLines({ trim: false, removeEmptyEntries: false });
+    const lines = Array.isArray(code) ? code : splitLines(code, { trim: false, removeEmptyEntries: false });
     return removeLinesFromFrontAndBackNoConcat(lines).join('\n');
 }
 
@@ -377,5 +411,12 @@ export function parseSemVer(versionString: string): SemVer | undefined {
         const minor = parseInt(versionMatch[2], 10);
         const build = parseInt(versionMatch[3], 10);
         return parse(`${major}.${minor}.${build}`, true) ?? undefined;
+    }
+}
+
+export abstract class Disposables implements IDisposable {
+    protected readonly disposables: IDisposable[] = [];
+    public dispose(): void {
+        disposeAllDisposables(this.disposables);
     }
 }

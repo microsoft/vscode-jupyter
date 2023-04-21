@@ -5,14 +5,12 @@
 
 // Helper functions for dealing with kernels and kernelspecs
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
 import * as nbformat from '@jupyterlab/nbformat';
 import type { Kernel, KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
+import cloneDeep from 'lodash/cloneDeep';
 import url from 'url-parse';
 import {
     KernelConnectionMetadata,
@@ -31,9 +29,11 @@ import { DataScience } from '../platform/common/utils/localize';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
+import { deserializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
+import { IPlatformService } from '../platform/common/platform/types';
+import { splitLines } from '../platform/common/helpers';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -242,7 +242,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         case 'startUsingLocalKernelSpec': {
             if (
                 kernelConnection.interpreter?.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
                 if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
@@ -261,13 +261,13 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
             }
         }
         case 'startUsingPythonInterpreter':
+            const pythonVersion = (
+                getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+            ).trim();
             if (
                 kernelConnection.interpreter.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
+                kernelConnection.interpreter.envType !== EnvironmentType.Unknown
             ) {
-                const pythonVersion = `Python ${
-                    getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                }`.trim();
                 // If user has created a custom kernelspec, then use that.
                 if (
                     kernelConnection.kernelSpec.display_name &&
@@ -276,9 +276,18 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
                 ) {
                     return kernelConnection.kernelSpec.display_name;
                 }
-                const pythonDisplayName = pythonVersion.trim();
+                // If this is a conda environment without Python, then don't display `Python` in it.
+                const isCondaEnvWithoutPython =
+                    kernelConnection.interpreter.envType === EnvironmentType.Conda &&
+                    kernelConnection.interpreter.isCondaEnvWithoutPython === true;
+                const pythonDisplayName = pythonVersion.trim() ? `Python ${pythonVersion}` : 'Python';
                 const envName = getPythonEnvironmentName(kernelConnection.interpreter);
+                if (isCondaEnvWithoutPython && envName) {
+                    return envName;
+                }
                 return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+            } else {
+                return `Python ${pythonVersion}`.trim();
             }
     }
     return oldDisplayName;
@@ -308,7 +317,7 @@ function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: Kerne
     const interpreterName =
         kernelConnection.kind === 'startUsingPythonInterpreter' ? kernelConnection.interpreter.displayName : undefined;
 
-    return displayName || name || interpreterName || '';
+    return [displayName, name, interpreterName, ''].find((item) => typeof item === 'string' && item.length > 0) || '';
 }
 
 export function getNameOfKernelConnection(
@@ -323,7 +332,7 @@ export function getNameOfKernelConnection(
         : kernelConnection.kernelSpec?.name;
 }
 
-export function getKernelPathFromKernelConnection(kernelConnection?: KernelConnectionMetadata): Uri | undefined {
+export function getKernelDisplayPathFromKernelConnection(kernelConnection?: KernelConnectionMetadata): Uri | undefined {
     if (!kernelConnection) {
         return;
     }
@@ -339,6 +348,9 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
     ) {
         const pathValue =
             kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.executable;
+        if (pathValue === '/python' || pathValue === 'python') {
+            return kernelConnection.interpreter?.displayPath;
+        }
         return pathValue ? Uri.file(pathValue) : undefined;
     } else {
         // For non python kernels, give preference to the executable path in the kernelspec
@@ -357,26 +369,27 @@ export function getRemoteKernelSessionInformation(
     defaultValue: string = ''
 ): string {
     if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
-        return DataScience.jupyterSelectURIRunningDetailFormat().format(
-            kernelConnection.kernelModel.lastActivityTime.toLocaleString(),
-            kernelConnection.kernelModel.numberOfConnections.toString()
+        return DataScience.jupyterSelectURIRunningDetailFormat(
+            kernelConnection.kernelModel.lastActivityTime,
+            kernelConnection.kernelModel.numberOfConnections
         );
     }
     return defaultValue;
 }
 
-export function getKernelConnectionPath(
+export function getKernelConnectionDisplayPath(
     kernelConnection: KernelConnectionMetadata | undefined,
-    workspaceService: IWorkspaceService
+    workspaceService: IWorkspaceService,
+    platform: IPlatformService
 ) {
     if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
         return undefined;
     }
-    const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
+    const kernelPath = getKernelDisplayPathFromKernelConnection(kernelConnection);
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
     const folders = workspaceService.workspaceFolders ? workspaceService.workspaceFolders : [];
-    return kernelPath ? getDisplayPath(kernelPath, folders) : '';
+    return kernelPath ? getDisplayPath(kernelPath, folders, platform.homeDir) : '';
 }
 
 export function getInterpreterFromKernelConnectionMetadata(
@@ -390,12 +403,12 @@ export function getInterpreterFromKernelConnectionMetadata(
     }
     const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
     if (model?.metadata?.interpreter) {
-        return deserializePythonEnvironment(model?.metadata?.interpreter);
+        return deserializePythonEnvironment(model?.metadata?.interpreter, '');
     }
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
         : undefined;
-    return deserializePythonEnvironment(kernelSpec?.metadata?.interpreter);
+    return deserializePythonEnvironment(kernelSpec?.metadata?.interpreter, '');
 }
 export function isPythonKernelConnection(kernelConnection?: KernelConnectionMetadata): boolean {
     if (!kernelConnection) {
@@ -449,7 +462,7 @@ export function getLanguageInKernelSpec(kernelSpec?: Partial<IJupyterKernelSpec>
  * This helps us easily identify such kernels.
  * WARNING: Never change this, this is stored in ipynb & kernelspec.json.
  */
-const autoGeneratedKernelNameIdentifier = 'jvsc74a57bd0';
+export const autoGeneratedKernelNameIdentifier = 'jvsc74a57bd0';
 /**
  * The name generated here is tied to the interpreter & is predictable.
  * WARNING: Changes to this will impact `getKernelId()`
@@ -464,16 +477,7 @@ export async function getInterpreterKernelSpecName(interpreter?: PythonEnvironme
         ? `${prefix}${autoGeneratedKernelNameIdentifier}${await getInterpreterHash(interpreter)}`
         : 'python3';
 }
-/**
- * Returns the workspace folder this interpreter is based in or the root if not a virtual env
- */
-export function getInterpreterWorkspaceFolder(
-    interpreter: PythonEnvironment,
-    workspaceService: IWorkspaceService
-): Uri | undefined {
-    const folder = workspaceService.getWorkspaceFolder(interpreter.uri);
-    return folder?.uri || workspaceService.rootFolder;
-}
+
 /**
  * Gets information about the registered kernelspec.
  * Note: When dealing with non-raw kernels, we register kernelspecs in a global location.
@@ -547,7 +551,7 @@ export function areKernelConnectionsEqual(
 }
 // Check if a name is a default python kernel name and pull the version
 export function detectDefaultKernelName(name: string) {
-    const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');
+    const regEx = new RegExp('python\\s*(?<version>(\\d+))', 'g');
     return regEx.exec(name.toLowerCase());
 }
 
@@ -569,10 +573,7 @@ export type SilentExecutionErrorOptions = {
     // This optional message will be displayed as a prefix for the error or warning message
     traceErrorsMessage?: string;
     // Setting this will log telemetry on the given name
-    telemetryName?:
-        | Telemetry.InteractiveWindowDebugSetupCodeFailure
-        | Telemetry.KernelStartupCodeFailure
-        | Telemetry.PythonVariableFetchingCodeFailure;
+    telemetryName?: Telemetry.InteractiveWindowDebugSetupCodeFailure | Telemetry.PythonVariableFetchingCodeFailure;
 };
 
 export async function executeSilently(
@@ -580,7 +581,7 @@ export async function executeSilently(
     code: string,
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
-    traceVerbose(`Executing silently Code (${session.status}) = ${code.substring(0, 100).splitLines().join('\\n')}`);
+    traceVerbose(`Executing silently Code (${session.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`);
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -597,7 +598,7 @@ export async function executeSilently(
     const outputs: nbformat.IOutput[] = [];
     request.onIOPub = (msg) => {
         if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-            traceInfoIfCI(`Got io pub message (stream), ${msg.content.text.substr(0, 100).splitLines().join('\\n')}`);
+            traceInfoIfCI(`Got io pub message (stream), ${splitLines(msg.content.text.substr(0, 100)).join('\\n')}`);
             if (
                 outputs.length > 0 &&
                 outputs[outputs.length - 1].output_type === 'stream' &&
@@ -636,6 +637,14 @@ export async function executeSilently(
                     .join()
                     .substring(0, 100)}}`
             );
+            if (errorOptions?.traceErrors) {
+                const errorMessage = `${
+                    errorOptions.traceErrorsMessage || 'Failed to execute (silent) code against the kernel'
+                }, \nCode = ${code}\nError details: `;
+                traceError(
+                    `${errorMessage} ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback.join()}`
+                );
+            }
             const output: nbformat.IError = {
                 ename: msg.content.ename,
                 evalue: msg.content.evalue,
@@ -649,7 +658,7 @@ export async function executeSilently(
     };
     await request.done;
 
-    const codeForLogging = code.substring(0, 100).splitLines().join('\\n');
+    const codeForLogging = splitLines(code.substring(0, 100)).join('\\n');
 
     // Handle any errors logged in the output if needed
     if (errorOptions) {
@@ -684,31 +693,7 @@ function handleExecuteSilentErrors(
 
             // Send telemetry if requested, no traceback for PII
             if (errorOptions.telemetryName) {
-                sendTelemetryEvent(errorOptions.telemetryName, undefined, {
-                    ename: errorOutput.ename,
-                    evalue: errorOutput.evalue
-                });
+                sendTelemetryEvent(errorOptions.telemetryName);
             }
         });
-}
-
-export function serializeKernelConnection(kernelConnection: KernelConnectionMetadata) {
-    if (kernelConnection.interpreter) {
-        return {
-            ...kernelConnection,
-            interpreter: serializePythonEnvironment(kernelConnection.interpreter)!
-        };
-    }
-    return kernelConnection;
-}
-
-export function deserializeKernelConnection(kernelConnection: any): KernelConnectionMetadata {
-    if (kernelConnection.interpreter) {
-        return {
-            ...kernelConnection,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            interpreter: deserializePythonEnvironment(kernelConnection.interpreter as any)!
-        };
-    }
-    return kernelConnection;
 }

@@ -12,18 +12,19 @@ const colors = require('colors');
 const core = require('@actions/core');
 const glob = require('glob');
 const { ExtensionRootDir } = require('./constants');
-const { computeHash } = require('../src/platform/msrCrypto/hash');
+const { webcrypto } = require('node:crypto');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'logs', 'testresults.json');
 const webTestSummaryNb = path.join(__dirname, '..', 'logs', 'testresults.ipynb');
 const failedWebTestSummaryNb = path.join(__dirname, '..', 'logs', 'failedtestresults.ipynb');
 const progress = [];
+const logsDir = path.join(ExtensionRootDir, 'logs');
 
 async function captureScreenShot(name, res) {
     const screenshot = require('screenshot-desktop');
-    fs.ensureDirSync(path.join(ExtensionRootDir, 'logs', name));
-    const filename = path.join(ExtensionRootDir, 'logs', name);
+    fs.ensureDirSync(logsDir);
+    const filename = path.join(logsDir, name);
     try {
         await screenshot({ filename });
         console.info(`Screenshot captured into ${filename}`);
@@ -98,6 +99,15 @@ exports.startReportServer = async function () {
 async function addCell(cells, output, failed, executionCount) {
     const stackFrames = failed ? (output.err.stack || '').split(/\r?\n/) : [];
     const line1 = stackFrames.shift() || '';
+
+    async function computeHash(data, algorithm) {
+        const inputBuffer = new TextEncoder().encode(data);
+        const hashBuffer = await webcrypto.subtle.digest({ name: algorithm }, inputBuffer);
+
+        // Turn into hash string (got this logic from https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest)
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
     const fullTestNameHash = (await computeHash(output.fullTitle() || '', 'SHA-256')).substring(0, 10);
     const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
     const assertionError = failed
@@ -131,17 +141,26 @@ async function addCell(cells, output, failed, executionCount) {
         text: consoleOutputs
     };
     // Look for a screenshot file with the above prefix & attach that to the cell outputs.
-    const screenshots = glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir }).map((file) => {
-        console.info(`Found screenshot file ${file}`);
-        const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString('base64');
-        return {
-            data: {
-                'image/png': contents
-            },
-            metadata: {},
-            output_type: 'display_data'
-        };
-    });
+    const screenshots = (
+        await Promise.all(
+            glob.sync(`${fileNamePrefix}*-screenshot.png`, { cwd: logsDir }).map((file) => {
+                file = path.join(logsDir, file);
+                try {
+                    const blob = fs.readFileSync(file);
+                    const contents = Buffer.from(blob).toString('base64');
+                    return {
+                        data: {
+                            'image/png': contents
+                        },
+                        metadata: {},
+                        output_type: 'display_data'
+                    };
+                } catch (ex) {
+                    console.error(`Failed to read screenshot file ${file} at stage ${stage}`, ex);
+                }
+            })
+        )
+    ).filter((item) => !!item);
     // Add a markdown cell so we can see this in the outline.
     cells.push({
         cell_type: 'markdown',
@@ -249,7 +268,8 @@ exports.dumpTestSummary = async () => {
 
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
-        } else if (passedCount < 3) {
+        } else if (passedCount < 1) {
+            // Temporarily reduced to 1 since #11917 disabled tests
             // the non-python suite only has 4 tests passing currently, so that's the highest bar we can use.
             core.setFailed('Not enough tests were run - are too many being skipped?');
         }

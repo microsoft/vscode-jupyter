@@ -1,53 +1,55 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import {
     debug,
-    NotebookDocument,
-    workspace,
     DebugSession,
     DebugSessionOptions,
-    DebugAdapterDescriptor,
     Event,
     EventEmitter,
-    NotebookCell
+    NotebookCell,
+    NotebookDocument,
+    NotebookEditor,
+    workspace,
+    window
 } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { IDisposable } from '../../platform/common/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DebuggingTelemetry } from './constants';
-import { sendTelemetryEvent } from '../../telemetry';
-import { traceError, traceInfoIfCI } from '../../platform/logging';
+import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { IKernelDebugAdapterConfig } from './debuggingTypes';
-import { Debugger } from './debugger';
-import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
-import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { noop } from '../../platform/common/utils/misc';
-import { IControllerLoader, IControllerSelection } from '../controllers/types';
+import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { sendTelemetryEvent } from '../../telemetry';
+import { IControllerRegistration } from '../controllers/types';
+import { DebuggingTelemetry } from './constants';
+import { Debugger } from './debugger';
+import { IDebuggingManager, INotebookDebugConfig, KernelDebugMode } from './debuggingTypes';
+import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
+import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
+import { KernelConnector } from '../controllers/kernelConnector';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { DisplayOptions } from '../../kernels/displayOptions';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
-export abstract class DebuggingManagerBase implements IDisposable {
-    private notebookToDebugger = new Map<NotebookDocument, Debugger>();
+export abstract class DebuggingManagerBase implements IDisposable, IDebuggingManager {
+    protected notebookToDebugger = new Map<NotebookDocument, Debugger>();
     protected notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapterBase>();
     protected notebookInProgress = new Set<NotebookDocument>();
     protected readonly disposables: IDisposable[] = [];
     private _doneDebugging = new EventEmitter<void>();
 
     public constructor(
-        private kernelProvider: IKernelProvider,
-        private readonly notebookControllerLoader: IControllerLoader,
-        private readonly notebookControllerSelection: IControllerSelection,
+        protected readonly kernelProvider: IKernelProvider,
+        private readonly controllerRegistration: IControllerRegistration,
         protected readonly commandManager: ICommandManager,
         protected readonly appShell: IApplicationShell,
-        protected readonly vscNotebook: IVSCodeNotebook
+        protected readonly vscNotebook: IVSCodeNotebook,
+        protected readonly serviceContainer: IServiceContainer
     ) {}
 
-    public async activate() {
+    public activate() {
         this.disposables.push(
             // track termination of debug sessions
             debug.onDidTerminateDebugSession(this.endSession.bind(this)),
@@ -56,12 +58,15 @@ export abstract class DebuggingManagerBase implements IDisposable {
             workspace.onDidCloseNotebookDocument(async (document) => {
                 const dbg = this.notebookToDebugger.get(document);
                 if (dbg) {
-                    await dbg.stop();
+                    await debug.stopDebugging(dbg.session);
                     this.onDidStopDebugging(document);
                 }
             })
         );
     }
+
+    abstract getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined;
+
     public getDebugCell(notebook: NotebookDocument): NotebookCell | undefined {
         return this.notebookToDebugAdapter.get(notebook)?.debugCell;
     }
@@ -78,12 +83,13 @@ export abstract class DebuggingManagerBase implements IDisposable {
         return this.notebookToDebugger.has(notebook);
     }
 
-    public getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined {
+    public getDebugSession(notebook: NotebookDocument): DebugSession | undefined {
         const dbg = this.notebookToDebugger.get(notebook);
         if (dbg) {
             return dbg.session;
         }
     }
+
     public getDebugAdapter(notebook: NotebookDocument): KernelDebugAdapterBase | undefined {
         return this.notebookToDebugAdapter.get(notebook);
     }
@@ -92,26 +98,14 @@ export abstract class DebuggingManagerBase implements IDisposable {
         //
     }
 
-    protected async startDebuggingConfig(
-        doc: NotebookDocument,
-        config: IKernelDebugAdapterConfig,
-        options?: DebugSessionOptions
-    ) {
+    protected async startDebuggingConfig(config: INotebookDebugConfig, options?: DebugSessionOptions) {
         traceInfoIfCI(`Attempting to start debugging with config ${JSON.stringify(config)}`);
-        let dbg = this.notebookToDebugger.get(doc);
-        if (!dbg) {
-            dbg = new Debugger(doc, config, options);
-            this.notebookToDebugger.set(doc, dbg);
 
-            try {
-                const session = await dbg.session;
-                traceInfoIfCI(`Debugger session is ready. Should be debugging ${session.id} now`);
-            } catch (err) {
-                traceError(`Can't start debugging (${err})`);
-                this.appShell.showErrorMessage(DataScience.cantStartDebugging()).then(noop, noop);
-            }
-        } else {
-            traceInfoIfCI(`Not starting debugging because already debugging in this notebook`);
+        try {
+            await debug.startDebugging(undefined, config, options);
+        } catch (err) {
+            traceError(`Can't start debugging (${err})`);
+            this.appShell.showErrorMessage(DataScience.cantStartDebugging).then(noop, noop);
         }
     }
 
@@ -119,11 +113,12 @@ export abstract class DebuggingManagerBase implements IDisposable {
         this.notebookToDebugAdapter.set(notebook, adapter);
         this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
     }
+
     protected async endSession(session: DebugSession) {
-        traceInfoIfCI(`Ending debug session ${session.id}`);
+        traceInfo(`Ending debug session ${session.id}`);
         this._doneDebugging.fire();
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
-            if (dbg && session.id === (await dbg.session).id) {
+            if (dbg && session.id === dbg.session.id) {
                 this.notebookToDebugger.delete(doc);
                 this.notebookToDebugAdapter.delete(doc);
                 this.onDidStopDebugging(doc);
@@ -131,8 +126,6 @@ export abstract class DebuggingManagerBase implements IDisposable {
             }
         }
     }
-
-    protected abstract createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined>;
 
     protected getDebuggerByUri(document: NotebookDocument): Debugger | undefined {
         for (const [doc, dbg] of this.notebookToDebugger.entries()) {
@@ -143,29 +136,66 @@ export abstract class DebuggingManagerBase implements IDisposable {
     }
 
     protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
-        await this.notebookControllerLoader.loaded;
-        const controller = this.notebookControllerSelection.getSelected(doc);
-
+        const controller = this.controllerRegistration.getSelected(doc);
         let kernel = this.kernelProvider.get(doc);
-        if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc, {
-                metadata: controller.connection,
-                controller: controller?.controller,
-                resourceUri: doc.uri
-            });
+        if (controller && (!kernel || (kernel && kernel.status === 'unknown'))) {
+            kernel = await KernelConnector.connectToNotebookKernel(
+                controller.connection,
+                this.serviceContainer,
+                {
+                    notebook: doc,
+                    controller: controller.controller,
+                    resource: doc.uri
+                },
+                new DisplayOptions(false),
+                this.disposables,
+                'jupyterExtension'
+            );
         }
-        if (kernel && kernel.status === 'unknown') {
-            await kernel.start();
-        }
-
         return kernel;
     }
 
-    protected async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
+    private findEditorForCell(cell: NotebookCell): NotebookEditor | undefined {
+        const notebookUri = cell.notebook.uri.toString();
+        return window.visibleNotebookEditors.find((e) => e.notebook.uri.toString() === notebookUri);
+    }
+
+    protected async checkIpykernelAndPrompt(
+        cell: NotebookCell,
+        allowSelectKernel: boolean = true
+    ): Promise<IpykernelCheckResult> {
+        const editor = this.findEditorForCell(cell);
+        if (!editor) {
+            this.appShell.showErrorMessage(DataScience.noNotebookToDebug).then(noop, noop);
+            return IpykernelCheckResult.Unknown;
+        }
+
+        const ipykernelResult = await this.checkForIpykernel6(editor.notebook);
+        switch (ipykernelResult) {
+            case IpykernelCheckResult.NotInstalled:
+                // User would have been notified about this, nothing more to do.
+                break;
+            case IpykernelCheckResult.Outdated:
+            case IpykernelCheckResult.Unknown: {
+                this.promptInstallIpykernel6().then(noop, noop);
+                break;
+            }
+            case IpykernelCheckResult.ControllerNotSelected: {
+                if (allowSelectKernel) {
+                    await this.commandManager.executeCommand('notebook.selectKernel', { notebookEditor: editor });
+                    return await this.checkIpykernelAndPrompt(cell, false);
+                }
+            }
+        }
+
+        return ipykernelResult;
+    }
+
+    private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
         try {
             let kernel = this.kernelProvider.get(doc);
             if (!kernel) {
-                const controller = this.notebookControllerSelection.getSelected(doc);
+                const controller = this.controllerRegistration.getSelected(doc);
                 if (!controller) {
                     return IpykernelCheckResult.ControllerNotSelected;
                 }
@@ -175,8 +205,8 @@ export abstract class DebuggingManagerBase implements IDisposable {
                     resourceUri: doc.uri
                 });
             }
-
-            const result = await isUsingIpykernel6OrLater(kernel);
+            const execution = this.kernelProvider.getKernelExecution(kernel);
+            const result = await isUsingIpykernel6OrLater(execution);
             sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
                 status: result === IpykernelCheckResult.Ok ? 'installed' : 'notInstalled'
             });
@@ -187,14 +217,14 @@ export abstract class DebuggingManagerBase implements IDisposable {
         return IpykernelCheckResult.Unknown;
     }
 
-    protected async promptInstallIpykernel6() {
+    private async promptInstallIpykernel6() {
         const response = await this.appShell.showInformationMessage(
-            DataScience.needIpykernel6(),
+            DataScience.needIpykernel6,
             { modal: true },
-            DataScience.setup()
+            DataScience.setup
         );
 
-        if (response === DataScience.setup()) {
+        if (response === DataScience.setup) {
             sendTelemetryEvent(DebuggingTelemetry.clickedOnSetup);
             this.appShell.openUrl(
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'

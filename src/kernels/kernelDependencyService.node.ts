@@ -1,20 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import {
-    traceInfo,
-    traceError,
-    traceInfoIfCI,
-    traceDecoratorVerbose,
-    ignoreLogging,
-    logValue
-} from '../platform/logging';
+import { traceInfo, traceError, traceInfoIfCI, traceDecoratorVerbose, logValue } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
 import { DataScience, Common } from '../platform/common/utils/localize';
@@ -22,17 +13,26 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { Telemetry } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
-import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
-import { ProductNames } from './installer/productNames';
-import { IInstaller, Product, InstallerResponse } from './installer/types';
-import { IKernelDependencyService, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './types';
+import {
+    isModulePresentInEnvironmentCache,
+    trackPackageInstalledIntoInterpreter
+} from '../platform/interpreter/installer/productInstaller';
+import { ProductNames } from '../platform/interpreter/installer/productNames';
+import { IInstaller, Product, InstallerResponse } from '../platform/interpreter/installer/types';
+import {
+    IKernelDependencyService,
+    isLocalConnection,
+    KernelConnectionMetadata,
+    KernelInterpreterDependencyResponse
+} from './types';
 import { noop } from '../platform/common/utils/misc';
 import { getResourceType } from '../platform/common/utils';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { IRawNotebookSupportedService } from './raw/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
-import { isModulePresentInEnvironment } from './installer/productInstaller.node';
+import { isModulePresentInEnvironment } from '../platform/interpreter/installer/productInstaller.node';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
+import { isPythonKernelConnection } from './helpers';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -54,36 +54,58 @@ export class KernelDependencyService implements IKernelDependencyService {
      * If user opts not to install they can opt to select another interpreter.
      */
     @traceDecoratorVerbose('Install Missing Dependencies')
-    public async installMissingDependencies(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        @ignoreLogging() token: CancellationToken,
-        ignoreCache?: boolean,
-        cannotChangeKernels?: boolean
-    ): Promise<KernelInterpreterDependencyResponse> {
-        traceInfo(
-            `installMissingDependencies ${
-                kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
-            }, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
-        );
+    public async installMissingDependencies({
+        resource,
+        kernelConnection,
+        ui,
+        token,
+        ignoreCache,
+        cannotChangeKernels,
+        installWithoutPrompting
+    }: {
+        resource: Resource;
+        kernelConnection: KernelConnectionMetadata;
+        ui: IDisplayOptions;
+        token: CancellationToken;
+        ignoreCache?: boolean;
+        cannotChangeKernels?: boolean;
+        installWithoutPrompting?: boolean;
+    }): Promise<KernelInterpreterDependencyResponse> {
         if (
-            kernelConnection.kind === 'connectToLiveRemoteKernel' ||
-            kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
-            kernelConnection.interpreter === undefined
+            !isLocalConnection(kernelConnection) ||
+            !isPythonKernelConnection(kernelConnection) ||
+            !kernelConnection.interpreter
         ) {
             return KernelInterpreterDependencyResponse.ok;
         }
-        const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
-            resource,
-            DataScience.validatingKernelDependencies(),
-            () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+
+        traceInfo(
+            `Check & install missing Kernel dependencies for ${getDisplayPath(
+                kernelConnection.interpreter?.uri
+            )}, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
         );
-        if (alreadyInstalled) {
-            return KernelInterpreterDependencyResponse.ok;
-        }
-        if (token?.isCancellationRequested) {
-            return KernelInterpreterDependencyResponse.cancel;
+        const checkForPackages = async () => {
+            const alreadyInstalled = await KernelProgressReporter.wrapAndReportProgress(
+                resource,
+                DataScience.validatingKernelDependencies,
+                () => this.areDependenciesInstalled(kernelConnection, token, ignoreCache)
+            );
+            if (alreadyInstalled) {
+                return KernelInterpreterDependencyResponse.ok;
+            }
+            if (token?.isCancellationRequested) {
+                return KernelInterpreterDependencyResponse.cancel;
+            }
+        };
+
+        if (!installWithoutPrompting) {
+            const result = await checkForPackages();
+            if (
+                result === KernelInterpreterDependencyResponse.ok ||
+                result === KernelInterpreterDependencyResponse.cancel
+            ) {
+                return result;
+            }
         }
 
         // Cache the install run
@@ -98,15 +120,26 @@ export class KernelDependencyService implements IKernelDependencyService {
             });
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
-                DataScience.installingMissingDependencies(),
-                () =>
-                    this.runInstaller(
+                DataScience.installingMissingDependencies,
+                async () => {
+                    if (installWithoutPrompting) {
+                        const result = await checkForPackages();
+                        if (
+                            result === KernelInterpreterDependencyResponse.ok ||
+                            result === KernelInterpreterDependencyResponse.cancel
+                        ) {
+                            return result;
+                        }
+                    }
+                    return this.runInstaller(
                         resource,
                         kernelConnection.interpreter!,
                         ui,
                         cancelTokenSource,
-                        cannotChangeKernels
-                    )
+                        cannotChangeKernels,
+                        installWithoutPrompting
+                    );
+                }
             );
             promise
                 .finally(() => {
@@ -186,7 +219,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
         cancelTokenSource: CancellationTokenSource,
-        cannotChangeKernels?: boolean
+        cannotChangeKernels?: boolean,
+        installWithoutPrompting?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfoIfCI(
             `Run Installer for ${getDisplayPath(resource)} ui.disableUI=${
@@ -207,12 +241,12 @@ export class KernelDependencyService implements IKernelDependencyService {
             return KernelInterpreterDependencyResponse.cancel;
         }
         const messageFormat = isModulePresent
-            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate()
-            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
+            ? DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreterAndRequiresUpdate
+            : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter;
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
-        const message = messageFormat.format(
+        const message = messageFormat(
             interpreter.displayName || interpreter.uri.fsPath,
-            products.map((product) => ProductNames.get(product)!).join(` ${Common.and()} `)
+            products.map((product) => ProductNames.get(product)!).join(` ${Common.and} `)
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
@@ -231,9 +265,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         });
 
         // Build our set of prompt actions
-        const installOption = Common.install();
-        const selectKernelOption = DataScience.selectKernel();
-        const moreInfoOption = Common.moreInfo();
+        const installOption = Common.install;
+        const selectKernelOption = DataScience.selectKernel;
+        const moreInfoOption = Common.moreInfo;
         const options = [installOption];
         if (resource && !cannotChangeKernels) {
             // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
@@ -243,7 +277,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         options.push(moreInfoOption);
 
         try {
-            if (!this.isCodeSpace) {
+            if (!this.isCodeSpace || !installWithoutPrompting) {
                 sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                     action: 'prompted',
                     moduleName: productNameForTelemetry,
@@ -255,12 +289,13 @@ export class KernelDependencyService implements IKernelDependencyService {
             traceInfoIfCI(`Prompting user for install (this.isCodeSpace=${this.isCodeSpace}).`);
             let selection;
             do {
-                selection = this.isCodeSpace
-                    ? installOption
-                    : await Promise.race([
-                          this.appShell.showInformationMessage(message, { modal: true }, ...options),
-                          promptCancellationPromise
-                      ]);
+                selection =
+                    this.isCodeSpace || installWithoutPrompting
+                        ? installOption
+                        : await Promise.race([
+                              this.appShell.showInformationMessage(message, { modal: true }, ...options),
+                              promptCancellationPromise
+                          ]);
 
                 if (selection === moreInfoOption) {
                     sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {

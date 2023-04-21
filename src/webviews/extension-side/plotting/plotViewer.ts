@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../../../platform/common/extensions';
-
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
@@ -22,6 +19,8 @@ import * as localize from '../../../platform/common/utils/localize';
 import { WebviewPanelHost } from '../../../platform/webviews/webviewPanelHost';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 
 @injectable()
 export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
@@ -36,6 +35,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IFileSystem) protected fs: IFileSystem,
         @inject(IExtensionContext) readonly context: IExtensionContext
     ) {
+        const startupTimer = new StopWatch();
         const plotDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
@@ -44,11 +44,17 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
             plotDir,
             [joinPath(plotDir, 'plotViewer.js')],
-            localize.DataScience.plotViewerTitle(),
+            localize.DataScience.plotViewerTitle,
             ViewColumn.One
         );
         // Load the web panel using our current directory as we don't expect to load any other files
-        super.loadWebview(Uri.file(process.cwd())).catch(traceError);
+        super
+            .loadWebview(Uri.file(process.cwd()))
+            .catch(traceError)
+            .finally(() => {
+                // Send our telemetry for the webview loading when the load is done.
+                sendTelemetryEvent(Telemetry.PlotViewerWebviewLoaded, { duration: startupTimer.elapsedTime });
+            });
     }
 
     public get closed(): Event<IPlotViewer> {
@@ -72,7 +78,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             await super.show(false);
 
             // Send a message with our data
-            this.postMessage(PlotViewerMessages.SendPlot, imageHtml).ignoreErrors();
+            this.postMessage(PlotViewerMessages.SendPlot, imageHtml).catch(noop);
         }
     };
 
@@ -92,11 +98,11 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     protected override onMessage(message: string, payload: any) {
         switch (message) {
             case PlotViewerMessages.CopyPlot:
-                this.copyPlot(payload.toString()).ignoreErrors();
+                this.copyPlot(payload.toString()).catch(noop);
                 break;
 
             case PlotViewerMessages.ExportPlot:
-                this.exportPlot(payload).ignoreErrors();
+                this.exportPlot(payload).catch(noop);
                 break;
 
             case PlotViewerMessages.RemovePlot:
@@ -123,12 +129,12 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     protected async exportPlot(payload: IExportPlotRequest): Promise<void> {
         traceInfo('exporting plot...');
         const filtersObject: Record<string, string[]> = {};
-        filtersObject[localize.DataScience.pngFilter()] = ['png'];
-        filtersObject[localize.DataScience.svgFilter()] = ['svg'];
+        filtersObject[localize.DataScience.pngFilter] = ['png'];
+        filtersObject[localize.DataScience.svgFilter] = ['svg'];
 
         // Ask the user what file to save to
         const file = await this.applicationShell.showSaveDialog({
-            saveLabel: localize.DataScience.exportPlotTitle(),
+            saveLabel: localize.DataScience.exportPlotTitle,
             filters: filtersObject
         });
         try {
@@ -149,7 +155,9 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             }
         } catch (e) {
             traceError(e);
-            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e)).then(noop, noop);
+            this.applicationShell
+                .showErrorMessage(localize.DataScience.exportImageFailed(e.toString()))
+                .then(noop, noop);
         }
     }
 }

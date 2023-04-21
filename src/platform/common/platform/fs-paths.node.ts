@@ -1,27 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { getOSType, OSType } from '../utils/platform';
 import { getDisplayPath as getDisplayPathCommon } from './fs-paths';
 import { Uri, WorkspaceFolder } from 'vscode';
+import { homedir } from 'os';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
-
-export const homePath = Uri.file(untildify('~')); // This is the only thing requiring a node version
-
-export function removeHomeFromFile(file: string | undefined) {
-    if (getOSType() === OSType.Windows) {
-        if (file && file.toLowerCase().startsWith(homePath.fsPath.toLowerCase())) {
-            return `~${file.slice(homePath.fsPath.length)}`;
-        }
-    } else {
-        if (file && file.startsWith(homePath.fsPath)) {
-            return `~${file.slice(homePath.fsPath.length)}`;
-        }
-    }
-    return file || '';
-}
+export const homePath = Uri.file(homedir()); // This is the only thing requiring a node version
 
 export function getDisplayPathFromLocalFile(file: string | undefined, cwd?: string | undefined) {
     const folders: WorkspaceFolder[] = cwd
@@ -33,9 +17,12 @@ export function getDisplayPathFromLocalFile(file: string | undefined, cwd?: stri
               }
           ]
         : [];
-    return getDisplayPath(file ? Uri.file(file) : undefined, folders);
+    return getDisplayPathCommon(file ? Uri.file(file) : undefined, folders, homePath);
 }
 
-export function getDisplayPath(file?: Uri, workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = []) {
+export function getDisplayPath(
+    file?: Uri | string,
+    workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = []
+) {
     return getDisplayPathCommon(file, workspaceFolders, homePath);
 }

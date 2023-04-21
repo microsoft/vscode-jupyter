@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Event, Uri } from 'vscode';
 import { IDisposable, IHttpClient } from '../../../platform/common/types';
 import { IPyWidgetMessages } from '../../../messageTypes';

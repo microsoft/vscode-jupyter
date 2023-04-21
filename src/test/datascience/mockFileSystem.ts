@@ -3,8 +3,6 @@
 
 /* eslint-disable local-rules/dont-use-fspath */
 
-'use strict';
-
 import * as fsextra from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import { FileStat, FileType, Uri } from 'vscode';

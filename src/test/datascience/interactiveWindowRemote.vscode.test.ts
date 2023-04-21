@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { assert } from 'chai';
 import { workspace, Disposable } from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo } from '../../platform/logging';
+import { testMandatory } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import { submitFromPythonFile } from './helpers.node';
 import {
@@ -16,7 +15,7 @@ import {
     waitForTextOutput
 } from './notebook/helper.node';
 
-suite('Interactive window (remote)', async () => {
+suite('Interactive window (remote) @iw', async () => {
     let interactiveWindowProvider: IInteractiveWindowProvider;
     let disposables: Disposable[] = [];
     setup(async function () {
@@ -50,7 +49,7 @@ suite('Interactive window (remote)', async () => {
         return { notebookDocument };
     }
 
-    test('Execute cell from Python file', async () => {
+    testMandatory('Execute cell from Python file', async () => {
         const source = 'print("Hello World")';
         const { notebookDocument } = await runCellInRemoveInteractiveWindow(source);
 

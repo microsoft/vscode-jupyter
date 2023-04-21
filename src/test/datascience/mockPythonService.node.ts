@@ -1,14 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import {
-    ExecutionResult,
-    IPythonExecutionService,
-    ObservableExecutionResult,
-    SpawnOptions
-} from '../../platform/common/process/types.node';
-import { buildPythonExecInfo } from '../../platform/pythonEnvironments/exec';
+import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../../platform/common/process/types.node';
+import { IPythonExecutionService } from '../../platform/interpreter/types.node';
 import { InterpreterInformation, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { MockProcessService } from './mockProcessService';
 
@@ -22,10 +16,6 @@ export class MockPythonService implements IPythonExecutionService {
 
     public getInterpreterInformation(): Promise<InterpreterInformation> {
         return Promise.resolve(this.interpreter);
-    }
-
-    public getExecutablePath(): Promise<string> {
-        return Promise.resolve(this.interpreter.uri.fsPath);
     }
 
     public isModuleInstalled(_moduleName: string): Promise<boolean> {
@@ -76,9 +66,5 @@ export class MockPythonService implements IPythonExecutionService {
 
     public setDelay(timeout: number | undefined) {
         this.procService.setDelay(timeout);
-    }
-
-    public getExecutionInfo(args: string[]) {
-        return buildPythonExecInfo(this.interpreter.uri.fsPath, args);
     }
 }

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, optional } from 'inversify';
 import * as vscode from 'vscode';
 
@@ -19,7 +18,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { traceInfoIfCI } from '../../platform/logging';
+import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import {
     CodeLensCommands,
     EditorContexts,
@@ -42,6 +41,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private totalGetCodeLensCalls: number = 0;
     private activeCodeWatchers: ICodeWatcher[] = [];
     private didChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IDebugLocationTracker) @optional() private debugLocationTracker: IDebugLocationTracker | undefined,
@@ -74,6 +74,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                 duration: this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
             });
         }
+        disposeAllDisposables(this.activeCodeWatchers);
     }
 
     public get onDidChangeCodeLenses(): vscode.Event<void> {
@@ -106,7 +107,8 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private onDidCloseTextDocument(e: vscode.TextDocument) {
         const index = this.activeCodeWatchers.findIndex((item) => item.uri && item.uri.toString() === e.uri.toString());
         if (index >= 0) {
-            this.activeCodeWatchers.splice(index, 1);
+            const codewatcher = this.activeCodeWatchers.splice(index, 1);
+            codewatcher[0].dispose();
         }
     }
 
@@ -192,7 +194,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return codeWatcher.getCodeLenses();
         }
 
-        traceInfoIfCI(`Creating a new watcher for document ${document.uri}`);
+        traceVerbose(`Creating a new watcher for document ${document.uri}`);
         const newCodeWatcher = this.createNewCodeWatcher(document);
         return newCodeWatcher.getCodeLenses();
     }
@@ -206,7 +208,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Create a new watcher for this file if we can find a matching document
         const possibleDocuments = this.documentManager.textDocuments.filter((d) => d.uri.toString() === uri.toString());
         if (possibleDocuments && possibleDocuments.length > 0) {
-            traceInfoIfCI(`creating new code watcher with matching document ${uri}`);
+            traceVerbose(`creating new code watcher with matching document ${uri}`);
             return this.createNewCodeWatcher(possibleDocuments[0]);
         }
 

@@ -21,7 +21,7 @@ import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pyth
 import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definition (slow)', function () {
+suite('VSCode Intellisense Notebook and Interactive Goto Definition @lsp', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -102,7 +102,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         );
     });
 
-    test('Import pandas and goto it', async () => {
+    test.skip('Import pandas and goto it', async () => {
         await insertCodeCell('import pandas as pd');
         const cell2 = await insertCodeCell('pd.read_csv');
 

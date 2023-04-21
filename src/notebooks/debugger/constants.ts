@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 export const pythonKernelDebugAdapter = 'Python Kernel Debug Adapter';
 export const pythonIWKernelDebugAdapter = 'Python Interactive Window Debug Adapter';
 

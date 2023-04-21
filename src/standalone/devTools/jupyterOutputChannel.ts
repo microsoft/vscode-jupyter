@@ -1,24 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { window, workspace } from 'vscode';
+import { window } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
+import { traceVerbose } from '../../platform/logging';
+import { splitLines } from '../../platform/common/helpers';
 
 /**
  * Returns the output panel for output related to Jupyter Server.
  */
-export function getJupyterOutputChannel(
-    isDevMode: boolean,
-    disposables: IDisposableRegistry,
-    defaultOutputChannel: IOutputChannel
-): IOutputChannel {
-    const forceLog = workspace.getConfiguration('jupyter').get('logKernelOutputSeparately', false);
-    if (!isDevMode && !forceLog) {
-        return defaultOutputChannel;
-    }
+export function getJupyterOutputChannel(disposables: IDisposableRegistry): IOutputChannel {
     const jupyterServerOutputChannel = window.createOutputChannel(
-        localize.DataScience.jupyterServerConsoleOutputChannel()
+        localize.DataScience.jupyterServerConsoleOutputChannel,
+        'log'
     );
     disposables.push(jupyterServerOutputChannel);
     const handler: ProxyHandler<IOutputChannel> = {
@@ -28,18 +23,30 @@ export function getJupyterOutputChannel(
                 if (propKey === 'append') {
                     return (...args: Parameters<IOutputChannel['append']>) => {
                         jupyterServerOutputChannel.append(...args);
-                        return defaultOutputChannel.append(...args);
+                        formatMessageAndLog(...args);
                     };
                 }
                 if (propKey === 'appendLine') {
                     return (...args: Parameters<IOutputChannel['appendLine']>) => {
                         jupyterServerOutputChannel.appendLine(...args);
-                        return defaultOutputChannel.appendLine(...args);
+                        formatMessageAndLog(...args);
                     };
                 }
             }
             return method;
         }
     };
-    return new Proxy(defaultOutputChannel, handler);
+    return new Proxy(jupyterServerOutputChannel, handler);
+}
+
+function formatMessageAndLog(...args: Parameters<IOutputChannel['append']>) {
+    if (args.length === 1) {
+        traceVerbose(
+            splitLines(args[0])
+                .map((line, i) => (i === 0 ? line : `    ${line}`))
+                .join('\n')
+        );
+    } else {
+        traceVerbose(...args);
+    }
 }

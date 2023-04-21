@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, named } from 'inversify';
 import {
     ConfigurationTarget,
     Event,
     EventEmitter,
     Memento,
+    NotebookControllerAffinity,
     NotebookDocument,
     NotebookEditor,
     Uri,
@@ -30,15 +30,15 @@ import {
     Resource,
     WORKSPACE_MEMENTO
 } from '../platform/common/types';
-import { chainable } from '../platform/common/utils/decorators';
 import * as localize from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from '../notebooks/types';
 import { InteractiveWindow } from './interactiveWindow';
-import { InteractiveWindowView, JVSC_EXTENSION_ID, NotebookCellScheme } from '../platform/common/constants';
+import { JVSC_EXTENSION_ID, NotebookCellScheme, Telemetry } from '../platform/common/constants';
 import {
+    IInteractiveControllerHelper,
     IInteractiveWindow,
     IInteractiveWindowCache,
     IInteractiveWindowProvider,
@@ -48,13 +48,11 @@ import {
 import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
-import {
-    IControllerDefaultService,
-    IControllerRegistration,
-    IVSCodeNotebookController
-} from '../notebooks/controllers/types';
-import { getResourceType } from '../platform/common/utils';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isInteractiveInputTab } from './helpers';
+import { Schemas } from '../platform/vscode-path/utils';
+import { sendTelemetryEvent } from '../telemetry';
+import { InteractiveControllerFactory } from './InteractiveWindowController';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -70,23 +68,16 @@ export class InteractiveWindowProvider
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
-    public get onDidCreateInteractiveWindow(): Event<IInteractiveWindow> {
-        return this._onDidCreateInteractiveWindow.event;
-    }
+
+    // returns the active Editor if it is an Interactive Window that we are tracking
     public get activeWindow(): IInteractiveWindow | undefined {
-        return this._windows.find(
-            (win) =>
-                window.activeNotebookEditor !== undefined &&
-                win.notebookUri?.toString() === window.activeNotebookEditor?.notebook.uri.toString()
-        );
+        const notebookUri = window.activeNotebookEditor?.notebook.uri.toString();
+        return notebookUri ? this._windows.find((win) => win.notebookUri?.toString() === notebookUri) : undefined;
     }
-    public get windows(): ReadonlyArray<IInteractiveWindow> {
-        return this._windows;
-    }
+
     private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
-    private readonly _onDidCreateInteractiveWindow = new EventEmitter<IInteractiveWindow>();
     private lastActiveInteractiveWindow: IInteractiveWindow | undefined;
-    private pendingCreations: Promise<void>[] = [];
+    private pendingCreations: Promise<void> | undefined;
     private _windows: InteractiveWindow[] = [];
 
     constructor(
@@ -99,9 +90,8 @@ export class InteractiveWindowProvider
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IControllerDefaultService) private readonly controllerDefaultService: IControllerDefaultService,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IInteractiveControllerHelper) private readonly controllerHelper: IInteractiveControllerHelper
     ) {
         asyncRegistry.push(this);
 
@@ -125,21 +115,43 @@ export class InteractiveWindowProvider
                 return;
             }
 
+            const tab = interactiveWindowMapping.get(iw.uriString);
+
+            if (!tab) {
+                return;
+            }
+
+            const mode = this.configService.getSettings(tab.input.uri).interactiveWindowMode;
+
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
-                iw.mode,
-                undefined,
-                interactiveWindowMapping.get(iw.uriString)!,
+                new InteractiveControllerFactory(this.controllerHelper, mode),
+                tab,
                 Uri.parse(iw.inputBoxUriString)
             );
+
             this._windows.push(result);
+            sendTelemetryEvent(
+                Telemetry.CreateInteractiveWindow,
+                { windowCount: this._windows.length },
+                {
+                    hasKernel: false,
+                    hasOwner: !!iw.owner,
+                    mode: mode,
+                    restored: true
+                }
+            );
+
+            const handler = result.closed(this.onInteractiveWindowClosed.bind(this, result));
+            this.disposables.push(result);
+            this.disposables.push(handler);
+            this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
         });
 
         this._updateWindowCache();
     }
 
-    @chainable()
     public async getOrCreate(resource: Resource, connection?: KernelConnectionMetadata): Promise<IInteractiveWindow> {
         if (!this.workspaceService.isTrusted) {
             // This should not happen, but if it does, then just throw an error.
@@ -149,26 +161,19 @@ export class InteractiveWindowProvider
         // Ask for a configuration change if appropriate
         const mode = await this.getInteractiveMode(resource);
 
-        // See if we already have a match
-        if (this.pendingCreations.length) {
-            // Possible its still in the process of getting created, hence wait on the creations to complete.
-            // But ignore errors.
-            const promises = Promise.all(this.pendingCreations.map((item) => item.catch(noop)));
-            await promises.catch(noop);
+        // Ensure we wait for a previous creation to finish.
+        if (this.pendingCreations) {
+            await this.pendingCreations.catch(noop);
         }
-        let result = this.getExisting(resource, mode, connection) as IInteractiveWindow;
+
+        // See if we already have a match
+        let result = this.getExisting(resource, mode, connection);
         if (!result) {
             // No match. Create a new item.
             result = await this.create(resource, mode, connection);
-            // start the kernel
-            result.start();
-        } else {
-            const preferredController = connection
-                ? this.controllerRegistration.get(connection, InteractiveWindowView)
-                : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
-
-            await result.restore(preferredController);
         }
+
+        await result.ensureInitialized();
 
         return result;
     }
@@ -186,35 +191,50 @@ export class InteractiveWindowProvider
         return noop();
     }
 
-    // Note to future devs: this function must be synchronous. Do not await on anything before calling
-    // the interactive window ctor and adding the interactive window to the provider's list of known windows.
-    // Otherwise we risk a race condition where e.g. multiple run cell requests come in quick and we end up
-    // instantiating multiples.
     private async create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {
+        // track when a creation is pending, so consumers can wait before checking for an existing one.
         const creationInProgress = createDeferred<void>();
         // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
-        this.pendingCreations.push(creationInProgress.promise);
+        this.pendingCreations = creationInProgress.promise;
         try {
-            traceInfo(`Starting interactive window for resource '${getDisplayPath(resource)}'`);
+            let initialController = await this.controllerHelper.getInitialController(resource, connection);
 
-            // Set it as soon as we create it. The .ctor for the interactive window
-            // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
-            // Find our preferred controller
-            const preferredController = connection
-                ? this.controllerRegistration.get(connection, InteractiveWindowView)
-                : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
+            traceInfo(
+                `Starting interactive window for resource '${getDisplayPath(resource)}' with controller '${
+                    initialController?.id
+                }'`
+            );
 
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-            const [inputUri, editor] = await this.createEditor(preferredController, resource, mode, commandManager);
+            const [inputUri, editor] = await this.createEditor(initialController, resource, mode, commandManager);
+            if (initialController) {
+                initialController.controller.updateNotebookAffinity(
+                    editor.notebook,
+                    NotebookControllerAffinity.Preferred
+                );
+            }
+            traceVerbose(
+                `Interactive Window Editor Created: ${editor.notebook.uri.toString()} with input box: ${inputUri.toString()}`
+            );
+
             const result = new InteractiveWindow(
                 this.serviceContainer,
                 resource,
-                mode,
-                preferredController,
+                new InteractiveControllerFactory(this.controllerHelper, mode, initialController),
                 editor,
                 inputUri
             );
             this._windows.push(result);
+            sendTelemetryEvent(
+                Telemetry.CreateInteractiveWindow,
+                { windowCount: this._windows.length },
+                {
+                    hasKernel: !!initialController,
+                    hasOwner: !!resource,
+                    mode: mode,
+                    restored: false
+                }
+            );
             this._updateWindowCache();
 
             // This is the last interactive window at the moment (as we're about to create it)
@@ -226,12 +246,9 @@ export class InteractiveWindowProvider
             this.disposables.push(handler);
             this.disposables.push(result.onDidChangeViewState(this.raiseOnDidChangeActiveInteractiveWindow.bind(this)));
 
-            // fire created event
-            this._onDidCreateInteractiveWindow.fire(result);
             return result;
         } finally {
             creationInProgress.resolve();
-            this.pendingCreations = this.pendingCreations.filter((item) => item !== creationInProgress.promise);
         }
     }
     private async createEditor(
@@ -289,19 +306,19 @@ export class InteractiveWindowProvider
             // See if the first window was tied to a file or not.
             this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
             const questions = [
-                localize.DataScience.interactiveWindowModeBannerSwitchYes(),
-                localize.DataScience.interactiveWindowModeBannerSwitchNo()
+                localize.DataScience.interactiveWindowModeBannerSwitchYes,
+                localize.DataScience.interactiveWindowModeBannerSwitchNo
             ];
             // Ask user if they'd like to switch to per file or not.
             const response = await this.appShell.showInformationMessage(
-                localize.DataScience.interactiveWindowModeBannerTitle(),
+                localize.DataScience.interactiveWindowModeBannerTitle,
                 ...questions
             );
             if (response === questions[0]) {
                 result = 'perFile';
                 this._windows[0].changeMode(result);
                 await this.configService.updateSetting(
-                    'interactiveWindowMode',
+                    'interactiveWindow.creationMode',
                     result,
                     resource,
                     ConfigurationTarget.Global
@@ -315,7 +332,6 @@ export class InteractiveWindowProvider
             (iw) =>
                 ({
                     owner: iw.owner,
-                    mode: iw.mode,
                     uriString: iw.notebookUri.toString(),
                     inputBoxUriString: iw.inputUri.toString()
                 } as IInteractiveWindowCache)
@@ -386,19 +402,34 @@ export class InteractiveWindowProvider
     }
 
     findNotebookEditor(resource: Resource): NotebookEditor | undefined {
-        const targetInteractiveNotebookEditor =
-            resource && getResourceType(resource) === 'interactive' ? this.get(resource)?.notebookEditor : undefined;
-        const activeInteractiveNotebookEditor =
-            getResourceType(resource) === 'interactive'
-                ? this.getActiveOrAssociatedInteractiveWindow()?.notebookEditor
-                : undefined;
+        let notebook: NotebookDocument | undefined;
+        if (resource && resource.scheme === Schemas.vscodeInteractive) {
+            notebook = this.get(resource)?.notebookDocument;
+        } else {
+            const mode = this.configService.getSettings(resource).interactiveWindowMode;
+            notebook = this.getExisting(resource, mode)?.notebookDocument;
+        }
 
-        return targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
+        return notebook ? window.visibleNotebookEditors.find((editor) => editor.notebook === notebook) : undefined;
     }
 
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined {
-        const interactiveWindow = this.windows.find((w) => w.inputUri?.toString() === uri.toString());
+        const interactiveWindow = this._windows.find((w) => w.inputUri?.toString() === uri.toString());
         let notebook = interactiveWindow?.notebookDocument;
         return notebook;
+    }
+
+    getInteractiveWindowWithNotebook(notebookUri: Uri | undefined) {
+        let targetInteractiveWindow;
+        if (notebookUri !== undefined) {
+            targetInteractiveWindow = this._windows.find((w) => w.notebookUri?.toString() === notebookUri.toString());
+        } else {
+            targetInteractiveWindow = this.getActiveOrAssociatedInteractiveWindow();
+        }
+        return targetInteractiveWindow;
+    }
+
+    getInteractiveWindowsWithSubmitter(file: Uri): IInteractiveWindow[] {
+        return this._windows.filter((w) => w.submitters.find((s) => this.fs.arePathsSame(file, s)));
     }
 }

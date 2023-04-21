@@ -5,6 +5,7 @@ images/**
 docs/**
 *.vsix
 .appveyor.yml
+.devcontainer*/**
 .editorconfig
 .env
 .eslintrc
@@ -24,12 +25,13 @@ CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
 cucumber-report.json
 gulpfile.js
+news/**
 package.webviews/webview-side.dependencies.json
 package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
 pvsc.code-workspace
-PYTHON_INTERACTIVE_TROUBLESHOOTING.md
+INTERACTIVE_TROUBLESHOOTING.md
 requirements.in
 sprint-planning.github-issues
 test.ipynb
@@ -73,7 +75,6 @@ images/**/*.gif
 images/**/*.png
 ipywidgets/**
 i18n/**
-news/**
 node_modules/**
 obj/**
 logs/**
@@ -117,3 +118,5 @@ types/**
 test-results*
 *.zip
 !**/*nls.*.json
+*.d.ts
+debugpy_logging.cmd

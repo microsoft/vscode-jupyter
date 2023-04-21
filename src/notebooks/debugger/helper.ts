@@ -1,9 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import type { IDebugEventMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernelDebugAdapter, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
-import { IKernel } from '../../kernels/types';
+import { INotebookKernelExecution } from '../../kernels/types';
+import {
+    IInteractiveWindowDebugConfig,
+    IKernelDebugAdapter,
+    INotebookDebugConfig,
+    KernelDebugMode
+} from './debuggingTypes';
 
 export enum IpykernelCheckResult {
     Unknown,
@@ -13,22 +19,36 @@ export enum IpykernelCheckResult {
     ControllerNotSelected
 }
 
-export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<IpykernelCheckResult> {
-    const code = 'import ipykernel\nprint(ipykernel.__version__)';
-    const output = await kernel.executeHidden(code);
+export async function isUsingIpykernel6OrLater(execution: INotebookKernelExecution): Promise<IpykernelCheckResult> {
+    const code = `import builtins
+import ipykernel
+builtins.print(ipykernel.__version__)`;
+    const output = await execution.executeHidden(code);
 
-    if (output[0].text) {
-        const version = output[0].text.toString().split('.');
-        const majorVersion = Number(version[0]);
-        return majorVersion >= 6 ? IpykernelCheckResult.Ok : IpykernelCheckResult.Outdated;
+    const versionRegex: RegExp = /^(\d+)\.\d+\.\d+$/;
+
+    // It is necessary to traverse all the output to determine the version of ipykernel, some jupyter servers may return extra status metadata
+    for (const line of output) {
+        if (line.output_type !== 'stream') continue;
+
+        const lineText = line.text?.toString().trim() ?? '';
+        const matches: RegExpMatchArray | null = lineText.match(versionRegex);
+        if (matches) {
+            const majorVersion: string = matches[1];
+            if (Number(majorVersion) >= 6) {
+                return IpykernelCheckResult.Ok;
+            }
+            return IpykernelCheckResult.Outdated;
+        }
     }
 
     return IpykernelCheckResult.Unknown;
 }
 
-export function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDebugAdapterConfig {
-    const config = thing as IKernelDebugAdapterConfig;
+export function assertIsDebugConfig(thing: unknown): asserts thing is INotebookDebugConfig {
+    const config = thing as INotebookDebugConfig;
     if (
+        typeof config.__notebookUri === 'undefined' ||
         typeof config.__mode === 'undefined' ||
         ((config.__mode === KernelDebugMode.Cell ||
             config.__mode === KernelDebugMode.InteractiveWindow ||
@@ -39,11 +59,18 @@ export function assertIsDebugConfig(thing: unknown): asserts thing is IKernelDeb
     }
 }
 
+export function assertIsInteractiveWindowDebugConfig(thing: unknown): asserts thing is IInteractiveWindowDebugConfig {
+    assertIsDebugConfig(thing);
+    if (thing.__mode !== KernelDebugMode.InteractiveWindow) {
+        throw new Error('Invalid launch configuration');
+    }
+}
+
 export function getMessageSourceAndHookIt(
     msg: DebugProtocol.ProtocolMessage,
     sourceHook: (
-        source: DebugProtocol.Source | undefined,
-        lines?: { line?: number; endLine?: number; lines?: number[] }
+        location: { source?: DebugProtocol.Source; line?: number; endLine?: number },
+        source?: DebugProtocol.Source
     ) => void
 ): void {
     switch (msg.type) {
@@ -51,22 +78,13 @@ export function getMessageSourceAndHookIt(
             const event = msg as DebugProtocol.Event;
             switch (event.event) {
                 case 'output':
-                    sourceHook(
-                        (event as DebugProtocol.OutputEvent).body.source,
-                        (event as DebugProtocol.OutputEvent).body
-                    );
+                    sourceHook((event as DebugProtocol.OutputEvent).body);
                     break;
                 case 'loadedSource':
-                    sourceHook(
-                        (event as DebugProtocol.LoadedSourceEvent).body.source,
-                        (event as DebugProtocol.OutputEvent).body
-                    );
+                    sourceHook((event as DebugProtocol.LoadedSourceEvent).body);
                     break;
                 case 'breakpoint':
-                    sourceHook(
-                        (event as DebugProtocol.BreakpointEvent).body.breakpoint.source,
-                        (event as DebugProtocol.OutputEvent).body
-                    );
+                    sourceHook((event as DebugProtocol.BreakpointEvent).body.breakpoint);
                     break;
                 default:
                     break;
@@ -76,28 +94,27 @@ export function getMessageSourceAndHookIt(
             const request = msg as DebugProtocol.Request;
             switch (request.command) {
                 case 'setBreakpoints':
-                    // Keep track of the original source to be passed for other hooks.
-                    const originalSource = { ...(request.arguments as DebugProtocol.SetBreakpointsArguments).source };
-                    sourceHook((request.arguments as DebugProtocol.SetBreakpointsArguments).source, request.arguments);
-                    const breakpoints = (request.arguments as DebugProtocol.SetBreakpointsArguments).breakpoints;
-                    if (breakpoints && Array.isArray(breakpoints)) {
-                        breakpoints.forEach((bk) => {
-                            // Pass the original source to the hook (without the translation).
-                            sourceHook({ ...originalSource }, bk);
+                    const args = request.arguments as DebugProtocol.SetBreakpointsArguments;
+                    const breakpoints = args.breakpoints;
+                    if (breakpoints && breakpoints.length) {
+                        const originalLine = breakpoints[0].line;
+                        breakpoints.forEach((bp) => {
+                            sourceHook(bp, { ...args.source });
                         });
+                        const objForSource = { source: args.source, line: originalLine };
+                        sourceHook(objForSource);
+                        args.source = objForSource.source;
                     }
                     break;
                 case 'breakpointLocations':
-                    sourceHook(
-                        (request.arguments as DebugProtocol.BreakpointLocationsArguments).source,
-                        request.arguments
-                    );
+                    // TODO this technically would have to be mapped to two different sources, in reality, I don't think that will happen in vscode
+                    sourceHook(request.arguments as DebugProtocol.BreakpointLocationsArguments);
                     break;
                 case 'source':
-                    sourceHook((request.arguments as DebugProtocol.SourceArguments).source);
+                    sourceHook(request.arguments as DebugProtocol.SourceArguments);
                     break;
                 case 'gotoTargets':
-                    sourceHook((request.arguments as DebugProtocol.GotoTargetsArguments).source, request.arguments);
+                    sourceHook(request.arguments as DebugProtocol.GotoTargetsArguments);
                     break;
                 default:
                     break;
@@ -109,27 +126,29 @@ export function getMessageSourceAndHookIt(
                 switch (response.command) {
                     case 'stackTrace':
                         (response as DebugProtocol.StackTraceResponse).body.stackFrames.forEach((frame) => {
-                            sourceHook(frame.source, frame);
+                            sourceHook(frame);
                         });
                         break;
                     case 'loadedSources':
-                        (response as DebugProtocol.LoadedSourcesResponse).body.sources.forEach((source) =>
-                            sourceHook(source)
-                        );
+                        (response as DebugProtocol.LoadedSourcesResponse).body.sources.forEach((source) => {
+                            const fakeObj = { source };
+                            sourceHook(fakeObj);
+                            source.path = fakeObj.source.path;
+                        });
                         break;
                     case 'scopes':
                         (response as DebugProtocol.ScopesResponse).body.scopes.forEach((scope) => {
-                            sourceHook(scope.source, scope);
+                            sourceHook(scope);
                         });
                         break;
                     case 'setFunctionBreakpoints':
                         (response as DebugProtocol.SetFunctionBreakpointsResponse).body.breakpoints.forEach((bp) => {
-                            sourceHook(bp.source, bp);
+                            sourceHook(bp);
                         });
                         break;
                     case 'setBreakpoints':
                         (response as DebugProtocol.SetBreakpointsResponse).body.breakpoints.forEach((bp) => {
-                            sourceHook(bp.source, bp);
+                            sourceHook(bp);
                         });
                         break;
                     default:
@@ -149,11 +168,18 @@ export function shortNameMatchesLongName(shortNamePath: string, longNamePath: st
     return r.test(longNamePath);
 }
 
-export async function cellDebugSetup(kernel: IKernel, debugAdapter: IKernelDebugAdapter): Promise<void> {
+export async function cellDebugSetup(
+    execution: INotebookKernelExecution,
+    debugAdapter: IKernelDebugAdapter
+): Promise<void> {
     // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
     const code = 'import debugpy\ndebugpy.debug_this_thread()';
-    await kernel.executeHidden(code);
+    await execution.executeHidden(code);
 
     await debugAdapter.dumpAllCells();
+}
+
+export function isDebugEventMsg(msg: unknown): msg is IDebugEventMsg {
+    return !!(msg as IDebugEventMsg).header && (msg as IDebugEventMsg).header.msg_type === 'debug_event';
 }

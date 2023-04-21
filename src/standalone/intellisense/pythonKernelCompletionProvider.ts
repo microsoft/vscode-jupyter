@@ -84,7 +84,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
 
         const kernel = this.kernelProvider.get(notebookDocument);
         if (!kernel || !kernel.session) {
-            traceError(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
+            traceVerbose(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
             return [];
         }
         // Allow slower timeouts for CI (testing).

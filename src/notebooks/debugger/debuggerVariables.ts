@@ -1,26 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { Identifiers } from '../../platform/common/constants';
-import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { traceError, traceVerbose } from '../../platform/logging';
-import {
-    IConfigurationService,
-    IDataFrameScriptGenerator,
-    IVariableScriptGenerator,
-    Resource
-} from '../../platform/common/types';
-import { DebugLocationTracker } from './debugLocationTracker';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from './debuggingTypes';
-import { IKernel } from '../../kernels/types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
+import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from '../../kernels/variables/helpers';
 import { parseDataFrame } from '../../kernels/variables/pythonVariableRequester';
 import {
     IConditionalJupyterVariables,
@@ -28,8 +16,19 @@ import {
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
 } from '../../kernels/variables/types';
-import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from '../../kernels/variables/helpers';
+import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
+import { Identifiers } from '../../platform/common/constants';
+import {
+    IConfigurationService,
+    IDataFrameScriptGenerator,
+    IVariableScriptGenerator,
+    Resource
+} from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
+import { traceError, traceVerbose } from '../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { IJupyterDebugService, INotebookDebuggingManager, KernelDebugMode } from './debuggingTypes';
+import { DebugLocationTracker } from './debugLocationTracker';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -53,11 +52,12 @@ export class DebuggerVariables
 
     constructor(
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
-        @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
+        @inject(INotebookDebuggingManager) private readonly debuggingManager: INotebookDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
-        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -80,9 +80,9 @@ export class DebuggerVariables
         if (kernel) {
             this.watchKernel(kernel);
         }
-
+        const execution = kernel && this.kernelProvider.getKernelExecution(kernel);
         const result: IJupyterVariablesResponse = {
-            executionCount: kernel ? kernel.executionCount : request.executionCount,
+            executionCount: execution ? execution.executionCount : request.executionCount,
             pageStartIndex: 0,
             pageResponse: [],
             totalCount: 0,
@@ -250,7 +250,7 @@ export class DebuggerVariables
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'event' && message.event === 'stopped' && this.activeNotebookIsDebugging()) {
-            this.handleNotebookVariables(message as DebugProtocol.StoppedEvent).ignoreErrors();
+            this.handleNotebookVariables(message as DebugProtocol.StoppedEvent).catch(noop);
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
             const response = message as DebugProtocol.ScopesResponse;
 
@@ -434,7 +434,7 @@ export class DebuggerVariables
         const threadId = stoppedMessage.body.threadId;
 
         if (doc) {
-            const session = await this.debuggingManager.getDebugSession(doc);
+            const session = this.debuggingManager.getDebugSession(doc);
             if (session) {
                 // Call stack trace
                 const stResponse: DebugProtocol.StackTraceResponse['body'] = await session.customRequest('stackTrace', {

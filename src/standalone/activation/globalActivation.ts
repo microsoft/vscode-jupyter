@@ -1,26 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
-import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { PYTHON_FILE_ANY_SCHEME, PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
+import { PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
-import '../../platform/common/extensions';
 import {
     IConfigurationService,
     IDataScienceCommandListener,
     IDisposable,
-    IDisposableRegistry,
-    IExtensionContext
+    IDisposableRegistry
 } from '../../platform/common/types';
 import { debounceAsync, swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { EditorContexts } from '../../platform/common/constants';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -30,17 +25,13 @@ import { sendTelemetryEvent } from '../../telemetry';
  * Could probably be broken up.
  */
 @injectable()
-export class GlobalActivation implements IExtensionSingleActivationService {
+export class GlobalActivation implements IExtensionSyncActivationService {
     public isDisposed: boolean = false;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();
     constructor(
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IExtensionContext) private extensionContext: IExtensionContext,
-        @inject(IDataScienceCodeLensProvider)
-        @optional()
-        private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
@@ -55,13 +46,7 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         return this.startTime;
     }
 
-    public async activate(): Promise<void> {
-        if (this.dataScienceCodeLensProvider) {
-            this.extensionContext.subscriptions.push(
-                vscode.languages.registerCodeLensProvider([PYTHON_FILE_ANY_SCHEME], this.dataScienceCodeLensProvider)
-            );
-        }
-
+    public activate() {
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
         this.changeHandler = this.configuration.getSettings(undefined).onDidChange(this.onSettingsChanged.bind(this));
@@ -74,7 +59,7 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         this.onChangedActiveTextEditor();
 
         // Send telemetry for all of our settings
-        this.sendSettingsTelemetry().ignoreErrors();
+        this.sendSettingsTelemetry().catch(noop);
 
         // Figure out the ZMQ available context key
         this.computeZmqAvailable();
@@ -138,7 +123,7 @@ export class GlobalActivation implements IExtensionSingleActivationService {
                 if (typeof currentValue === 'function') {
                     continue;
                 }
-                if (typeof currentValue === 'string' && k !== 'interactiveWindowMode') {
+                if (typeof currentValue === 'string' && k !== 'interactiveWindow.creationMode') {
                     const inspectResult = jupyterConfig.inspect<string>(`${k}`);
                     if (inspectResult && inspectResult.defaultValue !== currentValue) {
                         resultSettings[k] = 'non-default';

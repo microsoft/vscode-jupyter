@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import {
     ConnectNotebookProviderOptions,
@@ -13,24 +11,15 @@ import {
     NotebookCreationOptions
 } from '../../types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { IJupyterNotebookProvider, IJupyterServerProvider, IJupyterServerUriStorage } from '../types';
+import { IJupyterNotebookProvider, IJupyterServerProvider } from '../types';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook
 @injectable()
 export class JupyterNotebookProvider implements IJupyterNotebookProvider {
-    constructor(
-        @inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider,
-        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
-    ) {}
+    constructor(@inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider) {}
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection> {
         const { connection } = await this.serverProvider.getOrCreateServer(options);
-        if (!options.localJupyter) {
-            // Log this remote URI into our MRU list
-            this.serverStorage
-                .addToUriList(connection.url || connection.displayName, Date.now(), connection.displayName)
-                .ignoreErrors();
-        }
         return connection;
     }
 

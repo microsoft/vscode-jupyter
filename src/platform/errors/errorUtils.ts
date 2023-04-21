@@ -7,6 +7,7 @@ import { DataScience } from '../common/utils/localize';
 import { JupyterConnectError } from './jupyterConnectError';
 import { BaseError } from './types';
 import * as path from '../../platform/vscode-path/resources';
+import { splitLines } from '../common/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
@@ -170,7 +171,11 @@ export enum KernelFailureReason {
     /**
      * Failure to start Jupyter due to outdated traitlets.
      */
-    jupyterStartFailureOutdatedTraitlets = 'jupyterStartFailureOutdatedTraitlets'
+    jupyterStartFailureOutdatedTraitlets = 'jupyterStartFailureOutdatedTraitlets',
+    /**
+     *  Python environment is missing (probably been deleted).
+     */
+    pythonEnvironmentMissing = 'pythonEnvironmentMissing'
 }
 type BaseFailure<Reason extends KernelFailureReason, ExtraData = {}> = {
     reason: Reason;
@@ -290,7 +295,7 @@ export function analyzeKernelErrors(
         */
         return {
             reason: KernelFailureReason.importWin32apiFailure,
-            message: DataScience.failedToStartKernelDueToWin32APIFailure(),
+            message: DataScience.failedToStartKernelDueToWin32APIFailure,
             moreInfoLink: 'https://aka.ms/kernelFailuresWin32Api',
             telemetrySafeTags: ['win32api']
         };
@@ -304,7 +309,7 @@ export function analyzeKernelErrors(
         */
         return {
             reason: KernelFailureReason.importWin32apiFailure,
-            message: DataScience.failedToStartKernelDueToWin32APIFailure(),
+            message: DataScience.failedToStartKernelDueToWin32APIFailure,
             moreInfoLink: 'https://aka.ms/kernelFailuresWin32Api',
             telemetrySafeTags: ['dll.load.failed', 'win32api']
         };
@@ -322,8 +327,8 @@ export function analyzeKernelErrors(
             reason: KernelFailureReason.dllLoadFailure,
             moduleName,
             message: moduleName
-                ? DataScience.failedToStartKernelDueToDllLoadFailure().format(moduleName)
-                : DataScience.failedToStartKernelDueToUnknownDllLoadFailure(),
+                ? DataScience.failedToStartKernelDueToDllLoadFailure(moduleName)
+                : DataScience.failedToStartKernelDueToUnknownDllLoadFailure,
             moreInfoLink: 'https://aka.ms/kernelFailuresDllLoad',
             telemetrySafeTags: ['dll.load.failed']
         };
@@ -344,7 +349,7 @@ export function analyzeKernelErrors(
         */
         return {
             reason: KernelFailureReason.oldIPythonFailure,
-            message: DataScience.failedToStartKernelDueToOldIPython(),
+            message: DataScience.failedToStartKernelDueToOldIPython,
             moreInfoLink: 'https://aka.ms/kernelFailuresOldIPython',
             telemetrySafeTags: ['oldipython']
         };
@@ -367,7 +372,7 @@ export function analyzeKernelErrors(
         */
         return {
             reason: KernelFailureReason.oldIPyKernelFailure,
-            message: DataScience.failedToStartKernelDueToOldIPyKernel(),
+            message: DataScience.failedToStartKernelDueToOldIPyKernel,
             moreInfoLink: 'https://aka.ms/kernelFailuresOldIPyKernel',
             telemetrySafeTags: ['oldipykernel']
         };
@@ -405,7 +410,7 @@ export function analyzeKernelErrors(
         if (tags.length) {
             return {
                 reason: KernelFailureReason.zmqModuleFailure,
-                message: DataScience.failedToStartKernelDueToPyZmqFailure(),
+                message: DataScience.failedToStartKernelDueToPyZmqFailure,
                 moreInfoLink: 'https://aka.ms/kernelFailuresPyzmq',
                 telemetrySafeTags: tags
             };
@@ -426,8 +431,8 @@ export function analyzeKernelErrors(
                 moduleName: info.moduleName,
                 fileName: info.fileName,
                 message: info.fileName
-                    ? DataScience.failedToStartKernelDueToImportFailureFromFile().format(info.moduleName, info.fileName)
-                    : DataScience.failedToStartKernelDueToImportFailure().format(info.moduleName),
+                    ? DataScience.failedToStartKernelDueToImportFailureFromFile(info.moduleName, info.fileName)
+                    : DataScience.failedToStartKernelDueToImportFailure(info.moduleName),
                 moreInfoLink: info.fileName
                     ? 'https://aka.ms/kernelFailuresModuleImportErrFromFile'
                     : 'https://aka.ms/kernelFailuresModuleImportErr',
@@ -440,8 +445,7 @@ export function analyzeKernelErrors(
     const noModule = 'No module named'.toLowerCase();
     const isNotAPackage = `is not a package`.toLowerCase();
     if (stdErr.includes(noModule) && !isNotAPackage) {
-        const line = stdErrOrStackTrace
-            .splitLines()
+        const line = splitLines(stdErrOrStackTrace)
             .map((line) => line.trim())
             .filter((line) => line.length)
             .find((line) => line.toLowerCase().includes(noModule));
@@ -450,14 +454,13 @@ export function analyzeKernelErrors(
             return {
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName,
-                message: DataScience.failedToStartKernelDueToMissingModule().format(moduleName),
+                message: DataScience.failedToStartKernelDueToMissingModule(moduleName),
                 moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
                 telemetrySafeTags: ['module.notfound.error']
             };
         }
     } else if (stdErr.includes(noModule) && isNotAPackage) {
-        const line = stdErrOrStackTrace
-            .splitLines()
+        const line = splitLines(stdErrOrStackTrace)
             .map((line) => line.trim())
             .filter((line) => line.length)
             .find((line) => line.toLowerCase().includes(noModule));
@@ -483,7 +486,7 @@ export function analyzeKernelErrors(
                 reason: KernelFailureReason.overridingBuiltinModules,
                 fileName,
                 moduleName,
-                message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(fileName),
+                message: DataScience.fileSeemsToBeInterferingWithKernelStartup(fileName),
                 moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
                 telemetrySafeTags: ['import.error', 'override.modules']
             };
@@ -497,7 +500,7 @@ export function analyzeKernelErrors(
                 reason: KernelFailureReason.overridingBuiltinModules,
                 folderName,
                 moduleName,
-                message: DataScience.moduleSeemsToBeInterferingWithKernelStartup().format(folderName),
+                message: DataScience.moduleSeemsToBeInterferingWithKernelStartup(folderName),
                 moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
                 telemetrySafeTags: ['import.error', 'override.modules']
             };
@@ -505,7 +508,7 @@ export function analyzeKernelErrors(
             return {
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName,
-                message: DataScience.failedToStartKernelDueToMissingModule().format(moduleName),
+                message: DataScience.failedToStartKernelDueToMissingModule(moduleName),
                 moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
                 telemetrySafeTags: ['module.notfound.error']
             };
@@ -519,7 +522,7 @@ export function analyzeKernelErrors(
             reason: KernelFailureReason.overridingBuiltinModules,
             fileName,
             moduleName: path.basename(filesInCwd[0], '.py'),
-            message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(fileName),
+            message: DataScience.fileSeemsToBeInterferingWithKernelStartup(fileName),
             moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
             telemetrySafeTags: ['import.error', 'override.modules']
         };
@@ -532,7 +535,7 @@ export function analyzeKernelErrors(
             return {
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName: info.moduleName,
-                message: DataScience.failedToStartKernelDueToMissingModule().format(info.moduleName),
+                message: DataScience.failedToStartKernelDueToMissingModule(info.moduleName),
                 moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
                 telemetrySafeTags: ['module.notfound.error']
             };
@@ -540,8 +543,7 @@ export function analyzeKernelErrors(
     }
     if (error instanceof JupyterConnectError) {
         // Get the last error message in the stack trace.
-        let errorMessage = stdErrOrStackTrace
-            .splitLines()
+        let errorMessage = splitLines(stdErrOrStackTrace)
             .map((line) => line.trim())
             .reverse()
             .find((line) => line.toLowerCase().includes('error: '));
@@ -551,19 +553,17 @@ export function analyzeKernelErrors(
         let link: string | undefined;
         let reason = KernelFailureReason.jupyterStartFailure;
         // Some times the error message is either in the message or the stderr.
-        let pythonError = error.message
-            .splitLines({ removeEmptyEntries: true, trim: true })
+        let pythonError = splitLines(error.message, { removeEmptyEntries: true, trim: true })
             .reverse()
             .find((item) => item.toLowerCase().includes('error: '));
         pythonError =
             pythonError ||
-            (error.stdErr || '')
-                .splitLines({ removeEmptyEntries: true, trim: true })
+            splitLines(error.stdErr || '', { removeEmptyEntries: true, trim: true })
                 .reverse()
                 .find((item) => item.toLowerCase().includes('error: '));
         if (stdErr.includes(errorMessageDueToOutdatedTraitlets.toLowerCase())) {
             reason = KernelFailureReason.jupyterStartFailureOutdatedTraitlets;
-            errorMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
+            errorMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets(
                 kernelDisplayName || '',
                 pythonError || ''
             );
@@ -571,8 +571,8 @@ export function analyzeKernelErrors(
             link = 'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated';
         } else {
             errorMessage = pythonError
-                ? DataScience.failedToStartJupyterWithErrorInfo().format(kernelDisplayName || '', pythonError)
-                : DataScience.failedToStartJupyter().format(kernelDisplayName || '');
+                ? DataScience.failedToStartJupyterWithErrorInfo(kernelDisplayName || '', pythonError)
+                : DataScience.failedToStartJupyter(kernelDisplayName || '');
             link = undefined;
         }
         if (errorMessage) {
@@ -642,7 +642,7 @@ function isBuiltInModuleOverwritten(
         reason: KernelFailureReason.overridingBuiltinModules,
         fileName,
         moduleName,
-        message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
+        message: DataScience.fileSeemsToBeInterferingWithKernelStartup(
             getDisplayPath(Uri.file(fileName), workspaceFolders || [])
         ),
         moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
@@ -655,7 +655,7 @@ export function createOutputWithErrorMessageForDisplay(errorMessage: string) {
         return;
     }
     // If we have markdown links to run a command, turn that into a link.
-    const regex = /\[(?<name>.*)\]\((?<command>command:\S*)\)/gm;
+    const regex = /\[([^\[\]]*)\]\((.*?)\)/gm;
     let matches: RegExpExecArray | undefined | null;
     while ((matches = regex.exec(errorMessage)) !== null) {
         if (matches.length === 3) {
@@ -663,8 +663,7 @@ export function createOutputWithErrorMessageForDisplay(errorMessage: string) {
         }
     }
     // Ensure all lines are colored red as errors (except for lines containing hyperlinks).
-    const stack = errorMessage
-        .splitLines({ removeEmptyEntries: false, trim: false })
+    const stack = splitLines(errorMessage, { removeEmptyEntries: false, trim: false })
         .map((line) => `\u001b[1;31m${line}`)
         .join('\n');
     return new NotebookCellOutput([

@@ -10,7 +10,7 @@ import { promisify } from 'util';
 import { TemporaryFile } from './types';
 import { IFileSystemNode } from './types.node';
 import { ENCODING, FileSystem as FileSystemBase } from './fileSystem';
-import { IExtensionContext, IHttpClient } from '../types';
+import { IHttpClient } from '../types';
 import { FileType, Uri } from 'vscode';
 import { getFilePath } from './fs-paths';
 
@@ -21,8 +21,8 @@ import { getFilePath } from './fs-paths';
 @injectable()
 export class FileSystem extends FileSystemBase implements IFileSystemNode {
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
-    constructor(@inject(IExtensionContext) context: IExtensionContext, @inject(IHttpClient) httpClient: IHttpClient) {
-        super(context, httpClient);
+    constructor(@inject(IHttpClient) httpClient: IHttpClient) {
+        super(httpClient);
         this.globFiles = promisify(glob);
     }
 

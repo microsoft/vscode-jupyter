@@ -71,9 +71,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     {...(this.props.originalVariableShape.length > 2 ? { open: true } : {})}
                 >
                     <summary className="slice-summary" onClick={() => this.props.onPanelToggled()}>
-                        <span className="slice-summary-detail">
-                            {getLocString('DataScience.sliceSummaryTitle', 'SLICING')}
-                        </span>
+                        <span className="slice-summary-detail">{getLocString('sliceSummaryTitle', 'SLICING')}</span>
                         {this.renderReadonlyIndicator()}
                     </summary>
                     <form onSubmit={this.handleSubmit} className="slice-form">
@@ -85,7 +83,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                                     onClick={this.toggleEnablement}
                                 />
                                 <span className="checkbox-label" onClick={this.toggleEnablement}>
-                                    {getLocString('DataScience.sliceData', 'Slice Data')}
+                                    {getLocString('sliceData', 'Slice Data')}
                                 </span>
                             </div>
                         </div>
@@ -109,7 +107,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                                 className="submit-slice-button"
                                 type="submit"
                                 disabled={isDisabled}
-                                value={getLocString('DataScience.sliceSubmitButton', 'Apply')}
+                                value={getLocString('sliceSubmitButton', 'Apply')}
                             />
                         </div>
                         {this.generateDropdowns()}
@@ -160,7 +158,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                 <div className="slice-control-row slice-form-container">
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
-                        label={getLocString('DataScience.sliceDropdownAxisLabel', 'Axis')}
+                        label={getLocString('sliceDropdownAxisLabel', 'Axis')}
                         style={{ marginRight: '10px' }}
                         styles={styles}
                         disabled={!this.state.isEnabled || this.props.loadingData}
@@ -172,7 +170,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
                     />
                     <Dropdown
                         responsiveMode={ResponsiveMode.xxxLarge}
-                        label={getLocString('DataScience.sliceDropdownIndexLabel', 'Index')}
+                        label={getLocString('sliceDropdownIndexLabel', 'Index')}
                         styles={styles}
                         disabled={
                             !this.state.isEnabled ||

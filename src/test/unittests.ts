@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import '../platform/ioc/reflectMetadata';
 
 // Not sure why but on windows, if you execute a process from the System32 directory, it will just crash Node.
 // Not throw an exception, just make node exit.
@@ -16,11 +17,6 @@ if (os.platform() === 'win32') {
         // eslint-disable-next-line no-console
         console.error('error during reg.exe');
     });
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
 }
 
 setTestExecution(true);

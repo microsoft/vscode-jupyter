@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { CommandsWithoutArgs } from '../../commands';
+import { CommandIds } from '../../commands';
 import { ICommandManager } from './application/types';
 import { Experiments } from './experiments/groups';
 import { ISystemVariables } from './variables/types';
@@ -55,27 +53,20 @@ export interface IJupyterSettings {
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
-    readonly allowImportFromNotebook: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
     readonly notebookFileRoot: string;
     readonly useDefaultConfigForJupyter: boolean;
     readonly searchForJupyter: boolean;
-    readonly allowInput: boolean;
-    readonly showCellInputCode: boolean;
-    readonly maxOutputSize: number;
-    readonly enableScrollingForCellOutputs: boolean;
     readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
-    readonly allowLiveShare: boolean;
     readonly errorBackgroundColor: string;
     readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
-    readonly liveShareConnectionTimeout: number;
-    readonly decorateCells: boolean;
+    readonly decorateCells: 'currentCell' | 'allCells' | 'disabled';
     readonly enableCellCodeLens: boolean;
     askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;
@@ -85,12 +76,10 @@ export interface IJupyterSettings {
     readonly debugCodeLenses: string;
     readonly debugpyDistPath: string;
     readonly stopOnFirstLineWhileDebugging: boolean;
-    readonly textOutputLimit: number;
     readonly magicCommandsAsComments: boolean;
     readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
     readonly stopOnError: boolean;
     readonly remoteDebuggerPort: number;
-    readonly colorizeInputBox: boolean;
     readonly addGotoCodeLenses: boolean;
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;
@@ -99,24 +88,27 @@ export interface IJupyterSettings {
     readonly themeMatplotlibPlots: boolean;
     readonly variableQueries: IVariableQuery[];
     readonly disableJupyterAutoStart: boolean;
+    readonly development: boolean;
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
     readonly interactiveWindowMode: InteractiveWindowMode;
+    readonly pythonCellFolding: boolean;
     readonly interactiveWindowViewColumn: InteractiveWindowViewColumn;
     readonly disableZMQSupport: boolean;
     readonly forceIPyKernelDebugger?: boolean;
-    readonly disablePythonDaemon: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;
     readonly newCellOnRunLast: boolean;
-    readonly pylanceHandlesNotebooks?: boolean;
-    readonly pylanceLspNotebooksEnabled?: boolean;
     readonly pythonCompletionTriggerCharacters?: string;
     readonly logKernelOutputSeparately: boolean;
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
     readonly enableExtendedKernelCompletions: boolean;
-    readonly showOnlyOneTypeOfKernel: boolean;
+    /**
+     * To be removed in the future (remove around April 2023)
+     * Added as a fallback in case the new approach of resolving Python env variables for Kernels fails or does not work as expected.
+     */
+    readonly useOldKernelResolve: boolean;
 }
 
 export interface IVariableTooltipFields {
@@ -130,7 +122,7 @@ export interface IWatchableJupyterSettings extends IJupyterSettings {
     createSystemVariables(resource: Resource): ISystemVariables;
 }
 
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose' | 'everything';
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
 
 export interface ILoggingSettings {
     readonly level: LoggingLevelSettingType | 'off';
@@ -262,13 +254,17 @@ export type DeprecatedFeatureInfo = {
     doNotDisplayPromptStateKey: string;
     message: string;
     moreInfoUrl: string;
-    commands?: CommandsWithoutArgs[];
+    commands?: CommandIds[];
     setting?: DeprecatedSettingAndValue;
 };
 
-export const IFeatureDeprecationManager = Symbol('IFeatureDeprecationManager');
+export interface IFeatureSet {}
 
-export interface IFeatureDeprecationManager extends Disposable {
+export const IFeaturesManager = Symbol('IFeaturesManager');
+
+export interface IFeaturesManager extends Disposable {
+    readonly features: IFeatureSet;
+    readonly onDidChangeFeatures: Event<void>;
     initialize(): void;
     registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void;
 }

@@ -1,32 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import { inject, injectable, multiInject } from 'inversify';
-import { NotebookDocument, Uri } from 'vscode';
+import { inject, injectable, multiInject, named } from 'inversify';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
-import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExtensionContext
+    IExtensionContext,
+    IMemento,
+    WORKSPACE_MEMENTO
 } from '../platform/common/types';
-import { IStatusProvider } from '../platform/progress/types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
-import { InteractiveWindowView } from '../platform/common/constants';
-import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
+import { InteractiveScheme, InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import {
     IThirdPartyKernel,
     IKernel,
     INotebookProvider,
-    IStartupCodeProvider,
     ITracebackFormatter,
     KernelOptions,
-    ThirdPartyKernelOptions
+    ThirdPartyKernelOptions,
+    IStartupCodeProviders
 } from './types';
+import { IJupyterServerUriStorage } from './jupyter/types';
+import { createKernelSettings } from './kernelSettings';
+import { NotebookKernelExecution } from './kernelExecution';
 
 /**
  * Node version of a kernel provider. Needed in order to create the node version of a kernel.
@@ -39,15 +39,16 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
-        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
+        @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
+        @multiInject(ITracebackFormatter)
+        private readonly formatters: ITracebackFormatter[],
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
+        disposables.push(jupyterServerUriStorage.onDidRemoveUris(this.handleUriRemoval.bind(this)));
     }
 
     public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {
@@ -57,50 +58,46 @@ export class KernelProvider extends BaseCoreKernelProvider {
         }
         this.disposeOldKernel(notebook);
 
-        const uri = notebook.uri;
-        const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : uri;
-        const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
-        const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
+        const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
+        const settings = createKernelSettings(this.configService, resourceUri);
+        const notebookType =
+            notebook.uri.scheme === InteractiveScheme || options.resourceUri?.scheme === InteractiveScheme
+                ? InteractiveWindowView
+                : JupyterNotebookView;
+
         const kernel: IKernel = new Kernel(
-            uri,
             resourceUri,
             notebook,
             options.metadata,
             this.notebookProvider,
-            waitForIdleTimeout,
-            interruptTimeout,
+            settings,
             this.appShell,
             options.controller,
-            this.configService,
-            this.outputTracker,
-            this.statusProvider,
-            this.context,
-            this.formatters,
-            this.startupCodeProviders,
-            () => {
-                if (kernel.session) {
-                    return sendTelemetryForPythonKernelExecutable(
-                        kernel.session,
-                        kernel.resourceUri,
-                        kernel.kernelConnectionMetadata,
-                        this.pythonExecutionFactory
-                    );
-                } else {
-                    return Promise.resolve();
-                }
-            }
+            this.startupCodeProviders.getProviders(notebookType),
+            this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
-        kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
+        kernel.onDisposed(
+            () => {
+                this._onDidDisposeKernel.fire(kernel);
+            },
+            this,
+            this.disposables
+        );
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),
             this,
             this.disposables
         );
+
+        this.executions.set(
+            kernel,
+            new NotebookKernelExecution(kernel, this.appShell, this.context, this.formatters, notebook)
+        );
         this.asyncDisposables.push(kernel);
         this.storeKernel(notebook, options, kernel);
-        this.deleteMappingIfKernelIsDisposed(uri, kernel);
+        this.deleteMappingIfKernelIsDisposed(kernel);
         return kernel;
     }
 }
@@ -114,8 +111,8 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -129,22 +126,29 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
         this.disposeOldKernel(uri);
 
         const resourceUri = uri;
-        const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
-        const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
+        const settings = createKernelSettings(this.configService, resourceUri);
+        const notebookType =
+            resourceUri.scheme === InteractiveScheme || uri.scheme === InteractiveScheme
+                ? InteractiveWindowView
+                : JupyterNotebookView;
         const kernel: IThirdPartyKernel = new ThirdPartyKernel(
             uri,
             resourceUri,
             options.metadata,
             this.notebookProvider,
-            waitForIdleTimeout,
-            interruptTimeout,
             this.appShell,
-            this.configService,
-            this.statusProvider,
-            this.startupCodeProviders
+            settings,
+            this.startupCodeProviders.getProviders(notebookType),
+            this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
-        kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
+        kernel.onDisposed(
+            () => {
+                this._onDidDisposeKernel.fire(kernel);
+            },
+            this,
+            this.disposables
+        );
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);
         kernel.onStatusChanged(
             (status) => this._onKernelStatusChanged.fire({ kernel, status }),

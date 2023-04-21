@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
@@ -12,7 +10,6 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import './extensions';
 import { LogLevel } from '../logging/types';
 import { IWorkspaceService } from './application/types';
 import { isTestExecution } from './constants';
@@ -30,6 +27,8 @@ import {
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { ISystemVariables, ISystemVariablesConstructor } from './variables/types';
+import { ConfigMigration } from './configMigration';
+import { noop } from './utils/misc';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
@@ -45,7 +44,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
     public logging: ILoggingSettings = { level: 'error' };
-    public allowImportFromNotebook: boolean = false;
     public allowUnauthorizedRemoteConnection: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;
     public jupyterLaunchTimeout: number = 60_000;
@@ -53,19 +51,13 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public notebookFileRoot: string = '';
     public useDefaultConfigForJupyter: boolean = false;
     public searchForJupyter: boolean = false;
-    public allowInput: boolean = false;
-    public showCellInputCode: boolean = false;
-    public maxOutputSize: number = -1;
-    public enableScrollingForCellOutputs: boolean = false;
     public sendSelectionToInteractiveWindow: boolean = false;
     public markdownRegularExpression: string = '';
     public codeRegularExpression: string = '';
-    public allowLiveShare: boolean = false;
     public errorBackgroundColor: string = '';
     public ignoreVscodeTheme: boolean = false;
     public variableExplorerExclude: string = '';
-    public liveShareConnectionTimeout: number = 0;
-    public decorateCells: boolean = false;
+    public decorateCells: 'currentCell' | 'allCells' | 'disabled' = 'currentCell';
     public enableCellCodeLens: boolean = false;
     public askForLargeDataFrames: boolean = false;
     public enableAutoMoveToNextCell: boolean = false;
@@ -75,12 +67,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public debugCodeLenses: string = '';
     public debugpyDistPath: string = '';
     public stopOnFirstLineWhileDebugging: boolean = false;
-    public textOutputLimit: number = 0;
     public magicCommandsAsComments: boolean = false;
     public pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert' = 'direct';
     public stopOnError: boolean = false;
     public remoteDebuggerPort: number = 0;
-    public colorizeInputBox: boolean = false;
     public addGotoCodeLenses: boolean = false;
     public runStartupCommands: string | string[] = [];
     public debugJustMyCode: boolean = false;
@@ -92,24 +82,22 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterCommandLineArguments: string[] = [];
     public widgetScriptSources: WidgetCDNs[] = [];
     public interactiveWindowMode: InteractiveWindowMode = 'multiple';
+    public pythonCellFolding: boolean = true;
     public interactiveWindowViewColumn: InteractiveWindowViewColumn = 'secondGroup';
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     // Hidden settings not surfaced in package.json
     public forceIPyKernelDebugger: boolean = false;
-    // Hidden settings not surfaced in package.json
-    public disablePythonDaemon: boolean = false;
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
-    public pylanceHandlesNotebooks: boolean = true;
-    public pylanceLspNotebooksEnabled: boolean = false;
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
+    public development: boolean = false;
     public poetryPath: string = '';
     public excludeUserSitePackages: boolean = false;
     public enableExtendedKernelCompletions: boolean = false;
-    public showOnlyOneTypeOfKernel: boolean = false;
+    public useOldKernelResolve: boolean = false;
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {
@@ -134,7 +122,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             this.disableJupyterAutoStart = true;
         }
     }
-    // eslint-disable-next-line
+
     public static getInstance(
         resource: Uri | undefined,
         systemVariablesCtor: ISystemVariablesConstructor,
@@ -157,7 +145,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         return settings;
     }
 
-    // eslint-disable-next-line @typescript-eslint/member-delimiter-style
     public static getSettingsUriAndTarget(
         resource: Uri | undefined,
         workspace: IWorkspaceService
@@ -173,17 +160,14 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         return { uri: workspaceFolderUri, target };
     }
 
-    // eslint-disable-next-line
     public static dispose() {
         if (!isTestExecution()) {
             throw new Error('Dispose can only be called from unit tests');
         }
-        // eslint-disable-next-line no-void
         JupyterSettings.jupyterSettings.forEach((item) => item && item.dispose());
         JupyterSettings.jupyterSettings.clear();
     }
     public dispose() {
-        // eslint-disable-next-line
         this._disposables.forEach((disposable) => disposable && disposable.dispose());
         this._disposables = [];
     }
@@ -202,8 +186,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         allowedKeys.forEach((k) => (result[k] = (<any>this)[k]));
         return result;
     }
-    // eslint-disable-next-line complexity,
-    protected update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
+
+    private update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
         const systemVariables = this.createSystemVariables(undefined);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -233,24 +217,27 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
         // The rest are all the same.
         const replacer = (k: string, config: WorkspaceConfiguration) => {
-            // Replace variables with their actual value.
-            const val = systemVariables.resolveAny(config.get(k));
+            const newKey = ConfigMigration.fullSettingIds[k];
+            // Configuration migration is asyncronous, so check the old configuration key if the new one isn't set
+            const configValue = newKey && config.get(newKey) !== undefined ? config.get(newKey) : config.get(k);
+            const val = systemVariables.resolveAny(configValue);
             if (k !== 'variableTooltipFields' || val) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (<any>this)[k] = val;
             }
         };
-        const keys = this.getSerializableKeys().filter((f) => f !== 'experiments' && f !== 'logging');
+        const keys = this.getSerializableKeys().filter(
+            (f) => f !== 'experiments' && f !== 'logging' && f !== 'kernelPickerType'
+        );
         keys.forEach((k) => replacer(k, jupyterConfig));
 
         // Special case poetryPath. It actually comes from the python settings
         if (pythonConfig) {
             replacer('poetryPath', pythonConfig);
-            replacer('pylanceLspNotebooksEnabled', pythonConfig);
         }
     }
 
-    protected onWorkspaceFoldersChanged() {
+    private onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
         const workspaceKeys = this._workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.path);
         const activatedWkspcKeys = Array.from(JupyterSettings.jupyterSettings.keys());
@@ -261,7 +248,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
             }
         }
     }
-    protected initialize(): void {
+
+    private initialize(): void {
         const onDidChange = () => {
             const currentConfig = this._workspace.getConfiguration('jupyter', this._workspaceRoot);
             const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
@@ -287,10 +275,17 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         const pythonConfig = this._workspace.getConfiguration('python', this._workspaceRoot);
         if (initialConfig) {
             this.update(initialConfig, pythonConfig);
+            this.migrateSettings(initialConfig).catch(noop);
         }
     }
+
+    private async migrateSettings(config: WorkspaceConfiguration) {
+        const configMigration = new ConfigMigration(config);
+        await configMigration.migrateSettings();
+    }
+
     @debounceSync(1)
-    protected debounceChangeNotification() {
+    private debounceChangeNotification() {
         this._changeEmitter.fire();
     }
 
@@ -320,9 +315,6 @@ function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefin
         }
         case 'verbose': {
             return LogLevel.Trace;
-        }
-        case 'everything': {
-            return LogLevel.Everything;
         }
         default: {
             return LogLevel.Error;

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { VSCodeEvent } from 'vscode-notebook-renderer/events';
@@ -31,6 +29,9 @@ interface IMessageApi {
     sendMessage(type: string, payload?: any): void;
     dispose(): void;
 }
+
+declare var onDidReceiveKernelMessage: KernelMessagingApi['onDidReceiveKernelMessage'];
+declare var postKernelMessage: KernelMessagingApi['postKernelMessage'];
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;

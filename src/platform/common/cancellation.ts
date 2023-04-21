@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { CancellationError, CancellationToken, CancellationTokenSource } from 'vscode';
+import { disposeAllDisposables } from './helpers';
+import { IDisposable } from './types';
 import { createDeferred } from './utils/async';
 import { Common } from './utils/localize';
 
@@ -16,7 +16,7 @@ export function isCancellationError(ex: Error, includeErrorsWithTheMessageCancel
     }
     if (
         includeErrorsWithTheMessageCanceled &&
-        (ex.message.includes('Canceled') || ex.message.includes(Common.canceled()))
+        (ex.message.includes('Canceled') || ex.message.includes(Common.canceled))
     ) {
         return true;
     }
@@ -65,24 +65,25 @@ export function createPromiseFromCancellation<T>(
 
 /**
  * Create a single unified cancellation token that wraps multiple cancellation tokens.
- *
- * @export
- * @param {(...(CancellationToken | undefined)[])} tokens
- * @returns {CancellationToken}
  */
-export function wrapCancellationTokens(...tokens: (CancellationToken | undefined)[]): CancellationToken {
+export function wrapCancellationTokens(...tokens: CancellationToken[]) {
     const wrappedCancellationToken = new CancellationTokenSource();
+    const disposables: IDisposable[] = [];
     for (const token of tokens) {
         if (!token) {
             continue;
         }
         if (token.isCancellationRequested) {
-            return token;
+            wrappedCancellationToken.cancel();
         }
-        token.onCancellationRequested(() => wrappedCancellationToken.cancel());
+        token.onCancellationRequested(() => wrappedCancellationToken.cancel(), undefined, disposables);
     }
-
-    return wrappedCancellationToken.token;
+    const oldDispose = wrappedCancellationToken.dispose.bind(wrappedCancellationToken);
+    wrappedCancellationToken.dispose = () => {
+        oldDispose();
+        disposeAllDisposables(disposables);
+    };
+    return wrappedCancellationToken;
 }
 
 export namespace Cancellation {

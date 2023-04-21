@@ -9,7 +9,6 @@ const common = require('./common');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -28,7 +27,8 @@ function getEntry(bundle) {
             };
         case 'ipywidgetsKernel':
             return {
-                ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`]
+                ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`],
+                dummy: [`./src/webviews/webview-side/ipywidgets/dummy.ts`]
             };
         case 'ipywidgetsRenderer':
             // This is only used in tests (not shipped with extension).
@@ -121,55 +121,12 @@ function buildConfiguration(bundle) {
     // console.error(`Bundle = ${ bundle }`);
     // Folder inside `webviews/webview-side` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
-    const filesToCopy = [];
-    if (bundle === 'ipywidgetsRenderer') {
-        // Include files only for notebooks.
-        filesToCopy.push(
-            ...[
-                {
-                    from: 'node_modules/font-awesome/**/*',
-                    context: './',
-                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
-                },
-                {
-                    from: path.join(
-                        constants.ExtensionRootDir,
-                        'src',
-                        'notebooks',
-                        'controllers',
-                        'fontAwesomeLoader.js'
-                    ),
-                    to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
-                }
-            ]
-        );
-    }
-    if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
-        filesToCopy.push({
-            from: path.join(constants.ExtensionRootDir, 'src/webviews/webview-side/ipywidgets/kernel/require.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', 'ipywidgetsKernel')
-        });
-    } else if (bundle === 'widgetTester') {
-        ///
-    } else {
-        filesToCopy.push({
-            from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', bundleFolder)
-        });
-    }
     const plugins = [
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 100
         }),
         ...getPlugins(bundle)
     ];
-    if (filesToCopy.length > 0) {
-        plugins.push(
-            new CopyWebpackPlugin({
-                patterns: [...filesToCopy]
-            })
-        );
-    }
     return {
         context: constants.ExtensionRootDir,
         entry: getEntry(bundle),
@@ -198,7 +155,6 @@ function buildConfiguration(bundle) {
             fallback: {
                 fs: false,
                 path: require.resolve('path-browserify'),
-                crypto: require.resolve(path.join(constants.ExtensionRootDir, 'src/platform/msrCrypto/msrCrypto.js')),
                 os: false
             }
         },

@@ -1,20 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { traceInfo } from '../../../platform/logging';
+import { traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, capturePerfTelemetry, Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { expandWorkingDir } from '../jupyterUtils';
 import { IJupyterConnection } from '../../types';
 import {
@@ -25,7 +24,7 @@ import {
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { JupyterConnection } from '../jupyterConnection';
+import { JupyterConnection } from '../connection/jupyterConnection';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
@@ -83,7 +82,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public async getNotebookError(): Promise<string> {
         return this.jupyterInterpreterService
             ? this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported()
-            : DataScience.webNotSupported();
+            : DataScience.webNotSupported;
     }
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
@@ -107,7 +106,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
-            traceInfo(`Connecting to server`);
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 1;
@@ -122,21 +120,17 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
                     }
                     // eslint-disable-next-line no-constant-condition
-                    traceInfo(`Connecting to process server`);
+                    traceVerbose(`Connecting to process server`);
 
                     // Create a server tha  t we will then attempt to connect to.
                     result = await this.notebookServerFactory.createNotebookServer(connection);
-                    traceInfo(`Connection complete server`);
-
-                    sendTelemetryEvent(
-                        options.localJupyter ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter
-                    );
+                    traceVerbose(`Connection complete server`);
                     return result;
                 } catch (err) {
                     lastTryError = err;
                     // Cleanup after ourselves. server may be running partially.
                     if (result) {
-                        traceInfo(`Killing server because of error ${err}`);
+                        traceWarning(`Killing server because of error ${err}`);
                         await result.dispose();
                     }
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
@@ -218,8 +212,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    // eslint-disable-next-line
-    @capturePerfTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         resource: Resource,
         useDefaultConfig: boolean,

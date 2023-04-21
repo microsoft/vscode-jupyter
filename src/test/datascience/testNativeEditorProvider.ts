@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 export const __ = '';
 // import { inject, injectable } from 'inversify';
 // import uuid from 'uuid/v4';

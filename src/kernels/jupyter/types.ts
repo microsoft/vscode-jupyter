@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
@@ -25,11 +24,10 @@ import {
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
     IKernelConnectionSession,
-    INotebookProviderConnection,
     RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
-import { IContributedKernelFinder } from '../internalTypes';
+import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -74,7 +72,7 @@ export interface IJupyterNotebookProvider {
     createNotebook(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
 }
 
-export type INotebookServerLocalOptions = {
+type INotebookServerLocalOptions = {
     resource: Resource;
     ui: IDisplayOptions;
     /**
@@ -82,7 +80,7 @@ export type INotebookServerLocalOptions = {
      */
     localJupyter: true;
 };
-export type INotebookServerRemoteOptions = {
+type INotebookServerRemoteOptions = {
     serverId: string;
     resource: Resource;
     ui: IDisplayOptions;
@@ -203,6 +201,11 @@ export interface IJupyterServerUri {
     authorizationHeader: any; // JSON object for authorization header.
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
+    workingDirectory?: string;
+    /**
+     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
+     */
+    webSocketProtocols?: string[];
 }
 
 export type JupyterServerUriHandle = string;
@@ -212,8 +215,24 @@ export interface IJupyterUriProvider {
      * Should be a unique string (like a guid)
      */
     readonly id: string;
+    readonly displayName?: string;
+    readonly detail?: string;
     onDidChangeHandles?: Event<void>;
-    getQuickPickEntryItems?(): QuickPickItem[];
+    getQuickPickEntryItems?():
+        | Promise<
+              (QuickPickItem & {
+                  /**
+                   * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+                   */
+                  default?: boolean;
+              })[]
+          >
+        | (QuickPickItem & {
+              /**
+               * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+               */
+              default?: boolean;
+          })[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
     /**
      * Given the handle, returns the Jupyter Server information.
@@ -223,6 +242,10 @@ export interface IJupyterUriProvider {
      * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
      */
     getHandles?(): Promise<JupyterServerUriHandle[]>;
+    /**
+     * Users request to remove a handle.
+     */
+    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
 }
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
@@ -230,20 +253,57 @@ export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegist
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
-    registerProvider(picker: IJupyterUriProvider): void;
+    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
+    registerProvider(picker: IJupyterUriProvider): IDisposable;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+}
+
+/**
+ * Entry into our list of saved servers
+ */
+export interface IJupyterServerUriEntry {
+    /**
+     * Uri of the server to connect to
+     */
+    uri: string;
+    /**
+     * Unique ID using a hash of the full uri
+     */
+    serverId: string;
+    /**
+     * The most recent time that we connected to this server
+     */
+    time: number;
+    /**
+     * An optional display name to show for this server as opposed to just the Uri
+     */
+    displayName?: string;
+    /**
+     * Whether the server is validated by its provider or not
+     */
+    isValidated?: boolean;
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
+    isLocalLaunch: boolean;
+    onDidChangeConnectionType: Event<void>;
     readonly currentServerId: string | undefined;
     readonly onDidChangeUri: Event<void>;
-    readonly onDidRemoveUris: Event<string[]>;
+    readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
+    readonly onDidAddUri: Event<IJupyterServerUriEntry>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
-    getSavedUriList(): Promise<{ uri: string; serverId: string; time: number; displayName?: string }[]>;
+    /**
+     * Adds a server to the MRU list.
+     * Similar to `addToUriList` however one does not need to pass the `Uri` nor the `displayName`.
+     * As Uri could contain sensitive information and `displayName` would have already been setup.
+     */
+    addServerToUriList(serverId: string, time: number): Promise<void>;
+    getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
-    getRemoteUri(): Promise<string | undefined>;
+    getRemoteUri(): Promise<IJupyterServerUriEntry | undefined>;
+    getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined>;
     setUriToLocal(): Promise<void>;
     setUriToRemote(uri: string, displayName: string): Promise<void>;
     setUriToNone(): Promise<void>;
@@ -292,7 +352,8 @@ export interface IJupyterRequestCreator {
     getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,
-        getAuthHeaders?: () => any
+        getAuthHeaders?: () => any,
+        getWebSocketProtocols?: () => string | string[] | undefined
     ): ClassType<WebSocket>;
     getWebsocket(id: string): IKernelSocket | undefined;
     getRequestInit(): RequestInit;
@@ -330,15 +391,7 @@ export interface IJupyterRemoteCachedKernelValidator {
     isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
 }
 
-export const IServerConnectionType = Symbol('IServerConnectionType');
-
-export interface IServerConnectionType {
-    isLocalLaunch: boolean;
-    onDidChange: Event<void>;
-}
-
-export interface IRemoteKernelFinder extends IContributedKernelFinder {
-    listKernelsFromConnection(
-        connInfo: INotebookProviderConnection | undefined
-    ): Promise<RemoteKernelConnectionMetadata[]>;
+export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
+    kind: ContributedKernelFinderKind.Remote;
+    serverUri: IJupyterServerUriEntry;
 }

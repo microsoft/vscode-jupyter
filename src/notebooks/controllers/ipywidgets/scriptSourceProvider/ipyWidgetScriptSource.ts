@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';
@@ -21,6 +20,7 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { createDeferred, Deferred } from '../../../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
 import { ResourceMap } from '../../../../platform/vscode-path/map';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 
 /**
  * Handles messages from the kernel related to setting up widgets.
@@ -58,7 +58,8 @@ export class IPyWidgetScriptSource {
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
-        isWebExtension: boolean
+        isWebExtension: boolean,
+        private readonly cdnScriptProvider: CDNWidgetScriptSourceProvider
     ) {
         this.uriConverter = new ScriptUriConverter(isWebExtension, (resource) => {
             if (!this.uriTranslationRequests.has(resource))
@@ -70,7 +71,7 @@ export class IPyWidgetScriptSource {
             return this.uriTranslationRequests.get(resource)!.promise;
         });
         // Don't leave dangling promises.
-        this.isWebViewOnline.promise.ignoreErrors();
+        this.isWebViewOnline.promise.catch(noop);
         disposables.push(this);
         this.kernelProvider.onDidStartKernel(
             (e) => {
@@ -98,7 +99,7 @@ export class IPyWidgetScriptSource {
             }
         } else if (message === IPyWidgetMessages.IPyWidgets_Ready) {
             this.sendBaseUrl();
-            this.sendWidgetScriptSources().ignoreErrors();
+            this.sendWidgetScriptSources().catch(noop);
         } else if (message === IPyWidgetMessages.IPyWidgets_IsOnline) {
             const isOnline = (payload as { isOnline: boolean }).isOnline;
             this.isWebViewOnline.resolve(isOnline);
@@ -132,7 +133,8 @@ export class IPyWidgetScriptSource {
             this.configurationSettings,
             this.httpClient,
             this.sourceProviderFactory,
-            this.isWebViewOnline.promise
+            this.isWebViewOnline.promise,
+            this.cdnScriptProvider
         );
         this.kernel.onDisposed(() => this.dispose());
         this.handlePendingRequests();

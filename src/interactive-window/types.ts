@@ -1,12 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';
+import {
+    Disposable,
+    Event,
+    NotebookCell,
+    NotebookController,
+    NotebookDocument,
+    NotebookEditor,
+    Tab,
+    Uri
+} from 'vscode';
 import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
-import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 
 export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebookEditor: NotebookEditor };
 
@@ -26,17 +35,9 @@ export interface IInteractiveWindowProvider {
      */
     readonly activeWindow: IInteractiveWindow | undefined;
     /**
-     * List of open interactive windows
-     */
-    readonly windows: ReadonlyArray<IInteractiveWindow>;
-    /**
      * Event fired when the active interactive window changes
      */
     readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
-    /**
-     * Event fired when an interactive window is created
-     */
-    readonly onDidCreateInteractiveWindow: Event<IInteractiveWindow>;
     /**
      * Gets or creates a new interactive window and associates it with the owner. If no owner, marks as a non associated.
      * @param {Resource} owner File that started this interactive window
@@ -52,6 +53,35 @@ export interface IInteractiveWindowProvider {
      * The active interactive window if it has the focus, or the interactive window associated with current active text editor
      */
     getActiveOrAssociatedInteractiveWindow(): IInteractiveWindow | undefined;
+    /**
+     * Find an interactive window that contains the given notebook
+     */
+    getInteractiveWindowWithNotebook(notebookUri: Uri | undefined): IInteractiveWindow | undefined;
+    /**
+     * Find all interactive windows to which the file has submitted code
+     */
+    getInteractiveWindowsWithSubmitter(file: Uri): IInteractiveWindow[];
+}
+
+export const IInteractiveControllerHelper = Symbol('IInteractiveControllerHelper');
+export interface IInteractiveControllerHelper {
+    onControllerSelected: Event<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+    }>;
+    getInitialController(
+        resource: Resource,
+        connection?: KernelConnectionMetadata
+    ): Promise<IVSCodeNotebookController | undefined>;
+    getSelectedController(notebookDocument: NotebookDocument): IVSCodeNotebookController | undefined;
+    getRegisteredController(metadata: KernelConnectionMetadata): IVSCodeNotebookController | undefined;
+    createKernel(
+        metadata: KernelConnectionMetadata,
+        controller: NotebookController,
+        resource: Resource,
+        notebookDocument: NotebookDocument,
+        disposables: Disposable[]
+    ): Promise<{ kernel: IKernel; actualController: NotebookController }>;
 }
 
 export interface IInteractiveBase extends Disposable {
@@ -60,15 +90,13 @@ export interface IInteractiveBase extends Disposable {
 
 export interface IInteractiveWindow extends IInteractiveBase {
     readonly onDidChangeViewState: Event<void>;
-    readonly notebookEditor: NotebookEditor | undefined;
     readonly owner: Resource;
     readonly submitters: Uri[];
     readonly notebookUri?: Uri;
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     closed: Event<void>;
-    start(): void;
-    restore(preferredController: IVSCodeNotebookController | undefined): Promise<void>;
+    ensureInitialized(): Promise<void>;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
     addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;
@@ -95,12 +123,8 @@ export interface InteractiveTab extends Tab {
     readonly input: TabInputInteractiveWindow;
 }
 
-export interface IInteractiveWindowLoadable extends IInteractiveWindow {
-    changeMode(newMode: InteractiveWindowMode): void;
-}
-
 export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');
 export interface IInteractiveWindowDebuggingManager extends IDebuggingManager {
-    start(editor: NotebookEditor, cell: NotebookCell): Promise<void>;
+    start(notebook: NotebookDocument, cell: NotebookCell): Promise<void>;
     updateSourceMaps(editor: NotebookEditor, generatedCodes: IFileGeneratedCodes[]): Promise<void>;
 }

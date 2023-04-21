@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { CancellationToken, Event, Uri } from 'vscode';
+import { CancellationToken, Event, NotebookDocument, Uri } from 'vscode';
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
 import type { Session } from '@jupyterlab/services';
 
@@ -20,6 +20,13 @@ export interface JupyterAPI {
      * There are a specific set of extensions that are currently allowed to access this API.
      */
     getKernelService(): Promise<IExportedKernelService | undefined>;
+    /**
+     * Opens a notebook with a specific kernel as the active kernel.
+     * @param {Uri} uri Uri of the notebook to open.
+     * @param {String} kernelId Id of the kernel, retrieved from getKernelService().getKernelSpecifications()
+     * @returns {Promise<NotebookDocument>} Promise that resolves to the notebook document.
+     */
+    openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
 }
 
 /**
@@ -32,11 +39,8 @@ export enum EnvironmentType {
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
-    WindowsStore = 'WindowsStore',
     Poetry = 'Poetry',
-    VirtualEnvWrapper = 'VirtualEnvWrapper',
-    Global = 'Global',
-    System = 'System'
+    VirtualEnvWrapper = 'VirtualEnvWrapper'
 }
 
 /**
@@ -50,13 +54,9 @@ export type PythonVersion = {
     major: number;
     minor: number;
     patch: number;
-    build: string[];
-    /**
-     * Identifies a tag in the release process (e.g. beta 1)
-     */
-    prerelease: string[];
 };
 export type PythonEnvironment = {
+    id: string;
     displayName?: string;
     uri: Uri;
     version?: PythonVersion;
@@ -244,6 +244,11 @@ export type IKernelConnectionInfo = {
 };
 
 export interface IExportedKernelService {
+    readonly status: 'discovering' | 'idle';
+    /**
+     * Changes in kernel state (e.g. discovered kernels, not discovering kernel, etc).
+     */
+    onDidChangeStatus: Event<void>;
     /**
      * List of running kernels changed.
      */
@@ -256,9 +261,8 @@ export interface IExportedKernelService {
      * Gets a list of all kernel specifications that can be used to start a new kernel or to connect to an existing kernel.
      * Local, remote kernels are returned, including Python interpreters that
      * are treated as kernelspecs (as we can start Kernels for Python interpreters without Jupyter).
-     * @param {boolean} [refresh] Whether to force a refresh of the kernel specs (useful when dealing with remote kernels, as that list can change).
      */
-    getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]>;
+    getKernelSpecifications(): Promise<KernelConnectionMetadata[]>;
     /**
      * Gets a list of all active kernel connections.
      * If `uri` is undefined, then the kernel is not associated with any resource. I.e its currently not associated with any notebook in Jupyter extension.

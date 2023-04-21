@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../platform/common/extensions';
+import { splitLines } from '../../platform/common/helpers';
 
 /**
  * Parses output returned by the command `conda env list`.
@@ -23,7 +23,7 @@ export function parseCondaEnvFileContents(
     condaEnvFileContents: string
 ): { name: string; path: string; isActive: boolean }[] | undefined {
     // Don't trim the lines. `path` portion of the line can end with a space.
-    const lines = condaEnvFileContents.splitLines({ trim: false });
+    const lines = splitLines(condaEnvFileContents, { trim: false });
     const envs: { name: string; path: string; isActive: boolean }[] = [];
 
     lines.forEach((line) => {

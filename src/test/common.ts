@@ -3,13 +3,14 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
-
-import { NotebookDocument, Uri, Event } from 'vscode';
+import type { NotebookDocument, Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
-import { computeHash } from '../platform/msrCrypto/hash';
+import { disposeAllDisposables } from '../platform/common/helpers';
+import { isPromise } from '../platform/common/utils/async';
+import { computeHash } from '../platform/common/crypto';
+import { AsyncFunc, Func, Suite, Test } from 'mocha';
 
 export interface IExtensionTestApi extends IExtensionApi {
     serviceContainer: IServiceContainer;
@@ -42,30 +43,44 @@ export function clearPendingTimers() {
  * @param {string} errorMessage
  * @returns {Promise<void>}
  */
-export async function waitForCondition(
-    condition: () => Promise<boolean> | boolean,
+export async function waitForCondition<T>(
+    condition: () => Promise<T> | T,
     timeoutMs: number,
     errorMessage: string | (() => string),
     intervalTimeoutMs: number = 10,
-    throwOnError: boolean = false
-): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
+    throwOnError: boolean = false,
+    cancelToken?: { isCancellationRequested: boolean; onCancellationRequested: Function }
+): Promise<NonNullable<T>> {
+    return new Promise<NonNullable<T>>(async (resolve, reject) => {
+        const disposables: IDisposable[] = [];
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             clearTimeout(timer);
             errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
-            console.log(`Test failing --- ${errorMessage}`);
+            if (!cancelToken?.isCancellationRequested) {
+                console.log(`Test failing --- ${errorMessage}`);
+            }
             reject(new Error(errorMessage));
         }, timeoutMs);
         let timer: NodeJS.Timer;
         const timerFunc = async () => {
-            let success = false;
+            if (cancelToken?.isCancellationRequested) {
+                clearTimeout(timer);
+                clearTimeout(timeout);
+                disposeAllDisposables(disposables);
+                reject(new Error('Cancelled Wait Condition via cancellation token'));
+                return;
+            }
+            let success: T | undefined = undefined;
             try {
                 const promise = condition();
-                success = typeof promise === 'boolean' ? promise : await promise;
+                success = isPromise(promise) ? await promise : promise;
             } catch (exc) {
                 if (throwOnError) {
+                    clearTimeout(timer);
+                    clearTimeout(timeout);
+                    disposeAllDisposables(disposables);
                     reject(exc);
                 }
             }
@@ -76,10 +91,24 @@ export async function waitForCondition(
             } else {
                 clearTimeout(timer);
                 clearTimeout(timeout);
-                resolve();
+                disposeAllDisposables(disposables);
+                resolve(success as NonNullable<T>);
             }
         };
-        timer = setTimeout(timerFunc, intervalTimeoutMs);
+        timer = setTimeout(timerFunc, 0);
+        if (cancelToken) {
+            cancelToken.onCancellationRequested(
+                () => {
+                    clearTimeout(timer);
+                    clearTimeout(timeout);
+                    disposeAllDisposables(disposables);
+                    reject(new Error('Cancelled Wait Condition via cancellation token'));
+                    return;
+                },
+                undefined,
+                disposables
+            );
+        }
 
         pendingTimers.push(timer);
         pendingTimers.push(timeout);
@@ -116,10 +145,26 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
         return this.handledEvents;
     }
     private readonly handler: IDisposable;
+    private readonly cancellationToken: {
+        isCancellationRequested: boolean;
+        onCancellationRequested: (cb: Function) => IDisposable;
+    };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly handledEvents: any[] = [];
+    private readonly cancellationHandlers = new Set<Function>();
     constructor(event: Event<T>, private readonly eventNameForErrorMessages: string, disposables: IDisposable[] = []) {
         disposables.push(this);
+        this.cancellationToken = {
+            isCancellationRequested: false,
+            onCancellationRequested: (cb: Function) => {
+                this.cancellationHandlers.add(cb);
+                return {
+                    dispose: () => {
+                        this.cancellationHandlers.delete(cb);
+                    }
+                };
+            }
+        };
         this.handler = event(this.listener, this);
     }
     public reset() {
@@ -134,14 +179,21 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
         await waitForCondition(
             async () => this.count === numberOfTimesFired,
             waitPeriod,
-            `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`
+            () => `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`,
+            undefined,
+            undefined,
+            this.cancellationToken
         );
     }
     public async assertFiredAtLeast(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
         await waitForCondition(
             async () => this.count >= numberOfTimesFired,
             waitPeriod,
-            `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`
+            () =>
+                `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`,
+            undefined,
+            undefined,
+            this.cancellationToken
         );
     }
     public atIndex(index: number): T {
@@ -150,6 +202,8 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
 
     public dispose() {
         this.handler.dispose();
+        this.cancellationToken.isCancellationRequested = true;
+        this.cancellationHandlers.forEach((cb) => cb());
     }
 
     private listener(e: T) {
@@ -221,4 +275,14 @@ export async function generateScreenShotFileName(contextOrFileName: string | Moc
         typeof contextOrFileName === 'string' ? contextOrFileName : `${testTitle}_${fullTestNameHash}`;
     const name = `${fileNamePrefix}_${counter}`.replace(/[\W]+/g, '_');
     return `${name}-screenshot.png`;
+}
+
+const mandatoryTestFlag = '@mandatory';
+
+export function suiteMandatory(title: string, fn: (this: Suite) => void): Suite {
+    return suite(`${title} ${mandatoryTestFlag}`, fn);
+}
+
+export function testMandatory(title: string, fn?: Func): Test | AsyncFunc {
+    return test(`${title} ${mandatoryTestFlag}`, fn);
 }

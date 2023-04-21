@@ -1,5 +1,5 @@
 {
-    "spec": "./out/test/**/*.unit.test.js",
+    "spec": "./out/**/*.unit.test.js",
     "require": ["out/test/unittests.js"],
     "reporter": "mocha-multi-reporters",
     "reporter-option": "configFile=build/.mocha-multi-reporters.config",

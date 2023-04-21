@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ChildProcess } from 'child_process';
 import { kill } from 'process';
 import * as fs from 'fs-extra';
@@ -42,12 +40,7 @@ import {
     ignoreLogging
 } from '../../../platform/logging';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import {
-    IProcessServiceFactory,
-    IPythonExecutionFactory,
-    ObservableExecutionResult,
-    IProcessService
-} from '../../../platform/common/process/types.node';
+import { IProcessServiceFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -62,6 +55,9 @@ import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import pidtree from 'pidtree';
+import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
+import { splitLines } from '../../../platform/common/helpers';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -87,7 +83,10 @@ export class KernelProcess implements IKernelProcess {
         return this._connection;
     }
     private get isPythonKernel(): boolean {
-        return isPythonKernelConnection(this.kernelConnectionMetadata);
+        return (
+            isPythonKernelConnection(this.kernelConnectionMetadata) &&
+            isKernelLaunchedViaLocalPythonIPyKernel(this.kernelConnectionMetadata)
+        );
     }
     public get canInterrupt() {
         if (this._kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
@@ -131,7 +130,9 @@ export class KernelProcess implements IKernelProcess {
             !this.interrupter
         ) {
             traceInfo('Interrupting kernel via SIGINT');
-            kill(this._process.pid, 'SIGINT');
+            if (this._process.pid) {
+                kill(this._process.pid, 'SIGINT');
+            }
         } else if (
             this._kernelConnectionMetadata.kernelSpec.interrupt_mode !== 'message' &&
             this._process &&
@@ -169,10 +170,11 @@ export class KernelProcess implements IKernelProcess {
         deferred.promise.catch(noop);
         exeObs.proc!.on('exit', (exitCode) => {
             exitCode = exitCode || providedExitCode;
-            traceVerbose('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
             if (this.disposed) {
+                traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`);
                 return;
             }
+            traceVerbose(`KernelProcess Exited, Exit Code - ${exitCode}`, stderrProc);
             if (!exitEventFired) {
                 this.exitEvent.fire({
                     exitCode: exitCode || undefined,
@@ -186,53 +188,39 @@ export class KernelProcess implements IKernelProcess {
             }
         });
 
-        exeObs.proc!.stdout?.on('data', (data: Buffer | string) => {
-            // We get these from execObs.out.subscribe.
-            // Hence log only using traceLevel = verbose.
-            // But only useful if daemon doesn't start for any reason.
-            traceVerbose(`KernelProcess output: ${(data || '').toString()}`);
-            this.sendToOutput((data || '').toString());
-        });
+        if (exeObs.proc) {
+            exeObs.proc.stdout?.on('data', (data: Buffer | string) => {
+                // We get these from execObs.out.subscribe.
+                // Hence log only using traceLevel = verbose.
+                // But only useful if daemon doesn't start for any reason.
+                traceVerbose(`KernelProcess output: ${(data || '').toString()}`);
+                this.sendToOutput((data || '').toString());
+            });
 
-        exeObs.proc!.stderr?.on('data', (data: Buffer | string) => {
-            // We get these from execObs.out.subscribe.
-            // Hence log only using traceLevel = verbose.
-            // But only useful if daemon doesn't start for any reason.
-            stderrProc += data.toString();
-            traceVerbose(`KernelProcess error: ${(data || '').toString()}`);
-            this.sendToOutput((data || '').toString());
-        });
+            exeObs.proc.stderr?.on('data', (data: Buffer | string) => {
+                // We get these from execObs.out.subscribe.
+                // Hence log only using traceLevel = verbose.
+                // But only useful if daemon doesn't start for any reason.
+                const output = stripUnwantedMessages((data || '').toString());
+                stderrProc += output;
+                if (output.trim().length) {
+                    traceVerbose(`KernelProcess error: ${output}`);
+                }
+                this.sendToOutput(output);
+            });
+        }
 
         let sawKernelConnectionFile = false;
         exeObs.out.subscribe(
             (output) => {
                 if (output.source === 'stderr') {
-                    if (!sawKernelConnectionFile) {
-                        // We would like to remove the unnecessary warning from ipykernel that ends up confusing users when things go wrong.
-                        // The message we want to remove is:
-                        //          '..../site-packages/traitlets/traitlets.py:2202: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.
-                        //          warn(
-                        ///         .../site-packages/traitlets/traitlets.py:2157: FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use '841dde17-f6aa-4ea7-9c02-b3bb414b28b3' instead of 'b"841dde17-f6aa-4ea7-9c02-b3bb414b28b3"'.
-                        //          warn(
-                        const lines = output.out.splitLines({ trim: true, removeEmptyEntries: true });
-                        if (
-                            lines.length === 4 &&
-                            lines[0].endsWith(
-                                `FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
-                            ) &&
-                            lines[1] === 'warn(' &&
-                            lines[2].includes(
-                                `FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use`
-                            ) &&
-                            lines[3] === 'warn('
-                        ) {
-                            return;
-                        }
-                    }
+                    output.out = stripUnwantedMessages(output.out);
                     // Capture stderr, incase kernel doesn't start.
                     stderr += output.out;
 
-                    traceWarning(`StdErr from Kernel Process ${output.out}`);
+                    if (output.out.trim().length) {
+                        traceWarning(`StdErr from Kernel Process ${output.out.trim()}`);
+                    }
                 } else {
                     stdout += output.out;
                     // Strip unwanted stuff from the output, else it just chews up unnecessary space.
@@ -241,7 +229,7 @@ export class KernelProcess implements IKernelProcess {
                         stdout = stdout.replace(kernelOutputToNotLog.split(/\r?\n/).join(os.EOL), '');
                         // Strip the leading space, as we've removed some leading text.
                         stdout = stdout.trimStart();
-                        const lines = stdout.splitLines({ trim: true, removeEmptyEntries: true });
+                        const lines = splitLines(stdout, { trim: true, removeEmptyEntries: true });
                         if (
                             lines.length === 2 &&
                             lines[0] === kernelOutputWithConnectionFile &&
@@ -254,13 +242,13 @@ export class KernelProcess implements IKernelProcess {
                     if (stdout.includes(kernelOutputWithConnectionFile)) {
                         sawKernelConnectionFile = true;
                     }
-                    traceInfo(`Kernel Output: ${stdout}`);
+                    traceVerbose(`Kernel Output: ${stdout}`);
                 }
                 this.sendToOutput(output.out);
             },
             (error) => {
                 if (this.disposed) {
-                    traceInfo('Kernel died', error, stderr);
+                    traceWarning('Kernel died', error, stderr);
                     return;
                 }
                 traceError('Kernel died', error, stderr);
@@ -273,7 +261,7 @@ export class KernelProcess implements IKernelProcess {
             if (deferred.rejected) {
                 await deferred.promise;
             }
-            const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
+            const tcpPortUsed = (await import('tcp-port-used')).default;
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
             // Kernel must be connected to bo Shell & IoPub channels for kernel communication to work.
@@ -297,9 +285,14 @@ export class KernelProcess implements IKernelProcess {
                 })
             ]);
         } catch (e) {
+            const stdErrToLog = (stderrProc || stderr || '').trim();
             if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {
                 traceError('Disposing kernel process due to an error', e);
-                traceError(stderrProc || stderr);
+                if (e && e instanceof Error && stdErrToLog.length && e.message.includes(stdErrToLog)) {
+                    // No need to log the stderr as it's already part of the error message.
+                } else {
+                    traceError(stdErrToLog);
+                }
             }
             // Make sure to dispose if we never connect.
             await this.dispose();
@@ -312,12 +305,10 @@ export class KernelProcess implements IKernelProcess {
                     traceVerbose('User cancelled the kernel launch');
                 }
                 // If we have the python error message in std outputs, display that.
-                const errorMessage =
-                    getErrorMessageFromPythonTraceback(stderrProc || stderr) ||
-                    (stderrProc || stderr).substring(0, 100);
+                const errorMessage = getErrorMessageFromPythonTraceback(stdErrToLog) || stdErrToLog.substring(0, 100);
                 traceInfoIfCI(`KernelDiedError raised`, errorMessage, stderrProc + '\n' + stderr + '\n');
                 throw new KernelDiedError(
-                    DataScience.kernelDied().format(errorMessage),
+                    DataScience.kernelDied(errorMessage),
                     // Include what ever we have as the stderr.
                     stderrProc + '\n' + stderr + '\n',
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -344,7 +335,7 @@ export class KernelProcess implements IKernelProcess {
                 this.killChildProcesses(this._process?.pid).catch(noop)
             ]);
             try {
-                this.interrupter?.dispose().ignoreErrors();
+                this.interrupter?.dispose().catch(noop);
                 this._process?.kill(); // NOSONAR
                 this.exitEvent.fire({});
             } catch (ex) {
@@ -458,19 +449,26 @@ export class KernelProcess implements IKernelProcess {
             // Remember, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
             // See https://github.com/microsoft/vscode-jupyter/issues/7203
-            const connectionFile = this.connectionFile.includes(' ')
+            const quotedConnectionFile = this.connectionFile.includes(' ')
                 ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
                 : this.connectionFile;
             if (this.launchKernelSpec.argv[indexOfConnectionFile].includes('--connection-file')) {
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
-                ].replace(connectionFilePlaceholder, connectionFile);
-            } else {
-                // Even though we don't have `--connection-file` don't assume it won't be `--config-file` for other kernels.
-                // E.g. in Python the name of the argument is `-f` and in.
+                ].replace(connectionFilePlaceholder, quotedConnectionFile);
+            } else if (
+                this.launchKernelSpec.argv[indexOfConnectionFile].includes(`=${connectionFilePlaceholder}`) &&
+                !this.launchKernelSpec.argv[indexOfConnectionFile].trim().startsWith('=')
+            ) {
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
-                ].replace(connectionFilePlaceholder, connectionFile);
+                ].replace(connectionFilePlaceholder, quotedConnectionFile);
+            } else {
+                // Even though we don't have `--connection-file=${connection_file}` don't assume it won't be `--config-file=${connection_file}` for other kernels.
+                // E.g. in Python the name of the argument is `-f` instead of `--connection-file`.
+                this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
+                    indexOfConnectionFile
+                ].replace(connectionFilePlaceholder, this.connectionFile);
             }
         }
     }
@@ -541,21 +539,35 @@ export class KernelProcess implements IKernelProcess {
                 this.kernelEnvVarsService.getEnvironmentVariables(
                     this.resource,
                     this._kernelConnectionMetadata.interpreter,
-                    this._kernelConnectionMetadata.kernelSpec
+                    this._kernelConnectionMetadata.kernelSpec,
+                    cancelToken
                 )
             ]);
+
+            Cancellation.throwIfCanceled(cancelToken);
 
             // On windows, in order to support interrupt, we have to set an environment variable pointing to a WIN32 event handle
             if (os.platform() === 'win32') {
                 env = env || process.env;
-                const handle = await this.getWin32InterruptHandle();
+                try {
+                    const handle = await this.getWin32InterruptHandle();
 
-                // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
-                env.JPY_INTERRUPT_EVENT = `${handle}`;
+                    // See the code ProcessPollingWindows inside of ipykernel for it listening to this event handle.
+                    env.JPY_INTERRUPT_EVENT = `${handle}`;
+                    traceInfoIfCI(
+                        `Got interrupt handle kernel id ${handle} for interpreter ${this._kernelConnectionMetadata.interpreter.id}`
+                    );
+                } catch (ex) {
+                    traceError(
+                        `Failed to get interrupt handle kernel id ${this._kernelConnectionMetadata.id} for interpreter ${this._kernelConnectionMetadata.interpreter.id}`,
+                        ex
+                    );
+                }
             }
+            Cancellation.throwIfCanceled(cancelToken);
 
             // The kernelspec argv could be something like [python, main.py, --something, --something-else, -f,{connection_file}]
-            const args = this.launchKernelSpec.argv.slice(1);
+            const args = this.launchKernelSpec.argv.slice(1); // Remove the python part of the command
             if (this.jupyterSettings.enablePythonKernelLogging) {
                 args.push('--debug');
             }
@@ -568,21 +580,21 @@ export class KernelProcess implements IKernelProcess {
             // If we are not python just use the ProcessExecutionFactory
             // First part of argument is always the executable.
             const executable = this.launchKernelSpec.argv[0];
-            traceInfo(`Launching Raw Kernel & not daemon ${this.launchKernelSpec.display_name} # ${executable}`);
-            const promiseCancellation = createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' });
+            traceInfo(`Launching Raw Kernel ${this.launchKernelSpec.display_name} # ${executable}`);
             const [executionService, env] = await Promise.all([
-                Promise.race([
-                    this.processExecutionFactory.create(this.resource),
-                    promiseCancellation as Promise<IProcessService>
-                ]),
-                // Pass undefined for the interpreter here as we are not explicitly launching with a Python Environment
+                this.processExecutionFactory.create(this.resource, cancelToken),
+                // If we have an interpreter always use that, its possible we are launching a kernel that is associated with a Python environment
+                // E.g. we could be dealing with a Java/R kernel registered in a conda environment.
                 // Note that there might still be python env vars to merge from the kernel spec in the case of something like
                 // a Java kernel registered in a conda environment
-                Promise.race([
-                    this.kernelEnvVarsService.getEnvironmentVariables(this.resource, undefined, this.launchKernelSpec),
-                    promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
-                ])
+                this.kernelEnvVarsService.getEnvironmentVariables(
+                    this.resource,
+                    this._kernelConnectionMetadata.interpreter,
+                    this.launchKernelSpec,
+                    cancelToken
+                )
             ]);
+            Cancellation.throwIfCanceled(cancelToken);
             // The first argument is sliced because it is the executable command.
             const args = this.launchKernelSpec.argv.slice(1);
             exeObs = executionService.execObservable(executable, args, {
@@ -608,4 +620,41 @@ export class KernelProcess implements IKernelProcess {
         }
         return this.interrupter.handle;
     }
+}
+
+function stripUnwantedMessages(output: string) {
+    // We would like to remove the unnecessary warning from ipykernel that ends up confusing users when things go wrong.
+    // The message we want to remove is:
+    //          '..../site-packages/traitlets/traitlets.py:2202: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.
+    //          warn(
+    ///         .../site-packages/traitlets/traitlets.py:2157: FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use '841dde17-f6aa-4ea7-9c02-b3bb414b28b3' instead of 'b"841dde17-f6aa-4ea7-9c02-b3bb414b28b3"'.
+    //          warn(
+    let lines = splitLines(output, { trim: true, removeEmptyEntries: true });
+    if (
+        lines.some((line) =>
+            line.includes(`FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0.`)
+        ) &&
+        lines.some((line) => line.trim() === 'warn(') &&
+        lines.some((line) =>
+            line.includes(`FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0.`)
+        )
+    ) {
+        // No point displaying false positives.
+        // The message `.../site-packages/traitlets/traitlets.py:2548: FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
+        // always confuses users, and leads them to the assumption that this is the reason for the kernel not starting or the like.
+        return lines
+            .filter((line) => {
+                return (
+                    !line.endsWith(
+                        `FutureWarning: Supporting extra quotes around strings is deprecated in traitlets 5.0. You can use 'hmac-sha256' instead of '"hmac-sha256"' if you require traitlets >=5.`
+                    ) &&
+                    line.trim() !== 'warn(' &&
+                    !line.includes(
+                        `FutureWarning: Supporting extra quotes around Bytes is deprecated in traitlets 5.0. Use`
+                    )
+                );
+            })
+            .join(os.EOL);
+    }
+    return output;
 }

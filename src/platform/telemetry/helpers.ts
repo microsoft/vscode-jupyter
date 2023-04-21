@@ -1,18 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { KnownKernelLanguageAliases, VSCodeKnownNotebookLanguages } from '../common/constants';
 import { computeHash } from '../common/crypto';
 import { traceError } from '../logging';
-
-export async function getTelemetrySafeLanguage(language: string = 'unknown') {
-    language = (language || 'unknown').toLowerCase();
-    language = KnownKernelLanguageAliases.get(language) || language;
-    if (!VSCodeKnownNotebookLanguages.includes(language) && language != 'unknown') {
-        language = await getTelemetrySafeHashedString(language);
-    }
-    return language;
-}
 
 export function getTelemetrySafeVersion(version: string): string | undefined {
     try {

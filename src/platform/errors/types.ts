@@ -8,6 +8,7 @@
  */
 export abstract class BaseError extends Error {
     public stdErr?: string;
+    public isJupyterError = true;
     constructor(public readonly category: ErrorCategory, message: string) {
         super(message);
     }
@@ -17,8 +18,8 @@ export abstract class BaseError extends Error {
  * Wraps an error with a custom error message, retaining the call stack information.
  */
 export class WrappedError extends BaseError {
-    constructor(message: string, public readonly originalException?: Error) {
-        super(getErrorCategory(originalException), message);
+    constructor(message: string, public readonly originalException?: Error, category?: ErrorCategory) {
+        super(category || getErrorCategory(originalException), message);
         if (originalException) {
             // Retain call stack that trapped the error and rethrows this error.
             // Also retain the call stack of the original error.
@@ -67,6 +68,7 @@ export type ErrorCategory =
     | 'jupyterconnection'
     | 'jupyterinstall'
     | 'jupyterselfcert'
+    | 'jupyterpassword'
     | 'jupyterexpiredcert'
     | 'jupyterselfexpiredcert'
     | 'invalidkernel'
@@ -81,6 +83,10 @@ export type ErrorCategory =
     | 'localjupyterserverconnection'
     | 'remotejupyterserveruriprovider'
     | 'invalidremotejupyterserverurihandle'
+    | 'jupyternotebooknotinstalled'
+    | 'jupytercannotbelaunchedwitheroot'
+    | 'pythonExtension'
+    | 'windowsLongPathNotEnabled'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.
@@ -94,7 +100,7 @@ export type TelemetryErrorProperties = {
      * Node stacktrace without PII.
      * Common to most of the events.
      */
-    stackTrace: string;
+    stackTrace?: string;
     /**
      * A reason that we generate (e.g. kerneldied, noipykernel, etc), more like a category of the error.
      * Common to most of the events.

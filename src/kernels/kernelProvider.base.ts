@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
@@ -15,13 +14,17 @@ import {
     IKernel,
     KernelOptions,
     IThirdPartyKernelProvider,
-    ThirdPartyKernelOptions
+    ThirdPartyKernelOptions,
+    INotebookKernelExecution
 } from './types';
+import { IJupyterServerUriEntry } from './jupyter/types';
 
 /**
  * Provides kernels to the system. Generally backed by a URI or a notebook object.
  */
 export abstract class BaseCoreKernelProvider implements IKernelProvider {
+    protected readonly executions = new WeakMap<IKernel, INotebookKernelExecution>();
+
     /**
      * Use a separate dictionary to track kernels by Notebook, so that
      * the ref to kernel is lost when the notebook is closed.
@@ -81,6 +84,9 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
             return this.kernelsByNotebook.get(uriOrNotebook)?.kernel;
         }
     }
+    public getKernelExecution(kernel: IKernel): INotebookKernelExecution {
+        return this.executions.get(kernel)!;
+    }
 
     public getInternal(notebook: NotebookDocument):
         | {
@@ -106,14 +112,16 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.
      */
-    protected deleteMappingIfKernelIsDisposed(uri: Uri, kernel: IKernel) {
+    protected deleteMappingIfKernelIsDisposed(kernel: IKernel) {
         kernel.onDisposed(
             () => {
                 // If the same kernel is associated with this document & it was disposed, then delete it.
                 if (this.get(kernel.notebook) === kernel) {
                     this.kernelsByNotebook.delete(kernel.notebook);
                     traceVerbose(
-                        `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(uri)}`
+                        `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(
+                            kernel.uri
+                        )}`
                     );
                 }
                 this.pendingDisposables.delete(kernel);
@@ -136,6 +144,23 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 .catch(noop);
         }
         this.kernelsByNotebook.delete(notebook);
+    }
+
+    protected handleUriRemoval(uris: IJupyterServerUriEntry[]) {
+        this.notebook.notebookDocuments.forEach((document) => {
+            const kernel = this.kernelsByNotebook.get(document);
+            if (kernel) {
+                const metadata = kernel.options.metadata;
+
+                if (metadata.kind === 'connectToLiveRemoteKernel' || metadata.kind === 'startUsingRemoteKernelSpec') {
+                    const matchingRemovedUri = uris.find((uri) => uri.serverId === metadata.serverId);
+                    if (matchingRemovedUri) {
+                        // it should be removed
+                        this.kernelsByNotebook.delete(document);
+                    }
+                }
+            }
+        });
     }
 }
 

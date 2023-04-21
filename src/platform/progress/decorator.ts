@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { traceError } from '../logging';
 import { PromiseFunction } from '../common/utils/async';
 import { IProgressReporter, Progress, ReportableAction } from './types';

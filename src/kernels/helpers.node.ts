@@ -1,26 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
+import * as path from '../platform/vscode-path/path';
 import * as nbformat from '@jupyterlab/nbformat';
-import { IKernelConnectionSession, KernelConnectionMetadata } from './types';
+import { IJupyterKernelSpec, IKernelConnectionSession, isLocalConnection, KernelConnectionMetadata } from './types';
 import { Uri } from 'vscode';
 import { traceError, traceVerbose } from '../platform/logging';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
-import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import { Resource } from '../platform/common/types';
 import { concatMultilineString } from '../platform/common/utils';
 import { trackKernelResourceInformation } from './telemetry/helper';
 import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, isPythonKernelConnection } from './helpers';
+import { PYTHON_LANGUAGE } from '../platform/common/constants';
 
 export async function sendTelemetryForPythonKernelExecutable(
     session: IKernelConnectionSession,
     resource: Resource,
-    kernelConnection: KernelConnectionMetadata,
-    executionService: IPythonExecutionFactory
+    kernelConnection: KernelConnectionMetadata
 ) {
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
         return;
@@ -33,7 +29,10 @@ export async function sendTelemetryForPythonKernelExecutable(
     }
     try {
         traceVerbose('Begin sendTelemetryForPythonKernelExecutable');
-        const outputs = await executeSilently(session, 'import sys\nprint(sys.executable)');
+        const outputs = await executeSilently(
+            session,
+            'import sys as _VSCODE_sys\nprint(_VSCODE_sys.executable); del _VSCODE_sys'
+        );
         if (outputs.length === 0) {
             return;
         }
@@ -44,50 +43,55 @@ export async function sendTelemetryForPythonKernelExecutable(
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
         const match = areInterpreterPathsSame(kernelConnection.interpreter.uri, Uri.file(sysExecutable));
-        sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
-            match: match ? 'true' : 'false',
-            kernelConnectionType: kernelConnection.kind
-        });
         await trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
-        if (match) {
-            return;
-        }
-
-        // Rest of the code can all be async, no need to slow the calling code.
-
-        // The interpreter paths don't match, possible we have a synlink or similar.
-        // Lets try to get the path from the interpreter using the exact same code we send to the kernel.
-        executionService
-            .createActivatedEnvironment({
-                interpreter: kernelConnection.interpreter,
-                allowEnvironmentFetchExceptions: true
-            })
-            .then(async (execService) => {
-                const execOutput = await execService.exec(['-c', 'import sys;print(sys.executable)'], {
-                    throwOnStdErr: false
-                });
-                if (execOutput.stdout.trim().length > 0) {
-                    const match = areInterpreterPathsSame(
-                        Uri.file(execOutput.stdout.trim().toLowerCase()),
-                        Uri.file(sysExecutable)
-                    );
-                    sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
-                        match: match ? 'true' : 'false',
-                        kernelConnectionType: kernelConnection.kind
-                    });
-                    await trackKernelResourceInformation(resource, { interpreterMatchesKernel: match });
-                    if (!match) {
-                        traceError(
-                            `Interpreter started by kernel does not match expectation, expected ${getDisplayPath(
-                                kernelConnection.interpreter?.uri
-                            )}, got ${getDisplayPath(Uri.file(sysExecutable))}`
-                        );
-                    }
-                }
-            })
-            .catch((ex) => traceError('Failed to compare interpreters', ex));
     } catch (ex) {
         traceError('Failed to compare interpreters', ex);
     }
     traceVerbose('End sendTelemetryForPythonKernelExecutable');
+}
+
+/**
+ * Whether this is a kernel that will be launched via a Python executable.
+ * Any kernelSpec where the first argument (in argv) is `python` or `python3` will be launched via a Python executable.
+ */
+function isKernelLaunchedViaLocalPythonProcess(kernel: KernelConnectionMetadata | IJupyterKernelSpec) {
+    const connection = 'kernelSpec' in kernel ? kernel : undefined;
+    // We generate these, and these kernels are always started by us using Python code.
+    if (connection?.kind === 'startUsingPythonInterpreter') {
+        return true;
+    }
+    if (connection && !isLocalConnection(connection)) {
+        return false;
+    }
+    const kernelSpec = connection ? connection.kernelSpec : (kernel as IJupyterKernelSpec);
+    const executable = path.basename(kernelSpec.argv[0]).toLowerCase();
+    return executable.startsWith('python'); // This covers cases like python.exe, python3, python3.10;
+}
+
+/**
+ * Whether this is a kernel connection that points to a Local Python Kernel
+ * that can be started by the extension manually via Python code (i.e. by running the Python modules).
+ * Some times we have Python kernelSpecs created by users (or some other tool) where the first
+ * item in argv points to something like `conda` or the like.
+ * Basically these are custom kernels where users would like to run something against python or other but have full control over
+ * how the process is launched.
+ */
+export function isKernelLaunchedViaLocalPythonIPyKernel(kernel: KernelConnectionMetadata | IJupyterKernelSpec) {
+    const connection = 'kernelSpec' in kernel ? kernel : undefined;
+    // We generate these, and these kernels are always started by us using Python code.
+    if (connection?.kind === 'startUsingPythonInterpreter') {
+        return true;
+    }
+    if (connection && !isLocalConnection(connection)) {
+        return false;
+    }
+
+    const kernelSpec = connection ? connection.kernelSpec : (kernel as IJupyterKernelSpec);
+    if (kernelSpec.language && kernelSpec.language.toLowerCase() !== PYTHON_LANGUAGE) {
+        return false;
+    }
+    return (
+        isKernelLaunchedViaLocalPythonProcess(kernel) &&
+        kernelSpec.argv.some((arg) => arg.includes('ipykernel_launcher') || arg.includes('ipykernel'))
+    );
 }

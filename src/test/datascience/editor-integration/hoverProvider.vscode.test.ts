@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import cloneDeep = require('lodash/cloneDeep');
+import cloneDeep from 'lodash/cloneDeep';
 import * as sinon from 'sinon';
 import * as path from '../../../platform/vscode-path/path';
 import * as vscode from 'vscode';
@@ -25,7 +25,7 @@ import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { Identifiers } from '../../../platform/common/constants';
 
-suite('Hover provider', async () => {
+suite('Hover provider @lsp', async () => {
     const file = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',

@@ -3,7 +3,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { Uri } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { IDisposable, IExtensionContext, IHttpClient } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, startJupyterServer } from '../../common';
 import { openNotebook } from '../helpers';
@@ -16,7 +16,7 @@ import {
     waitForKernelToGetAutoSelected
 } from '../notebook/helper';
 import { initialize } from '../../initialize';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
 import { IKernel, IKernelProvider, isLocalConnection } from '../../../kernels/types';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
@@ -26,8 +26,12 @@ import {
     IIPyWidgetScriptManager,
     IIPyWidgetScriptManagerFactory
 } from '../../../notebooks/controllers/ipywidgets/types';
+import { isWeb } from '../../../platform/common/utils/misc';
+import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 
-suite('IPyWidget Script Manager', function () {
+suite('IPyWidget Script Manager @widgets', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -40,6 +44,7 @@ suite('IPyWidget Script Manager', function () {
     let fs: IFileSystem;
     let context: IExtensionContext;
     suiteSetup(async function () {
+        traceInfo('Suite Setup');
         api = await initialize();
         await closeNotebooks();
         await startJupyterServer();
@@ -65,6 +70,23 @@ suite('IPyWidget Script Manager', function () {
             disposables
         );
         const { notebook, editor } = await openNotebook(testWidgetNb);
+        if (!isWeb()) {
+            // Create the controller and select it for the tests.
+            const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+            const controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+            const controller = await createActiveInterpreterController(
+                notebook.notebookType as 'jupyter-notebook' | 'interactive',
+                notebook.uri,
+                interpreterService,
+                controllerRegistration
+            );
+            if (controller) {
+                await commands.executeCommand('notebook.selectKernel', {
+                    id: controller.id,
+                    extension: JVSC_EXTENSION_ID
+                });
+            }
+        }
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         const cell = notebook.cellAt(0);
 
@@ -74,6 +96,7 @@ suite('IPyWidget Script Manager', function () {
 
         kernel = kernelProvider.get(notebook)!;
         scriptManager = widgetScriptManagerFactory.getOrCreate(kernel);
+        traceInfo('Suite Setup (completed)');
     });
     setup(async function () {
         traceInfo(`Starting Test ${this.currentTest?.title}`);
@@ -98,7 +121,7 @@ suite('IPyWidget Script Manager', function () {
             } else {
                 const expectedDir = Uri.joinPath(
                     context.extensionUri,
-                    'tmp',
+                    'temp',
                     'scripts',
                     await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
                     'jupyter'
@@ -118,7 +141,7 @@ suite('IPyWidget Script Manager', function () {
         }
         const expectedDir = Uri.joinPath(
             context.extensionUri,
-            'tmp',
+            'temp',
             'scripts',
             await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
             'jupyter'
@@ -156,6 +179,10 @@ suite('IPyWidget Script Manager', function () {
         );
         await Promise.all(
             Object.keys(moduleMappings!).map(async (moduleName) => {
+                if (moduleName === 'jupyter-widgets-controls') {
+                    // Found that latest version of k3d has a reference to this, event though such a script is not defined
+                    return;
+                }
                 // Verify the Url is valid.
                 const uri = moduleMappings![moduleName];
                 assert.isOk(uri, `Script Uri not defined for widget ${moduleName}`);

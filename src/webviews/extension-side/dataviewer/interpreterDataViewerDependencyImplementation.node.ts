@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { IInstaller, Product, InstallerResponse } from '../../../kernels/installer/types';
+import { IInstaller, Product, InstallerResponse } from '../../../platform/interpreter/installer/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
@@ -33,8 +31,7 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
     ): Promise<string | undefined> {
         const launcher = await this.pythonFactory.createActivatedEnvironment({
             resource: undefined,
-            interpreter,
-            allowEnvironmentFetchExceptions: true
+            interpreter
         });
         const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {
             throwOnStdErr: true,

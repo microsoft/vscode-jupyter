@@ -1,27 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as fsextra from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
-import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
-import { traceDecoratorVerbose, traceInfo, traceWarning } from '../../../platform/logging';
+import {
+    ignoreLogging,
+    logValue,
+    traceDecoratorVerbose,
+    traceInfo,
+    traceVerbose,
+    traceWarning
+} from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
+import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     isLocalConnection,
     LocalKernelSpecConnectionMetadata,
@@ -39,6 +43,11 @@ import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaem
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { TraceOptions } from '../../../platform/logging/types';
+import { getResourceType } from '../../../platform/common/utils';
+import { format, splitLines } from '../../../platform/common/helpers';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { UsedPorts } from '../../common/usedPorts';
+import { isPythonKernelConnection } from '../../helpers';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -47,12 +56,7 @@ const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     private static startPortPromise = KernelLauncher.computeStartPort();
-    private static _usedPorts = new Set<number>();
-    private static getPorts = promisify(portfinder.getPorts);
     private portChain: Promise<number[]> | undefined;
-    public static get usedPorts(): number[] {
-        return Array.from(KernelLauncher._usedPorts);
-    }
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
@@ -71,13 +75,13 @@ export class KernelLauncher implements IKernelLauncher {
         try {
             // Destroy the file
             const port = await KernelLauncher.startPortPromise;
-            traceInfo(`Cleaning up port start file : ${port}`);
+            traceVerbose(`Cleaning up port start file : ${port}`);
 
-            const filePath = path.join(os.tmpdir(), PortFormatString.format(port.toString()));
+            const filePath = path.join(os.tmpdir(), format(PortFormatString, port.toString()));
             await fsextra.remove(filePath);
         } catch (exc) {
             // If it fails it doesn't really matter. Just a temp file
-            traceInfo(`Kernel port mutex failed to cleanup: `, exc);
+            traceWarning(`Kernel port mutex failed to cleanup: `, exc);
         }
     }
 
@@ -89,7 +93,7 @@ export class KernelLauncher implements IKernelLauncher {
             while (result === 0 && portStart < 65_000) {
                 try {
                     // Try creating a file with the port in the name
-                    const filePath = path.join(os.tmpdir(), PortFormatString.format(portStart.toString()));
+                    const filePath = path.join(os.tmpdir(), format(PortFormatString, portStart.toString()));
                     await fsextra.open(filePath, 'wx');
 
                     // If that works, we have our port
@@ -99,7 +103,7 @@ export class KernelLauncher implements IKernelLauncher {
                     portStart += 1_000;
                 }
             }
-            traceInfo(`Computed port start for KernelLauncher is : ${result}`);
+            traceVerbose(`Computed port start for KernelLauncher is : ${result}`);
 
             return result;
         } else {
@@ -109,11 +113,12 @@ export class KernelLauncher implements IKernelLauncher {
 
     @traceDecoratorVerbose('Kernel Launcher. launch', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async launch(
+        @logValue<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>('id')
         kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
         timeout: number,
         resource: Resource,
         workingDirectory: string,
-        cancelToken: CancellationToken
+        @ignoreLogging() cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const stopWatch = new StopWatch();
         const promise = (async () => {
@@ -125,9 +130,13 @@ export class KernelLauncher implements IKernelLauncher {
         promise
             .then(() =>
                 /* No need to send telemetry for kernel launch failures, that's sent elsewhere */
-                sendKernelTelemetryEvent(resource, Telemetry.KernelLauncherPerf, { duration: stopWatch.elapsedTime })
+                sendTelemetryEvent(
+                    Telemetry.KernelLauncherPerf,
+                    { duration: stopWatch.elapsedTime },
+                    { resourceType: getResourceType(resource) }
+                )
             )
-            .ignoreErrors();
+            .catch(noop);
         return promise;
     }
 
@@ -143,7 +152,11 @@ export class KernelLauncher implements IKernelLauncher {
         token: CancellationToken
     ) {
         const interpreter = kernelConnectionMetadata.interpreter;
-        if (!isLocalConnection(kernelConnectionMetadata) || !interpreter) {
+        if (
+            !isLocalConnection(kernelConnectionMetadata) ||
+            !isPythonKernelConnection(kernelConnectionMetadata) ||
+            !interpreter
+        ) {
             return;
         }
         const service = await this.pythonExecFactory.createActivatedEnvironment({
@@ -178,8 +191,11 @@ export class KernelLauncher implements IKernelLauncher {
             }
         }
         if (output.stderr) {
+            const formattedOutput = splitLines(output.stderr.trim(), { removeEmptyEntries: true, trim: true })
+                .map((l, i) => (i === 0 ? l : `    ${l}`))
+                .join('\n');
             traceWarning(
-                `Stderr output when getting ipykernel version & path ${output.stderr.trim()} for ${displayInterpreterPath}`
+                `Stderr output when getting ipykernel version & path ${formattedOutput} for ${displayInterpreterPath}`
             );
         }
     }
@@ -202,9 +218,10 @@ export class KernelLauncher implements IKernelLauncher {
         // Create a new output channel for this kernel
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
-        const outputChannel = jupyterSettings.logKernelOutputSeparately
-            ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel().format(baseName))
-            : undefined;
+        const outputChannel =
+            jupyterSettings.logKernelOutputSeparately || jupyterSettings.development
+                ? window.createOutputChannel(DataScience.kernelConsoleOutputChannel(baseName), 'log')
+                : undefined;
         outputChannel?.clear();
 
         // Create the process
@@ -224,6 +241,7 @@ export class KernelLauncher implements IKernelLauncher {
             this.platformService
         );
 
+        kernelProcess.exited(() => outputChannel?.dispose(), this, this.disposables);
         try {
             await Promise.race([
                 kernelProcess.launch(workingDirectory, timeout, cancelToken),
@@ -245,11 +263,11 @@ export class KernelLauncher implements IKernelLauncher {
                         exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
                     }
                 );
-                KernelLauncher._usedPorts.delete(connection.control_port);
-                KernelLauncher._usedPorts.delete(connection.hb_port);
-                KernelLauncher._usedPorts.delete(connection.iopub_port);
-                KernelLauncher._usedPorts.delete(connection.shell_port);
-                KernelLauncher._usedPorts.delete(connection.stdin_port);
+                UsedPorts.delete(connection.control_port);
+                UsedPorts.delete(connection.hb_port);
+                UsedPorts.delete(connection.iopub_port);
+                UsedPorts.delete(connection.shell_port);
+                UsedPorts.delete(connection.stdin_port);
                 disposable.dispose();
             },
             this,
@@ -274,12 +292,13 @@ export class KernelLauncher implements IKernelLauncher {
 
     static async findNextFreePort(port: number): Promise<number[]> {
         // Then get the next set starting at that point
-        const ports = await KernelLauncher.getPorts(5, { host: '127.0.0.1', port });
-        if (ports.some((item) => KernelLauncher._usedPorts.has(item))) {
-            const maxPort = Math.max(...KernelLauncher._usedPorts, ...ports);
+        const getPorts = promisify((await import('portfinder')).getPorts);
+        const ports = await getPorts(5, { host: '127.0.0.1', port });
+        if (ports.some((item) => UsedPorts.has(item))) {
+            const maxPort = Math.max(...UsedPorts, ...ports);
             return KernelLauncher.findNextFreePort(maxPort);
         }
-        ports.forEach((item) => KernelLauncher._usedPorts.add(item));
+        ports.forEach((item) => UsedPorts.add(item));
         return ports;
     }
 

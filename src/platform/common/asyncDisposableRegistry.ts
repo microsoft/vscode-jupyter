@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { injectable } from 'inversify';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from './types';
 

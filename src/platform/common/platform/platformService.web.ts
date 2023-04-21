@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { injectable } from 'inversify';
 import { OSType } from '../utils/platform';
 import { IPlatformService } from './types';
@@ -22,9 +20,6 @@ export class PlatformService implements IPlatformService {
     public get pathVariableName() {
         return '';
     }
-    public get virtualEnvBinName() {
-        return this.isWindows ? 'Scripts' : 'bin';
-    }
 
     public get isWindows(): boolean {
         return this.osType === OSType.Windows;
@@ -34,11 +29,5 @@ export class PlatformService implements IPlatformService {
     }
     public get isLinux(): boolean {
         return this.osType === OSType.Linux;
-    }
-    public get osRelease(): string {
-        return '';
-    }
-    public get is64bit(): boolean {
-        return false;
     }
 }

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as path from './vscode-path/path';
 
 const webpacked = !path.basename(__dirname).includes('platform');

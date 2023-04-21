@@ -1,40 +1,41 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import * as sinon from 'sinon';
+import { assert } from 'chai';
 import * as fs from 'fs';
 import * as os from 'os';
-import * as path from '../../platform/vscode-path/path';
-import { noop, sleep } from '../core';
+import * as sinon from 'sinon';
+import { commands, debug } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { IDebuggingManager, INotebookDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
+import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
+import * as path from '../../platform/vscode-path/path';
+import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
+import { noop, sleep } from '../core';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
+    defaultNotebookTestTimeout,
+    getCellOutputs,
+    getDebugSessionAndAdapter,
+    getDefaultKernelConnection,
     insertCodeCell,
     prewarmNotebooks,
-    getCellOutputs,
-    defaultNotebookTestTimeout,
-    waitForStoppedEvent,
     runCell,
-    getDebugSessionAndAdapter
+    waitForStoppedEvent
 } from './notebook/helper.node';
-import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
-import { traceInfo } from '../../platform/logging';
-import { assert } from 'chai';
-import { debug } from 'vscode';
 import { ITestWebviewHost } from './testInterfaces';
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
-import { Commands } from '../../platform/common/constants';
-import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
-import { IDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
+import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 
-suite('VSCode Notebook - Run By Line', function () {
+suite('Run By Line @debugger', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let commandManager: ICommandManager;
@@ -43,31 +44,61 @@ suite('VSCode Notebook - Run By Line', function () {
     let debuggingManager: IDebuggingManager;
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo(`Start Test Suite`);
-        this.timeout(120_000);
-        // Don't run if we can't use the native notebook interface
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
+        traceInfo(`Start Test Suite - Run By Line @debugger`);
+        try {
+            this.timeout(120_000);
+            // Don't run if we can't use the native notebook interface
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return this.skip();
+            }
 
-        api = await initialize();
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-        await prewarmNotebooks();
-        sinon.restore();
-        commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
-        const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
-        debuggingManager = api.serviceContainer.get<IDebuggingManager>(IDebuggingManager);
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        traceInfo(`Start Test Suite (completed)`);
+            api = await initialize();
+            traceVerbose('Step1');
+            await closeNotebooksAndCleanUpAfterTests(disposables);
+            traceVerbose('Step2');
+            await prewarmNotebooks();
+            traceVerbose('Step3');
+            sinon.restore();
+            traceVerbose('Step4');
+            commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+            const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            traceVerbose('Step5');
+            variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
+            debuggingManager = api.serviceContainer.get<IDebuggingManager>(INotebookDebuggingManager);
+            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        } catch (ex) {
+            traceError('Failed to setup suite for Run By Line @debugger', ex);
+            throw ex;
+        } finally {
+            traceInfo(`Start Test Suite (completed) - Run By Line @debugger`);
+        }
     });
     setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
+        this.timeout(120_000);
+        traceInfo(`Start Test (1) ${this.currentTest?.title}`);
         sinon.restore();
+        const metadata = await getDefaultKernelConnection();
+        const controllerRegistry = await api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        traceInfo(`Start Test (2) ${metadata.id}`);
 
-        // Create an editor to use for our tests
-        await createEmptyPythonNotebook(disposables);
+        const controller = await waitForCondition(
+            () =>
+                controllerRegistry.registered.find(
+                    (item) => item.viewType === 'jupyter-notebook' && item.connection.id === metadata.id
+                ),
+            defaultNotebookTestTimeout,
+            `Controller not found for connection ${metadata.id}`
+        );
+        traceInfo(`Start Test (3) ${controller.id}`);
+        await createEmptyPythonNotebook(disposables, undefined, true);
+        traceInfo(`Start Test (4) ${controller.id}`);
+        await commands.executeCommand('notebook.selectKernel', {
+            id: controller!.id,
+            extension: JVSC_EXTENSION_ID
+        });
+        traceInfo(`Start Test (5) ${controller.id}`);
+
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -84,7 +115,7 @@ suite('VSCode Notebook - Run By Line', function () {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test('Delete temp debugging files', async function () {
+    test('Delete temp debugging files @mandatory', async function () {
         let tempWatcher;
         let folderName;
         try {
@@ -107,7 +138,7 @@ suite('VSCode Notebook - Run By Line', function () {
             await waitForStoppedEvent(debugAdapter!);
 
             // Go head and run to the end now
-            await commandManager.executeCommand(Commands.RunByLineStop);
+            await commandManager.executeCommand(Commands.RunByLineStop, cell);
 
             // Wait until we have finished and have output
             await waitForCondition(
@@ -222,6 +253,29 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.equal(stack2.stackFrames[0].line, 4, 'Stopped at the wrong line');
     });
 
+    test.skip('Restart while debugging', async function () {
+        // https://github.com/microsoft/vscode-jupyter/issues/12188
+        const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
+
+        await commandManager.executeCommand(Commands.RunByLine, cell);
+        const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
+        await waitForStoppedEvent(debugAdapter!); // First line
+        await commandManager.executeCommand('workbench.action.debug.restart');
+        const { debugAdapter: debugAdapter2, session: session2 } = await getDebugSessionAndAdapter(
+            debuggingManager,
+            doc,
+            session.id
+        );
+        const stoppedEvent = await waitForStoppedEvent(debugAdapter2!); // First line
+        const stack: DebugProtocol.StackTraceResponse['body'] = await session2!.customRequest('stackTrace', {
+            threadId: stoppedEvent.body.threadId
+        });
+        assert.isTrue(stack.stackFrames.length > 0, 'has frames');
+        assert.equal(stack.stackFrames[0].source?.path, cell.document.uri.toString(), 'Stopped at the wrong path');
+        assert.equal(stack.stackFrames[0].line, 1, 'Stopped at the wrong line');
+    });
+
     test.skip('Does not stop in other cell', async function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
@@ -284,7 +338,7 @@ suite('VSCode Notebook - Run By Line', function () {
             `Print during time loop is not working. Outputs: ${getCellOutputs(cell)}}`,
             1000
         );
-        await commandManager.executeCommand(Commands.RunByLineStop);
+        await commandManager.executeCommand(Commands.RunByLineStop, cell);
         await waitForCondition(
             async () => !debug.activeDebugSession,
             defaultNotebookTestTimeout,

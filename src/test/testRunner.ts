@@ -5,7 +5,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, , , @typescript-eslint/no-explicit-any, prefer-template, no-console */
 // Most of the source is in node_modules/vscode/lib/testrunner.js
 
-'use strict';
 import glob from 'glob';
 import Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
@@ -48,7 +47,7 @@ export function configure(setupOptions: SetupOptions): void {
 }
 
 export async function run(): Promise<void> {
-    const testsRoot = path.join(__dirname);
+    const testsRoot = path.join(__dirname, '..');
     // Enable source map support.
     require('source-map-support').install();
 
@@ -80,29 +79,25 @@ export async function run(): Promise<void> {
     }
     // Run the tests.
     await new Promise<void>((resolve, reject) => {
-        glob(
-            `**/**.${testFilesGlob}.js`,
-            { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot },
-            (error, files) => {
-                if (error) {
-                    return reject(error);
-                }
-                try {
-                    files.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
-                    initializationScript()
-                        .then(() =>
-                            mocha.run((failures) =>
-                                failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
-                            )
-                        )
-                        .finally(() => {
-                            stopJupyterServer().catch(noop);
-                        })
-                        .catch(reject);
-                } catch (error) {
-                    return reject(error);
-                }
+        glob(`**/**.${testFilesGlob}.js`, { ignore: ['**/**.unit.test.js'], cwd: testsRoot }, (error, files) => {
+            if (error) {
+                return reject(error);
             }
-        );
+            try {
+                files.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
+                initializationScript()
+                    .then(() =>
+                        mocha.run((failures) =>
+                            failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
+                        )
+                    )
+                    .finally(() => {
+                        stopJupyterServer().catch(noop);
+                    })
+                    .catch(reject);
+            } catch (error) {
+                return reject(error);
+            }
+        });
     });
 }

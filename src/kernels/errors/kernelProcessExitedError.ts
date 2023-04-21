@@ -14,6 +14,6 @@ export class KernelProcessExitedError extends BaseKernelError {
         public override readonly stdErr: string,
         kernelConnectionMetadata: KernelConnectionMetadata
     ) {
-        super('kerneldied', DataScience.kernelDied().format(stdErr.trim()), kernelConnectionMetadata);
+        super('kerneldied', DataScience.kernelDied(stdErr.trim()), kernelConnectionMetadata);
     }
 }

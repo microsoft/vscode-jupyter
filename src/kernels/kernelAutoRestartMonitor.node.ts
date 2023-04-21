@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
-import { IStatusProvider } from '../platform/progress/types';
+import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 
@@ -20,7 +20,6 @@ export class KernelAutoRestartMonitor implements IExtensionSyncActivationService
     private kernelRestartProgress = new WeakMap<IKernel, IDisposable>();
 
     constructor(
-        @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider
     ) {}
@@ -54,12 +53,13 @@ export class KernelAutoRestartMonitor implements IExtensionSyncActivationService
         // The user needs to know that its automatically restarting (they didn't explicitly restart the kernel).
         if (kernel.status === 'autorestarting') {
             // Set our status
-            const status = this.statusProvider.set(
-                DataScience.restartingKernelStatus().format(
+            const progress = KernelProgressReporter.createProgressReporter(
+                kernel.resourceUri,
+                DataScience.restartingKernelStatus(
                     getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
                 )
             );
-            this.kernelRestartProgress.set(kernel, status);
+            this.kernelRestartProgress.set(kernel, progress);
         } else if (kernel.status !== 'starting' && kernel.status !== 'busy' && kernel.status !== 'unknown') {
             if (this.kernelRestartProgress.has(kernel)) {
                 this.kernelRestartProgress.get(kernel)?.dispose();

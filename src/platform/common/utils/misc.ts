@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { TextDocument, Uri } from 'vscode';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { InterpreterUri, Resource } from '../types';
@@ -139,4 +138,25 @@ export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
 
 export function isWeb() {
     return process.platform.toString() === 'web'; // Webpack is modifying this to force this to happen
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function jsonStringifyUriReplacer(_key: string, value: any) {
+    if (isUri(value)) {
+        return value.toString();
+    }
+    return value;
+}
+/**
+ * Compares contents of two objects that could contains Uris.
+ * Returns `true` if both are the same, `false` otherwise.
+ */
+export function areObjectsWithUrisTheSame(obj1?: unknown, obj2?: unknown) {
+    if (obj1 === obj2) {
+        return true;
+    }
+    if (obj1 && !obj2) {
+        return false;
+    }
+    return JSON.stringify(obj1, jsonStringifyUriReplacer) === JSON.stringify(obj2, jsonStringifyUriReplacer);
 }

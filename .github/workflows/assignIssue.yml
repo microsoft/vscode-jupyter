@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'microsoft/vscode-jupyter'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Created internally
         id: internal
         env:
             ISSUE_OWNER: ${{github.event.issue.user.login}}
         run: |
-          echo ::set-output name=result::$(node -p -e "['amunger', 'IanMatthewHuff', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens', 'kieferrm'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
+          echo ::set-output name=result::$(node -p -e "['amunger', 'DonJayamanne', 'minsa110', 'rebornix', 'roblourens', 'kieferrm'].filter(item => process.env.ISSUE_OWNER.toLowerCase() === item.toLowerCase()).length > 0 ? 1 : 0")
         shell: bash
       - name: Should we proceed
         id: proceed
@@ -57,7 +57,7 @@ jobs:
         shell: bash
       - name: Saturday (Don)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 6
-        uses: actions/github-script@v6.2.0
+        uses: actions/github-script@v6.4.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -69,7 +69,7 @@ jobs:
             })
       - name: Sunday (Don)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 0
-        uses: actions/github-script@v6.2.0
+        uses: actions/github-script@v6.4.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -81,7 +81,7 @@ jobs:
             })
       - name: Monday (Aaron)
         if: steps.proceed.outputs.result == 1 && steps.day.outputs.number == 1 && steps.hour.outputs.hour < 16
-        uses: actions/github-script@v6.2.0
+        uses: actions/github-script@v6.4.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -93,7 +93,7 @@ jobs:
             })
       - name: Tuesday (Rob)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 1 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 2 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v6.2.0
+        uses: actions/github-script@v6.4.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -103,9 +103,9 @@ jobs:
               repo: context.repo.repo,
               assignees: ['roblourens ']
             })
-      - name: Wednesday (Ian)
+      - name: Wednesday (Don)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 2 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 3 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v6.2.0
+        uses: actions/github-script@v6.4.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -113,11 +113,11 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              assignees: ['IanMatthewHuff']
+              assignees: ['DonJayamanne']
             })
       - name: Thursday (Peng)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 3 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 4 && steps.hour.outputs.hour < 16)
-        uses: actions/github-script@v6.2.0
+        uses: actions/github-script@v6.4.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
@@ -129,7 +129,7 @@ jobs:
             })
       - name: Friday (Aaron)
         if: steps.proceed.outputs.result == 1 && (steps.day.outputs.number == 4 && steps.hour.outputs.hour >= 16) || (steps.day.outputs.number == 5)
-        uses: actions/github-script@v6.2.0
+        uses: actions/github-script@v6.4.0
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |

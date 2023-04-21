@@ -7,7 +7,8 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
-
+const common = require('../webpack/common');
+const { downloadZMQ } = require('@vscode/zeromq');
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
  * However it expects to be talking to a websocket which is serializing the messages to strings.
@@ -145,8 +146,77 @@ exports.javascript = {
     fs.writeFileSync(filePath, contents);
 }
 
+function fixUIFabricForTS49() {
+    [
+        'node_modules/@uifabric/merge-styles/lib/mergeStyleSets.d.ts',
+        'node_modules/@uifabric/utilities/lib/styled.d.ts'
+    ].forEach((file) => {
+        const filePath = path.join(__dirname, '..', '..', file);
+        if (!fs.existsSync(filePath)) {
+            return;
+        }
+        const contents = fs.readFileSync(filePath, 'utf8').toString();
+        if (!contents.includes('// @ts-nocheck')) {
+            fs.writeFileSync(filePath, `// @ts-nocheck${EOL}${contents}`);
+        }
+    });
+}
+
+/**
+ * Ensures that moment is not used by any other npm package other than @jupyterlab/coreutils.
+ * See comments here build/webpack/moment.js
+ */
+function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
+    const packageLock = require(path.join(__dirname, '..', '..', 'package-lock.json'));
+    const packagesAllowedToUseMoment = ['node_modules/@jupyterlab/coreutils', '@jupyterlab/coreutils'];
+    const otherPackagesUsingMoment = [];
+    ['packages', 'dependencies'].forEach((key) => {
+        if (!(key in packageLock)) {
+            throw new Error(`Invalid package-lock.json, as it does not contain the key '${key}'`);
+        }
+        const packages = packageLock[key];
+        Object.keys(packages).forEach((packageName) => {
+            if (
+                packagesAllowedToUseMoment.includes(packageName) ||
+                packagesAllowedToUseMoment.some((p) => packageName.endsWith(p))
+            ) {
+                return;
+            }
+            ['dependencies', 'requires'].forEach((dependencyKey) => {
+                if (dependencyKey in packages[packageName]) {
+                    const dependenciesOfPackage = packages[packageName][dependencyKey];
+                    if ('moment' in dependenciesOfPackage) {
+                        otherPackagesUsingMoment.push(`${key}.${dependencyKey}.${packageName}`);
+                    }
+                }
+            });
+        });
+    });
+    if (otherPackagesUsingMoment.length > 0) {
+        // Verify how the other packages are using moment.
+        // If its still the same as jupyter lab coreutils, then we can ignore them
+        // Else we might have to either polyfill that to ensure moment usage works or just bring in moment back again.
+        throw new Error(`Moment is being used by other packages (${otherPackagesUsingMoment.join(', ')}).`);
+    }
+}
+async function downloadZmqBinaries() {
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
+        // No need to download zmq binaries for web.
+        return;
+    }
+    await downloadZMQ();
+}
+
+fixUIFabricForTS49();
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
 updateJSDomTypeDefinition();
 fixStripComments();
+verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
+downloadZmqBinaries()
+    .then(() => process.exit(0))
+    .catch((ex) => {
+        console.error('Failed to download ZMQ', ex);
+        process.exit(1);
+    });

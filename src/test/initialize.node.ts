@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as path from '../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot, initializeCommonNodeApi } from './common.node';
 import { IS_SMOKE_TEST } from './constants.node';
@@ -12,7 +11,6 @@ import { activateExtension, closeActiveWindows } from './initialize';
 export * from './initialize';
 export * from './constants.node';
 export * from './ciConstants.node';
-export const multirootPath = path.join(__dirname, '..', '..', 'src', 'test', 'testMultiRootWkspc');
 
 //First thing to be executed.
 process.env.VSC_JUPYTER_CI_TEST = '1';
@@ -24,7 +22,11 @@ export async function initializePython() {
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
     // Make sure the python extension can load if this test allows it
     if (!process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
-        const extension = vscode.extensions.getExtension(PythonExtension)!;
+        const extension = vscode.extensions.getExtension(PythonExtension);
+        if (!extension) {
+            console.error('Python extension not found');
+            throw new Error('Python extension not found');
+        }
         await extension.activate();
     }
 }

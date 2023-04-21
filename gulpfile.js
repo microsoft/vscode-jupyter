@@ -23,6 +23,9 @@ const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS ==
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 const { dumpTestSummary } = require('./build/webTestReporter');
 const { Validator } = require('jsonschema');
+const { stripVTControlCharacters } = require('util');
+const common = require('./build/webpack/common');
+const jsonc = require('jsonc-parser');
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -189,6 +192,10 @@ gulp.task('compile-viewers', async () => {
 });
 
 gulp.task('compile-webextension', async () => {
+    // No need to build dependencies for desktop.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
+        return;
+    }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
 });
 gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
@@ -197,12 +204,15 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
     if (configNameForProductionBuilds) {
         await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
-        console.log('Building ipywidgets in dev mode');
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
 
 gulp.task('webpack-dependencies', async () => {
+    // No need to build dependencies for web.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
+        return;
+    }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
 });
 
@@ -215,11 +225,62 @@ gulp.task('webpack-viewers', async () => {
 });
 
 gulp.task('webpack-extension-node', async () => {
+    // No need to build dependencies for web.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
+        return;
+    }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.node.config.js', 'extension');
 });
 
 gulp.task('webpack-extension-web', async () => {
+    // No need to build dependencies for desktop.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
+        return;
+    }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
+});
+
+function modifyJson(jsonFile, cb) {
+    const json = fs.readFileSync(jsonFile).toString('utf-8');
+    const [key, value] = cb(json);
+    const edits = jsonc.modify(json, [key], value, {});
+    const updatedJson = jsonc.applyEdits(json, edits);
+    fs.writeFileSync(jsonFile, updatedJson);
+}
+
+gulp.task('updatePackageJsonForBundle', async () => {
+    const packageJsonFile = path.join(__dirname, 'package.json');
+    const packageJsonContents = fs.readFileSync(packageJsonFile).toString('utf-8');
+    const json = JSON.parse(packageJsonContents);
+    switch (common.getBundleConfiguration()) {
+        case common.bundleConfiguration.desktop: {
+            if (json.browser) {
+                modifyJson(packageJsonFile, () => ['browser', undefined]);
+            }
+            if (!json.main) {
+                modifyJson(packageJsonFile, () => ['main', './out/extension.node.js']);
+            }
+            break;
+        }
+        case common.bundleConfiguration.webAndDesktop: {
+            if (!json.browser) {
+                modifyJson(packageJsonFile, () => ['browser', './out/extension.web.bundle.js']);
+            }
+            if (!json.main) {
+                modifyJson(packageJsonFile, () => ['main', './out/extension.node.js']);
+            }
+            break;
+        }
+        case common.bundleConfiguration.web: {
+            if (!json.browser) {
+                modifyJson(packageJsonFile, () => ['browser', './out/extension.web.bundle.js']);
+            }
+            if (json.main) {
+                modifyJson(packageJsonFile, () => ['main', undefined]);
+            }
+            break;
+        }
+    }
 });
 
 gulp.task(
@@ -235,6 +296,30 @@ gulp.task(
 gulp.task('updateBuildNumber', async () => {
     await updateBuildNumber();
 });
+
+/**
+ * For multi-platform builds We end up generating multiple VSIX in the same pipeline.
+ * As a result this runs multiple times in the same pipeline,
+ * and we can have different build numbers for different VSIX.
+ *
+ * On CI, we use the Azure Build Number to generate a unique build number.
+ * The Azure Build Number will contain the date time information of the current build time
+ */
+function getBuildDate() {
+    const vscBuildId = process.env.VSC_BUILD_ID || '';
+    const buildParts = vscBuildId.split('_');
+    if (buildParts.length >= 3) {
+        return new Date(
+            parseInt(buildParts[0].substring(0, 4), 10),
+            parseInt(buildParts[0].substring(4, 6), 10) - 1,
+            parseInt(buildParts[0].substring(6), 10),
+            parseInt(buildParts[1], 10),
+            parseInt(buildParts[2], 10)
+        );
+    } else {
+        return new Date();
+    }
+}
 
 async function updateBuildNumber() {
     // Edit the version number from the package.json
@@ -256,17 +341,17 @@ async function updateBuildNumber() {
     // New build is of the form `DDDHHMM` (day of year, hours, minute) (7 digits, as out of the 10 digits first three are reserved for `100` or `101` for patches).
     // Use date time for build, this way all subsequent builds are incremental and greater than the others before.
     // Example build for 3Jan 12:45 will be `0031245`, and 16 Feb 8:50 will be `0470845`
-    const today = new Date();
+    const today = getBuildDate();
     const dayCount = [0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
     const dayOfYear = dayCount[today.getMonth()] + today.getDate() + 1;
     const buildNumberSuffix = `${dayOfYear.toString().padStart(3, '0')}${(today.getHours() + 1)
         .toString()
-        .padStart(2, '0')}${(today.getMinutes() + 1).toString().padStart(2, '0')}`;
+        .padStart(2, '0')}${today.getMinutes().toString().padStart(2, '0')}`;
     const buildNumber = `${versionParts[2].substring(0, 3)}${buildNumberSuffix}`;
     const newVersion =
         versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumber}` : packageJson.version;
     packageJson.version = newVersion;
-
+    console.log('Build Number', newVersion);
     // Write back to the package json
     await fs.writeFile('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 }
@@ -280,8 +365,8 @@ async function buildWebPack(webpackConfigName, args, env) {
         env
     );
     const stdOutLines = stdOut
-        .split(os.EOL)
-        .map((item) => item.trim())
+        .split('\n')
+        .map((item) => stripVTControlCharacters(item).trim())
         .filter((item) => item.length > 0);
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines
@@ -355,7 +440,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('prePublishBundle', gulp.series('webpack'));
+gulp.task('prePublishBundle', gulp.series('webpack', 'updatePackageJsonForBundle'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 gulp.task('prePublishNonBundle', gulp.parallel('compile', gulp.series('compile-webviews')));
 
@@ -409,40 +494,28 @@ function hasNativeDependencies() {
     return false;
 }
 
-async function generateTelemetryMD() {
+async function generateTelemetry() {
     const generator = require('./out/telemetryGenerator.node');
     await generator.default();
 }
-gulp.task('generateTelemetryMd', async () => {
-    return generateTelemetryMD();
+gulp.task('generateTelemetry', async () => {
+    return generateTelemetry();
 });
 
 gulp.task('validateTelemetry', async () => {
-    const telemetryMD = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
-    const telemetryCSV = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
     const gdprTS = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
-    await generateTelemetryMD();
+    await generateTelemetry();
     const gdprTS2 = fs.readFileSync(path.join(__dirname, 'src', 'gdpr.ts'), 'utf-8');
     if (gdprTS2.trim() !== gdprTS.trim()) {
         console.error('src/gdpr.ts is not valid, please re-run `npm run generateTelemetry`');
         throw new Error('src/gdpr.ts is not valid, please re-run `npm run generateTelemetry`');
-    }
-    const telemetryMD2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
-    if (telemetryMD2.trim() !== telemetryMD.trim()) {
-        console.error('Telemetry.md is not valid, please re-run `npm run generateTelemetry`');
-        throw new Error('Telemetry.md is not valid, please re-run `npm run generateTelemetry`');
-    }
-    const telemetryCSV2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.csv'), 'utf-8');
-    if (telemetryCSV2.trim() !== telemetryCSV.trim()) {
-        console.error('Telemetry.csv is not valid, please re-run `npm run generateTelemetry`');
-        throw new Error('Telemetry.csv is not valid, please re-run `npm run generateTelemetry`');
     }
 });
 
 gulp.task('validatePackageLockJson', async () => {
     const fileName = path.join(__dirname, 'package-lock.json');
     const oldContents = fs.readFileSync(fileName).toString();
-    spawnSync('npm', ['install']);
+    spawnSync('npm', ['install', '--prefer-offline']);
     const newContents = fs.readFileSync(fileName).toString();
     if (oldContents.trim() !== newContents.trim()) {
         throw new Error('package-lock.json has changed after running `npm install`');

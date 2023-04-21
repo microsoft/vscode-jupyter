@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // Note: Don't change this to a tsx file as it loads in the unit tests. That will mess up mocha
 
 // Custom module loader so we can skip loading the 'canvas' module which won't load
@@ -60,6 +58,16 @@ import { DOMWindow, JSDOM } from 'jsdom';
 import { noop } from '../../platform/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
+    roundRect(
+        _x: number,
+        _y: number,
+        _w: number,
+        _h: number,
+        _radii?: number | DOMPointInit | (number | DOMPointInit)[] | undefined
+    ): void {
+        throw new Error('Method not implemented.');
+    }
+    fontKerning: CanvasFontKerning;
     public canvas!: HTMLCanvasElement;
     public getContextAttributes(): CanvasRenderingContext2DSettings {
         throw new Error('Method not implemented.');

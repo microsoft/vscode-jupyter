@@ -1,20 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
+import * as path from '../../platform/vscode-path/path';
 import { inject, injectable } from 'inversify';
-import { Disposable, extensions, Uri, workspace } from 'vscode';
+import { Disposable, extensions, Uri, workspace, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IPythonApiProvider } from '../../platform/api/types';
-import { PylanceExtension, PythonExtension } from '../../platform/common/constants';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
+import { PylanceExtension } from '../../platform/common/constants';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { IConfigurationService } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../../platform/logging';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { isInteractiveInputTab } from '../../interactive-window/helpers';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -29,10 +27,10 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
 
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         if (!this._isPylanceExtensionInstalled()) {
             this.extensionChangeHandler = extensions.onDidChange(this.extensionsChangeHandler.bind(this));
@@ -40,7 +38,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     }
 
     public async activate() {
-        if (!this.isPylanceUsingLspNotebooks()) {
+        if (!this.isUsingPylance() || !this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
 
@@ -78,12 +76,8 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
      * Returns a boolean indicating whether Pylance's LSP notebooks experiment is enabled.
      * When this is True, the Python extension starts Pylance for notebooks instead of us.
      */
-    public isPylanceUsingLspNotebooks() {
+    public isUsingPylance() {
         if (this._isEnabled === undefined) {
-            const isInTreatmentGroup = this.configService.getSettings().pylanceLspNotebooksEnabled;
-            const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
-            const pylanceVersion = extensions.getExtension(PylanceExtension)?.packageJSON.version;
-
             const pythonConfig = workspace.getConfiguration('python');
             const languageServer = pythonConfig?.get<string>('languageServer');
 
@@ -91,26 +85,10 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             // versions of Python and Pylance support the experiment.
             this._isEnabled = false;
             if (languageServer !== 'Pylance' && languageServer !== 'Default') {
-                traceInfo(`LSP Notebooks experiment is disabled -- not using Pylance`);
-            } else if (!isInTreatmentGroup) {
-                traceInfo(`LSP Notebooks experiment is disabled -- not in treatment group`);
-            } else if (!pythonVersion) {
-                traceInfo(`LSP Notebooks experiment is disabled -- Python disabled or not installed`);
-            } else if (
-                semver.lte(pythonVersion, '2022.7.11371008') &&
-                !semver.prerelease(pythonVersion)?.includes('dev')
-            ) {
-                traceInfo(`LSP Notebooks experiment is disabled -- Python does not support experiment`);
-            } else if (!pylanceVersion) {
-                traceInfo(`LSP Notebooks experiment is disabled -- Pylance disabled or not installed`);
-            } else if (
-                semver.lt(pylanceVersion, '2022.5.3-pre.1') &&
-                !semver.prerelease(pylanceVersion)?.includes('dev')
-            ) {
-                traceInfo(`LSP Notebooks experiment is disabled -- Pylance does not support experiment`);
+                traceInfo(`Not using Pylance`);
             } else {
                 this._isEnabled = true;
-                traceInfo(`LSP Notebooks experiment is enabled`);
+                traceInfo(`Using Pylance`);
             }
         }
 
@@ -128,7 +106,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             return undefined;
         }
 
-        const controller = this.notebookControllerSelection.getSelected(notebook);
+        const controller = this.controllerRegistration.getSelected(notebook);
         const interpreter = controller
             ? controller.connection.interpreter
             : await this.interpreterService.getActiveInterpreter(uri);
@@ -146,12 +124,33 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     }
 
     private _getNotebookUriForTextDocumentUri(textDocumentUri: Uri): Uri | undefined {
-        if (textDocumentUri.scheme !== 'vscode-interactive-input') {
+        const notebookUri = getNotebookUriFromInputBoxUri(textDocumentUri);
+        if (!notebookUri) {
             return undefined;
         }
 
-        const notebookPath = `${textDocumentUri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
-        const notebookUri = textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
-        return notebookUri;
+        let result: string | undefined = undefined;
+        window.tabGroups.all.find((group) => {
+            group.tabs.find((tab) => {
+                if (isInteractiveInputTab(tab)) {
+                    const tabUri = tab.input.uri.toString();
+                    // the interactive resource URI was altered to start with `/`, this will account for both URI formats
+                    if (tab.input.uri.toString().endsWith(notebookUri.path)) {
+                        result = tabUri;
+                    }
+                }
+            });
+        });
+        return result;
     }
+}
+
+export function getNotebookUriFromInputBoxUri(textDocumentUri: Uri): Uri | undefined {
+    if (textDocumentUri.scheme !== 'vscode-interactive-input') {
+        return undefined;
+    }
+
+    const inputBoxPrefix = path.sep + 'InteractiveInput-';
+    const notebookPath = `${textDocumentUri.fsPath.replace(inputBoxPrefix, 'Interactive-')}.interactive`;
+    return textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
 }

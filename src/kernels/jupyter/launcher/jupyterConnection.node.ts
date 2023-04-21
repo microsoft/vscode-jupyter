@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../../../platform/common/extensions';
-
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs/Subscription';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
+import { traceError, traceWarning, traceVerbose } from '../../../platform/logging';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -18,13 +15,14 @@ import { RegExpValues } from '../../../platform/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
-import { getJupyterConnectionDisplayName } from './helpers';
+import { getJupyterConnectionDisplayName } from '../helpers';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
+import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
-const namedRegexp = require('named-js-regexp');
-const urlMatcher = namedRegexp(RegExpValues.UrlPatternRegEx);
+const urlMatcher = new RegExp(RegExpValues.UrlPatternRegEx);
 
 /**
  * When starting a local jupyter server, this object waits for the server to come up.
@@ -43,6 +41,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         private readonly rootDir: Uri,
         private readonly getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         serviceContainer: IServiceContainer,
+        private readonly interpreter: PythonEnvironment | undefined,
         private cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -64,9 +63,9 @@ export class JupyterConnectionWaiter implements IDisposable {
         }, jupyterLaunchTimeout);
 
         // Listen for crashes
-        let exitCode = '0';
+        let exitCode = 0;
         if (launchResult.proc) {
-            launchResult.proc.on('exit', (c) => (exitCode = c ? c.toString() : '0'));
+            launchResult.proc.on('exit', (c) => (exitCode = c ? c : 0));
         }
         let stderr = '';
         // Listen on stderr for its connection information
@@ -83,7 +82,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                 },
                 (e) => this.rejectStartPromise(e),
                 // If the process dies, we can't extract connection information.
-                () => this.rejectStartPromise(DataScience.jupyterServerCrashed().format(exitCode))
+                () => this.rejectStartPromise(DataScience.jupyterServerCrashed(exitCode))
             )
         );
     }
@@ -119,13 +118,12 @@ export class JupyterConnectionWaiter implements IDisposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private output(data: any) {
         if (!this.connectionDisposed) {
-            traceInfo(data.toString('utf8'));
+            traceVerbose(data.toString('utf8'));
         }
     }
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
+    private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: string) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
             const matchInfo = serverInfos.find((info) => {
                 return arePathsSame(getFilePath(this.notebookDir), getFilePath(Uri.file(info.notebook_dir)));
@@ -144,26 +142,21 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private getJupyterURLFromString(data: any) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const urlMatch = urlMatcher.exec(data) as any;
-        const groups = urlMatch.groups() as RegExpValues.IUrlPatternGroupType;
-        if (urlMatch && !this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
+    private getJupyterURLFromString(data: string) {
+        const urlMatch = urlMatcher.exec(data);
+        const groups = urlMatch?.groups;
+        if (!this.startPromise.completed && groups && (groups.LOCAL || groups.IP)) {
             // Rebuild the URI from our group hits
             const host = groups.LOCAL ? groups.LOCAL : groups.IP;
             const uriString = `${groups.PREFIX}${host}${groups.REST}`;
 
-            // URL is not being found for some reason. Pull it in forcefully
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const URL = require('url').URL;
             let url: URL;
             try {
                 url = new URL(uriString);
             } catch (err) {
                 traceError(`Failed to parse ${uriString}`, err);
                 // Failed to parse the url either via server infos or the string
-                this.rejectStartPromise(DataScience.jupyterLaunchNoURL());
+                this.rejectStartPromise(DataScience.jupyterLaunchNoURL);
                 return;
             }
 
@@ -179,8 +172,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private extractConnectionInformation = (data: any) => {
+    private extractConnectionInformation = (data: string) => {
         this.output(data);
 
         const httpMatch = RegExpValues.HttpPattern.exec(data);
@@ -198,7 +190,7 @@ export class JupyterConnectionWaiter implements IDisposable {
 
     private launchTimedOut = () => {
         if (!this.startPromise.completed) {
-            this.rejectStartPromise(DataScience.jupyterLaunchTimedOut());
+            this.rejectStartPromise(DataScience.jupyterLaunchTimedOut);
         }
     };
 
@@ -223,11 +215,18 @@ export class JupyterConnectionWaiter implements IDisposable {
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.resolved) {
             message = typeof message === 'string' ? message : message.message;
-            this.startPromise.reject(
-                Cancellation.isCanceled(this.cancelToken)
-                    ? new CancellationError()
-                    : new JupyterConnectError(message, this.stderr.join('\n'))
-            );
+            let error: Error;
+            const stderr = this.stderr.join('\n');
+            if (Cancellation.isCanceled(this.cancelToken)) {
+                error = new CancellationError();
+            } else if (stderr.includes('Jupyter command `jupyter-notebook` not found')) {
+                error = new JupyterNotebookNotInstalled(message, stderr, this.interpreter);
+            } else if (stderr.includes('Running as root is not recommended. Use --allow-root to bypass')) {
+                error = new JupyterCannotBeLaunchedWithRootError(message, stderr, this.interpreter);
+            } else {
+                error = new JupyterConnectError(message, stderr, this.interpreter);
+            }
+            this.startPromise.reject(error);
         }
     };
 }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject } from 'inversify';
 import {
     commands,
     NotebookCell,
@@ -29,7 +29,7 @@ import { linkCommandAllowList, LineQueryRegex } from './linkProvider';
 /**
  * Registers comm channel to the error renderer to handle link clicking
  */
-@injectable()
+// @injectable()
 export class ErrorRendererCommunicationHandler implements IExtensionSyncActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,

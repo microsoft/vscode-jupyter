@@ -37,6 +37,7 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
     },
     "git.branchProtection": ["main", "release*"],
+    "git.branchProtectionPrompt": "alwaysCommitToNewBranch",
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "python.linting.enabled": false,
     "python.testing.promptToConfigure": false,
@@ -61,7 +62,7 @@
     ],
     "typescript.preferences.importModuleSpecifier": "relative",
     "mochaExplorer.files": "./out/test/**/*.unit.test.js",
-    "mochaExplorer.require": ["ts-node/register", "./out/test/unittests.js"],
+    "mochaExplorer.configFile": "./build/.mocha.unittests.js.json",
     "mochaExplorer.ui": "tdd",
     "mochaExplorer.nodeArgv": ["--enable-source-maps"]
 }

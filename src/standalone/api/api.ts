@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
-import { ExtensionMode, NotebookController, NotebookDocument } from 'vscode';
-import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
+import { ExtensionMode, NotebookController, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
-import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
+import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
@@ -15,11 +13,13 @@ import {
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './extension';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
-import { isTestExecution } from '../../platform/common/constants';
-import { IExtensionContext } from '../../platform/common/types';
+import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
+import { IExtensionContext, IExtensions } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
-import { IControllerPreferredService } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { noop } from '../../platform/common/utils/misc';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -70,8 +70,46 @@ export interface IExtensionApi {
      * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
      */
     addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
+    /**
+     * Opens a notebook with a specific kernel as the active kernel.
+     * @param {Uri} uri Uri of the notebook to open.
+     * @param {String} kernelId Id of the kernel, retrieved from getKernelService().getKernelSpecifications()
+     * @returns {Promise<NotebookDocument>} Promise that resolves to the notebook document.
+     */
+    openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
 }
 
+function waitForNotebookControllersCreationForServer(
+    serverId: string,
+    controllerRegistration: IControllerRegistration
+) {
+    return new Promise<void>((resolve) => {
+        controllerRegistration.onDidChange((e) => {
+            for (let controller of e.added) {
+                if (
+                    controller.connection.kind === 'connectToLiveRemoteKernel' ||
+                    controller.connection.kind === 'startUsingRemoteKernelSpec'
+                ) {
+                    if (controller.connection.serverId === serverId) {
+                        resolve();
+                    }
+                }
+            }
+        });
+    });
+}
+
+function sendApiUsageTelemetry(extensions: IExtensions, pemUsed: keyof IExtensionApi) {
+    extensions
+        .determineExtensionFromCallStack()
+        .then((info) => {
+            sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+                extensionId: info.extensionId,
+                pemUsed
+            });
+        })
+        .catch(noop);
+}
 export function buildApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ready: Promise<any>,
@@ -80,6 +118,7 @@ export function buildApi(
     context: IExtensionContext
 ): IExtensionApi {
     let registered = false;
+    const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const api: IExtensionApi = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
@@ -95,37 +134,79 @@ export function buildApi(
             apiProvider.setApi(pythonApi);
         },
         async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
+            sendApiUsageTelemetry(extensions, 'showDataViewer');
             const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
             await dataViewerProviderService.create(dataProvider, title);
         },
         registerRemoteServerProvider(picker: IJupyterUriProvider): void {
+            sendApiUsageTelemetry(extensions, 'registerRemoteServerProvider');
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
             container.registerProvider(picker);
         },
         getKernelService: async () => {
+            sendApiUsageTelemetry(extensions, 'getKernelService');
             const kernelServiceFactory =
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
         },
         getSuggestedController: async (
-            providerId: string,
-            handle: JupyterServerUriHandle,
-            notebook: NotebookDocument
+            _providerId: string,
+            _handle: JupyterServerUriHandle,
+            _notebook: NotebookDocument
         ) => {
-            const controllers = serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
-            const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
-            const uri = generateUriFromRemoteProvider(providerId, handle);
-            await connection.updateServerUri(uri);
-            const serverId = await computeServerId(uri);
-            const { controller } = await controllers.computePreferred(notebook, serverId);
-            return controller?.controller;
+            sendApiUsageTelemetry(extensions, 'getSuggestedController');
+            return undefined;
         },
         addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {
-            const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
-            const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-            const uri = generateUriFromRemoteProvider(providerId, handle);
-            await connection.updateServerUri(uri);
-            await selector.setJupyterURIToRemote(uri);
+            sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
+            await new Promise<void>(async (resolve) => {
+                const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
+                const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+                const uri = generateUriFromRemoteProvider(providerId, handle);
+                const serverId = await computeServerId(uri);
+
+                const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+                const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
+                    serverId,
+                    controllerRegistration
+                );
+
+                await connection.updateServerUri(uri);
+                await selector.setJupyterURIToRemote(uri);
+
+                if (
+                    controllerRegistration.all.find(
+                        (metadata) =>
+                            (metadata.kind === 'connectToLiveRemoteKernel' ||
+                                metadata.kind === 'startUsingRemoteKernelSpec') &&
+                            metadata.serverId === serverId
+                    ) !== undefined
+                ) {
+                    resolve();
+                    return;
+                } else {
+                    await controllerCreatedPromise;
+                    resolve();
+                }
+            });
+        },
+        openNotebook: async (uri: Uri, kernelId: string) => {
+            sendApiUsageTelemetry(extensions, 'openNotebook');
+            const controllers = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+            const id = controllers.all.find((controller) => controller.id === kernelId)?.id;
+            if (!id) {
+                throw new Error(`Kernel ${kernelId} not found.`);
+            }
+            const notebookEditor =
+                window.activeNotebookEditor?.notebook?.uri?.toString() === uri.toString()
+                    ? window.activeNotebookEditor
+                    : await window.showNotebookDocument(await workspace.openNotebookDocument(uri));
+            await commands.executeCommand('notebook.selectKernel', {
+                notebookEditor,
+                id,
+                extension: JVSC_EXTENSION_ID
+            });
+            return notebookEditor.notebook;
         }
     };
 

@@ -43,9 +43,9 @@ import { Settings } from '../../../../platform/common/constants';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 [true, false].forEach((useJedi) => {
     suite(
-        `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) (slow) ${
+        `DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) ${
             useJedi ? 'withJedi' : 'withoutJedi'
-        }`,
+        } @lsp`,
         function () {
             let api: IExtensionTestApi;
             const disposables: IDisposable[] = [];
@@ -84,7 +84,7 @@ import { Settings } from '../../../../platform/common/constants';
                 traceInfo(`Start Test ${this.currentTest?.title}`);
                 sinon.restore();
                 await startJupyterServer();
-                await createEmptyPythonNotebook(disposables, Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'))); // TODO, can't do this on web tests
+                await createEmptyPythonNotebook(disposables, Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp'))); // TODO, can't do this on web tests
                 setIntellisenseTimeout(30000);
                 traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
             });

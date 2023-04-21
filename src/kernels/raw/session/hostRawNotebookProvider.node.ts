@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../../../platform/common/extensions';
-
 import * as vscode from 'vscode';
 import uuid from 'uuid/v4';
 import { injectable, inject } from 'inversify';
@@ -20,7 +17,6 @@ import {
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
@@ -67,7 +63,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         return this.rawNotebookSupportedService.isSupported;
     }
 
-    @capturePerfTelemetry(Telemetry.RawKernelCreatingNotebook)
     public async createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
@@ -81,7 +76,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
 
         try {
             const kernelConnectionProvided = !!kernelConnection;
-            traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
@@ -107,7 +101,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             if (rawSession.isConnected) {
                 sessionPromise.resolve(rawSession);
             } else {
-                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
+                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError));
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process

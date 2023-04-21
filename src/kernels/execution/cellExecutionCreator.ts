@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import {
     CancellationToken,
     NotebookCell,
     NotebookCellExecution,
     NotebookCellOutput,
     NotebookCellOutputItem,
-    NotebookController
+    TextDocument
 } from 'vscode';
+import { traceVerbose } from '../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { IKernelController } from '../types';
 
 /**
  * Wrapper class around NotebookCellExecution that allows us to
@@ -19,6 +20,7 @@ import {
  */
 export class NotebookCellExecutionWrapper implements NotebookCellExecution {
     public started: boolean = false;
+    private _startTime?: number;
     constructor(
         private readonly _impl: NotebookCellExecution,
         public controllerId: string,
@@ -41,12 +43,19 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
         if (!this.started) {
             this.started = true;
             this._impl.start(startTime);
+            this._startTime = startTime;
+            traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime}`);
         }
     }
     end(success: boolean | undefined, endTime?: number): void {
         if (this._endCallback) {
             try {
                 this._impl.end(success, endTime);
+                traceVerbose(
+                    `End cell ${this.cell.index} execution @ ${endTime}, started @ ${this._startTime}, elapsed time = ${
+                        ((endTime || 0) - (this._startTime || 0)) / 1000
+                    }s`
+                );
             } finally {
                 this._endCallback();
                 this._endCallback = undefined;
@@ -80,10 +89,10 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
  * Class for mapping cells to an instance of a NotebookCellExecution object
  */
 export class CellExecutionCreator {
-    private static _map = new Map<string, NotebookCellExecutionWrapper>();
-    static getOrCreate(cell: NotebookCell, controller: NotebookController) {
+    private static _map = new WeakMap<TextDocument, NotebookCellExecutionWrapper>();
+    static getOrCreate(cell: NotebookCell, controller: IKernelController) {
         let cellExecution: NotebookCellExecutionWrapper | undefined;
-        const key = cell.document.uri.toString();
+        const key = cell.document;
         cellExecution = this.get(cell);
         if (!cellExecution) {
             cellExecution = CellExecutionCreator.create(key, cell, controller);
@@ -106,19 +115,24 @@ export class CellExecutionCreator {
         return cellExecution;
     }
     static get(cell: NotebookCell) {
-        const key = cell.document.uri.toString();
+        const key = cell.document;
         return CellExecutionCreator._map.get(key);
     }
 
-    private static create(key: string, cell: NotebookCell, controller: NotebookController) {
-        const result = new NotebookCellExecutionWrapper(
-            controller.createNotebookCellExecution(cell),
-            controller.id,
-            () => {
-                CellExecutionCreator._map.delete(key);
-            }
-        );
-        CellExecutionCreator._map.set(key, result);
-        return result;
+    private static create(key: TextDocument, cell: NotebookCell, controller: IKernelController) {
+        try {
+            const result = new NotebookCellExecutionWrapper(
+                controller.createNotebookCellExecution(cell),
+                controller.id,
+                () => {
+                    CellExecutionCreator._map.delete(key);
+                }
+            );
+            CellExecutionCreator._map.set(key, result);
+            return result;
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.FailedToCreateNotebookCellExecution, undefined, undefined, ex);
+            throw ex;
+        }
     }
 }

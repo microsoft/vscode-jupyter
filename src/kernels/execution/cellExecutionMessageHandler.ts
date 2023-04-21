@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import fastDeepEqual from 'fast-deep-equal';
 import type * as nbformat from '@jupyterlab/nbformat';
-import * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
+import type * as KernelMessage from '@jupyterlab/services/lib/kernel/messages';
 import {
     NotebookCell,
     NotebookCellExecution,
@@ -13,7 +11,6 @@ import {
     NotebookCellExecutionSummary,
     NotebookDocument,
     workspace,
-    NotebookController,
     WorkspaceEdit,
     NotebookCellData,
     Range,
@@ -25,12 +22,11 @@ import {
     NotebookCellOutputItem
 } from 'vscode';
 
-import { Kernel } from '@jupyterlab/services';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceError, traceWarning } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../../platform/common/utils';
 import {
@@ -41,11 +37,10 @@ import {
 } from './helpers';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
-import { ITracebackFormatter } from '../../kernels/types';
+import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
-import isObject = require('lodash/isObject');
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
-import { Lazy } from '../../platform/common/utils/lazy';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -114,6 +109,7 @@ export class CellExecutionMessageHandler implements IDisposable {
     private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cellHasErrorsInOutput?: boolean;
+    private disposed?: boolean;
 
     public get hasErrorOutput() {
         return this.cellHasErrorsInOutput === true;
@@ -124,7 +120,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      * If users clear outputs or if we have a new output other than stream, then clear this item.
      * Because if after the stream we have an image, then the stream is not the last output item, hence its cleared.
      */
-    private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; text: string; output: NotebookCellOutput };
+    private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; output: NotebookCellOutput };
     /**
      * When we have nested Output Widgets, we get comm messages one for each output widget.
      * The way it works is:
@@ -173,8 +169,7 @@ export class CellExecutionMessageHandler implements IDisposable {
     constructor(
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
-        private readonly controller: NotebookController,
-        private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
+        private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
         private readonly kernel: Kernel.IKernelConnection,
@@ -235,7 +230,11 @@ export class CellExecutionMessageHandler implements IDisposable {
      * Or when execution has been cancelled.
      */
     public dispose() {
-        traceCellMessage(this.cell, 'Execution disposed');
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
+        traceCellMessage(this.cell, 'Execution Message Handler disposed');
         disposeAllDisposables(this.disposables);
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
@@ -409,7 +408,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             method: 'update';
             state: { msg_id: string } | { children: string[] };
         }>;
-        if (!isObject(data) || data.method !== 'update' || !isObject(data.state)) {
+        if (!data || data.method !== 'update' || typeof data.state !== 'object') {
             return;
         }
 
@@ -503,18 +502,18 @@ export class CellExecutionMessageHandler implements IDisposable {
             return;
         }
         traceCellMessage(this.cell, 'Update output');
-        // Clear if necessary
-        this.clearOutputIfNecessary(this.execution);
-        // Keep track of the display_id against the output item, we might need this to update this later.
-        if (displayId) {
-            this.outputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
-        }
-
         // Append to the data (we would push here but VS code requires a recreation of the array)
         // Possible execution of cell has completed (the task would have been disposed).
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
-        let task = new Lazy(() => this.execution || this.createTemporaryTask());
+        const task = this.execution || this.createTemporaryTask();
+        // Clear if necessary
+        this.clearOutputIfNecessary(task);
+        // Keep track of the display_id against the output item, we might need this to update this later.
+        if (displayId) {
+            CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
+        }
+
         this.clearLastUsedStreamOutput();
         traceCellMessage(this.cell, 'Append output in addToCellData');
         // If the output belongs to a widget, then add the output to that specific widget (i.e. just below the widget).
@@ -542,7 +541,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                         .handlingCommId,
                     outputToAppend: cellOutput
                 },
-                task.getValue()
+                task
             );
 
             if (result?.outputAdded) {
@@ -550,7 +549,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             }
         }
         if (outputShouldBeAppended) {
-            task.getValue()?.appendOutput([cellOutput]).then(noop, noop);
+            task?.appendOutput([cellOutput]).then(noop, noop);
         }
         this.endTemporaryTask();
     }
@@ -818,45 +817,23 @@ export class CellExecutionMessageHandler implements IDisposable {
         // Ensure we append to previous output, only if the streams as the same &
         // If the last output is the desired stream type.
         if (this.lastUsedStreamOutput?.stream === msg.content.name) {
-            // Get the jupyter output from the vs code output (so we can concatenate the text ourselves).
-            let existingOutputText = this.lastUsedStreamOutput.text;
-            let newContent = msg.content.text;
-            // Look for the ansi code `<char27>[A`. (this means move up)
-            // Not going to support `[2A` (not for now).
-            const moveUpCode = `${String.fromCharCode(27)}[A`;
-            if (msg.content.text.startsWith(moveUpCode)) {
-                // Split message by lines & strip out the last n lines (where n = number of lines to move cursor up).
-                const existingOutputLines = existingOutputText.splitLines({
-                    trim: false,
-                    removeEmptyEntries: false
-                });
-                if (existingOutputLines.length) {
-                    existingOutputLines.pop();
-                }
-                existingOutputText = existingOutputLines.join('\n');
-                newContent = newContent.substring(moveUpCode.length);
-            }
-            // Create a new output item with the concatenated string.
-            this.lastUsedStreamOutput.text = formatStreamText(
-                concatMultilineString(`${existingOutputText}${newContent}`)
-            );
             const output = cellOutputToVSCCellOutput({
                 output_type: 'stream',
                 name: msg.content.name,
-                text: this.lastUsedStreamOutput.text
+                text: msg.content.text
             });
-            traceCellMessage(this.cell, `Replace output items '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
-            task?.replaceOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
+            traceCellMessage(this.cell, `Append output items '${msg.content.text.substring(0, 100)}`);
+            task?.appendOutputItems(output.items, this.lastUsedStreamOutput.output).then(noop, noop);
         } else if (previousValueOfClearOutputOnNextUpdateToOutput) {
             // Replace the current outputs with a single new output.
-            const text = formatStreamText(concatMultilineString(msg.content.text));
+            const text = concatMultilineString(msg.content.text);
             const output = cellOutputToVSCCellOutput({
                 output_type: 'stream',
                 name: msg.content.name,
                 text
             });
-            this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
-            traceCellMessage(this.cell, `Replace output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
+            this.lastUsedStreamOutput = { output, stream: msg.content.name };
+            traceCellMessage(this.cell, `Replace output with '${text.substring(0, 100)}'`);
             task?.replaceOutput([output]).then(noop, noop);
         } else {
             // Create a new output
@@ -866,8 +843,8 @@ export class CellExecutionMessageHandler implements IDisposable {
                 name: msg.content.name,
                 text
             });
-            this.lastUsedStreamOutput = { output, stream: msg.content.name, text };
-            traceCellMessage(this.cell, `Append output '${this.lastUsedStreamOutput.text.substring(0, 100)}'`);
+            this.lastUsedStreamOutput = { output, stream: msg.content.name };
+            traceCellMessage(this.cell, `Append new output '${text.substring(0, 100)}'`);
             task?.appendOutput([output]).then(noop, noop);
         }
         this.endTemporaryTask();
@@ -922,9 +899,11 @@ export class CellExecutionMessageHandler implements IDisposable {
 
     private handleError(msg: KernelMessage.IErrorMsg) {
         let traceback = msg.content.traceback;
+        traceInfoIfCI(`Traceback for error ${traceback}`);
         this.formatters.forEach((formatter) => {
             traceback = formatter.format(this.cell, traceback);
         });
+        traceInfoIfCI(`Traceback for error after formatting ${traceback}`);
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
@@ -956,34 +935,59 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleUpdateDisplayDataMessage(msg: KernelMessage.IUpdateDisplayDataMsg) {
         const displayId = msg.content.transient.display_id;
         if (!displayId) {
+            traceWarning('Update display data message received, but no display id', msg.content);
             return;
         }
-        const outputToBeUpdated = this.outputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
+        const outputToBeUpdated = CellOutputDisplayIdTracker.getMappedOutput(this.cell.notebook, displayId);
         if (!outputToBeUpdated) {
+            traceWarning('Update display data message received, but no output found to update', msg.content);
             return;
         }
-        const output = translateCellDisplayOutput(outputToBeUpdated);
+        if (outputToBeUpdated.cell.document.isClosed) {
+            traceWarning('Update display data message received, but output cell is closed', msg.content);
+            return;
+        }
+        const output = translateCellDisplayOutput(outputToBeUpdated.output);
         const newOutput = cellOutputToVSCCellOutput({
             ...output,
             data: msg.content.data,
             metadata: msg.content.metadata
         } as nbformat.IDisplayData);
+        const newOutputs = outputToBeUpdated.cell.outputs.map((o) => {
+            if (
+                o.items.length === outputToBeUpdated.output.items.length &&
+                o.items.every((item, index) => fastDeepEqual(item, outputToBeUpdated.output.items[index]))
+            ) {
+                return newOutput;
+            }
+            return o;
+        });
         // If there was no output and still no output, then nothing to do.
-        if (outputToBeUpdated.items.length === 0 && newOutput.items.length === 0) {
+        if (outputToBeUpdated.output.items.length === 0 && newOutput.items.length === 0) {
+            traceVerbose('Update display data message received, but no output to update', msg.content);
             return;
         }
         // Compare each output item (at the end of the day everything is serializable).
         // Hence this is a safe comparison.
-        if (outputToBeUpdated.items.length === newOutput.items.length) {
+        if (outputToBeUpdated.output.items.length === newOutput.items.length) {
             let allAllOutputItemsSame = true;
-            for (let index = 0; index < outputToBeUpdated.items.length; index++) {
-                if (!fastDeepEqual(outputToBeUpdated.items[index], newOutput.items[index])) {
-                    allAllOutputItemsSame = false;
-                    break;
+            if (!fastDeepEqual(outputToBeUpdated.output.metadata || {}, newOutput.metadata || {})) {
+                allAllOutputItemsSame = false;
+            }
+            if (allAllOutputItemsSame) {
+                for (let index = 0; index < outputToBeUpdated.output.items.length; index++) {
+                    if (!fastDeepEqual(outputToBeUpdated.output.items[index], newOutput.items[index])) {
+                        allAllOutputItemsSame = false;
+                        break;
+                    }
                 }
             }
             if (allAllOutputItemsSame) {
                 // If everything is still the same, then there's nothing to update.
+                traceVerbose(
+                    'Update display data message received, but no output to update (data is the same)',
+                    msg.content
+                );
                 return;
             }
         }
@@ -992,7 +996,8 @@ export class CellExecutionMessageHandler implements IDisposable {
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
         traceCellMessage(this.cell, `Replace output items in display data ${newOutput.items.length}`);
-        task?.replaceOutputItems(newOutput.items, outputToBeUpdated).then(noop, noop);
+        task?.replaceOutput(newOutputs, outputToBeUpdated.cell).then(noop, noop);
         this.endTemporaryTask();
+        CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, newOutput);
     }
 }

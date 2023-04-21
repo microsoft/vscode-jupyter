@@ -6,12 +6,15 @@ import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
 import { EnvironmentType } from '../pythonEnvironments/info';
+import { ProposedExtensionAPI } from './pythonApiTypes';
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
     onDidActivatePythonExtension: Event<void>;
     pythonExtensionHooked: Promise<void>;
+    pythonExtensionVersion: SemVer | undefined;
     getApi(): Promise<PythonApi>;
+    getNewApi(): Promise<ProposedExtensionAPI | undefined>;
     setApi(api: PythonApi): void;
 }
 export const IPythonExtensionChecker = Symbol('IPythonExtensionChecker');
@@ -24,7 +27,7 @@ export interface IPythonExtensionChecker {
 }
 
 /**
- * This allows Python exntension to update Product enum without breaking Jupyter.
+ * This allows Python extension to update Product enum without breaking Jupyter.
  * I.e. we have a strict contract, else using numbers (in enums) is bound to break across products.
  */
 export enum JupyterProductToInstall {
@@ -73,24 +76,6 @@ export interface IInterpreterQuickPickItem_PythonApi extends QuickPickItem {
 
 export type PythonApi = {
     /**
-     * IInterpreterService
-     */
-    onDidChangeInterpreter: Event<void>;
-    onDidChangeInterpreters: Event<void>;
-    /**
-     * IInterpreterService
-     */
-    getInterpreters(resource?: Uri): Promise<PythonEnvironment_PythonApi[]>;
-    /**
-     * IInterpreterService
-     */
-    getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment_PythonApi | undefined>;
-    /**
-     * IInterpreterService
-     */
-    getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment_PythonApi>;
-
-    /**
      * IEnvironmentActivationService
      */
     getActivatedEnvironmentVariables(
@@ -98,11 +83,8 @@ export type PythonApi = {
         interpreter: PythonEnvironment_PythonApi,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
-    /**
-     * IWindowsStoreInterpreter
-     */
     getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem_PythonApi[]>;
-    getKnownSuggestions(resource: Resource): IInterpreterQuickPickItem_PythonApi[];
+    getKnownSuggestions?(resource: Resource): IInterpreterQuickPickItem_PythonApi[];
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
      */
@@ -139,41 +121,4 @@ export type PythonApi = {
      * @param func : The function that Python should call when requesting the notebook URI.
      */
     registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
-
-    /**
-     * This API will re-trigger environment discovery. Extensions can wait on the returned
-     * promise to get the updated interpreters list. If there is a refresh already going on
-     * then it returns the promise for that refresh.
-     * @param options : [optional]
-     *     * clearCache : When true, this will clear the cache before interpreter refresh
-     *                    is triggered.
-     */
-    refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
-    /**
-     * Changes the active interpreter in use by the python extension
-     * @param interpreterPath
-     * @param resource
-     */
-    setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void>;
-    /***
-     * Returns a promise if a refresh is going on.
-     */
-    getRefreshPromise?(): Promise<void> | undefined;
-};
-
-export type RefreshInterpretersOptions = {
-    clearCache?: boolean;
-};
-export type IPythonProposedApi = {
-    environment: {
-        /**
-         * This API will re-trigger environment discovery. Extensions can wait on the returned
-         * promise to get the updated interpreters list. If there is a refresh already going on
-         * then it returns the promise for that refresh.
-         * @param options : [optional]
-         *     * clearCache : When true, this will clear the cache before interpreter refresh
-         *                    is triggered.
-         */
-        refreshInterpreters(options?: RefreshInterpretersOptions): Promise<string[] | undefined>;
-    };
 };

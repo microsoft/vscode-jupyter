@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
@@ -19,7 +18,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
+import { Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { IRawKernelConnectionSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
@@ -75,21 +74,11 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         // Save the resource that we connect with
         let newSession: RawSession;
         await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
-        const stopWatch = new StopWatch();
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
             newSession = await this.startRawSession({ ...options, purpose: 'start' });
             Cancellation.throwIfCanceled(options.token);
-            // Only connect our session if we didn't cancel or timeout
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, {
-                duration: stopWatch.elapsedTime
-            });
-            traceInfo(
-                `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
-                    newSession.kernelProcess.pid
-                })`
-            );
             this.setSession(newSession);
 
             // Listen for session status changes
@@ -97,34 +86,12 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         } catch (error) {
             this.connected = false;
             if (isCancellationError(error) || options.token.isCancellationRequested) {
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStart,
-                    { duration: stopWatch.elapsedTime },
-                    undefined,
-                    error
-                );
-                sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartUserCancel);
                 traceVerbose('Starting of raw session cancelled by user');
                 throw error;
             } else {
-                // Send our telemetry event with the error included
-                sendKernelTelemetryEvent(
-                    this.resource,
-                    Telemetry.RawKernelSessionStart,
-                    { duration: stopWatch.elapsedTime },
-                    undefined,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    error as any
-                );
-
                 traceError(`Failed to connect raw kernel session: ${error}`);
                 throw error;
             }
-        } finally {
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionConnect, {
-                duration: stopWatch.elapsedTime
-            });
         }
 
         this.connected = true;
@@ -153,6 +120,13 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
     }
 
     protected override setSession(session: RawSession | undefined) {
+        if (session) {
+            traceInfo(
+                `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
+                    session.kernelProcess.pid
+                })`
+            );
+        }
         super.setSession(session);
         if (!session) {
             return;
@@ -226,7 +200,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI), purpose: 'restart' });
     }
 
-    @capturePerfTelemetry(Telemetry.RawKernelStartRawSession)
     private async startRawSession(options: {
         token: CancellationToken;
         ui: IDisplayOptions;
@@ -244,9 +217,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         this.terminatingStatus = undefined;
         const process = await KernelProgressReporter.wrapAndReportProgress(
             this.resource,
-            DataScience.connectingToKernel().format(
-                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-            ),
+            DataScience.connectingToKernel(getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)),
             () =>
                 this.kernelLauncher.launch(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -257,27 +228,11 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
                     options.token
                 )
         );
-        const stopwatch = new StopWatch();
-        const promise = KernelProgressReporter.wrapAndReportProgress(
+        return KernelProgressReporter.wrapAndReportProgress(
             this.resource,
-            DataScience.waitingForJupyterSessionToBeIdle(),
+            DataScience.waitingForJupyterSessionToBeIdle,
             () => this.postStartRawSession(options, process)
         );
-        if (options.purpose === 'restart') {
-            promise
-                .then(() =>
-                    sendKernelTelemetryEvent(
-                        this.resource,
-                        Telemetry.NotebookRestart,
-                        { duration: stopwatch.elapsedTime },
-                        {
-                            startTimeOnly: true
-                        }
-                    )
-                )
-                .ignoreErrors();
-        }
-        return promise;
     }
     private async postStartRawSession(
         options: { token: CancellationToken; ui: IDisplayOptions },

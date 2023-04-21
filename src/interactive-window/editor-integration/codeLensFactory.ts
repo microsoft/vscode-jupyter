@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import {
     CodeLens,
@@ -11,12 +10,11 @@ import {
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
     Range,
-    TextDocument,
-    workspace
+    TextDocument
 } from 'vscode';
 
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
-import { traceWarning, traceInfoIfCI } from '../../platform/logging';
+import { traceWarning, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
@@ -24,7 +22,8 @@ import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
 import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
-import { ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
+import { CodeLensPerfMeasures, ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -39,6 +38,20 @@ type PerNotebookData = {
     documentExecutionCounts: Map<string, number>;
 };
 
+// localized code lense text
+const runCurrentandAllBelowTitle = localize.DataScience.runCurrentCellAndAddBelow;
+const addCellBelowTitle = localize.DataScience.addCellBelowCommandTitle;
+const debugCurrentCellTitle = localize.DataScience.debugCellCommandTitle;
+const debugCellTitle = localize.DataScience.debugCellCommandTitle;
+const debugStepOverTitle = localize.DataScience.debugStepOverCommandTitle;
+const DebugContinueTitle = localize.DataScience.debugContinueCommandTitle;
+const debugStopTitle = localize.DataScience.debugStopCommandTitle;
+const runCellTitle = localize.DataScience.runCellLensCommandTitle;
+const runAllCellsTitle = localize.DataScience.runAllCellsLensCommandTitle;
+const runAllAboveTitle = localize.DataScience.runAllCellsAboveLensCommandTitle;
+const runAllBelowTitle = localize.DataScience.runCellAndAllBelowLensCommandTitle;
+const scrollToCellFormat = localize.DataScience.scrollToCellTitleFormatMessage;
+
 /**
  * This class is a singleton that generates code lenses for any document the user opens. It listens
  * to cells being execute so it can add 'goto' lenses on cells that have already been run.
@@ -48,6 +61,10 @@ export class CodeLensFactory implements ICodeLensFactory {
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
     private notebookData = new Map<string, PerNotebookData>();
     private codeLensCache = new Map<string, CodeLensCacheData>();
+    private totalCodeLensUpdateTimeInMs: number = 0;
+    private codeLensUpdateCount: number = 0;
+    private maxCellCount: number = 0;
+
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -70,6 +87,15 @@ export class CodeLensFactory implements ICodeLensFactory {
             disposables
         );
     }
+
+    public getPerfMeasures(): CodeLensPerfMeasures {
+        return {
+            totalCodeLensUpdateTimeInMs: this.totalCodeLensUpdateTimeInMs,
+            codeLensUpdateCount: this.codeLensUpdateCount,
+            maxCellCount: this.maxCellCount
+        };
+    }
+
     public get updateRequired(): Event<void> {
         return this.updateEvent.event;
     }
@@ -85,6 +111,9 @@ export class CodeLensFactory implements ICodeLensFactory {
     }
 
     private getCodeLensCacheData(document: TextDocument): CodeLensCacheData {
+        const stopWatch = new StopWatch();
+        let updated = false;
+
         // See if we have a cached version of the code lenses for this document
         const key = document.uri.toString();
         let cache = this.codeLensCache.get(key);
@@ -127,19 +156,22 @@ export class CodeLensFactory implements ICodeLensFactory {
 
         // Generate our code lenses if necessary
         if (cache.documentLenses.length === 0 && needUpdate && cache.cellRanges.length) {
-            traceInfoIfCI(`Generating new code lenses for version ${document.version} of document ${document.uri}`);
+            updated = true;
             // Enumerate the possible commands for the document based code lenses
             const commands = this.enumerateCommands(document.uri);
-            traceInfoIfCI(`Enumerating commands for ${document.uri.toString()}, ${commands.join(', ')}`);
+            traceVerbose(
+                `CodeLensFactory: Generating new code lenses for version ${document.version} of document ${
+                    document.uri
+                } for commands ${commands.join(', ')}`
+            );
 
-            // Then iterate over all of the cell ranges and generate code lenses for each possible
-            // commands
+            // Then iterate over all of the cell ranges and generate code lenses for each enabled command
             let firstCell = true;
             cache.cellRanges.forEach((r) => {
                 commands.forEach((c) => {
                     const codeLens = this.createCodeLens(document, r, c, firstCell);
                     if (codeLens) {
-                        cache!.documentLenses.push(codeLens); // NOSONAR
+                        cache!.documentLenses.push(codeLens);
                     }
                 });
                 firstCell = false;
@@ -169,6 +201,12 @@ export class CodeLensFactory implements ICodeLensFactory {
                     }
                 });
             }
+        }
+
+        if (updated) {
+            this.totalCodeLensUpdateTimeInMs += stopWatch.elapsedTime;
+            this.codeLensUpdateCount += 1;
+            this.maxCellCount = Math.max(this.maxCellCount, cache.cellRanges.length);
         }
 
         return cache;
@@ -270,42 +308,27 @@ export class CodeLensFactory implements ICodeLensFactory {
         commandName: string,
         isFirst: boolean
     ): CodeLens | undefined {
-        // Do not generate interactive window codelenses for TextDocuments which are part of NotebookDocuments
-        if (workspace.notebookDocuments.find((notebook) => notebook.uri.toString() === document.uri.toString())) {
-            return;
-        }
-        traceInfoIfCI(`Generating code lens for command ${commandName} in ${document.uri.toString()}`);
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
         const { range, cell_type } = cellRange;
         switch (commandName) {
             case Commands.RunCurrentCellAndAddBelow:
-                return this.generateCodeLens(
-                    range,
-                    Commands.RunCurrentCellAndAddBelow,
-                    localize.DataScience.runCurrentCellAndAddBelow()
-                );
+                return this.generateCodeLens(range, Commands.RunCurrentCellAndAddBelow, runCurrentandAllBelowTitle);
             case Commands.AddCellBelow:
-                return this.generateCodeLens(
-                    range,
-                    Commands.AddCellBelow,
-                    localize.DataScience.addCellBelowCommandTitle(),
-                    [document.uri, range.start.line]
-                );
+                return this.generateCodeLens(range, Commands.AddCellBelow, addCellBelowTitle, [
+                    document.uri,
+                    range.start.line
+                ]);
             case Commands.DebugCurrentCellPalette:
-                return this.generateCodeLens(
-                    range,
-                    Commands.DebugCurrentCellPalette,
-                    localize.DataScience.debugCellCommandTitle()
-                );
+                return this.generateCodeLens(range, Commands.DebugCurrentCellPalette, debugCurrentCellTitle);
 
             case Commands.DebugCell:
                 // If it's not a code cell (e.g. markdown), don't add the "Debug cell" action.
                 if (cell_type !== 'code') {
                     break;
                 }
-                return this.generateCodeLens(range, Commands.DebugCell, localize.DataScience.debugCellCommandTitle(), [
+                return this.generateCodeLens(range, Commands.DebugCell, debugCellTitle, [
                     document.uri,
                     range.start.line,
                     range.start.character,
@@ -318,37 +341,25 @@ export class CodeLensFactory implements ICodeLensFactory {
                 if (cell_type !== 'code') {
                     break;
                 }
-                return this.generateCodeLens(
-                    range,
-                    Commands.DebugStepOver,
-                    localize.DataScience.debugStepOverCommandTitle(),
-                    [document.uri]
-                );
+                return this.generateCodeLens(range, Commands.DebugStepOver, debugStepOverTitle, [document.uri]);
 
             case Commands.DebugContinue:
                 // Only code cells get debug actions
                 if (cell_type !== 'code') {
                     break;
                 }
-                return this.generateCodeLens(
-                    range,
-                    Commands.DebugContinue,
-                    localize.DataScience.debugContinueCommandTitle(),
-                    [document.uri]
-                );
+                return this.generateCodeLens(range, Commands.DebugContinue, DebugContinueTitle, [document.uri]);
 
             case Commands.DebugStop:
                 // Only code cells get debug actions
                 if (cell_type !== 'code') {
                     break;
                 }
-                return this.generateCodeLens(range, Commands.DebugStop, localize.DataScience.debugStopCommandTitle(), [
-                    document.uri
-                ]);
+                return this.generateCodeLens(range, Commands.DebugStop, debugStopTitle, [document.uri]);
 
             case Commands.RunCurrentCell:
             case Commands.RunCell:
-                return this.generateCodeLens(range, Commands.RunCell, localize.DataScience.runCellLensCommandTitle(), [
+                return this.generateCodeLens(range, Commands.RunCell, runCellTitle, [
                     document.uri,
                     range.start.line,
                     range.start.character,
@@ -357,39 +368,35 @@ export class CodeLensFactory implements ICodeLensFactory {
                 ]);
 
             case Commands.RunAllCells:
-                return this.generateCodeLens(
-                    range,
-                    Commands.RunAllCells,
-                    localize.DataScience.runAllCellsLensCommandTitle(),
-                    [document.uri, range.start.line, range.start.character]
-                );
+                return this.generateCodeLens(range, Commands.RunAllCells, runAllCellsTitle, [
+                    document.uri,
+                    range.start.line,
+                    range.start.character
+                ]);
 
             case Commands.RunAllCellsAbovePalette:
             case Commands.RunAllCellsAbove:
                 if (!isFirst) {
-                    return this.generateCodeLens(
-                        range,
-                        Commands.RunAllCellsAbove,
-                        localize.DataScience.runAllCellsAboveLensCommandTitle(),
-                        [document.uri, range.start.line, range.start.character]
-                    );
+                    return this.generateCodeLens(range, Commands.RunAllCellsAbove, runAllAboveTitle, [
+                        document.uri,
+                        range.start.line,
+                        range.start.character
+                    ]);
                 } else {
-                    return this.generateCodeLens(
-                        range,
-                        Commands.RunCellAndAllBelow,
-                        localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                        [document.uri, range.start.line, range.start.character]
-                    );
+                    return this.generateCodeLens(range, Commands.RunCellAndAllBelow, runAllBelowTitle, [
+                        document.uri,
+                        range.start.line,
+                        range.start.character
+                    ]);
                 }
                 break;
             case Commands.RunCellAndAllBelowPalette:
             case Commands.RunCellAndAllBelow:
-                return this.generateCodeLens(
-                    range,
-                    Commands.RunCellAndAllBelow,
-                    localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                    [document.uri, range.start.line, range.start.character]
-                );
+                return this.generateCodeLens(range, Commands.RunCellAndAllBelow, runAllBelowTitle, [
+                    document.uri,
+                    range.start.line,
+                    range.start.character
+                ]);
 
             default:
                 traceWarning(`Invalid command for code lens ${commandName}`);
@@ -418,7 +425,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                     return this.generateCodeLens(
                         range,
                         Commands.ScrollToCell,
-                        localize.DataScience.scrollToCellTitleFormatMessage().format(matchingExecutionCount.toString()),
+                        scrollToCellFormat(matchingExecutionCount),
                         [document.uri, rangeMatch.id]
                     );
                 }

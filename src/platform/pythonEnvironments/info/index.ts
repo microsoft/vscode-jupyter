@@ -1,19 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 
 import { Uri } from 'vscode';
 import { PythonVersion } from './pythonVersion';
-
-type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
-
-/**
- * The components of a Python version.
- *
- * These match the elements of `sys.version_info`.
- */
-export type PythonVersionInfo = [number, number, number, ReleaseLevel];
 
 /**
  * The supported Python environment types.
@@ -25,13 +15,11 @@ export enum EnvironmentType {
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
-    WindowsStore = 'WindowsStore',
     Poetry = 'Poetry',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
-    Global = 'Global',
-    System = 'System',
 }
 
+export type InterpreterId = string;
 /**
  * Details about a Python runtime.
  *
@@ -41,6 +29,7 @@ export enum EnvironmentType {
  * @prop sysPrefix - the environment's install root (`sys.prefix`)
  */
 export type InterpreterInformation = {
+    id: InterpreterId;
     uri: Uri;
     version?: PythonVersion;
     sysVersion?: string;
@@ -55,5 +44,14 @@ export type PythonEnvironment = InterpreterInformation & {
     displayName?: string;
     envType?: EnvironmentType;
     envName?: string;
+    /**
+     * Directory of the Python environment.
+     */
     envPath?: Uri;
+    /**
+     * This contains the path to the environment.
+     * Used for display purposes only (in kernel picker or other places).
+     */
+    displayPath?: Uri;
+    isCondaEnvWithoutPython?: boolean;
 };

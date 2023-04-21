@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as vscode from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
@@ -19,7 +17,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (DataViewer)', function () {
+suite('DataViewer @webview', function () {
     const disposables: IDisposable[] = [];
     const testPythonFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,

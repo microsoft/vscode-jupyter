@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -17,7 +15,7 @@ import { IExtensionSyncActivationService } from '../../../platform/activation/ty
 import { NotebookCellBangInstallDiagnosticsProvider } from '../../../standalone/intellisense/diagnosticsProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite('VSCode Notebook -', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -55,7 +53,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'No problems detected'
         );
         const problem = diagnosticProvider.problems.get(cell.document.uri)![0];
-        assert.equal(problem.message, DataScience.percentPipCondaInstallInsteadOfBang().format('pip'));
+        assert.equal(problem.message, DataScience.percentPipCondaInstallInsteadOfBang('pip'));
         assert.isTrue(
             problem.range.isEqual(new Range(0, 0, 0, 12)),
             `Range is not as expected ${problem.range.toString()}`
@@ -71,7 +69,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'No problems detected'
         );
         const problem = diagnosticProvider.problems.get(cell.document.uri)![0];
-        assert.equal(problem.message, DataScience.percentPipCondaInstallInsteadOfBang().format('conda'));
+        assert.equal(problem.message, DataScience.percentPipCondaInstallInsteadOfBang('conda'));
         assert.isTrue(
             problem.range.isEqual(new Range(0, 0, 0, 14)),
             `Range is not as expected ${problem.range.toString()}`

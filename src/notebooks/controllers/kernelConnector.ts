@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import {
     IBaseKernel,
     IKernel,
@@ -12,9 +10,10 @@ import {
     KernelInterpreterDependencyResponse,
     KernelAction,
     KernelActionSource,
-    IThirdPartyKernelProvider
+    IThirdPartyKernelProvider,
+    IKernelController
 } from '../../kernels/types';
-import { Memento, NotebookDocument, NotebookController, Uri } from 'vscode';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
@@ -24,18 +23,20 @@ import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTele
 import { IServiceContainer } from '../../platform/ioc/types';
 import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
-import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';
-import { Product } from '../../kernels/installer/types';
+import { clearInstalledIntoInterpreterMemento } from '../../platform/interpreter/installer/productInstaller';
+import { Product } from '../../platform/interpreter/installer/types';
 import { INotebookEditorProvider } from '../types';
 import { selectKernel } from './kernelSelector';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { noop } from '../../platform/common/utils/misc';
-import { IStatusProvider } from '../../platform/progress/types';
 import { IRawNotebookProvider } from '../../kernels/raw/types';
-import { IControllerSelection, IVSCodeNotebookController } from './types';
+import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
+import { KernelSpecNotTrustedError } from '../../kernels/errors/kernelSpecNotTrustedError';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel
@@ -44,13 +45,13 @@ export class KernelConnector {
     private static async switchController(
         resource: Resource,
         serviceContainer: IServiceContainer
-    ): Promise<{ controller: NotebookController; metadata: KernelConnectionMetadata } | undefined> {
+    ): Promise<{ controller: IKernelController; metadata: KernelConnectionMetadata } | undefined> {
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
         const notebookEditorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         const editor = notebookEditorProvider.findNotebookEditor(resource);
 
         // Listen for selection change events (may not fire if user cancels)
-        const controllerManager = serviceContainer.get<IControllerSelection>(IControllerSelection);
+        const controllerManager = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         let controller: IVSCodeNotebookController | undefined;
         const waitForSelection = createDeferred<IVSCodeNotebookController>();
         const disposable = controllerManager.onControllerSelected((e) => waitForSelection.resolve(e.controller));
@@ -69,31 +70,23 @@ export class KernelConnector {
     ): Promise<boolean> {
         const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        // Status provider may not be available in web situation
-        const statusProvider = serviceContainer.tryGet<IStatusProvider>(IStatusProvider);
 
         const selection = await appShell.showErrorMessage(
-            DataScience.cannotRunCellKernelIsDead().format(
+            DataScience.cannotRunCellKernelIsDead(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             ),
             { modal: true },
-            DataScience.showJupyterLogs(),
-            DataScience.restartKernel()
+            DataScience.showJupyterLogs,
+            DataScience.restartKernel
         );
         let restartedKernel = false;
         switch (selection) {
-            case DataScience.restartKernel(): {
-                // Set our status
-                const status = statusProvider?.set(DataScience.restartingKernelStatus());
-                try {
-                    await kernel.restart();
-                    restartedKernel = true;
-                } finally {
-                    status?.dispose();
-                }
+            case DataScience.restartKernel: {
+                await kernel.restart();
+                restartedKernel = true;
                 break;
             }
-            case DataScience.showJupyterLogs(): {
+            case DataScience.showJupyterLogs: {
                 commandManager.executeCommand(Commands.ViewJupyterOutput).then(noop, noop);
             }
         }
@@ -106,7 +99,7 @@ export class KernelConnector {
         errorContext: KernelAction,
         resource: Resource,
         kernel: IBaseKernel,
-        controller: NotebookController | undefined,
+        controller: IKernelController | undefined,
         metadata: KernelConnectionMetadata,
         actionSource: KernelActionSource
     ) {
@@ -118,7 +111,7 @@ export class KernelConnector {
             // If we failed to start the kernel, then clear cache used to track
             // whether we have dependencies installed or not.
             // Possible something is missing.
-            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).ignoreErrors();
+            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).catch(noop);
         }
 
         const handleResult = await errorHandler.handleKernelError(
@@ -142,7 +135,7 @@ export class KernelConnector {
         }
 
         // Dispose the kernel no matter what happened as we need to go around again when there's an error
-        kernel.dispose().ignoreErrors();
+        kernel.dispose().catch(noop);
 
         switch (handleResult) {
             case KernelInterpreterDependencyResponse.cancel:
@@ -256,7 +249,11 @@ export class KernelConnector {
         disposables: IDisposable[],
         onAction: (action: KernelAction, kernel: IBaseKernel | IKernel) => void = () => noop()
     ): Promise<IBaseKernel | IKernel> {
-        traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI}`);
+        traceVerbose(
+            `${initialContext} the kernel, options.disableUI=${options.disableUI} for ${getDisplayPath(
+                'notebook' in notebookResource ? notebookResource.notebook.uri : notebookResource.resource
+            )}`
+        );
 
         let currentPromise = this.getKernelInfo(notebookResource);
         if (!options.disableUI && currentPromise?.options.disableUI) {
@@ -378,6 +375,16 @@ export class KernelConnector {
         }
     }
 
+    private static async canStartKernel(metadata: KernelConnectionMetadata, serviceContainer: IServiceContainer) {
+        if (!isLocalConnection(metadata) || !metadata.kernelSpec.specFile) {
+            return;
+        }
+        const trustedKernelPaths = serviceContainer.get<ITrustedKernelPaths>(ITrustedKernelPaths);
+        if (!trustedKernelPaths.isTrusted(Uri.file(metadata.kernelSpec.specFile))) {
+            throw new KernelSpecNotTrustedError(metadata);
+        }
+    }
+
     private static async wrapKernelMethodImpl(
         metadata: KernelConnectionMetadata,
         initialContext: KernelAction,
@@ -396,6 +403,9 @@ export class KernelConnector {
         let currentMethod = KernelConnector.convertContextToFunction(initialContext, options);
         let currentContext = initialContext;
         let controller = 'controller' in notebookResource ? notebookResource.controller : undefined;
+        if (initialContext === 'start') {
+            await KernelConnector.canStartKernel(metadata, serviceContainer);
+        }
         while (kernel === undefined) {
             // Try to create the kernel (possibly again)
             kernel =
@@ -474,7 +484,7 @@ export class KernelConnector {
     public static async connectToNotebookKernel(
         metadata: KernelConnectionMetadata,
         serviceContainer: IServiceContainer,
-        notebookResource: { resource: Resource; notebook: NotebookDocument; controller: NotebookController },
+        notebookResource: { resource: Resource; notebook: NotebookDocument; controller: IKernelController },
         options: IDisplayOptions,
         disposables: IDisposable[],
         actionSource: KernelActionSource = 'jupyterExtension',
@@ -515,5 +525,5 @@ export class KernelConnector {
 }
 
 type NotebookResource =
-    | { resource: Resource; notebook: NotebookDocument; controller: NotebookController }
+    | { resource: Resource; notebook: NotebookDocument; controller: IKernelController }
     | { resource: Uri };

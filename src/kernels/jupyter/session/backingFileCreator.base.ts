@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { Contents, ContentsManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { traceError } from '../../../platform/logging';
@@ -23,7 +22,7 @@ export function generateBackingIPyNbFileName(resource: Resource) {
     const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
     return resource
         ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
-        : `${DataScience.defaultNotebookName()}${suffix}`;
+        : `${DataScience.defaultNotebookName}${suffix}`;
 }
 export class BaseBackingFileCreator implements IJupyterBackingFileCreator {
     public async createBackingFile(

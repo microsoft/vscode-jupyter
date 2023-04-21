@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
-import { IExtensionSingleActivationService } from '../activation/types';
-import { EnvironmentActivationService } from '../common/process/environmentActivationService.node';
+import { IExtensionSyncActivationService } from '../activation/types';
+import { EnvironmentActivationService } from '../interpreter/environmentActivationService.node';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -18,8 +16,8 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IPythonExtensionChecker>(IPythonExtensionChecker, PythonExtensionChecker);
     serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         InterpreterStatusBarVisibility
     );
     serviceManager.addSingleton<IEnvironmentActivationService>(

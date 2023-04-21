@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { DataScience } from '../common/utils/localize';
 import { BaseError } from './types';
 
@@ -17,6 +15,6 @@ import { BaseError } from './types';
  */
 export class JupyterDataRateLimitError extends BaseError {
     constructor() {
-        super('unknown', DataScience.jupyterDataRateExceeded());
+        super('unknown', DataScience.jupyterDataRateExceeded);
     }
 }

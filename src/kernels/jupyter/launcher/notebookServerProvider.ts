@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, optional } from 'inversify';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo } from '../../../platform/logging';
+import { traceVerbose } from '../../../platform/logging';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -105,7 +103,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             throw new NotSupportedInWebError();
         }
         const serverOptions = this.getNotebookServerOptions(options);
-        traceInfo(`Checking for server existence.`);
 
         const disposables: IDisposable[] = [];
         let progressReporter: IDisposable | undefined;
@@ -114,9 +111,9 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 return;
             }
             // Status depends upon if we're about to connect to existing server or not.
-            progressReporter = (await jupyterExecution.getServer(serverOptions))
-                ? KernelProgressReporter.createProgressReporter(options.resource, DataScience.connectingToJupyter())
-                : KernelProgressReporter.createProgressReporter(options.resource, DataScience.startingJupyter());
+            progressReporter = !serverOptions.localJupyter
+                ? KernelProgressReporter.createProgressReporter(options.resource, DataScience.connectingToJupyter)
+                : KernelProgressReporter.createProgressReporter(options.resource, DataScience.startingJupyter);
             disposables.push(progressReporter);
         };
         if (this.ui.disableUI) {
@@ -125,21 +122,19 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         // Check to see if we support ipykernel or not
         try {
             await createProgressReporter();
-            traceInfo(`Checking for server usability.`);
+            traceVerbose(`Checking for server usability.`);
 
             const usable = await this.checkUsable(serverOptions);
             if (!usable) {
-                traceInfo('Server not usable (should ask for install now)');
+                traceVerbose('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
-                    DataScience.jupyterNotSupported().format(await jupyterExecution.getNotebookError())
+                    DataScience.jupyterNotSupported(await jupyterExecution.getNotebookError())
                 );
             }
             // Then actually start the server
-            traceInfo(`Starting notebook server.`);
-            const result = await jupyterExecution.connectToNotebookServer(serverOptions, options.token);
-            traceInfo(`Server started.`);
-            return result;
+            traceVerbose(`Starting notebook server.`);
+            return await jupyterExecution.connectToNotebookServer(serverOptions, options.token);
         } catch (e) {
             disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.
@@ -172,12 +167,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 const displayName = activeInterpreter.displayName
                     ? activeInterpreter.displayName
                     : getFilePath(activeInterpreter.uri);
-                throw new Error(
-                    DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString())
-                );
+                throw new Error(DataScience.jupyterNotSupportedBecauseOfEnvironment(displayName, e.toString()));
             } else {
                 throw new JupyterInstallError(
-                    DataScience.jupyterNotSupported().format(
+                    DataScience.jupyterNotSupported(
                         this.jupyterExecution ? await this.jupyterExecution.getNotebookError() : 'Error'
                     )
                 );

@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import '../platform/ioc/reflectMetadata';
 
 // Must always be on top to setup expected env.
 process.env.VSC_JUPYTER_SMOKE_TEST = '1';
@@ -15,7 +16,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './const
 class TestRunner {
     public async start() {
         console.log('Start Test Runner');
-        await this.enableLanguageServer(true);
         await this.extractLatestExtension(SMOKE_TEST_EXTENSIONS_DIR);
         await this.launchSmokeTests();
     }
@@ -26,25 +26,6 @@ class TestRunner {
         };
 
         await this.launchTest(env);
-    }
-    private async enableLanguageServer(enable: boolean) {
-        // When running smoke tests, we won't have access to unbundled files.
-        const settings = `{ "python.languageServer": ${enable ? '"Microsoft"' : '"Jedi"'} }`;
-        await fs.ensureDir(
-            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'testMultiRootWkspc', 'smokeTests', '.vscode')
-        );
-        await fs.writeFile(
-            path.join(
-                EXTENSION_ROOT_DIR_FOR_TESTS,
-                'src',
-                'test',
-                'testMultiRootWkspc',
-                'smokeTests',
-                '.vscode',
-                'settings.json'
-            ),
-            settings
-        );
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
         console.log('Launch tests in test runner');
@@ -64,10 +45,9 @@ class TestRunner {
             };
             const proc = spawn('node', [path.join(__dirname, 'standardTest.node.js')], {
                 cwd: EXTENSION_ROOT_DIR_FOR_TESTS,
-                env
+                env,
+                stdio: 'inherit'
             });
-            proc.stdout.pipe(process.stdout);
-            proc.stderr.pipe(process.stderr);
             proc.on('error', reject);
             proc.on('exit', (code) => {
                 console.log(`Tests Exited with code ${code}`);

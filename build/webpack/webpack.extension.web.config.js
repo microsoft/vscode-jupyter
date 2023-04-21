@@ -7,6 +7,7 @@ const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 const constants = require('../constants');
 const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
+const common = require('./common');
 
 const devEntry = {
     extension: './src/extension.web.ts'
@@ -20,7 +21,7 @@ const testEntry = {
 const entry = process.env.VSC_TEST_BUNDLE === 'true' ? testEntry : devEntry;
 
 // tslint:disable-next-line:no-var-requires no-require-imports
-const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
+const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.extension.web.json');
 const config = {
     mode: process.env.VSC_TEST_BUNDLE ? 'development' : 'none',
     target: 'webworker',
@@ -39,7 +40,7 @@ const config = {
                     {
                         loader: 'ts-loader',
                         options: {
-                            configFile: 'tsconfig.extension.web.json'
+                            configFile: 'src/tsconfig.extension.web.json'
                         }
                     }
                 ]
@@ -87,8 +88,9 @@ const config = {
             }
         ]
     },
-    externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
+    externals: ['vscode', 'commonjs', 'electron', 'node:crypto'], // Don't bundle these
     plugins: [
+        ...common.getDefaultPlugins('web'),
         // Work around for Buffer is undefined:
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer']
@@ -106,13 +108,12 @@ const config = {
                 typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
                     ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
                     : 'true'
+            ),
+            VSC_JUPYTER_CI_TEST_GREP: JSON.stringify(
+                typeof process.env.VSC_JUPYTER_CI_TEST_GREP === 'string' ? process.env.VSC_JUPYTER_CI_TEST_GREP : ''
             )
         }),
         new CleanTerminalPlugin(),
-        new webpack.IgnorePlugin({
-            resourceRegExp: /^\.\/locale$/,
-            contextRegExp: /moment$/
-        }),
         new webpack.optimize.LimitChunkCountPlugin({
             maxChunks: 1
         })
@@ -125,19 +126,11 @@ const config = {
         ],
         alias: {
             // provides alternate implementation for node module and source files
-            fs: './fs-empty.js'
+            fs: './fs-empty.js',
+            moment: path.join(__dirname, 'moment.js')
         },
         fallback: {
-            // Webpack 5 no longer polyfills Node.js core modules automatically.
-            // see https://webpack.js.org/configuration/resolve/#resolvefallback
-            // for the list of Node.js core module polyfills.
-            assert: require.resolve('assert'),
-            buffer: require.resolve('buffer'),
-            stream: require.resolve('stream-browserify'),
-            os: require.resolve('os-browserify'),
-            path: require.resolve('path-browserify'),
-            crypto: require.resolve(path.join(constants.ExtensionRootDir, 'src/platform/msrCrypto/msrCrypto.js')),
-            fs: false
+            os: require.resolve('os-browserify')
         }
     },
     output: {

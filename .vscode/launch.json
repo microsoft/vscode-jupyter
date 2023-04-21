@@ -292,7 +292,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
             ],
             "env": {
-                "VSC_JUPYTER_CI_TEST_GREP": "non-python-kernel",
+                "VSC_JUPYTER_CI_TEST_GREP": "@nonPython",
                 "VSC_JUPYTER_FORCE_LOGGING": "1",
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "1",
                 "VSC_JUPYTER_CI_TEST_VSC_CHANNEL": "insiders",

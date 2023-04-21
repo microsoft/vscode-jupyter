@@ -1,25 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import './platform/ioc/reflectMetadata';
 
-/* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
-
-// This line should always be right on top.
-/* eslint-disable @typescript-eslint/no-explicit-any */
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
+// Naive polyfill for setImmediate as it is required by @jupyterlab/services/lib/kernel/future.js
+// when running in a web worker as it selects either requestAnimationFrame or setImmediate, both of
+// which are not available in a worker in Safari.
+declare var self: {};
+if (typeof requestAnimationFrame === 'undefined' && typeof setImmediate === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (self as any).setImmediate = (cb: (...args: any[]) => any) => setTimeout(cb);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (self as any).clearImmediate = (id: any) => clearTimeout(id);
 }
 
-// Polly fill for webworkers in safari,
-// The scripts load in chrome because chrome supports offScreenCanvas which in turn supports requestAnimationFrame,
-// & requestAnimationFrame is the preferred approach and setImmediate is the fallback.
-// As requestAnimationFrame is supported in chrome webworkers there's no need for a fallback to setImmediate.
-// https://github.com/microsoft/vscode-jupyter/issues/10621
-require('setimmediate');
-
 // Initialize the logger first.
-require('./platform/logging');
+import './platform/logging';
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
@@ -66,7 +63,7 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IExtensionContext,
-    IFeatureDeprecationManager,
+    IFeaturesManager,
     IMemento,
     IOutputChannel,
     IsCodeSpace,
@@ -124,7 +121,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // Otherwise Telemetry is send via the error handler.
         sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
             // Run in the background.
-            .ignoreErrors();
+            .catch(noop);
         await ready;
         return api;
     } catch (ex) {
@@ -141,7 +138,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             showDataViewer: () => Promise.resolve(),
             getKernelService: () => Promise.resolve(undefined),
             getSuggestedController: () => Promise.resolve(undefined),
-            addRemoteJupyterServer: () => Promise.resolve(undefined)
+            addRemoteJupyterServer: () => Promise.resolve(undefined),
+            openNotebook: () => Promise.reject()
         };
     }
 }
@@ -198,7 +196,7 @@ async function activateUnsafe(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function displayProgress(promise: Promise<any>) {
-    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
+    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension };
     window.withProgress(progressOptions, () => promise).then(noop, noop);
 }
 
@@ -206,7 +204,7 @@ function displayProgress(promise: Promise<any>) {
 // error handling
 
 async function handleError(ex: Error, startupDurations: typeof durations) {
-    notifyUser(Common.handleExtensionActivationError());
+    notifyUser(Common.handleExtensionActivationError);
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);
@@ -242,13 +240,13 @@ function addConsoleLogger() {
     }
 }
 
-function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
-    registerLogger(new OutputChannelLogger(standardOutputChannel));
+function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager) {
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
+    registerLogger(new OutputChannelLogger(standardOutputChannel, ''));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
-        getJupyterOutputChannel(isDevMode, context.subscriptions, standardOutputChannel),
+        getJupyterOutputChannel(context.subscriptions),
         JUPYTER_OUTPUT_CHANNEL
     );
     serviceManager.addSingletonInstance<boolean>(IsCodeSpace, env.uiKind == UIKind.Web);
@@ -297,7 +295,7 @@ async function activateLegacy(
     commands.executeCommand('setContext', 'jupyter.webExtension', true).then(noop, noop);
 
     // Output channel is special. We need it before everything else
-    addOutputChannel(context, serviceManager, isDevMode);
+    addOutputChannel(context, serviceManager);
     addConsoleLogger();
 
     // Register the rest of the types (platform is first because it's needed by others)
@@ -337,11 +335,9 @@ async function activateLegacy(
     context.subscriptions.push(manager);
     manager.activateSync();
     const activationPromise = manager.activate();
-
-    const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
-    deprecationMgr.initialize();
-    context.subscriptions.push(deprecationMgr);
-
+    const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
+    featureManager.initialize();
+    context.subscriptions.push(featureManager);
     return activationPromise;
 }
 

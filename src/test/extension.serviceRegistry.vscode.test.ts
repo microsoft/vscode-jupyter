@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import { traceInfo } from '../platform/logging';
-import { captureScreenShot, IExtensionTestApi } from './common.node';
+import { captureScreenShot, IExtensionTestApi, testMandatory } from './common.node';
 
 import * as ts from 'typescript';
 import * as fs from 'fs-extra';
@@ -130,7 +128,7 @@ async function getSourceFiles() {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - Verify serviceRegistry is correct', function () {
+suite('Verify serviceRegistry is correct', function () {
     let api: IExtensionTestApi;
     setup(async function () {
         try {
@@ -146,7 +144,7 @@ suite('DataScience - Verify serviceRegistry is correct', function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    test('Verify all classes with inject on them are in the container', async () => {
+    testMandatory('Verify all classes with inject on them are in the container', async () => {
         assert.ok(
             api.serviceContainer,
             `Service container not created. Extension should fail to activate. See inversify output`

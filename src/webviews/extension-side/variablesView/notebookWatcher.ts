@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import {
     Event,
@@ -12,7 +11,6 @@ import {
     NotebookDocument,
     NotebookEditor
 } from 'vscode';
-import '../../../platform/common/extensions';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
@@ -40,8 +38,8 @@ export class NotebookWatcher implements INotebookWatcher {
     public get onDidChangeActiveNotebook(): Event<IActiveNotebookChangedEvent> {
         return this._onDidChangeActiveNotebook.event;
     }
-    public get onDidExecuteActiveNotebook(): Event<{ executionCount: number }> {
-        return this._onDidExecuteActiveNotebook.event;
+    public get onDidFinishExecutingActiveNotebook(): Event<{ executionCount: number }> {
+        return this._onDidFinisheExecutingActiveNotebook.event;
     }
     public get onDidRestartActiveNotebook(): Event<void> {
         return this._onDidRestartActiveNotebook.event;
@@ -73,7 +71,7 @@ export class NotebookWatcher implements INotebookWatcher {
         return activeNotebook ? this._executionCountTracker.get(activeNotebook) : undefined;
     }
 
-    private readonly _onDidExecuteActiveNotebook = new EventEmitter<{ executionCount: number }>();
+    private readonly _onDidFinisheExecutingActiveNotebook = new EventEmitter<{ executionCount: number }>();
     private readonly _onDidChangeActiveNotebook = new EventEmitter<{
         executionCount?: number;
     }>();
@@ -149,9 +147,14 @@ export class NotebookWatcher implements INotebookWatcher {
                 this.isActiveNotebookEvent(kernelStateEvent) &&
                 kernelStateEvent.cell?.executionSummary?.executionOrder !== undefined
             ) {
-                this._onDidExecuteActiveNotebook.fire({
-                    executionCount: kernelStateEvent.cell.executionSummary?.executionOrder
-                });
+                const doneExecuting =
+                    this.activeKernel &&
+                    this.kernelProvider.getKernelExecution(this.activeKernel).pendingCells.length === 0;
+                if (doneExecuting) {
+                    this._onDidFinisheExecutingActiveNotebook.fire({
+                        executionCount: kernelStateEvent.cell.executionSummary?.executionOrder
+                    });
+                }
             }
         }
     }

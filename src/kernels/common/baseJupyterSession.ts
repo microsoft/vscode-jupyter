@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
@@ -40,8 +39,6 @@ import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { isTestExecution } from '../../platform/common/constants';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function suppressShutdownErrors(realKernel: any) {
@@ -155,7 +152,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.unhandledMessageHandler = (_s, m) => {
-            traceInfo(`Unhandled message found: ${m.header.msg_type}`);
+            traceWarning(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
     public isServerSession(): this is IJupyterKernelConnectionSession {
@@ -203,21 +200,11 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     }
     public async restart(): Promise<void> {
         if (this.session?.isRemoteSession && this.session.kernel) {
-            const stopWatch = new StopWatch();
             await this.session.kernel.restart();
-            sendKernelTelemetryEvent(
-                this.resource,
-                Telemetry.NotebookRestart,
-                { duration: stopWatch.elapsedTime },
-                {
-                    startTimeOnly: true
-                }
-            );
             this.setSession(this.session, true);
+            traceInfo(`Restarted ${this.session?.kernel?.id}`);
             return;
         }
-
-        traceInfo(`Restarting ${this.session?.kernel?.id}`);
 
         // Save old state for shutdown
         const oldSession = this.session;
@@ -234,20 +221,20 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         this.setSession(newSession);
 
         if (newSession.kernel) {
-            traceInfo(`Got new session ${newSession.kernel.id}`);
+            traceVerbose(`New Session after restarting ${newSession.kernel.id}`);
 
             // Rewire our status changed event.
             newSession.statusChanged.connect(this.statusHandler);
             newSession.kernel.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
         }
-        traceInfo('Started new restart session');
         if (oldStatusHandler && oldSession) {
             oldSession.statusChanged.disconnect(oldStatusHandler);
             if (oldSession.kernel) {
                 oldSession.kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
             }
         }
-        this.shutdownSession(oldSession, undefined, false).ignoreErrors();
+        traceInfo(`Shutdown old session ${oldSession?.kernel?.id}`);
+        this.shutdownSession(oldSession, undefined, false).catch(noop);
     }
 
     public requestExecute(
@@ -343,14 +330,16 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 ? undefined
                 : KernelProgressReporter.reportProgress(
                       this.resource,
-                      localize.DataScience.waitingForJupyterSessionToBeIdle()
+                      localize.DataScience.waitingForJupyterSessionToBeIdle
                   );
             const disposables: IDisposable[] = [];
             if (progress) {
                 disposables.push(progress);
             }
             try {
-                traceVerbose(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+                traceVerbose(
+                    `Waiting for ${timeout}ms idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
+                );
 
                 // When our kernel connects and gets a status message it triggers the ready promise
                 const kernelStatus = createDeferred<string>();
@@ -383,9 +372,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     )
                 );
                 const sleepPromise = sleep(timeout);
-                sessionDisposed.promise.ignoreErrors();
-                sleepPromise.ignoreErrors();
-                kernelStatus.promise.ignoreErrors();
+                sessionDisposed.promise.catch(noop);
+                sleepPromise.catch(noop);
+                kernelStatus.promise.catch(noop);
                 const result = await Promise.race([kernelStatus.promise, sleepPromise, sessionDisposed.promise]);
                 if (session.isDisposed) {
                     traceError('Session disposed while waiting for session to be idle.');
@@ -401,8 +390,11 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                     `Shutting down after failing to wait for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
                 );
                 // If we throw an exception, make sure to shutdown the session as it's not usable anymore
-                this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
+                this.shutdownSession(session, this.statusHandler, isRestartSession).catch(noop);
                 throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
+            } catch (ex) {
+                traceInfoIfCI(`Error waiting for idle`, ex);
+                throw ex;
             } finally {
                 disposeAllDisposables(disposables);
             }
@@ -415,6 +407,9 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     protected setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo: boolean = false) {
         const oldSession = this._session;
         this.previousAnyMessageHandler?.dispose();
+        if (session) {
+            traceInfo(`Started new session ${session?.kernel?.id}`);
+        }
         if (oldSession) {
             if (this.unhandledMessageHandler) {
                 oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
@@ -513,7 +508,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         this._isDisposed = true;
         if (this.session) {
             try {
-                traceVerbose('Shutdown session - current session');
+                traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
                 await this.shutdownSession(this.session, this.statusHandler, false, shutdownEvenIfRemote);
                 traceVerbose('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
@@ -582,6 +577,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     }
 
     private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
+        traceInfoIfCI(`Server Kernel Status = ${kernelConnection}`);
         if (kernelConnection === 'disconnected') {
             const status = this.getServerStatus();
             this.onStatusChangedEvent.fire(status);

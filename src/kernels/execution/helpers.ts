@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import {
     NotebookCellOutput,
@@ -10,30 +8,29 @@ import {
     NotebookCell,
     NotebookCellData,
     NotebookCellKind,
-    NotebookCellExecutionState,
-    NotebookController
+    NotebookCellExecutionState
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
-import fastDeepEqual = require('fast-deep-equal');
+import cloneDeep from 'lodash/cloneDeep';
+import fastDeepEqual from 'fast-deep-equal';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { concatMultilineString, splitMultilineString } from '../../platform/common/utils';
 import { traceInfoIfCI, traceError, traceWarning } from '../../platform/logging';
-import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
-import { KernelConnectionMetadata } from '../types';
+import { IKernelController, KernelConnectionMetadata } from '../types';
 import {
     isPythonKernelConnection,
     getInterpreterFromKernelConnectionMetadata,
     kernelConnectionMetadataHasKernelModel,
     getKernelRegistrationInfo
 } from '../helpers';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -149,12 +146,21 @@ function sortOutputItemsBasedOnDisplayOrder(outputItems: NotebookCellOutputItem[
  * This class is used to track state of cells, used in logging & tests.
  */
 export class NotebookCellStateTracker {
-    private static cellStates = new WeakMap<NotebookCell, NotebookCellExecutionState>();
+    private static cellStates = new WeakMap<
+        NotebookCell,
+        { stateTransition: string[]; state: NotebookCellExecutionState; start: StopWatch }
+    >();
     public static getCellState(cell: NotebookCell): NotebookCellExecutionState | undefined {
-        return NotebookCellStateTracker.cellStates.get(cell);
+        return NotebookCellStateTracker.cellStates.get(cell)?.state;
+    }
+    public static getCellStatus(cell: NotebookCell): string {
+        return (NotebookCellStateTracker.cellStates.get(cell)?.stateTransition || []).join(', ') || '';
     }
     public static setCellState(cell: NotebookCell, state: NotebookCellExecutionState) {
-        NotebookCellStateTracker.cellStates.set(cell, state);
+        const stopWatch = NotebookCellStateTracker.cellStates.get(cell)?.start || new StopWatch();
+        const previousState = NotebookCellStateTracker.cellStates.get(cell)?.stateTransition || [];
+        previousState.push(`${state} ${previousState.length === 0 ? '@ start' : `After ${stopWatch.elapsedTime}ms`}`);
+        NotebookCellStateTracker.cellStates.set(cell, { stateTransition: previousState, state, start: stopWatch });
     }
 }
 
@@ -162,7 +168,7 @@ export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfoIfCI(
         `Cell Index:${cell.index}, of document ${uriPath.basename(
             cell.notebook.uri
-        )} with state:${NotebookCellStateTracker.getCellState(cell)}, exec: ${
+        )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${
             cell.executionSummary?.executionOrder
         }. ${message}.`
     );
@@ -287,7 +293,7 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
 }
 
 // Output stream can only have stderr or stdout so just check the first output. Undefined if no outputs
-export function getOutputStreamType(output: NotebookCellOutput): string | undefined {
+function getOutputStreamType(output: NotebookCellOutput): string | undefined {
     if (output.items.length > 0) {
         return output.items[0].mime === CellOutputMimeTypes.stderr ? 'stderr' : 'stdout';
     }
@@ -304,7 +310,7 @@ type JupyterOutput =
  * Metadata we store in VS Code cells.
  * This contains the original metadata from the Jupyuter cells.
  */
-export type CellMetadata = {
+type CellMetadata = {
     /**
      * Stores attachments for cells.
      */
@@ -318,7 +324,7 @@ export type CellMetadata = {
  * Metadata we store in VS Code cell output items.
  * This contains the original metadata from the Jupyuter Outputs.
  */
-export type CellOutputMetadata = {
+type CellOutputMetadata = {
     /**
      * Cell output metadata.
      */
@@ -616,7 +622,7 @@ export function translateCellDisplayOutput(output: NotebookCellOutput): JupyterO
  * As we're displaying the error in the statusbar, we don't want this dup error in output.
  * Hence remove this.
  */
-export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutput {
+function translateErrorOutput(output?: nbformat.IError): NotebookCellOutput {
     output = output || { output_type: 'error', ename: '', evalue: '', traceback: [] };
     return new NotebookCellOutput(
         [
@@ -631,19 +637,16 @@ export function translateErrorOutput(output?: nbformat.IError): NotebookCellOutp
 }
 
 export function getTextOutputValue(output: NotebookCellOutput): string {
-    const item = output?.items?.find(
-        (opit) =>
-            opit.mime === CellOutputMimeTypes.stdout ||
-            opit.mime === CellOutputMimeTypes.stderr ||
-            opit.mime === 'text/plain' ||
-            opit.mime === 'text/markdown'
-    );
+    const items =
+        output?.items?.filter(
+            (opit) =>
+                opit.mime === CellOutputMimeTypes.stdout ||
+                opit.mime === CellOutputMimeTypes.stderr ||
+                opit.mime === 'text/plain' ||
+                opit.mime === 'text/markdown'
+        ) || [];
 
-    if (item) {
-        const value = convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array);
-        return Array.isArray(value) ? value.join('') : value;
-    }
-    return '';
+    return items.map((item) => convertOutputMimeToJupyterOutput(item.mime, item.data as Uint8Array)).join('');
 }
 export function getTextOutputValues(cell: NotebookCell): string {
     return cell.outputs.map(getTextOutputValue).join('');
@@ -704,14 +707,17 @@ export async function updateNotebookMetadata(
         const interpreter = isPythonConnection
             ? getInterpreterFromKernelConnectionMetadata(kernelConnection)
             : undefined;
+        const version = interpreter?.version
+            ? `${interpreter.version.major}.${interpreter.version.minor}.${interpreter.version.patch}`
+            : '';
         if (
             interpreter &&
             interpreter.version &&
             metadata &&
             metadata.language_info &&
-            metadata.language_info.version !== interpreter.version.raw
+            metadata.language_info.version !== version
         ) {
-            metadata.language_info.version = interpreter.version.raw;
+            metadata.language_info.version = version;
             changed = true;
         } else if (!interpreter && metadata?.language_info && isPythonConnection) {
             // It's possible, such as with raw kernel and a default kernelspec to not have interpreter info
@@ -725,7 +731,9 @@ export async function updateNotebookMetadata(
     const kernelSpecOrModel =
         kernelConnection && kernelConnectionMetadataHasKernelModel(kernelConnection)
             ? kernelConnection.kernelModel
-            : kernelConnection?.kernelSpec;
+            : kernelConnection && 'kernelSpec' in kernelConnection
+            ? kernelConnection.kernelSpec
+            : undefined;
     if (kernelConnection?.kind === 'startUsingPythonInterpreter') {
         // Store interpreter name, we expect the kernel finder will find the corresponding interpreter based on this name.
         const kernelSpec = kernelConnection.kernelSpec;
@@ -753,41 +761,18 @@ export async function updateNotebookMetadata(
                 break;
         }
 
-        // Pull our old and new interpreter hash, if these don't match we also want to update metadata
-        // since name might be python3 in both scenarios and they might have the same python version so the
-        // check above with language info would not see them as changed.
-        const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnection);
-        const interpreterHash = interpreter?.uri ? await getInterpreterHash({ uri: interpreter?.uri }) : undefined;
-        const metadataInterpreter: undefined | { hash?: string } =
-            'interpreter' in metadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
-                ? (metadata.interpreter as undefined | { hash?: string })
-                : 'vscode' in metadata &&
-                  metadata.vscode &&
-                  typeof metadata.vscode === 'object' &&
-                  'interpreter' in metadata.vscode
-                ? (metadata.vscode.interpreter as undefined | { hash?: string })
-                : undefined;
-        const metadataInterpreterHash = metadataInterpreter?.hash;
-        if (metadata.kernelspec?.name !== name || (interpreterHash && interpreterHash !== metadataInterpreterHash)) {
+        if (metadata.kernelspec?.name !== name) {
             changed = true;
             metadata.kernelspec = {
                 name,
                 language: PYTHON_LANGUAGE,
                 display_name: displayName
             };
-            if (getKernelRegistrationInfo(kernelSpec)) {
-                // For kernels generated by us, store the interpreter information.
-                // We'll leave the kernel spec name as `python3`, this way it will work even in Jupyter or the like.
-                // Else if user opens a notebook that works in jupter,
-                // then in ours they cannot go back to jupyter as `python<hash>` is not necessarily a valid kernel in jupter.
-                metadata.vscode = {
-                    interpreter: {
-                        hash: await getInterpreterHash(kernelConnection.interpreter)
-                    }
-                };
-                if ('interpreter' in metadata) {
-                    delete metadata['interpreter'];
-                }
+            if ('vscode' in metadata) {
+                delete metadata['vscode'];
+            }
+            if ('interpreter' in metadata) {
+                delete metadata['interpreter'];
             }
         }
     } else if (kernelSpecOrModel && !metadata.kernelspec) {
@@ -845,7 +830,7 @@ export async function updateNotebookMetadata(
 
 export async function endCellAndDisplayErrorsInCell(
     cell: NotebookCell,
-    controller: NotebookController,
+    controller: IKernelController,
     errorMessage: string,
     isCancelled: boolean
 ) {

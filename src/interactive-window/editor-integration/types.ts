@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Event, CodeLens, CodeLensProvider, Uri, TextEditor, Range, TextDocument, NotebookDocument } from 'vscode';
 import { ICellRange, IDisposable } from '../../platform/common/types';
 
@@ -11,6 +9,12 @@ export const IDataScienceCodeLensProvider = Symbol('IDataScienceCodeLensProvider
 export interface IDataScienceCodeLensProvider extends CodeLensProvider {
     getCodeWatcher(document: TextDocument): ICodeWatcher | undefined;
 }
+
+export type CodeLensPerfMeasures = {
+    totalCodeLensUpdateTimeInMs: number;
+    codeLensUpdateCount: number;
+    maxCellCount: number;
+};
 
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
@@ -56,6 +60,7 @@ export interface ICodeLensFactory {
     updateRequired: Event<void>;
     createCodeLenses(document: TextDocument): CodeLens[];
     getCellRanges(document: TextDocument): ICellRange[];
+    getPerfMeasures(): CodeLensPerfMeasures;
 }
 
 export interface IGeneratedCode {

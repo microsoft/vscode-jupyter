@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../platform/common/application/types';
 import {
     DebugAdapter,
     DebugAdapterTracker,
     DebugConfiguration,
-    DebugProtocolMessage,
     DebugSession,
     Event,
     NotebookCell,
@@ -63,35 +60,54 @@ export interface IJupyterDebugService extends IDebugService {
 }
 
 export interface IKernelDebugAdapter extends DebugAdapter {
+    /* These methods make requests via roundtrip to the client */
     stepIn(threadId: number): Thenable<DebugProtocol.StepInResponse['body']>;
     stackTrace(args: DebugProtocol.StackTraceArguments): Thenable<DebugProtocol.StackTraceResponse['body']>;
     setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Thenable<DebugProtocol.SetBreakpointsResponse['body']>;
+    debugInfo(): Thenable<IDebugInfoResponse>;
     disconnect(): Promise<void>;
+
+    /**
+     * Makes a request directly to the Jupyter debug connection- no roundtrip but no response either
+     */
+    continueDirect(threadId: number): void;
+
     onDidEndSession: Event<DebugSession>;
     dumpAllCells(): Promise<void>;
-    getConfiguration(): IKernelDebugAdapterConfig;
+    getConfiguration(): IBaseNotebookDebugConfig;
 }
 
-export const IDebuggingManager = Symbol('IDebuggingManager');
 export interface IDebuggingManager {
     readonly onDoneDebugging: Event<void>;
     isDebugging(notebook: NotebookDocument): boolean;
     getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined;
-    getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined;
+    getDebugSession(notebook: NotebookDocument): DebugSession | undefined;
     getDebugCell(notebook: NotebookDocument): NotebookCell | undefined;
     getDebugAdapter(notebook: NotebookDocument): IKernelDebugAdapter | undefined;
+}
+
+export const INotebookDebuggingManager = Symbol('INotebookDebuggingManager');
+export interface INotebookDebuggingManager extends IDebuggingManager {
+    tryToStartDebugging(mode: KernelDebugMode, cell: NotebookCell, skipIpykernelCheck?: boolean): Promise<void>;
+    runByLineNext(cell: NotebookCell): void;
+    runByLineStop(cell: NotebookCell): void;
 }
 
 export interface IDebuggingDelegate {
     /**
      * Called for every event sent from the debug adapter to the client. Returns true to signal that sending the message is vetoed.
      */
-    willSendEvent(msg: DebugProtocolMessage): Promise<boolean>;
+    willSendEvent?(msg: DebugProtocol.Event): Promise<boolean>;
 
     /**
-     * Called for every request sent from the client to the debug adapter.
+     * Called for every request sent from the client to the debug adapter. Returns true to signal that the request was handled by the delegate.
      */
-    willSendRequest(request: DebugProtocol.Request): Promise<void>;
+    willSendRequest?(request: DebugProtocol.Request): undefined | Promise<DebugProtocol.Response | undefined>;
+
+    /**
+     * Called for every response returned from the debug adapter to the client.
+     */
+    willSendResponse?(request: DebugProtocol.Response): Promise<void>;
 }
 
 export interface IDumpCellResponse {
@@ -116,14 +132,29 @@ export interface IDebugInfoResponseBreakpoint {
 export enum KernelDebugMode {
     RunByLine,
     Cell,
-    Everything,
     InteractiveWindow
 }
 
-export interface IKernelDebugAdapterConfig extends DebugConfiguration {
+interface IBaseNotebookDebugConfig extends DebugConfiguration {
     __mode: KernelDebugMode;
-    __cellIndex?: number;
-    __interactiveWindowNotebookUri?: string;
+    __notebookUri: string;
+}
+
+export type INotebookDebugConfig = IRunByLineDebugConfig | ICellDebugConfig | IInteractiveWindowDebugConfig;
+
+export interface IRunByLineDebugConfig extends IBaseNotebookDebugConfig {
+    __mode: KernelDebugMode.RunByLine;
+    __cellIndex: number;
+}
+
+export interface ICellDebugConfig extends IBaseNotebookDebugConfig {
+    __mode: KernelDebugMode.Cell;
+    __cellIndex: number;
+}
+
+export interface IInteractiveWindowDebugConfig extends IBaseNotebookDebugConfig {
+    __mode: KernelDebugMode.InteractiveWindow;
+    __cellIndex: number;
 }
 
 export interface IDebugLocation {

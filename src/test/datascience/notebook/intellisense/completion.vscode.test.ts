@@ -28,7 +28,7 @@ import { Settings } from '../../../../platform/common/constants';
 import { getTextOutputValue } from '../../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completion (slow)', function () {
+suite('VSCode Intellisense Notebook and Interactive Code Completion @lsp', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;

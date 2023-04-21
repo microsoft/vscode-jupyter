@@ -1,33 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { Experiments } from '../../platform/common/experiments/groups';
-import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
+import { stripAnsi } from '../../platform/common/utils/regexp';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel, IKernelConnectionSession } from '../types';
+import { IKernel, IKernelConnectionSession, IKernelProvider } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
-    IKernelVariableRequester,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
+    IKernelVariableRequester
 } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
 // Regexes for parsing data from Python kernel. Not sure yet if other
 // kernels will add the ansi encoding.
-const TypeRegex = /.*?\[.*?;31mType:.*?\[0m\s+(\w+)/;
-const ValueRegex = /.*?\[.*?;31mValue:.*?\[0m\s+(.*)/;
-const StringFormRegex = /.*?\[.*?;31mString form:.*?\[0m\s+?([\s\S]+?)\n(.*\[.*;31m?)/;
-const DocStringRegex = /.*?\[.*?;31mDocstring:.*?\[0m\s+(.*)/;
-const CountRegex = /.*?\[.*?;31mLength:.*?\[0m\s+(.*)/;
+const TypeRegex = /Type:\s*(\w+)/;
+const ValueRegex = /Value:\s*(.*)/;
+const StringFormRegex = /String form:\s*([\s\S]+?)\n/;
+const DocStringRegex = /Docstring:\s*(.*)/;
+const CountRegex = /Length:\s+(.*)/;
 const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
 const DataViewableTypes: Set<string> = new Set<string>([
@@ -54,15 +53,14 @@ export class KernelVariables implements IJupyterVariables {
     private variableRequesters = new Map<string, IKernelVariableRequester>();
     private cachedVariables = new Map<string, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
-    private enhancedTooltipsExperimentPromise: boolean | undefined;
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IKernelVariableRequester)
         @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
         pythonVariableRequester: IKernelVariableRequester,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
+        @inject(IKernelProvider) private kernelProvider: IKernelProvider
     ) {
         this.variableRequesters.set(PYTHON_LANGUAGE, pythonVariableRequester);
     }
@@ -117,10 +115,14 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        kernel: IKernel,
+        kernel?: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
+        if (!kernel) {
+            return targetVariable;
+        }
+
         const languageId = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
@@ -175,14 +177,17 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
         let list = this.cachedVariables.get(kernel.uri.toString());
+        const hasExecutingCells = this.kernelProvider.getKernelExecution(kernel).pendingCells.length > 0;
+        const execution = this.kernelProvider.getKernelExecution(kernel);
         if (
             !list ||
-            list.currentExecutionCount !== request.executionCount ||
-            list.currentExecutionCount !== kernel.executionCount
+            (!hasExecutingCells &&
+                (list.currentExecutionCount !== request.executionCount ||
+                    list.currentExecutionCount !== execution.executionCount))
         ) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
-                currentExecutionCount: kernel.executionCount,
+                currentExecutionCount: execution.executionCount,
                 variables: (await this.getVariableNamesAndTypesFromKernel(kernel)).map((v) => {
                     return {
                         name: v.name,
@@ -203,7 +208,7 @@ export class KernelVariables implements IJupyterVariables {
             : [];
 
         const result: IJupyterVariablesResponse = {
-            executionCount: kernel.executionCount,
+            executionCount: execution.executionCount,
             pageStartIndex: -1,
             pageResponse: [],
             totalCount: 0,
@@ -233,19 +238,19 @@ export class KernelVariables implements IJupyterVariables {
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
             for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
+                if (exclusionList && exclusionList.indexOf(list.variables[i].type) >= 0) {
+                    // Remove from the list before fetching the full value
+                    list.variables.splice(i, 1);
+                    continue;
+                }
+
                 const fullVariable = list.variables[i].value
                     ? list.variables[i]
                     : await this.getVariableValueFromKernel(list.variables[i], kernel);
 
-                // See if this is excluded or not.
-                if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
-                    // Not part of our actual list. Remove from the real list too
-                    list.variables.splice(i, 1);
-                } else {
-                    list.variables[i] = fullVariable;
-                    result.pageResponse.push(fullVariable);
-                    i += 1;
-                }
+                list.variables[i] = fullVariable;
+                result.pageResponse.push(fullVariable);
+                i += 1;
             }
 
             // Save in our cache
@@ -264,21 +269,11 @@ export class KernelVariables implements IJupyterVariables {
         cancelToken: CancellationToken | undefined
     ): Promise<{ [attributeName: string]: string }> {
         const matchingVariable = await this.getMatchingVariable(word, kernel, cancelToken);
-        const settings = this.configService.getSettings().variableTooltipFields;
         const languageId = getKernelConnectionLanguage(kernel.kernelConnectionMetadata) || PYTHON_LANGUAGE;
-        const languageSettings = settings[languageId];
-        const inEnhancedTooltipsExperiment = await this.inEnhancedTooltipsExperiment();
 
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
-            return variableRequester.getVariableProperties(
-                word,
-                kernel,
-                cancelToken,
-                matchingVariable,
-                languageSettings,
-                inEnhancedTooltipsExperiment
-            );
+            return variableRequester.getVariableProperties(word, cancelToken, matchingVariable);
         }
 
         return {};
@@ -343,28 +338,22 @@ export class KernelVariables implements IJupyterVariables {
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = (output as any)['text/plain'].toString();
+                const text = stripAnsi(output['text/plain']!.toString());
 
                 // Parse into bits
                 const type = TypeRegex.exec(text);
-                const value = ValueRegex.exec(text);
-                const stringForm = StringFormRegex.exec(text);
-                const docString = DocStringRegex.exec(text);
                 const count = CountRegex.exec(text);
                 const shape = ShapeRegex.exec(text);
                 if (type) {
                     result.type = type[1];
                 }
-                if (value) {
-                    result.value = value[1];
-                } else if (stringForm) {
-                    result.value = stringForm[1];
-                } else if (docString) {
-                    result.value = docString[1];
-                } else {
-                    result.value = '';
-                }
+
+                // Take the first regex that returns a value
+                result.value = [ValueRegex, StringFormRegex, DocStringRegex].reduce(
+                    (value, regex) => value || regex.exec(text)?.[1] || '',
+                    ''
+                );
+
                 if (count) {
                     result.count = parseInt(count[1], 10);
                 }
@@ -401,14 +390,5 @@ export class KernelVariables implements IJupyterVariables {
         }
 
         return result;
-    }
-
-    private async inEnhancedTooltipsExperiment() {
-        if (!this.enhancedTooltipsExperimentPromise) {
-            this.enhancedTooltipsExperimentPromise = await this.experimentService.inExperiment(
-                Experiments.EnhancedTooltips
-            );
-        }
-        return this.enhancedTooltipsExperimentPromise;
     }
 }

@@ -1,21 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellOutput, NotebookDocument, workspace } from 'vscode';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 
 /**
  * Tracks a cell's display id. Some messages are sent to other cells and the display id is used to identify them.
  */
 @injectable()
-export class CellOutputDisplayIdTracker {
-    private displayIdCellOutputMappingPerDocument = new WeakMap<
+export class CellOutputDisplayIdTracker implements IExtensionSyncActivationService {
+    private static displayIdCellOutputMappingPerDocument = new WeakMap<
         NotebookDocument,
         Map<string, { output: NotebookCellOutput; cell: NotebookCell }>
     >();
-    private cellToDisplayIdMapping = new WeakMap<NotebookCell, string>();
-    constructor() {
+    private static cellToDisplayIdMapping = new WeakMap<NotebookCell, string>();
+    private static disposables: IDisposable[] = [];
+    public static dispose() {
+        disposeAllDisposables(CellOutputDisplayIdTracker.disposables);
+    }
+    constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
+        disposables.push({
+            dispose: () => {
+                CellOutputDisplayIdTracker.dispose();
+            }
+        });
+    }
+    public activate(): void {
         workspace.onDidChangeNotebookDocument((e) => {
             if (!isJupyterNotebook(e.notebook)) {
                 return;
@@ -25,10 +39,12 @@ export class CellOutputDisplayIdTracker {
                 .filter((change) => change.outputs?.length === 0)
                 .map((change) => {
                     // If a cell was cleared, then remove the mapping, the output cannot exist anymore.
-                    const displayIdToDelete = this.cellToDisplayIdMapping.get(change.cell);
+                    const displayIdToDelete = CellOutputDisplayIdTracker.cellToDisplayIdMapping.get(change.cell);
                     if (displayIdToDelete) {
-                        this.cellToDisplayIdMapping.delete(change.cell);
-                        this.displayIdCellOutputMappingPerDocument.get(e.notebook)?.delete(displayIdToDelete);
+                        CellOutputDisplayIdTracker.cellToDisplayIdMapping.delete(change.cell);
+                        CellOutputDisplayIdTracker.displayIdCellOutputMappingPerDocument
+                            .get(e.notebook)
+                            ?.delete(displayIdToDelete);
                     }
                 });
         });
@@ -38,25 +54,30 @@ export class CellOutputDisplayIdTracker {
      * When we need to update this display, we can resolve the promise & access the output.
      * The return value is a promise that needs to be resolved with the associated output thats been added to the DOM
      */
-    public trackOutputByDisplayId(cell: NotebookCell, displayId: string, output: NotebookCellOutput) {
-        let mapOfDisplayIdToOutput = this.displayIdCellOutputMappingPerDocument.get(cell.notebook);
+    public static trackOutputByDisplayId(cell: NotebookCell, displayId: string, output: NotebookCellOutput) {
+        let mapOfDisplayIdToOutput = CellOutputDisplayIdTracker.displayIdCellOutputMappingPerDocument.get(
+            cell.notebook
+        );
         if (!mapOfDisplayIdToOutput) {
             mapOfDisplayIdToOutput = new Map<string, { output: NotebookCellOutput; cell: NotebookCell }>();
-            this.displayIdCellOutputMappingPerDocument.set(cell.notebook, mapOfDisplayIdToOutput);
+            CellOutputDisplayIdTracker.displayIdCellOutputMappingPerDocument.set(cell.notebook, mapOfDisplayIdToOutput);
         }
         mapOfDisplayIdToOutput.set(displayId, { output, cell: cell });
-        this.cellToDisplayIdMapping.set(cell, displayId);
+        CellOutputDisplayIdTracker.cellToDisplayIdMapping.set(cell, displayId);
     }
     /**
      * We return a promise, as we need to wait until the output is part of the DOM before we can update it.
      */
-    public getMappedOutput(notebook: NotebookDocument, displayId: string): NotebookCellOutput | undefined {
-        const mapOfDisplayIdToOutput = this.displayIdCellOutputMappingPerDocument.get(notebook);
+    public static getMappedOutput(
+        notebook: NotebookDocument,
+        displayId: string
+    ): { cell: NotebookCell; output: NotebookCellOutput } | undefined {
+        const mapOfDisplayIdToOutput = CellOutputDisplayIdTracker.displayIdCellOutputMappingPerDocument.get(notebook);
         if (!mapOfDisplayIdToOutput) {
             return;
         }
         // Check if the cell still exists.
         const mapping = mapOfDisplayIdToOutput.get(displayId);
-        return mapping?.cell.document.isClosed ? undefined : mapping?.output;
+        return mapping?.cell.document.isClosed ? undefined : mapping;
     }
 }

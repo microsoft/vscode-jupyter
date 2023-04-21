@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { traceInfo, traceError, traceVerbose } from '../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
@@ -19,6 +19,7 @@ export class CellExecutionQueue implements Disposable {
     private cancelledOrCompletedWithErrors = false;
     private startedRunningCells = false;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
+    private readonly _onPostExecute = new EventEmitter<NotebookCell>();
     private disposables: Disposable[] = [];
     private lastCellExecution?: CellExecution;
     /**
@@ -52,6 +53,11 @@ export class CellExecutionQueue implements Disposable {
     public get onPreExecute() {
         return this._onPreExecute.event;
     }
+
+    public get onPostExecute() {
+        return this._onPostExecute.event;
+    }
+
     /**
      * Queue the cell for execution & start processing it immediately.
      */
@@ -61,7 +67,7 @@ export class CellExecutionQueue implements Disposable {
             traceCellMessage(cell, 'Use existing cell execution');
             return;
         }
-        const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata, this.resourceUri);
+        const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
         this.disposables.push(cellExecution);
         cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
         this.queueOfCellsToExecute.push(cellExecution);
@@ -156,6 +162,8 @@ export class CellExecutionQueue implements Disposable {
                 if (index >= 0) {
                     this.queueOfCellsToExecute.splice(index, 1);
                 }
+
+                this._onPostExecute.fire(cellToExecute.cell);
             }
 
             // If notebook was closed or a cell has failed the get out.
@@ -165,16 +173,27 @@ export class CellExecutionQueue implements Disposable {
                 executionResult === NotebookCellRunState.Error
             ) {
                 this.cancelledOrCompletedWithErrors = true;
-                traceInfo(
-                    `Cancel all remaining cells ${this.cancelledOrCompletedWithErrors} || ${executionResult} || ${notebookClosed}`
-                );
+                const reasons: string[] = [];
+                if (this.cancelledOrCompletedWithErrors) {
+                    reasons.push('cancellation or failure in execution');
+                }
+                if (notebookClosed) {
+                    reasons.push('Notebook being closed');
+                }
+                if (typeof executionResult === 'number' && executionResult === NotebookCellRunState.Error) {
+                    reasons.push('failure in cell execution');
+                }
+                if (reasons.length === 0) {
+                    reasons.push('an unknown reason');
+                }
+                traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
                 await this.cancel();
                 break;
             }
             // If the kernel is dead, then no point trying the rest.
             if (kernelConnection.status === 'dead' || kernelConnection.status === 'terminating') {
                 this.cancelledOrCompletedWithErrors = true;
-                traceInfo(`Cancel all remaining cells due to dead kernel`);
+                traceWarning(`Cancel all remaining cells due to dead kernel`);
                 await this.cancel();
                 break;
             }

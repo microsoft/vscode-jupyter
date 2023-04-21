@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
@@ -27,8 +25,8 @@ import {
 import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
-import { ProductNames } from '../../../kernels/installer/productNames';
-import { Product } from '../../../kernels/installer/types';
+import { ProductNames } from '../../../platform/interpreter/installer/productNames';
+import { Product } from '../../../platform/interpreter/installer/types';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { INbConvertInterpreterDependencyChecker, INotebookImporter } from '../../../kernels/jupyter/types';
 import { JupyterImporter } from '../../../standalone/import-export/jupyterImporter.node';
@@ -36,12 +34,13 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { CodeSnippets, Identifiers } from '../../../platform/common/constants';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { format } from '../../../platform/common/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
+suite('Export @export', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let proc: ProcessService;
@@ -66,7 +65,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
-                { result: Common.install(), clickImmediately: true },
+                { result: Common.install, clickImmediately: true },
                 disposables
             );
 
@@ -222,10 +221,10 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         ]);
 
         // Verify text content
-        const prefix = DataScience.instructionComments().format(defaultCellMarker);
+        const prefix = DataScience.instructionComments(defaultCellMarker);
         let expectedContents = output.stdout;
         if (expectedContents.includes('get_ipython')) {
-            expectedContents = CodeSnippets.ImportIPython.format(defaultCellMarker, expectedContents);
+            expectedContents = format(CodeSnippets.ImportIPython, defaultCellMarker, expectedContents);
         }
         expectedContents = prefix.concat(expectedContents);
 

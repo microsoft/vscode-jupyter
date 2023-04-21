@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { DebugConfiguration, Disposable, NotebookDocument } from 'vscode';
@@ -20,6 +19,8 @@ import { IFileGeneratedCodes } from '../editor-integration/types';
 import { IJupyterDebugService } from '../../notebooks/debugger/debuggingTypes';
 import { executeSilently } from '../../kernels/helpers';
 import { buildSourceMap } from './helper';
+import { trimQuotes } from '../../platform/common/helpers';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Public API to begin debugging in the interactive window
@@ -114,7 +115,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             traceErrors: true,
             traceErrorsMessage: 'Execute_request failure enabling tracing code for IW',
             telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
-        }).ignoreErrors();
+        }).catch(noop);
     }
 
     public disable(kernel: IKernel) {
@@ -125,7 +126,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             traceErrors: true,
             traceErrorsMessage: 'Execute_request failure disabling tracing code for IW',
             telemetryName: Telemetry.InteractiveWindowDebugSetupCodeFailure
-        }).ignoreErrors();
+        }).catch(noop);
     }
 
     private async startDebugSession(
@@ -267,7 +268,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             const result = kernel.session
                 ? await executeSilently(
                       kernel.session,
-                      `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`,
+                      `import sys as _VSCODE_sys\r\n_VSCODE_sys.path.extend([${debuggerPathList}])\r\n_VSCODE_sys.path\r\ndel _VSCODE_sys`,
                       {
                           traceErrors: true,
                           traceErrorsMessage: 'Execute_request failure appending debugger paths for IW',
@@ -292,7 +293,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         if (outputs.length > 0) {
             let enableAttachString = getPlainTextOrStreamOutput(outputs);
             if (enableAttachString) {
-                enableAttachString = enableAttachString.trimQuotes();
+                enableAttachString = trimQuotes(enableAttachString);
 
                 // Important: This regex matches the format of the string returned from enable_attach. When
                 // doing enable_attach remotely, make sure to print out a string in the format ('host', port)
@@ -316,7 +317,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             );
         }
         throw new JupyterDebuggerNotInstalledError(
-            DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage),
+            DataScience.jupyterDebuggerOutputParseError(this.debuggerPackage),
             undefined,
             kernel.kernelConnectionMetadata
         );

@@ -19,7 +19,6 @@ import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 
-import * as iconv from 'iconv-lite';
 import { sleep } from '../core';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { noop } from '../../platform/common/utils/misc';
@@ -35,9 +34,8 @@ function getPythonPath(): string {
 }
 
 class BufferDecoder {
-    public decode(buffers: Buffer[], encoding: string = 'utf-8'): string {
-        encoding = iconv.encodingExists(encoding) ? encoding : 'utf-8';
-        return iconv.decode(Buffer.concat(buffers), encoding);
+    public decode(buffers: Buffer[]): string {
+        return Buffer.concat(buffers).toString('utf-8');
     }
 }
 
@@ -260,7 +258,9 @@ export class JupyterServer {
                 if (!result.proc) {
                     throw new Error('Starting Jupyter failed, no process');
                 }
-                this.pid = result.proc.pid;
+                if (result.proc.pid) {
+                    this.pid = result.proc.pid;
+                }
                 result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'));
                 result.proc.once('disconnect', () =>
                     traceInfo('Shutting Jupyter server used for remote tests (disconnected)')
@@ -301,7 +301,6 @@ export class JupyterServer {
         args: string[],
         options: child_process.SpawnOptions = {}
     ): ObservableExecutionResult<string> {
-        const encoding = 'utf8';
         const proc = child_process.spawn(file, args, options);
         let procExited = false;
         traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
@@ -326,7 +325,7 @@ export class JupyterServer {
             };
 
             const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-                const out = this.decoder.decode([data], encoding);
+                const out = this.decoder.decode([data]);
                 subscriber.next({ source, out: out });
             };
 
@@ -357,8 +356,11 @@ export class JupyterServer {
         };
     }
 
-    public static kill(pid: number): void {
+    public static kill(pid?: number): void {
         try {
+            if (!pid) {
+                return;
+            }
             if (process.platform === 'win32') {
                 // Windows doesn't support SIGTERM, so execute taskkill to kill the process
                 child_process.execSync(`taskkill /pid ${pid} /T /F`);

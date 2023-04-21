@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ApplicationEnvironment } from './common/application/applicationEnvironment.web';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
@@ -20,10 +18,8 @@ import { registerTypes as registerCommonTypes } from './common/serviceRegistry.w
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { IServiceManager } from './ioc/types';
 import { ProgressReporter } from './progress/progressReporter';
-import { StatusProvider } from './progress/statusProvider';
-import { IStatusProvider } from './progress/types';
 import { WorkspaceService } from './common/application/workspace.web';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
+import { IExtensionSyncActivationService } from './activation/types';
 import { OutputCommandListener } from './logging/outputCommandListener';
 
 import { IFileSystem } from './common/platform/types';
@@ -34,7 +30,6 @@ import { WebviewViewProvider } from './webviews/webviewViewProvider';
 import { InterpreterPackages } from './interpreter/interpreterPackages.web';
 import { IInterpreterPackages } from './interpreter/types';
 import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterTracker';
-import { InterpreterCountTracker } from './interpreter/interpreterCountTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -43,7 +38,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
-    serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
 
@@ -59,10 +53,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InterpreterCountTracker
     );
     // Webview Provider
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);

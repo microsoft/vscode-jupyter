@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as cp from 'child_process';
-import * as url from 'url';
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
@@ -17,7 +14,7 @@ import {
 } from '../../../platform/common/cancellation';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -34,6 +31,10 @@ import { IJupyterConnection } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { INotebookStarter } from '../types';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
+import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
+import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
+import { noop } from '../../../platform/common/utils/misc';
+import { UsedPorts } from '../../common/usedPorts';
 
 /**
  * Responsible for starting a notebook.
@@ -46,10 +47,6 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 @injectable()
 export class NotebookStarter implements INotebookStarter {
     private readonly disposables: IDisposable[] = [];
-    private static _usedPorts = new Set<number>();
-    public static get usedPorts() {
-        return Array.from(NotebookStarter._usedPorts);
-    }
     constructor(
         @inject(IJupyterSubCommandExecutionService)
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
@@ -83,11 +80,12 @@ export class NotebookStarter implements INotebookStarter {
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
         const disposables: IDisposable[] = [];
+        const stopWatch = new StopWatch();
         const progress = KernelProgressReporter.reportProgress(resource, ReportableAction.NotebookStart);
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
-            tempDirPromise.then((dir) => this.disposables.push(dir)).ignoreErrors();
+            tempDirPromise.then((dir) => this.disposables.push(dir)).catch(noop);
             // Before starting the notebook process, make sure we generate a kernel spec
             const args = await this.generateArguments(
                 useDefaultConfig,
@@ -100,21 +98,26 @@ export class NotebookStarter implements INotebookStarter {
             Cancellation.throwIfCanceled(cancelToken);
 
             // Then use this to launch our notebook process.
-            traceInfo('Starting Jupyter Notebook');
-            const stopWatch = new StopWatch();
-            const [launchResult, tempDir] = await Promise.all([
+            traceVerbose('Starting Jupyter Notebook');
+            const [launchResult, tempDir, interpreter] = await Promise.all([
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
                     encoding: 'utf8',
                     token: cancelToken
                 }),
-                tempDirPromise
+                tempDirPromise,
+                this.jupyterInterpreterService.getSelectedInterpreter(cancelToken).catch(() => undefined)
             ]);
 
             // Watch for premature exits
             if (launchResult.proc) {
                 launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
-                launchResult.out.subscribe((out) => this.jupyterOutputChannel.append(out.out));
+                launchResult.out.subscribe((out) => {
+                    if (out.out.includes('Uncaught exception in ZMQStream callback')) {
+                        sendTelemetryEvent(Telemetry.JupyterServerZMQStreamError);
+                    }
+                    this.jupyterOutputChannel.append(out.out);
+                });
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
@@ -129,13 +132,14 @@ export class NotebookStarter implements INotebookStarter {
             }
 
             // Wait for the connection information on this result
-            traceInfo('Waiting for Jupyter Notebook');
+            traceVerbose('Waiting for Jupyter Notebook');
             starter = new JupyterConnectionWaiter(
                 launchResult,
                 Uri.file(tempDir.path),
                 workingDirectory,
                 this.jupyterInterpreterService.getRunningJupyterServers.bind(this.jupyterInterpreterService),
                 this.serviceContainer,
+                interpreter,
                 cancelToken
             );
             // Make sure we haven't canceled already.
@@ -152,25 +156,28 @@ export class NotebookStarter implements INotebookStarter {
                 throw new CancellationError();
             }
 
-            // Fire off telemetry for the process being talkable
-            sendTelemetryEvent(Telemetry.StartJupyterProcess, { duration: stopWatch.elapsedTime });
-
             try {
-                const port = parseInt(url.parse(connection.baseUrl).port || '0', 10);
+                const port = parseInt(new URL(connection.baseUrl).port || '0', 10);
                 if (port && !isNaN(port)) {
                     if (launchResult.proc) {
-                        launchResult.proc.on('exit', () => NotebookStarter._usedPorts.delete(port));
+                        launchResult.proc.on('exit', () => UsedPorts.delete(port));
                     }
-                    NotebookStarter._usedPorts.add(port);
+                    UsedPorts.add(port);
                 }
             } catch (ex) {
                 traceError(`Parsing failed ${connection.baseUrl}`, ex);
             }
             disposeAllDisposables(disposables);
+            sendTelemetryEvent(Telemetry.StartJupyter, { duration: stopWatch.elapsedTime });
             return connection;
         } catch (err) {
             disposeAllDisposables(disposables);
-            if (isCancellationError(err) || err instanceof JupyterConnectError) {
+            if (
+                isCancellationError(err) ||
+                err instanceof JupyterConnectError ||
+                err instanceof JupyterCannotBeLaunchedWithRootError ||
+                err instanceof JupyterNotebookNotInstalled
+            ) {
                 throw err;
             }
 
@@ -183,9 +190,9 @@ export class NotebookStarter implements INotebookStarter {
 
             // Something else went wrong. See if the local proc died or not.
             if (exitCode !== 0) {
-                throw new Error(DataScience.jupyterServerCrashed().format(exitCode.toString()));
+                throw new Error(DataScience.jupyterServerCrashed(exitCode));
             } else {
-                throw WrappedError.from(DataScience.jupyterNotebookFailure().format(err), err);
+                throw WrappedError.from(DataScience.jupyterNotebookFailure(err), err);
             }
         } finally {
             progress.dispose();

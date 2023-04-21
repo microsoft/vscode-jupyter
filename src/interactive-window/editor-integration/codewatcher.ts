@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import {
@@ -20,9 +19,8 @@ import {
 
 import { IDocumentManager } from '../../platform/common/application/types';
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
-import { chainable } from '../../platform/common/utils/decorators';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { capturePerfTelemetry, captureUsageTelemetry } from '../../telemetry';
+import { capturePerfTelemetry, captureUsageTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
 import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
@@ -125,6 +123,14 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, false, true);
     }
     public dispose() {
+        let perfMeasures = this.codeLensFactory.getPerfMeasures();
+        if (perfMeasures && perfMeasures.codeLensUpdateCount > 0) {
+            sendTelemetryEvent(Telemetry.DocumentWithCodeCells, {
+                codeLensUpdateTime: perfMeasures.totalCodeLensUpdateTimeInMs / perfMeasures.codeLensUpdateCount,
+                maxCellCount: perfMeasures.maxCellCount
+            });
+        }
+
         this.codeLensUpdatedEvent.dispose();
         this.closeDocumentDisposable?.dispose(); // NOSONAR
         this.updateRequiredDisposable?.dispose(); // NOSONAR
@@ -984,9 +990,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @chainable()
     private getActiveInteractiveWindow() {
-        // This should be chained so that a queue forms when getting the interactive window
         return this.interactiveWindowProvider.getOrCreate(this.document?.uri);
     }
     private async addCode(

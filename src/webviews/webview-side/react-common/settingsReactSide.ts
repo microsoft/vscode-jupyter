@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {
@@ -13,7 +11,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         logging: {
             level: 'off'
         },
-        allowImportFromNotebook: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         // eslint-disable-next-line no-template-curly-in-string
@@ -21,10 +18,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
         searchForJupyter: true,
-        allowInput: true,
-        showCellInputCode: true,
-        maxOutputSize: 400,
-        enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
@@ -55,7 +48,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
-        jupyterCommandLineArguments: [],
         widgetScriptSources: []
     };
 

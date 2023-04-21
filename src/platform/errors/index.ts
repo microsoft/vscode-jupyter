@@ -48,13 +48,15 @@ export async function populateTelemetryWithErrorInfo(props: Partial<TelemetryErr
     ]);
 }
 
-function parseStack(ex: Error) {
+export function parseStack(ex: Error) {
     // Work around bug in stackTrace when ex has an array already
     if (ex.stack && Array.isArray(ex.stack)) {
         const concatenated = { ...ex, stack: ex.stack.join('\n') };
-        return stackTrace.parse(concatenated);
+        // Work around for https://github.com/microsoft/vscode-jupyter/issues/12550
+        return stackTrace.parse.call(stackTrace, concatenated);
     }
-    return stackTrace.parse(ex);
+    // Work around for https://github.com/microsoft/vscode-jupyter/issues/12550
+    return stackTrace.parse.call(stackTrace, ex);
 }
 
 function serializeStackTrace(ex: Error): string {

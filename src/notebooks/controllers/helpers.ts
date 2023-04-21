@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { createInterpreterKernelSpec, getKernelId } from '../../kernels/helpers';
-import { PythonKernelConnectionMetadata } from '../../kernels/types';
+import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { traceInfoIfCI } from '../../platform/logging';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
 
 // This is here so the default service and the loader service can both use it without having
@@ -23,12 +23,28 @@ export async function createActiveInterpreterController(
         // Ensure that the controller corresponding to the active interpreter
         // has been successfully created
         const spec = await createInterpreterKernelSpec(pythonInterpreter);
-        const metadata: PythonKernelConnectionMetadata = {
-            kind: 'startUsingPythonInterpreter',
+        const metadata = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
             interpreter: pythonInterpreter,
             id: getKernelId(spec, pythonInterpreter)
-        };
-        return registration.add(metadata, [viewType])[0]; // Should only create one because only one view type
+        });
+        const controllers = registration.addOrUpdate(metadata, [viewType]);
+        const controller = controllers[0]; // Should only create one because only one view type
+        registration.trackActiveInterpreterControllers(controllers);
+        traceInfoIfCI(
+            `Active Interpreter Controller ${controller.connection.kind}:${
+                controller.id
+            } created for View ${viewType} with resource ${getDisplayPath(resource)}`
+        );
+        return controller;
     }
+}
+
+export async function isActiveInterpreter(
+    metadata: KernelConnectionMetadata,
+    resource: Resource,
+    interpreters: IInterpreterService
+) {
+    const activeInterpreter = await interpreters.getActiveInterpreter(resource);
+    return activeInterpreter?.id === metadata.interpreter?.id;
 }

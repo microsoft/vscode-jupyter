@@ -7,19 +7,13 @@ import { OSType } from '../utils/platform';
 //===========================
 // platform
 
-export const IsWindows = Symbol('IS_WINDOWS');
-
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
     readonly osType: OSType;
-    osRelease: string;
-    readonly virtualEnvBinName: 'bin' | 'Scripts';
-
     // convenience methods
     readonly isWindows: boolean;
     readonly isMac: boolean;
     readonly isLinux: boolean;
-    readonly is64bit: boolean;
     readonly homeDir: vscode.Uri | undefined;
     readonly tempDir: vscode.Uri | undefined;
 }
@@ -30,10 +24,6 @@ export interface IPlatformService {
 export type TemporaryFileUri = { file: vscode.Uri } & vscode.Disposable;
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export type TemporaryDirectory = { path: string } & vscode.Disposable;
-
-export interface ITempFileSystem {
-    createFile(suffix: string, mode?: number): Promise<TemporaryFile>;
-}
 
 // Where to fine executables.
 //
@@ -54,7 +44,6 @@ export interface IFileSystem {
     stat(uri: vscode.Uri): Promise<vscode.FileStat>;
     writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void>;
     getFiles(dir: vscode.Uri): Promise<vscode.Uri[]>;
-    createTemporaryFile(options: { fileExtension?: string; prefix?: string }): Promise<TemporaryFileUri>;
     exists(uri: vscode.Uri, fileType?: vscode.FileType): Promise<boolean>;
     getFileHash(filename: vscode.Uri): Promise<string>;
 }

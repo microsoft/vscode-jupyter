@@ -3,12 +3,12 @@
 
 import { IServiceManager } from '../ioc/types';
 import { ExperimentService } from './experiments/service';
-import { FeatureDeprecationManager } from './featureDeprecationManager';
+import { FeatureManager } from './featureManager';
 import { PersistentStateFactory } from './persistentState';
 import {
     IsWindows,
     IExperimentService,
-    IFeatureDeprecationManager,
+    IFeaturesManager,
     IPersistentStateFactory,
     IExtensions,
     ICryptoUtils,
@@ -31,13 +31,13 @@ import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStep
 import { BrowserService } from './net/browser';
 import { DebugService } from './application/debugService';
 import { HttpClient } from './net/httpClient';
-import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
-import { VariableScriptGenerator } from './variableScriptGenerator';
+import { DataFrameScriptGenerator } from '../interpreter/dataFrameScriptGenerator';
+import { VariableScriptGenerator } from '../interpreter/variableScriptGenerator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, false);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
-    serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
+    serviceManager.addSingleton<IFeaturesManager>(IFeaturesManager, FeatureManager);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
