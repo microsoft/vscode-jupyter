@@ -39,10 +39,6 @@ function getEntry(bundle) {
             return {
                 errorRenderer: [`./src/webviews/webview-side/error-renderer/index.ts`]
             };
-        case 'widgetTester':
-            return {
-                widgetTester: [`./src/test/datascience/widgets/rendererUtils.ts`]
-            };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
     }
@@ -98,10 +94,6 @@ function getPlugins(bundle) {
                     })
                 ]
             );
-            break;
-        }
-        case 'widgetTester': {
-            plugins.push(definePlugin);
             break;
         }
         case 'ipywidgetsKernel':
@@ -257,4 +249,3 @@ exports.viewers = buildConfiguration('viewers');
 exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
 exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');
 exports.errorRenderer = buildConfiguration('errorRenderer');
-exports.widgetTester = buildConfiguration('widgetTester');
