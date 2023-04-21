@@ -14,7 +14,6 @@ const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.exten
 // Some modules will be pre-generated and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
-const buildBundle = common.getBundleConfiguration() !== common.bundleConfiguration.web;
 
 function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     resourcePath = (resourcePath || '').toLowerCase();
@@ -52,7 +51,7 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: buildBundle ? './src/extension.node.ts' : './src/extension.mock.ts'
+        extension: './src/extension.node.ts'
     },
     devtool: 'source-map',
     node: {
@@ -144,54 +143,50 @@ const config = {
     ], // Don't bundle these
     plugins: [
         ...common.getDefaultPlugins('extension'),
-        ...(!buildBundle
-            ? [] // Don't bundle anything if we're not building the node bundle.
-            : [
-                  new copyWebpackPlugin({
-                      patterns: [
-                          {
-                              from: './node_modules/pdfkit/js/pdfkit.standalone.js',
-                              to: './node_modules/pdfkit/js/pdfkit.standalone.js'
-                          }
-                      ]
-                  }),
-                  new copyWebpackPlugin({
-                      patterns: [
-                          {
-                              from: './node_modules/jquery/dist/jquery.min.js',
-                              to: './node_modules/jquery/dist/jquery.min.js'
-                          }
-                      ]
-                  }),
-                  // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
-                  // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
-                  // so at runtime we pick up the original structure.
-                  new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
-                  new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromqold.js'], log: false } }),
-                  new copyWebpackPlugin({
-                      patterns: [
-                          // Copy files from latest zmq package.
-                          { from: './node_modules/@aminya/node-gyp-build/**/*' },
-                          {
-                              from: './node_modules/zeromq/**/*',
-                              filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromq')
-                          },
-                          // Copy files from fallback zmq package.
-                          {
-                              from: './node_modules/zeromqold/**/*',
-                              filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromqold')
-                          },
-                          { from: './node_modules/node-gyp-build/**/*' }
-                      ]
-                  }),
-                  new webpack.DefinePlugin({
-                      IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
-                          typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
-                              ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
-                              : 'true'
-                      )
-                  })
-              ])
+        new copyWebpackPlugin({
+            patterns: [
+                {
+                    from: './node_modules/pdfkit/js/pdfkit.standalone.js',
+                    to: './node_modules/pdfkit/js/pdfkit.standalone.js'
+                }
+            ]
+        }),
+        new copyWebpackPlugin({
+            patterns: [
+                {
+                    from: './node_modules/jquery/dist/jquery.min.js',
+                    to: './node_modules/jquery/dist/jquery.min.js'
+                }
+            ]
+        }),
+        // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
+        // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
+        // so at runtime we pick up the original structure.
+        new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromq.js'], log: false } }),
+        new removeFilesWebpackPlugin({ after: { include: ['./out/node_modules/zeromqold.js'], log: false } }),
+        new copyWebpackPlugin({
+            patterns: [
+                // Copy files from latest zmq package.
+                { from: './node_modules/@aminya/node-gyp-build/**/*' },
+                {
+                    from: './node_modules/zeromq/**/*',
+                    filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromq')
+                },
+                // Copy files from fallback zmq package.
+                {
+                    from: './node_modules/zeromqold/**/*',
+                    filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromqold')
+                },
+                { from: './node_modules/node-gyp-build/**/*' }
+            ]
+        }),
+        new webpack.DefinePlugin({
+            IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION: JSON.stringify(
+                typeof process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION === 'string'
+                    ? process.env.IS_PRE_RELEASE_VERSION_OF_JUPYTER_EXTENSION
+                    : 'true'
+            )
+        })
     ],
     resolve: {
         alias: {
