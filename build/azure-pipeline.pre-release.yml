@@ -60,7 +60,6 @@ extends:
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
         displayName: Install zmq dependencies
-        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'alpine'))
 
       - script: npm i -g npm@8.15.1
         displayName: npm 8.15.1
@@ -69,7 +68,6 @@ extends:
         displayName: npm ci
         env:
           npm_config_build_from_source: true
-          VSC_VSCE_TARGET: $(vsceTarget)
 
       - script: npm run clean
         displayName: Clean
@@ -91,4 +89,3 @@ extends:
       - script: npm run prePublishBundlePreRelease
         displayName: Build
         env:
-          VSC_VSCE_TARGET: $(vsceTarget)
