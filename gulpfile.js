@@ -25,6 +25,7 @@ const { dumpTestSummary } = require('./build/webTestReporter');
 const { Validator } = require('jsonschema');
 const { stripVTControlCharacters } = require('util');
 const common = require('./build/webpack/common');
+const jsonc = require('jsonc-parser');
 
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
@@ -227,6 +228,49 @@ gulp.task('webpack-extension-web', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
 });
 
+function modifyJson(jsonFile, cb) {
+    const json = fs.readFileSync(jsonFile).toString('utf-8');
+    const [key, value] = cb(json);
+    const edits = jsonc.modify(json, [key], value, {});
+    const updatedJson = jsonc.applyEdits(json, edits);
+    fs.writeFileSync(jsonFile, updatedJson);
+}
+
+gulp.task('updatePackageJsonForBundle', async () => {
+    const packageJsonFile = path.join(__dirname, 'package.json');
+    const packageJsonContents = fs.readFileSync(packageJsonFile).toString('utf-8');
+    const json = JSON.parse(packageJsonContents);
+    switch (common.getBundleConfiguration()) {
+        case common.bundleConfiguration.desktop: {
+            if (json.browser) {
+                modifyJson(packageJsonFile, () => ['browser', undefined]);
+            }
+            if (!json.main) {
+                modifyJson(packageJsonFile, () => ['main', './out/extension.node.js']);
+            }
+            break;
+        }
+        case common.bundleConfiguration.webAndDesktop: {
+            if (!json.browser) {
+                modifyJson(packageJsonFile, () => ['browser', './out/extension.web.bundle.js']);
+            }
+            if (!json.main) {
+                modifyJson(packageJsonFile, () => ['main', './out/extension.node.js']);
+            }
+            break;
+        }
+        case common.bundleConfiguration.web: {
+            if (!json.browser) {
+                modifyJson(packageJsonFile, () => ['browser', './out/extension.web.bundle.js']);
+            }
+            if (json.main) {
+                modifyJson(packageJsonFile, () => ['main', undefined]);
+            }
+            break;
+        }
+    }
+});
+
 gulp.task(
     'webpack',
     gulp.series(
@@ -384,7 +428,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 
-gulp.task('prePublishBundle', gulp.series('webpack'));
+gulp.task('prePublishBundle', gulp.series('webpack', 'updatePackageJsonForBundle'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'checkNpmDependencies'));
 gulp.task('prePublishNonBundle', gulp.parallel('compile', gulp.series('compile-webviews')));
 
