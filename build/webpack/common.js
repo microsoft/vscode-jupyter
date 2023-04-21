@@ -53,11 +53,14 @@ const bundleConfiguration = {
  */
 function getBundleConfiguration() {
     if (process.env.VSC_VSCE_TARGET === 'web') {
+        console.log('Building Web Bundle');
         return bundleConfiguration.web;
-    } else if (process.env.VSC_VSCE_TARGET === undefined) {
+    } else if (!process.env.VSC_VSCE_TARGET) {
+        console.log('Building Universal Bundle');
         // Building locally or on Github actions, when we're not creating platform specific bundles.
         return bundleConfiguration.webAndDesktop;
     } else {
+        console.log('Building Desktop Bundle');
         return bundleConfiguration.desktop;
     }
 }

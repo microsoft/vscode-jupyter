@@ -5,6 +5,8 @@ trigger: none
 #   tags:
 #     include: ['*']
 pr: none
+# Do not change this name, it is used by gulp file to generate the build number.
+name: $(Date:yyyyMMdd)_$(Hours)_$(Minutes)_$(Rev:r)
 
 resources:
   repositories:
@@ -79,6 +81,8 @@ extends:
 
       - script: npm run updateBuildNumber
         displayName: Update build number
+        env:
+          VSC_BUILD_ID: $(Build.BuildNumber)
 
       - script: npm run prePublishBundleStable
         displayName: Build
