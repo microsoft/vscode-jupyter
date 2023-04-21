@@ -25,11 +25,40 @@ extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
     l10nSourcePaths: ./src
+    buildPlatforms:
+      - name: Linux
+        vsceTarget: ''
+      - name: Linux
+        packageArch: arm64
+        vsceTarget: linux-arm64
+      - name: Linux
+        packageArch: arm
+        vsceTarget: linux-armhf
+      - name: Linux
+        vsceTarget: alpine-x64
+      - name: Linux
+        vsceTarget: alpine-arm64
+      - name: Linux
+        packageArch: x64
+        vsceTarget: linux-x64
+      - name: MacOS
+        packageArch: arm64
+        vsceTarget: darwin-arm64
+      - name: MacOS
+        packageArch: x64
+        vsceTarget: darwin-x64
+      - name: Windows
+        packageArch: ia32
+        vsceTarget: win32-ia32
+      - name: Windows
+        packageArch: x64
+        vsceTarget: win32-x64
     buildSteps:
       - script: |
           sudo apt-get update
           sudo apt-get install libpango1.0-dev libgif-dev
         displayName: Install zmq dependencies
+        condition: or(eq(variables.vsceTarget, ''), contains(variables.vsceTarget, 'linux'), contains(variables.vsceTarget, 'alpine'))
 
       - script: npm i -g npm@8.15.1
         displayName: npm 8.15.1
@@ -38,6 +67,7 @@ extends:
         displayName: npm ci
         env:
           npm_config_build_from_source: true
+          VSC_VSCE_TARGET: $(vsceTarget)
 
       - script: npm run clean
         displayName: Clean
@@ -58,3 +88,5 @@ extends:
 
       - script: npm run prePublishBundlePreRelease
         displayName: Build
+        env:
+          VSC_VSCE_TARGET: $(vsceTarget)
