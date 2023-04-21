@@ -7,6 +7,7 @@ const colors = require('colors/safe');
 const fs = require('fs-extra');
 const path = require('path');
 const constants = require('../constants');
+const common = require('../webpack/common');
 const { downloadZMQ } = require('@vscode/zeromq');
 /**
  * In order to get raw kernels working, we reuse the default kernel that jupyterlab ships.
@@ -198,8 +199,11 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
         throw new Error(`Moment is being used by other packages (${otherPackagesUsingMoment.join(', ')}).`);
     }
 }
-
 async function downloadZmqBinaries() {
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
+        // No need to download zmq binaries for web.
+        return;
+    }
     await downloadZMQ();
 }
 

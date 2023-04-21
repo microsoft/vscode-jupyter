@@ -7,6 +7,7 @@ import assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';
+import * as os from 'os';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_REMOTE_NATIVE_TEST } from './constants.node';
 import { noop, sleep } from './core';
 import { isCI } from '../platform/common/constants';
@@ -114,9 +115,38 @@ async function setPythonPathInWorkspace(
         console.log(`No need to update Interpreter path, as it is ${value[prop]} in workspace`);
     }
 }
+/**
+ * Sometimes on CI, we have paths such as (this could happen on user machines as well)
+ *  - /opt/hostedtoolcache/Python/3.8.11/x64/python
+ *  - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
+ *  They are both the same.
+ * This function will take that into account.
+ */
+function getNormalizedInterpreterPath(fsPath: string) {
+    if (os.platform() === 'win32') {
+        return fsPath.toLowerCase();
+    }
+
+    // No need to generate hashes, its unnecessarily slow.
+    if (!fsPath.endsWith('/bin/python')) {
+        return fsPath;
+    }
+    // Sometimes on CI, we have paths such as (this could happen on user machines as well)
+    // - /opt/hostedtoolcache/Python/3.8.11/x64/python
+    // - /opt/hostedtoolcache/Python/3.8.11/x64/bin/python
+    // They are both the same.
+    // To ensure we treat them as the same, lets drop the `bin` on unix.
+    // We need to exclude paths such as `/usr/bin/python`
+    const filePath =
+        fsPath.endsWith('/bin/python') && fsPath.split('/').length > 4
+            ? fsPath.replace('/bin/python', '/python')
+            : fsPath;
+    return fs.existsSync(filePath) ? filePath : fsPath;
+}
+
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
-        return process.env.CI_PYTHON_PATH;
+        return getNormalizedInterpreterPath(process.env.CI_PYTHON_PATH);
     }
     // eslint-disable-next-line
     // TODO: Change this to python3.
