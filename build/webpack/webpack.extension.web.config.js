@@ -8,9 +8,10 @@ const webpack = require('webpack');
 const constants = require('../constants');
 const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
 const common = require('./common');
+const buildBundle = common.getBundleConfiguration() !== common.bundleConfiguration.desktop;
 
 const devEntry = {
-    extension: './src/extension.web.ts'
+    extension: buildBundle ? './src/extension.web.ts' : './src/extension.mock.ts'
 };
 const testEntry = {
     extension: './src/test/web/index.ts' // source of the web extension test runner
