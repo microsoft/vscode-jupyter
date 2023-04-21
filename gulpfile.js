@@ -192,6 +192,10 @@ gulp.task('compile-viewers', async () => {
 });
 
 gulp.task('compile-webextension', async () => {
+    // No need to build dependencies for desktop.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
+        return;
+    }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
 });
 gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
@@ -221,10 +225,18 @@ gulp.task('webpack-viewers', async () => {
 });
 
 gulp.task('webpack-extension-node', async () => {
+    // No need to build dependencies for web.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.web) {
+        return;
+    }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.node.config.js', 'extension');
 });
 
 gulp.task('webpack-extension-web', async () => {
+    // No need to build dependencies for desktop.
+    if (common.getBundleConfiguration() === common.bundleConfiguration.desktop) {
+        return;
+    }
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
 });
 
@@ -298,8 +310,8 @@ function getBuildDate() {
     const buildParts = vscBuildId.split('_');
     if (buildParts.length >= 3) {
         return new Date(
-            parseInt(buildParts[0].substring(0, 3), 10),
-            parseInt(buildParts[0].substring(0, 3), 10) - 1,
+            parseInt(buildParts[0].substring(0, 4), 10),
+            parseInt(buildParts[0].substring(4, 6), 10) - 1,
             parseInt(buildParts[0].substring(6), 10),
             parseInt(buildParts[1], 10),
             parseInt(buildParts[2], 10)
