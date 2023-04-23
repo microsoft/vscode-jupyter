@@ -45,7 +45,8 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
         return resourcePath.includes('prebuilds');
     }
     // Copy if this is a prebuilds folder that needs to be copied across.
-    return preBuildsFoldersToCopy.some((folder) => resourcePath.includes(folder));
+    // Use path.sep as the delimiter, as we do not want linux-arm64 to get compiled with search criteria is linux-arm.
+    return preBuildsFoldersToCopy.some((folder) => resourcePath.includes(`${folder}${path.sep}`));
 }
 const config = {
     mode: 'production',
