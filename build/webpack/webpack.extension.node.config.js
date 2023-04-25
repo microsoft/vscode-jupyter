@@ -18,12 +18,12 @@ const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     const fileName = path.basename(resourcePath);
     // Ensure the code is platform agnostic.
-    resourcePath = (resourcePath || '').toString().toLowerCase().replace('\\', '/');
+    resourcePath = (resourcePath || '').toString().toLowerCase().replace(/\\/g, '/');
     // We do not need to bundle these folders
     const foldersToIgnore = ['build', 'script', 'src', 'node_modules', 'vendor'];
     if (
         foldersToIgnore.some((folder) =>
-            resourcePath.toLowerCase().startsWith(path.join(parentFolder, folder).replace('\\', '/').toLowerCase())
+            resourcePath.toLowerCase().startsWith(path.join(parentFolder, folder).replace(/\\/g, '/').toLowerCase())
         )
     ) {
         console.log('Ignore file (1)', resourcePath);
@@ -38,11 +38,11 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     ) {
         return true;
     }
-    if (!resourcePath.includes(path.join(parentFolder, 'prebuilds').replace('\\', '/').toLowerCase())) {
+    if (!resourcePath.includes(path.join(parentFolder, 'prebuilds').replace(/\\/g, '/').toLowerCase())) {
         // We do not ship any other sub directory.
         console.log(
             'Ignore file (2)',
-            `Not includes ${path.join(parentFolder, 'prebuilds').replace('\\', '/').toLowerCase()}`,
+            `Not includes ${path.join(parentFolder, 'prebuilds').replace(/\\/g, '/').toLowerCase()}`,
             resourcePath
         );
         return false;
