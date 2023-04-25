@@ -16,7 +16,7 @@ const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.exten
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 
 function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
-    const fileName = path.basename(resourcePath);
+    const filename = path.basename(resourcePath);
     // Ensure the code is platform agnostic.
     resourcePath = (resourcePath || '').toString().toLowerCase().replace(/\\/g, '/');
     // We do not need to bundle these folders
