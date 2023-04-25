@@ -17,6 +17,7 @@ const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 
 function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     const fileName = path.basename(resourcePath);
+    // Ensure the code is platform agnostic.
     resourcePath = (resourcePath || '').toString().toLowerCase().replace('\\', '/');
     // We do not need to bundle these folders
     const foldersToIgnore = ['build', 'script', 'src', 'node_modules', 'vendor'];
