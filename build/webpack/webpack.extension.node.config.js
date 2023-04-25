@@ -20,6 +20,7 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     // We do not need to bundle these folders
     const foldersToIgnore = ['build', 'script', 'src', 'node_modules', 'vendor'];
     if (foldersToIgnore.some((folder) => resourcePath.includes(path.join(parentFolder, folder)))) {
+        console.log('Ingnore file', resourcePath);
         return;
     }
 
@@ -28,25 +29,34 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
         resourcePath.endsWith('.json') ||
         resourcePath.endsWith('.md') ||
         resourcePath.endsWith('license')
-    ) {
+        ) {
+        console.log('Copy file', resourcePath);
         return true;
     }
     if (!resourcePath.includes('prebuilds')) {
         // We do not ship any other sub directory.
+        console.log('Ignore file', resourcePath);
         return false;
     }
     if (resourcePath.includes('electron.') && resourcePath.endsWith('.node')) {
         // We do not ship electron binaries.
+        console.log('Ignore file', resourcePath);
         return false;
     }
     const preBuildsFoldersToCopy = common.getZeroMQPreBuildsFoldersToKeep();
     if (preBuildsFoldersToCopy.length === 0) {
-        // Copy everything from all prebuilds folders.
+        // Copy everything from all prebuilds folder.
+        console.log('Copy file', resourcePath);
         return resourcePath.includes('prebuilds');
     }
     // Copy if this is a prebuilds folder that needs to be copied across.
     // Use path.sep as the delimiter, as we do not want linux-arm64 to get compiled with search criteria is linux-arm.
-    return preBuildsFoldersToCopy.some((folder) => resourcePath.includes(`${folder}${path.sep}`));
+    if (preBuildsFoldersToCopy.some((folder) => resourcePath.includes(`${folder}/`) ||  resourcePath.includes(`${folder}\\`))){
+        console.log('Copy file', resourcePath);
+        return true;
+    }
+    console.log('Ignore file', resourcePath);
+    return false;
 }
 const config = {
     mode: 'production',
