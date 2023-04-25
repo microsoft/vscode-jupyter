@@ -16,12 +16,13 @@ const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.exten
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 
 function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
-    resourcePath = (resourcePath || '').toString().toLowerCase();
+    const fileName = path.basename(resourcePath);
+    resourcePath = (resourcePath || '').toString().toLowerCase().replace('\\', '/');
     // We do not need to bundle these folders
     const foldersToIgnore = ['build', 'script', 'src', 'node_modules', 'vendor'];
     if (
         foldersToIgnore.some((folder) =>
-            resourcePath.toLowerCase().startsWith(path.join(parentFolder, folder).toLowerCase())
+            resourcePath.toLowerCase().startsWith(path.join(parentFolder, folder).replace('\\', '/').toLowerCase())
         )
     ) {
         console.log('Ignore file (1)', resourcePath);
@@ -36,16 +37,16 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     ) {
         return true;
     }
-    if (!resourcePath.includes(path.join(parentFolder, 'prebuilds').toLowerCase())) {
+    if (!resourcePath.includes(path.join(parentFolder, 'prebuilds').replace('\\', '/').toLowerCase())) {
         // We do not ship any other sub directory.
         console.log(
             'Ignore file (2)',
-            `Not includes ${path.join(parentFolder, 'prebuilds').toLowerCase()}`,
+            `Not includes ${path.join(parentFolder, 'prebuilds').replace('\\', '/').toLowerCase()}`,
             resourcePath
         );
         return false;
     }
-    if (path.basename(resourcePath).includes('electron.') && resourcePath.endsWith('.node')) {
+    if (filename.includes('electron.') && resourcePath.endsWith('.node')) {
         // We do not ship electron binaries.
         console.log('Ignore file (3)', resourcePath);
         return false;
@@ -57,12 +58,7 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     }
     // Copy if this is a prebuilds folder that needs to be copied across.
     // Use path.sep as the delimiter, as we do not want linux-arm64 to get compiled with search criteria is linux-arm.
-    if (
-        preBuildsFoldersToCopy.some(
-            (folder) =>
-                resourcePath.includes(`${folder.toLowerCase()}/`) || resourcePath.includes(`${folder.toLowerCase()}\\`)
-        )
-    ) {
+    if (preBuildsFoldersToCopy.some((folder) => resourcePath.includes(`${folder.toLowerCase()}/`))) {
         return true;
     }
     console.log('Ignore file (6)', resourcePath);
