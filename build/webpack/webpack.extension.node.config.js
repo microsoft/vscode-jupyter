@@ -16,11 +16,18 @@ const configFileName = path.join(constants.ExtensionRootDir, 'src/tsconfig.exten
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 
 function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
-    resourcePath = (resourcePath || '').toLowerCase();
+    const filename = path.basename(resourcePath);
+    // Ensure the code is platform agnostic.
+    resourcePath = (resourcePath || '').toString().toLowerCase().replace(/\\/g, '/');
     // We do not need to bundle these folders
     const foldersToIgnore = ['build', 'script', 'src', 'node_modules', 'vendor'];
-    if (foldersToIgnore.some((folder) => resourcePath.includes(path.join(parentFolder, folder)))) {
-        return;
+    if (
+        foldersToIgnore.some((folder) =>
+            resourcePath.toLowerCase().startsWith(path.join(parentFolder, folder).replace(/\\/g, '/').toLowerCase())
+        )
+    ) {
+        console.log('Ignore file (1)', resourcePath);
+        return false;
     }
 
     if (
@@ -31,22 +38,32 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     ) {
         return true;
     }
-    if (!resourcePath.includes('prebuilds')) {
+    if (!resourcePath.includes(path.join(parentFolder, 'prebuilds').replace(/\\/g, '/').toLowerCase())) {
         // We do not ship any other sub directory.
+        console.log(
+            'Ignore file (2)',
+            `Not includes ${path.join(parentFolder, 'prebuilds').replace(/\\/g, '/').toLowerCase()}`,
+            resourcePath
+        );
         return false;
     }
-    if (resourcePath.includes('electron.') && resourcePath.endsWith('.node')) {
+    if (filename.includes('electron.') && resourcePath.endsWith('.node')) {
         // We do not ship electron binaries.
+        console.log('Ignore file (3)', resourcePath);
         return false;
     }
     const preBuildsFoldersToCopy = common.getZeroMQPreBuildsFoldersToKeep();
     if (preBuildsFoldersToCopy.length === 0) {
-        // Copy everything from all prebuilds folders.
-        return resourcePath.includes('prebuilds');
+        // Copy everything from all prebuilds folder.
+        return true;
     }
     // Copy if this is a prebuilds folder that needs to be copied across.
     // Use path.sep as the delimiter, as we do not want linux-arm64 to get compiled with search criteria is linux-arm.
-    return preBuildsFoldersToCopy.some((folder) => resourcePath.includes(`${folder}${path.sep}`));
+    if (preBuildsFoldersToCopy.some((folder) => resourcePath.includes(`${folder.toLowerCase()}/`))) {
+        return true;
+    }
+    console.log('Ignore file (6)', resourcePath);
+    return false;
 }
 const config = {
     mode: 'production',
@@ -171,12 +188,24 @@ const config = {
                 { from: './node_modules/@aminya/node-gyp-build/**/*' },
                 {
                     from: './node_modules/zeromq/**/*',
-                    filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromq')
-                },
+                    filter: (filepath) =>
+                        shouldCopyFileFromZmqFolder(
+                            path.join(constants.ExtensionRootDir, 'node_modules', 'zeromq'),
+                            filepath
+                        )
+                }
+            ]
+        }),
+        new copyWebpackPlugin({
+            patterns: [
                 // Copy files from fallback zmq package.
                 {
                     from: './node_modules/zeromqold/**/*',
-                    filter: shouldCopyFileFromZmqFolder.bind(this, './node_modules/zeromqold')
+                    filter: (filepath) =>
+                        shouldCopyFileFromZmqFolder(
+                            path.join(constants.ExtensionRootDir, 'node_modules', 'zeromqold'),
+                            filepath
+                        )
                 },
                 { from: './node_modules/node-gyp-build/**/*' }
             ]
