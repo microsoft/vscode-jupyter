@@ -39,7 +39,11 @@ function shouldCopyFileFromZmqFolder(parentFolder, resourcePath) {
     }
     if (!resourcePath.includes(path.join(parentFolder, 'prebuilds').toLowerCase())) {
         // We do not ship any other sub directory.
-        console.log('Ignore file (2)', `Not includes ${path.join(parentFolder, 'prebuilds')}`, resourcePath);
+        console.log(
+            'Ignore file (2)',
+            `Not includes ${path.join(parentFolder, 'prebuilds').toLowerCase()}`,
+            resourcePath
+        );
         return false;
     }
     if (path.basename(resourcePath.includes('electron.')) && resourcePath.endsWith('.node')) {
@@ -191,13 +195,19 @@ const config = {
                 {
                     from: './node_modules/zeromq/**/*',
                     filter: (filepath) =>
-                        shouldCopyFileFromZmqFolder(path.join(__dirname, 'node_modules', 'zeromq'), filepath)
+                        shouldCopyFileFromZmqFolder(
+                            path.join(constants.ExtensionRootDir, 'node_modules', 'zeromq'),
+                            filepath
+                        )
                 },
                 // Copy files from fallback zmq package.
                 {
                     from: './node_modules/zeromqold/**/*',
                     filter: (filepath) =>
-                        shouldCopyFileFromZmqFolder(path.join(__dirname, 'node_modules', 'zeromqold'), filepath)
+                        shouldCopyFileFromZmqFolder(
+                            path.join(constants.ExtensionRootDir, 'node_modules', 'zeromqold'),
+                            filepath
+                        )
                 },
                 { from: './node_modules/node-gyp-build/**/*' }
             ]
