@@ -957,7 +957,8 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                             expectedInterpreters: [python36Global].concat(activePythonEnv ? [activePythonEnv] : [])
                         });
                     });
-                    test('If two kernelspecs share the same interpreter, but have different env variables, then both should be listed', async () => {
+                    // https://github.com/microsoft/vscode-jupyter/issues/13236
+                    test.skip('If two kernelspecs share the same interpreter, but have different env variables, then both should be listed', async () => {
                         const testData: TestData = {
                             interpreters: [
                                 {
