@@ -16,16 +16,13 @@
     -   [ ] At this point, the vscode engine version should also be the same as in the release branch- will be bumped when the next release happens
     -   [ ] Bump the version number to the next monthly ("YYYY.M.100") version number (e.g. if the latest is `2022.2.100`, bump it to `2022.3.100`).
         -   [ ] Run `npm install` to update `package-lock.json`
--   [ ] Schedule a sanity test. Ask team for specific areas that need testing.
--   [ ] Ask CTI (Python Tools CTI) to test the release candidate
-    -   Test plan document: https://github.com/microsoft/vscode-jupyter/blob/main/.github/test_plan.md
 
 # Testing (Monday of VS Code release week)
 
 -  [ ] Obtain VS Code [stable RC](https://builds.code.visualstudio.com/builds/stable) for sanity testing
 -  [ ] Sanity test release candidate VSIX against VS Code RC
-   -   Create a VSIX to sanity test by running the release pipeline https://dev.azure.com/monacotools/Monaco/_build?definitionId=284
-     -   You do not need an approval to build the VSIX, but you can keep the pipeline running and ask for an approval once the sanity test is successful to publish it.  
+   -   Create a VSIX to sanity test by running the [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) against the `release/release-YYYY.MM` branch
+     -   You do not need an approval to build the VSIX, but you can keep the pipeline running and ask for an approval once the sanity test is successful to publish it.
    -   Make sure that the sanity test hits both macOS and Windows builds
 -  [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
    -   After a candidate fix is merged, a pre-release build can be released by manually running [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283) against the release branch.
@@ -41,7 +38,7 @@
 -   [ ] Verify the PR Pipeline on Github actions is green against the release branch.
 -   [ ] Manually run the [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) against the `release/release-YYYY.MM` branch
 -   [ ] Approve the `Publish` stage
--   [ ] Push a tag with the released version number on the commit that was released 
+-   [ ] Push a tag with the released version number on the commit that was released
 -   [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
 
 # Day of VS Code releasing the next insider version (Wednesday)
