@@ -21,7 +21,7 @@
 
 -  [ ] Obtain VS Code [stable RC](https://builds.code.visualstudio.com/builds/stable) for sanity testing
 -  [ ] Sanity test release candidate VSIX against VS Code RC
-   -   Create a VSIX to sanity test by running the release pipeline https://dev.azure.com/monacotools/Monaco/_build?definitionId=284
+   -   Create a VSIX to sanity test by running the [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) against the `release/release-YYYY.MM` branch
      -   You do not need an approval to build the VSIX, but you can keep the pipeline running and ask for an approval once the sanity test is successful to publish it.
    -   Make sure that the sanity test hits both macOS and Windows builds
 -  [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
