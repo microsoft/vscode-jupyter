@@ -201,6 +201,9 @@ export interface IJupyterServerUri {
     authorizationHeader: any; // JSON object for authorization header.
     expiration?: Date; // Date/time when header expires and should be refreshed.
     displayName: string;
+    /**
+     * The remote server directory to which the current workspace folder is mapped.
+     */
     workingDirectory?: string;
     /**
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
