@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { CancellationToken, Event, NotebookDocument, Uri } from 'vscode';
+import { CancellationToken, Event, NotebookDocument, QuickPickItem, Uri } from 'vscode';
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
 import type { Session } from '@jupyterlab/services';
 
@@ -13,6 +13,16 @@ import type { Session } from '@jupyterlab/services';
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
 export interface JupyterAPI {
+    /**
+     * Registers a remote server provider component that's used to pick remote jupyter server URIs
+     * @param serverProvider object called back when picking jupyter server URI
+     */
+    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
+    /**
+     * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
+     * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
+     */
+    addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
     /**
      * Gets the service that provides access to kernels.
      * Returns `undefined` if the calling extension is not allowed to access this API. This could
@@ -27,6 +37,60 @@ export interface JupyterAPI {
      * @returns {Promise<NotebookDocument>} Promise that resolves to the notebook document.
      */
     openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
+}
+
+export interface IJupyterServerUri {
+    baseUrl: string;
+    token: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    authorizationHeader: any; // JSON object for authorization header.
+    expiration?: Date; // Date/time when header expires and should be refreshed.
+    displayName: string;
+    workingDirectory?: string;
+    /**
+     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
+     */
+    webSocketProtocols?: string[];
+}
+
+export type JupyterServerUriHandle = string;
+
+export interface IJupyterUriProvider {
+    /**
+     * Should be a unique string (like a guid)
+     */
+    readonly id: string;
+    readonly displayName?: string;
+    readonly detail?: string;
+    onDidChangeHandles?: Event<void>;
+    getQuickPickEntryItems?():
+        | Promise<
+              (QuickPickItem & {
+                  /**
+                   * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+                   */
+                  default?: boolean;
+              })[]
+          >
+        | (QuickPickItem & {
+              /**
+               * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+               */
+              default?: boolean;
+          })[];
+    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    /**
+     * Given the handle, returns the Jupyter Server information.
+     */
+    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    /**
+     * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
+     */
+    getHandles?(): Promise<JupyterServerUriHandle[]>;
+    /**
+     * Users request to remove a handle.
+     */
+    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
 }
 
 /**
