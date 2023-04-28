@@ -12,7 +12,7 @@ import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import {
@@ -254,6 +254,44 @@ export class JupyterSession
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
+        const telemetryInfo: {
+            failedWithoutBackingFile?: boolean;
+            failedWithBackingFile?: boolean;
+            localHost?: boolean;
+        } = {};
+        if (this.connInfo.localLaunch) {
+            telemetryInfo.localHost = true;
+        }
+
+        try {
+            const session = await this.createSessionImpl({ ...options, createBakingFile: false });
+            telemetryInfo.failedWithoutBackingFile = false;
+            sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
+            return session;
+        } catch (ex) {
+            traceWarning(`Failed to create a session without a backing file, trying again with a backing file`, ex);
+            try {
+                telemetryInfo.failedWithoutBackingFile = false;
+                const session = await this.createSessionImpl({
+                    ...options,
+                    createBakingFile: true
+                });
+                telemetryInfo.failedWithBackingFile = false;
+                sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
+                return session;
+            } catch (ex) {
+                telemetryInfo.failedWithBackingFile = true;
+                sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
+                throw ex;
+            }
+        }
+    }
+
+    private async createSessionImpl(options: {
+        token: CancellationToken;
+        ui: IDisplayOptions;
+        createBakingFile: boolean;
+    }): Promise<ISessionWithSocket> {
         let backingFile: IBackupFile | undefined;
         let remoteFilePath: string | undefined;
 
@@ -266,7 +304,7 @@ export class JupyterSession
                 );
             }
         }
-        if (!remoteFilePath) {
+        if (!remoteFilePath && options.createBakingFile) {
             // Create our backing file for the notebook
             backingFile = await this.backingFileCreator.createBackingFile(
                 this.resource,
