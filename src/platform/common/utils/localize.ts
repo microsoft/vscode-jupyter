@@ -109,7 +109,9 @@ export namespace DataScience {
     export const validatingKernelDependencies = l10n.t('Validating kernel dependencies');
     export const performingExport = l10n.t('Performing Export');
     export const exportNotebookToPython = l10n.t('Exporting Notebook to Python');
-    export const sessionDisposed = l10n.t('Cannot execute code, session has been disposed.');
+    export const sessionDisposed = l10n.t(
+        'Cannot execute code, session has been disposed. Please try restarting the Kernel.'
+    );
     export const passwordFailure = l10n.t(
         'Failed to connect to password protected server. Check that password is correct.'
     );

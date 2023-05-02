@@ -34,6 +34,8 @@ import {
 } from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
+import { isKernelSessionDead } from '../kernel';
 
 /**
  * Factory for CellExecution objects.
@@ -83,6 +85,7 @@ export class CellExecution implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private _preExecuteEmitter = new EventEmitter<NotebookCell>();
     private cellExecutionHandler?: CellExecutionMessageHandler;
+    private session?: IKernelConnectionSession;
     private constructor(
         public readonly cell: NotebookCell,
         private readonly codeOverride: string | undefined,
@@ -139,6 +142,7 @@ export class CellExecution implements IDisposable {
         return new CellExecution(cell, code, metadata, controller, requestListener);
     }
     public async start(session: IKernelConnectionSession) {
+        this.session = session;
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
             return;
@@ -152,6 +156,15 @@ export class CellExecution implements IDisposable {
             this._result.resolve();
             return;
         }
+        if (session.kind === 'remoteJupyter' && session.status === 'unknown') {
+            if (!session.kernel || session.kernel.isDisposed || session.disposed) {
+                this.execution?.start();
+                this.execution?.clearOutput().then(noop, noop);
+                this.completedWithErrors(new SessionDisposedError());
+                return;
+            }
+        }
+
         if (this.started) {
             traceCellMessage(this.cell, 'Cell has already been started yet CellExecution.Start invoked again');
             traceError(`Cell has already been started yet CellExecution.Start invoked again ${this.cell.index}`);
@@ -225,6 +238,14 @@ export class CellExecution implements IDisposable {
         traceCellMessage(this.cell, 'Update with error state & output');
         let errorMessage: string | undefined;
         let output: NotebookCellOutput | undefined;
+        if (
+            !(error instanceof BaseError) &&
+            error.message?.includes('Canceled future for execute_request message before replies were done') &&
+            this.session &&
+            isKernelSessionDead(this.session)
+        ) {
+            error = new SessionDisposedError();
+        }
         // If the error doesn't derive from BaseError, it came from execution
         if (!(error instanceof BaseError)) {
             errorMessage = error.message || error.name || error.stack;
