@@ -30,6 +30,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
      * the ref to kernel is lost when the notebook is closed.
      */
     private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
+    private readonly kernelsById = new Map<string, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     protected readonly _onDidRestartKernel = new EventEmitter<IKernel>();
     protected readonly _onDidStartKernel = new EventEmitter<IKernel>();
@@ -74,12 +75,14 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     public get onDidCreateKernel(): Event<IKernel> {
         return this._onDidCreateKernel.event;
     }
-    public get(uriOrNotebook: Uri | NotebookDocument): IKernel | undefined {
+    public get(uriOrNotebook: Uri | NotebookDocument | string): IKernel | undefined {
         if (isUri(uriOrNotebook)) {
             const notebook = this.notebook.notebookDocuments.find(
                 (item) => item.uri.toString() === uriOrNotebook.toString()
             );
             return notebook ? this.get(notebook) : undefined;
+        } else if (typeof uriOrNotebook === 'string') {
+            return this.kernelsById.get(uriOrNotebook)?.kernel;
         } else {
             return this.kernelsByNotebook.get(uriOrNotebook)?.kernel;
         }
@@ -107,6 +110,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     public abstract getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
     protected storeKernel(notebook: NotebookDocument, options: KernelOptions, kernel: IKernel) {
         this.kernelsByNotebook.set(notebook, { options, kernel });
+        this.kernelsById.set(kernel.id, { options, kernel });
         this._onDidCreateKernel.fire(kernel);
     }
     /**
@@ -118,6 +122,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 // If the same kernel is associated with this document & it was disposed, then delete it.
                 if (this.get(kernel.notebook) === kernel) {
                     this.kernelsByNotebook.delete(kernel.notebook);
+                    this.kernelsById.delete(kernel.id);
                     traceVerbose(
                         `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(
                             kernel.uri
@@ -136,6 +141,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
             traceInfoIfCI(
                 `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
             );
+            this.kernelsById.delete(kernelToDispose.kernel.id);
             this.pendingDisposables.add(kernelToDispose.kernel);
             kernelToDispose.kernel
                 .dispose()
@@ -157,6 +163,7 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                     if (matchingRemovedUri) {
                         // it should be removed
                         this.kernelsByNotebook.delete(document);
+                        this.kernelsById.delete(kernel.kernel.id);
                     }
                 }
             }
@@ -170,6 +177,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
      * Where as if a kernel is tied to a notebook, then the kernel dies along with notebooks.
      */
     private readonly kernelsByUri = new Map<string, { options: ThirdPartyKernelOptions; kernel: IThirdPartyKernel }>();
+    private readonly kernelsById = new Map<string, { options: ThirdPartyKernelOptions; kernel: IThirdPartyKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     protected readonly _onDidRestartKernel = new EventEmitter<IThirdPartyKernel>();
     protected readonly _onDidStartKernel = new EventEmitter<IThirdPartyKernel>();
@@ -209,8 +217,8 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     public get onDidCreateKernel(): Event<IThirdPartyKernel> {
         return this._onDidCreateKernel.event;
     }
-    public get(uri: Uri): IThirdPartyKernel | undefined {
-        return this.kernelsByUri.get(uri.toString())?.kernel;
+    public get(uri: Uri | string): IThirdPartyKernel | undefined {
+        return this.kernelsByUri.get(uri.toString())?.kernel || this.kernelsById.get(uri.toString())?.kernel;
     }
 
     public getInternal(uri: Uri):
@@ -232,6 +240,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
     public abstract getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel;
     protected storeKernel(uri: Uri, options: ThirdPartyKernelOptions, kernel: IThirdPartyKernel) {
         this.kernelsByUri.set(uri.toString(), { options, kernel });
+        this.kernelsById.set(kernel.id, { options, kernel });
         this._onDidCreateKernel.fire(kernel);
     }
 
@@ -244,6 +253,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
                 // If the same kernel is associated with this document & it was disposed, then delete it.
                 if (this.get(uri) === kernel) {
                     this.kernelsByUri.delete(uri.toString());
+                    this.kernelsById.delete(kernel.id);
                     traceVerbose(
                         `Kernel got disposed, hence there is no longer a kernel associated with ${getDisplayPath(uri)}`
                     );
@@ -258,6 +268,7 @@ export abstract class BaseThirdPartyKernelProvider implements IThirdPartyKernelP
         const kernelToDispose = this.kernelsByUri.get(uri.toString());
         if (kernelToDispose) {
             traceInfoIfCI(`Disposing kernel associated with ${getDisplayPath(uri)}`);
+            this.kernelsById.delete(kernelToDispose.kernel.id);
             this.pendingDisposables.add(kernelToDispose.kernel);
             kernelToDispose.kernel
                 .dispose()

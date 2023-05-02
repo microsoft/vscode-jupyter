@@ -187,7 +187,7 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
         });
-        const kernels: { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] = [];
+        const kernels: { metadata: KernelConnectionMetadata; uri: Uri | undefined; id: string }[] = [];
         const kernelsAlreadyListed = new Set<string>();
         this.kernelProvider.kernels
             .filter(
@@ -204,7 +204,8 @@ class JupyterKernelService implements IExportedKernelService {
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    uri: item.uri
+                    uri: item.uri,
+                    id: item.id
                 });
             });
         this.thirdPartyKernelProvider.kernels
@@ -222,7 +223,8 @@ class JupyterKernelService implements IExportedKernelService {
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    uri: item.uri
+                    uri: item.uri,
+                    id: item.id
                 });
             });
         this.controllerRegistration.registered.forEach((item) => {
@@ -235,7 +237,7 @@ class JupyterKernelService implements IExportedKernelService {
             if (!item.connection.kernelModel.id || kernelsAlreadyListed.has(item.connection.kernelModel.id)) {
                 return;
             }
-            kernels.push({ metadata: item.connection as KernelConnectionMetadata, uri: undefined });
+            kernels.push({ metadata: item.connection as KernelConnectionMetadata, uri: undefined, id: item.id });
         });
         return kernels;
     }
