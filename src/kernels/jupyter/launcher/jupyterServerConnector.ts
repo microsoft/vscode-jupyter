@@ -15,7 +15,7 @@ export class JupyterServerConnector implements IJupyterServerConnector {
     constructor(
         @inject(IRawKernelConnectionSessionCreator)
         @optional()
-        private readonly rawNotebookProvider: IRawKernelConnectionSessionCreator | undefined,
+        private readonly rawSessionCreator: IRawKernelConnectionSessionCreator | undefined,
         @inject(IJupyterNotebookProvider)
         private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
@@ -32,7 +32,7 @@ export class JupyterServerConnector implements IJupyterServerConnector {
             }
         });
         options.ui = this.startupUi;
-        if (this.rawNotebookProvider?.isSupported && options.localJupyter) {
+        if (this.rawSessionCreator?.isSupported && options.localJupyter) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
         } else if (this.extensionChecker.isPythonExtensionInstalled || !options.localJupyter) {
             return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());

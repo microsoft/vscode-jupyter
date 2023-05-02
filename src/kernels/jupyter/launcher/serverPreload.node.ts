@@ -31,10 +31,10 @@ export class ServerPreload implements IExtensionSyncActivationService {
     constructor(
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IJupyterServerConnector) private notebookProvider: IJupyterServerConnector,
+        @inject(IJupyterServerConnector) private serverConnector: IJupyterServerConnector,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IRawNotebookSupportedService) private readonly rawNotebookProvider: IRawNotebookSupportedService,
+        @inject(IRawNotebookSupportedService) private readonly rawKernelSupport: IRawNotebookSupportedService,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
@@ -73,7 +73,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
     }
 
     private async createServerIfNecessary() {
-        if (!this.workspace.isTrusted || this.rawNotebookProvider.isSupported) {
+        if (!this.workspace.isTrusted || this.rawKernelSupport.isSupported) {
             return;
         }
         const source = new CancellationTokenSource();
@@ -84,7 +84,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
             // If it didn't start, attempt for local and if allowed.
             if (!this.configService.getSettings(undefined).disableJupyterAutoStart) {
                 // Local case, try creating one
-                await this.notebookProvider.connect({
+                await this.serverConnector.connect({
                     resource: undefined,
                     ui,
                     localJupyter: true,
