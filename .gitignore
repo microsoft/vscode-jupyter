@@ -31,8 +31,8 @@ bin/**
 logs/**
 obj/**
 .pytest_cache
-temp/**
-tmp/**
+temp/
+tmp/
 src/test/datascience/tmp/**
 src/test/datascience/temp/**
 .python-version
