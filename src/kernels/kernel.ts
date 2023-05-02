@@ -80,6 +80,27 @@ export function shouldMessageBeMirroredWithRenderer(msg: KernelMessage.IExecuteR
     return true;
 }
 
+export function isKernelDead(k: IBaseKernel) {
+    return (
+        k.status === 'dead' ||
+        (k.status === 'terminating' && !k.disposed && !k.disposing) ||
+        (!k.disposed &&
+            !k.disposing &&
+            (k.session?.status == 'unknown' || k.session?.kernel?.status == 'unknown') &&
+            (k.session.kernel?.isDisposed || k.session.disposed))
+    );
+}
+
+export function isKernelSessionDead(k: IKernelConnectionSession) {
+    return (
+        k.status === 'dead' ||
+        (k.status === 'terminating' && !k.disposed) ||
+        (!k.disposed &&
+            (k.status == 'unknown' || k.kernel?.status == 'unknown') &&
+            (k.kernel?.isDisposed || k.disposed))
+    );
+}
+
 type Hook = (...args: unknown[]) => Promise<void>;
 /**
  * Represents an active kernel process running on the jupyter (or local) machine.

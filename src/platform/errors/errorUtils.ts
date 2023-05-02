@@ -8,6 +8,7 @@ import { JupyterConnectError } from './jupyterConnectError';
 import { BaseError } from './types';
 import * as path from '../../platform/vscode-path/resources';
 import { splitLines } from '../common/helpers';
+import { SessionDisposedError } from './sessionDisposedError';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
@@ -175,7 +176,11 @@ export enum KernelFailureReason {
     /**
      *  Python environment is missing (probably been deleted).
      */
-    pythonEnvironmentMissing = 'pythonEnvironmentMissing'
+    pythonEnvironmentMissing = 'pythonEnvironmentMissing',
+    /**
+     *  Kernel Session has been disposed/shutdown.
+     */
+    sessionDisposed = 'sessionDisposed'
 }
 type BaseFailure<Reason extends KernelFailureReason, ExtraData = {}> = {
     reason: Reason;
@@ -257,6 +262,7 @@ export type ImportWin32ApiFailure = BaseFailure<KernelFailureReason.importWin32a
 export type ZmqModuleFailure = BaseFailure<KernelFailureReason.zmqModuleFailure>;
 export type OldIPyKernelFailure = BaseFailure<KernelFailureReason.oldIPyKernelFailure>;
 export type OldIPythonFailure = BaseFailure<KernelFailureReason.oldIPythonFailure>;
+export type KernelSessionDisposedFailure = BaseFailure<KernelFailureReason.sessionDisposed>;
 
 export type KernelFailure =
     | OverridingBuiltInModulesFailure
@@ -268,7 +274,8 @@ export type KernelFailure =
     | ZmqModuleFailure
     | OldIPyKernelFailure
     | JupyterStartFailure
-    | OldIPythonFailure;
+    | OldIPythonFailure
+    | KernelSessionDisposedFailure;
 
 export function analyzeKernelErrors(
     workspaceFolders: readonly WorkspaceFolder[],
@@ -281,7 +288,14 @@ export function analyzeKernelErrors(
     const stdErrOrStackTrace = error instanceof BaseError ? error.stdErr || error.stack || '' : error.toString();
     const lastTwolinesOfError = getLastTwoLinesFromPythonTracebackWithErrorMessage(stdErrOrStackTrace);
     const stdErr = stdErrOrStackTrace.toLowerCase();
-
+    if (error instanceof SessionDisposedError) {
+        return {
+            reason: KernelFailureReason.sessionDisposed,
+            message: DataScience.sessionDisposed,
+            moreInfoLink: 'https://aka.ms/kernelDisposedCannotRunCell',
+            telemetrySafeTags: ['deadSession']
+        };
+    }
     if (stdErr.includes("ImportError: No module named 'win32api'".toLowerCase())) {
         // force re-installing ipykernel worked.
         /*
