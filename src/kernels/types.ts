@@ -332,6 +332,7 @@ export type KernelHooks =
 export interface IBaseKernel extends IAsyncDisposable {
     readonly ipywidgetsVersion?: 7 | 8;
     readonly onIPyWidgetVersionResolved: Event<7 | 8 | undefined>;
+    readonly id: string;
     readonly uri: Uri;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
@@ -479,6 +480,10 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
      */
     get(uriOrNotebook: Uri | NotebookDocument): IKernel | undefined;
     /**
+     * Get hold of the active kernel for a given Kernel Id.
+     */
+    get(id: string): IKernel | undefined;
+    /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
@@ -495,6 +500,10 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
      * Get hold of the active kernel for a given resource uri.
      */
     get(uri: Uri): IThirdPartyKernel | undefined;
+    /**
+     * Get hold of the active kernel for a given Kernel Id.
+     */
+    get(id: string): IThirdPartyKernel | undefined;
     /**
      * Gets or creates a kernel for a given resource uri.
      * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
