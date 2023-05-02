@@ -3,15 +3,12 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { ConnectNotebookProviderOptions, INotebookProviderConnection, IJupyterServerConnector } from '../../types';
+import { ConnectNotebookProviderOptions, IJupyterConnection, IJupyterServerConnector } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawKernelConnectionSessionCreator } from '../../raw/types';
 import { IJupyterNotebookProvider } from '../types';
 import { PythonExtensionNotInstalledError } from '../../../platform/errors/pythonExtNotInstalledError';
 
-/**
- * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
- */
 @injectable()
 export class JupyterServerConnector implements IJupyterServerConnector {
     private readonly startupUi = new DisplayOptions(true);
@@ -24,8 +21,7 @@ export class JupyterServerConnector implements IJupyterServerConnector {
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
-    // Attempt to connect to our server provider, and if we do, return the connection info
-    public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection> {
+    public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection> {
         if (!options.ui.disableUI) {
             this.startupUi.disableUI = false;
         }

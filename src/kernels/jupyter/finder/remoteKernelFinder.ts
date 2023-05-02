@@ -8,7 +8,7 @@ import {
     IJupyterKernelSpec,
     IJupyterServerConnector,
     IKernelProvider,
-    INotebookProviderConnection,
+    IJupyterConnection,
     isRemoteConnection,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
@@ -263,7 +263,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     private async getRemoteConnectionInfo(
         cancelToken?: CancellationToken,
         displayProgress: boolean = true
-    ): Promise<INotebookProviderConnection | undefined> {
+    ): Promise<IJupyterConnection | undefined> {
         const ui = new DisplayOptions(!displayProgress);
         return this.jupyterServerConnector.connect({
             resource: undefined,
@@ -326,9 +326,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     // Talk to the remote server to determine sessions
-    public async listKernelsFromConnection(
-        connInfo: INotebookProviderConnection
-    ): Promise<RemoteKernelConnectionMetadata[]> {
+    public async listKernelsFromConnection(connInfo: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
         // Get a jupyter session manager to talk to
         let sessionManager: IJupyterSessionManager | undefined;
         // This should only be used when doing remote.
