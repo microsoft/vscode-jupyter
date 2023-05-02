@@ -37,6 +37,7 @@ import { isCancellationError } from '../../platform/common/cancellation';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelSpecNotTrustedError } from '../../kernels/errors/kernelSpecNotTrustedError';
+import { isKernelDead } from '../../kernels/kernel';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel
@@ -215,14 +216,7 @@ export class KernelConnector {
         // Before returning, but without disposing the kernel, double check it's still valid
         // If a restart didn't happen, then we can't connect. Throw an error.
         // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
-        if (
-            kernel.status === 'dead' ||
-            (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing) ||
-            (!kernel.disposed &&
-                !kernel.disposing &&
-                (kernel.session?.status === 'unknown' || kernel.session?.kernel?.status === 'unknown') &&
-                (kernel.session?.kernel?.isDisposed || kernel.session.kernel?.disposed))
-        ) {
+        if (isKernelDead(kernel)) {
             // If the kernel is dead, then remove the cached promise, & try to get the kernel again.
             // At that point, it will get restarted.
             this.deleteKernelInfo(notebookResource, promise);
@@ -426,14 +420,6 @@ export class KernelConnector {
                           metadata,
                           resourceUri: notebookResource.resource
                       });
-
-            const isKernelDead = (k: IBaseKernel) =>
-                k.status === 'dead' ||
-                (k.status === 'terminating' && !k.disposed && !k.disposing) ||
-                (!k.disposed &&
-                    !k.disposing &&
-                    (k.session?.status == 'unknown' || k.session?.kernel?.status == 'unknown') &&
-                    (k.session.kernel?.isDisposed || k.session.disposed));
 
             try {
                 // If the kernel is dead, ask the user if they want to restart.
