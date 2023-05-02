@@ -152,5 +152,5 @@ export function getNotebookUriFromInputBoxUri(textDocumentUri: Uri): Uri | undef
 
     const inputBoxPrefix = path.sep + 'InteractiveInput-';
     const notebookPath = `${textDocumentUri.fsPath.replace(inputBoxPrefix, 'Interactive-')}.interactive`;
-    return textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
+    return workspace.notebookDocuments.find((doc) => doc.uri.toString() === notebookPath)?.uri;
 }

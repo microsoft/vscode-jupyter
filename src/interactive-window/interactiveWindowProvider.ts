@@ -403,7 +403,7 @@ export class InteractiveWindowProvider
 
     findNotebookEditor(resource: Resource): NotebookEditor | undefined {
         let notebook: NotebookDocument | undefined;
-        if (resource && resource.scheme === Schemas.vscodeInteractive) {
+        if (resource && resource.path.endsWith('.interactive')) {
             notebook = this.get(resource)?.notebookDocument;
         } else {
             const mode = this.configService.getSettings(resource).interactiveWindowMode;
