@@ -54,7 +54,7 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
               };
         await this.jupyterNotebookProvider.connect(serverOptions);
         Cancellation.throwIfCanceled(options.token);
-        
+
         return this.jupyterNotebookProvider.createNotebook(options);
     }
 }

@@ -3,11 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import {
-    ConnectNotebookProviderOptions,
-    INotebookProviderConnection,
-    IJupyterServerConnector
-} from '../../types';
+import { ConnectNotebookProviderOptions, INotebookProviderConnection, IJupyterServerConnector } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawKernelConnectionSessionCreator } from '../../raw/types';
 import { IJupyterNotebookProvider } from '../types';
