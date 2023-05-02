@@ -215,7 +215,14 @@ export class KernelConnector {
         // Before returning, but without disposing the kernel, double check it's still valid
         // If a restart didn't happen, then we can't connect. Throw an error.
         // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
-        if (kernel.status === 'dead' || (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing)) {
+        if (
+            kernel.status === 'dead' ||
+            (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing) ||
+            (!kernel.disposed &&
+                !kernel.disposing &&
+                (kernel.session?.status === 'unknown' || kernel.session?.kernel?.status === 'unknown') &&
+                (kernel.session?.kernel?.isDisposed || kernel.session.kernel?.disposed))
+        ) {
             // If the kernel is dead, then remove the cached promise, & try to get the kernel again.
             // At that point, it will get restarted.
             this.deleteKernelInfo(notebookResource, promise);
@@ -421,7 +428,12 @@ export class KernelConnector {
                       });
 
             const isKernelDead = (k: IBaseKernel) =>
-                k.status === 'dead' || (k.status === 'terminating' && !k.disposed && !k.disposing);
+                k.status === 'dead' ||
+                (k.status === 'terminating' && !k.disposed && !k.disposing) ||
+                (!k.disposed &&
+                    !k.disposing &&
+                    (k.session?.status == 'unknown' || k.session?.kernel?.status == 'unknown') &&
+                    (k.session.kernel?.isDisposed || k.session.disposed));
 
             try {
                 // If the kernel is dead, ask the user if they want to restart.
