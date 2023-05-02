@@ -62,7 +62,7 @@ import {
 import {
     IKernelFinder,
     IKernelProvider,
-    INotebookProvider,
+    IJupyterServerConnector,
     IThirdPartyKernelProvider,
     PythonKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -343,7 +343,7 @@ export async function ensureNewNotebooksHavePythonCells() {
 async function shutdownRemoteKernels() {
     const api = await initialize();
     const serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
-    const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
+    const jupyterServerConnector = api.serviceContainer.get<IJupyterServerConnector>(IJupyterServerConnector);
     const jupyterSessionManagerFactory =
         api.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
     const uri = await serverUriStorage.getRemoteUri();
@@ -353,7 +353,7 @@ async function shutdownRemoteKernels() {
     const cancelToken = new CancellationTokenSource();
     let sessionManager: IJupyterSessionManager | undefined;
     try {
-        const connection = await notebookProvider.connect({
+        const connection = await jupyterServerConnector.connect({
             resource: undefined,
             ui: new DisplayOptions(true),
             localJupyter: false,

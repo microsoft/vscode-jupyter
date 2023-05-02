@@ -14,9 +14,9 @@ import {
     WORKSPACE_MEMENTO
 } from '../../../platform/common/types';
 import { getKernelConnectionLanguage } from '../../helpers';
-import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
+import { IKernel, IKernelProvider, IJupyterServerConnector } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
-import { IRawNotebookProvider } from '../../raw/types';
+import { IRawNotebookSupportedService } from '../../raw/types';
 import { isJupyterNotebook } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -31,10 +31,10 @@ export class ServerPreload implements IExtensionSyncActivationService {
     constructor(
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IJupyterServerConnector) private serverConnector: IJupyterServerConnector,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
+        @inject(IRawNotebookSupportedService) private readonly rawKernelSupport: IRawNotebookSupportedService,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
@@ -73,7 +73,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
     }
 
     private async createServerIfNecessary() {
-        if (!this.workspace.isTrusted || this.rawNotebookProvider.isSupported) {
+        if (!this.workspace.isTrusted || this.rawKernelSupport.isSupported) {
             return;
         }
         const source = new CancellationTokenSource();
@@ -84,7 +84,7 @@ export class ServerPreload implements IExtensionSyncActivationService {
             // If it didn't start, attempt for local and if allowed.
             if (!this.configService.getSettings(undefined).disableJupyterAutoStart) {
                 // Local case, try creating one
-                await this.notebookProvider.connect({
+                await this.serverConnector.connect({
                     resource: undefined,
                     ui,
                     localJupyter: true,

@@ -13,7 +13,12 @@ import { createKernelController, TestNotebookDocument } from '../test/datascienc
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { KernelProvider } from './kernelProvider.web';
 import { Kernel, ThirdPartyKernel } from './kernel';
-import { IKernelController, INotebookProvider, IStartupCodeProviders, KernelConnectionMetadata } from './types';
+import {
+    IKernelConnectionSessionCreator,
+    IKernelController,
+    IStartupCodeProviders,
+    KernelConnectionMetadata
+} from './types';
 import { ThirdPartyKernelProvider } from './kernelProvider.node';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { noop } from '../test/core';
@@ -21,7 +26,7 @@ import { noop } from '../test/core';
 suite('Web Kernel Provider', function () {
     const disposables: IDisposable[] = [];
     const asyncDisposables: { dispose: () => Promise<unknown> }[] = [];
-    let notebookProvider: INotebookProvider;
+    let sessionCreator: IKernelConnectionSessionCreator;
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
     let vscNotebook: IVSCodeNotebook;
@@ -31,7 +36,7 @@ suite('Web Kernel Provider', function () {
     let controller: IKernelController;
     let workspaceMemento: Memento;
     setup(() => {
-        notebookProvider = mock<INotebookProvider>();
+        sessionCreator = mock<IKernelConnectionSessionCreator>();
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
         vscNotebook = mock<IVSCodeNotebook>();
@@ -52,7 +57,7 @@ suite('Web Kernel Provider', function () {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             asyncDisposables as any,
             disposables,
-            instance(notebookProvider),
+            instance(sessionCreator),
             instance(configService),
             instance(appShell),
             instance(vscNotebook),
@@ -70,7 +75,7 @@ suite('Web Kernel Provider', function () {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             asyncDisposables as any,
             disposables,
-            instance(notebookProvider),
+            instance(sessionCreator),
             instance(configService),
             instance(appShell),
             instance(vscNotebook),

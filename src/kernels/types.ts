@@ -511,12 +511,6 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
     getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel;
 }
 
-export interface IRawConnection {
-    readonly type: 'raw';
-    readonly localLaunch: true;
-    readonly displayName: string;
-}
-
 export interface IJupyterConnection extends Disposable {
     readonly type: 'jupyter';
     readonly localLaunch: boolean;
@@ -538,8 +532,6 @@ export interface IJupyterConnection extends Disposable {
     getWebsocketProtocols?(): string[];
     readonly workingDirectory?: string;
 }
-
-export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
 
 export enum InterruptResult {
     Success = 'success',
@@ -712,16 +704,28 @@ export type NotebookCreationOptions = {
     creator: KernelActionSource;
 };
 
-export const INotebookProvider = Symbol('INotebookProvider');
-export interface INotebookProvider {
+export const IJupyterServerConnector = Symbol('IJupyterServerConnector');
+/**
+ * Returns the connection information to connect to a Jupyter Server.
+ * In the case of Local non-raw kernels, we will start the Jupyter Server.
+ * In the case of Remote Jupyter Servers we'll resolve the server info and auth information.
+ */
+export interface IJupyterServerConnector {
+    /**
+     * Prepares for the Jupyter Server Connection (in the case of local non-raw kernels, we start the Jupyter Server).
+     * Once the server is ready, we return the information required to connect to the Jupyter Server.
+     * E.g. in the case of Local non-raw kernels, this will start the Jupyter Server and return the URI and auth/token information to connect to the local server.
+     * In the case of remote, this will resolve the server information along and return the URI and auth/token information to connect to the remote server.
+     */
+    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
+}
+
+export const IKernelConnectionSessionCreator = Symbol('IKernelConnectionSessionCreator');
+export interface IKernelConnectionSessionCreator {
     /**
      * Creates a notebook.
      */
     create(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
-    /**
-     * Connect to a notebook provider to prepare its connection and to get connection information
-     */
-    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection>;
 }
 
 export interface IKernelSocket {

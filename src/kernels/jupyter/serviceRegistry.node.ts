@@ -5,7 +5,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerNode } from '../errors/kernelErrorHandler.node';
 import { IDataScienceErrorHandler } from '../errors/types';
-import { INotebookProvider } from '../types';
+import { IKernelConnectionSessionCreator, IJupyterServerConnector } from '../types';
 import { JupyterCommandFactory } from './interpreter/jupyterCommand.node';
 import { JupyterInterpreterDependencyService } from './interpreter/jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterOldCacheStateStore } from './interpreter/jupyterInterpreterOldCacheStateStore.node';
@@ -29,7 +29,7 @@ import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
 import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServerFactory';
-import { NotebookProvider } from './launcher/notebookProvider';
+import { JupyterServerConnector } from './launcher/jupyterServerConnector';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
@@ -61,6 +61,7 @@ import {
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
+import { KernelConnectionSessionCreator } from './launcher/kernelConnectionSessionCreator';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
@@ -120,7 +121,11 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, NotebookStarter);
-    serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
+    serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);
+    serviceManager.addSingleton<IKernelConnectionSessionCreator>(
+        IKernelConnectionSessionCreator,
+        KernelConnectionSessionCreator
+    );
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);
