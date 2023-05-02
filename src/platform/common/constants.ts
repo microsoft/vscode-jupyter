@@ -126,6 +126,7 @@ export const LanguagesSupportedByPythonkernel = [
     'ruby', // %%ruby
     'sql', // %%sql
     'perl', // %%perl
+    'qsharp', // %%qsharp
     'raw' // raw cells (no formatting)
 ];
 export const jupyterLanguageToMonacoLanguageMapping = new Map([
