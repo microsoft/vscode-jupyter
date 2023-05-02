@@ -5,16 +5,11 @@ import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import {
     ConnectNotebookProviderOptions,
-    GetServerOptions,
-    IKernelConnectionSession,
-    INotebookProvider,
     INotebookProviderConnection,
-    isLocalConnection,
-    NotebookCreationOptions
+    IJupyterServerConnector
 } from '../../types';
-import { Cancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
-import { IRawNotebookProvider } from '../../raw/types';
+import { IRawKernelConnectionSessionCreator } from '../../raw/types';
 import { IJupyterNotebookProvider } from '../types';
 import { PythonExtensionNotInstalledError } from '../../../platform/errors/pythonExtNotInstalledError';
 
@@ -22,12 +17,12 @@ import { PythonExtensionNotInstalledError } from '../../../platform/errors/pytho
  * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
  */
 @injectable()
-export class NotebookProvider implements INotebookProvider {
+export class JupyterServerConnector implements IJupyterServerConnector {
     private readonly startupUi = new DisplayOptions(true);
     constructor(
-        @inject(IRawNotebookProvider)
+        @inject(IRawKernelConnectionSessionCreator)
         @optional()
-        private readonly rawNotebookProvider: IRawNotebookProvider | undefined,
+        private readonly rawNotebookProvider: IRawKernelConnectionSessionCreator | undefined,
         @inject(IJupyterNotebookProvider)
         private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
@@ -56,40 +51,5 @@ export class NotebookProvider implements INotebookProvider {
             }
             throw new PythonExtensionNotInstalledError();
         }
-    }
-    public async create(options: NotebookCreationOptions): Promise<IKernelConnectionSession> {
-        const kernelConnection = options.kernelConnection;
-        const isLocal = isLocalConnection(kernelConnection);
-        const rawLocalKernel = this.rawNotebookProvider?.isSupported && isLocal;
-
-        // We want to cache a Promise<INotebook> from the create functions
-        // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
-        // so check for our connection here first
-        if (!rawLocalKernel) {
-            const serverOptions: GetServerOptions = isLocal
-                ? {
-                      resource: options.resource,
-                      token: options.token,
-                      ui: options.ui,
-                      localJupyter: true
-                  }
-                : {
-                      resource: options.resource,
-                      token: options.token,
-                      ui: options.ui,
-                      localJupyter: false,
-                      serverId: kernelConnection.serverId
-                  };
-            await this.jupyterNotebookProvider.connect(serverOptions);
-        }
-        Cancellation.throwIfCanceled(options.token);
-        return rawLocalKernel
-            ? this.rawNotebookProvider!.createNotebook(
-                  options.resource,
-                  options.kernelConnection,
-                  options.ui,
-                  options.token
-              )
-            : this.jupyterNotebookProvider.createNotebook(options);
     }
 }

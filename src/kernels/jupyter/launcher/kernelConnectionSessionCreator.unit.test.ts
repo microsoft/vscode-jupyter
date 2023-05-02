@@ -6,12 +6,12 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../types';
-import { NotebookProvider } from './notebookProvider';
 import { DisplayOptions } from '../../displayOptions';
 import { IJupyterNotebookProvider } from '../types';
-import { IRawNotebookProvider } from '../../raw/types';
+import { IRawKernelConnectionSessionCreator } from '../../raw/types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { KernelConnectionSessionCreator } from './kernelConnectionSessionCreator';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -19,26 +19,25 @@ function Uri(filename: string): vscode.Uri {
 
 /* eslint-disable  */
 suite('NotebookProvider', () => {
-    let notebookProvider: NotebookProvider;
+    let kernelConnectionSessionCreator: KernelConnectionSessionCreator;
     let jupyterNotebookProvider: IJupyterNotebookProvider;
-    let rawNotebookProvider: IRawNotebookProvider;
+    let rawKernelSessionCreator: IRawKernelConnectionSessionCreator;
     let cancelToken: vscode.CancellationTokenSource;
     const disposables: IDisposable[] = [];
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
-        rawNotebookProvider = mock<IRawNotebookProvider>();
+        rawKernelSessionCreator = mock<IRawKernelConnectionSessionCreator>();
         cancelToken = new vscode.CancellationTokenSource();
         disposables.push(cancelToken);
-        when(rawNotebookProvider.isSupported).thenReturn(false);
+        when(rawKernelSessionCreator.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const onDidChangeEvent = new vscode.EventEmitter<void>();
         disposables.push(onDidChangeEvent);
 
-        notebookProvider = new NotebookProvider(
-            instance(rawNotebookProvider),
-            instance(jupyterNotebookProvider),
-            instance(extensionChecker)
+        kernelConnectionSessionCreator = new KernelConnectionSessionCreator(
+            instance(rawKernelSessionCreator),
+            instance(jupyterNotebookProvider)
         );
     });
     teardown(() => disposeAllDisposables(disposables));
@@ -50,7 +49,7 @@ suite('NotebookProvider', () => {
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
-        const session = await notebookProvider.create({
+        const session = await kernelConnectionSessionCreator.create({
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -68,7 +67,7 @@ suite('NotebookProvider', () => {
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
-        const session = await notebookProvider.create({
+        const session = await kernelConnectionSessionCreator.create({
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -77,7 +76,7 @@ suite('NotebookProvider', () => {
         });
         expect(session).to.not.equal(undefined, 'Server should return a notebook');
 
-        const session2 = await notebookProvider.create({
+        const session2 = await kernelConnectionSessionCreator.create({
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),

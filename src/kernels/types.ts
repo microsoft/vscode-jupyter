@@ -712,16 +712,20 @@ export type NotebookCreationOptions = {
     creator: KernelActionSource;
 };
 
-export const INotebookProvider = Symbol('INotebookProvider');
-export interface INotebookProvider {
+export const IJupyterServerConnector = Symbol('IJupyterServerConnector');
+export interface IJupyterServerConnector {
+    /**
+     * Prepares for the Jupyter Server Connection (in the case of local non-raw kernels, we start the Jupyter Server).
+     */
+    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection>;
+}
+
+export const IKernelConnectionSessionCreator = Symbol('IKernelConnectionSessionCreator');
+export interface IKernelConnectionSessionCreator {
     /**
      * Creates a notebook.
      */
     create(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
-    /**
-     * Connect to a notebook provider to prepare its connection and to get connection information
-     */
-    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection>;
 }
 
 export interface IKernelSocket {

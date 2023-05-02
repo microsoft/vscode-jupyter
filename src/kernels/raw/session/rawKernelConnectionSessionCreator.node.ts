@@ -18,7 +18,7 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
-import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
+import { IKernelLauncher, IRawKernelConnectionSessionCreator, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
@@ -30,7 +30,7 @@ import { noop } from '../../../platform/common/utils/misc';
  * Implements IRawNotebookProvider for raw kernel connections.
  */
 @injectable()
-export class HostRawNotebookProvider implements IRawNotebookProvider {
+export class RawKernelConnectionSessionCreator implements IRawKernelConnectionSessionCreator {
     public get id(): string {
         return this._id;
     }
@@ -63,7 +63,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         return this.rawNotebookSupportedService.isSupported;
     }
 
-    public async createNotebook(
+    public async create(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,

@@ -61,10 +61,10 @@ export interface IRawNotebookSupportedService {
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
-export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
-export interface IRawNotebookProvider extends IAsyncDisposable {
+export const IRawKernelConnectionSessionCreator = Symbol('IRawKernelConnectionSessionCreator');
+export interface IRawKernelConnectionSessionCreator extends IAsyncDisposable {
     isSupported: boolean;
-    createNotebook(
+    create(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,

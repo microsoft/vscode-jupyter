@@ -6,8 +6,8 @@ import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
+    IJupyterServerConnector,
     IKernelProvider,
-    INotebookProvider,
     INotebookProviderConnection,
     isRemoteConnection,
     LiveRemoteKernelConnectionMetadata,
@@ -90,7 +90,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         readonly cacheKey: string,
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private extensionChecker: IPythonExtensionChecker,
-        private readonly notebookProvider: INotebookProvider,
+        private readonly jupyterServerConnector: IJupyterServerConnector,
         private readonly globalState: Memento,
         private readonly env: IApplicationEnvironment,
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
@@ -265,7 +265,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         displayProgress: boolean = true
     ): Promise<INotebookProviderConnection | undefined> {
         const ui = new DisplayOptions(!displayProgress);
-        return this.notebookProvider.connect({
+        return this.jupyterServerConnector.connect({
             resource: undefined,
             ui,
             localJupyter: false,

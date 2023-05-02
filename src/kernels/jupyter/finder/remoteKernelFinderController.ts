@@ -3,7 +3,7 @@
 
 import { injectable, inject, named } from 'inversify';
 import { Disposable, Memento } from 'vscode';
-import { IKernelFinder, IKernelProvider, INotebookProvider } from '../../types';
+import { IKernelFinder, IKernelProvider, IJupyterServerConnector } from '../../types';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import {
     IJupyterSessionManagerFactory,
@@ -34,7 +34,7 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
     constructor(
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private extensionChecker: IPythonExtensionChecker,
-        private readonly notebookProvider: INotebookProvider,
+        private readonly jupyterServerConnector: IJupyterServerConnector,
         private readonly serverUriStorage: IJupyterServerUriStorage,
         private readonly globalState: Memento,
         private readonly env: IApplicationEnvironment,
@@ -75,7 +75,7 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
                 `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,
-                this.notebookProvider,
+                this.jupyterServerConnector,
                 this.globalState,
                 this.env,
                 this.cachedRemoteKernelValidator,
@@ -116,7 +116,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         @inject(IJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
+        @inject(IJupyterServerConnector) private readonly jupyterServerConnector: IJupyterServerConnector,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
@@ -129,7 +129,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         this._strategy = new MultiServerStrategy(
             this.jupyterSessionManagerFactory,
             this.extensionChecker,
-            this.notebookProvider,
+            this.jupyterServerConnector,
             this.serverUriStorage,
             this.globalState,
             this.env,

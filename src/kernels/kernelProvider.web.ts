@@ -18,11 +18,11 @@ import { Kernel, ThirdPartyKernel } from './kernel';
 import {
     IThirdPartyKernel,
     IKernel,
-    INotebookProvider,
     ITracebackFormatter,
     KernelOptions,
     ThirdPartyKernelOptions,
-    IStartupCodeProviders
+    IStartupCodeProviders,
+    IKernelConnectionSessionCreator
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
@@ -36,7 +36,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
     constructor(
         @inject(IAsyncDisposableRegistry) asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IKernelConnectionSessionCreator) private sessionCreator: IKernelConnectionSessionCreator,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
@@ -67,7 +67,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
             resourceUri,
             notebook,
             options.metadata,
-            this.notebookProvider,
+            this.sessionCreator,
             settings,
             this.appShell,
             options.controller,
@@ -99,7 +99,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
     constructor(
         @inject(IAsyncDisposableRegistry) asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IKernelConnectionSessionCreator) private sessionCreator: IKernelConnectionSessionCreator,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
@@ -126,7 +126,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
             uri,
             resourceUri,
             options.metadata,
-            this.notebookProvider,
+            this.sessionCreator,
             this.appShell,
             settings,
             this.startupCodeProviders.getProviders(notebookType),
