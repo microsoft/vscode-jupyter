@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import uuid from 'uuid/v4';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs/Observable';
@@ -185,6 +186,7 @@ abstract class BaseKernel implements IBaseKernel {
         return this._restartPromise || Promise.resolve();
     }
     constructor(
+        public readonly id: string,
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
@@ -997,6 +999,7 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
         workspaceMemento: Memento
     ) {
         super(
+            `3rdPartyKernel_${uuid()}`,
             uri,
             resourceUri,
             kernelConnectionMetadata,
@@ -1030,6 +1033,7 @@ export class Kernel extends BaseKernel implements IKernel {
         workspaceMemento: Memento
     ) {
         super(
+            uuid(),
             notebook.uri,
             resourceUri,
             kernelConnectionMetadata,
