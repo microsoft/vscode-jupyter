@@ -44,7 +44,6 @@ import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernel
 import {
     IKernel,
     IKernelConnectionSession,
-    INotebookProvider,
     InterruptResult,
     IStartupCodeProvider,
     KernelConnectionMetadata,
@@ -54,7 +53,8 @@ import {
     KernelHooks,
     IKernelSettings,
     IKernelController,
-    IThirdPartyKernel
+    IThirdPartyKernel,
+    IKernelConnectionSessionCreator
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -190,7 +190,7 @@ abstract class BaseKernel implements IBaseKernel {
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
-        protected readonly notebookProvider: INotebookProvider,
+        private readonly sessionCreator: IKernelConnectionSessionCreator,
         protected readonly kernelSettings: IKernelSettings,
         protected readonly appShell: IApplicationShell,
         protected readonly startupCodeProviders: IStartupCodeProvider[],
@@ -571,7 +571,7 @@ abstract class BaseKernel implements IBaseKernel {
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
             this._onStatusChanged.fire('starting');
-            const session = await this.notebookProvider.create({
+            const session = await this.sessionCreator.create({
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
@@ -992,7 +992,7 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
         uri: Uri,
         resourceUri: Resource,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
-        notebookProvider: INotebookProvider,
+        sessionCreator: IKernelConnectionSessionCreator,
         appShell: IApplicationShell,
         kernelSettings: IKernelSettings,
         startupCodeProviders: IStartupCodeProvider[],
@@ -1003,7 +1003,7 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
             uri,
             resourceUri,
             kernelConnectionMetadata,
-            notebookProvider,
+            sessionCreator,
             kernelSettings,
             appShell,
             startupCodeProviders,
@@ -1025,7 +1025,7 @@ export class Kernel extends BaseKernel implements IKernel {
         resourceUri: Resource,
         public readonly notebook: NotebookDocument,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
-        notebookProvider: INotebookProvider,
+        sessionCreator: IKernelConnectionSessionCreator,
         kernelSettings: IKernelSettings,
         appShell: IApplicationShell,
         public readonly controller: IKernelController,
@@ -1037,7 +1037,7 @@ export class Kernel extends BaseKernel implements IKernel {
             notebook.uri,
             resourceUri,
             kernelConnectionMetadata,
-            notebookProvider,
+            sessionCreator,
             kernelSettings,
             appShell,
             startupCodeProviders,

@@ -6,9 +6,9 @@ import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
+    IJupyterServerConnector,
     IKernelProvider,
-    INotebookProvider,
-    INotebookProviderConnection,
+    IJupyterConnection,
     isRemoteConnection,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
@@ -90,7 +90,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         readonly cacheKey: string,
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private extensionChecker: IPythonExtensionChecker,
-        private readonly notebookProvider: INotebookProvider,
+        private readonly jupyterServerConnector: IJupyterServerConnector,
         private readonly globalState: Memento,
         private readonly env: IApplicationEnvironment,
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
@@ -263,9 +263,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     private async getRemoteConnectionInfo(
         cancelToken?: CancellationToken,
         displayProgress: boolean = true
-    ): Promise<INotebookProviderConnection | undefined> {
+    ): Promise<IJupyterConnection | undefined> {
         const ui = new DisplayOptions(!displayProgress);
-        return this.notebookProvider.connect({
+        return this.jupyterServerConnector.connect({
             resource: undefined,
             ui,
             localJupyter: false,
@@ -326,9 +326,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     // Talk to the remote server to determine sessions
-    public async listKernelsFromConnection(
-        connInfo: INotebookProviderConnection
-    ): Promise<RemoteKernelConnectionMetadata[]> {
+    public async listKernelsFromConnection(connInfo: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
         // Get a jupyter session manager to talk to
         let sessionManager: IJupyterSessionManager | undefined;
         // This should only be used when doing remote.
