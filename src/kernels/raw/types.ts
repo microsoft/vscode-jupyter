@@ -4,7 +4,7 @@
 import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, Resource } from '../../platform/common/types';
 import {
-    IKernelConnectionSession,
+    IRawKernelConnectionSession,
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
@@ -69,5 +69,5 @@ export interface IRawKernelConnectionSessionCreator extends IAsyncDisposable {
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: CancellationToken
-    ): Promise<IKernelConnectionSession>;
+    ): Promise<IRawKernelConnectionSession>;
 }
