@@ -381,7 +381,7 @@
 //Telemetry.JupyterApiUsage
 /* __GDPR__
    "DATASCIENCE.JUPYTER_API_USAGE" : {
-     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "clientExtId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
      "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
