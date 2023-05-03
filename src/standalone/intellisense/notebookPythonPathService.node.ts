@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as path from '../../platform/vscode-path/path';
 import { inject, injectable } from 'inversify';
 import { Disposable, extensions, Uri, workspace, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
@@ -150,7 +149,6 @@ export function getNotebookUriFromInputBoxUri(textDocumentUri: Uri): Uri | undef
         return undefined;
     }
 
-    const inputBoxPrefix = path.sep + 'InteractiveInput-';
-    const notebookPath = `${textDocumentUri.fsPath.replace(inputBoxPrefix, 'Interactive-')}.interactive`;
-    return workspace.notebookDocuments.find((doc) => doc.uri.toString() === notebookPath)?.uri;
+    const notebookPath = `${textDocumentUri.path.replace('InteractiveInput-', 'Interactive-')}.interactive`;
+    return workspace.notebookDocuments.find((doc) => doc.uri.path === notebookPath)?.uri;
 }
