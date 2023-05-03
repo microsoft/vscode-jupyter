@@ -19,6 +19,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../kernels/types';
+import { Schemas } from '../platform/vscode-path/utils';
 
 suite('KernelWorkingFolder', function () {
     let configService: IConfigurationService;
@@ -48,6 +49,7 @@ suite('KernelWorkingFolder', function () {
         kernelSpec = mock<IJupyterKernelSpec>();
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(kernel.kernelConnectionMetadata).thenReturn(instance(connectionMetadata));
+        when(kernel.resourceUri).thenReturn(Uri.from({ scheme: Schemas.vscodeNotebook, path: '/notebook.ipynb' }));
     });
     test('No working folder for Remote Kernel Specs', async () => {
         when(connectionMetadata.kind).thenReturn('startUsingRemoteKernelSpec');

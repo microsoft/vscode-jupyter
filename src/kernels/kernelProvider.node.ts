@@ -13,7 +13,7 @@ import {
     WORKSPACE_MEMENTO
 } from '../platform/common/types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
-import { InteractiveScheme, InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import {
     IThirdPartyKernel,
@@ -61,7 +61,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         const resourceUri = notebook.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
         const settings = createKernelSettings(this.configService, resourceUri);
         const notebookType =
-            notebook.uri.scheme === InteractiveScheme || options.resourceUri?.scheme === InteractiveScheme
+            notebook.uri.path.endsWith('.interactive') || options.resourceUri?.path.endsWith('.interactive')
                 ? InteractiveWindowView
                 : JupyterNotebookView;
 
@@ -127,10 +127,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
 
         const resourceUri = uri;
         const settings = createKernelSettings(this.configService, resourceUri);
-        const notebookType =
-            resourceUri.scheme === InteractiveScheme || uri.scheme === InteractiveScheme
-                ? InteractiveWindowView
-                : JupyterNotebookView;
+        const notebookType = resourceUri.path.endsWith('.interactive') ? InteractiveWindowView : JupyterNotebookView;
         const kernel: IThirdPartyKernel = new ThirdPartyKernel(
             uri,
             resourceUri,

@@ -142,12 +142,12 @@
             },
             {
                 "key": "shift+enter",
-                "when": "resourceScheme == 'vscode-interactive' && notebookKernel =~ /^ms-toolsai.jupyter\\// || resourceScheme == 'vscode-interactive' && !notebookKernel",
+                "when": "activeEditor == 'workbench.editor.interactive' && notebookKernel =~ /^ms-toolsai.jupyter\\// || activeEditor == 'workbench.editor.interactive' && !notebookKernel",
                 "command": "interactive.execute"
             },
             {
                 "key": "escape",
-                "when": "resourceScheme == 'vscode-interactive' && !editorHoverVisible && !suggestWidgetVisible && !isComposing && !inSnippetMode && !exceptionWidgetVisible && !selectionAnchorSet && !LinkedEditingInputVisible && !renameInputVisible && !editorHasSelection && !accessibilityHelpWidgetVisible && !breakpointWidgetVisible && !findWidgetVisible && !markersNavigationVisible && !parameterHintsVisible && !editorHasMultipleSelections && !notificationToastsVisible",
+                "when": "activeEditor == 'workbench.editor.interactive' && !editorHoverVisible && !suggestWidgetVisible && !isComposing && !inSnippetMode && !exceptionWidgetVisible && !selectionAnchorSet && !LinkedEditingInputVisible && !renameInputVisible && !editorHasSelection && !accessibilityHelpWidgetVisible && !breakpointWidgetVisible && !findWidgetVisible && !markersNavigationVisible && !parameterHintsVisible && !editorHasMultipleSelections && !notificationToastsVisible",
                 "command": "interactive.input.clear"
             },
             {
