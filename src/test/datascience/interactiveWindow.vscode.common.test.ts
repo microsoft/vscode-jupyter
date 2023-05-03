@@ -54,6 +54,8 @@ import { Commands } from '../../platform/common/constants';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
+import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/notebookPythonPathService.node';
+import { Schemas } from '../../platform/vscode-path/utils';
 
 suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
@@ -572,5 +574,20 @@ ${actualCode}
 
         const output = getTextOutputValue(printCell.outputs[0]);
         assert.equal(output.trim(), '1', 'original value should have been printed');
+    });
+
+    test.only('Get the notebook resource for the IW input box', async () => {
+        const { activeInteractiveWindow, untitledPythonFile } = await runNewPythonFile(
+            interactiveWindowProvider,
+            'print(1)',
+            disposables
+        );
+
+        const notebookUri = getNotebookUriFromInputBoxUri(activeInteractiveWindow.inputUri);
+        assert.ok(notebookUri?.path.endsWith('.interactive'));
+        assert.equal(notebookUri?.scheme, Schemas.vscodeInteractiveInput);
+
+        const badUri = getNotebookUriFromInputBoxUri(untitledPythonFile.uri);
+        assert.isEmpty(badUri);
     });
 });
