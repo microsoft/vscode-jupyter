@@ -12,7 +12,8 @@ import {
     TextLine,
     Uri,
     NotebookRange,
-    NotebookCellData
+    NotebookCellData,
+    NotebookCellOutput
 } from 'vscode';
 import { InteractiveWindowView, JupyterNotebookView, NotebookCellScheme } from '../../../platform/common/constants';
 
@@ -99,6 +100,7 @@ export function createMockedDocument(
     const inputLines = inputText.split(/\r?\n/);
 
     when(document.languageId).thenReturn('python');
+    when(document.isClosed).thenReturn(false);
 
     // First set the metadata
     when(document.uri).thenReturn(uri);
@@ -175,6 +177,7 @@ export function createMockedNotebookDocument(
         metadata: nbMetadata
     };
     when(notebook.notebookType).thenReturn(notebookType);
+    when(notebook.uri).thenReturn(uri);
     when(notebook.metadata).thenReturn({ custom: notebookContent } as never);
 
     const nbCells = cells.map((data, index) => {
@@ -188,7 +191,8 @@ export function createMockedNotebookDocument(
         when(cell.document).thenReturn(mockedDocument);
         when(cell.index).thenReturn(index);
         when(cell.kind).thenReturn(data.kind);
-        when(cell.outputs).thenReturn([]);
+        const cellOutput: NotebookCellOutput[] = [];
+        when(cell.outputs).thenReturn(cellOutput);
         when(cell.notebook).thenReturn(instance(notebook));
         return instance(cell);
     });

@@ -511,7 +511,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.clearOutputIfNecessary(task);
         // Keep track of the display_id against the output item, we might need this to update this later.
         if (displayId) {
-            CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput);
+            CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, cellOutput, cellOutput.items);
         }
 
         this.clearLastUsedStreamOutput();
@@ -947,29 +947,31 @@ export class CellExecutionMessageHandler implements IDisposable {
             traceWarning('Update display data message received, but output cell is closed', msg.content);
             return;
         }
-        const output = translateCellDisplayOutput(outputToBeUpdated.output);
+        const output = translateCellDisplayOutput(
+            new NotebookCellOutput(outputToBeUpdated.outputItems, outputToBeUpdated.outputContainer.metadata)
+        );
         const newOutput = cellOutputToVSCCellOutput({
             ...output,
             data: msg.content.data,
             metadata: msg.content.metadata
         } as nbformat.IDisplayData);
         // If there was no output and still no output, then nothing to do.
-        if (outputToBeUpdated.output.items.length === 0 && newOutput.items.length === 0) {
+        if (outputToBeUpdated.outputItems.length === 0 && newOutput.items.length === 0) {
             traceVerbose('Update display data message received, but no output to update', msg.content);
             return;
         }
         // Compare each output item (at the end of the day everything is serializable).
         // Hence this is a safe comparison.
         let outputMetadataHasChanged = false;
-        if (outputToBeUpdated.output.items.length === newOutput.items.length) {
+        if (outputToBeUpdated.outputItems.length === newOutput.items.length) {
             let allAllOutputItemsSame = true;
-            if (!fastDeepEqual(outputToBeUpdated.output.metadata || {}, newOutput.metadata || {})) {
+            if (!fastDeepEqual(outputToBeUpdated.outputContainer.metadata || {}, newOutput.metadata || {})) {
                 outputMetadataHasChanged = true;
                 allAllOutputItemsSame = false;
             }
             if (allAllOutputItemsSame) {
-                for (let index = 0; index < outputToBeUpdated.output.items.length; index++) {
-                    if (!fastDeepEqual(outputToBeUpdated.output.items[index], newOutput.items[index])) {
+                for (let index = 0; index < outputToBeUpdated.outputItems.length; index++) {
+                    if (!fastDeepEqual(outputToBeUpdated.outputItems[index], newOutput.items[index])) {
                         allAllOutputItemsSame = false;
                         break;
                     }
@@ -1011,10 +1013,22 @@ export class CellExecutionMessageHandler implements IDisposable {
                 return o;
             });
             task?.replaceOutput(newOutputs, outputToBeUpdated.cell).then(noop, noop);
+            CellOutputDisplayIdTracker.trackOutputByDisplayId(
+                outputToBeUpdated.cell,
+                displayId,
+                newOutput,
+                newOutput.items
+            );
         } else {
-            task?.replaceOutputItems(newOutput.items, outputToBeUpdated.output).then(noop, noop);
+            task?.replaceOutputItems(newOutput.items, outputToBeUpdated.outputContainer).then(noop, noop);
+            CellOutputDisplayIdTracker.trackOutputByDisplayId(
+                outputToBeUpdated.cell,
+                // Though the items have been replaced, the output container is still the same, hence keep track of the last output object.
+                displayId,
+                outputToBeUpdated.outputContainer,
+                newOutput.items
+            );
         }
         this.endTemporaryTask();
-        CellOutputDisplayIdTracker.trackOutputByDisplayId(outputToBeUpdated.cell, displayId, newOutput);
     }
 }
