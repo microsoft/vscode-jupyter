@@ -57,25 +57,28 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
                 options.token
             );
         }
+        const disposables: IDisposable[] = [];
+        let progressReporter: IDisposable | undefined;
+        const createProgressReporter = async () => {
+            if (options.ui.disableUI || progressReporter) {
+                return;
+            }
+            // Status depends upon if we're about to connect to existing server or not.
+            progressReporter = KernelProgressReporter.createProgressReporter(
+                options.resource,
+                isRemoteConnection(options.kernelConnection)
+                    ? DataScience.connectingToJupyter
+                    : DataScience.startingJupyter
+            );
+            disposables.push(progressReporter);
+        };
+        if (options.ui.disableUI) {
+            options.ui.onDidChangeDisableUI(createProgressReporter, this, disposables);
+        }
+
         if (isRemoteConnection(options.kernelConnection)) {
             let connection: undefined | IJupyterConnection;
 
-            const disposables: IDisposable[] = [];
-            let progressReporter: IDisposable | undefined;
-            const createProgressReporter = async () => {
-                if (options.ui.disableUI || progressReporter) {
-                    return;
-                }
-                // Status depends upon if we're about to connect to existing server or not.
-                progressReporter = KernelProgressReporter.createProgressReporter(
-                    options.resource,
-                    DataScience.connectingToJupyter
-                );
-                disposables.push(progressReporter);
-            };
-            if (options.ui.disableUI) {
-                options.ui.onDidChangeDisableUI(createProgressReporter, this, disposables);
-            }
             // Check to see if we support ipykernel or not
             try {
                 await createProgressReporter();
@@ -127,9 +130,13 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
                 ui: options.ui
             };
 
-            await this.jupyterNotebookProvider.connect(serverOptions);
-            Cancellation.throwIfCanceled(options.token);
-            return this.jupyterNotebookProvider.createNotebook(options);
+            try {
+                await this.jupyterNotebookProvider.connect(serverOptions);
+                Cancellation.throwIfCanceled(options.token);
+                return await this.jupyterNotebookProvider.createNotebook(options);
+            } finally {
+                disposeAllDisposables(disposables);
+            }
         }
     }
 }

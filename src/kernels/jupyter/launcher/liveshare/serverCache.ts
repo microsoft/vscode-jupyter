@@ -32,7 +32,6 @@ export class ServerCache implements IAsyncDisposable {
         options: INotebookServerLocalOptions,
         cancelToken: CancellationToken
     ): Promise<INotebookServer> {
-        const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey();
         let data: IServerData | undefined;
 
@@ -43,7 +42,7 @@ export class ServerCache implements IAsyncDisposable {
             // Didn't find one, so start up our promise and cache it
             data = {
                 promise: createFunction(options, cancelToken),
-                options: fixedOptions,
+                options: { resource: options.resource },
                 resolved: false
             };
             this.cache.set(key, data);
@@ -101,13 +100,6 @@ export class ServerCache implements IAsyncDisposable {
                 })
             );
         }
-    }
-
-    public async generateDefaultOptions(options: INotebookServerLocalOptions): Promise<INotebookServerLocalOptions> {
-        return {
-            resource: options?.resource,
-            ui: options.ui
-        };
     }
 
     private generateKey(): string {

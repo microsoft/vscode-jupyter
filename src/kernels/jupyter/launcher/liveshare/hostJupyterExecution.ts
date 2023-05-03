@@ -107,10 +107,7 @@ export class HostJupyterExecution implements IJupyterExecution {
         cancelToken: CancellationToken
     ): Promise<INotebookServer> {
         if (!this._disposed) {
-            return this.connectToNotebookServerImpl(
-                await this.serverCache.generateDefaultOptions(options),
-                cancelToken
-            );
+            return this.connectToNotebookServerImpl({ resource: options.resource }, cancelToken);
         }
         throw new Error('Notebook server is disposed');
     }

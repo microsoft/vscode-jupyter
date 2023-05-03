@@ -72,7 +72,6 @@ export interface IJupyterNotebookProvider {
 
 export type INotebookServerLocalOptions = {
     resource: Resource;
-    ui: IDisplayOptions;
 };
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
