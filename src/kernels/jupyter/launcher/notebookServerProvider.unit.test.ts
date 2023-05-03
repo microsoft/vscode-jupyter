@@ -70,8 +70,7 @@ suite('NotebookServerProvider', () => {
         const server = await serverProvider.getOrCreateServer({
             resource: undefined,
             ui: new DisplayOptions(false),
-            token: source.token,
-            localJupyter: true
+            token: source.token
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
         verify(jupyterExecution.getServer(anything())).once();
@@ -86,8 +85,7 @@ suite('NotebookServerProvider', () => {
         const server = await serverProvider.getOrCreateServer({
             ui: new DisplayOptions(true),
             resource: undefined,
-            token: source.token,
-            localJupyter: true
+            token: source.token
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
     });

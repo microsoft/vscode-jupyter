@@ -46,7 +46,6 @@ import {
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { DisplayOptions } from '../../../kernels/displayOptions';
 import {
     CellOutputMimeTypes,
     NotebookCellStateTracker,
@@ -62,7 +61,6 @@ import {
 import {
     IKernelFinder,
     IKernelProvider,
-    IJupyterServerConnector,
     IThirdPartyKernelProvider,
     PythonKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -104,6 +102,7 @@ import { noop } from '../../core';
 import { closeActiveWindows, isInsiders } from '../../initialize';
 import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
 import { ControllerPreferredService } from './controllerPreferredService';
+import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -343,7 +342,7 @@ export async function ensureNewNotebooksHavePythonCells() {
 async function shutdownRemoteKernels() {
     const api = await initialize();
     const serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
-    const jupyterServerConnector = api.serviceContainer.get<IJupyterServerConnector>(IJupyterServerConnector);
+    const jupyterConnection = api.serviceContainer.get<JupyterConnection>(JupyterConnection);
     const jupyterSessionManagerFactory =
         api.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
     const uri = await serverUriStorage.getRemoteUri();
@@ -353,11 +352,7 @@ async function shutdownRemoteKernels() {
     const cancelToken = new CancellationTokenSource();
     let sessionManager: IJupyterSessionManager | undefined;
     try {
-        const connection = await jupyterServerConnector.connect({
-            resource: undefined,
-            ui: new DisplayOptions(true),
-            localJupyter: false,
-            token: cancelToken.token,
+        const connection = await jupyterConnection.createConnectionInfo({
             serverId: serverUriStorage.currentServerId!
         });
         if (connection.type !== 'jupyter') {

@@ -16,7 +16,7 @@ import {
     KernelConnectionMetadata,
     IJupyterConnection,
     ConnectNotebookProviderOptions,
-    NotebookCreationOptions,
+    KernelConnectionSessionCreationOptions,
     IJupyterKernelConnectionSession,
     IJupyterKernelSpec,
     GetServerOptions,
@@ -47,8 +47,6 @@ export enum JupyterInterpreterDependencyResponse {
     cancel
 }
 
-// Talks to a jupyter ipython kernel to retrieve data for cells
-export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     createNotebook(
         resource: Resource,
@@ -69,34 +67,23 @@ export interface INotebookServerFactory {
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
-    createNotebook(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
+    createNotebook(options: KernelConnectionSessionCreationOptions): Promise<IKernelConnectionSession>;
 }
 
-type INotebookServerLocalOptions = {
+export type INotebookServerLocalOptions = {
     resource: Resource;
     ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: true;
 };
-type INotebookServerRemoteOptions = {
-    serverId: string;
-    resource: Resource;
-    ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: false;
-};
-export type INotebookServerOptions = INotebookServerLocalOptions | INotebookServerRemoteOptions;
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(options: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer>;
+    connectToNotebookServer(
+        options: INotebookServerLocalOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
+    getServer(options: INotebookServerLocalOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
@@ -114,10 +101,12 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
+    shutdown(serverId: string): Promise<void>;
     create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
+    readonly isDisposed: boolean;
     startNew(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,

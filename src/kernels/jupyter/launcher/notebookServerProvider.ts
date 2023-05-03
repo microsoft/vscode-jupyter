@@ -17,7 +17,7 @@ import {
     INotebookServer,
     IJupyterExecution,
     IJupyterServerUriStorage,
-    INotebookServerOptions
+    INotebookServerLocalOptions
 } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
@@ -59,7 +59,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         const serverOptions = this.getNotebookServerOptions(options);
 
         // If we are just fetching or only want to create for local, see if exists
-        if (options.localJupyter && this.jupyterExecution) {
+        if (this.jupyterExecution) {
             const server = await this.jupyterExecution.getServer(serverOptions);
             // Possible it wasn't created, hence create it.
             if (server) {
@@ -78,7 +78,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             this.ui.disableUI = false;
         }
         options.ui.onDidChangeDisableUI(() => (this.ui.disableUI = options.ui.disableUI), this, this.disposables);
-        const cacheKey = options.localJupyter ? localCacheKey : options.serverId;
+        const cacheKey = localCacheKey;
         if (!this.serverPromise.has(cacheKey)) {
             // Start a server
             this.serverPromise.set(cacheKey, this.startServer(options));
@@ -111,9 +111,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 return;
             }
             // Status depends upon if we're about to connect to existing server or not.
-            progressReporter = !serverOptions.localJupyter
-                ? KernelProgressReporter.createProgressReporter(options.resource, DataScience.connectingToJupyter)
-                : KernelProgressReporter.createProgressReporter(options.resource, DataScience.startingJupyter);
+            progressReporter = KernelProgressReporter.createProgressReporter(
+                options.resource,
+                DataScience.startingJupyter
+            );
             disposables.push(progressReporter);
         };
         if (this.ui.disableUI) {
@@ -124,7 +125,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             await createProgressReporter();
             traceVerbose(`Checking for server usability.`);
 
-            const usable = await this.checkUsable(serverOptions);
+            const usable = await this.checkUsable();
             if (!usable) {
                 traceVerbose('Server not usable (should ask for install now)');
                 // Indicate failing.
@@ -152,9 +153,9 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async checkUsable(options: INotebookServerOptions): Promise<boolean> {
+    private async checkUsable(): Promise<boolean> {
         try {
-            if (options.localJupyter && this.jupyterExecution) {
+            if (this.jupyterExecution) {
                 const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
                 return usableInterpreter ? true : false;
             } else {
@@ -178,20 +179,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private getNotebookServerOptions(options: GetServerOptions): INotebookServerOptions {
-        if (options.localJupyter) {
-            return {
-                resource: options.resource,
-                ui: this.ui,
-                localJupyter: true
-            };
-        }
-
+    private getNotebookServerOptions(options: GetServerOptions): INotebookServerLocalOptions {
         return {
-            serverId: options.serverId,
             resource: options.resource,
-            ui: this.ui,
-            localJupyter: false
+            ui: this.ui
         };
     }
 }

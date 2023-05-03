@@ -4,7 +4,7 @@
 import { CancellationToken } from 'vscode-jsonrpc';
 import { inject } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { traceInfo, traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../../../platform/logging';
 import {
     IAsyncDisposableRegistry,
     IDisposableRegistry,
@@ -17,7 +17,6 @@ import { DataScience } from '../../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
 import {
     KernelConnectionMetadata,
-    isLocalConnection,
     IJupyterConnection,
     KernelActionSource,
     IJupyterKernelConnectionSession
@@ -27,8 +26,8 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { Cancellation } from '../../../../platform/common/cancellation';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { INotebookServer } from '../../types';
-import { Uri } from 'vscode';
 import { RemoteJupyterServerConnectionError } from '../../../../platform/errors/remoteJupyterServerConnectionError';
+import { JupyterKernelConnectionSessionCreator } from '../jupyterKernelConnectionSessionCreator';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
@@ -39,6 +38,7 @@ export class HostJupyterServer implements INotebookServer {
     private serverExitCode: number | undefined;
     private sessions = new Set<Promise<IJupyterKernelConnectionSession>>();
     private disposed = false;
+    private readonly kernelConnectionSessionCreator: JupyterKernelConnectionSessionCreator;
     constructor(
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -46,6 +46,7 @@ export class HostJupyterServer implements INotebookServer {
         public connection: IJupyterConnection,
         private sessionManager: JupyterSessionManager
     ) {
+        this.kernelConnectionSessionCreator = new JupyterKernelConnectionSessionCreator(this.workspaceService);
         this.asyncRegistry.push(this);
 
         this.connectionInfoDisconnectHandler = this.connection.disconnected((c) => {
@@ -81,45 +82,27 @@ export class HostJupyterServer implements INotebookServer {
         resource: Resource,
         sessionManager: JupyterSessionManager,
         kernelConnection: KernelConnectionMetadata,
-        cancelToken: CancellationToken,
+        token: CancellationToken,
         ui: IDisplayOptions,
-        actionSource: KernelActionSource
+        creator: KernelActionSource
     ): Promise<IJupyterKernelConnectionSession> {
-        this.throwIfDisposedOrCancelled(cancelToken);
+        this.throwIfDisposedOrCancelled(token);
         // Compute launch information from the resource and the notebook metadata
         const sessionPromise = createDeferred<IJupyterKernelConnectionSession>();
         // Save the Session
         this.trackDisposable(sessionPromise.promise);
-        const startNewSession = async () => {
-            this.throwIfDisposedOrCancelled(cancelToken);
-            // Figure out the working directory we need for our new notebook. This is only necessary for local.
-            const workingDirectory = isLocalConnection(kernelConnection)
-                ? await this.workspaceService.computeWorkingDirectory(resource)
-                : '';
-            this.throwIfDisposedOrCancelled(cancelToken);
-            // Start a session (or use the existing one if allowed)
-            const session = await sessionManager.startNew(
-                resource,
-                kernelConnection,
-                Uri.file(workingDirectory),
-                ui,
-                cancelToken,
-                actionSource
-            );
-            this.throwIfDisposedOrCancelled(cancelToken);
-            traceInfo(`Started session for kernel ${kernelConnection.kind}:${kernelConnection.id}`);
-            return session;
-        };
 
         try {
-            const session = await startNewSession();
-            this.throwIfDisposedOrCancelled(cancelToken);
-
-            if (session) {
-                sessionPromise.resolve(session);
-            } else {
-                sessionPromise.reject(this.getDisposedError());
-            }
+            const session = await this.kernelConnectionSessionCreator.create({
+                creator,
+                kernelConnection,
+                resource,
+                sessionManager,
+                token,
+                ui
+            });
+            this.throwIfDisposedOrCancelled(token);
+            sessionPromise.resolve(session);
         } catch (ex) {
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
@@ -210,19 +193,6 @@ export class HostJupyterServer implements INotebookServer {
         } catch (e) {
             traceError(`Error during shutdown: `, e);
         }
-    }
-
-    // Return a copy of the connection information that this server used to connect with
-    public getConnectionInfo(): IJupyterConnection {
-        if (!this.connection) {
-            throw new Error('Not connected');
-        }
-
-        // Return a copy with a no-op for dispose
-        return {
-            ...this.connection,
-            dispose: noop
-        };
     }
 
     public getDisposedError(): Error {

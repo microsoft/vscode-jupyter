@@ -6,7 +6,6 @@ import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
-    IJupyterServerConnector,
     IKernelProvider,
     IJupyterConnection,
     isRemoteConnection,
@@ -37,6 +36,7 @@ import { ContributedKernelFinderKind } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { JupyterConnection } from '../connection/jupyterConnection';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -90,14 +90,14 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         readonly cacheKey: string,
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private extensionChecker: IPythonExtensionChecker,
-        private readonly jupyterServerConnector: IJupyterServerConnector,
         private readonly globalState: Memento,
         private readonly env: IApplicationEnvironment,
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         kernelFinder: KernelFinder,
         private readonly kernelProvider: IKernelProvider,
         private readonly extensions: IExtensions,
-        readonly serverUri: IJupyterServerUriEntry
+        readonly serverUri: IJupyterServerUriEntry,
+        private readonly jupyterConnection: JupyterConnection
     ) {
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
@@ -200,7 +200,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             } else {
                 try {
                     const kernelsWithoutCachePromise = (async () => {
-                        const connInfo = await this.getRemoteConnectionInfo(undefined, displayProgress);
+                        const connInfo = await this.getRemoteConnectionInfo(displayProgress);
                         return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
                     })();
 
@@ -227,7 +227,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
             try {
                 const kernelsWithoutCachePromise = (async () => {
-                    const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token, false);
+                    const connInfo = await this.getRemoteConnectionInfo(false);
                     return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
                 })();
 
@@ -260,16 +260,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         return this.cache;
     }
 
-    private async getRemoteConnectionInfo(
-        cancelToken?: CancellationToken,
-        displayProgress: boolean = true
-    ): Promise<IJupyterConnection | undefined> {
+    private async getRemoteConnectionInfo(displayProgress: boolean = true): Promise<IJupyterConnection | undefined> {
         const ui = new DisplayOptions(!displayProgress);
-        return this.jupyterServerConnector.connect({
-            resource: undefined,
-            ui,
-            localJupyter: false,
-            token: cancelToken,
+        return this.jupyterConnection.createConnectionInfo({
             serverId: this.serverUri.serverId
         });
     }

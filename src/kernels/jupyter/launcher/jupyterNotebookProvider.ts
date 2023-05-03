@@ -7,8 +7,7 @@ import {
     GetServerOptions,
     IJupyterConnection,
     IKernelConnectionSession,
-    isLocalConnection,
-    NotebookCreationOptions
+    KernelConnectionSessionCreationOptions
 } from '../../types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { IJupyterNotebookProvider, IJupyterServerProvider } from '../types';
@@ -23,23 +22,13 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         return connection;
     }
 
-    public async createNotebook(options: NotebookCreationOptions): Promise<IKernelConnectionSession> {
-        const kernelConnection = options.kernelConnection;
+    public async createNotebook(options: KernelConnectionSessionCreationOptions): Promise<IKernelConnectionSession> {
         // Make sure we have a server
-        const serverOptions: GetServerOptions = isLocalConnection(kernelConnection)
-            ? {
-                  ui: options.ui,
-                  resource: options.resource,
-                  token: options.token,
-                  localJupyter: true
-              }
-            : {
-                  ui: options.ui,
-                  resource: options.resource,
-                  token: options.token,
-                  localJupyter: false,
-                  serverId: kernelConnection.serverId
-              };
+        const serverOptions: GetServerOptions = {
+            ui: options.ui,
+            resource: options.resource,
+            token: options.token
+        };
         const server = await this.serverProvider.getOrCreateServer(serverOptions);
         Cancellation.throwIfCanceled(options.token);
         return server.createNotebook(

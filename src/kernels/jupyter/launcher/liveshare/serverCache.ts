@@ -5,10 +5,10 @@ import { CancellationToken } from 'vscode';
 import { traceError, traceVerbose } from '../../../../platform/logging';
 import { IAsyncDisposable } from '../../../../platform/common/types';
 import { sleep } from '../../../../platform/common/utils/async';
-import { INotebookServerOptions, INotebookServer } from '../../types';
+import { INotebookServerLocalOptions, INotebookServer } from '../../types';
 
 interface IServerData {
-    options: INotebookServerOptions;
+    options: INotebookServerLocalOptions;
     promise: Promise<INotebookServer>;
     resolved: boolean;
 }
@@ -25,12 +25,15 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async getOrCreate(
-        createFunction: (options: INotebookServerOptions, cancelToken: CancellationToken) => Promise<INotebookServer>,
-        options: INotebookServerOptions,
+        createFunction: (
+            options: INotebookServerLocalOptions,
+            cancelToken: CancellationToken
+        ) => Promise<INotebookServer>,
+        options: INotebookServerLocalOptions,
         cancelToken: CancellationToken
     ): Promise<INotebookServer> {
         const fixedOptions = await this.generateDefaultOptions(options);
-        const key = this.generateKey(fixedOptions);
+        const key = this.generateKey();
         let data: IServerData | undefined;
 
         // Check to see if we already have a promise for this key
@@ -69,9 +72,8 @@ export class ServerCache implements IAsyncDisposable {
             });
     }
 
-    public async get(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
-        const fixedOptions = await this.generateDefaultOptions(options);
-        const key = this.generateKey(fixedOptions);
+    public async get(): Promise<INotebookServer | undefined> {
+        const key = this.generateKey();
         if (this.cache.has(key)) {
             return this.cache.get(key)?.promise;
         }
@@ -101,24 +103,14 @@ export class ServerCache implements IAsyncDisposable {
         }
     }
 
-    public async generateDefaultOptions(options: INotebookServerOptions): Promise<INotebookServerOptions> {
-        if (options.localJupyter) {
-            return {
-                resource: options?.resource,
-                ui: options.ui,
-                localJupyter: true
-            };
-        }
+    public async generateDefaultOptions(options: INotebookServerLocalOptions): Promise<INotebookServerLocalOptions> {
         return {
-            serverId: options.serverId,
             resource: options?.resource,
-            ui: options.ui,
-            localJupyter: false
+            ui: options.ui
         };
     }
 
-    private generateKey(options: INotebookServerOptions): string {
-        // combine all the values together to make a unique key
-        return `serverId=${options.localJupyter ? '' : options.serverId};local=${options.localJupyter};`;
+    private generateKey(): string {
+        return `local`;
     }
 }

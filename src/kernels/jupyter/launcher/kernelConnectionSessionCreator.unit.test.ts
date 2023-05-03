@@ -7,11 +7,13 @@ import * as vscode from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
-import { IJupyterNotebookProvider } from '../types';
+import { IJupyterNotebookProvider, IJupyterSessionManagerFactory } from '../types';
 import { IRawKernelConnectionSessionCreator } from '../../raw/types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionSessionCreator } from './kernelConnectionSessionCreator';
+import { JupyterKernelConnectionSessionCreator } from './jupyterKernelConnectionSessionCreator';
+import { JupyterConnection } from '../connection/jupyterConnection';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -34,10 +36,16 @@ suite('NotebookProvider', () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const onDidChangeEvent = new vscode.EventEmitter<void>();
         disposables.push(onDidChangeEvent);
+        const sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
+        const jupyterSessionCreator = mock<JupyterKernelConnectionSessionCreator>();
+        const jupyterConnection = mock<JupyterConnection>();
 
         kernelConnectionSessionCreator = new KernelConnectionSessionCreator(
             instance(rawKernelSessionCreator),
-            instance(jupyterNotebookProvider)
+            instance(jupyterNotebookProvider),
+            instance(sessionManagerFactory),
+            instance(jupyterSessionCreator),
+            instance(jupyterConnection)
         );
     });
     teardown(() => disposeAllDisposables(disposables));

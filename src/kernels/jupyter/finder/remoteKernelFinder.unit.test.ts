@@ -33,6 +33,7 @@ import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { IExtensions } from '../../../platform/common/types';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { RemoteKernelFinder } from './remoteKernelFinder';
+import { JupyterConnection } from '../connection/jupyterConnection';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -151,6 +152,7 @@ suite(`Remote Kernel Finder`, () => {
         kernelFinder = new KernelFinder(disposables);
         kernelsChanged = createEventHandler(kernelFinder, 'onDidChangeKernels');
         disposables.push(kernelsChanged);
+        const jupyterConnection = mock<JupyterConnection>();
 
         remoteKernelFinder = new RemoteKernelFinder(
             'currentremote',
@@ -158,14 +160,14 @@ suite(`Remote Kernel Finder`, () => {
             RemoteKernelSpecsCacheKey,
             instance(jupyterSessionManagerFactory),
             instance(extensionChecker),
-            instance(serverConnector),
             instance(memento),
             instance(env),
             instance(cachedRemoteKernelValidator),
             kernelFinder,
             instance(kernelProvider),
             instance(extensions),
-            serverEntry
+            serverEntry,
+            instance(jupyterConnection)
         );
         remoteKernelFinder.activate().then(noop, noop);
     });
