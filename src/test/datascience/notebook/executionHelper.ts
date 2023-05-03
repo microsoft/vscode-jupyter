@@ -67,7 +67,10 @@ class TestNotebookCellExecution implements NotebookCellExecution {
     ): Promise<void> {
         const cellToEdit = cell || this.cell;
         const items = Array.isArray(out) ? out : [out];
-        (cellToEdit.outputs as NotebookCellOutput[]) = items;
+        if (cellToEdit.outputs.length) {
+            (cellToEdit.outputs as NotebookCellOutput[]).splice(0, cellToEdit.outputs.length);
+        }
+        (cellToEdit.outputs as NotebookCellOutput[]).push(...items);
     }
     async appendOutput(
         out: NotebookCellOutput | readonly NotebookCellOutput[],

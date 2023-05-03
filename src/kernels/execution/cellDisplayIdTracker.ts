@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { NotebookCell, NotebookCellOutput, NotebookDocument, workspace } from 'vscode';
+import { NotebookCell, NotebookCellOutput, NotebookCellOutputItem, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -15,7 +15,7 @@ import { isJupyterNotebook } from '../../platform/common/utils';
 export class CellOutputDisplayIdTracker implements IExtensionSyncActivationService {
     private static displayIdCellOutputMappingPerDocument = new WeakMap<
         NotebookDocument,
-        Map<string, { output: NotebookCellOutput; cell: NotebookCell }>
+        Map<string, { outputContainer: NotebookCellOutput; outputItems: NotebookCellOutputItem[]; cell: NotebookCell }>
     >();
     private static cellToDisplayIdMapping = new WeakMap<NotebookCell, string>();
     private static disposables: IDisposable[] = [];
@@ -54,15 +54,23 @@ export class CellOutputDisplayIdTracker implements IExtensionSyncActivationServi
      * When we need to update this display, we can resolve the promise & access the output.
      * The return value is a promise that needs to be resolved with the associated output thats been added to the DOM
      */
-    public static trackOutputByDisplayId(cell: NotebookCell, displayId: string, output: NotebookCellOutput) {
+    public static trackOutputByDisplayId(
+        cell: NotebookCell,
+        displayId: string,
+        outputContainer: NotebookCellOutput,
+        outputItems: NotebookCellOutputItem[]
+    ) {
         let mapOfDisplayIdToOutput = CellOutputDisplayIdTracker.displayIdCellOutputMappingPerDocument.get(
             cell.notebook
         );
         if (!mapOfDisplayIdToOutput) {
-            mapOfDisplayIdToOutput = new Map<string, { output: NotebookCellOutput; cell: NotebookCell }>();
+            mapOfDisplayIdToOutput = new Map<
+                string,
+                { outputContainer: NotebookCellOutput; outputItems: NotebookCellOutputItem[]; cell: NotebookCell }
+            >();
             CellOutputDisplayIdTracker.displayIdCellOutputMappingPerDocument.set(cell.notebook, mapOfDisplayIdToOutput);
         }
-        mapOfDisplayIdToOutput.set(displayId, { output, cell: cell });
+        mapOfDisplayIdToOutput.set(displayId, { outputContainer, cell, outputItems });
         CellOutputDisplayIdTracker.cellToDisplayIdMapping.set(cell, displayId);
     }
     /**
@@ -71,7 +79,7 @@ export class CellOutputDisplayIdTracker implements IExtensionSyncActivationServi
     public static getMappedOutput(
         notebook: NotebookDocument,
         displayId: string
-    ): { cell: NotebookCell; output: NotebookCellOutput } | undefined {
+    ): { cell: NotebookCell; outputContainer: NotebookCellOutput; outputItems: NotebookCellOutputItem[] } | undefined {
         const mapOfDisplayIdToOutput = CellOutputDisplayIdTracker.displayIdCellOutputMappingPerDocument.get(notebook);
         if (!mapOfDisplayIdToOutput) {
             return;
