@@ -953,15 +953,6 @@ export class CellExecutionMessageHandler implements IDisposable {
             data: msg.content.data,
             metadata: msg.content.metadata
         } as nbformat.IDisplayData);
-        const newOutputs = outputToBeUpdated.cell.outputs.map((o) => {
-            if (
-                o.items.length === outputToBeUpdated.output.items.length &&
-                o.items.every((item, index) => fastDeepEqual(item, outputToBeUpdated.output.items[index]))
-            ) {
-                return newOutput;
-            }
-            return o;
-        });
         // If there was no output and still no output, then nothing to do.
         if (outputToBeUpdated.output.items.length === 0 && newOutput.items.length === 0) {
             traceVerbose('Update display data message received, but no output to update', msg.content);
@@ -969,9 +960,11 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         // Compare each output item (at the end of the day everything is serializable).
         // Hence this is a safe comparison.
+        let outputMetadataHasChanged = false;
         if (outputToBeUpdated.output.items.length === newOutput.items.length) {
             let allAllOutputItemsSame = true;
             if (!fastDeepEqual(outputToBeUpdated.output.metadata || {}, newOutput.metadata || {})) {
+                outputMetadataHasChanged = true;
                 allAllOutputItemsSame = false;
             }
             if (allAllOutputItemsSame) {
@@ -996,8 +989,32 @@ export class CellExecutionMessageHandler implements IDisposable {
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
         traceCellMessage(this.cell, `Replace output items in display data ${newOutput.items.length}`);
-        task?.replaceOutput(newOutputs, outputToBeUpdated.cell).then(noop, noop);
+        if (outputMetadataHasChanged) {
+            // https://github.com/microsoft/vscode/issues/181369
+            // This operation is very unsafe as we replace all of the outputs, when we need to replace just one output.
+            // Unsafe because its possible some new outputs were added to this cell (appended).
+            // However this is the only way we can update the output along with its metadata.
+            const newOutputs = outputToBeUpdated.cell.outputs.map((o) => {
+                const jupyterOutput = translateCellDisplayOutput(o);
+                // Replace just the item that stores the display data.
+                if (
+                    jupyterOutput.output_type === 'display_data' &&
+                    'transient' in jupyterOutput &&
+                    jupyterOutput.transient &&
+                    typeof jupyterOutput.transient === 'object' &&
+                    'display_id' in jupyterOutput.transient &&
+                    typeof jupyterOutput.transient.display_id === 'string' &&
+                    jupyterOutput.transient.display_id === displayId
+                ) {
+                    return newOutput;
+                }
+                return o;
+            });
+            task?.replaceOutput(newOutputs, outputToBeUpdated.cell).then(noop, noop);
+        } else {
+            task?.replaceOutputItems(newOutput.items, outputToBeUpdated.output).then(noop, noop);
+        }
         this.endTemporaryTask();
-        CellOutputDisplayIdTracker.trackOutputByDisplayId(this.cell, displayId, newOutput);
+        CellOutputDisplayIdTracker.trackOutputByDisplayId(outputToBeUpdated.cell, displayId, newOutput);
     }
 }
