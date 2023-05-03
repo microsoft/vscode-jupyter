@@ -104,7 +104,7 @@ function sendApiUsageTelemetry(extensions: IExtensions, pemUsed: keyof IExtensio
         .determineExtensionFromCallStack()
         .then((info) => {
             sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
-                extensionId: info.extensionId,
+                clientExtId: info.extensionId,
                 pemUsed
             });
         })
@@ -154,6 +154,11 @@ export function buildApi(
             _handle: JupyterServerUriHandle,
             _notebook: NotebookDocument
         ) => {
+            traceError('The API getSuggestedController is being deprecated.');
+            if (context.extensionMode === ExtensionMode.Development || context.extensionMode === ExtensionMode.Test) {
+                window.showErrorMessage('The Jupyter API getSuggestedController is being deprecated.').then(noop, noop);
+                return;
+            }
             sendApiUsageTelemetry(extensions, 'getSuggestedController');
             return undefined;
         },
