@@ -40,6 +40,7 @@ import {
 } from './types';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelConnectionSessionCreator } from './launcher/kernelConnectionSessionCreator';
+import { JupyterKernelConnectionSessionCreator } from './launcher/jupyterKernelConnectionSessionCreator';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
@@ -61,6 +62,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IKernelConnectionSessionCreator>(
         IKernelConnectionSessionCreator,
         KernelConnectionSessionCreator
+    );
+    serviceManager.addSingleton<JupyterKernelConnectionSessionCreator>(
+        JupyterKernelConnectionSessionCreator,
+        JupyterKernelConnectionSessionCreator
     );
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);

@@ -262,6 +262,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
     private async getRemoteConnectionInfo(displayProgress: boolean = true): Promise<IJupyterConnection | undefined> {
         const ui = new DisplayOptions(!displayProgress);
+        console.log(ui.disableUI);
         return this.jupyterConnection.createConnectionInfo({
             serverId: this.serverUri.serverId
         });
