@@ -72,7 +72,7 @@ suite('KernelWorkingFolder', function () {
     ];
     connectionType.forEach((item) => {
         workspaceFolder = { index: 0, name: 'one', uri: Uri.file(__dirname) };
-        suite.only(`Python Kernels for ${item}`, () => {
+        suite(`Python Kernels for ${item}`, () => {
             setup(() => {
                 if (item === 'startUsingLocalKernelSpec') {
                     let localKernelSpec = connectionMetadata as LocalKernelSpecConnectionMetadata;
