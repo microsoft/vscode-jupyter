@@ -26,7 +26,6 @@ import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { computeServerId } from '../jupyterUtils';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import { DisplayOptions } from '../../displayOptions';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -37,6 +36,8 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { JupyterConnection } from '../connection/jupyterConnection';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
+import { DataScience } from '../../../platform/common/utils/localize';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -261,11 +262,15 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     private async getRemoteConnectionInfo(displayProgress: boolean = true): Promise<IJupyterConnection | undefined> {
-        const ui = new DisplayOptions(!displayProgress);
-        console.log(ui.disableUI);
-        return this.jupyterConnection.createConnectionInfo({
-            serverId: this.serverUri.serverId
-        });
+        const disposables: IDisposable[] = [];
+        if (displayProgress) {
+            disposables.push(KernelProgressReporter.createProgressReporter(undefined, DataScience.connectingToJupyter));
+        }
+        return this.jupyterConnection
+            .createConnectionInfo({
+                serverId: this.serverUri.serverId
+            })
+            .finally(() => disposeAllDisposables(disposables));
     }
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<RemoteKernelConnectionMetadata[]> {
