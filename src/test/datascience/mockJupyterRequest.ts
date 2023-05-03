@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { Signal } from '@lumino/signaling';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -29,7 +30,8 @@ class SimpleMessageProducer implements IMessageProducer {
     constructor(
         type: KernelMessage.IOPubMessageType | KernelMessage.ShellMessageType,
         result: any,
-        channel: string = 'iopub'
+        channel: string = 'iopub',
+        private readonly parentHeader: {}
     ) {
         this.type = type;
         this.result = result;
@@ -61,7 +63,7 @@ class SimpleMessageProducer implements IMessageProducer {
                 msg_type: msgType,
                 date: ''
             },
-            parent_header: {},
+            parent_header: this.parentHeader,
             metadata: {},
             content: result
         };
@@ -132,8 +134,8 @@ class OutputMessageProducer extends SimpleMessageProducer {
     private cancelToken: CancellationToken;
     private waitingForInput: Deferred<string> | undefined;
 
-    constructor(output: nbformat.IOutput, cancelToken: CancellationToken) {
-        super(output.output_type as KernelMessage.IOPubMessageType, output);
+    constructor(output: nbformat.IOutput, cancelToken: CancellationToken, parentHeader: {}) {
+        super(output.output_type as KernelMessage.IOPubMessageType, output, 'iopub', parentHeader);
         this.output = output;
         this.cancelToken = cancelToken;
     }
@@ -203,20 +205,30 @@ class OutputMessageProducer extends SimpleMessageProducer {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
-export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
-    public msg: KernelMessage.IShellMessage;
-    public onReply: (msg: KernelMessage.IShellMessage) => void | PromiseLike<void>;
+export class MockJupyterRequestICell<
+    Request extends KernelMessage.IExecuteRequestMsg,
+    Reply extends KernelMessage.IExecuteReplyMsg
+> implements Kernel.IFuture<Request, Reply>
+{
+    public msg: Request;
+    public onReply: (msg: Reply) => void | PromiseLike<void>;
     public onStdin: (msg: KernelMessage.IStdinMessage) => void | PromiseLike<void>;
     public onIOPub: (msg: KernelMessage.IIOPubMessage) => void | PromiseLike<void>;
     public isDisposed: boolean = false;
 
-    private deferred: Deferred<KernelMessage.IShellMessage> = createDeferred<KernelMessage.IShellMessage>();
+    private deferred = createDeferred<Reply>();
     private executionCount: number;
     private cell: ICell;
     private cancelToken: CancellationToken;
     private currentProducer: IMessageProducer | undefined;
 
-    constructor(cell: ICell, delay: number, executionCount: number, cancelToken: CancellationToken) {
+    constructor(
+        cell: ICell,
+        delay: number,
+        executionCount: number,
+        cancelToken: CancellationToken,
+        private readonly iopubMessage: Signal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage>
+    ) {
         // Save our execution count, this is like our id
         this.executionCount = executionCount;
         this.cell = cell;
@@ -237,7 +249,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
             parent_header: {},
             metadata: {},
             content: {}
-        };
+        } as Request;
         this.onIOPub = noop;
         this.onReply = noop;
         this.onStdin = noop;
@@ -246,7 +258,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
         this.executeRequest(delay);
     }
 
-    public get done(): Promise<KernelMessage.IShellMessage> {
+    public get done(): Promise<Reply> {
         return this.deferred.promise;
     }
     public registerMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
@@ -276,18 +288,28 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
         // Create message producers for output first.
         const outputs = this.cell.data.outputs as nbformat.IOutput[];
         const outputProducers = outputs.map(
-            (o) => new OutputMessageProducer({ ...o, execution_count: this.executionCount }, this.cancelToken)
+            (o) =>
+                new OutputMessageProducer(
+                    { ...o, execution_count: this.executionCount },
+                    this.cancelToken,
+                    this.msg.header
+                )
         );
 
         // Then combine those into an array of producers for the rest of the messages
         const producers = [
-            new SimpleMessageProducer('status', { execution_state: 'busy' }),
-            new SimpleMessageProducer('execute_input', {
-                code: concatMultilineString(this.cell.data.source),
-                execution_count: this.executionCount
-            }),
+            new SimpleMessageProducer('status', { execution_state: 'busy' }, 'iopub', this.msg.header),
+            new SimpleMessageProducer(
+                'execute_input',
+                {
+                    code: concatMultilineString(this.cell.data.source),
+                    execution_count: this.executionCount
+                },
+                'iopub',
+                this.msg.header
+            ),
             ...outputProducers,
-            new SimpleMessageProducer('status', { execution_state: 'idle' })
+            new SimpleMessageProducer('status', { execution_state: 'idle' }, 'iopub', this.msg.header)
         ];
 
         // Then send these until we're done
@@ -307,6 +329,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
                     .then((r) => {
                         // If there's a message, send it.
                         if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
+                            this.iopubMessage.emit(r.message as KernelMessage.IIOPubMessage);
                             swallowExceptions(() => this.onIOPub(r.message as KernelMessage.IIOPubMessage));
                         } else if (r.message && r.message.channel === 'stdin' && this.onStdin) {
                             swallowExceptions(() => this.onStdin(r.message as KernelMessage.IStdinMessage));
@@ -329,167 +352,27 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
             const replyProducer = new SimpleMessageProducer(
                 'execute_reply',
                 { execution_count: this.executionCount },
-                'shell'
+                'shell',
+                this.msg.header
             );
             replyProducer
                 .produceNextMessage()
                 .then((r) => {
-                    swallowExceptions(() => this.onReply((<any>r.message) as KernelMessage.IShellMessage));
+                    swallowExceptions(() => this.onReply((<any>r.message) as Reply));
                 })
                 .catch(noop);
 
             // Then the done message
-            const shellProducer = new SimpleMessageProducer('done' as any, { status: 'success' }, 'shell');
-            shellProducer
-                .produceNextMessage()
-                .then((r) => {
-                    this.deferred.resolve((<any>r.message) as KernelMessage.IShellMessage);
-                })
-                .catch(noop);
-        }
-    }
-}
-
-export class MockJupyterRequest implements Kernel.IFuture<any, any> {
-    public msg: KernelMessage.IShellMessage;
-    public onReply: (msg: KernelMessage.IShellMessage) => void | PromiseLike<void>;
-    public onStdin: (msg: KernelMessage.IStdinMessage) => void | PromiseLike<void>;
-    public onIOPub: (msg: KernelMessage.IIOPubMessage) => void | PromiseLike<void>;
-    public isDisposed: boolean = false;
-
-    private deferred: Deferred<KernelMessage.IShellMessage> = createDeferred<KernelMessage.IShellMessage>();
-    private currentProducer: IMessageProducer | undefined;
-
-    constructor(
-        private readonly cell: nbformat.IBaseCell,
-        delay: number,
-        private readonly executionCount: number,
-        private readonly cancelToken: CancellationToken
-    ) {
-        // Save our execution count, this is like our id
-
-        // Because the base type was implemented without undefined on unset items, we
-        // need to set all items for hygiene to work.
-        this.msg = {
-            channel: 'shell',
-            header: {
-                username: 'foo',
-                version: '1.1',
-                session: '1111111111',
-                msg_id: '1.1',
-                msg_type: 'shell' as any as KernelMessage.ShellMessageType,
-                date: ''
-            },
-            parent_header: {},
-            metadata: {},
-            content: {}
-        };
-        this.onIOPub = noop;
-        this.onReply = noop;
-        this.onStdin = noop;
-
-        // Start our sequence of events that is our cell running
-        this.executeRequest(delay);
-    }
-
-    public get done(): Promise<KernelMessage.IShellMessage> {
-        return this.deferred.promise;
-    }
-    public registerMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
-        noop();
-    }
-    public removeMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
-        noop();
-    }
-    public sendInputReply(content: KernelMessage.IInputReply): void {
-        if (this.currentProducer) {
-            this.currentProducer.receiveInput(content.value);
-        }
-    }
-    public dispose(): void {
-        if (!this.isDisposed) {
-            this.isDisposed = true;
-        }
-    }
-
-    private executeRequest(delay: number) {
-        // The order of messages should be:
-        // 1 - Status busy
-        // 2 - Execute input
-        // 3 - N - Results/output
-        // N + 1 - Status idle
-
-        // Create message producers for output first.
-        const outputs = this.cell.outputs as nbformat.IOutput[];
-        const outputProducers = outputs?.map(
-            (o) => new OutputMessageProducer({ ...o, execution_count: this.executionCount }, this.cancelToken)
-        );
-
-        // Then combine those into an array of producers for the rest of the messages
-        const producers = [
-            new SimpleMessageProducer('status', { execution_state: 'busy' }),
-            new SimpleMessageProducer('execute_input', {
-                code: concatMultilineString(this.cell.source),
-                execution_count: this.executionCount
-            }),
-            ...outputProducers,
-            new SimpleMessageProducer('status', { execution_state: 'idle' })
-        ];
-
-        // Then send these until we're done
-        this.sendMessages(producers, delay);
-    }
-
-    private sendMessages(producers: IMessageProducer[], delay: number) {
-        if (producers && producers.length > 0) {
-            // We have another producer, after a delay produce the next
-            // message
-            const producer = producers[0];
-            this.currentProducer = producer;
-            setTimeout(() => {
-                // Produce the next message
-                producer
-                    .produceNextMessage()
-                    .then((r) => {
-                        // If there's a message, send it.
-                        if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
-                            swallowExceptions(() => this.onIOPub(r.message as KernelMessage.IIOPubMessage));
-                        } else if (r.message && r.message.channel === 'stdin' && this.onStdin) {
-                            swallowExceptions(() => this.onStdin(r.message as KernelMessage.IStdinMessage));
-                        }
-
-                        // Move onto the next producer if allowed
-                        if (!this.cancelToken.isCancellationRequested) {
-                            if (r.haveMore) {
-                                this.sendMessages(producers, delay);
-                            } else {
-                                this.sendMessages(producers.slice(1), delay);
-                            }
-                        }
-                    })
-                    .catch(noop);
-            }, delay);
-        } else {
-            this.currentProducer = undefined;
-            // No more messages, send the execute reply message
-            const replyProducer = new SimpleMessageProducer(
-                'execute_reply',
-                { execution_count: this.executionCount },
-                'shell'
+            const shellProducer = new SimpleMessageProducer(
+                'done' as any,
+                { status: 'success' },
+                'shell',
+                this.msg.header
             );
-            replyProducer
-                .produceNextMessage()
-                .then((r) => {
-                    swallowExceptions(() => this.onReply((<any>r.message) as KernelMessage.IShellMessage));
-                })
-                .catch(noop);
-
-            // Then the done message
-            const shellProducer = new SimpleMessageProducer('done' as any, { status: 'success' }, 'shell');
             shellProducer
                 .produceNextMessage()
                 .then((r) => {
-                    this.deferred.resolve((<any>r.message) as KernelMessage.IShellMessage);
+                    this.deferred.resolve((<any>r.message) as Reply);
                 })
                 .catch(noop);
         }
