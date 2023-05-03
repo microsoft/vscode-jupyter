@@ -50,7 +50,6 @@ import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isInteractiveInputTab } from './helpers';
-import { Schemas } from '../platform/vscode-path/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { InteractiveControllerFactory } from './InteractiveWindowController';
 
@@ -403,7 +402,7 @@ export class InteractiveWindowProvider
 
     findNotebookEditor(resource: Resource): NotebookEditor | undefined {
         let notebook: NotebookDocument | undefined;
-        if (resource && resource.scheme === Schemas.vscodeInteractive) {
+        if (resource && resource.path.endsWith('.interactive')) {
             notebook = this.get(resource)?.notebookDocument;
         } else {
             const mode = this.configService.getSettings(resource).interactiveWindowMode;

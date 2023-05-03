@@ -58,7 +58,7 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider, IExtensi
 
         // workaround for 13057: provide a dummy workspace file when there is no .py file owner since IW resources are in the root
         const launchingFile =
-            kernel.resourceUri?.scheme === 'vscode-interactive' && this.workspace.rootFolder
+            kernel.resourceUri?.path.endsWith('.interactive') && this.workspace.rootFolder
                 ? Uri.joinPath(this.workspace.rootFolder, kernel.resourceUri.path)
                 : kernel.resourceUri;
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { TextDocument, Uri } from 'vscode';
-import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
+import { NotebookCellScheme } from '../constants';
 import { InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
@@ -133,7 +133,7 @@ export function isUri(resource?: Uri | any): resource is Uri {
 
 export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
     const uri = isUri(documentOrUri) ? documentOrUri : documentOrUri.uri;
-    return uri.scheme.includes(NotebookCellScheme) || uri.scheme.includes(InteractiveInputScheme);
+    return uri.scheme.includes(NotebookCellScheme) || uri.path.endsWith('.interactive');
 }
 
 export function isWeb() {

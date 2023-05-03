@@ -10,14 +10,13 @@ export const PYTHON_FILE_ANY_SCHEME = { language: PYTHON_LANGUAGE };
 export const PYTHON_CELL = { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE };
 export const PYTHON = [PYTHON_UNTITLED, PYTHON_FILE, PYTHON_CELL];
 export const InteractiveInputScheme = 'vscode-interactive-input';
-export const InteractiveScheme = 'vscode-interactive';
 export const JupyterNotebookView = 'jupyter-notebook';
 export const InteractiveWindowView = 'interactive';
 
 export const NOTEBOOK_SELECTOR = [
     { language: PYTHON_LANGUAGE, notebookType: JupyterNotebookView },
+    { language: PYTHON_LANGUAGE, notebookType: InteractiveWindowView },
     { scheme: InteractiveInputScheme, language: PYTHON_LANGUAGE },
-    { scheme: InteractiveScheme, language: PYTHON_LANGUAGE },
     { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE }
 ];
 
