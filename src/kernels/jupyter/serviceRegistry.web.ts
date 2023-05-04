@@ -11,9 +11,8 @@ import { JupyterKernelService } from './session/jupyterKernelService.web';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
-import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
-import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
+import { HostJupyterExecution } from './launcher/hostJupyterExecution';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
@@ -29,7 +28,6 @@ import {
     IJupyterServerUriStorage,
     IJupyterBackingFileCreator,
     IJupyterKernelService,
-    IJupyterNotebookProvider,
     IJupyterServerProvider,
     IJupyterExecution,
     IJupyterRequestCreator,
@@ -37,11 +35,10 @@ import {
     IJupyterRemoteCachedKernelValidator
 } from './types';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
-import { KernelConnectionSessionCreator } from './launcher/kernelConnectionSessionCreator';
-import { JupyterKernelConnectionSessionCreator } from './launcher/jupyterKernelConnectionSessionCreator';
+import { KernelConnectionSessionCreator } from '../common/kernelConnectionSessionCreator';
+import { JupyterKernelConnectionSessionCreator } from './session/jupyterKernelConnectionSessionCreator';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
-    serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(

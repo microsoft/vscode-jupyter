@@ -10,7 +10,6 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/connection/serverUriStorage';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterExecution } from '../../../kernels/jupyter/types';
 import { IJupyterConnection } from '../../types';
@@ -43,22 +42,12 @@ suite('NotebookServerProvider', () => {
         jupyterExecution = mock<IJupyterExecution>();
         interpreterService = mock<IInterpreterService>();
 
-        const serverStorage = mock(JupyterServerUriStorage);
-        when(serverStorage.getUri()).thenResolve({ uri: 'local', time: Date.now(), serverId: 'local' });
-        when(serverStorage.getRemoteUri()).thenResolve();
         const eventEmitter = new EventEmitter<void>();
         disposables.push(eventEmitter);
-        when(serverStorage.onDidChangeUri).thenReturn(eventEmitter.event);
         when((jupyterExecution as any).then).thenReturn(undefined);
-        when((serverStorage as any).then).thenReturn(undefined);
 
         // Create the server provider
-        serverProvider = new NotebookServerProvider(
-            instance(jupyterExecution),
-            instance(interpreterService),
-            instance(serverStorage),
-            disposables
-        );
+        serverProvider = new NotebookServerProvider(instance(jupyterExecution), instance(interpreterService));
         source = new CancellationTokenSource();
         disposables.push(source);
     });

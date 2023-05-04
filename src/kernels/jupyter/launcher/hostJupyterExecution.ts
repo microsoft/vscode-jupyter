@@ -3,27 +3,26 @@
 
 import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
-import { ServerCache } from './serverCache';
 import { inject, injectable, optional } from 'inversify';
-import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { traceInfo, traceVerbose } from '../../../../platform/logging';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { traceError, traceInfo, traceVerbose } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
     IConfigurationService,
     Resource
-} from '../../../../platform/common/types';
-import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts';
-import { IJupyterExecution, INotebookStarter, IJupyterServerUriStorage } from '../../types';
-import * as urlPath from '../../../../platform/vscode-path/resources';
-import { IJupyterSubCommandExecutionService } from '../../types.node';
-import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
-import { DataScience } from '../../../../platform/common/utils/localize';
-import { Cancellation } from '../../../../platform/common/cancellation';
-import { IJupyterConnection } from '../../../types';
-import { JupyterWaitForIdleError } from '../../../errors/jupyterWaitForIdleError';
-import { expandWorkingDir } from '../../jupyterUtils';
+} from '../../../platform/common/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IJupyterExecution, INotebookStarter } from '../types';
+import * as urlPath from '../../../platform/vscode-path/resources';
+import { IJupyterSubCommandExecutionService } from '../types.node';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { Cancellation } from '../../../platform/common/cancellation';
+import { IJupyterConnection } from '../../types';
+import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
+import { expandWorkingDir } from '../jupyterUtils';
+import { noop } from '../../../platform/common/utils/misc';
 
 /**
  * Jupyter server implementation that uses the JupyterExecutionBase class to launch Jupyter.
@@ -31,10 +30,9 @@ import { expandWorkingDir } from '../../jupyterUtils';
 @injectable()
 export class HostJupyterExecution implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
+    private cache?: Promise<IJupyterConnection>;
     private disposed: boolean = false;
-    private serverCache: ServerCache;
     private _disposed = false;
-    private _id = uuid();
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
@@ -44,8 +42,7 @@ export class HostJupyterExecution implements IJupyterExecution {
         @inject(INotebookStarter) @optional() private readonly notebookStarter: INotebookStarter | undefined,
         @inject(IJupyterSubCommandExecutionService)
         @optional()
-        private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
@@ -62,35 +59,21 @@ export class HostJupyterExecution implements IJupyterExecution {
                 this.disposableRegistry
             );
         }
-        this.serverCache = new ServerCache();
-        this.serverUriStorage.onDidChangeUri(
-            () => {
-                this.serverCache.clearCache();
-            },
-            this,
-            disposableRegistry
-        );
         asyncRegistry.push(this);
     }
 
-    @testOnlyMethod()
-    public clearCache() {
-        this.serverCache.clearCache();
-    }
     public async dispose(): Promise<void> {
-        traceInfo(`Disposing HostJupyterExecution ${this._id}`);
+        traceInfo(`Disposing HostJupyterExecution`);
         if (!this._disposed) {
             this._disposed = true;
-            traceVerbose(`Disposing super HostJupyterExecution ${this._id}`);
+            traceVerbose(`Disposing super HostJupyterExecution`);
             this.disposed = true;
 
             // Cleanup on dispose. We are going away permanently
-            if (this.serverCache) {
-                traceVerbose(`Cleaning up server cache ${this._id}`);
-                await this.serverCache.dispose();
-            }
+            traceVerbose(`Cleaning up server cache`);
+            await this.cache?.then((s) => s.dispose()).catch(noop);
         }
-        traceVerbose(`Finished disposing HostJupyterExecution  ${this._id}`);
+        traceVerbose(`Finished disposing HostJupyterExecution`);
     }
 
     private async hostConnectToNotebookServer(
@@ -107,16 +90,23 @@ export class HostJupyterExecution implements IJupyterExecution {
         resource: Resource,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
-        if (!this._disposed) {
-            return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), resource, cancelToken);
+        if (this._disposed) {
+            throw new Error('Notebook server is disposed');
         }
-        throw new Error('Notebook server is disposed');
+        if (!this.cache) {
+            const promise = (this.cache = this.hostConnectToNotebookServer(resource, cancelToken));
+            promise.catch((ex) => {
+                traceError(`Failed to start the Jupyter Server`, ex);
+                if (this.cache === promise) {
+                    this.cache = undefined;
+                }
+            });
+        }
+
+        return this.cache;
     }
     public async getServer(): Promise<IJupyterConnection | undefined> {
-        if (!this._disposed) {
-            // See if we have this server or not.
-            return this.serverCache.get();
-        }
+        return !this._disposed && this.cache ? this.cache : undefined;
     }
 
     public async refreshCommands(): Promise<void> {
@@ -162,7 +152,7 @@ export class HostJupyterExecution implements IJupyterExecution {
             while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
-                    connection = await this.startOrConnect(resource, cancelToken);
+                    connection = await this.start(resource, cancelToken);
 
                     traceVerbose(`Connection complete server`);
                     return connection;
@@ -192,7 +182,7 @@ export class HostJupyterExecution implements IJupyterExecution {
         }, cancelToken);
     }
 
-    private async startOrConnect(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
+    private async start(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         // If that works, then attempt to start the server
         traceInfo(`Launching server`);
