@@ -551,6 +551,7 @@ export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     isServerSession(): this is IJupyterKernelConnectionSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
+    onDidShutdown: Event<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     waitForIdle(timeout: number, token: CancellationToken): Promise<void>;

@@ -24,8 +24,6 @@ import {
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
-    private readonly remoteSessionManagersPerServerId = new Map<string, IJupyterSessionManager>();
-    private localSessionManager?: IJupyterSessionManager;
     constructor(
         @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
         @inject(IConfigurationService) private config: IConfigurationService,
@@ -47,13 +45,6 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
      * @param failOnPassword - whether or not to fail the creation if a password is required.
      */
     public async create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
-        if (connInfo.localLaunch && this.localSessionManager && !this.localSessionManager.isDisposed) {
-            return this.localSessionManager;
-        }
-        const remoteSessionManager = this.remoteSessionManagersPerServerId.get(connInfo.serverId || '');
-        if (!connInfo.localLaunch && connInfo.serverId && remoteSessionManager && !remoteSessionManager.isDisposed) {
-            return remoteSessionManager;
-        }
         const result = new JupyterSessionManager(
             this.jupyterPasswordConnect,
             this.config,
@@ -69,19 +60,6 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         );
         this.asyncDisposables.push(result);
         await result.initialize(connInfo);
-        if (connInfo.localLaunch) {
-            this.localSessionManager = result;
-        }
-        if (!connInfo.localLaunch && connInfo.serverId) {
-            this.remoteSessionManagersPerServerId.set(connInfo.serverId, result);
-        }
         return result;
-    }
-    public async shutdown(serverId: string) {
-        const sessionManager = this.remoteSessionManagersPerServerId.get(serverId);
-        if (sessionManager) {
-            this.remoteSessionManagersPerServerId.delete(serverId);
-            await sessionManager.dispose();
-        }
     }
 }

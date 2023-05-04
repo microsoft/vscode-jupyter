@@ -21,9 +21,11 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable } from '../../../platform/common/types';
+import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { Disposable } from 'vscode';
+import { noop } from '../../../platform/common/utils/misc';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -42,7 +44,8 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
         @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(JupyterKernelConnectionSessionCreator)
         private readonly jupyterSessionCreator: JupyterKernelConnectionSessionCreator,
-        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
+        @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry
     ) {}
 
     public async create(options: KernelConnectionSessionCreationOptions): Promise<IKernelConnectionSession> {
@@ -93,6 +96,7 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
         let connection: undefined | IJupyterConnection;
 
         // Check to see if we support ipykernel or not
+        const disposablesWhenThereAreFailures: IDisposable[] = [];
         try {
             connection = await this.jupyterConnection.createConnectionInfo({
                 serverId: options.kernelConnection.serverId
@@ -102,9 +106,15 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
             }
 
             Cancellation.throwIfCanceled(options.token);
+
             const sessionManager = await this.sessionManagerFactory.create(connection);
+            this.asyncDisposables.push(sessionManager);
+            disposablesWhenThereAreFailures.push(new Disposable(() => sessionManager.dispose().catch(noop)));
+
             Cancellation.throwIfCanceled(options.token);
-            return await this.jupyterSessionCreator.create({
+            // Disposing session manager will dispose all sessions that were started by that session manager.
+            // Hence Session managers should be disposed only if the corresponding session is shutdown.
+            const session = await this.jupyterSessionCreator.create({
                 creator: options.creator,
                 kernelConnection: options.kernelConnection,
                 resource: options.resource,
@@ -112,7 +122,10 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
                 token: options.token,
                 ui: options.ui
             });
+            session.onDidShutdown(() => sessionManager.dispose());
+            return session;
         } catch (ex) {
+            disposeAllDisposables(disposablesWhenThereAreFailures);
             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, ex);
 
             // Check for the self signed certs error specifically

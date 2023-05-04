@@ -9,11 +9,12 @@ import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../..
 import { DisplayOptions } from '../../displayOptions';
 import { IJupyterNotebookProvider, IJupyterSessionManagerFactory } from '../types';
 import { IRawKernelConnectionSessionCreator } from '../../raw/types';
-import { IDisposable } from '../../../platform/common/types';
+import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionSessionCreator } from './kernelConnectionSessionCreator';
 import { JupyterKernelConnectionSessionCreator } from './jupyterKernelConnectionSessionCreator';
 import { JupyterConnection } from '../connection/jupyterConnection';
+import { AsyncDisposableRegistry } from '../../../platform/common/asyncDisposableRegistry';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -26,6 +27,7 @@ suite('NotebookProvider', () => {
     let rawKernelSessionCreator: IRawKernelConnectionSessionCreator;
     let cancelToken: vscode.CancellationTokenSource;
     const disposables: IDisposable[] = [];
+    let asyncDisposables: IAsyncDisposableRegistry;
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawKernelSessionCreator = mock<IRawKernelConnectionSessionCreator>();
@@ -39,16 +41,20 @@ suite('NotebookProvider', () => {
         const sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
         const jupyterSessionCreator = mock<JupyterKernelConnectionSessionCreator>();
         const jupyterConnection = mock<JupyterConnection>();
-
+        asyncDisposables = new AsyncDisposableRegistry();
         kernelConnectionSessionCreator = new KernelConnectionSessionCreator(
             instance(rawKernelSessionCreator),
             instance(jupyterNotebookProvider),
             instance(sessionManagerFactory),
             instance(jupyterSessionCreator),
-            instance(jupyterConnection)
+            instance(jupyterConnection),
+            asyncDisposables
         );
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(async () => {
+        disposeAllDisposables(disposables);
+        await asyncDisposables.dispose();
+    });
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
         const mockSession = mock<IJupyterKernelConnectionSession>();
         instance(mockSession as any).then = undefined;
