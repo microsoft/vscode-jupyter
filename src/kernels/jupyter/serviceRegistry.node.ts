@@ -25,9 +25,8 @@ import { JupyterKernelService } from './session/jupyterKernelService.node';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
-import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
-import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
+import { HostJupyterExecution } from './launcher/hostJupyterExecution';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
@@ -39,7 +38,6 @@ import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
-    IJupyterNotebookProvider,
     IJupyterExecution,
     IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
@@ -59,12 +57,11 @@ import {
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
-import { KernelConnectionSessionCreator } from './launcher/kernelConnectionSessionCreator';
-import { JupyterKernelConnectionSessionCreator } from './launcher/jupyterKernelConnectionSessionCreator';
+import { KernelConnectionSessionCreator } from '../common/kernelConnectionSessionCreator';
+import { JupyterKernelConnectionSessionCreator } from './session/jupyterKernelConnectionSessionCreator';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
-    serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         JupyterInterpreterSelectionCommand
