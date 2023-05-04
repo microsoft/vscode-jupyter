@@ -87,7 +87,6 @@ export class ServerPreload implements IExtensionSyncActivationService {
                 await this.serverConnector.connect({
                     resource: undefined,
                     ui,
-                    localJupyter: true,
                     token: source.token
                 });
             }

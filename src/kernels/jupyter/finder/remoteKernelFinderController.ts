@@ -3,7 +3,7 @@
 
 import { injectable, inject, named } from 'inversify';
 import { Disposable, Memento } from 'vscode';
-import { IKernelFinder, IKernelProvider, IJupyterServerConnector } from '../../types';
+import { IKernelFinder, IKernelProvider } from '../../types';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import {
     IJupyterSessionManagerFactory,
@@ -21,6 +21,7 @@ import { ContributedKernelFinderKind } from '../../internalTypes';
 import * as localize from '../../../platform/common/utils/localize';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { Settings } from '../../../platform/common/constants';
+import { JupyterConnection } from '../connection/jupyterConnection';
 
 /** Strategy design */
 interface IRemoteKernelFinderRegistrationStrategy {
@@ -34,7 +35,6 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
     constructor(
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private extensionChecker: IPythonExtensionChecker,
-        private readonly jupyterServerConnector: IJupyterServerConnector,
         private readonly serverUriStorage: IJupyterServerUriStorage,
         private readonly globalState: Memento,
         private readonly env: IApplicationEnvironment,
@@ -42,7 +42,8 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
         private readonly kernelFinder: KernelFinder,
         private readonly disposables: IDisposableRegistry,
         private readonly kernelProvider: IKernelProvider,
-        private readonly extensions: IExtensions
+        private readonly extensions: IExtensions,
+        private readonly jupyterConnection: JupyterConnection
     ) {}
 
     async activate(): Promise<void> {
@@ -75,14 +76,14 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
                 `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,
-                this.jupyterServerConnector,
                 this.globalState,
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,
                 this.kernelProvider,
                 this.extensions,
-                serverUri
+                serverUri,
+                this.jupyterConnection
             );
             this.disposables.push(finder);
 
@@ -116,7 +117,6 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         @inject(IJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IJupyterServerConnector) private readonly jupyterServerConnector: IJupyterServerConnector,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
@@ -124,12 +124,12 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         @inject(IKernelFinder) private readonly kernelFinder: KernelFinder,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(JupyterConnection) jupyterConnection: JupyterConnection
     ) {
         this._strategy = new MultiServerStrategy(
             this.jupyterSessionManagerFactory,
             this.extensionChecker,
-            this.jupyterServerConnector,
             this.serverUriStorage,
             this.globalState,
             this.env,
@@ -137,7 +137,8 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
             this.kernelFinder,
             this._localDisposables,
             this.kernelProvider,
-            this.extensions
+            this.extensions,
+            jupyterConnection
         );
     }
 

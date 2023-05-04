@@ -3,13 +3,13 @@
 
 import { CancellationToken } from 'vscode';
 import { traceError, traceVerbose } from '../../../../platform/logging';
-import { IAsyncDisposable } from '../../../../platform/common/types';
+import { IAsyncDisposable, Resource } from '../../../../platform/common/types';
 import { sleep } from '../../../../platform/common/utils/async';
-import { INotebookServerOptions, INotebookServer } from '../../types';
+import { IJupyterConnection } from '../../../types';
 
 interface IServerData {
-    options: INotebookServerOptions;
-    promise: Promise<INotebookServer>;
+    resource: Resource;
+    promise: Promise<IJupyterConnection>;
     resolved: boolean;
 }
 
@@ -25,12 +25,11 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async getOrCreate(
-        createFunction: (options: INotebookServerOptions, cancelToken: CancellationToken) => Promise<INotebookServer>,
-        options: INotebookServerOptions,
+        createFunction: (resource: Resource, cancelToken: CancellationToken) => Promise<IJupyterConnection>,
+        resource: Resource,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer> {
-        const fixedOptions = await this.generateDefaultOptions(options);
-        const key = this.generateKey(fixedOptions);
+    ): Promise<IJupyterConnection> {
+        const key = this.generateKey();
         let data: IServerData | undefined;
 
         // Check to see if we already have a promise for this key
@@ -39,23 +38,15 @@ export class ServerCache implements IAsyncDisposable {
         if (!data) {
             // Didn't find one, so start up our promise and cache it
             data = {
-                promise: createFunction(options, cancelToken),
-                options: fixedOptions,
+                promise: createFunction(resource, cancelToken),
+                resource,
                 resolved: false
             };
             this.cache.set(key, data);
         }
 
         return data.promise
-            .then((server: INotebookServer) => {
-                // Change the dispose on it so we
-                // can detach from the server when it goes away.
-                const oldDispose = server.dispose.bind(server);
-                server.dispose = () => {
-                    this.cache.delete(key);
-                    return oldDispose();
-                };
-
+            .then((server: IJupyterConnection) => {
                 // We've resolved the promise at this point
                 if (data) {
                     data.resolved = true;
@@ -69,9 +60,8 @@ export class ServerCache implements IAsyncDisposable {
             });
     }
 
-    public async get(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
-        const fixedOptions = await this.generateDefaultOptions(options);
-        const key = this.generateKey(fixedOptions);
+    public async get(): Promise<IJupyterConnection | undefined> {
+        const key = this.generateKey();
         if (this.cache.has(key)) {
             return this.cache.get(key)?.promise;
         }
@@ -101,24 +91,7 @@ export class ServerCache implements IAsyncDisposable {
         }
     }
 
-    public async generateDefaultOptions(options: INotebookServerOptions): Promise<INotebookServerOptions> {
-        if (options.localJupyter) {
-            return {
-                resource: options?.resource,
-                ui: options.ui,
-                localJupyter: true
-            };
-        }
-        return {
-            serverId: options.serverId,
-            resource: options?.resource,
-            ui: options.ui,
-            localJupyter: false
-        };
-    }
-
-    private generateKey(options: INotebookServerOptions): string {
-        // combine all the values together to make a unique key
-        return `serverId=${options.localJupyter ? '' : options.serverId};local=${options.localJupyter};`;
+    private generateKey(): string {
+        return `local`;
     }
 }

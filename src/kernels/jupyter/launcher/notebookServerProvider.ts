@@ -2,23 +2,14 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceVerbose } from '../../../platform/logging';
-import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { IDisposableRegistry } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
-import { DisplayOptions } from '../../displayOptions';
-import { GetServerOptions } from '../../types';
-import {
-    IJupyterServerProvider,
-    INotebookServer,
-    IJupyterExecution,
-    IJupyterServerUriStorage,
-    INotebookServerOptions
-} from '../types';
+import { GetServerOptions, IJupyterConnection } from '../../types';
+import { IJupyterServerProvider, IJupyterExecution, IJupyterServerUriStorage } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { isCancellationError } from '../../../platform/common/cancellation';
@@ -29,8 +20,7 @@ import { isCancellationError } from '../../../platform/common/cancellation';
 const localCacheKey = 'LocalJupyterSererCacheKey';
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
-    private serverPromise = new Map<string, Promise<INotebookServer>>();
-    private ui = new DisplayOptions(true);
+    private serverPromise = new Map<string, Promise<IJupyterConnection>>();
     constructor(
         @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -55,12 +45,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     public clearCache() {
         this.serverPromise.clear();
     }
-    public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer> {
-        const serverOptions = this.getNotebookServerOptions(options);
-
+    public async getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection> {
         // If we are just fetching or only want to create for local, see if exists
-        if (options.localJupyter && this.jupyterExecution) {
-            const server = await this.jupyterExecution.getServer(serverOptions);
+        if (this.jupyterExecution) {
+            const server = await this.jupyterExecution.getServer(options.resource);
             // Possible it wasn't created, hence create it.
             if (server) {
                 return server;
@@ -71,14 +59,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         return this.createServer(options);
     }
 
-    private async createServer(options: GetServerOptions): Promise<INotebookServer> {
-        // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
-        // allows the server to be attempted without a UI, but a future request can come in and use the same startup
-        if (!options.ui.disableUI) {
-            this.ui.disableUI = false;
-        }
-        options.ui.onDidChangeDisableUI(() => (this.ui.disableUI = options.ui.disableUI), this, this.disposables);
-        const cacheKey = options.localJupyter ? localCacheKey : options.serverId;
+    private async createServer(options: GetServerOptions): Promise<IJupyterConnection> {
+        const cacheKey = localCacheKey;
         if (!this.serverPromise.has(cacheKey)) {
             // Start a server
             this.serverPromise.set(cacheKey, this.startServer(options));
@@ -97,34 +79,17 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async startServer(options: GetServerOptions): Promise<INotebookServer> {
+    private async startServer(options: GetServerOptions): Promise<IJupyterConnection> {
         const jupyterExecution = this.jupyterExecution;
         if (!jupyterExecution) {
             throw new NotSupportedInWebError();
         }
-        const serverOptions = this.getNotebookServerOptions(options);
 
-        const disposables: IDisposable[] = [];
-        let progressReporter: IDisposable | undefined;
-        const createProgressReporter = async () => {
-            if (this.ui.disableUI || progressReporter) {
-                return;
-            }
-            // Status depends upon if we're about to connect to existing server or not.
-            progressReporter = !serverOptions.localJupyter
-                ? KernelProgressReporter.createProgressReporter(options.resource, DataScience.connectingToJupyter)
-                : KernelProgressReporter.createProgressReporter(options.resource, DataScience.startingJupyter);
-            disposables.push(progressReporter);
-        };
-        if (this.ui.disableUI) {
-            this.ui.onDidChangeDisableUI(createProgressReporter, this, disposables);
-        }
         // Check to see if we support ipykernel or not
         try {
-            await createProgressReporter();
             traceVerbose(`Checking for server usability.`);
 
-            const usable = await this.checkUsable(serverOptions);
+            const usable = await this.checkUsable();
             if (!usable) {
                 traceVerbose('Server not usable (should ask for install now)');
                 // Indicate failing.
@@ -134,9 +99,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceVerbose(`Starting notebook server.`);
-            return await jupyterExecution.connectToNotebookServer(serverOptions, options.token);
+            return await jupyterExecution.connectToNotebookServer(options.resource, options.token);
         } catch (e) {
-            disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.
             if (options.token?.isCancellationRequested && isCancellationError(e)) {
                 throw e;
@@ -147,14 +111,12 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             await jupyterExecution.refreshCommands();
 
             throw e;
-        } finally {
-            disposeAllDisposables(disposables);
         }
     }
 
-    private async checkUsable(options: INotebookServerOptions): Promise<boolean> {
+    private async checkUsable(): Promise<boolean> {
         try {
-            if (options.localJupyter && this.jupyterExecution) {
+            if (this.jupyterExecution) {
                 const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
                 return usableInterpreter ? true : false;
             } else {
@@ -176,22 +138,5 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 );
             }
         }
-    }
-
-    private getNotebookServerOptions(options: GetServerOptions): INotebookServerOptions {
-        if (options.localJupyter) {
-            return {
-                resource: options.resource,
-                ui: this.ui,
-                localJupyter: true
-            };
-        }
-
-        return {
-            serverId: options.serverId,
-            resource: options.resource,
-            ui: this.ui,
-            localJupyter: false
-        };
     }
 }

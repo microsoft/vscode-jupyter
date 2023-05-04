@@ -551,6 +551,7 @@ export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     isServerSession(): this is IJupyterKernelConnectionSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
+    onDidShutdown: Event<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
@@ -675,28 +676,18 @@ export interface IJupyterKernelSpec {
         | 'registeredByNewVersionOfExtForCustomKernelSpec';
 }
 
-export type GetServerOptions =
-    | {
-          ui: IDisplayOptions;
-          localJupyter: true;
-          token: CancellationToken | undefined;
-          resource: Resource;
-          serverId?: undefined;
-      }
-    | {
-          ui: IDisplayOptions;
-          localJupyter: false;
-          token: CancellationToken | undefined;
-          resource: Resource;
-          serverId: string;
-      };
+export type GetServerOptions = {
+    ui: IDisplayOptions;
+    token: CancellationToken | undefined;
+    resource: Resource;
+};
 
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = GetServerOptions;
 /**
  * Options for getting a notebook
  */
-export type NotebookCreationOptions = {
+export type KernelConnectionSessionCreationOptions = {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
@@ -725,7 +716,7 @@ export interface IKernelConnectionSessionCreator {
     /**
      * Creates a notebook.
      */
-    create(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
+    create(options: KernelConnectionSessionCreationOptions): Promise<IKernelConnectionSession>;
 }
 
 export interface IKernelSocket {

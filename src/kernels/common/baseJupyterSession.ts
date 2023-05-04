@@ -96,12 +96,16 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     private _wrappedKernel?: KernelConnectionWrapper;
     private _isDisposed?: boolean;
     private readonly _disposed = new EventEmitter<void>();
+    private readonly didShutdown = new EventEmitter<void>();
     protected readonly disposables: IDisposable[] = [];
     public get disposed() {
         return this._isDisposed === true;
     }
     public get onDidDispose() {
         return this._disposed.event;
+    }
+    public get onDidShutdown() {
+        return this.didShutdown.event;
     }
     protected get session(): ISessionWithSocket | undefined {
         return this._session;
@@ -525,6 +529,8 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
             this.restartSessionPromise = undefined;
             this.onStatusChangedEvent.fire('dead');
             this._disposed.fire();
+            this.didShutdown.fire();
+            this.didShutdown.dispose();
             this._disposed.dispose();
             this.onStatusChangedEvent.dispose();
             this.previousAnyMessageHandler?.dispose();
