@@ -34,6 +34,7 @@ import { IExtensions } from '../../../platform/common/types';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -45,6 +46,7 @@ suite(`Remote Kernel Finder`, () => {
     const dummyEvent = new EventEmitter<number>();
     let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
     let kernelsChanged: TestEventHandler<void>;
+    let jupyterConnection: JupyterConnection;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
         type: 'jupyter',
@@ -152,8 +154,8 @@ suite(`Remote Kernel Finder`, () => {
         kernelFinder = new KernelFinder(disposables);
         kernelsChanged = createEventHandler(kernelFinder, 'onDidChangeKernels');
         disposables.push(kernelsChanged);
-        const jupyterConnection = mock<JupyterConnection>();
-
+        jupyterConnection = mock<JupyterConnection>();
+        when(jupyterConnection.createConnectionInfo(anything())).thenResolve(connInfo);
         remoteKernelFinder = new RemoteKernelFinder(
             'currentremote',
             'Local Kernels',
@@ -171,9 +173,7 @@ suite(`Remote Kernel Finder`, () => {
         );
         remoteKernelFinder.activate().then(noop, noop);
     });
-    teardown(() => {
-        disposables.forEach((d) => d.dispose());
-    });
+    teardown(() => disposeAllDisposables(disposables));
     test('Kernels found', async () => {
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);

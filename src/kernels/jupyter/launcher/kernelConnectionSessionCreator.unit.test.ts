@@ -15,6 +15,7 @@ import { KernelConnectionSessionCreator } from './kernelConnectionSessionCreator
 import { JupyterKernelConnectionSessionCreator } from './jupyterKernelConnectionSessionCreator';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { AsyncDisposableRegistry } from '../../../platform/common/asyncDisposableRegistry';
+import { EventEmitter } from 'vscode';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -28,6 +29,7 @@ suite('NotebookProvider', () => {
     let cancelToken: vscode.CancellationTokenSource;
     const disposables: IDisposable[] = [];
     let asyncDisposables: IAsyncDisposableRegistry;
+    let onDidShutdown: EventEmitter<void>;
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawKernelSessionCreator = mock<IRawKernelConnectionSessionCreator>();
@@ -38,9 +40,19 @@ suite('NotebookProvider', () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const onDidChangeEvent = new vscode.EventEmitter<void>();
         disposables.push(onDidChangeEvent);
+        onDidShutdown = new vscode.EventEmitter<void>();
+        disposables.push(onDidShutdown);
         const sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
         const jupyterSessionCreator = mock<JupyterKernelConnectionSessionCreator>();
         const jupyterConnection = mock<JupyterConnection>();
+        when(jupyterConnection.createConnectionInfo(anything())).thenResolve({
+            localLaunch: true,
+            baseUrl: 'http://localhost:8888'
+        } as any);
+        const mockSession = mock<IJupyterKernelConnectionSession>();
+        when(mockSession.onDidShutdown).thenReturn(onDidShutdown.event);
+        instance(mockSession as any).then = undefined;
+        when(jupyterSessionCreator.create(anything())).thenResolve(instance(mockSession));
         asyncDisposables = new AsyncDisposableRegistry();
         kernelConnectionSessionCreator = new KernelConnectionSessionCreator(
             instance(rawKernelSessionCreator),
@@ -56,12 +68,9 @@ suite('NotebookProvider', () => {
         await asyncDisposables.dispose();
     });
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
-        const mockSession = mock<IJupyterKernelConnectionSession>();
-        instance(mockSession as any).then = undefined;
         when(jupyterNotebookProvider.startJupyter(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
-
         const session = await kernelConnectionSessionCreator.create({
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
@@ -73,8 +82,6 @@ suite('NotebookProvider', () => {
     });
 
     test('NotebookProvider getOrCreateNotebook second request should return the notebook already cached', async () => {
-        const mockSession = mock<IJupyterKernelConnectionSession>();
-        instance(mockSession as any).then = undefined;
         when(jupyterNotebookProvider.startJupyter(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
