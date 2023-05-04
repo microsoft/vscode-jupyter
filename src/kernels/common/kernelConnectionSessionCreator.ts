@@ -9,24 +9,24 @@ import {
     isLocalConnection,
     isRemoteConnection,
     KernelConnectionSessionCreationOptions
-} from '../../types';
-import { Cancellation } from '../../../platform/common/cancellation';
-import { IRawKernelConnectionSessionCreator } from '../../raw/types';
-import { IJupyterNotebookProvider, IJupyterSessionManagerFactory } from '../types';
-import { JupyterKernelConnectionSessionCreator } from './jupyterKernelConnectionSessionCreator';
-import { JupyterConnection } from '../connection/jupyterConnection';
-import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
-import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
-import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
-import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
-import { DataScience } from '../../../platform/common/utils/localize';
+} from '../types';
+import { Cancellation } from '../../platform/common/cancellation';
+import { IRawKernelConnectionSessionCreator } from '../raw/types';
+import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../jupyter/types';
+import { JupyterKernelConnectionSessionCreator } from '../jupyter/session/jupyterKernelConnectionSessionCreator';
+import { JupyterConnection } from '../jupyter/connection/jupyterConnection';
+import { Telemetry, sendTelemetryEvent } from '../../telemetry';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
+import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
+import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IAsyncDisposableRegistry, IDisposable } from '../../platform/common/types';
+import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
+import { DataScience } from '../../platform/common/utils/localize';
 import { Disposable } from 'vscode';
-import { noop } from '../../../platform/common/utils/misc';
-import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
-import { BaseError } from '../../../platform/errors/types';
+import { noop } from '../../platform/common/utils/misc';
+import { LocalJupyterServerConnectionError } from '../../platform/errors/localJupyterServerConnectionError';
+import { BaseError } from '../../platform/errors/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -40,8 +40,8 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
         @inject(IRawKernelConnectionSessionCreator)
         @optional()
         private readonly rawKernelSessionCreator: IRawKernelConnectionSessionCreator | undefined,
-        @inject(IJupyterNotebookProvider)
-        private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
+        @inject(IJupyterServerProvider)
+        private readonly jupyterNotebookProvider: IJupyterServerProvider,
         @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(JupyterKernelConnectionSessionCreator)
         private readonly jupyterSessionCreator: JupyterKernelConnectionSessionCreator,
@@ -97,7 +97,7 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
                 ? await this.jupyterConnection.createConnectionInfo({
                       serverId: options.kernelConnection.serverId
                   })
-                : await this.jupyterNotebookProvider.startJupyter({
+                : await this.jupyterNotebookProvider.getOrCreateServer({
                       resource: options.resource,
                       token: options.token,
                       ui: options.ui

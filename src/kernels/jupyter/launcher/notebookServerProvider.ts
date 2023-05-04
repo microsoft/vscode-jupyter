@@ -3,48 +3,22 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { traceVerbose } from '../../../platform/logging';
-import { IDisposableRegistry } from '../../../platform/common/types';
-import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { GetServerOptions, IJupyterConnection } from '../../types';
-import { IJupyterServerProvider, IJupyterExecution, IJupyterServerUriStorage } from '../types';
+import { IJupyterServerProvider, IJupyterExecution } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { isCancellationError } from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError } from '../../../platform/common/cancellation';
 
-/**
- * Starts jupyter servers locally.
- */
-const localCacheKey = 'LocalJupyterSererCacheKey';
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
-    private serverPromise = new Map<string, Promise<IJupyterConnection>>();
+    private serverPromise?: Promise<IJupyterConnection>;
     constructor(
         @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {
-        serverUriStorage.onDidChangeUri(
-            () => {
-                // Possible user selected another Server.
-                const localCache = this.serverPromise.get('local');
-                this.serverPromise.clear();
-                // Restore the cache for local servers.
-                if (localCache) {
-                    this.serverPromise.set(localCacheKey, localCache);
-                }
-            },
-            this,
-            this.disposables
-        );
-    }
-    @testOnlyMethod()
-    public clearCache() {
-        this.serverPromise.clear();
-    }
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+    ) {}
     public async getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection> {
         // If we are just fetching or only want to create for local, see if exists
         if (this.jupyterExecution) {
@@ -60,23 +34,16 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     }
 
     private async createServer(options: GetServerOptions): Promise<IJupyterConnection> {
-        const cacheKey = localCacheKey;
-        if (!this.serverPromise.has(cacheKey)) {
+        if (!this.serverPromise) {
             // Start a server
-            this.serverPromise.set(cacheKey, this.startServer(options));
+            const promise = (this.serverPromise = this.startServer(options));
+            promise.catch(() => {
+                if (promise === this.serverPromise) {
+                    this.serverPromise = undefined;
+                }
+            });
         }
-        try {
-            const value = await this.serverPromise.get(cacheKey)!;
-            // If we cancelled starting of the server, then don't cache the result.
-            if (!value && options.token?.isCancellationRequested) {
-                this.serverPromise.delete(cacheKey);
-            }
-            return value;
-        } catch (e) {
-            // Don't cache the error
-            this.serverPromise.delete(cacheKey);
-            throw e;
-        }
+        return this.serverPromise;
     }
 
     private async startServer(options: GetServerOptions): Promise<IJupyterConnection> {
@@ -99,7 +66,9 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceVerbose(`Starting notebook server.`);
-            return await jupyterExecution.connectToNotebookServer(options.resource, options.token);
+            const result = await jupyterExecution.connectToNotebookServer(options.resource, options.token);
+            Cancellation.throwIfCanceled(options.token);
+            return result;
         } catch (e) {
             // If user cancelled, then do nothing.
             if (options.token?.isCancellationRequested && isCancellationError(e)) {

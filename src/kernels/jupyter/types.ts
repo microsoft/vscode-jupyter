@@ -15,7 +15,6 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     IJupyterConnection,
-    ConnectNotebookProviderOptions,
     IJupyterKernelConnectionSession,
     IJupyterKernelSpec,
     GetServerOptions,
@@ -43,18 +42,6 @@ export enum JupyterInterpreterDependencyResponse {
     ok,
     selectAnotherInterpreter,
     cancel
-}
-
-export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
-/**
- * Provides a wrapper around a local Jupyter Notebook Server.
- */
-export interface IJupyterNotebookProvider {
-    /**
-     * Stats the local Jupyter Notebook server (if not already started)
-     * and returns the connection information.
-     */
-    startJupyter(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -154,9 +141,13 @@ export interface INbConvertExportToPythonService {
 }
 
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
+/**
+ * Provides a wrapper around a local Jupyter Notebook Server.
+ */
 export interface IJupyterServerProvider {
     /**
-     * Creates (if not already created) and gets the local Jupyter server used for starting notebooks
+     * Stats the local Jupyter Notebook server (if not already started)
+     * and returns the connection information.
      */
     getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection>;
 }
