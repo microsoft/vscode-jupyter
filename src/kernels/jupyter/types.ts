@@ -60,10 +60,7 @@ export interface IJupyterNotebookProvider {
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(
-        resource: Resource,
-        cancelToken?: CancellationToken
-    ): Promise<IJupyterConnection>;
+    connectToNotebookServer(resource: Resource, cancelToken?: CancellationToken): Promise<IJupyterConnection>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(resource: Resource): Promise<IJupyterConnection | undefined>;
     getNotebookError(): Promise<string>;

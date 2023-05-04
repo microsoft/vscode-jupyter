@@ -25,10 +25,7 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async getOrCreate(
-        createFunction: (
-            resource: Resource,
-            cancelToken: CancellationToken
-        ) => Promise<IJupyterConnection>,
+        createFunction: (resource: Resource, cancelToken: CancellationToken) => Promise<IJupyterConnection>,
         resource: Resource,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {

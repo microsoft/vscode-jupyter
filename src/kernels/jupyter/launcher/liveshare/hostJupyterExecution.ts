@@ -15,11 +15,7 @@ import {
 } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
-import {
-    IJupyterExecution,
-    INotebookStarter,
-    IJupyterServerUriStorage
-} from '../../types';
+import { IJupyterExecution, INotebookStarter, IJupyterServerUriStorage } from '../../types';
 import * as urlPath from '../../../../platform/vscode-path/resources';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
@@ -196,10 +192,7 @@ export class HostJupyterExecution implements IJupyterExecution {
         }, cancelToken);
     }
 
-    private async startOrConnect(
-        resource: Resource,
-        cancelToken: CancellationToken
-    ): Promise<IJupyterConnection> {
+    private async startOrConnect(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         // If that works, then attempt to start the server
         traceInfo(`Launching server`);
