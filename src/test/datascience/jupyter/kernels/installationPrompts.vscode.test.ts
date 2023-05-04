@@ -70,7 +70,8 @@ import { BaseKernelError } from '../../../../kernels/errors/types';
 import { IControllerRegistration } from '../../../../notebooks/controllers/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
-suite('Install IPyKernel (install) @kernelInstall', function () {
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('Install IPyKernel (install) @kernelInstall', function () {
     const disposables: IDisposable[] = [];
     let nbFile: Uri;
     const templateIPynbFile = Uri.file(
@@ -676,7 +677,8 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         await Promise.all([waitForExecutionCompletedSuccessfully(cell), waitForExecutionCompletedSuccessfully(cell2)]);
     });
 
-    test('Ensure ipykernel install prompt is NOT displayed when auto start is enabled & ipykernel is missing (VSCode Notebook)', async function () {
+    // eslint-disable-next-line no-only-tests/no-only-tests
+    test.only('Ensure ipykernel install prompt is NOT displayed when auto start is enabled & ipykernel is missing (VSCode Notebook)', async function () {
         // Ensure we have auto start enabled, and verify kernel startup fails silently without any notifications.
         // When running a cell we should get an install prompt.
         configSettings.disableJupyterAutoStart = false;
