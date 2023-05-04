@@ -48,7 +48,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     public async getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection> {
         // If we are just fetching or only want to create for local, see if exists
         if (this.jupyterExecution) {
-            const server = await this.jupyterExecution.getServer({ resource: options.resource });
+            const server = await this.jupyterExecution.getServer(options.resource);
             // Possible it wasn't created, hence create it.
             if (server) {
                 return server;
@@ -84,7 +84,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         if (!jupyterExecution) {
             throw new NotSupportedInWebError();
         }
-        const serverOptions = { resource: options.resource };
 
         // Check to see if we support ipykernel or not
         try {
@@ -100,7 +99,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceVerbose(`Starting notebook server.`);
-            return await jupyterExecution.connectToNotebookServer(serverOptions, options.token);
+            return await jupyterExecution.connectToNotebookServer(options.resource, options.token);
         } catch (e) {
             // If user cancelled, then do nothing.
             if (options.token?.isCancellationRequested && isCancellationError(e)) {

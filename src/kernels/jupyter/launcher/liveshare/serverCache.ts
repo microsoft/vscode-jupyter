@@ -3,13 +3,12 @@
 
 import { CancellationToken } from 'vscode';
 import { traceError, traceVerbose } from '../../../../platform/logging';
-import { IAsyncDisposable } from '../../../../platform/common/types';
+import { IAsyncDisposable, Resource } from '../../../../platform/common/types';
 import { sleep } from '../../../../platform/common/utils/async';
-import { INotebookServerLocalOptions } from '../../types';
 import { IJupyterConnection } from '../../../types';
 
 interface IServerData {
-    options: INotebookServerLocalOptions;
+    resource: Resource;
     promise: Promise<IJupyterConnection>;
     resolved: boolean;
 }
@@ -27,10 +26,10 @@ export class ServerCache implements IAsyncDisposable {
 
     public async getOrCreate(
         createFunction: (
-            options: INotebookServerLocalOptions,
+            resource: Resource,
             cancelToken: CancellationToken
         ) => Promise<IJupyterConnection>,
-        options: INotebookServerLocalOptions,
+        resource: Resource,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         const key = this.generateKey();
@@ -42,8 +41,8 @@ export class ServerCache implements IAsyncDisposable {
         if (!data) {
             // Didn't find one, so start up our promise and cache it
             data = {
-                promise: createFunction(options, cancelToken),
-                options: { resource: options.resource },
+                promise: createFunction(resource, cancelToken),
+                resource,
                 resolved: false
             };
             this.cache.set(key, data);

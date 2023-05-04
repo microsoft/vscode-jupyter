@@ -10,13 +10,13 @@ import { traceInfo, traceVerbose } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
-    IConfigurationService
+    IConfigurationService,
+    Resource
 } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import {
     IJupyterExecution,
-    INotebookServerLocalOptions,
     INotebookStarter,
     IJupyterServerUriStorage
 } from '../../types';
@@ -26,8 +26,6 @@ import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info'
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { Cancellation } from '../../../../platform/common/cancellation';
 import { IJupyterConnection } from '../../../types';
-import { LocalJupyterServerConnectionError } from '../../../../platform/errors/localJupyterServerConnectionError';
-import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { JupyterWaitForIdleError } from '../../../errors/jupyterWaitForIdleError';
 import { expandWorkingDir } from '../../jupyterUtils';
 
@@ -100,21 +98,21 @@ export class HostJupyterExecution implements IJupyterExecution {
     }
 
     private async hostConnectToNotebookServer(
-        options: INotebookServerLocalOptions,
+        resource: Resource,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         if (!this._disposed) {
-            return this.connectToNotebookServerImpl({ resource: options.resource }, cancelToken);
+            return this.connectToNotebookServerImpl(resource, cancelToken);
         }
         throw new Error('Notebook server is disposed');
     }
 
     public async connectToNotebookServer(
-        options: INotebookServerLocalOptions,
+        resource: Resource,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         if (!this._disposed) {
-            return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
+            return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), resource, cancelToken);
         }
         throw new Error('Notebook server is disposed');
     }
@@ -153,7 +151,7 @@ export class HostJupyterExecution implements IJupyterExecution {
 
     /* eslint-disable complexity,  */
     public connectToNotebookServerImpl(
-        options: INotebookServerLocalOptions,
+        resource: Resource,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         // Return nothing if we cancel
@@ -168,7 +166,7 @@ export class HostJupyterExecution implements IJupyterExecution {
             while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
-                    connection = await this.startOrConnect(options, cancelToken);
+                    connection = await this.startOrConnect(resource, cancelToken);
 
                     traceVerbose(`Connection complete server`);
                     return connection;
@@ -187,10 +185,7 @@ export class HostJupyterExecution implements IJupyterExecution {
                         if (this.disposed) {
                             throw err;
                         }
-
-                        // Something else went wrong
-                        sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err);
-                        throw new LocalJupyterServerConnectionError(err);
+                        throw err;
                     } else {
                         throw err;
                     }
@@ -202,15 +197,15 @@ export class HostJupyterExecution implements IJupyterExecution {
     }
 
     private async startOrConnect(
-        options: INotebookServerLocalOptions,
+        resource: Resource,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         // If that works, then attempt to start the server
         traceInfo(`Launching server`);
-        const settings = this.configuration.getSettings(options.resource);
+        const settings = this.configuration.getSettings(resource);
         const useDefaultConfig = settings.useDefaultConfigForJupyter;
-        const workingDir = await this.workspace.computeWorkingDirectory(options.resource);
+        const workingDir = await this.workspace.computeWorkingDirectory(resource);
         // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
         const workingDirectory = expandWorkingDir(
             workingDir,
@@ -224,7 +219,7 @@ export class HostJupyterExecution implements IJupyterExecution {
             throw new Error('Notebook Starter cannot be undefined');
         }
         return this.notebookStarter.start(
-            options.resource,
+            resource,
             useDefaultConfig,
             this.configuration.getSettings(undefined).jupyterCommandLineArguments,
             Uri.file(workingDirectory),

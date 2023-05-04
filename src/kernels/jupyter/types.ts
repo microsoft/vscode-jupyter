@@ -57,19 +57,15 @@ export interface IJupyterNotebookProvider {
     startJupyter(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
 }
 
-export type INotebookServerLocalOptions = {
-    resource: Resource;
-};
-
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
-        options: INotebookServerLocalOptions,
+        resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<IJupyterConnection>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getServer(options: INotebookServerLocalOptions): Promise<IJupyterConnection | undefined>;
+    getServer(resource: Resource): Promise<IJupyterConnection | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
