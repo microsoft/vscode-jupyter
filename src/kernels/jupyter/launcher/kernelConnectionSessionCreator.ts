@@ -3,7 +3,6 @@
 
 import { inject, injectable, optional } from 'inversify';
 import {
-    GetServerOptions,
     IJupyterConnection,
     IKernelConnectionSession,
     IKernelConnectionSessionCreator,
@@ -59,7 +58,7 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
         }
         const disposables: IDisposable[] = [];
         let progressReporter: IDisposable | undefined;
-        const createProgressReporter = async () => {
+        const createProgressReporter = () => {
             if (options.ui.disableUI || progressReporter) {
                 return;
             }
@@ -75,13 +74,13 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
         if (options.ui.disableUI) {
             options.ui.onDidChangeDisableUI(createProgressReporter, this, disposables);
         }
+        createProgressReporter();
 
         if (isRemoteConnection(options.kernelConnection)) {
             let connection: undefined | IJupyterConnection;
 
             // Check to see if we support ipykernel or not
             try {
-                await createProgressReporter();
                 connection = await this.jupyterConnection.createConnectionInfo({
                     serverId: options.kernelConnection.serverId
                 });
@@ -124,14 +123,12 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
                 disposeAllDisposables(disposables);
             }
         } else {
-            const serverOptions: GetServerOptions = {
-                resource: options.resource,
-                token: options.token,
-                ui: options.ui
-            };
-
             try {
-                await this.jupyterNotebookProvider.connect(serverOptions);
+                await this.jupyterNotebookProvider.connect({
+                    resource: options.resource,
+                    token: options.token,
+                    ui: options.ui
+                });
                 Cancellation.throwIfCanceled(options.token);
                 return await this.jupyterNotebookProvider.createNotebook(options);
             } finally {
