@@ -6,7 +6,7 @@ import { CancellationToken, Uri } from 'vscode';
 import { ServerCache } from './serverCache';
 import { inject, injectable, optional } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';
+import { traceInfo, traceVerbose } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
@@ -17,9 +17,7 @@ import { IInterpreterService } from '../../../../platform/interpreter/contracts'
 import {
     IJupyterExecution,
     INotebookServerLocalOptions,
-    INotebookServer,
     INotebookStarter,
-    INotebookServerFactory,
     IJupyterServerUriStorage
 } from '../../types';
 import * as urlPath from '../../../../platform/vscode-path/resources';
@@ -53,7 +51,6 @@ export class HostJupyterExecution implements IJupyterExecution {
         @inject(IJupyterSubCommandExecutionService)
         @optional()
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
-        @inject(INotebookServerFactory) private readonly notebookServerFactory: INotebookServerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
@@ -105,7 +102,7 @@ export class HostJupyterExecution implements IJupyterExecution {
     private async hostConnectToNotebookServer(
         options: INotebookServerLocalOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer> {
+    ): Promise<IJupyterConnection> {
         if (!this._disposed) {
             return this.connectToNotebookServerImpl({ resource: options.resource }, cancelToken);
         }
@@ -115,13 +112,13 @@ export class HostJupyterExecution implements IJupyterExecution {
     public async connectToNotebookServer(
         options: INotebookServerLocalOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer> {
+    ): Promise<IJupyterConnection> {
         if (!this._disposed) {
             return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
         }
         throw new Error('Notebook server is disposed');
     }
-    public async getServer(): Promise<INotebookServer | undefined> {
+    public async getServer(): Promise<IJupyterConnection | undefined> {
         if (!this._disposed) {
             // See if we have this server or not.
             return this.serverCache.get();
@@ -158,11 +155,10 @@ export class HostJupyterExecution implements IJupyterExecution {
     public connectToNotebookServerImpl(
         options: INotebookServerLocalOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer> {
+    ): Promise<IJupyterConnection> {
         // Return nothing if we cancel
         // eslint-disable-next-line
         return Cancellation.race(async () => {
-            let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
@@ -174,20 +170,10 @@ export class HostJupyterExecution implements IJupyterExecution {
                     // Start or connect to the process
                     connection = await this.startOrConnect(options, cancelToken);
 
-                    // eslint-disable-next-line no-constant-condition
-                    traceVerbose(`Connecting to process server`);
-
-                    // Create a server tha  t we will then attempt to connect to.
-                    result = await this.notebookServerFactory.createNotebookServer(connection);
                     traceVerbose(`Connection complete server`);
-                    return result;
+                    return connection;
                 } catch (err) {
                     lastTryError = err;
-                    // Cleanup after ourselves. server may be running partially.
-                    if (result) {
-                        traceWarning(`Killing server because of error ${err}`);
-                        await result.dispose();
-                    }
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.

@@ -5,11 +5,12 @@ import { CancellationToken } from 'vscode';
 import { traceError, traceVerbose } from '../../../../platform/logging';
 import { IAsyncDisposable } from '../../../../platform/common/types';
 import { sleep } from '../../../../platform/common/utils/async';
-import { INotebookServerLocalOptions, INotebookServer } from '../../types';
+import { INotebookServerLocalOptions } from '../../types';
+import { IJupyterConnection } from '../../../types';
 
 interface IServerData {
     options: INotebookServerLocalOptions;
-    promise: Promise<INotebookServer>;
+    promise: Promise<IJupyterConnection>;
     resolved: boolean;
 }
 
@@ -28,10 +29,10 @@ export class ServerCache implements IAsyncDisposable {
         createFunction: (
             options: INotebookServerLocalOptions,
             cancelToken: CancellationToken
-        ) => Promise<INotebookServer>,
+        ) => Promise<IJupyterConnection>,
         options: INotebookServerLocalOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer> {
+    ): Promise<IJupyterConnection> {
         const key = this.generateKey();
         let data: IServerData | undefined;
 
@@ -49,15 +50,7 @@ export class ServerCache implements IAsyncDisposable {
         }
 
         return data.promise
-            .then((server: INotebookServer) => {
-                // Change the dispose on it so we
-                // can detach from the server when it goes away.
-                const oldDispose = server.dispose.bind(server);
-                server.dispose = () => {
-                    this.cache.delete(key);
-                    return oldDispose();
-                };
-
+            .then((server: IJupyterConnection) => {
                 // We've resolved the promise at this point
                 if (data) {
                     data.resolved = true;
@@ -71,7 +64,7 @@ export class ServerCache implements IAsyncDisposable {
             });
     }
 
-    public async get(): Promise<INotebookServer | undefined> {
+    public async get(): Promise<IJupyterConnection | undefined> {
         const key = this.generateKey();
         if (this.cache.has(key)) {
             return this.cache.get(key)?.promise;

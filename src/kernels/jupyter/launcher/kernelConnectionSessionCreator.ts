@@ -8,8 +8,7 @@ import {
     IKernelConnectionSessionCreator,
     isLocalConnection,
     isRemoteConnection,
-    KernelConnectionSessionCreationOptions,
-    RemoteKernelConnectionMetadata
+    KernelConnectionSessionCreationOptions
 } from '../../types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { IRawKernelConnectionSessionCreator } from '../../raw/types';
@@ -26,6 +25,7 @@ import { KernelProgressReporter } from '../../../platform/progress/kernelProgres
 import { DataScience } from '../../../platform/common/utils/localize';
 import { Disposable } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
+import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -76,11 +76,7 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
         }
         createProgressReporter();
 
-        const promise = isRemoteConnection(options.kernelConnection)
-            ? this.createRemoteKernelSession({ ...options, kernelConnection: options.kernelConnection })
-            : this.createLocalJupyterKernelSession(options);
-
-        return promise.finally(() => disposeAllDisposables(disposables));
+        return this.createJupyterKernelSession(options).finally(() => disposeAllDisposables(disposables));
     }
     private createRawKernelSession(
         factory: IRawKernelConnectionSessionCreator,
@@ -88,19 +84,24 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
     ): Promise<IKernelConnectionSession> {
         return factory.create(options.resource, options.kernelConnection, options.ui, options.token);
     }
-    private async createRemoteKernelSession(
-        options: Omit<KernelConnectionSessionCreationOptions, 'kernelConnection'> & {
-            kernelConnection: RemoteKernelConnectionMetadata;
-        }
+    private async createJupyterKernelSession(
+        options: KernelConnectionSessionCreationOptions
     ): Promise<IKernelConnectionSession> {
         let connection: undefined | IJupyterConnection;
 
         // Check to see if we support ipykernel or not
         const disposablesWhenThereAreFailures: IDisposable[] = [];
         try {
-            connection = await this.jupyterConnection.createConnectionInfo({
-                serverId: options.kernelConnection.serverId
-            });
+            connection = isRemoteConnection(options.kernelConnection)
+                ? await this.jupyterConnection.createConnectionInfo({
+                      serverId: options.kernelConnection.serverId
+                  })
+                : await this.jupyterNotebookProvider.startJupyter({
+                      resource: options.resource,
+                      token: options.token,
+                      ui: options.ui
+                  });
+
             if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
             }
@@ -126,29 +127,29 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
             return session;
         } catch (ex) {
             disposeAllDisposables(disposablesWhenThereAreFailures);
-            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, ex);
 
-            // Check for the self signed certs error specifically
-            if (!connection) {
-                throw ex;
-            } else if (JupyterSelfCertsError.isSelfCertsError(ex)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                throw new JupyterSelfCertsError(connection.baseUrl);
-            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(ex)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
-                throw new JupyterSelfCertsExpiredError(connection.baseUrl);
+            if (isRemoteConnection(options.kernelConnection)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, ex);
+                // Check for the self signed certs error specifically
+                if (!connection) {
+                    throw ex;
+                } else if (JupyterSelfCertsError.isSelfCertsError(ex)) {
+                    sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                    throw new JupyterSelfCertsError(connection.baseUrl);
+                } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(ex)) {
+                    sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
+                    throw new JupyterSelfCertsExpiredError(connection.baseUrl);
+                } else {
+                    throw new RemoteJupyterServerConnectionError(
+                        connection.baseUrl,
+                        options.kernelConnection.serverId,
+                        ex
+                    );
+                }
             } else {
-                throw new RemoteJupyterServerConnectionError(connection.baseUrl, options.kernelConnection.serverId, ex);
+                sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, ex);
+                throw new LocalJupyterServerConnectionError(ex);
             }
         }
-    }
-    private async createLocalJupyterKernelSession(options: KernelConnectionSessionCreationOptions) {
-        await this.jupyterNotebookProvider.connect({
-            resource: options.resource,
-            token: options.token,
-            ui: options.ui
-        });
-        Cancellation.throwIfCanceled(options.token);
-        return this.jupyterNotebookProvider.createNotebook(options);
     }
 }

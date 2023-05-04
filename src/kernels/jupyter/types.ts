@@ -16,14 +16,12 @@ import {
     KernelConnectionMetadata,
     IJupyterConnection,
     ConnectNotebookProviderOptions,
-    KernelConnectionSessionCreationOptions,
     IJupyterKernelConnectionSession,
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
-    IKernelConnectionSession,
     RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
@@ -47,27 +45,16 @@ export enum JupyterInterpreterDependencyResponse {
     cancel
 }
 
-export interface INotebookServer extends IAsyncDisposable {
-    createNotebook(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        cancelToken: CancellationToken,
-        ui: IDisplayOptions,
-        creator: KernelActionSource
-    ): Promise<IKernelConnectionSession>;
-    readonly connection: IJupyterConnection;
-}
-
-export const INotebookServerFactory = Symbol('INotebookServerFactory');
-export interface INotebookServerFactory {
-    createNotebookServer(connection: IJupyterConnection): Promise<INotebookServer>;
-}
-
-// Provides notebooks that talk to jupyter servers
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
+/**
+ * Provides a wrapper around a local Jupyter Notebook Server.
+ */
 export interface IJupyterNotebookProvider {
-    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
-    createNotebook(options: KernelConnectionSessionCreationOptions): Promise<IKernelConnectionSession>;
+    /**
+     * Stats the local Jupyter Notebook server (if not already started)
+     * and returns the connection information.
+     */
+    startJupyter(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
 }
 
 export type INotebookServerLocalOptions = {
@@ -80,9 +67,9 @@ export interface IJupyterExecution extends IAsyncDisposable {
     connectToNotebookServer(
         options: INotebookServerLocalOptions,
         cancelToken?: CancellationToken
-    ): Promise<INotebookServer>;
+    ): Promise<IJupyterConnection>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getServer(options: INotebookServerLocalOptions): Promise<INotebookServer | undefined>;
+    getServer(options: INotebookServerLocalOptions): Promise<IJupyterConnection | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
@@ -176,9 +163,9 @@ export interface INbConvertExportToPythonService {
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
 export interface IJupyterServerProvider {
     /**
-     * Gets the server used for starting notebooks
+     * Creates (if not already created) and gets the local Jupyter server used for starting notebooks
      */
-    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer>;
+    getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection>;
 }
 
 export interface IJupyterServerUri {

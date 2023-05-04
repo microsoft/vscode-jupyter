@@ -58,8 +58,7 @@ suite('NotebookProvider', () => {
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
         const mockSession = mock<IJupyterKernelConnectionSession>();
         instance(mockSession as any).then = undefined;
-        when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(instance(mockSession));
-        when(jupyterNotebookProvider.connect(anything())).thenResolve({} as any);
+        when(jupyterNotebookProvider.startJupyter(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
@@ -76,8 +75,7 @@ suite('NotebookProvider', () => {
     test('NotebookProvider getOrCreateNotebook second request should return the notebook already cached', async () => {
         const mockSession = mock<IJupyterKernelConnectionSession>();
         instance(mockSession as any).then = undefined;
-        when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(instance(mockSession));
-        when(jupyterNotebookProvider.connect(anything())).thenResolve({} as any);
+        when(jupyterNotebookProvider.startJupyter(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 

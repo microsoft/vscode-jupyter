@@ -28,7 +28,6 @@ import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
-import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServerFactory';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
@@ -55,7 +54,6 @@ import {
     INotebookStarter,
     IJupyterRequestCreator,
     IJupyterRequestAgentCreator,
-    INotebookServerFactory,
     ILiveRemoteKernelConnectionUsageTracker,
     IJupyterRemoteCachedKernelValidator
 } from './types';
@@ -66,7 +64,6 @@ import { JupyterKernelConnectionSessionCreator } from './launcher/jupyterKernelC
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
-    serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

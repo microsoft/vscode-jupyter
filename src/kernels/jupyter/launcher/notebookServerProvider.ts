@@ -8,8 +8,8 @@ import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { GetServerOptions } from '../../types';
-import { IJupyterServerProvider, INotebookServer, IJupyterExecution, IJupyterServerUriStorage } from '../types';
+import { GetServerOptions, IJupyterConnection } from '../../types';
+import { IJupyterServerProvider, IJupyterExecution, IJupyterServerUriStorage } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { isCancellationError } from '../../../platform/common/cancellation';
@@ -20,7 +20,7 @@ import { isCancellationError } from '../../../platform/common/cancellation';
 const localCacheKey = 'LocalJupyterSererCacheKey';
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
-    private serverPromise = new Map<string, Promise<INotebookServer>>();
+    private serverPromise = new Map<string, Promise<IJupyterConnection>>();
     constructor(
         @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -45,7 +45,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     public clearCache() {
         this.serverPromise.clear();
     }
-    public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer> {
+    public async getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection> {
         // If we are just fetching or only want to create for local, see if exists
         if (this.jupyterExecution) {
             const server = await this.jupyterExecution.getServer({ resource: options.resource });
@@ -59,7 +59,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         return this.createServer(options);
     }
 
-    private async createServer(options: GetServerOptions): Promise<INotebookServer> {
+    private async createServer(options: GetServerOptions): Promise<IJupyterConnection> {
         const cacheKey = localCacheKey;
         if (!this.serverPromise.has(cacheKey)) {
             // Start a server
@@ -79,7 +79,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async startServer(options: GetServerOptions): Promise<INotebookServer> {
+    private async startServer(options: GetServerOptions): Promise<IJupyterConnection> {
         const jupyterExecution = this.jupyterExecution;
         if (!jupyterExecution) {
             throw new NotSupportedInWebError();

@@ -35,7 +35,7 @@ export class JupyterServerConnector implements IJupyterServerConnector {
         if (this.rawSessionCreator?.isSupported) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
         } else if (this.extensionChecker.isPythonExtensionInstalled) {
-            return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
+            return this.jupyterNotebookProvider.startJupyter(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
             if (!this.startupUi.disableUI) {
