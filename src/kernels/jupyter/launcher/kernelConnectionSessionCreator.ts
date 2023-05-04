@@ -26,6 +26,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { Disposable } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
+import { BaseError } from '../../../platform/errors/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -148,7 +149,11 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
                 }
             } else {
                 sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, ex);
-                throw new LocalJupyterServerConnectionError(ex);
+                if (ex instanceof BaseError) {
+                    throw ex;
+                } else {
+                    throw new LocalJupyterServerConnectionError(ex);
+                }
             }
         }
     }
