@@ -79,6 +79,8 @@ function getZeroMQPreBuildsFoldersToKeep() {
             return ['win32-ia32'];
         } else if (vsceTarget.includes('x64')) {
             return ['win32-x64'];
+        } else if (vsceTarget.includes('arm64')) {
+            return ['win32-arm64'];
         } else {
             return ['win32-ia32', 'win32-x64'];
         }
