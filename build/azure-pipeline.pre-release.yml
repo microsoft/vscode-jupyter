@@ -53,6 +53,9 @@ extends:
       - name: Windows
         packageArch: x64
         vsceTarget: win32-x64
+      - name: Windows
+        packageArch: arm64
+        vsceTarget: win32-arm64
     buildSteps:
       - script: |
           sudo apt-get update
