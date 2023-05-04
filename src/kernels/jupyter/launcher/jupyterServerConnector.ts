@@ -6,7 +6,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { ConnectNotebookProviderOptions, IJupyterConnection, IJupyterServerConnector } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawKernelConnectionSessionCreator } from '../../raw/types';
-import { IJupyterNotebookProvider } from '../types';
+import { IJupyterServerProvider } from '../types';
 import { PythonExtensionNotInstalledError } from '../../../platform/errors/pythonExtNotInstalledError';
 
 @injectable()
@@ -16,8 +16,8 @@ export class JupyterServerConnector implements IJupyterServerConnector {
         @inject(IRawKernelConnectionSessionCreator)
         @optional()
         private readonly rawSessionCreator: IRawKernelConnectionSessionCreator | undefined,
-        @inject(IJupyterNotebookProvider)
-        private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
+        @inject(IJupyterServerProvider)
+        private readonly jupyterNotebookProvider: IJupyterServerProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
@@ -35,7 +35,7 @@ export class JupyterServerConnector implements IJupyterServerConnector {
         if (this.rawSessionCreator?.isSupported) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
         } else if (this.extensionChecker.isPythonExtensionInstalled) {
-            return this.jupyterNotebookProvider.startJupyter(options).finally(() => handler.dispose());
+            return this.jupyterNotebookProvider.getOrCreateServer(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
             if (!this.startupUi.disableUI) {

@@ -1,21 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { IDisposable } from '@fluentui/react';
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as vscode from 'vscode';
-import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../types';
-import { DisplayOptions } from '../../displayOptions';
-import { IJupyterNotebookProvider, IJupyterSessionManagerFactory } from '../types';
-import { IRawKernelConnectionSessionCreator } from '../../raw/types';
-import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { KernelConnectionSessionCreator } from './kernelConnectionSessionCreator';
-import { JupyterKernelConnectionSessionCreator } from './jupyterKernelConnectionSessionCreator';
-import { JupyterConnection } from '../connection/jupyterConnection';
-import { AsyncDisposableRegistry } from '../../../platform/common/asyncDisposableRegistry';
 import { EventEmitter } from 'vscode';
+import { PythonExtensionChecker } from '../../platform/api/pythonApi';
+import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IAsyncDisposableRegistry } from '../../platform/common/types';
+import { DisplayOptions } from '../displayOptions';
+import { JupyterConnection } from '../jupyter/connection/jupyterConnection';
+import { JupyterKernelConnectionSessionCreator } from '../jupyter/session/jupyterKernelConnectionSessionCreator';
+import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../jupyter/types';
+import { IRawKernelConnectionSessionCreator } from '../raw/types';
+import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../types';
+import { KernelConnectionSessionCreator } from './kernelConnectionSessionCreator';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -24,14 +25,14 @@ function Uri(filename: string): vscode.Uri {
 /* eslint-disable  */
 suite('NotebookProvider', () => {
     let kernelConnectionSessionCreator: KernelConnectionSessionCreator;
-    let jupyterNotebookProvider: IJupyterNotebookProvider;
+    let jupyterNotebookProvider: IJupyterServerProvider;
     let rawKernelSessionCreator: IRawKernelConnectionSessionCreator;
     let cancelToken: vscode.CancellationTokenSource;
     const disposables: IDisposable[] = [];
     let asyncDisposables: IAsyncDisposableRegistry;
     let onDidShutdown: EventEmitter<void>;
     setup(() => {
-        jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
+        jupyterNotebookProvider = mock<IJupyterServerProvider>();
         rawKernelSessionCreator = mock<IRawKernelConnectionSessionCreator>();
         cancelToken = new vscode.CancellationTokenSource();
         disposables.push(cancelToken);
@@ -68,7 +69,7 @@ suite('NotebookProvider', () => {
         await asyncDisposables.dispose();
     });
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
-        when(jupyterNotebookProvider.startJupyter(anything())).thenResolve({} as any);
+        when(jupyterNotebookProvider.getOrCreateServer(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
         const session = await kernelConnectionSessionCreator.create({
@@ -82,7 +83,7 @@ suite('NotebookProvider', () => {
     });
 
     test('NotebookProvider getOrCreateNotebook second request should return the notebook already cached', async () => {
-        when(jupyterNotebookProvider.startJupyter(anything())).thenResolve({} as any);
+        when(jupyterNotebookProvider.getOrCreateServer(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
