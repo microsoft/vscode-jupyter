@@ -29,7 +29,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.78.0"
+        "vscode": "^1.79.0"
     },
     "l10n": "./l10n",
     "keywords": [
@@ -2183,7 +2183,7 @@
         "@typescript-eslint/parser": "^5.47.0",
         "@vscode/test-electron": "^2.2.0",
         "@vscode/test-web": "^0.0.29",
-        "@vscode/zeromq": "^0.1.4",
+        "@vscode/zeromq": "^0.1.5",
         "acorn": "^6.4.1",
         "babel-polyfill": "^6.26.0",
         "bufferutil": "^4.0.6",
