@@ -19,6 +19,7 @@ import { getKernelRegistrationInfo } from '../../helpers';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { isUnitTestExecution } from '../../../platform/common/constants';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -176,19 +177,30 @@ export class ContributedLocalPythonEnvFinder
                     clearTimeout(this.cacheLoggingTimeout);
                 }
                 // Reduce the logging, as this can get written a lot,
-                this.cacheLoggingTimeout = setTimeout(() => {
-                    traceVerbose(
-                        `Updating cache with Python kernels ${values
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Added = ${added
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Updated = ${updated
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Removed = ${removed
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}`
-                    );
-                }, 15_000);
+                this.cacheLoggingTimeout = setTimeout(
+                    () => {
+                        traceVerbose(
+                            `Updating cache with Python kernels ${values
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Added = ${added
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Updated = ${updated
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Removed = ${removed
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}`
+                        );
+                    },
+                    isUnitTestExecution() ? 0 : 15_000
+                );
                 this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
             }
         } catch (ex) {

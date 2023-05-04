@@ -32,13 +32,13 @@ export class JupyterServerConnector implements IJupyterServerConnector {
             }
         });
         options.ui = this.startupUi;
-        if (this.rawSessionCreator?.isSupported && options.localJupyter) {
+        if (this.rawSessionCreator?.isSupported) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
-        } else if (this.extensionChecker.isPythonExtensionInstalled || !options.localJupyter) {
-            return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
+        } else if (this.extensionChecker.isPythonExtensionInstalled) {
+            return this.jupyterNotebookProvider.startJupyter(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
-            if (!this.startupUi.disableUI && options.localJupyter) {
+            if (!this.startupUi.disableUI) {
                 await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
             }
             throw new PythonExtensionNotInstalledError();

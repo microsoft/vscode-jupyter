@@ -12,7 +12,8 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/connection/serverUriStorage';
 import { DisplayOptions } from '../../../kernels/displayOptions';
-import { IJupyterExecution, INotebookServer } from '../../../kernels/jupyter/types';
+import { IJupyterExecution } from '../../../kernels/jupyter/types';
+import { IJupyterConnection } from '../../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
@@ -63,15 +64,14 @@ suite('NotebookServerProvider', () => {
     });
     teardown(() => disposeAllDisposables(disposables));
     test('NotebookServerProvider - Get Only - server', async () => {
-        const notebookServer = mock<INotebookServer>();
-        when((notebookServer as any).then).thenReturn(undefined);
-        when(jupyterExecution.getServer(anything())).thenResolve(instance(notebookServer));
+        const connection = mock<IJupyterConnection>();
+        when((connection as any).then).thenReturn(undefined);
+        when(jupyterExecution.getServer(anything())).thenResolve(instance(connection));
 
         const server = await serverProvider.getOrCreateServer({
             resource: undefined,
             ui: new DisplayOptions(false),
-            token: source.token,
-            localJupyter: true
+            token: source.token
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
         verify(jupyterExecution.getServer(anything())).once();
@@ -79,15 +79,14 @@ suite('NotebookServerProvider', () => {
 
     test('NotebookServerProvider - Get Or Create', async () => {
         when(jupyterExecution.getUsableJupyterPython()).thenResolve(workingPython);
-        const notebookServer = createTypeMoq<INotebookServer>('jupyter server');
-        when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(notebookServer.object);
+        const connection = createTypeMoq<IJupyterConnection>('jupyter server');
+        when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(connection.object);
 
         // Disable UI just lets us skip mocking the progress reporter
         const server = await serverProvider.getOrCreateServer({
             ui: new DisplayOptions(true),
             resource: undefined,
-            token: source.token,
-            localJupyter: true
+            token: source.token
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
     });

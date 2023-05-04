@@ -6,39 +6,24 @@ import { CancellationToken, Uri } from 'vscode';
 import { ServerCache } from './serverCache';
 import { inject, injectable, optional } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { traceInfo, traceVerbose, traceWarning } from '../../../../platform/logging';
+import { traceInfo, traceVerbose } from '../../../../platform/logging';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
-    IConfigurationService
+    IConfigurationService,
+    Resource
 } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
-import {
-    IJupyterExecution,
-    INotebookServerOptions,
-    INotebookServer,
-    INotebookStarter,
-    INotebookServerFactory,
-    IJupyterServerUriStorage
-} from '../../types';
+import { IJupyterExecution, INotebookStarter, IJupyterServerUriStorage } from '../../types';
 import * as urlPath from '../../../../platform/vscode-path/resources';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
-import { JupyterConnection } from '../../connection/jupyterConnection';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { Cancellation } from '../../../../platform/common/cancellation';
 import { IJupyterConnection } from '../../../types';
-import { JupyterSelfCertsError } from '../../../../platform/errors/jupyterSelfCertsError';
-import { JupyterSelfCertsExpiredError } from '../../../../platform/errors/jupyterSelfCertsExpiredError';
-import { LocalJupyterServerConnectionError } from '../../../../platform/errors/localJupyterServerConnectionError';
-import { RemoteJupyterServerConnectionError } from '../../../../platform/errors/remoteJupyterServerConnectionError';
-import { sendTelemetryEvent, Telemetry } from '../../../../telemetry';
 import { JupyterWaitForIdleError } from '../../../errors/jupyterWaitForIdleError';
 import { expandWorkingDir } from '../../jupyterUtils';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 /**
  * Jupyter server implementation that uses the JupyterExecutionBase class to launch Jupyter.
@@ -60,9 +45,7 @@ export class HostJupyterExecution implements IJupyterExecution {
         @inject(IJupyterSubCommandExecutionService)
         @optional()
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
-        @inject(INotebookServerFactory) private readonly notebookServerFactory: INotebookServerFactory,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
@@ -111,31 +94,28 @@ export class HostJupyterExecution implements IJupyterExecution {
     }
 
     private async hostConnectToNotebookServer(
-        options: INotebookServerOptions,
+        resource: Resource,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer> {
+    ): Promise<IJupyterConnection> {
         if (!this._disposed) {
-            return this.connectToNotebookServerImpl(
-                await this.serverCache.generateDefaultOptions(options),
-                cancelToken
-            );
+            return this.connectToNotebookServerImpl(resource, cancelToken);
         }
         throw new Error('Notebook server is disposed');
     }
 
     public async connectToNotebookServer(
-        options: INotebookServerOptions,
+        resource: Resource,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer> {
+    ): Promise<IJupyterConnection> {
         if (!this._disposed) {
-            return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
+            return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), resource, cancelToken);
         }
         throw new Error('Notebook server is disposed');
     }
-    public async getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
+    public async getServer(): Promise<IJupyterConnection | undefined> {
         if (!this._disposed) {
             // See if we have this server or not.
-            return this.serverCache.get(options);
+            return this.serverCache.get();
         }
     }
 
@@ -167,13 +147,12 @@ export class HostJupyterExecution implements IJupyterExecution {
 
     /* eslint-disable complexity,  */
     public connectToNotebookServerImpl(
-        options: INotebookServerOptions,
+        resource: Resource,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer> {
+    ): Promise<IJupyterConnection> {
         // Return nothing if we cancel
         // eslint-disable-next-line
         return Cancellation.race(async () => {
-            let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
@@ -183,25 +162,12 @@ export class HostJupyterExecution implements IJupyterExecution {
             while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
-                    connection = await this.startOrConnect(options, cancelToken);
+                    connection = await this.startOrConnect(resource, cancelToken);
 
-                    if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
-                        sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
-                    }
-                    // eslint-disable-next-line no-constant-condition
-                    traceVerbose(`Connecting to process server`);
-
-                    // Create a server tha  t we will then attempt to connect to.
-                    result = await this.notebookServerFactory.createNotebookServer(connection);
                     traceVerbose(`Connection complete server`);
-                    return result;
+                    return connection;
                 } catch (err) {
                     lastTryError = err;
-                    // Cleanup after ourselves. server may be running partially.
-                    if (result) {
-                        traceWarning(`Killing server because of error ${err}`);
-                        await result.dispose();
-                    }
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
@@ -215,25 +181,7 @@ export class HostJupyterExecution implements IJupyterExecution {
                         if (this.disposed) {
                             throw err;
                         }
-
-                        // Something else went wrong
-                        if (!options.localJupyter) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err);
-
-                            // Check for the self signed certs error specifically
-                            if (JupyterSelfCertsError.isSelfCertsError(err)) {
-                                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                                throw new JupyterSelfCertsError(connection.baseUrl);
-                            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
-                                sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
-                                throw new JupyterSelfCertsExpiredError(connection.baseUrl);
-                            } else {
-                                throw new RemoteJupyterServerConnectionError(connection.baseUrl, options.serverId, err);
-                            }
-                        } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err);
-                            throw new LocalJupyterServerConnectionError(err);
-                        }
+                        throw err;
                     } else {
                         throw err;
                     }
@@ -244,40 +192,32 @@ export class HostJupyterExecution implements IJupyterExecution {
         }, cancelToken);
     }
 
-    private async startOrConnect(
-        options: INotebookServerOptions,
-        cancelToken: CancellationToken
-    ): Promise<IJupyterConnection> {
+    private async startOrConnect(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
-        if (options.localJupyter) {
-            // If that works, then attempt to start the server
-            traceInfo(`Launching server`);
-            const settings = this.configuration.getSettings(options.resource);
-            const useDefaultConfig = settings.useDefaultConfigForJupyter;
-            const workingDir = await this.workspace.computeWorkingDirectory(options.resource);
-            // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
-            const workingDirectory = expandWorkingDir(
-                workingDir,
-                this.workspace.rootFolder ? urlPath.joinPath(this.workspace.rootFolder, `${uuid()}.txt`) : undefined,
-                this.workspace,
-                settings
-            );
+        // If that works, then attempt to start the server
+        traceInfo(`Launching server`);
+        const settings = this.configuration.getSettings(resource);
+        const useDefaultConfig = settings.useDefaultConfigForJupyter;
+        const workingDir = await this.workspace.computeWorkingDirectory(resource);
+        // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
+        const workingDirectory = expandWorkingDir(
+            workingDir,
+            this.workspace.rootFolder ? urlPath.joinPath(this.workspace.rootFolder, `${uuid()}.txt`) : undefined,
+            this.workspace,
+            settings
+        );
 
-            if (!this.notebookStarter) {
-                // In desktop mode this must be defined, in web this code path never gets executed.
-                throw new Error('Notebook Starter cannot be undefined');
-            }
-            return this.notebookStarter!.start(
-                options.resource,
-                useDefaultConfig,
-                this.configuration.getSettings(undefined).jupyterCommandLineArguments,
-                Uri.file(workingDirectory),
-                cancelToken
-            );
-        } else {
-            // If we have a URI spec up a connection info for it
-            return this.jupyterConnection.createConnectionInfo({ serverId: options.serverId });
+        if (!this.notebookStarter) {
+            // In desktop mode this must be defined, in web this code path never gets executed.
+            throw new Error('Notebook Starter cannot be undefined');
         }
+        return this.notebookStarter.start(
+            resource,
+            useDefaultConfig,
+            this.configuration.getSettings(undefined).jupyterCommandLineArguments,
+            Uri.file(workingDirectory),
+            cancelToken
+        );
     }
 
     private onSettingsChanged() {

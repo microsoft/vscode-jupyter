@@ -14,7 +14,6 @@ import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
-import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServerFactory';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
@@ -34,17 +33,16 @@ import {
     IJupyterServerProvider,
     IJupyterExecution,
     IJupyterRequestCreator,
-    INotebookServerFactory,
     ILiveRemoteKernelConnectionUsageTracker,
     IJupyterRemoteCachedKernelValidator
 } from './types';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelConnectionSessionCreator } from './launcher/kernelConnectionSessionCreator';
+import { JupyterKernelConnectionSessionCreator } from './launcher/jupyterKernelConnectionSessionCreator';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
-    serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(
         IJupyterSessionManagerFactory,
@@ -61,6 +59,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IKernelConnectionSessionCreator>(
         IKernelConnectionSessionCreator,
         KernelConnectionSessionCreator
+    );
+    serviceManager.addSingleton<JupyterKernelConnectionSessionCreator>(
+        JupyterKernelConnectionSessionCreator,
+        JupyterKernelConnectionSessionCreator
     );
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);

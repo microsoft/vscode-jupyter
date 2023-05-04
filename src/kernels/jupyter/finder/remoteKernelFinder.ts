@@ -6,7 +6,6 @@ import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
-    IJupyterServerConnector,
     IKernelProvider,
     IJupyterConnection,
     isRemoteConnection,
@@ -27,7 +26,6 @@ import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { computeServerId } from '../jupyterUtils';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import { DisplayOptions } from '../../displayOptions';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -37,6 +35,10 @@ import { ContributedKernelFinderKind } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { JupyterConnection } from '../connection/jupyterConnection';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { isUnitTestExecution } from '../../../platform/common/constants';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -90,14 +92,14 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         readonly cacheKey: string,
         private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private extensionChecker: IPythonExtensionChecker,
-        private readonly jupyterServerConnector: IJupyterServerConnector,
         private readonly globalState: Memento,
         private readonly env: IApplicationEnvironment,
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         kernelFinder: KernelFinder,
         private readonly kernelProvider: IKernelProvider,
         private readonly extensions: IExtensions,
-        readonly serverUri: IJupyterServerUriEntry
+        readonly serverUri: IJupyterServerUriEntry,
+        private readonly jupyterConnection: JupyterConnection
     ) {
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
@@ -200,7 +202,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             } else {
                 try {
                     const kernelsWithoutCachePromise = (async () => {
-                        const connInfo = await this.getRemoteConnectionInfo(undefined, displayProgress);
+                        const connInfo = await this.getRemoteConnectionInfo(displayProgress);
                         return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
                     })();
 
@@ -227,7 +229,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
             try {
                 const kernelsWithoutCachePromise = (async () => {
-                    const connInfo = await this.getRemoteConnectionInfo(updateCacheCancellationToken.token, false);
+                    const connInfo = await this.getRemoteConnectionInfo(false);
                     return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
                 })();
 
@@ -260,18 +262,16 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         return this.cache;
     }
 
-    private async getRemoteConnectionInfo(
-        cancelToken?: CancellationToken,
-        displayProgress: boolean = true
-    ): Promise<IJupyterConnection | undefined> {
-        const ui = new DisplayOptions(!displayProgress);
-        return this.jupyterServerConnector.connect({
-            resource: undefined,
-            ui,
-            localJupyter: false,
-            token: cancelToken,
-            serverId: this.serverUri.serverId
-        });
+    private async getRemoteConnectionInfo(displayProgress: boolean = true): Promise<IJupyterConnection | undefined> {
+        const disposables: IDisposable[] = [];
+        if (displayProgress) {
+            disposables.push(KernelProgressReporter.createProgressReporter(undefined, DataScience.connectingToJupyter));
+        }
+        return this.jupyterConnection
+            .createConnectionInfo({
+                serverId: this.serverUri.serverId
+            })
+            .finally(() => disposeAllDisposables(disposables));
     }
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<RemoteKernelConnectionMetadata[]> {
@@ -435,19 +435,30 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     clearTimeout(this.cacheLoggingTimeout);
                 }
                 // Reduce the logging, as this can get written a lot,
-                this.cacheLoggingTimeout = setTimeout(() => {
-                    traceVerbose(
-                        `Updating cache with Remote kernels ${values
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Added = ${added
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Updated = ${updated
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}, Removed = ${removed
-                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
-                            .join(', ')}`
-                    );
-                }, 15_000);
+                this.cacheLoggingTimeout = setTimeout(
+                    () => {
+                        traceVerbose(
+                            `Updating cache with Remote kernels ${values
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Added = ${added
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Updated = ${updated
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Removed = ${removed
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}`
+                        );
+                    },
+                    isUnitTestExecution() ? 0 : 15_000
+                );
                 this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
             }
         } catch (ex) {

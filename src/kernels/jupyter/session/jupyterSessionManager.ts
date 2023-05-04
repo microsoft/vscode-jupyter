@@ -60,6 +60,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private readonly userAllowsInsecureConnections: IPersistentState<boolean>;
     private disposed?: boolean;
+    public get isDisposed() {
+        return this.disposed === true;
+    }
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
