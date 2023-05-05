@@ -13,7 +13,7 @@ import { IAsyncDisposableRegistry } from '../../../platform/common/types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { JupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
-import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../types';
+import { IJupyterServerProvider, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
 import { IJupyterKernelSession, KernelConnectionMetadata } from '../../types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 
@@ -39,8 +39,17 @@ suite('NotebookProvider', () => {
         disposables.push(onDidChangeEvent);
         onDidShutdown = new vscode.EventEmitter<void>();
         disposables.push(onDidShutdown);
+        const mockSession = mock<IJupyterKernelSession>();
+        when(mockSession.onDidShutdown).thenReturn(onDidShutdown.event);
+        instance(mockSession as any).then = undefined;
+        const jupyterSessionManager = mock<IJupyterSessionManager>();
+        instance(jupyterSessionManager as any).then = undefined;
+        when(jupyterSessionManager.isDisposed).thenReturn(false);
+        when(
+            jupyterSessionManager.startNew(anything(), anything(), anything(), anything(), anything(), anything())
+        ).thenResolve(instance(mockSession));
         const sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
-        const jupyterSessionCreator = mock<JupyterKernelSessionFactory>();
+        when(sessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
         const jupyterConnection = mock<JupyterConnection>();
         when(jupyterConnection.createConnectionInfo(anything())).thenResolve({
             localLaunch: true,
@@ -50,10 +59,6 @@ suite('NotebookProvider', () => {
             localLaunch: true,
             baseUrl: 'http://localhost:8888'
         } as any);
-        const mockSession = mock<IJupyterKernelSession>();
-        when(mockSession.onDidShutdown).thenReturn(onDidShutdown.event);
-        instance(mockSession as any).then = undefined;
-        when(jupyterSessionCreator.create(anything())).thenResolve(instance(mockSession));
         asyncDisposables = new AsyncDisposableRegistry();
         const workspace = mock<IWorkspaceService>();
         when(workspace.computeWorkingDirectory(anything())).thenResolve('');
