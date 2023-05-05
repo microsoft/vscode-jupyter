@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable, inject, named } from 'inversify';
-import { Disposable, Memento } from 'vscode';
+import { Memento } from 'vscode';
 import { IKernelFinder, IKernelProvider } from '../../types';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import {
@@ -23,39 +23,40 @@ import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { Settings } from '../../../platform/common/constants';
 import { JupyterConnection } from '../connection/jupyterConnection';
 
-/** Strategy design */
-interface IRemoteKernelFinderRegistrationStrategy {
-    activate(): Promise<void>;
-    dispose(): void;
-}
-
-class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
+@injectable()
+export class RemoteKernelFinderController implements IExtensionSyncActivationService {
     private serverFinderMapping: Map<string, RemoteKernelFinder> = new Map<string, RemoteKernelFinder>();
 
     constructor(
-        private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        private extensionChecker: IPythonExtensionChecker,
-        private readonly serverUriStorage: IJupyterServerUriStorage,
-        private readonly globalState: Memento,
-        private readonly env: IApplicationEnvironment,
+        @inject(IJupyterSessionManagerFactory)
+        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
+        @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
+        @inject(IJupyterRemoteCachedKernelValidator)
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
-        private readonly kernelFinder: KernelFinder,
-        private readonly disposables: IDisposableRegistry,
-        private readonly kernelProvider: IKernelProvider,
-        private readonly extensions: IExtensions,
-        private readonly jupyterConnection: JupyterConnection
+        @inject(IKernelFinder) private readonly kernelFinder: KernelFinder,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
 
-    async activate(): Promise<void> {
+    activate() {
         // Add in the URIs that we already know about
-        const currentServers = await this.serverUriStorage.getSavedUriList();
-        currentServers.forEach(this.createRemoteKernelFinder.bind(this));
+        this.serverUriStorage
+            .getSavedUriList()
+            .then((currentServers) => {
+                currentServers.forEach(this.createRemoteKernelFinder.bind(this));
 
-        // Check for when more URIs are added
-        this.serverUriStorage.onDidAddUri(this.createRemoteKernelFinder, this, this.disposables);
+                // Check for when more URIs are added
+                this.serverUriStorage.onDidAddUri(this.createRemoteKernelFinder, this, this.disposables);
 
-        // Also check for when a URI is removed
-        this.serverUriStorage.onDidRemoveUris(this.urisRemoved, this, this.disposables);
+                // Also check for when a URI is removed
+                this.serverUriStorage.onDidRemoveUris(this.urisRemoved, this, this.disposables);
+            })
+            .catch(noop);
     }
 
     createRemoteKernelFinder(serverUri: IJupyterServerUriEntry) {
@@ -104,50 +105,5 @@ class MultiServerStrategy implements IRemoteKernelFinderRegistrationStrategy {
 
     dispose() {
         this.serverFinderMapping.forEach((finder) => finder.dispose());
-    }
-}
-
-// This class creates RemoteKernelFinders for all registered Jupyter Server URIs
-@injectable()
-export class RemoteKernelFinderController implements IExtensionSyncActivationService {
-    private _strategy: IRemoteKernelFinderRegistrationStrategy;
-    private _localDisposables: Disposable[] = [];
-
-    constructor(
-        @inject(IJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
-        @inject(IJupyterRemoteCachedKernelValidator)
-        private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
-        @inject(IKernelFinder) private readonly kernelFinder: KernelFinder,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IExtensions) private readonly extensions: IExtensions,
-        @inject(JupyterConnection) jupyterConnection: JupyterConnection
-    ) {
-        this._strategy = new MultiServerStrategy(
-            this.jupyterSessionManagerFactory,
-            this.extensionChecker,
-            this.serverUriStorage,
-            this.globalState,
-            this.env,
-            this.cachedRemoteKernelValidator,
-            this.kernelFinder,
-            this._localDisposables,
-            this.kernelProvider,
-            this.extensions,
-            jupyterConnection
-        );
-    }
-
-    dispose() {
-        this._strategy?.dispose();
-        this._localDisposables.forEach((d) => d.dispose());
-    }
-
-    activate() {
-        this._strategy.activate().then(noop, noop);
     }
 }
