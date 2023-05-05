@@ -28,8 +28,8 @@ import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/hostJupyterExecution';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector';
-import { NotebookServerProvider } from './launcher/notebookServerProvider';
-import { NotebookStarter } from './launcher/notebookStarter.node';
+import { JupyterServerProvider } from './launcher/jupyterServerProvider';
+import { JupyterServerStarter } from './launcher/jupyterServerStarter.node';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
 import { JupyterServerSelector } from './connection/serverSelector';
@@ -101,7 +101,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
     serviceManager.addSingleton<IJupyterKernelService>(IJupyterKernelService, JupyterKernelService);
-    serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
+    serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, JupyterServerProvider);
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(
         IJupyterInterpreterDependencyManager,
         JupyterInterpreterSubCommandExecutionService
@@ -115,7 +115,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterUriProviderRegistration
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-    serviceManager.addSingleton<INotebookStarter>(INotebookStarter, NotebookStarter);
+    serviceManager.addSingleton<INotebookStarter>(INotebookStarter, JupyterServerStarter);
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);
     serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
     serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);

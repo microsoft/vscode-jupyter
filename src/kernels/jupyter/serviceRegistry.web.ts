@@ -14,7 +14,7 @@ import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/hostJupyterExecution';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector';
-import { NotebookServerProvider } from './launcher/notebookServerProvider';
+import { JupyterServerProvider } from './launcher/jupyterServerProvider';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
 import { JupyterServerSelector } from './connection/serverSelector';
@@ -57,7 +57,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
-    serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
+    serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, JupyterServerProvider);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
     serviceManager.addBinding(JupyterConnection, IExtensionSyncActivationService);

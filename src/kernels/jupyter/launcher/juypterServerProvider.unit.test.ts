@@ -9,9 +9,9 @@ import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
-import { DisplayOptions } from '../../../kernels/displayOptions';
-import { IJupyterExecution } from '../../../kernels/jupyter/types';
+import { JupyterServerProvider } from './jupyterServerProvider';
+import { DisplayOptions } from '../../displayOptions';
+import { IJupyterExecution } from '../types';
 import { IJupyterConnection } from '../../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -25,8 +25,8 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 }
 
 /* eslint-disable  */
-suite('NotebookServerProvider', () => {
-    let serverProvider: NotebookServerProvider;
+suite('Jupyter Server Provider', () => {
+    let serverProvider: JupyterServerProvider;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;
     const workingPython: PythonEnvironment = {
@@ -47,12 +47,12 @@ suite('NotebookServerProvider', () => {
         when((jupyterExecution as any).then).thenReturn(undefined);
 
         // Create the server provider
-        serverProvider = new NotebookServerProvider(instance(jupyterExecution), instance(interpreterService));
+        serverProvider = new JupyterServerProvider(instance(jupyterExecution), instance(interpreterService));
         source = new CancellationTokenSource();
         disposables.push(source);
     });
     teardown(() => disposeAllDisposables(disposables));
-    test('NotebookServerProvider - Get Only - server', async () => {
+    test('Get Only - server', async () => {
         const connection = mock<IJupyterConnection>();
         when((connection as any).then).thenReturn(undefined);
         when(jupyterExecution.getServer(anything())).thenResolve(instance(connection));
@@ -66,7 +66,7 @@ suite('NotebookServerProvider', () => {
         verify(jupyterExecution.getServer(anything())).once();
     });
 
-    test('NotebookServerProvider - Get Or Create', async () => {
+    test('Get Or Create', async () => {
         when(jupyterExecution.getUsableJupyterPython()).thenResolve(workingPython);
         const connection = createTypeMoq<IJupyterConnection>('jupyter server');
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(connection.object);

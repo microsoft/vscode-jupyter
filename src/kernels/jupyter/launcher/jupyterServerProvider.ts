@@ -13,7 +13,7 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { Cancellation, isCancellationError } from '../../../platform/common/cancellation';
 
 @injectable()
-export class NotebookServerProvider implements IJupyterServerProvider {
+export class JupyterServerProvider implements IJupyterServerProvider {
     private serverPromise?: Promise<IJupyterConnection>;
     constructor(
         @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
