@@ -888,7 +888,7 @@ import { sleep } from '../../../test/core';
                     // Lets wait for a bit before running the tests.
                     setup(async () => {
                         if (os.platform() === 'win32') {
-                            await sleep(100);
+                            await sleep(500);
                         }
                     });
                     /**
