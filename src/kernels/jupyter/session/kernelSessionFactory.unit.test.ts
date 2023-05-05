@@ -6,17 +6,16 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EventEmitter } from 'vscode';
-import { PythonExtensionChecker } from '../../platform/api/pythonApi';
-import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IAsyncDisposableRegistry } from '../../platform/common/types';
-import { DisplayOptions } from '../displayOptions';
-import { JupyterConnection } from '../jupyter/connection/jupyterConnection';
-import { JupyterKernelSessionFactory } from '../jupyter/session/jupyterKernelSessionFactory';
-import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../jupyter/types';
-import { IRawKernelSessionFactory } from '../raw/types';
-import { IJupyterKernelSession, KernelConnectionMetadata } from '../types';
-import { KernelSessionFactory } from './kernelSessionFactory';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
+import { AsyncDisposableRegistry } from '../../../platform/common/asyncDisposableRegistry';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IAsyncDisposableRegistry } from '../../../platform/common/types';
+import { DisplayOptions } from '../../displayOptions';
+import { JupyterConnection } from '../connection/jupyterConnection';
+import { JupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
+import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../types';
+import { IJupyterKernelSession, KernelConnectionMetadata } from '../../types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -24,19 +23,16 @@ function Uri(filename: string): vscode.Uri {
 
 /* eslint-disable  */
 suite('NotebookProvider', () => {
-    let kernelConnectionSessionCreator: KernelSessionFactory;
+    let jupyterKernelSessionFactory: JupyterKernelSessionFactory;
     let jupyterNotebookProvider: IJupyterServerProvider;
-    let rawKernelSessionCreator: IRawKernelSessionFactory;
     let cancelToken: vscode.CancellationTokenSource;
     const disposables: IDisposable[] = [];
     let asyncDisposables: IAsyncDisposableRegistry;
     let onDidShutdown: EventEmitter<void>;
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterServerProvider>();
-        rawKernelSessionCreator = mock<IRawKernelSessionFactory>();
         cancelToken = new vscode.CancellationTokenSource();
         disposables.push(cancelToken);
-        when(rawKernelSessionCreator.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         const onDidChangeEvent = new vscode.EventEmitter<void>();
@@ -50,18 +46,23 @@ suite('NotebookProvider', () => {
             localLaunch: true,
             baseUrl: 'http://localhost:8888'
         } as any);
+        when(jupyterNotebookProvider.getOrCreateServer(anything())).thenResolve({
+            localLaunch: true,
+            baseUrl: 'http://localhost:8888'
+        } as any);
         const mockSession = mock<IJupyterKernelSession>();
         when(mockSession.onDidShutdown).thenReturn(onDidShutdown.event);
         instance(mockSession as any).then = undefined;
         when(jupyterSessionCreator.create(anything())).thenResolve(instance(mockSession));
         asyncDisposables = new AsyncDisposableRegistry();
-        kernelConnectionSessionCreator = new KernelSessionFactory(
-            instance(rawKernelSessionCreator),
+        const workspace = mock<IWorkspaceService>();
+        when(workspace.computeWorkingDirectory(anything())).thenResolve('');
+        jupyterKernelSessionFactory = new JupyterKernelSessionFactory(
             instance(jupyterNotebookProvider),
             instance(sessionManagerFactory),
-            instance(jupyterSessionCreator),
             instance(jupyterConnection),
-            asyncDisposables
+            asyncDisposables,
+            instance(workspace)
         );
     });
     teardown(async () => {
@@ -72,7 +73,7 @@ suite('NotebookProvider', () => {
         when(jupyterNotebookProvider.getOrCreateServer(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
-        const session = await kernelConnectionSessionCreator.create({
+        const session = await jupyterKernelSessionFactory.create({
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -87,7 +88,7 @@ suite('NotebookProvider', () => {
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
-        const session = await kernelConnectionSessionCreator.create({
+        const session = await jupyterKernelSessionFactory.create({
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -96,7 +97,7 @@ suite('NotebookProvider', () => {
         });
         expect(session).to.not.equal(undefined, 'Server should return a notebook');
 
-        const session2 = await kernelConnectionSessionCreator.create({
+        const session2 = await jupyterKernelSessionFactory.create({
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),

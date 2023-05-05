@@ -30,7 +30,7 @@ import { selectKernel } from './kernelSelector';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { noop } from '../../platform/common/utils/misc';
-import { IRawKernelSessionFactory } from '../../kernels/raw/types';
+import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
@@ -127,7 +127,7 @@ export class KernelConnector {
         const isLocal = isLocalConnection(metadata);
 
         // Raw notebook provider is not available in web
-        const rawNotebookProvider = serviceContainer.tryGet<IRawKernelSessionFactory>(IRawKernelSessionFactory);
+        const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookSupportedService>(IRawNotebookSupportedService);
         const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
         if (rawLocalKernel && errorContext === 'start') {
             sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {

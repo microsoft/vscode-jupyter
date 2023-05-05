@@ -12,7 +12,7 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { IRawKernelSession, KernelSessionCreationOptions } from '../../types';
-import { IKernelLauncher, IRawKernelSessionFactory, IRawNotebookSupportedService } from '../types';
+import { IKernelLauncher, IRawKernelSessionFactory } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
@@ -36,8 +36,6 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
-        @inject(IRawNotebookSupportedService)
-        private readonly rawNotebookSupportedService: IRawNotebookSupportedService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.asyncRegistry.push(this);
@@ -50,11 +48,6 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             const notebooks = await Promise.all([...this.sessions.values()]);
             await Promise.all(notebooks.map((session) => session.dispose()));
         }
-    }
-
-    // Check to see if we have all that we need for supporting raw kernel launch
-    public get isSupported(): boolean {
-        return this.rawNotebookSupportedService.isSupported;
     }
 
     public async create(options: KernelSessionCreationOptions): Promise<IRawKernelSession> {
