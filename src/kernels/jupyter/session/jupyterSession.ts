@@ -21,7 +21,7 @@ import {
     IJupyterConnection,
     ISessionWithSocket,
     KernelActionSource,
-    IJupyterKernelConnectionSession,
+    IJupyterKernelSession,
     isRemoteConnection
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
@@ -31,9 +31,10 @@ import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
 
 // function is
-export class JupyterSession extends BaseJupyterSession implements IJupyterKernelConnectionSession {
-    public readonly kind: 'remoteJupyter' | 'localJupyter';
-
+export class JupyterSession
+    extends BaseJupyterSession<'localJupyter' | 'remoteJupyter'>
+    implements IJupyterKernelSession
+{
     constructor(
         resource: Resource,
         private connInfo: IJupyterConnection,
@@ -50,11 +51,16 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly sessionCreator: KernelActionSource
     ) {
-        super(resource, kernelConnectionMetadata, workingDirectory, interruptTimeout);
-        this.kind = connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter';
+        super(
+            connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
+            resource,
+            kernelConnectionMetadata,
+            workingDirectory,
+            interruptTimeout
+        );
     }
 
-    public override isServerSession(): this is IJupyterKernelConnectionSession {
+    public override isServerSession(): this is IJupyterKernelSession {
         return true;
     }
 

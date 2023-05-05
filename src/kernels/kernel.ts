@@ -28,7 +28,7 @@ import { disposeAllDisposables, splitLines } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
-import { createDeferred, sleep, waitForPromise } from '../platform/common/utils/async';
+import { createDeferred, waitForPromise } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -43,7 +43,7 @@ import { Telemetry } from '../telemetry';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
     IKernel,
-    IKernelConnectionSession,
+    IKernelSession,
     InterruptResult,
     IStartupCodeProvider,
     KernelConnectionMetadata,
@@ -54,7 +54,7 @@ import {
     IKernelSettings,
     IKernelController,
     IThirdPartyKernel,
-    IKernelConnectionSessionCreator
+    IKernelSessionFactory
 } from './types';
 import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -62,7 +62,7 @@ import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
 import dedent from 'dedent';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
-import { cacheKernelInfo, getCacheKernelInfo } from './kernelInfoCache';
+import { getKernelInfo } from './kernelInfo';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -92,7 +92,7 @@ export function isKernelDead(k: IBaseKernel) {
     );
 }
 
-export function isKernelSessionDead(k: IKernelConnectionSession) {
+export function isKernelSessionDead(k: IKernelSession) {
     return (
         k.status === 'dead' ||
         (k.status === 'terminating' && !k.disposed) ||
@@ -155,7 +155,7 @@ abstract class BaseKernel implements IBaseKernel {
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    private _session?: IKernelConnectionSession;
+    private _session?: IKernelSession;
     /**
      * If the session died, then ensure the status is set to `dead`.
      * We need to provide an accurate status.
@@ -163,7 +163,7 @@ abstract class BaseKernel implements IBaseKernel {
      * If a jupyter kernel dies after it has started, then status is set to `dead`.
      */
     private isKernelDead?: boolean;
-    public get session(): IKernelConnectionSession | undefined {
+    public get session(): IKernelSession | undefined {
         return this._session;
     }
     private _disposed?: boolean;
@@ -174,8 +174,8 @@ abstract class BaseKernel implements IBaseKernel {
     private readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
     private readonly _onDisposed = new EventEmitter<void>();
-    private _jupyterSessionPromise?: Promise<IKernelConnectionSession>;
-    private readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
+    private _jupyterSessionPromise?: Promise<IKernelSession>;
+    private readonly hookedSessionForEvents = new WeakSet<IKernelSession>();
     private hooks = new Map<KernelHooks, Set<Hook>>();
     private startCancellation = new CancellationTokenSource();
     private startupUI = new DisplayOptions(true);
@@ -190,7 +190,7 @@ abstract class BaseKernel implements IBaseKernel {
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
-        private readonly sessionCreator: IKernelConnectionSessionCreator,
+        private readonly sessionCreator: IKernelSessionFactory,
         protected readonly kernelSettings: IKernelSettings,
         protected readonly appShell: IApplicationShell,
         protected readonly startupCodeProviders: IStartupCodeProvider[],
@@ -238,7 +238,7 @@ abstract class BaseKernel implements IBaseKernel {
         }
         return disposable;
     }
-    public async start(options?: IDisplayOptions): Promise<IKernelConnectionSession> {
+    public async start(options?: IDisplayOptions): Promise<IKernelSession> {
         // Possible this cancellation was cancelled previously.
         if (this.startCancellation.token.isCancellationRequested) {
             this.startCancellation.dispose();
@@ -407,9 +407,7 @@ abstract class BaseKernel implements IBaseKernel {
             Promise.all(Array.from(this.hooks.get('restartCompleted') || new Set<Hook>()).map((h) => h())).catch(noop);
         }
     }
-    protected async startJupyterSession(
-        options: IDisplayOptions = new DisplayOptions(false)
-    ): Promise<IKernelConnectionSession> {
+    protected async startJupyterSession(options: IDisplayOptions = new DisplayOptions(false)): Promise<IKernelSession> {
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
@@ -470,7 +468,7 @@ abstract class BaseKernel implements IBaseKernel {
     }
 
     private async interruptExecution(
-        session: IKernelConnectionSession,
+        session: IKernelSession,
         pendingExecutions: Promise<unknown>
     ): Promise<InterruptResult> {
         const restarted = createDeferred<boolean>();
@@ -547,7 +545,7 @@ abstract class BaseKernel implements IBaseKernel {
         });
     }
 
-    private async createJupyterSession(): Promise<IKernelConnectionSession> {
+    private async createJupyterSession(): Promise<IKernelSession> {
         let disposables: Disposable[] = [];
         try {
             // No need to block kernel startup on UI updates.
@@ -666,7 +664,7 @@ abstract class BaseKernel implements IBaseKernel {
         }
     }
 
-    protected async initializeAfterStart(session: IKernelConnectionSession | undefined) {
+    protected async initializeAfterStart(session: IKernelSession | undefined) {
         await Promise.all(Array.from(this.hooks.get('didStart') || new Set<Hook>()).map((h) => h()));
         traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
         if (!session) {
@@ -747,50 +745,7 @@ abstract class BaseKernel implements IBaseKernel {
         // Then request our kernel info (indicates kernel is ready to go)
         try {
             traceVerbose('Requesting Kernel info');
-
-            const promises: Promise<
-                | KernelMessage.IReplyErrorContent
-                | KernelMessage.IReplyAbortContent
-                | KernelMessage.IInfoReply
-                | undefined
-            >[] = [];
-
-            const defaultResponse: KernelMessage.IInfoReply = {
-                banner: '',
-                help_links: [],
-                implementation: '',
-                implementation_version: '',
-                language_info: { name: '', version: '' },
-                protocol_version: '',
-                status: 'ok'
-            };
-            const kernelInfoPromise = session.requestKernelInfo().then((item) => item?.content);
-            promises.push(kernelInfoPromise);
-            kernelInfoPromise
-                .then((content) =>
-                    cacheKernelInfo(
-                        this.workspaceMemento,
-                        this.kernelConnectionMetadata,
-                        content as KernelMessage.IInfoReply | undefined
-                    )
-                )
-                .catch(noop);
-            // If this doesn't complete in 5 seconds for remote kernels, assume the kernel is busy & provide some default content.
-            if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
-                const cachedInfo = getCacheKernelInfo(this.workspaceMemento, this.kernelConnectionMetadata);
-                if (cachedInfo) {
-                    promises.push(Promise.resolve(cachedInfo));
-                } else {
-                    promises.push(sleep(5_000).then(() => defaultResponse));
-                }
-            }
-            const content = await Promise.race(promises);
-            if (content === defaultResponse) {
-                traceWarning('Failed to Kernel info in a timely manner, defaulting to empty info!');
-            } else {
-                traceVerbose('Got Kernel info');
-            }
-            this._info = content;
+            this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
@@ -805,7 +760,7 @@ abstract class BaseKernel implements IBaseKernel {
      * For non-python kernels, we assume the version of IPyWidgets is 7.
      * For Python we just run a block of Python code to determine the version.
      */
-    private async determineVersionOfIPyWidgets(session: IKernelConnectionSession) {
+    private async determineVersionOfIPyWidgets(session: IKernelSession) {
         if (!isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // For all other kernels, assume we are using the older version of IPyWidgets.
             // There are very few kernels that support IPyWidgets, however IPyWidgets 8 is very new
@@ -969,7 +924,7 @@ abstract class BaseKernel implements IBaseKernel {
     }
 
     protected async executeSilently(
-        session: IKernelConnectionSession,
+        session: IKernelSession,
         code: string[],
         errorOptions?: SilentExecutionErrorOptions
     ) {
@@ -992,7 +947,7 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
         uri: Uri,
         resourceUri: Resource,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
-        sessionCreator: IKernelConnectionSessionCreator,
+        sessionCreator: IKernelSessionFactory,
         appShell: IApplicationShell,
         kernelSettings: IKernelSettings,
         startupCodeProviders: IStartupCodeProvider[],
@@ -1025,7 +980,7 @@ export class Kernel extends BaseKernel implements IKernel {
         resourceUri: Resource,
         public readonly notebook: NotebookDocument,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
-        sessionCreator: IKernelConnectionSessionCreator,
+        sessionCreator: IKernelSessionFactory,
         kernelSettings: IKernelSettings,
         appShell: IApplicationShell,
         public readonly controller: IKernelController,

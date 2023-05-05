@@ -15,7 +15,7 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     IJupyterConnection,
-    IJupyterKernelConnectionSession,
+    IJupyterKernelSession,
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
@@ -44,13 +44,13 @@ export enum JupyterInterpreterDependencyResponse {
     cancel
 }
 
-export const IJupyterExecution = Symbol('IJupyterExecution');
-export interface IJupyterExecution extends IAsyncDisposable {
-    isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
+export const IJupyterServerHelper = Symbol('JupyterServerHelper');
+export interface IJupyterServerHelper extends IAsyncDisposable {
+    isJupyterServerSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(resource: Resource, cancelToken?: CancellationToken): Promise<IJupyterConnection>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getServer(resource: Resource): Promise<IJupyterConnection | undefined>;
-    getNotebookError(): Promise<string>;
+    getJupyterServerConnection(resource: Resource): Promise<IJupyterConnection | undefined>;
+    getJupyterServerError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
 
@@ -79,7 +79,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         ui: IDisplayOptions,
         cancelToken: CancellationToken,
         creator: KernelActionSource
-    ): Promise<IJupyterKernelConnectionSession>;
+    ): Promise<IJupyterKernelSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;

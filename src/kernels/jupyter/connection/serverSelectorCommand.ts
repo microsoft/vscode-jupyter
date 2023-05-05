@@ -3,15 +3,15 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../platform/common/application/types';
-import { Commands } from '../platform/common/constants';
-import { IBrowserService, IDisposable } from '../platform/common/types';
-import { traceInfo } from '../platform/logging';
-import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../kernels/jupyter/connection/serverSelector';
-import { IJupyterServerUriStorage } from '../kernels/jupyter/types';
-import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { noop } from '../platform/common/utils/misc';
-import { Common, DataScience } from '../platform/common/utils/localize';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { Commands } from '../../../platform/common/constants';
+import { IBrowserService, IDisposable } from '../../../platform/common/types';
+import { traceInfo } from '../../../platform/logging';
+import { JupyterServerSelector, SelectJupyterUriCommandSource } from './serverSelector';
+import { IJupyterServerUriStorage } from '../types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
 
 /**
  * Registers commands to allow the user to set the remote server URI.

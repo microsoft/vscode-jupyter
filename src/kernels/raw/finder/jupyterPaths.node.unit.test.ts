@@ -7,7 +7,7 @@
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, ExtensionContext, Memento, Uri } from 'vscode';
-import { CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, JupyterPaths } from '../../raw/finder/jupyterPaths.node';
+import { CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, JupyterPaths } from './jupyterPaths.node';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IDisposable } from '../../../platform/common/types';

@@ -9,7 +9,7 @@ import { IConfigurationService, IDisposableRegistry } from '../../platform/commo
 import { createDeferred } from '../../platform/common/utils/async';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel, IKernelConnectionSession, IKernelProvider } from '../types';
+import { IKernel, IKernelSession, IKernelProvider } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
@@ -294,7 +294,7 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     private inspect(
-        session: IKernelConnectionSession,
+        session: IKernelSession,
         code: string,
         offsetInCode = 0,
         cancelToken?: CancellationToken

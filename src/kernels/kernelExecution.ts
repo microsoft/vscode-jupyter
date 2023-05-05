@@ -17,13 +17,7 @@ import { traceCellMessage } from './execution/helpers';
 import { executeSilently } from './helpers';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from './telemetry/helper';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
-import {
-    IKernel,
-    IKernelConnectionSession,
-    INotebookKernelExecution,
-    ITracebackFormatter,
-    NotebookCellRunState
-} from './types';
+import { IKernel, IKernelSession, INotebookKernelExecution, ITracebackFormatter, NotebookCellRunState } from './types';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -134,7 +128,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
      * Restarts the kernel
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
-    private async onWillRestart(sessionPromise?: Promise<IKernelConnectionSession>) {
+    private async onWillRestart(sessionPromise?: Promise<IKernelSession>) {
         const executionQueue = this.documentExecutions.get(this.notebook);
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;
@@ -151,10 +145,7 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             await pendingCells;
         }
     }
-    private getOrCreateCellExecutionQueue(
-        document: NotebookDocument,
-        sessionPromise: Promise<IKernelConnectionSession>
-    ) {
+    private getOrCreateCellExecutionQueue(document: NotebookDocument, sessionPromise: Promise<IKernelSession>) {
         const existingExecutionQueue = this.documentExecutions.get(document);
         // Re-use the existing Queue if it can be used.
         if (existingExecutionQueue && !existingExecutionQueue.isEmpty && !existingExecutionQueue.failed) {

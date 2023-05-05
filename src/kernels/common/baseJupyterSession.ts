@@ -28,11 +28,11 @@ import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { KernelInterruptTimeoutError } from '../errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import {
-    IJupyterKernelConnectionSession,
+    IJupyterKernelSession,
     ISessionWithSocket,
     KernelConnectionMetadata,
     KernelSocketInformation,
-    IBaseKernelConnectionSession
+    IBaseKernelSession
 } from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
@@ -86,7 +86,9 @@ export class JupyterSessionStartError extends WrappedError {
 /**
  * Common code for a Jupyterlabs IKernelConnection. Raw and Jupyter both inherit from this.
  */
-export abstract class BaseJupyterSession implements IBaseKernelConnectionSession {
+export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
+    implements IBaseKernelSession<T>
+{
     /**
      * Keep a single instance of KernelConnectionWrapper.
      * This way when sessions change, we still have a single Kernel.IKernelConnection proxy (wrapper),
@@ -149,6 +151,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     private previousAnyMessageHandler?: IDisposable;
 
     constructor(
+        public readonly kind: T,
         protected resource: Resource,
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         public workingDirectory: Uri,
@@ -159,7 +162,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
             traceWarning(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
-    public isServerSession(): this is IJupyterKernelConnectionSession {
+    public isServerSession(): this is IJupyterKernelSession {
         return false;
     }
     public async dispose(): Promise<void> {

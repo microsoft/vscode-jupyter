@@ -15,7 +15,7 @@ export const __ = '';
 //     IDataScienceCodeLensProvider,
 //     IInteractiveWindow,
 //     IInteractiveWindowProvider,
-//     IJupyterExecution
+//     IJupyterServerHelper
 // } from '../../platform/datascience/types';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { MockDocumentManager } from './mockDocumentManager';
@@ -81,7 +81,7 @@ export const __ = '';
 // ) {
 //     test(name, async function () {
 //         const ioc = getIOC();
-//         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
+//         const jupyterExecution = ioc.get<IJupyterServerHelper>(IJupyterServerHelper);
 //         if (await jupyterExecution.isNotebookSupported()) {
 //             addMockData(ioc, 'a=1\na', 1);
 //             // eslint-disable-next-line no-invalid-this

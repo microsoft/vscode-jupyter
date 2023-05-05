@@ -20,7 +20,7 @@ import { IConfigurationService, IDisposableRegistry } from '../../platform/commo
 import { waitForPromise } from '../../platform/common/utils/async';
 import { isNotebookCell } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { IKernelConnectionSession, IKernelProvider } from '../../kernels/types';
+import { IKernelSession, IKernelProvider } from '../../kernels/types';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
 import { mapJupyterKind } from './conversion';
 import { isTestExecution, Settings } from '../../platform/common/constants';
@@ -156,7 +156,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         );
     }
     public async getJupyterCompletion(
-        session: IKernelConnectionSession,
+        session: IKernelSession,
         cellCode: string,
         offsetInCode: number,
         cancelToken?: CancellationToken
