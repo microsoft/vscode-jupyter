@@ -13,7 +13,7 @@ import {
 import { Cancellation } from '../../platform/common/cancellation';
 import { IRawKernelSessionFactory } from '../raw/types';
 import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../jupyter/types';
-import { JupyterKernelConnectionSessionCreator } from '../jupyter/session/jupyterKernelSessionFactory';
+import { JupyterKernelSessionFactory } from '../jupyter/session/jupyterKernelSessionFactory';
 import { JupyterConnection } from '../jupyter/connection/jupyterConnection';
 import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
@@ -43,8 +43,8 @@ export class KernelSessionFactory implements IKernelSessionFactory {
         @inject(IJupyterServerProvider)
         private readonly jupyterNotebookProvider: IJupyterServerProvider,
         @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(JupyterKernelConnectionSessionCreator)
-        private readonly jupyterSessionCreator: JupyterKernelConnectionSessionCreator,
+        @inject(JupyterKernelSessionFactory)
+        private readonly jupyterSessionCreator: JupyterKernelSessionFactory,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry
     ) {}

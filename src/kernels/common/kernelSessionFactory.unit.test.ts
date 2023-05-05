@@ -12,7 +12,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IAsyncDisposableRegistry } from '../../platform/common/types';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterConnection } from '../jupyter/connection/jupyterConnection';
-import { JupyterKernelConnectionSessionCreator } from '../jupyter/session/jupyterKernelSessionFactory';
+import { JupyterKernelSessionFactory } from '../jupyter/session/jupyterKernelSessionFactory';
 import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../jupyter/types';
 import { IRawKernelSessionFactory } from '../raw/types';
 import { IJupyterKernelSession, KernelConnectionMetadata } from '../types';
@@ -44,7 +44,7 @@ suite('NotebookProvider', () => {
         onDidShutdown = new vscode.EventEmitter<void>();
         disposables.push(onDidShutdown);
         const sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
-        const jupyterSessionCreator = mock<JupyterKernelConnectionSessionCreator>();
+        const jupyterSessionCreator = mock<JupyterKernelSessionFactory>();
         const jupyterConnection = mock<JupyterConnection>();
         when(jupyterConnection.createConnectionInfo(anything())).thenResolve({
             localLaunch: true,

@@ -22,7 +22,7 @@ export type JupyterKernelSessionCreationOptions = KernelSessionCreationOptions &
 };
 
 @injectable()
-export class JupyterKernelConnectionSessionCreator {
+export class JupyterKernelSessionFactory {
     constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {}
     public async create(options: JupyterKernelSessionCreationOptions): Promise<IJupyterKernelSession> {
         if (options.sessionManager.isDisposed) {

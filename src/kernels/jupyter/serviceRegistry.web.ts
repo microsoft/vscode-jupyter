@@ -36,7 +36,7 @@ import {
 } from './types';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
-import { JupyterKernelConnectionSessionCreator } from './session/jupyterKernelSessionFactory';
+import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
@@ -54,10 +54,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);
     serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
-    serviceManager.addSingleton<JupyterKernelConnectionSessionCreator>(
-        JupyterKernelConnectionSessionCreator,
-        JupyterKernelConnectionSessionCreator
-    );
+    serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
