@@ -57,6 +57,7 @@ import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFind
 import { ITrustedKernelPaths } from './types';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { sleep } from '../../../test/core';
 
 [false, true].forEach((isWindows) => {
     suite(`Contributed Local Kernel Spec Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -883,6 +884,9 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             suite(
                 activePythonEnv ? `With active Python (${activePythonEnv?.displayName})` : 'without active Python',
                 () => {
+                    // For some reason the tests are flaky on windows,
+                    // Lets wait for a bit before running the tests.
+                    setup(async () => sleep(100));
                     /**
                      * As we're using a push model, we need to wait for the events to get triggered.
                      * How many events do we need to wait for is not deterministic (well for tests it is, but its too complex).
