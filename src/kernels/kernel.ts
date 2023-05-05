@@ -62,7 +62,7 @@ import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
 import dedent from 'dedent';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
-import { cacheKernelInfo, getCacheKernelInfo } from './kernelInfoCache';
+import { getKernelInfo } from './kernelInfo';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -745,50 +745,7 @@ abstract class BaseKernel implements IBaseKernel {
         // Then request our kernel info (indicates kernel is ready to go)
         try {
             traceVerbose('Requesting Kernel info');
-
-            const promises: Promise<
-                | KernelMessage.IReplyErrorContent
-                | KernelMessage.IReplyAbortContent
-                | KernelMessage.IInfoReply
-                | undefined
-            >[] = [];
-
-            const defaultResponse: KernelMessage.IInfoReply = {
-                banner: '',
-                help_links: [],
-                implementation: '',
-                implementation_version: '',
-                language_info: { name: '', version: '' },
-                protocol_version: '',
-                status: 'ok'
-            };
-            const kernelInfoPromise = session.requestKernelInfo().then((item) => item?.content);
-            promises.push(kernelInfoPromise);
-            kernelInfoPromise
-                .then((content) =>
-                    cacheKernelInfo(
-                        this.workspaceMemento,
-                        this.kernelConnectionMetadata,
-                        content as KernelMessage.IInfoReply | undefined
-                    )
-                )
-                .catch(noop);
-            // If this doesn't complete in 5 seconds for remote kernels, assume the kernel is busy & provide some default content.
-            if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
-                const cachedInfo = getCacheKernelInfo(this.workspaceMemento, this.kernelConnectionMetadata);
-                if (cachedInfo) {
-                    promises.push(Promise.resolve(cachedInfo));
-                } else {
-                    promises.push(sleep(5_000).then(() => defaultResponse));
-                }
-            }
-            const content = await Promise.race(promises);
-            if (content === defaultResponse) {
-                traceWarning('Failed to Kernel info in a timely manner, defaulting to empty info!');
-            } else {
-                traceVerbose('Got Kernel info');
-            }
-            this._info = content;
+            this._info = await getKernelInfo(session, this.kernelConnectionMetadata, this.workspaceMemento);
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
