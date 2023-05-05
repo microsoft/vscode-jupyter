@@ -12,11 +12,11 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IAsyncDisposableRegistry } from '../../platform/common/types';
 import { DisplayOptions } from '../displayOptions';
 import { JupyterConnection } from '../jupyter/connection/jupyterConnection';
-import { JupyterKernelConnectionSessionCreator } from '../jupyter/session/jupyterKernelConnectionSessionCreator';
+import { JupyterKernelConnectionSessionCreator } from '../jupyter/session/jupyterKernelSessionFactory';
 import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../jupyter/types';
-import { IRawKernelConnectionSessionCreator } from '../raw/types';
-import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../types';
-import { KernelConnectionSessionCreator } from './kernelConnectionSessionCreator';
+import { IRawKernelSessionFactory } from '../raw/types';
+import { IJupyterKernelSession, KernelConnectionMetadata } from '../types';
+import { KernelSessionFactory } from './kernelSessionFactory';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -24,16 +24,16 @@ function Uri(filename: string): vscode.Uri {
 
 /* eslint-disable  */
 suite('NotebookProvider', () => {
-    let kernelConnectionSessionCreator: KernelConnectionSessionCreator;
+    let kernelConnectionSessionCreator: KernelSessionFactory;
     let jupyterNotebookProvider: IJupyterServerProvider;
-    let rawKernelSessionCreator: IRawKernelConnectionSessionCreator;
+    let rawKernelSessionCreator: IRawKernelSessionFactory;
     let cancelToken: vscode.CancellationTokenSource;
     const disposables: IDisposable[] = [];
     let asyncDisposables: IAsyncDisposableRegistry;
     let onDidShutdown: EventEmitter<void>;
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterServerProvider>();
-        rawKernelSessionCreator = mock<IRawKernelConnectionSessionCreator>();
+        rawKernelSessionCreator = mock<IRawKernelSessionFactory>();
         cancelToken = new vscode.CancellationTokenSource();
         disposables.push(cancelToken);
         when(rawKernelSessionCreator.isSupported).thenReturn(false);
@@ -50,12 +50,12 @@ suite('NotebookProvider', () => {
             localLaunch: true,
             baseUrl: 'http://localhost:8888'
         } as any);
-        const mockSession = mock<IJupyterKernelConnectionSession>();
+        const mockSession = mock<IJupyterKernelSession>();
         when(mockSession.onDidShutdown).thenReturn(onDidShutdown.event);
         instance(mockSession as any).then = undefined;
         when(jupyterSessionCreator.create(anything())).thenResolve(instance(mockSession));
         asyncDisposables = new AsyncDisposableRegistry();
-        kernelConnectionSessionCreator = new KernelConnectionSessionCreator(
+        kernelConnectionSessionCreator = new KernelSessionFactory(
             instance(rawKernelSessionCreator),
             instance(jupyterNotebookProvider),
             instance(sessionManagerFactory),

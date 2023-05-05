@@ -7,18 +7,12 @@ import { injectable, inject } from 'inversify';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    Resource,
-    IDisplayOptions
-} from '../../../platform/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
-import { IKernelLauncher, IRawKernelConnectionSessionCreator, IRawNotebookSupportedService } from '../types';
+import { IRawKernelSession, KernelSessionCreationOptions } from '../../types';
+import { IKernelLauncher, IRawKernelSessionFactory, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
@@ -30,11 +24,11 @@ import { noop } from '../../../platform/common/utils/misc';
  * Implements IRawNotebookProvider for raw kernel connections.
  */
 @injectable()
-export class RawKernelConnectionSessionCreator implements IRawKernelConnectionSessionCreator {
+export class RawKernelSessionFactory implements IRawKernelSessionFactory {
     public get id(): string {
         return this._id;
     }
-    private sessions = new Set<Promise<IRawKernelConnectionSession>>();
+    private sessions = new Set<Promise<IRawKernelSession>>();
     private _id = uuid();
     private disposed = false;
     constructor(
@@ -63,39 +57,34 @@ export class RawKernelConnectionSessionCreator implements IRawKernelConnectionSe
         return this.rawNotebookSupportedService.isSupported;
     }
 
-    public async create(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        cancelToken: vscode.CancellationToken
-    ): Promise<IRawKernelConnectionSession> {
-        traceVerbose(`Creating raw notebook for resource '${getDisplayPath(resource)}'`);
-        const sessionPromise = createDeferred<IRawKernelConnectionSession>();
+    public async create(options: KernelSessionCreationOptions): Promise<IRawKernelSession> {
+        traceVerbose(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
+        const sessionPromise = createDeferred<IRawKernelSession>();
         this.trackDisposable(sessionPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
         try {
-            const kernelConnectionProvided = !!kernelConnection;
-            const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
-            Cancellation.throwIfCanceled(cancelToken);
-            const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
-            const interruptTimeout = this.configService.getSettings(resource).jupyterInterruptTimeout;
+            const kernelConnectionProvided = !!options.kernelConnection;
+            const workingDirectory = await this.workspaceService.computeWorkingDirectory(options.resource);
+            Cancellation.throwIfCanceled(options.token);
+            const launchTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
+            const interruptTimeout = this.configService.getSettings(options.resource).jupyterInterruptTimeout;
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
-                resource,
+                options.resource,
                 vscode.Uri.file(workingDirectory),
                 interruptTimeout,
-                kernelConnection,
+                options.kernelConnection,
                 launchTimeout
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
             // If a kernel connection was not provided, then we set it up here.
             if (!kernelConnectionProvided) {
-                await trackKernelResourceInformation(resource, { kernelConnection });
+                await trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
             }
-            await rawSession.connect({ token: cancelToken, ui });
-            if (cancelToken.isCancellationRequested) {
+            await rawSession.connect(options);
+            if (options.token.isCancellationRequested) {
                 throw new vscode.CancellationError();
             }
             if (rawSession.isConnected) {
@@ -116,7 +105,7 @@ export class RawKernelConnectionSessionCreator implements IRawKernelConnectionSe
         return sessionPromise.promise;
     }
 
-    private trackDisposable(sessionPromise: Promise<IRawKernelConnectionSession>) {
+    private trackDisposable(sessionPromise: Promise<IRawKernelSession>) {
         void sessionPromise
             .then((session) => {
                 session.onDidDispose(

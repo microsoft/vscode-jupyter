@@ -5,7 +5,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerWeb } from '../errors/kernelErrorHandler.web';
 import { IDataScienceErrorHandler } from '../errors/types';
-import { IKernelConnectionSessionCreator, IJupyterServerConnector } from '../types';
+import { IKernelSessionFactory, IJupyterServerConnector } from '../types';
 import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterKernelService } from './session/jupyterKernelService.web';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
@@ -35,8 +35,8 @@ import {
     IJupyterRemoteCachedKernelValidator
 } from './types';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
-import { KernelConnectionSessionCreator } from '../common/kernelConnectionSessionCreator';
-import { JupyterKernelConnectionSessionCreator } from './session/jupyterKernelConnectionSessionCreator';
+import { KernelSessionFactory } from '../common/kernelSessionFactory';
+import { JupyterKernelConnectionSessionCreator } from './session/jupyterKernelSessionFactory';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
@@ -53,10 +53,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);
-    serviceManager.addSingleton<IKernelConnectionSessionCreator>(
-        IKernelConnectionSessionCreator,
-        KernelConnectionSessionCreator
-    );
+    serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
     serviceManager.addSingleton<JupyterKernelConnectionSessionCreator>(
         JupyterKernelConnectionSessionCreator,
         JupyterKernelConnectionSessionCreator

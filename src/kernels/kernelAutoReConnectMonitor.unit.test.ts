@@ -9,7 +9,7 @@ import { disposeAllDisposables } from '../platform/common/helpers';
 import { IApplicationShell } from '../platform/common/application/types';
 import {
     IKernel,
-    IKernelConnectionSession,
+    IKernelSession,
     IKernelProvider,
     INotebookKernelExecution,
     RemoteKernelSpecConnectionMetadata
@@ -82,7 +82,7 @@ suite('Kernel ReConnect Progress Message', () => {
         const onPreExecute = new EventEmitter<NotebookCell>();
         disposables.push(onPreExecute);
         disposables.push(onRestarted);
-        const session = mock<IKernelConnectionSession>();
+        const session = mock<IKernelSession>();
         const kernelConnection = mock<Kernel.IKernelConnection>();
         const kernelConnectionStatusSignal = new Signal<Kernel.IKernelConnection, Kernel.ConnectionStatus>(
             instance(kernelConnection)
@@ -201,7 +201,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         const onRestarted = new EventEmitter<void>();
         disposables.push(onPreExecute);
         disposables.push(onRestarted);
-        const session = mock<IKernelConnectionSession>();
+        const session = mock<IKernelSession>();
         const kernelConnection = mock<Kernel.IKernelConnection>();
         const kernelConnectionStatusSignal = new Signal<Kernel.IKernelConnection, Kernel.ConnectionStatus>(
             instance(kernelConnection)

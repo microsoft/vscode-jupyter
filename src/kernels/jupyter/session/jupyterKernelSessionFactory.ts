@@ -4,8 +4,8 @@
 import { Uri } from 'vscode';
 import { Cancellation } from '../../../platform/common/cancellation';
 import {
-    IJupyterKernelConnectionSession,
-    KernelConnectionSessionCreationOptions,
+    IJupyterKernelSession,
+    KernelSessionCreationOptions,
     isLocalConnection,
     isRemoteConnection
 } from '../../types';
@@ -17,16 +17,14 @@ import { noop } from '../../../platform/common/utils/misc';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 
-export type JupyterKernelConnectionSessionCreationOptions = KernelConnectionSessionCreationOptions & {
+export type JupyterKernelSessionCreationOptions = KernelSessionCreationOptions & {
     sessionManager: IJupyterSessionManager;
 };
 
 @injectable()
 export class JupyterKernelConnectionSessionCreator {
     constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {}
-    public async create(
-        options: JupyterKernelConnectionSessionCreationOptions
-    ): Promise<IJupyterKernelConnectionSession> {
+    public async create(options: JupyterKernelSessionCreationOptions): Promise<IJupyterKernelSession> {
         if (options.sessionManager.isDisposed) {
             throw new SessionDisposedError();
         }

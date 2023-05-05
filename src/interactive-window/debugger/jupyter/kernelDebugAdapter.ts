@@ -4,7 +4,7 @@
 import { DebugAdapterTracker, DebugSession, NotebookDocument, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { getInteractiveCellMetadata } from '../../../interactive-window/helpers';
-import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
+import { IKernel, IKernelSession } from '../../../kernels/types';
 import { IDebugLocationTrackerFactory, IDumpCellResponse } from '../../../notebooks/debugger/debuggingTypes';
 import { KernelDebugAdapterBase } from '../../../notebooks/debugger/kernelDebugAdapterBase';
 import { IDebugService } from '../../../platform/common/application/types';
@@ -29,7 +29,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
     constructor(
         session: DebugSession,
         notebookDocument: NotebookDocument,
-        jupyterSession: IKernelConnectionSession,
+        jupyterSession: IKernelSession,
         kernel: IKernel | undefined,
         platformService: IPlatformService,
         debugService: IDebugService,

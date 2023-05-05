@@ -4,16 +4,16 @@
 import { inject, injectable, optional } from 'inversify';
 import {
     IJupyterConnection,
-    IKernelConnectionSession,
-    IKernelConnectionSessionCreator,
+    IKernelSession,
+    IKernelSessionFactory,
     isLocalConnection,
     isRemoteConnection,
-    KernelConnectionSessionCreationOptions
+    KernelSessionCreationOptions
 } from '../types';
 import { Cancellation } from '../../platform/common/cancellation';
-import { IRawKernelConnectionSessionCreator } from '../raw/types';
+import { IRawKernelSessionFactory } from '../raw/types';
 import { IJupyterServerProvider, IJupyterSessionManagerFactory } from '../jupyter/types';
-import { JupyterKernelConnectionSessionCreator } from '../jupyter/session/jupyterKernelConnectionSessionCreator';
+import { JupyterKernelConnectionSessionCreator } from '../jupyter/session/jupyterKernelSessionFactory';
 import { JupyterConnection } from '../jupyter/connection/jupyterConnection';
 import { Telemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
@@ -35,11 +35,11 @@ const LocalHosts = ['localhost', '127.0.0.1', '::1'];
  * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
  */
 @injectable()
-export class KernelConnectionSessionCreator implements IKernelConnectionSessionCreator {
+export class KernelSessionFactory implements IKernelSessionFactory {
     constructor(
-        @inject(IRawKernelConnectionSessionCreator)
+        @inject(IRawKernelSessionFactory)
         @optional()
-        private readonly rawKernelSessionCreator: IRawKernelConnectionSessionCreator | undefined,
+        private readonly rawKernelSessionCreator: IRawKernelSessionFactory | undefined,
         @inject(IJupyterServerProvider)
         private readonly jupyterNotebookProvider: IJupyterServerProvider,
         @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
@@ -49,12 +49,12 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry
     ) {}
 
-    public async create(options: KernelConnectionSessionCreationOptions): Promise<IKernelConnectionSession> {
+    public async create(options: KernelSessionCreationOptions): Promise<IKernelSession> {
         const kernelConnection = options.kernelConnection;
         const isLocal = isLocalConnection(kernelConnection);
 
         if (this.rawKernelSessionCreator?.isSupported && isLocal) {
-            return this.createRawKernelSession(this.rawKernelSessionCreator, options);
+            return this.rawKernelSessionCreator.create(options);
         }
 
         const disposables: IDisposable[] = [];
@@ -79,15 +79,7 @@ export class KernelConnectionSessionCreator implements IKernelConnectionSessionC
 
         return this.createJupyterKernelSession(options).finally(() => disposeAllDisposables(disposables));
     }
-    private createRawKernelSession(
-        factory: IRawKernelConnectionSessionCreator,
-        options: KernelConnectionSessionCreationOptions
-    ): Promise<IKernelConnectionSession> {
-        return factory.create(options.resource, options.kernelConnection, options.ui, options.token);
-    }
-    private async createJupyterKernelSession(
-        options: KernelConnectionSessionCreationOptions
-    ): Promise<IKernelConnectionSession> {
+    private async createJupyterKernelSession(options: KernelSessionCreationOptions): Promise<IKernelSession> {
         let connection: undefined | IJupyterConnection;
 
         // Check to see if we support ipykernel or not

@@ -5,7 +5,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerNode } from '../errors/kernelErrorHandler.node';
 import { IDataScienceErrorHandler } from '../errors/types';
-import { IKernelConnectionSessionCreator, IJupyterServerConnector } from '../types';
+import { IKernelSessionFactory, IJupyterServerConnector } from '../types';
 import { JupyterCommandFactory } from './interpreter/jupyterCommand.node';
 import { JupyterInterpreterDependencyService } from './interpreter/jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterOldCacheStateStore } from './interpreter/jupyterInterpreterOldCacheStateStore.node';
@@ -57,8 +57,8 @@ import {
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
-import { KernelConnectionSessionCreator } from '../common/kernelConnectionSessionCreator';
-import { JupyterKernelConnectionSessionCreator } from './session/jupyterKernelConnectionSessionCreator';
+import { KernelSessionFactory } from '../common/kernelSessionFactory';
+import { JupyterKernelConnectionSessionCreator } from './session/jupyterKernelSessionFactory';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
@@ -117,10 +117,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, NotebookStarter);
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);
-    serviceManager.addSingleton<IKernelConnectionSessionCreator>(
-        IKernelConnectionSessionCreator,
-        KernelConnectionSessionCreator
-    );
+    serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
     serviceManager.addSingleton<JupyterKernelConnectionSessionCreator>(
         JupyterKernelConnectionSessionCreator,
         JupyterKernelConnectionSessionCreator

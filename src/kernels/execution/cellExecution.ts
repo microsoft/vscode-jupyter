@@ -26,12 +26,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
-import {
-    IKernelConnectionSession,
-    IKernelController,
-    KernelConnectionMetadata,
-    NotebookCellRunState
-} from '../../kernels/types';
+import { IKernelSession, IKernelController, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
@@ -85,7 +80,7 @@ export class CellExecution implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private _preExecuteEmitter = new EventEmitter<NotebookCell>();
     private cellExecutionHandler?: CellExecutionMessageHandler;
-    private session?: IKernelConnectionSession;
+    private session?: IKernelSession;
     private constructor(
         public readonly cell: NotebookCell,
         private readonly codeOverride: string | undefined,
@@ -141,7 +136,7 @@ export class CellExecution implements IDisposable {
     ) {
         return new CellExecution(cell, code, metadata, controller, requestListener);
     }
-    public async start(session: IKernelConnectionSession) {
+    public async start(session: IKernelSession) {
         this.session = session;
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
@@ -329,12 +324,12 @@ export class CellExecution implements IDisposable {
         return !this.cell.document.isClosed;
     }
 
-    private async execute(code: string, session: IKernelConnectionSession) {
+    private async execute(code: string, session: IKernelSession) {
         traceCellMessage(this.cell, 'Send code for execution');
         await this.executeCodeCell(code, session);
     }
 
-    private async executeCodeCell(code: string, session: IKernelConnectionSession) {
+    private async executeCodeCell(code: string, session: IKernelSession) {
         // Skip if no code to execute
         if (code.trim().length === 0 || this.cell.document.isClosed) {
             traceCellMessage(this.cell, 'Empty cell execution');
