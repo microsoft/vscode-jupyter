@@ -883,6 +883,12 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             suite(
                 activePythonEnv ? `With active Python (${activePythonEnv?.displayName})` : 'without active Python',
                 () => {
+                    setup(function () {
+                        // Flaky windows unit tests. https://github.com/microsoft/vscode-jupyter/issues/13462
+                        if (os.platform() === 'win32' && !activePythonEnv) {
+                            return this.skip();
+                        }
+                    });
                     /**
                      * As we're using a push model, we need to wait for the events to get triggered.
                      * How many events do we need to wait for is not deterministic (well for tests it is, but its too complex).
