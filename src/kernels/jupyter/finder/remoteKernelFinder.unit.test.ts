@@ -23,7 +23,6 @@ import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFa
 import { ActiveKernelIdList } from '../connection/preferredRemoteKernelIdProvider';
 import { IJupyterKernel, IJupyterRemoteCachedKernelValidator, IJupyterSessionManager } from '../types';
 import { KernelFinder } from '../../kernelFinder';
-import { JupyterServerConnector } from '../launcher/jupyterServerConnector';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../connection/serverUriStorage';
@@ -127,8 +126,6 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        const serverConnector = mock(JupyterServerConnector);
-        when(serverConnector.connect(anything())).thenResolve(connInfo);
         fs = mock(FileSystem);
         when(fs.delete(anything())).thenResolve();
         when(fs.exists(anything())).thenResolve(true);

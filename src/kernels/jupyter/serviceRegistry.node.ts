@@ -24,11 +24,11 @@ import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
 import { JupyterKernelService } from './session/jupyterKernelService.node';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
-import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
+import { JupyterCommandLineSelector } from './launcher/commandLineSelector.node';
 import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
-import { HostJupyterExecution } from './launcher/hostJupyterExecution';
-import { JupyterServerConnector } from './launcher/jupyterServerConnector';
-import { JupyterServerProvider } from './launcher/jupyterServerProvider';
+import { JupyterServerHelper } from './launcher/jupyterServerHelper.node';
+import { JupyterServerConnector } from './launcher/jupyterServerConnector.node';
+import { JupyterServerProvider } from './launcher/jupyterServerProvider.node';
 import { JupyterServerStarter } from './launcher/jupyterServerStarter.node';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
@@ -38,7 +38,6 @@ import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
-    IJupyterExecution,
     IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
     INbConvertInterpreterDependencyChecker,
@@ -53,7 +52,8 @@ import {
     IJupyterRequestCreator,
     IJupyterRequestAgentCreator,
     ILiveRemoteKernelConnectionUsageTracker,
-    IJupyterRemoteCachedKernelValidator
+    IJupyterRemoteCachedKernelValidator,
+    IJupyterServerHelper
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
@@ -70,7 +70,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSyncActivationService,
         MigrateJupyterInterpreterStateService
     );
-    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
+    serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(
         IJupyterSessionManagerFactory,

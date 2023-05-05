@@ -9,9 +9,9 @@ import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterServerProvider } from './jupyterServerProvider';
+import { JupyterServerProvider } from './jupyterServerProvider.node';
 import { DisplayOptions } from '../../displayOptions';
-import { IJupyterExecution } from '../types';
+import { IJupyterServerHelper } from '../types';
 import { IJupyterConnection } from '../../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -27,7 +27,7 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 /* eslint-disable  */
 suite('Jupyter Server Provider', () => {
     let serverProvider: JupyterServerProvider;
-    let jupyterExecution: IJupyterExecution;
+    let jupyterServerHelper: IJupyterServerHelper;
     let interpreterService: IInterpreterService;
     const workingPython: PythonEnvironment = {
         uri: Uri.file('/foo/bar/python.exe'),
@@ -39,15 +39,15 @@ suite('Jupyter Server Provider', () => {
     const disposables: Disposable[] = [];
     let source: CancellationTokenSource;
     setup(() => {
-        jupyterExecution = mock<IJupyterExecution>();
+        jupyterServerHelper = mock<IJupyterServerHelper>();
         interpreterService = mock<IInterpreterService>();
 
         const eventEmitter = new EventEmitter<void>();
         disposables.push(eventEmitter);
-        when((jupyterExecution as any).then).thenReturn(undefined);
+        when((jupyterServerHelper as any).then).thenReturn(undefined);
 
         // Create the server provider
-        serverProvider = new JupyterServerProvider(instance(jupyterExecution), instance(interpreterService));
+        serverProvider = new JupyterServerProvider(instance(jupyterServerHelper), instance(interpreterService));
         source = new CancellationTokenSource();
         disposables.push(source);
     });
@@ -55,7 +55,7 @@ suite('Jupyter Server Provider', () => {
     test('Get Only - server', async () => {
         const connection = mock<IJupyterConnection>();
         when((connection as any).then).thenReturn(undefined);
-        when(jupyterExecution.getServer(anything())).thenResolve(instance(connection));
+        when(jupyterServerHelper.getJupyterServerConnection(anything())).thenResolve(instance(connection));
 
         const server = await serverProvider.getOrCreateServer({
             resource: undefined,
@@ -63,13 +63,13 @@ suite('Jupyter Server Provider', () => {
             token: source.token
         });
         expect(server).to.not.equal(undefined, 'Server expected to be defined');
-        verify(jupyterExecution.getServer(anything())).once();
+        verify(jupyterServerHelper.getJupyterServerConnection(anything())).once();
     });
 
     test('Get Or Create', async () => {
-        when(jupyterExecution.getUsableJupyterPython()).thenResolve(workingPython);
+        when(jupyterServerHelper.getUsableJupyterPython()).thenResolve(workingPython);
         const connection = createTypeMoq<IJupyterConnection>('jupyter server');
-        when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(connection.object);
+        when(jupyterServerHelper.connectToNotebookServer(anything(), anything())).thenResolve(connection.object);
 
         // Disable UI just lets us skip mocking the progress reporter
         const server = await serverProvider.getOrCreateServer({
