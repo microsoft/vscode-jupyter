@@ -47,7 +47,7 @@ import { traceError, traceInfo, traceVerbose } from '../../platform/logging';
 import { generateCellsFromDocument } from '../editor-integration/cellFactory';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { INotebookEditorProvider } from '../../notebooks/types';
-import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
+import { IJupyterServerHelper, INotebookExporter } from '../../kernels/jupyter/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { StatusProvider } from './statusProvider';
 
@@ -60,7 +60,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IJupyterServerHelper) private jupyterServerHelper: IJupyterServerHelper,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -664,7 +664,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             filePath &&
             filePath.length > 0 &&
             this.jupyterExporter &&
-            (await this.jupyterExecution.isNotebookSupported())
+            (await this.jupyterServerHelper.isJupyterServerSupported())
         ) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
@@ -703,7 +703,9 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             }
         } else {
             await this.dataScienceErrorHandler.handleError(
-                new JupyterInstallError(DataScience.jupyterNotSupported(await this.jupyterExecution.getNotebookError()))
+                new JupyterInstallError(
+                    DataScience.jupyterNotSupported(await this.jupyterServerHelper.getJupyterServerError())
+                )
             );
         }
     }

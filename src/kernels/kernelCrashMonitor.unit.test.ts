@@ -12,7 +12,7 @@ import { createKernelController, TestNotebookDocument } from '../test/datascienc
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import {
     IKernel,
-    IKernelConnectionSession,
+    IKernelSession,
     IKernelController,
     IKernelProvider,
     INotebookKernelExecution,
@@ -38,7 +38,7 @@ suite('Kernel Crash Monitor', () => {
     let kernelExecution: INotebookKernelExecution;
     let onPreExecute: EventEmitter<NotebookCell>;
     let cell: NotebookCell;
-    let kernelSession: IKernelConnectionSession;
+    let kernelSession: IKernelSession;
     let notebook: TestNotebookDocument;
     let controller: IKernelController;
     let clock: fakeTimers.InstalledClock;
@@ -67,7 +67,7 @@ suite('Kernel Crash Monitor', () => {
         kernel = mock<IKernel>();
         appShell = mock<IApplicationShell>();
         kernelExecution = mock<INotebookKernelExecution>();
-        kernelSession = mock<IKernelConnectionSession>();
+        kernelSession = mock<IKernelSession>();
         onKernelStatusChanged = new EventEmitter<{
             status: KernelMessage.Status;
             kernel: IKernel;

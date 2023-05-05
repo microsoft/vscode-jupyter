@@ -6,7 +6,7 @@ import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { IKernelSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { Resource } from '../../platform/common/types';
 
 /**
@@ -39,7 +39,7 @@ export class CellExecutionQueue implements Disposable {
         return this.queueOfCellsToExecute.map((cell) => cell.cell);
     }
     constructor(
-        private readonly session: Promise<IKernelConnectionSession>,
+        private readonly session: Promise<IKernelSession>,
         private readonly executionFactory: CellExecutionFactory,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         readonly resourceUri: Resource

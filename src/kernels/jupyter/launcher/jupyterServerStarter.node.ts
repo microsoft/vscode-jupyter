@@ -29,7 +29,7 @@ import { KernelProgressReporter } from '../../../platform/progress/kernelProgres
 import { ReportableAction } from '../../../platform/progress/types';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { INotebookStarter } from '../types';
+import { INotebookStarter as IJupyterServerStarter } from '../types';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
@@ -39,13 +39,9 @@ import { UsedPorts } from '../../common/usedPorts';
 /**
  * Responsible for starting a notebook.
  * Separate class as theres quite a lot of work involved in starting a notebook.
- *
- * @export
- * @class NotebookStarter
- * @implements {Disposable}
  */
 @injectable()
-export class NotebookStarter implements INotebookStarter {
+export class JupyterServerStarter implements IJupyterServerStarter {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(IJupyterSubCommandExecutionService)

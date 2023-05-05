@@ -13,7 +13,7 @@ import {
 } from './types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 
-suite('Notebook Controller Manager', () => {
+suite('Kernel Connection Helpers', () => {
     test('Live kernels should display the name`', () => {
         const name = getDisplayNameOrNameOfKernelConnection(
             LiveRemoteKernelConnectionMetadata.create({

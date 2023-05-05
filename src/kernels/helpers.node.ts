@@ -3,7 +3,7 @@
 
 import * as path from '../platform/vscode-path/path';
 import * as nbformat from '@jupyterlab/nbformat';
-import { IJupyterKernelSpec, IKernelConnectionSession, isLocalConnection, KernelConnectionMetadata } from './types';
+import { IJupyterKernelSpec, IKernelSession, isLocalConnection, KernelConnectionMetadata } from './types';
 import { Uri } from 'vscode';
 import { traceError, traceVerbose } from '../platform/logging';
 import { Resource } from '../platform/common/types';
@@ -14,7 +14,7 @@ import { executeSilently, isPythonKernelConnection } from './helpers';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 
 export async function sendTelemetryForPythonKernelExecutable(
-    session: IKernelConnectionSession,
+    session: IKernelSession,
     resource: Resource,
     kernelConnection: KernelConnectionMetadata
 ) {

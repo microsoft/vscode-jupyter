@@ -6,7 +6,7 @@ import { IPythonExtensionChecker } from '../platform/api/types';
 import { Identifiers, isPreReleaseVersion } from '../platform/common/constants';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
-import { Activation } from './activation.node';
+import { Activation } from './jupyter/interpreter/activation.node';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { KernelCompletionsPreWarmer } from './execution/kernelCompletionPreWarmer';
 import { PreferredRemoteKernelIdProvider } from './jupyter/connection/preferredRemoteKernelIdProvider';
@@ -34,9 +34,9 @@ import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.node';
 import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsService.node';
 import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
-import { RawKernelConnectionSessionCreator } from './raw/session/rawKernelConnectionSessionCreator.node';
+import { RawKernelSessionFactory } from './raw/session/rawKernelSessionFactory.node';
 import { RawNotebookSupportedService } from './raw/session/rawNotebookSupportedService.node';
-import { IKernelLauncher, IRawKernelConnectionSessionCreator, IRawNotebookSupportedService } from './raw/types';
+import { IKernelLauncher, IRawKernelSessionFactory, IRawNotebookSupportedService } from './raw/types';
 import {
     IKernelDependencyService,
     IKernelFinder,
@@ -49,6 +49,7 @@ import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
+import { JupyterServerSelectorCommand } from './jupyter/connection/serverSelectorCommand';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -65,10 +66,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PreferredRemoteKernelIdProvider,
         PreferredRemoteKernelIdProvider
     );
-    serviceManager.addSingleton<IRawKernelConnectionSessionCreator>(
-        IRawKernelConnectionSessionCreator,
-        RawKernelConnectionSessionCreator
-    );
+    serviceManager.addSingleton<IRawKernelSessionFactory>(IRawKernelSessionFactory, RawKernelSessionFactory);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(
         KernelEnvironmentVariablesService,
@@ -138,6 +136,11 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
     serviceManager.addSingleton<IThirdPartyKernelProvider>(IThirdPartyKernelProvider, ThirdPartyKernelProvider);
 
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        JupyterServerSelectorCommand
+    );
+
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
     setSharedProperty('isInsiderExtension', isPreReleaseVersion());
@@ -153,7 +156,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         CellOutputDisplayIdTracker
     );
-
     serviceManager.addSingleton<IStartupCodeProviders>(IStartupCodeProviders, KernelStartupCodeProviders);
     serviceManager.addSingleton<PythonKernelInterruptDaemon>(PythonKernelInterruptDaemon, PythonKernelInterruptDaemon);
 }

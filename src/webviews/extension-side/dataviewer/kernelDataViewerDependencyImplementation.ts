@@ -6,7 +6,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { executeSilently } from '../../../kernels/helpers';
-import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
+import { IKernel, IKernelSession } from '../../../kernels/types';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
 
 export const kernelGetPandasVersion =
@@ -19,7 +19,7 @@ function kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
     return isConda ? '%conda' : '%pip';
 }
 
-type IKernelWithSession = IKernel & { session: IKernelConnectionSession };
+type IKernelWithSession = IKernel & { session: IKernelSession };
 
 // TypeScript will narrow the type to PythonEnvironment in any block guarded by a call to isPythonEnvironment
 function kernelHasSession(kernel: IKernel): kernel is IKernelWithSession {

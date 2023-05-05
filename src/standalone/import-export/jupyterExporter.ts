@@ -13,7 +13,7 @@ import { ICell, IConfigurationService } from '../../platform/common/types';
 import { pruneCell } from '../../platform/common/utils';
 import { DataScience } from '../../platform/common/utils/localize';
 import { defaultNotebookFormat } from '../../platform/common/constants';
-import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
+import { IJupyterServerHelper, INotebookExporter } from '../../kernels/jupyter/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { noop } from '../../platform/common/utils/misc';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
@@ -24,7 +24,7 @@ import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 @injectable()
 export class JupyterExporter implements INotebookExporter {
     constructor(
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IJupyterServerHelper) private jupyterServerHelper: IJupyterServerHelper,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
@@ -144,7 +144,7 @@ export class JupyterExporter implements INotebookExporter {
 
     private extractPythonMainVersion = async (): Promise<number> => {
         // Use the active interpreter
-        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+        const usableInterpreter = await this.jupyterServerHelper.getUsableJupyterPython();
         return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
     };
 }

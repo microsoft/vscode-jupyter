@@ -26,7 +26,7 @@ import { IJupyterServerUriStorage } from './jupyter/types';
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.node';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import {
-    IKernelConnectionSessionCreator,
+    IKernelSessionFactory,
     IKernelController,
     IKernelProvider,
     IStartupCodeProviders,
@@ -44,7 +44,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 suite('Node Kernel Provider', function () {
     const disposables: IDisposable[] = [];
     const asyncDisposables: { dispose: () => Promise<unknown> }[] = [];
-    let sessionCreator: IKernelConnectionSessionCreator;
+    let sessionCreator: IKernelSessionFactory;
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
     let vscNotebook: IVSCodeNotebook;
@@ -54,7 +54,7 @@ suite('Node Kernel Provider', function () {
     let controller: IKernelController;
     let workspaceMemento: Memento;
     setup(() => {
-        sessionCreator = mock<IKernelConnectionSessionCreator>();
+        sessionCreator = mock<IKernelSessionFactory>();
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
         vscNotebook = mock<IVSCodeNotebook>();
@@ -170,7 +170,7 @@ suite('KernelProvider Node', () => {
     let asyncDisposables: AsyncDisposableRegistry;
     let kernelProvider: IKernelProvider;
     let thirdPartyKernelProvider: IThirdPartyKernelProvider;
-    let sessionCreator: IKernelConnectionSessionCreator;
+    let sessionCreator: IKernelSessionFactory;
     let configService: IConfigurationService;
     let appShell: IApplicationShell;
     let vscNotebook: IVSCodeNotebook;
@@ -202,7 +202,7 @@ suite('KernelProvider Node', () => {
         onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
         disposables.push(onDidCloseNotebookDocument);
         asyncDisposables = new AsyncDisposableRegistry();
-        sessionCreator = mock<IKernelConnectionSessionCreator>();
+        sessionCreator = mock<IKernelSessionFactory>();
         configService = mock<IConfigurationService>();
         appShell = mock<IApplicationShell>();
         vscNotebook = mock<IVSCodeNotebook>();

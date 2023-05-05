@@ -13,7 +13,7 @@ import {
     Resource
 } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { IJupyterExecution, INotebookStarter } from '../types';
+import { IJupyterServerHelper, INotebookStarter } from '../types';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -28,7 +28,7 @@ import { noop } from '../../../platform/common/utils/misc';
  * Jupyter server implementation that uses the JupyterExecutionBase class to launch Jupyter.
  */
 @injectable()
-export class HostJupyterExecution implements IJupyterExecution {
+export class JupyterServerHelper implements IJupyterServerHelper {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private cache?: Promise<IJupyterConnection>;
     private disposed: boolean = false;
@@ -105,7 +105,7 @@ export class HostJupyterExecution implements IJupyterExecution {
 
         return this.cache;
     }
-    public async getServer(): Promise<IJupyterConnection | undefined> {
+    public async getJupyterServerConnection(): Promise<IJupyterConnection | undefined> {
         return !this._disposed && this.cache ? this.cache : undefined;
     }
 
@@ -113,12 +113,12 @@ export class HostJupyterExecution implements IJupyterExecution {
         await this.jupyterInterpreterService?.refreshCommands();
     }
 
-    public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
+    public async isJupyterServerSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command notebook
         return this.jupyterInterpreterService ? this.jupyterInterpreterService.isNotebookSupported(cancelToken) : false;
     }
 
-    public async getNotebookError(): Promise<string> {
+    public async getJupyterServerError(): Promise<string> {
         return this.jupyterInterpreterService
             ? this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported()
             : DataScience.webNotSupported;

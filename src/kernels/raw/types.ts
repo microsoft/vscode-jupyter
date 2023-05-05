@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Event } from 'vscode';
-import { IAsyncDisposable, IDisplayOptions, Resource } from '../../platform/common/types';
+import { IAsyncDisposable, Resource } from '../../platform/common/types';
 import {
-    IRawKernelConnectionSession,
-    KernelConnectionMetadata,
+    IRawKernelSession,
+    KernelSessionCreationOptions,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../types';
@@ -61,13 +61,7 @@ export interface IRawNotebookSupportedService {
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
-export const IRawKernelConnectionSessionCreator = Symbol('IRawKernelConnectionSessionCreator');
-export interface IRawKernelConnectionSessionCreator extends IAsyncDisposable {
-    isSupported: boolean;
-    create(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken
-    ): Promise<IRawKernelConnectionSession>;
+export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');
+export interface IRawKernelSessionFactory extends IAsyncDisposable {
+    create(options: KernelSessionCreationOptions): Promise<IRawKernelSession>;
 }

@@ -22,7 +22,7 @@ import {
     KernelOptions,
     ThirdPartyKernelOptions,
     IStartupCodeProviders,
-    IKernelConnectionSessionCreator
+    IKernelSessionFactory
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
@@ -36,7 +36,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
     constructor(
         @inject(IAsyncDisposableRegistry) asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IKernelConnectionSessionCreator) private sessionCreator: IKernelConnectionSessionCreator,
+        @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
@@ -107,7 +107,7 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
     constructor(
         @inject(IAsyncDisposableRegistry) asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IKernelConnectionSessionCreator) private sessionCreator: IKernelConnectionSessionCreator,
+        @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,

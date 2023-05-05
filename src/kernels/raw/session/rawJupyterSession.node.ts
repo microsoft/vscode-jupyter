@@ -20,7 +20,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEve
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
-import { IRawKernelConnectionSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
+import { IRawKernelSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
@@ -35,8 +35,7 @@ through ZMQ.
 It's responsible for translating our IJupyterKernelConnectionSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
-export class RawJupyterSession extends BaseJupyterSession implements IRawKernelConnectionSession {
-    public readonly kind = 'localRaw';
+export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements IRawKernelSession {
     private processExitHandler = new WeakMap<RawSession, IDisposable>();
     private terminatingStatus?: KernelMessage.Status;
     public get atleastOneCellExecutedSuccessfully() {
@@ -59,7 +58,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super(resource, kernelConnection, workingDirectory, interruptTimeout);
+        super('localRaw', resource, kernelConnection, workingDirectory, interruptTimeout);
     }
 
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {

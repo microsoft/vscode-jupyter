@@ -35,11 +35,11 @@ suite(`UpdateNotebookMetadata`, () => {
         sysVersion: '3.7.0',
         version: { major: 3, minor: 7, patch: 0, raw: '3.7.0' }
     };
-    test('UpdateNotebookMetadata Empty call does not change anything', async () => {
+    test('Empty call does not change anything', async () => {
         const value = await updateNotebookMetadata();
         assert.strictEqual(value.changed, false);
     });
-    test('UpdateNotebookMetadata Ensure Language', async () => {
+    test('Ensure Language', async () => {
         const notebookMetadata = { orig_nbformat: 4 };
         const value = await updateNotebookMetadata(notebookMetadata);
 
@@ -47,7 +47,7 @@ suite(`UpdateNotebookMetadata`, () => {
         verifyMetadata(notebookMetadata, { orig_nbformat: 4, language_info: { name: '' } });
         assert.strictEqual(value.changed, false);
     });
-    test('UpdateNotebookMetadata Update Language', async () => {
+    test('Update Language', async () => {
         const notebookMetadata = { orig_nbformat: 4, language_info: { name: 'JUNK' } };
         const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
@@ -65,7 +65,7 @@ suite(`UpdateNotebookMetadata`, () => {
         assert.strictEqual(value.changed, true);
     });
 
-    test('UpdateNotebookMetadata Update Python Version', async () => {
+    test('Update Python Version', async () => {
         const notebookMetadata = { orig_nbformat: 4, language_info: { name: 'python', version: '3.6.0' } };
         const kernelConnection = PythonKernelConnectionMetadata.create({
             id: 'python36',
@@ -83,7 +83,7 @@ suite(`UpdateNotebookMetadata`, () => {
         assert.strictEqual(value.changed, true);
     });
 
-    test('UpdateNotebookMetadata New KernelSpec Name / Display Name', async () => {
+    test('New KernelSpec Name / Display Name', async () => {
         const notebookMetadata = {
             orig_nbformat: 4,
             kernelspec: { display_name: 'JUNK DISPLAYNAME', language: 'python', name: 'JUNK' },
@@ -105,7 +105,7 @@ suite(`UpdateNotebookMetadata`, () => {
         assert.strictEqual(value.changed, true);
     });
 
-    test('UpdateNotebookMetadata No Change', async () => {
+    test('No Change', async () => {
         let notebookMetadata: nbformat.INotebookMetadata = {
             orig_nbformat: 4,
             vscode: {
@@ -137,7 +137,7 @@ suite(`UpdateNotebookMetadata`, () => {
         // Should be no change here
         assert.strictEqual(value.changed, false);
     });
-    test('UpdateNotebookMetadata No Change (old format)', async () => {
+    test('No Change (old format)', async () => {
         let notebookMetadata: nbformat.INotebookMetadata = {
             orig_nbformat: 4,
             interpreter: {

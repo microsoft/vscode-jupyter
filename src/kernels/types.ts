@@ -368,7 +368,7 @@ export interface IBaseKernel extends IAsyncDisposable {
      * Provides access to the underlying kernel.
      * The Jupyter kernel can be directly access via the `session.kernel` property.
      */
-    readonly session?: IKernelConnectionSession;
+    readonly session?: IKernelSession;
     /**
      * We create IKernels early on to ensure they are mapped with the notebook documents.
      * I.e. created even before they are used.
@@ -376,12 +376,12 @@ export interface IBaseKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
-    start(options?: IDisplayOptions): Promise<IKernelConnectionSession>;
+    start(options?: IDisplayOptions): Promise<IKernelSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     addHook(
         event: 'willRestart',
-        hook: (sessionPromise?: Promise<IKernelConnectionSession>) => Promise<void>,
+        hook: (sessionPromise?: Promise<IKernelSession>) => Promise<void>,
         thisArgs?: unknown,
         disposables?: IDisposable[]
     ): IDisposable;
@@ -542,13 +542,14 @@ export enum InterruptResult {
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
-export interface IBaseKernelConnectionSession extends IAsyncDisposable {
+export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'> extends IAsyncDisposable {
+    readonly kind: T;
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    isServerSession(): this is IJupyterKernelConnectionSession;
+    isServerSession(): this is IJupyterKernelSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
@@ -580,17 +581,14 @@ export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     shutdown(): Promise<void>;
 }
 
-export interface IJupyterKernelConnectionSession extends IBaseKernelConnectionSession {
-    readonly kind: 'remoteJupyter' | 'localJupyter';
+export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {
     invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
     createTempfile(ext: string): Promise<string>;
     deleteTempfile(file: string): Promise<void>;
     getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel>;
 }
-export interface IRawKernelConnectionSession extends IBaseKernelConnectionSession {
-    readonly kind: 'localRaw';
-}
-export type IKernelConnectionSession = IJupyterKernelConnectionSession | IRawKernelConnectionSession;
+export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
+export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
 export type ISessionWithSocket = Session.ISessionConnection & {
     /**
@@ -687,7 +685,7 @@ export type ConnectNotebookProviderOptions = GetServerOptions;
 /**
  * Options for getting a notebook
  */
-export type KernelConnectionSessionCreationOptions = {
+export type KernelSessionCreationOptions = {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
@@ -711,12 +709,12 @@ export interface IJupyterServerConnector {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
 }
 
-export const IKernelConnectionSessionCreator = Symbol('IKernelConnectionSessionCreator');
-export interface IKernelConnectionSessionCreator {
+export const IKernelSessionFactory = Symbol('IKernelSessionFactory');
+export interface IKernelSessionFactory {
     /**
      * Creates a notebook.
      */
-    create(options: KernelConnectionSessionCreationOptions): Promise<IKernelConnectionSession>;
+    create(options: KernelSessionCreationOptions): Promise<IKernelSession>;
 }
 
 export interface IKernelSocket {

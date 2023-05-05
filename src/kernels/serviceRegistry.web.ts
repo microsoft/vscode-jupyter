@@ -35,6 +35,7 @@ import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 import { KernelDependencyService } from './kernelDependencyService.web';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
+import { JupyterServerSelectorCommand } from './jupyter/connection/serverSelectorCommand';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -92,6 +93,12 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        JupyterServerSelectorCommand
+    );
+
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
 

@@ -7,22 +7,24 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { GetServerOptions, IJupyterConnection } from '../../types';
-import { IJupyterServerProvider, IJupyterExecution } from '../types';
+import { IJupyterServerHelper, IJupyterServerProvider } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { Cancellation, isCancellationError } from '../../../platform/common/cancellation';
 
 @injectable()
-export class NotebookServerProvider implements IJupyterServerProvider {
+export class JupyterServerProvider implements IJupyterServerProvider {
     private serverPromise?: Promise<IJupyterConnection>;
     constructor(
-        @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
+        @inject(IJupyterServerHelper)
+        @optional()
+        private readonly jupyterServerHelper: IJupyterServerHelper | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
     public async getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection> {
         // If we are just fetching or only want to create for local, see if exists
-        if (this.jupyterExecution) {
-            const server = await this.jupyterExecution.getServer(options.resource);
+        if (this.jupyterServerHelper) {
+            const server = await this.jupyterServerHelper.getJupyterServerConnection(options.resource);
             // Possible it wasn't created, hence create it.
             if (server) {
                 return server;
@@ -47,8 +49,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     }
 
     private async startServer(options: GetServerOptions): Promise<IJupyterConnection> {
-        const jupyterExecution = this.jupyterExecution;
-        if (!jupyterExecution) {
+        const jupyterServerHelper = this.jupyterServerHelper;
+        if (!jupyterServerHelper) {
             throw new NotSupportedInWebError();
         }
 
@@ -61,12 +63,12 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 traceVerbose('Server not usable (should ask for install now)');
                 // Indicate failing.
                 throw new JupyterInstallError(
-                    DataScience.jupyterNotSupported(await jupyterExecution.getNotebookError())
+                    DataScience.jupyterNotSupported(await jupyterServerHelper.getJupyterServerError())
                 );
             }
             // Then actually start the server
             traceVerbose(`Starting notebook server.`);
-            const result = await jupyterExecution.connectToNotebookServer(options.resource, options.token);
+            const result = await jupyterServerHelper.connectToNotebookServer(options.resource, options.token);
             Cancellation.throwIfCanceled(options.token);
             return result;
         } catch (e) {
@@ -77,7 +79,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
             // Also tell jupyter execution to reset its search. Otherwise we've just cached
             // the failure there
-            await jupyterExecution.refreshCommands();
+            await jupyterServerHelper.refreshCommands();
 
             throw e;
         }
@@ -85,8 +87,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async checkUsable(): Promise<boolean> {
         try {
-            if (this.jupyterExecution) {
-                const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+            if (this.jupyterServerHelper) {
+                const usableInterpreter = await this.jupyterServerHelper.getUsableJupyterPython();
                 return usableInterpreter ? true : false;
             } else {
                 return true;
@@ -102,7 +104,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             } else {
                 throw new JupyterInstallError(
                     DataScience.jupyterNotSupported(
-                        this.jupyterExecution ? await this.jupyterExecution.getNotebookError() : 'Error'
+                        this.jupyterServerHelper ? await this.jupyterServerHelper.getJupyterServerError() : 'Error'
                     )
                 );
             }

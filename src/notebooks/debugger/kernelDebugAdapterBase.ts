@@ -21,7 +21,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { executeSilently } from '../../kernels/helpers';
-import { IKernel, IKernelConnectionSession } from '../../kernels/types';
+import { IKernel, IKernelSession } from '../../kernels/types';
 import { IDebugService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IDisposable } from '../../platform/common/types';
@@ -63,7 +63,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     constructor(
         protected session: DebugSession,
         protected notebookDocument: NotebookDocument,
-        protected readonly jupyterSession: IKernelConnectionSession,
+        protected readonly jupyterSession: IKernelSession,
         private readonly kernel: IKernel | undefined,
         private readonly platformService: IPlatformService,
         private readonly debugService: IDebugService
