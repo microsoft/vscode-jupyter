@@ -3,16 +3,16 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { IPythonExtensionChecker } from '../platform/api/types';
-import { IVSCodeNotebook } from '../platform/common/application/types';
-import { Telemetry } from '../platform/common/constants';
-import { IDisposableRegistry } from '../platform/common/types';
-import { getNotebookFormat, isJupyterNotebook } from '../platform/common/utils';
-import { noop } from '../platform/common/utils/misc';
-import { sendTelemetryEvent } from '../telemetry';
-import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService.node';
-import { IRawNotebookSupportedService } from './raw/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { Telemetry } from '../../../platform/common/constants';
+import { IDisposableRegistry } from '../../../platform/common/types';
+import { getNotebookFormat, isJupyterNotebook } from '../../../platform/common/utils';
+import { noop } from '../../../platform/common/utils/misc';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { JupyterInterpreterService } from './jupyterInterpreterService.node';
+import { IRawNotebookSupportedService } from '../../raw/types';
 
 /**
  * Starts up a bunch of objects when running in a node environment.

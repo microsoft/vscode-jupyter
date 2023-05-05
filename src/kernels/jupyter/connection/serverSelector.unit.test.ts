@@ -7,7 +7,7 @@ import { CommandManager } from '../../../platform/common/application/commandMana
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { JupyterServerSelector } from './serverSelector';
 import { Commands } from '../../../platform/common/constants';
-import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelectorCommand';
+import { JupyterServerSelectorCommand } from './serverSelectorCommand';
 import { JupyterServerUriStorage } from './serverUriStorage';
 import { IBrowserService } from '../../../platform/common/types';
 
