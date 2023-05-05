@@ -886,7 +886,11 @@ import { sleep } from '../../../test/core';
                 () => {
                     // For some reason the tests are flaky on windows,
                     // Lets wait for a bit before running the tests.
-                    setup(async () => sleep(100));
+                    setup(async () => {
+                        if (os.platform() === 'win32') {
+                            await sleep(100);
+                        }
+                    });
                     /**
                      * As we're using a push model, we need to wait for the events to get triggered.
                      * How many events do we need to wait for is not deterministic (well for tests it is, but its too complex).
