@@ -20,7 +20,6 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
@@ -63,17 +62,19 @@ export class CellExecution implements IDisposable {
     public get preExecute(): Event<NotebookCell> {
         return this._preExecuteEmitter.event;
     }
-
-    private stopWatch = new StopWatch();
-
     private readonly _result = createDeferred<NotebookCellRunState>();
 
     private started?: boolean;
 
     private _completed?: boolean;
-    private startTime?: number;
     private endTime?: number;
-    private execution?: NotebookCellExecution;
+    private execution?: NotebookCellExecution & {
+        /**
+         * Whether we have received a response for the execution request sent to the kernel.
+         * I.e. has the kernel acknowledged the execution request.
+         */
+        started?: boolean;
+    };
     private cancelHandled = false;
     private disposed?: boolean;
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
@@ -108,7 +109,6 @@ export class CellExecution implements IDisposable {
             this.disposables
         );
         NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Idle);
-        const execution = CellExecutionCreator.get(cell);
         if (this.canExecuteCell()) {
             // This has been queued for execution, hence clear all the output.
             // (possible solution for ) https://github.com/microsoft/vscode-jupyter/issues/7123
@@ -119,11 +119,15 @@ export class CellExecution implements IDisposable {
             // tempTask.executionOrder = undefined;
             // void tempTask.clearOutput();
             // void tempTask.end(undefined);
-            this.execution = CellExecutionCreator.getOrCreate(cell, this.controller);
+            this.execution = CellExecutionCreator.getOrCreate(cell, this.controller, true);
             NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Pending);
-        } else if (execution) {
-            execution.start();
-            execution.end(undefined);
+        } else {
+            const execution = CellExecutionCreator.get(cell);
+            // If execution already exists, then the cell is in a pending state, get it out of pending state.
+            if (execution) {
+                execution.start();
+                execution.end(undefined);
+            }
         }
     }
 
@@ -168,16 +172,8 @@ export class CellExecution implements IDisposable {
         }
         this.started = true;
 
-        this.startTime = new Date().getTime();
         activeNotebookCellExecution.set(this.cell.notebook, this.execution);
-        this.execution?.start(this.startTime);
         NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Executing);
-        // Await here, so that the UI updates on the progress & we clear the output.
-        // Else when running cells with existing outputs, the outputs don't get cleared & it doesn't look like its running.
-        // Ideally we shouldn't have any awaits, but here we want the UI to get updated.
-        await this.execution?.clearOutput();
-        this.stopWatch.reset();
-
         // Begin the request that will modify our cell.
         this.execute(this.codeOverride || this.cell.document.getText().replace(/\r\n/g, '\n'), session)
             .catch((e) => this.completedWithErrors(e))
@@ -197,7 +193,7 @@ export class CellExecution implements IDisposable {
         if (this.cancelHandled) {
             return;
         }
-        if (this.started && !forced) {
+        if (this.started && !forced && this.execution?.started) {
             // At this point the cell execution can only be stopped from kernel & we should not
             // stop handling execution results & the like from the kernel.
             // The result will resolve when execution completes or kernel is restarted.
@@ -227,6 +223,10 @@ export class CellExecution implements IDisposable {
         disposeAllDisposables(this.disposables);
     }
     private completedWithErrors(error: Partial<Error>) {
+        if (this.cancelHandled) {
+            // We cancelled the cell, hence don't do anything.
+            return;
+        }
         traceWarning(`Cell completed with errors`, error);
         traceCellMessage(this.cell, 'Completed with errors');
 
@@ -267,7 +267,7 @@ export class CellExecution implements IDisposable {
     private get isEmptyCodeCell(): boolean {
         return this.cell.document.getText().trim().length === 0;
     }
-    private completedSuccessfully() {
+    private completedSuccessfully(completedTime?: number) {
         traceCellMessage(this.cell, 'Completed successfully');
         // If we requested a cancellation, then assume it did not even run.
         // If it did, then we'd get an interrupt error in the output.
@@ -280,12 +280,12 @@ export class CellExecution implements IDisposable {
             runState = NotebookCellRunState.Error;
         }
 
-        this.endCellTask(success);
+        this.endCellTask(success, completedTime);
         this._completed = true;
         traceCellMessage(this.cell, `Completed successfully & resolving with status = ${success}`);
         this._result.resolve(runState);
     }
-    private endCellTask(success: 'success' | 'failed' | 'cancelled') {
+    private endCellTask(success: 'success' | 'failed' | 'cancelled', completedTime = new Date().getTime()) {
         if (this.isEmptyCodeCell) {
             // Undefined for not success or failures
             if (this.execution) {
@@ -293,11 +293,17 @@ export class CellExecution implements IDisposable {
             }
             this.execution?.end(undefined);
         } else if (success === 'success' || success === 'failed') {
-            this.endTime = new Date().getTime();
+            this.endTime = completedTime;
             this.execution?.end(success === 'success', this.endTime);
         } else {
             // Cell was cancelled.
             // Undefined for not success or failures
+            try {
+                // If a request was generated an sent, then dispose it.
+                this.request?.dispose();
+            } catch {
+                //
+            }
             this.execution?.end(undefined);
         }
         if (activeNotebookCellExecution.get(this.cell.notebook) === this.execution) {
@@ -326,12 +332,12 @@ export class CellExecution implements IDisposable {
 
     private async execute(code: string, session: IKernelSession) {
         traceCellMessage(this.cell, 'Send code for execution');
-        await this.executeCodeCell(code, session);
-    }
-
-    private async executeCodeCell(code: string, session: IKernelSession) {
         // Skip if no code to execute
         if (code.trim().length === 0 || this.cell.document.isClosed) {
+            if (code.trim().length === 0) {
+                this.execution?.start();
+                this.execution?.clearOutput()?.then(noop, noop);
+            }
             traceCellMessage(this.cell, 'Empty cell execution');
             return this.completedSuccessfully();
         }
@@ -384,11 +390,22 @@ export class CellExecution implements IDisposable {
             // request.done resolves even before all iopub messages have been sent through.
             // Solution is to wait for all messages to get processed.
             traceCellMessage(this.cell, 'Wait for jupyter execution');
-            await this.request.done;
+            const reply = await this.request.done;
+            let completedTime: number | undefined;
+            try {
+                // The time from the kernel is more accurate, as that will ignore the network latency.
+                completedTime = new Date(reply.header.date).getTime();
+            } catch {
+                //
+            }
+            console.error(reply);
             traceCellMessage(this.cell, 'Jupyter execution completed');
-            this.completedSuccessfully();
+            this.completedSuccessfully(completedTime);
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
+            if (this.cancelHandled) {
+                return;
+            }
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
             // Or even when the kernel dies when running a cell with the code `os.kill(os.getpid(), 9)`
             traceError('Error in waiting for cell to complete', ex);
