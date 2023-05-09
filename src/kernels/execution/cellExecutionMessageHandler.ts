@@ -110,6 +110,7 @@ export class CellExecutionMessageHandler implements IDisposable {
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cellHasErrorsInOutput?: boolean;
     private disposed?: boolean;
+    private startTime?: number;
 
     public get hasErrorOutput() {
         return this.cellHasErrorsInOutput === true;
@@ -352,6 +353,19 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.temporaryExecution = undefined;
     }
     private handleIOPub(msg: KernelMessage.IIOPubMessage) {
+        if (!this.startTime) {
+            // Set the start time after we get some kind of a response to the execution request.
+            // This is a more accurate representation of when the cell execution started.
+            this.startTime = new Date().getTime();
+            try {
+                // The time from the kernel is more accurate, as that will ignore the network latency.
+                this.startTime = new Date(msg.header.date).getTime();
+            } catch {
+                //
+            }
+            this.execution?.start(this.startTime);
+        }
+
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
