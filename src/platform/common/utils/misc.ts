@@ -13,7 +13,7 @@ export function noop() {}
 /**
  * Execute a block of code ignoring any exceptions.
  */
-export function swallowExceptions(cb: Function) {
+export function swallowExceptions(cb: Function): void {
     try {
         const result = cb();
         if (isPromise(result)) {

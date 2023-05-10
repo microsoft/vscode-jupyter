@@ -529,12 +529,16 @@ suite(`Cell Execution Message Handler`, () => {
                 tokenSource.token,
                 ioPubMessageEmitter
             );
-            const handler = messageHandlerService.registerListener(notebook.cellAt(0), {
+            const handler = messageHandlerService.registerListenerForExecution(notebook.cellAt(0), {
                 kernel: instance(kernel),
                 request: request1,
-                onErrorHandlingExecuteRequestIOPubMessage: (ex) => (messageHandlingFailure = ex),
                 cellExecution: createKernelController().createNotebookCellExecution(notebook.cellAt(0))
             });
+            handler.onErrorHandlingExecuteRequestIOPubMessage(
+                (ex) => (messageHandlingFailure = ex.error),
+                undefined,
+                disposables
+            );
             disposables.push(handler);
 
             await request1.done;
@@ -569,13 +573,17 @@ suite(`Cell Execution Message Handler`, () => {
                 tokenSource.token,
                 ioPubMessageEmitter
             );
-            const handler2 = messageHandlerService.registerListener(notebook.cellAt(1), {
+            const handler2 = messageHandlerService.registerListenerForExecution(notebook.cellAt(1), {
                 kernel: instance(kernel),
                 request: request2,
-                onErrorHandlingExecuteRequestIOPubMessage: (ex) => (messageHandlingFailure = ex),
                 cellExecution: createKernelController().createNotebookCellExecution(notebook.cellAt(1))
             });
             disposables.push(handler2);
+            handler2.onErrorHandlingExecuteRequestIOPubMessage(
+                (ex) => (messageHandlingFailure = ex.error),
+                undefined,
+                disposables
+            );
 
             await request2.done;
 
@@ -598,13 +606,17 @@ suite(`Cell Execution Message Handler`, () => {
                 tokenSource.token,
                 ioPubMessageEmitter
             );
-            const handler = messageHandlerService.registerListener(notebook.cellAt(0), {
+            const handler = messageHandlerService.registerListenerForExecution(notebook.cellAt(0), {
                 kernel: instance(kernel),
                 request: request1,
-                onErrorHandlingExecuteRequestIOPubMessage: (ex) => (messageHandlingFailure = ex),
                 cellExecution: createKernelController().createNotebookCellExecution(notebook.cellAt(0))
             });
             disposables.push(handler);
+            handler.onErrorHandlingExecuteRequestIOPubMessage(
+                (ex) => (messageHandlingFailure = ex.error),
+                undefined,
+                disposables
+            );
 
             await request1.done;
 
@@ -631,13 +643,17 @@ suite(`Cell Execution Message Handler`, () => {
                 tokenSource.token,
                 ioPubMessageEmitter
             );
-            const handler2 = messageHandlerService.registerListener(notebook.cellAt(1), {
+            const handler2 = messageHandlerService.registerListenerForExecution(notebook.cellAt(1), {
                 kernel: instance(kernel),
                 request: request2,
-                onErrorHandlingExecuteRequestIOPubMessage: (ex) => (messageHandlingFailure = ex),
                 cellExecution: createKernelController().createNotebookCellExecution(notebook.cellAt(1))
             });
             disposables.push(handler2);
+            handler2.onErrorHandlingExecuteRequestIOPubMessage(
+                (ex) => (messageHandlingFailure = ex.error),
+                undefined,
+                disposables
+            );
 
             await request2.done;
 

@@ -42,13 +42,12 @@ export class CellExecutionMessageHandlerService {
             this.notebook.getCells().forEach((cell) => this.messageHandlers.get(cell)?.dispose());
         }
     }
-    public registerListener(
+    public registerListenerForExecution(
         cell: NotebookCell,
         options: {
             kernel: Kernel.IKernelConnection;
             request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
             cellExecution: NotebookCellExecution;
-            onErrorHandlingExecuteRequestIOPubMessage: (error: Error) => void;
         }
     ): CellExecutionMessageHandler {
         this.notebook = cell.notebook;
@@ -62,7 +61,34 @@ export class CellExecutionMessageHandlerService {
             this.formatters,
             options.kernel,
             options.request,
-            options.cellExecution
+            options.cellExecution,
+            options.request.msg.header.msg_id
+        );
+        // This object must be kept in memory has it monitors the kernel messages.
+        this.messageHandlers.set(cell, handler);
+        return handler;
+    }
+    public registerListenerForResumingExecution(
+        cell: NotebookCell,
+        options: {
+            kernel: Kernel.IKernelConnection;
+            msg_id: string;
+            cellExecution: NotebookCellExecution;
+        }
+    ): CellExecutionMessageHandler {
+        this.notebook = cell.notebook;
+        // Always dispose any previous handlers & create new ones.
+        this.messageHandlers.get(cell)?.dispose();
+        const handler = new CellExecutionMessageHandler(
+            cell,
+            this.appShell,
+            this.controller,
+            this.context,
+            this.formatters,
+            options.kernel,
+            undefined,
+            options.cellExecution,
+            options.msg_id
         );
         // This object must be kept in memory has it monitors the kernel messages.
         this.messageHandlers.set(cell, handler);

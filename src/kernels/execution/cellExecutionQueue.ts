@@ -6,7 +6,12 @@ import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-import { IKernelSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import {
+    IKernelSession,
+    KernelConnectionMetadata,
+    NotebookCellRunState,
+    ResumeCellExecutionInformation
+} from '../../kernels/types';
 import { Resource } from '../../platform/common/types';
 
 /**
@@ -70,6 +75,25 @@ export class CellExecutionQueue implements Disposable {
         const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
         this.disposables.push(cellExecution);
         cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
+        this.queueOfCellsToExecute.push(cellExecution);
+
+        traceCellMessage(cell, 'User queued cell for execution');
+
+        // Start executing the cells.
+        this.startExecutingCells();
+    }
+
+    /**
+     * Queue the cell for execution & start processing it immediately.
+     */
+    public resumeCell(cell: NotebookCell, info: ResumeCellExecutionInformation): void {
+        const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
+        if (existingCellExecution) {
+            traceCellMessage(cell, 'Use existing cell execution');
+            return;
+        }
+        const cellExecution = this.executionFactory.create(cell, '', this.metadata, info);
+        this.disposables.push(cellExecution);
         this.queueOfCellsToExecute.push(cellExecution);
 
         traceCellMessage(cell, 'User queued cell for execution');

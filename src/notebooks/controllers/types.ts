@@ -31,6 +31,7 @@ export interface IVSCodeNotebookController extends IDisposable {
     }>;
     readonly onDidDispose: vscode.Event<void>;
     readonly onDidReceiveMessage: vscode.Event<{ editor: vscode.NotebookEditor; message: any }>;
+    restoreConnection(notebook: vscode.NotebookDocument): Promise<void>;
     postMessage(message: any, editor?: vscode.NotebookEditor): Thenable<boolean>;
     asWebviewUri(localResource: vscode.Uri): vscode.Uri;
     isAssociatedWithDocument(notebook: vscode.NotebookDocument): boolean;

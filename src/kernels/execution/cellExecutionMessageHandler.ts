@@ -41,6 +41,7 @@ import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import { createDeferred } from '../../platform/common/utils/async';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -67,7 +68,7 @@ type WidgetData = {
  */
 export const activeNotebookCellExecution = new WeakMap<NotebookDocument, NotebookCellExecution | undefined>();
 
-function getParentHeaderMsgId(msg: KernelMessage.IMessage): string | undefined {
+export function getParentHeaderMsgId(msg: KernelMessage.IMessage): string | undefined {
     if (msg.parent_header && 'msg_id' in msg.parent_header) {
         return msg.parent_header.msg_id;
     }
@@ -167,6 +168,13 @@ export class CellExecutionMessageHandler implements IDisposable {
      * or for any subsequent requests as a result of outputs sending custom messages.
      */
     private readonly ownedRequestMsgIds = new Set<string>();
+    private readonly _completed = createDeferred<void>();
+    public get completed() {
+        return this._completed.promise;
+    }
+    private gotIdleIOPubStatus = false;
+    private gotShellReply = false;
+    private readonly lastSeenMessageIds = new Set<string>();
     constructor(
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
@@ -174,11 +182,15 @@ export class CellExecutionMessageHandler implements IDisposable {
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
         private readonly kernel: Kernel.IKernelConnection,
-        request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>,
-        cellExecution: NotebookCellExecution
+        private readonly request:
+            | Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
+            | undefined,
+        cellExecution: NotebookCellExecution,
+        executionMessageId: string
     ) {
-        this.executeRequestMessageId = request.msg.header.msg_id;
-        this.ownedRequestMsgIds.add(request.msg.header.msg_id);
+        this._completed.promise.catch(noop);
+        this.executeRequestMessageId = executionMessageId;
+        this.ownedRequestMsgIds.add(executionMessageId);
         workspace.onDidChangeNotebookDocument(
             (e) => {
                 if (!isJupyterNotebook(e.notebook)) {
@@ -204,27 +216,29 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.kernel.anyMessage.connect(this.onKernelAnyMessage, this);
         this.kernel.iopubMessage.connect(this.onKernelIOPubMessage, this);
 
-        request.onIOPub = () => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed && !this.completedExecution) {
-                request.dispose();
-            }
-        };
-        request.onReply = (msg) => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed) {
-                request.dispose();
-                return;
-            }
-            this.handleReply(msg);
-        };
-        request.onStdin = this.handleInputRequest.bind(this);
-        request.done
-            .finally(() => {
-                this.completedExecution = true;
-                this.endCellExecution();
-            })
-            .catch(noop);
+        if (request) {
+            request.onIOPub = () => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed && !this.completedExecution) {
+                    request.dispose();
+                }
+            };
+            request.onReply = (msg) => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed) {
+                    request.dispose();
+                    return;
+                }
+                this.handleReply(msg);
+            };
+            request.onStdin = this.handleInputRequest.bind(this);
+            request.done
+                .finally(() => {
+                    this.completedExecution = true;
+                    this.endCellExecution();
+                })
+                .catch(noop);
+        }
     }
     /**
      * This method is called when all execution has been completed (successfully or failed).
@@ -243,6 +257,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.execution = undefined;
         this.kernel.anyMessage.disconnect(this.onKernelAnyMessage, this);
         this.kernel.iopubMessage.disconnect(this.onKernelIOPubMessage, this);
+        this._onErrorHandlingIOPubMessage.dispose();
     }
     /**
      * This merely marks the end of the cell execution.
@@ -255,19 +270,60 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.prompts.clear();
         this.clearLastUsedStreamOutput();
         this.execution = undefined;
+        this._completed.resolve();
     }
     private onKernelAnyMessage(_: unknown, { direction, msg }: Kernel.IAnyMessageArgs) {
         if (this.cell.document.isClosed) {
             return this.endCellExecution();
         }
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
+        if (!this.request) {
+            const parentMsgId = getParentHeaderMsgId(msg);
+            if (msg.channel === 'iopub' && parentMsgId === this.executeRequestMessageId) {
+                this.onKernelIOPubMessage(_, msg as KernelMessage.IIOPubMessage);
+            }
+            // In @jupyterlab/services/lib/kernel/future.js a request is marked as completed when we receive a status message with execution_state = 'idle' and have received a reply in shell chanel.
+            if (
+                jupyterLab.KernelMessage.isStatusMsg(msg) &&
+                msg.content.execution_state === 'idle' &&
+                parentMsgId === this.executeRequestMessageId
+            ) {
+                this.gotIdleIOPubStatus = true;
+            }
+            if (msg.channel === 'shell' && parentMsgId === this.executeRequestMessageId) {
+                this.gotShellReply = true;
+            }
+            // If we have a new parent message id, then this means a new request is being processed.
+            // I.e. previous request is done.
+            const gotANewMessage = parentMsgId ? parentMsgId !== this.executeRequestMessageId : false;
+
+            // This is what marks a request as completed in Jupyter Lab API.
+            const completed = this.gotIdleIOPubStatus && this.gotShellReply;
+            // The following are backups, just in case the above doesn't work.
+            // If we're resuming execution of a cell, then end the cell execution
+            // when we receive certain message types.
+            // If we're reloading or the like and then re-connecting to an active session, then
+            // the kernel is probably busy executing a cell,
+            // The first thin we do is always send a request for kernle info,
+            // If we get a response for that, then this means the previous cell execution has completed.
+            // Similarly if we see a response for an execution then the previous execution has completed.
+            const messageTypesIndicatingEndOfCellExecution = ['kernel_info_reply', 'execute_input', 'execute_reply'];
+            const gotMessageThatIndicatesEndOfCellExecution =
+                'msg_type' in msg &&
+                typeof msg.msg_type === 'string' &&
+                messageTypesIndicatingEndOfCellExecution.includes(msg.msg_type);
+            if (completed || gotMessageThatIndicatesEndOfCellExecution || gotANewMessage) {
+                this.completedExecution = true;
+                return this.endCellExecution();
+            }
+        }
         // We're only interested in messages after execution has completed.
         // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
         if (direction !== 'send' || !this.completedExecution) {
             return;
         }
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         if (jupyterLab.KernelMessage.isCommMsgMsg(msg) && this.ownedCommIds.has(msg.content.comm_id)) {
             // Looks like we have a comm msg request sent by some output or the like.
             // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
@@ -278,6 +334,16 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (this.cell.document.isClosed) {
             return this.endCellExecution();
         }
+        if (!this.request) {
+            // When restoring connections for a kernel (e.g. after reloading vscode)
+            // We listen to any message event-handler and pump through any iopub messages from there into this handler.
+            // We need to ensure we never end up in a situation were some day the iopub messages end up in the iopub message pipe there by ending up in this handler, meaning we have duplicates
+            if (this.lastSeenMessageIds.has(msg.header.msg_id)) {
+                return;
+            }
+            this.lastSeenMessageIds.add(msg.header.msg_id);
+        }
+
         // We're only interested in messages after execution has completed.
         // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
 

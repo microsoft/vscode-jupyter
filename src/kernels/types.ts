@@ -405,6 +405,17 @@ export interface IKernel extends IBaseKernel {
     readonly creator: 'jupyterExtension';
 }
 
+export type ResumeCellExecutionInformation = {
+    /**
+     * msg_id from the Kernel.
+     */
+    msg_id: string;
+    /**
+     * Original start time of the cell execution.
+     */
+    startTime: number;
+    executionCount: number;
+};
 export interface INotebookKernelExecution {
     /**
      * Total execution count on this kernel
@@ -421,6 +432,11 @@ export interface INotebookKernelExecution {
      * @param codeOverride Override the code to execute
      */
     executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
+    /**
+     * Given the cell execution message Id and the like , this will resume the execution of a cell from a detached state.
+     * E.g. assume user re-loads VS Code, we need to resume the execution of the cell.
+     */
+    resumeCellExecution(cell: NotebookCell, info: ResumeCellExecutionInformation): Promise<NotebookCellRunState>;
     /**
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */
