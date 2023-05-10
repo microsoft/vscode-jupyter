@@ -497,7 +497,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         let currentExecution = this.runningCellExecutions.get(cell.notebook);
         if (!currentExecution || currentExecution.cell === cell) {
             currentExecution?.end(undefined, undefined);
-            currentExecution = CellExecutionCreator.getOrCreate(cell, controller);
+            currentExecution = CellExecutionCreator.getOrCreate(cell, controller, true);
             this.runningCellExecutions.set(cell.notebook, currentExecution);
 
             // When this execution ends, we don't have a current one anymore.
