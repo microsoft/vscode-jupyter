@@ -16,7 +16,7 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { JupyterNotebookView, InteractiveWindowView, isCI } from '../../platform/common/constants';
+import { isCI, JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import {
     IDisposableRegistry,
     IConfigurationService,

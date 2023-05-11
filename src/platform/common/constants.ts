@@ -473,6 +473,7 @@ export enum Telemetry {
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
     KernelCount = 'DS_INTERNAL.KERNEL_COUNT',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL',
+    ResumeCellExecution = 'DATASCIENCE.RESUME_EXECUTE_CELL',
     /**
      * Sent when a command we register is executed.
      */

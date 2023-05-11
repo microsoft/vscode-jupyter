@@ -19,7 +19,8 @@ import {
     EventEmitter,
     ExtensionMode,
     NotebookEdit,
-    NotebookCellOutputItem
+    NotebookCellOutputItem,
+    Disposable
 } from 'vscode';
 
 import type { Kernel } from '@jupyterlab/services';
@@ -41,6 +42,7 @@ import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { Identifiers, WIDGET_MIMETYPE } from '../../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
+import { createDeferred } from '../../platform/common/utils/async';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -67,7 +69,7 @@ type WidgetData = {
  */
 export const activeNotebookCellExecution = new WeakMap<NotebookDocument, NotebookCellExecution | undefined>();
 
-function getParentHeaderMsgId(msg: KernelMessage.IMessage): string | undefined {
+export function getParentHeaderMsgId(msg: KernelMessage.IMessage): string | undefined {
     if (msg.parent_header && 'msg_id' in msg.parent_header) {
         return msg.parent_header.msg_id;
     }
@@ -167,6 +169,14 @@ export class CellExecutionMessageHandler implements IDisposable {
      * or for any subsequent requests as a result of outputs sending custom messages.
      */
     private readonly ownedRequestMsgIds = new Set<string>();
+    private readonly _completed = createDeferred<void>();
+    public get completed() {
+        return this._completed.promise;
+    }
+    private gotIdleIOPubStatus = false;
+    private gotShellReply = false;
+    private streamsReAttachedToExecutingCell = false;
+    private endAbnormallyTimeout?: NodeJS.Timeout | number;
     constructor(
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
@@ -174,11 +184,15 @@ export class CellExecutionMessageHandler implements IDisposable {
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
         private readonly kernel: Kernel.IKernelConnection,
-        request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>,
-        cellExecution: NotebookCellExecution
+        private readonly request:
+            | Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
+            | undefined,
+        cellExecution: NotebookCellExecution,
+        executionMessageId: string
     ) {
-        this.executeRequestMessageId = request.msg.header.msg_id;
-        this.ownedRequestMsgIds.add(request.msg.header.msg_id);
+        this._completed.promise.catch(noop);
+        this.executeRequestMessageId = executionMessageId;
+        this.ownedRequestMsgIds.add(executionMessageId);
         workspace.onDidChangeNotebookDocument(
             (e) => {
                 if (!isJupyterNotebook(e.notebook)) {
@@ -204,27 +218,29 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.kernel.anyMessage.connect(this.onKernelAnyMessage, this);
         this.kernel.iopubMessage.connect(this.onKernelIOPubMessage, this);
 
-        request.onIOPub = () => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed && !this.completedExecution) {
-                request.dispose();
-            }
-        };
-        request.onReply = (msg) => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed) {
-                request.dispose();
-                return;
-            }
-            this.handleReply(msg);
-        };
-        request.onStdin = this.handleInputRequest.bind(this);
-        request.done
-            .finally(() => {
-                this.completedExecution = true;
-                this.endCellExecution();
-            })
-            .catch(noop);
+        if (request) {
+            request.onIOPub = () => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed && !this.completedExecution) {
+                    request.dispose();
+                }
+            };
+            request.onReply = (msg) => {
+                // Cell has been deleted or the like.
+                if (this.cell.document.isClosed) {
+                    request.dispose();
+                    return;
+                }
+                this.handleReply(msg);
+            };
+            request.onStdin = this.handleInputRequest.bind(this);
+            request.done
+                .finally(() => {
+                    this.completedExecution = true;
+                    this.endCellExecution();
+                })
+                .catch(noop);
+        }
     }
     /**
      * This method is called when all execution has been completed (successfully or failed).
@@ -239,10 +255,20 @@ export class CellExecutionMessageHandler implements IDisposable {
         disposeAllDisposables(this.disposables);
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
-        this.clearLastUsedStreamOutput();
+        // Assume you have a long running cell, then reload vscode, next this cell continues running.
+        // Next you interrupt this cell, what happens is this will get disposed
+        // as we end up getting a message from for the request kernel info message (generally sent when we re-connect to a kernel)
+        // at that point this method is called and the stream is cleared,
+        // However we still haven't received final reply message
+        // & we could still get one more packet from the kernel, unfortunately the stream has been cleared and we end up appending the new stream
+        // message as a new output , meaning we end up with two outputs instead of one output with multiple output items.
+        if (this.request) {
+            this.clearLastUsedStreamOutput();
+        }
         this.execution = undefined;
         this.kernel.anyMessage.disconnect(this.onKernelAnyMessage, this);
         this.kernel.iopubMessage.disconnect(this.onKernelIOPubMessage, this);
+        this._onErrorHandlingIOPubMessage.dispose();
     }
     /**
      * This merely marks the end of the cell execution.
@@ -253,21 +279,117 @@ export class CellExecutionMessageHandler implements IDisposable {
     private endCellExecution() {
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
-        this.clearLastUsedStreamOutput();
+        // Assume you have a long running cell, then reload vscode, next this cell continues running.
+        // Next you interrupt this cell, what happens is this will get disposed
+        // as we end up getting a message from for the request kernel info message (generally sent when we re-connect to a kernel)
+        // at that point this method is called and the stream is cleared,
+        // However we still haven't received final reply message
+        // & we could still get one more packet from the kernel, unfortunately the stream has been cleared and we end up appending the new stream
+        // message as a new output , meaning we end up with two outputs instead of one output with multiple output items.
+        if (this.request) {
+            this.clearLastUsedStreamOutput();
+        }
         this.execution = undefined;
+        this._completed.resolve();
     }
     private onKernelAnyMessage(_: unknown, { direction, msg }: Kernel.IAnyMessageArgs) {
         if (this.cell.document.isClosed) {
             return this.endCellExecution();
         }
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
+        if (!this.request && direction === 'recv') {
+            const parentMsgId = getParentHeaderMsgId(msg);
+            // In @jupyterlab/services/lib/kernel/future.js a request is marked as completed when we receive a status message with execution_state = 'idle' and have received a reply in shell chanel.
+            if (
+                jupyterLab.KernelMessage.isStatusMsg(msg) &&
+                msg.content.execution_state === 'idle' &&
+                parentMsgId === this.executeRequestMessageId
+            ) {
+                this.gotIdleIOPubStatus = true;
+            }
+            if (msg.channel === 'shell' && parentMsgId === this.executeRequestMessageId) {
+                this.gotShellReply = true;
+            }
+            // Scenario
+            // Start a long running cell, then reload vscode
+            // now interrupt the cell after we reload, this will send an interrupt request to the kernel
+            // We will get a response saying that the response is being processed, but that does not mean it was processed.
+            // So we should ignore status == busy messages for other msg_ids
+            // We are only interested in idle messages for new requests.
+            const isBusyProcessingAnotherRequest =
+                jupyterLab.KernelMessage.isStatusMsg(msg) &&
+                msg.content.execution_state !== 'idle' &&
+                parentMsgId !== this.executeRequestMessageId;
+
+            typeof msg.parent_header === 'object' &&
+                msg.parent_header &&
+                'msg_type' in msg.parent_header &&
+                msg.parent_header.msg_type === 'interrupt_request';
+            // If we have a new parent message id, then this means a new request is being processed.
+            // I.e. previous request is done.
+            const gotANewMessage = parentMsgId
+                ? parentMsgId !== this.executeRequestMessageId && !isBusyProcessingAnotherRequest
+                : false;
+            const isResponseToInterruptRequest =
+                typeof msg.parent_header === 'object' &&
+                msg.parent_header &&
+                'msg_type' in msg.parent_header &&
+                msg.parent_header.msg_type === 'interrupt_request';
+            // This is what marks a request as completed in Jupyter Lab API.
+            const completed = this.gotIdleIOPubStatus && this.gotShellReply;
+            // The following are backups, just in case the above doesn't work.
+            // If we're resuming execution of a cell, then end the cell execution
+            // when we receive certain message types.
+            // If we're reloading or the like and then re-connecting to an active session, then
+            // the kernel is probably busy executing a cell,
+            // The first thin we do is always send a request for kernle info,
+            // If we get a response for that, then this means the previous cell execution has completed.
+            // Similarly if we see a response for an execution then the previous execution has completed.
+            const messageTypesIndicatingEndOfCellExecution = ['kernel_info_reply', 'execute_input', 'execute_reply'];
+            const gotMessageThatIndicatesEndOfCellExecution =
+                'msg_type' in msg &&
+                typeof msg.msg_type === 'string' &&
+                messageTypesIndicatingEndOfCellExecution.includes(msg.msg_type);
+            if (!this.completedExecution && completed) {
+                this.completedExecution = true;
+                // Clear the hacky way of ending the execution.
+                if (this.endAbnormallyTimeout) {
+                    clearTimeout(this.endAbnormallyTimeout);
+                }
+                return this.endCellExecution();
+            }
+            if (!this.completedExecution && (gotMessageThatIndicatesEndOfCellExecution || gotANewMessage)) {
+                // This is a hacky way of ending the execution, hence wait for 100ms  before ending the execution.
+                // Its possible that within a second we will a proper response from the kernel that marks the end of execution.
+                if (this.endAbnormallyTimeout) {
+                    clearTimeout(this.endAbnormallyTimeout);
+                }
+                this.endAbnormallyTimeout = setTimeout(
+                    () => {
+                        this.completedExecution = true;
+                        this.endAbnormallyTimeout = undefined;
+                        return this.endCellExecution();
+                    },
+                    // If we got an idle response to an interrupt request, this means the previous request has ended.
+                    // However its very likely we will get a valid response to end the previous request, hence lets wait 1s for that response to come back.
+                    isResponseToInterruptRequest ? 1000 : 100
+                );
+                this.disposables.push(
+                    new Disposable(() => {
+                        clearTimeout(this.endAbnormallyTimeout);
+                        this.endAbnormallyTimeout = undefined;
+                    })
+                );
+                return;
+            }
+        }
         // We're only interested in messages after execution has completed.
         // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
         if (direction !== 'send' || !this.completedExecution) {
             return;
         }
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         if (jupyterLab.KernelMessage.isCommMsgMsg(msg) && this.ownedCommIds.has(msg.content.comm_id)) {
             // Looks like we have a comm msg request sent by some output or the like.
             // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
@@ -278,6 +400,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (this.cell.document.isClosed) {
             return this.endCellExecution();
         }
+
         // We're only interested in messages after execution has completed.
         // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
 
@@ -825,6 +948,27 @@ export class CellExecutionMessageHandler implements IDisposable {
         // This message could have come from a background thread.
         // In such circumstances, create a temporary task & use that to update the output (only cell execution tasks can update cell output).
         const task = this.execution || this.createTemporaryTask();
+
+        const outputName =
+            msg.content.name === 'stdout'
+                ? NotebookCellOutputItem.stdout('').mime
+                : NotebookCellOutputItem.stderr('').mime;
+        // If we're resuming a previously executing cell (e.g. by reloading vscode),
+        // & the last output is an output with the same stream output items then use that (instead of creating a whole new output).
+        // Because with streams we always append to the existing output (unless we have different mime types or different stream types)
+        if (!this.request && !this.streamsReAttachedToExecutingCell && !this.lastUsedStreamOutput) {
+            if (
+                this.cell.outputs.length &&
+                this.cell.outputs[this.cell.outputs.length - 1].items.length >= 1 &&
+                this.cell.outputs[this.cell.outputs.length - 1].items.every((item) => item.mime === outputName)
+            ) {
+                this.lastUsedStreamOutput = {
+                    output: this.cell.outputs[0],
+                    stream: msg.content.name
+                };
+            }
+        }
+        this.streamsReAttachedToExecutingCell = true;
 
         // Clear output if waiting for a clear
         const { previousValueOfClearOutputOnNextUpdateToOutput } = this.clearOutputIfNecessary(task);

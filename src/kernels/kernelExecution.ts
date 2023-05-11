@@ -17,7 +17,14 @@ import { traceCellMessage } from './execution/helpers';
 import { executeSilently } from './helpers';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from './telemetry/helper';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
-import { IKernel, IKernelSession, INotebookKernelExecution, ITracebackFormatter, NotebookCellRunState } from './types';
+import {
+    IKernel,
+    IKernelSession,
+    INotebookKernelExecution,
+    ITracebackFormatter,
+    NotebookCellRunState,
+    ResumeCellExecutionInformation
+} from './types';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -46,7 +53,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             appShell,
             kernel.controller,
             context,
-            formatters
+            formatters,
+            notebook
         );
         this.disposables.push(requestListener);
         this.executionFactory = new CellExecutionFactory(kernel.controller, requestListener);
@@ -72,13 +80,43 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         return this.documentExecutions.get(this.notebook)?.queue || [];
     }
 
-    public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<NotebookCellRunState> {
-        traceCellMessage(cell, `KernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
+    public async resumeCellExecution(
+        cell: NotebookCell,
+        info: ResumeCellExecutionInformation
+    ): Promise<NotebookCellRunState> {
+        traceCellMessage(
+            cell,
+            `NotebookKernelExecution.resumeCellExecution (start), ${getDisplayPath(cell.notebook.uri)}`
+        );
         if (cell.kind == NotebookCellKind.Markup) {
             return NotebookCellRunState.Success;
         }
 
-        traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
+        await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
+            this.kernel.resourceUri,
+            this.kernel.kernelConnectionMetadata
+        );
+        sendKernelTelemetryEvent(this.kernel.resourceUri, Telemetry.ResumeCellExecution);
+        const sessionPromise = this.kernel.start(new DisplayOptions(false));
+        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
+        executionQueue.resumeCell(cell, info);
+        const result = await executionQueue.waitForCompletion([cell]);
+
+        traceCellMessage(
+            cell,
+            `NotebookKernelExecution.resumeCellExecution (completed), ${getDisplayPath(cell.notebook.uri)}`
+        );
+        traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
+
+        return result[0];
+    }
+    public async executeCell(cell: NotebookCell, codeOverride?: string | undefined): Promise<NotebookCellRunState> {
+        traceCellMessage(cell, `NotebookKernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
+        if (cell.kind == NotebookCellKind.Markup) {
+            return NotebookCellRunState.Success;
+        }
+
+        traceCellMessage(cell, `NotebookKernelExecution.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(
             this.kernel.resourceUri,
             this.kernel.kernelConnectionMetadata
@@ -89,12 +127,15 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
         // If we're restarting, wait for it to finish
         await this.kernel.restarting;
 
-        traceCellMessage(cell, `KernelExecution.executeCell (2), ${getDisplayPath(cell.notebook.uri)}`);
+        traceCellMessage(cell, `NotebookKernelExecution.executeCell (2), ${getDisplayPath(cell.notebook.uri)}`);
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
         executionQueue.queueCell(cell, codeOverride);
         const result = await executionQueue.waitForCompletion([cell]);
 
-        traceCellMessage(cell, `KernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`);
+        traceCellMessage(
+            cell,
+            `NotebookKernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`
+        );
         traceVerbose(`Cell ${cell.index} executed with state ${result[0]}`);
 
         return result[0];

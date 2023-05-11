@@ -75,6 +75,7 @@ import { registerTypes as registerStandaloneTypes } from './standalone/serviceRe
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
 import {
+    Exiting,
     isCI,
     isTestExecution,
     JUPYTER_OUTPUT_CHANNEL,
@@ -107,6 +108,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
+    context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
         let api: IExtensionApi;
         let ready: Promise<void>;
@@ -140,6 +142,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
 }
 
 export function deactivate(): Thenable<void> {
+    Exiting.isExiting = true;
     // Make sure to shutdown anybody who needs it.
     if (activatedServiceContainer) {
         const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);

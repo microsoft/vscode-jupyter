@@ -36,6 +36,7 @@ import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyter
 import { KernelDependencyService } from './kernelDependencyService.web';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
 import { JupyterServerSelectorCommand } from './jupyter/connection/serverSelectorCommand';
+import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -98,6 +99,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         JupyterServerSelectorCommand
     );
+    serviceManager.addSingleton<LastCellExecutionTracker>(LastCellExecutionTracker, LastCellExecutionTracker);
+    serviceManager.addBinding(LastCellExecutionTracker, IExtensionSyncActivationService);
 
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);
