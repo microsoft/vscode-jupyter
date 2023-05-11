@@ -954,13 +954,13 @@ export class CellExecutionMessageHandler implements IDisposable {
                 ? NotebookCellOutputItem.stdout('').mime
                 : NotebookCellOutputItem.stderr('').mime;
         // If we're resuming a previously executing cell (e.g. by reloading vscode),
-        // & there is only one output, then use that as the last output stream (instead of creating a whole new output).
+        // & the last output is an output with the same stream output items then use that (instead of creating a whole new output).
         // Because with streams we always append to the existing output (unless we have different mime types or different stream types)
         if (!this.request && !this.streamsReAttachedToExecutingCell && !this.lastUsedStreamOutput) {
             if (
-                this.cell.outputs.length === 1 &&
-                this.cell.outputs[0].items.length >= 1 &&
-                this.cell.outputs[0].items.every((item) => item.mime === outputName)
+                this.cell.outputs.length &&
+                this.cell.outputs[this.cell.outputs.length - 1].items.length >= 1 &&
+                this.cell.outputs[this.cell.outputs.length - 1].items.every((item) => item.mime === outputName)
             ) {
                 this.lastUsedStreamOutput = {
                     output: this.cell.outputs[0],
