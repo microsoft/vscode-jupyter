@@ -25,16 +25,55 @@ function createJupyterKernelWithoutSerialization() {
         );
     }
     var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
-    var replacedContents = fileContents.replace(
-        /^const serialize =.*$/gm,
-        'const serialize = { serialize: (a) => a, deserialize: (a) => a };'
-    );
+    var replacedContents = fileContents
+        .replace(/^const serialize =.*$/gm, 'const serialize = { serialize: (a) => a, deserialize: (a) => a };')
+        .replace(
+            'const owned = team.session === this.clientId;',
+            'const owned = parentHeader.session === this.clientId;'
+        );
     if (replacedContents === fileContents) {
         throw new Error('Jupyter lab default kernel cannot be made non serializing');
     }
     var destPath = path.join(path.dirname(filePath), 'nonSerializingKernel.js');
     fs.writeFileSync(destPath, replacedContents);
     console.log(colors.green(destPath + ' file generated (by Jupyter VSC)'));
+}
+function fixVariableNameInKernelDefaultJs() {
+    var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'default.js');
+    var filePath = path.join(constants.ExtensionRootDir, relativePath);
+    if (!fs.existsSync(filePath)) {
+        throw new Error(
+            "Jupyter lab default kernel not found '" + filePath + "' (Jupyter Extension post install script)"
+        );
+    }
+    var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
+    const replacement = 'const owned = parentHeader.session === this.clientId;';
+    var replacedContents = fileContents.replace('const owned = team.session === this.clientId;', replacement);
+    if (replacedContents === fileContents) {
+        if (fileContents.includes(replacement)) {
+            return;
+        }
+        throw new Error("Jupyter lab default kernel cannot be updated to fix variable name 'team'");
+    }
+    fs.writeFileSync(filePath, replacedContents);
+    console.log(colors.green(filePath + ' file updated (by Jupyter VSC)'));
+}
+function removeUnnecessaryLoggingFromKernelDefault() {
+    var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'lib', 'kernel', 'default.js');
+    var filePath = path.join(constants.ExtensionRootDir, relativePath);
+    if (!fs.existsSync(filePath)) {
+        throw new Error(
+            "Jupyter lab default kernel not found '" + filePath + "' (Jupyter Extension post install script)"
+        );
+    }
+    var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
+    var replacedContents = fileContents.replace('console.debug(`Starting WebSocket: ${display}`);', '');
+    if (replacedContents === fileContents) {
+        // We do not care if we cannot remove this.
+        return;
+    }
+    fs.writeFileSync(filePath, replacedContents);
+    console.log(colors.green(filePath + ' file updated (by Jupyter VSC)'));
 }
 
 /**
@@ -211,6 +250,8 @@ fixUIFabricForTS49();
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
 createJupyterKernelWithoutSerialization();
+fixVariableNameInKernelDefaultJs();
+removeUnnecessaryLoggingFromKernelDefault();
 updateJSDomTypeDefinition();
 fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();

@@ -26,7 +26,7 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import {
     traceInfoIfCI,
@@ -47,7 +47,7 @@ import {
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { Commands } from '../../platform/common/constants';
@@ -64,7 +64,8 @@ import {
     IKernelController,
     IKernelProvider,
     isLocalConnection,
-    KernelConnectionMetadata
+    KernelConnectionMetadata,
+    NotebookCellRunState
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
@@ -87,6 +88,9 @@ import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
 import { ConnectionDisplayDataProvider, IConnectionDisplayData } from './connectionDisplayData';
 import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
+import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecutionTracker';
+import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
+import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessageHandler';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -253,6 +257,58 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this.disposables.push(indicator);
             indicator.initialize();
         }
+
+        const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
+        const lastCellExecutionTracker = this.serviceContainer.get<LastCellExecutionTracker>(LastCellExecutionTracker);
+        const info = lastCellExecutionTracker.getLastTrackedCellExecution(notebook, kernel);
+
+        if (
+            !kernel.session?.kernel ||
+            kernelExecution.pendingCells.length ||
+            !info ||
+            notebook.cellCount < info.cellIndex ||
+            notebook.cellAt(info.cellIndex).kind !== NotebookCellKind.Code
+        ) {
+            return;
+        }
+
+        // If we're connected to the same kernel session and the same cell is still getting executed,
+        // then ensure to mark the cell as busy and attach the outputs of the execution to the cell.
+        let resumed = false;
+        const localDisposables: IDisposable[] = [];
+        let disposeAnyHandler: IDisposable | undefined;
+        const anyMessageHandler = (_: unknown, msg: IAnyMessageArgs) => {
+            if (msg.direction === 'send' || resumed) {
+                return;
+            }
+            if (getParentHeaderMsgId(msg.msg as KernelMessage.IMessage) === info.msg_id) {
+                // If we have an idle state, then the request is done.
+                if (
+                    'msg_type' in msg.msg &&
+                    msg.msg.msg_type === 'status' &&
+                    'execution_state' in msg.msg.content &&
+                    msg.msg.content.execution_state === 'idle'
+                ) {
+                    return;
+                }
+                resumed = true;
+                kernelExecution
+                    .resumeCellExecution(notebook.cellAt(info.cellIndex), {
+                        msg_id: info.msg_id,
+                        startTime: info.startTime,
+                        executionCount: info.executionCount
+                    })
+                    .catch(noop);
+                disposeAllDisposables(localDisposables);
+            }
+        };
+        // Check if we're still getting messages for the previous execution.
+        kernel.session.kernel.anyMessage.connect(anyMessageHandler);
+        disposeAnyHandler = new Disposable(() => {
+            swallowExceptions(() => kernel.session?.kernel?.anyMessage.disconnect(anyMessageHandler));
+        });
+        localDisposables.push(disposeAnyHandler);
+        this.disposables.push(disposeAnyHandler);
     }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
         if (kernelConnection.kind !== 'connectToLiveRemoteKernel') {
@@ -510,7 +566,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         return currentExecution;
     }
 
-    private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
+    public async executeCell(doc: NotebookDocument, cell: NotebookCell, codeOverride?: string) {
         traceVerbose(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
         let exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
@@ -520,6 +576,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         let kernel: IKernel | undefined;
         let controller: IKernelController = new KernelController(this.controller);
         let kernelStarted = false;
+        const lastCellExecutionTracker = this.serviceContainer.get<LastCellExecutionTracker>(LastCellExecutionTracker);
+
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
             kernelStarted = true;
@@ -532,7 +590,33 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             }
-            return await this.kernelProvider.getKernelExecution(kernel).executeCell(cell);
+
+            // Track the information so we can restore execution upon reloading vs code or the like.
+            lastCellExecutionTracker.trackCellExecution(cell, kernel);
+            const promise = this.kernelProvider.getKernelExecution(kernel).executeCell(cell, codeOverride);
+
+            // If we complete execution, then there is nothing to be restored.
+            promise
+                .then((state) => {
+                    if (!kernel) {
+                        return;
+                    }
+                    if (Exiting.isExiting) {
+                        // If we're exiting vs code, then no need to clear the last execution info, we need to preserve that.
+                        return;
+                    }
+                    // When closing VS Code, execution tasks get disposed, same as when we restart the kernel or interrupt kernels.
+                    // Hence we need to ensure we don't clear last execution state if the status is idle.
+                    // Completion of cells is marked by status being success or error.
+                    // Idle means the cell execution did not complete.
+                    if (state === NotebookCellRunState.Idle) {
+                        return;
+                    }
+
+                    return lastCellExecutionTracker.deleteTrackedCellExecution(cell, kernel);
+                })
+                .catch(noop);
+            return await promise;
         } catch (ex) {
             if (!isCancellationError(ex)) {
                 traceError(`Error in execution`, ex);

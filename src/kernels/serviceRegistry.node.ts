@@ -50,6 +50,7 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarm
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { JupyterServerSelectorCommand } from './jupyter/connection/serverSelectorCommand';
+import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -140,6 +141,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         JupyterServerSelectorCommand
     );
+    serviceManager.addSingleton<LastCellExecutionTracker>(LastCellExecutionTracker, LastCellExecutionTracker);
+    serviceManager.addBinding(LastCellExecutionTracker, IExtensionSyncActivationService);
 
     // Subdirectories
     registerJupyterTypes(serviceManager, isDevMode);

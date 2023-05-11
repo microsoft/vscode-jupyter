@@ -2801,6 +2801,20 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForErrorProperties()
         }
     };
+
+    /**
+     * Sent when we resume execution of a cell (e.g. when reloading VS Code while a cell was executing).
+     */
+    [Telemetry.ResumeCellExecution]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'User Action',
+        tags: ['Cell Execution'],
+        properties: {
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            ...commonClassificationForErrorProperties()
+        }
+    };
     /**
      * Send when a kernel starts.
      */
