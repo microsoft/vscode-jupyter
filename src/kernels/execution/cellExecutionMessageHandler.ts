@@ -256,12 +256,11 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
         // Assume you have a long running cell, then reload vscode, next this cell continues running.
-        // Next you interrupt this cell, what happens is this will get disposed
-        // as we end up getting a message from for the request kernel info message (generally sent when we re-connect to a kernel)
-        // at that point this method is called and the stream is cleared,
-        // However we still haven't received final reply message
-        // & we could still get one more packet from the kernel, unfortunately the stream has been cleared and we end up appending the new stream
-        // message as a new output , meaning we end up with two outputs instead of one output with multiple output items.
+        // Next you interrupt this cell, next this class will get disposed
+        // However due to restoring outputs, we could end up with a final stream output or the like,
+        // The new stream ends up getting added as a new output (instead of appending to existing output),
+        // this happens as the previous stream has been cleared (if we call clearLastUsedStreamOutput).
+        // Thats why we never clear the last stream when disposing this class for restored executions (request === undefined).
         if (this.request) {
             this.clearLastUsedStreamOutput();
         }
@@ -280,12 +279,11 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
         // Assume you have a long running cell, then reload vscode, next this cell continues running.
-        // Next you interrupt this cell, what happens is this will get disposed
-        // as we end up getting a message from for the request kernel info message (generally sent when we re-connect to a kernel)
-        // at that point this method is called and the stream is cleared,
-        // However we still haven't received final reply message
-        // & we could still get one more packet from the kernel, unfortunately the stream has been cleared and we end up appending the new stream
-        // message as a new output , meaning we end up with two outputs instead of one output with multiple output items.
+        // Next you interrupt this cell, next this class will get disposed
+        // However due to restoring outputs, we could end up with a final stream output or the like,
+        // The new stream ends up getting added as a new output (instead of appending to existing output),
+        // this happens as the previous stream has been cleared (if we call clearLastUsedStreamOutput).
+        // Thats why we never clear the last stream when disposing this class for restored executions (request === undefined).
         if (this.request) {
             this.clearLastUsedStreamOutput();
         }
