@@ -8,7 +8,15 @@ import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import * as jupyterLabSerialize from '@jupyterlab/services/lib/kernel/serialize';
 import { Event, EventEmitter } from 'vscode';
 import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.node';
-import { IStreamMsg, IExecuteReplyMsg, IExecuteInputMsg, IStatusMsg, IDisplayDataMsg, IUpdateDisplayDataMsg, IInfoReplyMsg } from '@jupyterlab/services/lib/kernel/messages';
+import {
+    IStreamMsg,
+    IExecuteReplyMsg,
+    IExecuteInputMsg,
+    IStatusMsg,
+    IDisplayDataMsg,
+    IUpdateDisplayDataMsg,
+    IInfoReplyMsg
+} from '@jupyterlab/services/lib/kernel/messages';
 
 function deserialize(msg: string | ArrayBuffer): KernelMessage.IMessage {
     return typeof msg === 'string' || msg instanceof ArrayBuffer ? jupyterLabSerialize.deserialize(msg) : msg;
