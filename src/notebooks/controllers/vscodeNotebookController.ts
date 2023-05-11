@@ -26,7 +26,7 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import {
     traceInfoIfCI,
@@ -64,7 +64,8 @@ import {
     IKernelController,
     IKernelProvider,
     isLocalConnection,
-    KernelConnectionMetadata
+    KernelConnectionMetadata,
+    NotebookCellRunState
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
@@ -303,9 +304,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         };
         // Check if we're still getting messages for the previous execution.
         kernel.session.kernel.anyMessage.connect(anyMessageHandler);
-        disposeAnyHandler = new Disposable(() =>
-            swallowExceptions(() => kernel.session?.kernel?.anyMessage.disconnect(anyMessageHandler))
-        );
+        disposeAnyHandler = new Disposable(() => {
+            swallowExceptions(() => kernel.session?.kernel?.anyMessage.disconnect(anyMessageHandler));
+        });
         localDisposables.push(disposeAnyHandler);
         this.disposables.push(disposeAnyHandler);
     }
@@ -595,7 +596,26 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             const promise = this.kernelProvider.getKernelExecution(kernel).executeCell(cell, codeOverride);
 
             // If we complete execution, then there is nothing to be restored.
-            promise.finally(() => kernel && lastCellExecutionTracker.deleteTrackedCellExecution(cell, kernel));
+            promise
+                .then((state) => {
+                    if (!kernel) {
+                        return;
+                    }
+                    if (Exiting.isExiting) {
+                        // If we're exiting vs code, then no need to clear the last execution info, we need to preserve that.
+                        return;
+                    }
+                    // When closing VS Code, execution tasks get disposed, same as when we restart the kernel or interrupt kernels.
+                    // Hence we need to ensure we don't clear last execution state if the status is idle.
+                    // Completion of cells is marked by status being success or error.
+                    // Idle means the cell execution did not complete.
+                    if (state === NotebookCellRunState.Idle) {
+                        return;
+                    }
+
+                    return lastCellExecutionTracker.deleteTrackedCellExecution(cell, kernel);
+                })
+                .catch(noop);
             return await promise;
         } catch (ex) {
             if (!isCancellationError(ex)) {

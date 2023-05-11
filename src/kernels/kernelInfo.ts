@@ -35,6 +35,9 @@ export async function getKernelInfo(
         protocol_version: '',
         status: 'ok'
     };
+    // Even if we might have a cached response to the kernel info, make this request.
+    // We rely on this being sent always, to detect whether cells completed execution or the like
+    // after reloading VS Code.
     const kernelInfoPromise = session.requestKernelInfo().then((item) => item?.content);
     promises.push(kernelInfoPromise);
     kernelInfoPromise

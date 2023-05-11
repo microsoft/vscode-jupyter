@@ -14,13 +14,13 @@ import { CellExecutionMessageHandler } from './cellExecutionMessageHandler';
  */
 export class CellExecutionMessageHandlerService {
     private readonly disposables: IDisposable[] = [];
-    private notebook?: NotebookDocument;
     private readonly messageHandlers = new WeakMap<NotebookCell, CellExecutionMessageHandler>();
     constructor(
         private readonly appShell: IApplicationShell,
         private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
-        private readonly formatters: ITracebackFormatter[]
+        private readonly formatters: ITracebackFormatter[],
+        private readonly notebook: NotebookDocument
     ) {
         workspace.onDidChangeNotebookDocument(
             (e) => {
@@ -36,7 +36,7 @@ export class CellExecutionMessageHandlerService {
             this.disposables
         );
     }
-    dispose() {
+    public dispose() {
         disposeAllDisposables(this.disposables);
         if (this.notebook) {
             this.notebook.getCells().forEach((cell) => this.messageHandlers.get(cell)?.dispose());
@@ -50,7 +50,6 @@ export class CellExecutionMessageHandlerService {
             cellExecution: NotebookCellExecution;
         }
     ): CellExecutionMessageHandler {
-        this.notebook = cell.notebook;
         // Always dispose any previous handlers & create new ones.
         this.messageHandlers.get(cell)?.dispose();
         const handler = new CellExecutionMessageHandler(
@@ -76,7 +75,6 @@ export class CellExecutionMessageHandlerService {
             cellExecution: NotebookCellExecution;
         }
     ): CellExecutionMessageHandler {
-        this.notebook = cell.notebook;
         // Always dispose any previous handlers & create new ones.
         this.messageHandlers.get(cell)?.dispose();
         const handler = new CellExecutionMessageHandler(

@@ -21,3 +21,10 @@ export function isPreReleaseVersion() {
         return 'true';
     }
 }
+
+export const Exiting = {
+    /**
+     * Whether VS Code is shutting down or the like (e.g. reloading).
+     */
+    isExiting: false
+};

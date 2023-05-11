@@ -53,7 +53,8 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
             appShell,
             kernel.controller,
             context,
-            formatters
+            formatters,
+            notebook
         );
         this.disposables.push(requestListener);
         this.executionFactory = new CellExecutionFactory(kernel.controller, requestListener);
