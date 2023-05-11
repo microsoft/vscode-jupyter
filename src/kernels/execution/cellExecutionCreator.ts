@@ -59,9 +59,11 @@ export class NotebookCellExecutionWrapper implements NotebookCellExecution {
             // indicating the fact that the kernel has started processing the output.
             // That's when we clear the output. (ideally it should be cleared as soon as its queued, but thats an upstream core issue).
             if (this.clearOutputOnStartWithTime) {
+                traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime} (clear output)`);
                 this._impl.clearOutput().then(noop, noop);
+            } else {
+                traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime}`);
             }
-            traceVerbose(`Start cell ${this.cell.index} execution @ ${startTime}`);
         }
     }
     end(success: boolean | undefined, endTime?: number): void {
