@@ -1888,15 +1888,15 @@ export class IEventNamePropertyMapping {
         /**
          * Failed to start the session without the backing file.
          */
-        failedWithoutBackingFile?: boolean;
+        failedWithoutBackingFile: boolean;
         /**
          * Failed to start the session without the backing file.
          */
-        failedWithBackingFile?: boolean;
+        failedWithBackingFile: boolean;
         /**
          * Whether this is a local host connection or remote.
          */
-        localHost?: boolean;
+        localHost: boolean;
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
