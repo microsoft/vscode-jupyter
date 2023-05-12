@@ -42,10 +42,13 @@ export class PythonEnvFilterCompletionProvider implements CompletionItemProvider
         }
 
         return this.interpreters.resolvedEnvironments.map((env) => {
+            const label = getPythonEnvDisplayName(env);
+            const envPath = getDisplayPath(env.uri);
             return {
-                label: getPythonEnvDisplayName(env),
-                detail: getDisplayPath(env.uri),
-                insertText: `"${getDisplayPath(env.uri)}"`
+                label,
+                detail: envPath,
+                insertText: `"${envPath}"`,
+                filterText: `${label} ${envPath}`
             };
         });
     }
