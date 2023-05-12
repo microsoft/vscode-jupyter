@@ -10,7 +10,7 @@ import { IDisposable } from '../../../platform/common/types';
 import { isPromise } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { traceError } from '../../../platform/logging';
-import { KernelFilterService } from '../kernelFilter/kernelFilterService';
+import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IQuickPickKernelItemProvider } from './types';
 
@@ -41,7 +41,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         private readonly notebook: NotebookDocument,
         kind: ContributedKernelFinderKind,
         finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>,
-        private readonly kernelFilter: KernelFilterService
+        private readonly pythonEnvFilter: PythonEnvironmentFilter
     ) {
         this.refresh = async () => {
             this.refreshInvoked = true;
@@ -128,7 +128,11 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         }
     }
     private filteredKernels(kernels: KernelConnectionMetadata[]) {
-        return kernels.filter((k) => !this.kernelFilter.isKernelHidden(k));
+        return kernels.filter(
+            (k) =>
+                k.kind !== 'startUsingPythonInterpreter' ||
+                !this.pythonEnvFilter.isPythonEnvironmentExcluded(k.interpreter)
+        );
     }
     private computePreferredRemoteKernel(
         finder: IContributedKernelFinder,

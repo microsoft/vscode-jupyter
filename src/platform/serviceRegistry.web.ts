@@ -16,6 +16,7 @@ import { ConfigurationService } from './common/configuration/service.web';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.web';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.web';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
+import { registerTypes as registerInterpreterTypes } from './interpreter/serviceRegistry.web';
 import { IServiceManager } from './ioc/types';
 import { ProgressReporter } from './progress/progressReporter';
 import { WorkspaceService } from './common/application/workspace.web';
@@ -43,6 +44,7 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);
+    registerInterpreterTypes(serviceManager);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
