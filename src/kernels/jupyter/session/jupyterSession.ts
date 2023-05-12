@@ -254,36 +254,28 @@ export class JupyterSession
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
-        const telemetryInfo: {
-            failedWithoutBackingFile?: boolean;
-            failedWithBackingFile?: boolean;
-            localHost?: boolean;
-        } = {};
-        if (this.connInfo.localLaunch) {
-            telemetryInfo.localHost = true;
-        }
+        const telemetryInfo = {
+            failedWithoutBackingFile: false,
+            failedWithBackingFile: false,
+            localHost: this.connInfo.localLaunch
+        };
 
         try {
-            const session = await this.createSessionImpl({ ...options, createBakingFile: false });
-            telemetryInfo.failedWithoutBackingFile = false;
-            sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
-            return session;
+            return await this.createSessionImpl({ ...options, createBakingFile: false });
         } catch (ex) {
             traceWarning(`Failed to create a session without a backing file, trying again with a backing file`, ex);
             try {
-                telemetryInfo.failedWithoutBackingFile = false;
-                const session = await this.createSessionImpl({
+                telemetryInfo.failedWithoutBackingFile = true;
+                return await this.createSessionImpl({
                     ...options,
                     createBakingFile: true
                 });
-                telemetryInfo.failedWithBackingFile = false;
-                sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
-                return session;
             } catch (ex) {
                 telemetryInfo.failedWithBackingFile = true;
-                sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
                 throw ex;
             }
+        } finally {
+            sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
         }
     }
 
