@@ -231,8 +231,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                         provider: provider,
                         type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
                         description: undefined,
-                        originalItem: i,
-                        detail: provider.displayName
+                        originalItem: i
                     };
                 }
             );

@@ -157,13 +157,6 @@ export namespace DataScience {
             pythonModuleName,
             commandId
         );
-    export const installPythonAndCondaPackageInstructions = (pythonModuleName: string, commandId: string) =>
-        l10n.t(
-            "Run the following command to install Python and '{0}' into the Conda environment. \nCommand: '{1}'",
-            pythonModuleName,
-            commandId
-        );
-
     export const pythonCondaKernelsWithoutPython = l10n.t(
         'The Python Runtime and IPyKernel will be automatically installed upon selecting this environment.'
     );
@@ -326,12 +319,6 @@ export namespace DataScience {
                 'Do not translate the link https://aka.ms/vscodeJupyterKernelCrash'
             ]
         });
-    export const failedToStartKernelAsPythonIsNotInstalledInCondaEnv = (kernelName: string, condaEnvName: string) =>
-        l10n.t(
-            "The kernel '{0}' was not started as Python is not installed in the Conda Environment '{0}'.  \nClick [here](https://aka.ms/KernelFailurePythonNotInstalledInConda) for further details, optionally install Python into the Conda Environment using the command `conda install -n {0} python -y`.",
-            kernelName,
-            condaEnvName
-        );
     export const kernelCrashedDueToCodeInCurrentOrPreviousCell = l10n.t({
         message:
             "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
@@ -356,7 +343,6 @@ export namespace DataScience {
     export const startingNewKernelHeader = l10n.t('_Connecting to kernel..._');
     export const startingNewKernelCustomHeader = (kernelName: string) => l10n.t('_Connecting to {0}..._', kernelName);
     export const jupyterSelectURIPrompt = l10n.t('Enter the URL of the running Jupyter server');
-    export const jupyterSelectURIQuickPickTitle = l10n.t('Enter the URL of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitleOld = l10n.t('Pick how to connect to Jupyter');
     export const jupyterSelectURIQuickPickPlaceholder = l10n.t('Choose an option');
     export const jupyterSelectURIQuickPickCurrent = (uri: string) => l10n.t('Current: {0}', uri);
@@ -529,7 +515,6 @@ export namespace DataScience {
         'Please reload the window when changing the Jupyter command line.'
     );
     export const jupyterCommandLineReloadAnswer = l10n.t('Reload');
-    export const createdNewNotebook = (hostName: string) => l10n.t('{0}: Creating new notebook ', hostName);
 
     export const createdNewKernel = (hostName: string, sessionId: string) =>
         l10n.t('{0}: Kernel started: {1}', hostName, sessionId);
@@ -540,11 +525,6 @@ export namespace DataScience {
     export const jupyterSelectURIQuickPickTitleRemoteOnly = l10n.t('Pick an already running Jupyter server');
     export const jupyterSelectURIRemoteDetail = l10n.t('Specify the URL of an existing server');
     export const removeRemoteJupyterServerEntryInQuickPick = l10n.t('Remove');
-    export const specifyLocalOrRemoteJupyterServerForConnections = l10n.t(
-        'Specify Jupyter Server for Connections (deprecated)'
-    );
-    export const jupyterNativeNotebookUriStatusLabelForLocal = l10n.t('Jupyter Server: Local');
-    export const jupyterNativeNotebookUriStatusLabelForRemote = l10n.t('Jupyter Server: Remote');
 
     export const loadClassFailedWithNoInternet = (widgetName: string, version: string) =>
         l10n.t(
@@ -712,8 +692,6 @@ export namespace DataScience {
     export const UserJupyterServerUrlProviderDisplayName = l10n.t('Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = l10n.t('Connect to an existing Jupyter Server');
     export const UserJupyterServerUrlAlreadyExistError = l10n.t('A Jupyter Server with this URL already exists');
-    export const universalRemoteKernelFinderDisplayName = (serverName: string) => l10n.t('Remote - {0}', serverName);
-    export const remoteKernelFinderDisplayName = l10n.t('Current Remote');
     export const kernelPickerSelectKernelTitle = l10n.t('Select Kernel');
     export const kernelPickerSelectLocalKernelSpecTitle = l10n.t('Select a Jupyter Kernel');
     export const kernelPickerSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');

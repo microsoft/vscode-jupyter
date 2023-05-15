@@ -157,13 +157,26 @@ export interface IJupyterServerProvider {
 
 export interface IJupyterServerUri {
     baseUrl: string;
+    /**
+     * Jupyter auth Token
+     */
     token: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    authorizationHeader: any; // JSON object for authorization header.
-    expiration?: Date; // Date/time when header expires and should be refreshed.
+    /**
+     * Authorization header to be used when connecting to the server.
+     */
+    authorizationHeader: Record<string, string>;
+    /**
+     * Date/time when header expires and should be refreshed.
+     */
+    expiration?: Date;
     displayName: string;
     /**
      * The remote server directory to which the current workspace folder is mapped.
+     * Providing a value for this will result in generating Session Names like Jupyter Notebook/Lab.
+     * I.e. the session names map to the relative path of the notebook file.
+     *
+     * As a result when attempting to create a new session for a notebook/file, Jupyter will
+     * first see if a session already exists for the same file and same kernel, and if so, will re-use that session.
      */
     workingDirectory?: string;
     /**

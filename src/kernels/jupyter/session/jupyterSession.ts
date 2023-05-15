@@ -290,10 +290,7 @@ export class JupyterSession
         if (isRemoteConnection(this.kernelConnectionMetadata) && this.connInfo.workingDirectory && this.resource) {
             const currentWorkingDirectory = workspace.getWorkspaceFolder(Uri.from(this.resource));
             if (currentWorkingDirectory) {
-                remoteFilePath = this.resource.path.replace(
-                    currentWorkingDirectory.uri.path,
-                    this.connInfo.workingDirectory
-                );
+                remoteFilePath = this.resource.path.replace(`${currentWorkingDirectory.uri.path}/`, '');
             }
         }
         if (!remoteFilePath && options.createBakingFile) {
@@ -339,12 +336,19 @@ export class JupyterSession
             getNameOfKernelConnection(this.kernelConnectionMetadata) ?? this.specsManager?.specs?.default ?? '';
 
         // Create our session options using this temporary notebook and our connection info
+
+        // NOTE: If the path is a constant value such as `remoteFilePath` then Jupyter will alway re-use the same kernel sessions.
+        // I.e. if we select Remote Kernel A for Notebook a.ipynb, then a session S1 will be created.
+        // Next, if we attempt to create a new session for select Remote Kernel A once again for Notebook a.ipynb,
+        // the jupyter server will see that a session already exists for the same kernel, hence will re-use the same session S1.
+        // In such cases, the `name` of the session is not required, jupyter lab too does not set this.
+        // If its empty Jupyter will default to the relative path of the notebook.
         const sessionOptions: Session.ISessionOptions = {
             path: remoteFilePath ?? generateBackingIPyNbFileName(this.resource), // Name has to be unique
             kernel: {
                 name: kernelName
             },
-            name: uuid(), // This is crucial to distinguish this session from any other.
+            name: remoteFilePath ? '' : uuid(), // This is crucial to distinguish this session from any other.
             type: 'notebook'
         };
 
