@@ -355,13 +355,16 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let cookieString;
 
         // If no token is specified prompt for a password
-        const isEmptyToken = connInfo.token === '' || connInfo.token === 'null';
-        if (isEmptyToken && !connInfo.getAuthHeader) {
+        const isTokenEmpty = connInfo.token === '' || connInfo.token === 'null';
+        if (isTokenEmpty && !connInfo.getAuthHeader) {
             if (this.failOnPassword) {
                 throw new Error('Password request not allowed.');
             }
             serverSettings = { ...serverSettings, token: '' };
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, true);
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo({
+                url: connInfo.baseUrl,
+                isTokenEmpty
+            });
             if (pwSettings && pwSettings.requestHeaders) {
                 requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
                 cookieString = (pwSettings.requestHeaders as any).Cookie || '';

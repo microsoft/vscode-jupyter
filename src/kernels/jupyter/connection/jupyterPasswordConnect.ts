@@ -45,10 +45,13 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     public static get prompt(): Promise<void> | undefined {
         return JupyterPasswordConnect._prompt?.promise;
     }
-    public getPasswordConnectionInfo(
-        url: string,
-        isEmptyToken: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
+    public getPasswordConnectionInfo({
+        url,
+        isTokenEmpty
+    }: {
+        url: string;
+        isTokenEmpty: boolean;
+    }): Promise<IJupyterPasswordConnectInfo | undefined> {
         JupyterPasswordConnect._prompt = undefined;
         if (!url || url.length < 1) {
             return Promise.resolve(undefined);
@@ -61,7 +64,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         let result = this.savedConnectInfo.get(newUrl);
         if (!result) {
             const deferred = (JupyterPasswordConnect._prompt = createDeferred());
-            result = this.getNonCachedPasswordConnectionInfo(newUrl, isEmptyToken).then((value) => {
+            result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty }).then((value) => {
                 // If we fail to get a valid password connect info, don't save the value
                 traceWarning(`Password for ${newUrl} was invalid.`);
                 if (!value) {
@@ -82,15 +85,15 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return result;
     }
 
-    private async getNonCachedPasswordConnectionInfo(
-        url: string,
-        isEmptyToken: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
+    private async getNonCachedPasswordConnectionInfo(options: {
+        url: string;
+        isTokenEmpty: boolean;
+    }): Promise<IJupyterPasswordConnectInfo | undefined> {
         // If jupyter hub, go down a special path of asking jupyter hub for a token
-        if (await this.isJupyterHub(url)) {
-            return this.getJupyterHubConnectionInfo(url);
+        if (await this.isJupyterHub(options.url)) {
+            return this.getJupyterHubConnectionInfo(options.url);
         } else {
-            return this.getJupyterConnectionInfo(url, isEmptyToken);
+            return this.getJupyterConnectionInfo(options);
         }
     }
 
@@ -236,21 +239,25 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
     }
 
-    private async getJupyterConnectionInfo(
-        url: string,
-        isEmptyToken: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
+    private async getJupyterConnectionInfo({
+        url,
+        isTokenEmpty
+    }: {
+        url: string;
+        isTokenEmpty: boolean;
+    }): Promise<IJupyterPasswordConnectInfo | undefined> {
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
 
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
-        if ((await this.needPassword(url)) || isEmptyToken) {
+        const needsPassword = await this.needPassword(url);
+        if (needsPassword || isTokenEmpty) {
             // Get password first
-            let userPassword = isEmptyToken ? '' : await this.getUserPassword(url);
+            let userPassword = needsPassword ? await this.getUserPassword(url) : '';
 
             // If we do not have a password, but token is empty, then generate an xsrf token with session cookie
-            if (userPassword || isEmptyToken) {
+            if (userPassword || isTokenEmpty) {
                 xsrfCookie = await this.getXSRFToken(url, '');
 
                 // Then get the session cookie by hitting that same page with the xsrftoken and the password
@@ -279,7 +286,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         // If we found everything return it all back if not, undefined as partial is useless
         // Remember session cookie can be empty, if both token and password are empty
-        if (xsrfCookie && sessionCookieName && (sessionCookieValue || isEmptyToken)) {
+        if (xsrfCookie && sessionCookieName && (sessionCookieValue || isTokenEmpty)) {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
