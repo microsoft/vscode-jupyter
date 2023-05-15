@@ -62,7 +62,10 @@ export interface IJupyterPasswordConnectInfo {
 
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
 export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
+    getPasswordConnectionInfo(options: {
+        url: string;
+        isTokenEmpty: boolean;
+    }): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
