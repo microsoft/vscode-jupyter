@@ -340,7 +340,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private getRow = (index: number): IGridRow => {
         if (index >= 0 && index < this.props.variables.length) {
             const variable = this.props.variables[index];
-            if (variable && variable.value) {
+            if (variable && typeof variable.value === 'string') {
                 let newSize = '';
                 if (variable.shape && variable.shape !== '') {
                     newSize = variable.shape;
@@ -362,7 +362,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     type: variable.type,
                     size: newSize,
                     index,
-                    value: value ? value : getLocString('variableLoadingValue', 'Loading...')
+                    value: typeof value === 'string' ? value : getLocString('variableLoadingValue', 'Loading...')
                 };
             }
         }
