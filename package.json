@@ -1520,7 +1520,7 @@
                 },
                 "jupyter.variableExplorerExclude": {
                     "type": "string",
-                    "default": "module;function;builtin_function_or_method;ABCMeta;type",
+                    "default": "module;function;builtin_function_or_method;ABCMeta;type;ModelMetaclass",
                     "description": "%jupyter.configuration.jupyter.variableExplorerExclude.description%",
                     "scope": "resource"
                 },
