@@ -12,7 +12,7 @@ import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { KernelFilterService } from '../kernelFilter/kernelFilterService';
+import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 
 suite('Quick Pick Kernel Item Provider', () => {
     [
@@ -28,8 +28,8 @@ suite('Quick Pick Kernel Item Provider', () => {
             let onDidChangeStatus: EventEmitter<void>;
             const disposables: IDisposable[] = [];
             let clock: fakeTimers.InstalledClock;
-            const kernelFilter = mock<KernelFilterService>();
-            when(kernelFilter.isKernelHidden(anything())).thenReturn(false);
+            const pythonEnvFilter = mock<PythonEnvironmentFilter>();
+            when(pythonEnvFilter.isPythonEnvironmentExcluded(anything())).thenReturn(false);
             const kernelConnection1 = instance(mock<KernelConnectionMetadata>());
             const kernelConnection2 = instance(mock<KernelConnectionMetadata>());
             const kernelConnection3 = instance(mock<KernelConnectionMetadata>());
@@ -68,7 +68,7 @@ suite('Quick Pick Kernel Item Provider', () => {
                     instance(notebook),
                     kind,
                     kind === ContributedKernelFinderKind.Remote ? Promise.resolve(instance(finder)) : instance(finder),
-                    instance(kernelFilter)
+                    instance(pythonEnvFilter)
                 );
             }
             teardown(() => disposeAllDisposables(disposables));

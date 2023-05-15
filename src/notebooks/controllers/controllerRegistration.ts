@@ -31,7 +31,7 @@ import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
-import { KernelFilterService } from './kernelFilter/kernelFilterService';
+import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import {
     IControllerRegistration,
     InteractiveControllerIdSuffix,
@@ -86,7 +86,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
+        @inject(PythonEnvironmentFilter) private readonly pythonEnvFilter: PythonEnvironmentFilter,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
@@ -102,7 +102,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
             this,
             this.disposables
         );
-        this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
+        this.pythonEnvFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeConnectionType(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);

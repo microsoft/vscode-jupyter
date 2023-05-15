@@ -32,7 +32,7 @@ import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnviron
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { ControllerRegistration } from './controllerRegistration';
-import { KernelFilterService } from './kernelFilter/kernelFilterService';
+import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import { IVSCodeNotebookController } from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
@@ -88,7 +88,7 @@ suite('Controller Registration', () => {
     let interpreters: IInterpreterService;
     let registration: ControllerRegistration;
     let serverUriStorage: IJupyterServerUriStorage;
-    let kernelFilter: KernelFilterService;
+    let kernelFilter: PythonEnvironmentFilter;
     let onDidChangeKernels: EventEmitter<void>;
     let onDidChangeKernelsInContributedLocalKernelFinder: EventEmitter<{
         added?: KernelConnectionMetadata[] | undefined;
@@ -130,7 +130,7 @@ suite('Controller Registration', () => {
         extensionChecker = mock<IPythonExtensionChecker>();
         interpreters = mock<IInterpreterService>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
-        kernelFilter = mock<KernelFilterService>();
+        kernelFilter = mock<PythonEnvironmentFilter>();
         contributedLocalKernelFinder = mock<IContributedKernelFinder>();
         contributedPythonKernelFinder = mock<IContributedKernelFinder>();
         configService = mock<IConfigurationService>();
@@ -213,7 +213,7 @@ suite('Controller Registration', () => {
         ]);
         when(kernelFinder.kernels).thenReturn([]);
         when(interpreters.resolvedEnvironments).thenReturn([activePythonEnv]);
-        when(kernelFilter.isKernelHidden(anything())).thenReturn(false);
+        when(kernelFilter.isPythonEnvironmentExcluded(anything())).thenReturn(false);
         when(vscNotebook.notebookDocuments).thenReturn([]);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(interpreters.getActiveInterpreter(anything())).thenResolve(activePythonEnv);

@@ -6,6 +6,10 @@ import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../common/t
 import { IServiceManager } from '../ioc/types';
 import { CondaService } from './condaService.node';
 import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
+import { PythonEnvFilterCompletionProvider } from './filter/completionProvider.node';
+import { PythonEnvironmentFilter } from './filter/filterService';
+import { PythonEnvFilterSettingMigration } from './filter/settingsMigration';
+import { PythonFilterUICommandDeprecation } from './filter/uiDeprecationHandler';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { InstallationChannelManager } from './installer/channelManager.node';
 import { CondaInstaller } from './installer/condaInstaller.node';
@@ -43,6 +47,19 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker
     );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PythonEnvFilterSettingMigration
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PythonFilterUICommandDeprecation
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PythonEnvFilterCompletionProvider
+    );
+    serviceManager.addSingleton<PythonEnvironmentFilter>(PythonEnvironmentFilter, PythonEnvironmentFilter);
     serviceManager.addSingleton<IReservedPythonNamedProvider>(IReservedPythonNamedProvider, ReservedNamedProvider);
     serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
     serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
