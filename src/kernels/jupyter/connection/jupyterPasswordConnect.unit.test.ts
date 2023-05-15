@@ -50,7 +50,7 @@ suite('JupyterPasswordConnect', () => {
         );
     });
 
-    function createMockSetup(secure: boolean, ok: boolean) {
+    function createMockSetup(secure: boolean, ok: boolean, xsrfReponseStatusCode: 200 | 302 = 302) {
         const dsSettings = {
             allowUnauthorizedRemoteConnection: secure
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,7 +70,7 @@ suite('JupyterPasswordConnect', () => {
                 return { 'set-cookie': [`_xsrf=${xsrfValue}`] };
             });
         mockXsrfResponse.setup((mr) => mr.ok).returns(() => ok);
-        mockXsrfResponse.setup((mr) => mr.status).returns(() => 302);
+        mockXsrfResponse.setup((mr) => mr.status).returns(() => xsrfReponseStatusCode);
         mockXsrfResponse.setup((mr) => mr.headers).returns(() => mockXsrfHeaders.object);
 
         const mockHubResponse = typemoq.Mock.ofType(nodeFetch.Response);
@@ -114,7 +114,7 @@ suite('JupyterPasswordConnect', () => {
         return { fetchMock, mockXsrfHeaders, mockXsrfResponse };
     }
 
-    test('getPasswordConnectionInfo', async () => {
+    test('With Password', async () => {
         when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
 
@@ -154,7 +154,67 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponse.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            url: 'http://TESTNAME:8888/',
+            isTokenEmpty: true
+        });
+        assert(result, 'Failed to get password');
+        if (result) {
+            // eslint-disable-next-line
+            assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
+        }
+
+        // Verfiy calls
+        mockXsrfHeaders.verifyAll();
+        mockSessionHeaders.verifyAll();
+        mockXsrfResponse.verifyAll();
+        mockSessionResponse.verifyAll();
+        fetchMock.verifyAll();
+    });
+    test('Empty Password and empty token', async () => {
+        when(appShell.showInputBox(anything())).thenReject(new Error('Should not be called'));
+        const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true, 200);
+
+        // Mock our second call to get session cookie
+        const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
+        const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
+        mockSessionHeaders
+            .setup((mh) => mh.raw())
+            .returns(() => {
+                return {
+                    'set-cookie': [`${sessionName}=${sessionValue}`]
+                };
+            });
+        mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
+        mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
+
+        const postParams = new URLSearchParams();
+        postParams.append('_xsrf', '12341234');
+        postParams.append('password', '');
+
+        // typemoq doesn't love this comparison, so generalize it a bit
+        fetchMock
+            .setup((fm) =>
+                fm(
+                    'http://TESTNAME:8888/login?',
+                    typemoq.It.isObjectWith({
+                        method: 'post',
+                        headers: {
+                            Cookie: `_xsrf=${xsrfValue}`,
+                            Connection: 'keep-alive',
+                            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+                        body: postParams.toString()
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(mockSessionResponse.object));
+        when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
+
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            url: 'http://TESTNAME:8888/',
+            isTokenEmpty: true
+        });
         assert(result, 'Failed to get password');
         if (result) {
             // eslint-disable-next-line
@@ -169,7 +229,7 @@ suite('JupyterPasswordConnect', () => {
         fetchMock.verifyAll();
     });
 
-    test('getPasswordConnectionInfo allowUnauthorized', async () => {
+    test('Without a Password and allowUnauthorized', async () => {
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(true, true);
 
         // Mock our second call to get session cookie
@@ -203,7 +263,10 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponse.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('https://TESTNAME:8888/');
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            url: 'https://TESTNAME:8888/',
+            isTokenEmpty: true
+        });
         assert(result, 'Failed to get password');
         if (result) {
             // eslint-disable-next-line
@@ -218,11 +281,14 @@ suite('JupyterPasswordConnect', () => {
         fetchMock.verifyAll();
     });
 
-    test('getPasswordConnectionInfo failure', async () => {
+    test('Failure', async () => {
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, false);
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            url: 'http://TESTNAME:8888/',
+            isTokenEmpty: true
+        });
         assert(!result);
 
         // Verfiy calls
@@ -231,7 +297,7 @@ suite('JupyterPasswordConnect', () => {
         fetchMock.verifyAll();
     });
 
-    test('getPasswordConnectionInfo bad password followed by good password.', async () => {
+    test('Bad password followed by good password.', async () => {
         // Reconfigure our app shell to first give a bad password
         when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('JUNK'));
 
@@ -272,7 +338,10 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponseBad.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        let result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
+        let result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            url: 'http://TESTNAME:8888/',
+            isTokenEmpty: true
+        });
         assert(!result, 'First call to get password should have failed');
 
         // Now set our input for the correct password
@@ -315,7 +384,10 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         // Retry the password
-        result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
+        result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            url: 'http://TESTNAME:8888/',
+            isTokenEmpty: true
+        });
         assert(result, 'Expected to get a result on the second call');
 
         // Verfiy calls
@@ -381,11 +453,14 @@ suite('JupyterPasswordConnect', () => {
             return instance(invalidResponse);
         };
     }
-    test('getPasswordConnectionInfo jupyter hub', async () => {
+    test('Jupyter hub', async () => {
         const fetch = createJupyterHubSetup();
         when(requestCreator.getFetchMethod()).thenReturn(fetch as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            url: 'http://TESTNAME:8888/',
+            isTokenEmpty: true
+        });
         assert.ok(result, 'No hub connection info');
         assert.equal(result?.remappedBaseUrl, 'http://testname:8888/user/test', 'Url not remapped');
         assert.equal(result?.remappedToken, 'foobar', 'Token should be returned in URL');

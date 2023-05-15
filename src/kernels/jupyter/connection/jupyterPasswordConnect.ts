@@ -45,7 +45,13 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     public static get prompt(): Promise<void> | undefined {
         return JupyterPasswordConnect._prompt?.promise;
     }
-    public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
+    public getPasswordConnectionInfo({
+        url,
+        isTokenEmpty
+    }: {
+        url: string;
+        isTokenEmpty: boolean;
+    }): Promise<IJupyterPasswordConnectInfo | undefined> {
         JupyterPasswordConnect._prompt = undefined;
         if (!url || url.length < 1) {
             return Promise.resolve(undefined);
@@ -58,7 +64,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         let result = this.savedConnectInfo.get(newUrl);
         if (!result) {
             const deferred = (JupyterPasswordConnect._prompt = createDeferred());
-            result = this.getNonCachedPasswordConnectionInfo(newUrl).then((value) => {
+            result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty }).then((value) => {
                 // If we fail to get a valid password connect info, don't save the value
                 traceWarning(`Password for ${newUrl} was invalid.`);
                 if (!value) {
@@ -79,16 +85,15 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return result;
     }
 
-    private getSessionCookieString(xsrfCookie: string, sessionCookieName: string, sessionCookieValue: string): string {
-        return `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue}`;
-    }
-
-    private async getNonCachedPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
+    private async getNonCachedPasswordConnectionInfo(options: {
+        url: string;
+        isTokenEmpty: boolean;
+    }): Promise<IJupyterPasswordConnectInfo | undefined> {
         // If jupyter hub, go down a special path of asking jupyter hub for a token
-        if (await this.isJupyterHub(url)) {
-            return this.getJupyterHubConnectionInfo(url);
+        if (await this.isJupyterHub(options.url)) {
+            return this.getJupyterHubConnectionInfo(options.url);
         } else {
-            return this.getJupyterConnectionInfo(url);
+            return this.getJupyterConnectionInfo(options);
         }
     }
 
@@ -234,25 +239,34 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
     }
 
-    private async getJupyterConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
+    private async getJupyterConnectionInfo({
+        url,
+        isTokenEmpty
+    }: {
+        url: string;
+        isTokenEmpty: boolean;
+    }): Promise<IJupyterPasswordConnectInfo | undefined> {
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
 
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
-        if (await this.needPassword(url)) {
+        const needsPassword = await this.needPassword(url);
+        if (needsPassword || isTokenEmpty) {
             // Get password first
-            let userPassword = await this.getUserPassword(url);
+            let userPassword = needsPassword ? await this.getUserPassword(url) : '';
 
-            if (userPassword) {
+            // If we do not have a password, but token is empty, then generate an xsrf token with session cookie
+            if (userPassword || isTokenEmpty) {
                 xsrfCookie = await this.getXSRFToken(url, '');
 
                 // Then get the session cookie by hitting that same page with the xsrftoken and the password
                 if (xsrfCookie) {
-                    const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword);
+                    const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword || '');
                     sessionCookieName = sessionResult.sessionCookieName;
                     sessionCookieValue = sessionResult.sessionCookieValue;
                 } else {
+                    // Special case for Kubeflow, see https://github.com/microsoft/vscode-jupyter/issues/8441
                     // get xsrf cookie with session cookie
                     sessionCookieName = 'authservice_session';
                     sessionCookieValue = userPassword;
@@ -271,9 +285,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
 
         // If we found everything return it all back if not, undefined as partial is useless
-        if (xsrfCookie && sessionCookieName && sessionCookieValue) {
+        // Remember session cookie can be empty, if both token and password are empty
+        if (xsrfCookie && sessionCookieName && (sessionCookieValue || isTokenEmpty)) {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
-            const cookieString = this.getSessionCookieString(xsrfCookie, sessionCookieName, sessionCookieValue);
+            const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
             return { requestHeaders };
         } else {
@@ -282,7 +297,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
     }
 
-    // For HTTPS connections respect our allowUnauthorized setting by adding in an agent to enable that on the request
+    /**
+     * For HTTPS connections respect our allowUnauthorized setting by adding in an agent to enable that on the request
+     */
     private addAllowUnauthorized(url: string, allowUnauthorized: boolean, options: RequestInit): RequestInit {
         if (url.startsWith('https') && allowUnauthorized && this.agentCreator) {
             const requestAgent = this.agentCreator.createHttpRequestAgent();
@@ -450,10 +467,12 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return response.status === 200;
     }
 
-    // Jupyter uses a session cookie to validate so by hitting the login page with the password we can get that cookie and use it ourselves
-    // This workflow can be seen by running fiddler and hitting the login page with a browser
-    // First you need a get at the login page to get the xsrf token, then you send back that token along with the password in a post
-    // That will return back the session cookie. This session cookie then needs to be added to our requests and websockets for @jupyterlab/services
+    /**
+     * Jupyter uses a session cookie to validate so by hitting the login page with the password we can get that cookie and use it ourselves
+     * This workflow can be seen by running fiddler and hitting the login page with a browser
+     * First you need a get at the login page to get the xsrf token, then you send back that token along with the password in a post
+     * That will return back the session cookie. This session cookie then needs to be added to our requests and websockets for @jupyterlab/services
+     */
     private async getSessionCookie(
         url: string,
         xsrfCookie: string,
@@ -510,7 +529,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return cookieList;
     }
 
-    // When URIs are removed from the server list also remove them from
+    /**
+     * When URIs are removed from the server list also remove them from
+     */
     private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         uriEntries.forEach((uriEntry) => {
             const newUrl = addTrailingSlash(uriEntry.uri);
@@ -519,7 +540,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
 }
 
-// Small helper for tacking on a trailing slash if needed
 function addTrailingSlash(url: string): string {
     let newUrl = url;
     if (newUrl[newUrl.length - 1] !== '/') {

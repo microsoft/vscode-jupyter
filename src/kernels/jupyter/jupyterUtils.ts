@@ -110,9 +110,9 @@ export function createRemoteConnectionInfo(
         : // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
           // the location for connecting to jupyterlab
           `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
-    const token = serverUri ? serverUri.token : `${url.searchParams.get('token')}`;
+    const token = serverUri ? serverUri.token : `${url.searchParams.get('token') ?? ''}`;
     const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
-
+    const isEmptyAuthHeader = Object.keys(serverUri?.authorizationHeader ?? {}).length === 0;
     return {
         type: 'jupyter',
         baseUrl,
@@ -132,7 +132,10 @@ export function createRemoteConnectionInfo(
         workingDirectory: serverUri?.workingDirectory,
         // For remote jupyter servers that are managed by us, we can provide the auth header.
         // Its crucial this is set to undefined, else password retrieval will not be attempted.
-        getAuthHeader: serverUri && !serverId.startsWith('_builtin') ? () => serverUri?.authorizationHeader : undefined,
+        getAuthHeader:
+            serverUri && !serverId.startsWith('_builtin') && !isEmptyAuthHeader
+                ? () => serverUri?.authorizationHeader
+                : undefined,
         getWebsocketProtocols:
             serverUri && !serverId.startsWith('_builtin') ? () => serverUri?.webSocketProtocols || [] : () => [],
         url: uri
