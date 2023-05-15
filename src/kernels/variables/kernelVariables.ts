@@ -244,9 +244,10 @@ export class KernelVariables implements IJupyterVariables {
                     continue;
                 }
 
-                const fullVariable = list.variables[i].value
-                    ? list.variables[i]
-                    : await this.getVariableValueFromKernel(list.variables[i], kernel);
+                const fullVariable =
+                    typeof list.variables[i].value === 'string'
+                        ? list.variables[i]
+                        : await this.getVariableValueFromKernel(list.variables[i], kernel);
 
                 list.variables[i] = fullVariable;
                 result.pageResponse.push(fullVariable);
