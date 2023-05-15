@@ -224,8 +224,7 @@
         ]
     },
     "jupyter.configuration.jupyter.variableQueries.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-    "jupyter.configuration.jupyter.kernels.filter.items.markdownDescription": "Fully qualified path to the kernel spec or the Python environment. \nE.g. `~/miniconda3/envs/sample/bin/python`.",
-    "jupyter.configuration.jupyter.kernels.filter.markdownDescription": "List of Jupyter Kernels and/or Python environments that are to be excluded from the Kernel picker.",
+    "jupyter.configuration.jupyter.kernels.filter.markdownDescription": "List of Python environments to be excluded from the Kernel picker.",
     "jupyter.configuration.jupyter.interactiveWindowMode.description": {
         "message": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
         "comment": [

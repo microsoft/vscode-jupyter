@@ -1713,39 +1713,18 @@
                         ]
                     ]
                 },
-                "jupyter.kernels.filter": {
+                "jupyter.kernels.excludePythonEnvironments": {
                     "type": "array",
                     "items": {
-                        "type": "object",
-                        "properties": {
-                            "type": {
-                                "enum": [
-                                    "jupyterKernelspec",
-                                    "pythonEnvironment"
-                                ]
-                            },
-                            "path": {
-                                "type": "string",
-                                "markdownDescription": "%jupyter.configuration.jupyter.kernels.filter.items.markdownDescription%"
-                            },
-                            "required": [
-                                "type",
-                                "path"
-                            ]
-                        }
+                        "type": "string"
                     },
+                    "default": [],
                     "markdownDescription": "%jupyter.configuration.jupyter.kernels.filter.markdownDescription%",
                     "scope": "machine-overridable",
                     "examples": [
                         [
-                            {
-                                "type": "jupyterKernelspec",
-                                "path": "/usr/share/jupyter/kernels/sample/kernelspec.json"
-                            },
-                            {
-                                "type": "jupyterKernelspec",
-                                "path": "~/miniconda3/envs/sample/scripts/python.exe"
-                            }
+                            "~/miniconda3/envs/tf/scripts/python.exe",
+                            "~/miniconda3/envs/ds"
                         ]
                     ]
                 },

@@ -34,6 +34,7 @@ import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { sendTelemetryEvent } from '../telemetry';
 import { IPlatformService } from '../platform/common/platform/types';
 import { splitLines } from '../platform/common/helpers';
+import { getPythonEnvironmentName } from '../platform/interpreter/helpers';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -291,15 +292,6 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
             }
     }
     return oldDisplayName;
-}
-function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
-    // Sometimes Python extension doesn't detect conda environments correctly (e.g. conda env create without a name).
-    // In such cases the envName is empty, but it has a path.
-    let envName = pythonEnv.envName;
-    if (pythonEnv.envPath && pythonEnv.envType === EnvironmentType.Conda && !pythonEnv.envName) {
-        envName = uriPath.basename(pythonEnv.envPath);
-    }
-    return envName;
 }
 function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: KernelConnectionMetadata | undefined) {
     if (!kernelConnection) {

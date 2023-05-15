@@ -189,7 +189,6 @@ suite('JupyterSession', () => {
 
         assert.isTrue(jupyterSession.isConnected);
         verify(sessionManager.startNew(anything(), anything())).once();
-        verify(contentsManager.newUntitled(anything())).once();
     });
 
     suite('After connecting', () => {
@@ -222,7 +221,6 @@ suite('JupyterSession', () => {
                 await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
-                verify(contentsManager.delete(anything())).once();
                 // Shutdown sessions started for Interactive window.
                 verify(session.shutdown()).once();
                 verify(session.dispose()).once();
@@ -249,7 +247,6 @@ suite('JupyterSession', () => {
                 await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
-                verify(contentsManager.delete(anything())).once();
                 // Never shutdown live sessions connected from Interactive window.
                 verify(session.shutdown()).never();
                 verify(session.dispose()).once();
@@ -274,7 +271,6 @@ suite('JupyterSession', () => {
                 await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
-                verify(contentsManager.delete(anything())).once();
                 // Never shutdown sessions started from Notebooks.
                 verify(session.shutdown()).never();
                 verify(session.dispose()).once();
@@ -301,7 +297,6 @@ suite('JupyterSession', () => {
                 await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
-                verify(contentsManager.delete(anything())).once();
                 // Never shutdown live sessions connected from Notebooks.
                 verify(session.shutdown()).never();
                 verify(session.dispose()).once();
@@ -314,7 +309,6 @@ suite('JupyterSession', () => {
                 await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
-                verify(contentsManager.delete(anything())).once();
                 // always kill the sessions.
                 verify(session.shutdown()).once();
                 verify(session.dispose()).once();
