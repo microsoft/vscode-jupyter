@@ -18,7 +18,7 @@ import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
-suite.only('JupyterPasswordConnect', () => {
+suite('JupyterPasswordConnect', () => {
     let jupyterPasswordConnect: JupyterPasswordConnect;
     let appShell: ApplicationShell;
     let configService: ConfigurationService;
