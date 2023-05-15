@@ -1882,6 +1882,41 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
+     * Whether we managed to start a remote kernel successfully without a backing file.
+     */
+    [Telemetry.StartedRemoteJupyterSessionWithBackingFile]: TelemetryEventInfo<{
+        /**
+         * Failed to start the session without the backing file.
+         */
+        failedWithoutBackingFile: boolean;
+        /**
+         * Failed to start the session without the backing file.
+         */
+        failedWithBackingFile: boolean;
+        /**
+         * Whether this is a local host connection or remote.
+         */
+        localHost: boolean;
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failedWithoutBackingFile: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            failedWithBackingFile: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            localHost: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
      * Whether we ran into the ZMQ Error as identified here https://github.com/microsoft/vscode-jupyter/issues/12775
      */
     [Telemetry.JupyterServerZMQStreamError]: TelemetryEventInfo<undefined> = {

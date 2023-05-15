@@ -359,6 +359,7 @@ export enum Telemetry {
     FailedToCreateNotebookCellExecution = 'DATASCIENCE.FAILED_TO_CREATE_CELL_EXECUTION',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
+    StartedRemoteJupyterSessionWithBackingFile = 'DS_INTERNAL.JUPYTER_STARTED_SESSION_WITH_BACKING_FILE',
     ZMQSupport = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT',
     ZMQSupportFailure = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT_FAILURE',
     JupyterServerZMQStreamError = 'DS_INTERNAL.JUPYTER_SERVER_ZMQ_STREAM_ERROR',
