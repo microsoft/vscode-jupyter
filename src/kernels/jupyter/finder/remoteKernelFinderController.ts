@@ -18,7 +18,6 @@ import { KernelFinder } from '../../kernelFinder';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import * as localize from '../../../platform/common/utils/localize';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { Settings } from '../../../platform/common/constants';
 import { JupyterConnection } from '../connection/jupyterConnection';
@@ -73,7 +72,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         if (!this.serverFinderMapping.has(serverUri.serverId)) {
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverUri.serverId}`,
-                localize.DataScience.universalRemoteKernelFinderDisplayName(serverUri.displayName || serverUri.uri),
+                serverUri.displayName || serverUri.uri,
                 `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,

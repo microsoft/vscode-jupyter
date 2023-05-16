@@ -42,7 +42,9 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
             }
         }
 
-        return (getAuthHeader ? AuthorizingRequest : nodeFetch.Request) as any;
+        return (
+            getAuthHeader && Object.keys(getAuthHeader() || {}).length ? AuthorizingRequest : nodeFetch.Request
+        ) as any;
     }
 
     public getWebsocketCtor(

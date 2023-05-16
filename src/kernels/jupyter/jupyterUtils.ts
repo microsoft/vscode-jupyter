@@ -129,7 +129,9 @@ export function createRemoteConnectionInfo(
         },
         dispose: noop,
         rootDirectory: Uri.file(''),
-        workingDirectory: serverUri?.workingDirectory,
+        // Temporarily support workingDirectory as a fallback for old extensions using that (to be removed in the next release).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mappedRemoteNotebookDir: serverUri?.mappedRemoteNotebookDir || (serverUri as any)?.workingDirectory,
         // For remote jupyter servers that are managed by us, we can provide the auth header.
         // Its crucial this is set to undefined, else password retrieval will not be attempted.
         getAuthHeader:
