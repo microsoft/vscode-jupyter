@@ -26,9 +26,10 @@ import {
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
-import { CancellationError, Uri, workspace } from 'vscode';
+import { CancellationError, Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
+import * as path from '../../../platform/vscode-path/resources';
 
 // function is
 export class JupyterSession
@@ -80,7 +81,7 @@ export class JupyterSession
         this.connected = true;
     }
 
-    public async createNewKernelSession(options: {
+    private async createNewKernelSession(options: {
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
@@ -287,13 +288,19 @@ export class JupyterSession
         let backingFile: IBackupFile | undefined;
         let remoteFilePath: string | undefined;
 
-        if (isRemoteConnection(this.kernelConnectionMetadata) && this.connInfo.workingDirectory && this.resource) {
-            const currentWorkingDirectory = workspace.getWorkspaceFolder(Uri.from(this.resource));
-            if (currentWorkingDirectory) {
-                remoteFilePath = this.resource.path.replace(
-                    currentWorkingDirectory.uri.path,
-                    this.connInfo.workingDirectory
-                );
+        if (
+            isRemoteConnection(this.kernelConnectionMetadata) &&
+            this.connInfo.mappedRemoteNotebookDir &&
+            this.resource &&
+            this.resource.scheme !== 'untitled'
+        ) {
+            // Get Uris of both, local and remote files.
+            // Convert Uris to strings to Uri again, as its possible the Uris are not always compatible.
+            // E.g. one could be dealing with custom file system providers.
+            const filePath = Uri.file(this.resource.path);
+            const mappedLocalPath = Uri.file(this.connInfo.mappedRemoteNotebookDir);
+            if (path.isEqualOrParent(filePath, mappedLocalPath)) {
+                remoteFilePath = path.relativePath(mappedLocalPath, filePath);
             }
         }
         if (!remoteFilePath && options.createBakingFile) {
@@ -338,14 +345,34 @@ export class JupyterSession
         const kernelName =
             getNameOfKernelConnection(this.kernelConnectionMetadata) ?? this.specsManager?.specs?.default ?? '';
 
+        // NOTE: If the path is a constant value such as `remoteFilePath` then Jupyter will alway re-use the same kernel sessions.
+        // I.e. if we select Remote Kernel A for Notebook a.ipynb, then a session S1 will be created.
+        // Next, if we attempt to create a new session for select Remote Kernel A once again for Notebook a.ipynb,
+        // the jupyter server will see that a session already exists for the same kernel, hence will re-use the same session S1.
+        // In such cases, the `name` of the session is not required, jupyter lab too does not set this.
+        // If its empty Jupyter will default to the relative path of the notebook.
+
+        let sessionName: string;
+        if (remoteFilePath && this.resource) {
+            // If we have mapped the local dir to the remote dir, then we need to use the name of the file.
+            sessionName = path.basename(this.resource);
+        } else {
+            // Ensure the session name is user friendly, so we can determine what it maps to.
+            // This way users managing the sessions on remote servers know which session maps to a particular file on the local machine.
+            const fileExtension = this.resource ? path.extname(this.resource) : '';
+            sessionName = `${
+                this.resource ? path.basename(this.resource, fileExtension) : ''
+            }-${uuid()}${fileExtension}`;
+        }
+
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: remoteFilePath ?? generateBackingIPyNbFileName(this.resource), // Name has to be unique
+            path: remoteFilePath || generateBackingIPyNbFileName(this.resource), // Name has to be unique, else Jupyter will re-use the same session.
             kernel: {
                 name: kernelName
             },
-            name: uuid(), // This is crucial to distinguish this session from any other.
-            type: 'notebook'
+            name: sessionName, // Name has to be unique, else Jupyter will re-use the same session.
+            type: (this.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console'
         };
 
         const requestCreator = this.requestCreator;

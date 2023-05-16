@@ -546,7 +546,11 @@ export interface IJupyterConnection extends Disposable {
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
      */
     getWebsocketProtocols?(): string[];
-    readonly workingDirectory?: string;
+    /**
+     * Maps to IJupyterServerUri.mappedRemoteNotebookDir
+     * @see IJupyterServerUri
+     */
+    readonly mappedRemoteNotebookDir?: string;
 }
 
 export enum InterruptResult {

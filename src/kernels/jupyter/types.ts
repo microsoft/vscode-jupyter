@@ -157,15 +157,35 @@ export interface IJupyterServerProvider {
 
 export interface IJupyterServerUri {
     baseUrl: string;
+    /**
+     * Jupyter auth Token
+     */
     token: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    authorizationHeader: any; // JSON object for authorization header.
-    expiration?: Date; // Date/time when header expires and should be refreshed.
+    /**
+     * Authorization header to be used when connecting to the server.
+     */
+    authorizationHeader: Record<string, string>;
+    /**
+     * Date/time when header expires and should be refreshed.
+     */
+    expiration?: Date;
     displayName: string;
     /**
-     * The remote server directory to which the current workspace folder is mapped.
+     * The local directory that maps to the remote directory of the Jupyter Server.
+     * E.g. assume you start Jupyter Notebook with --notebook-dir=/foo/bar,
+     * and you have a file named /foo/bar/sample.ipynb, /foo/bar/sample2.ipynb and the like.
+     * Then assume the mapped local directory will be /users/xyz/remoteServer and the files sample.ipynb and sample2.ipynb
+     * are in the above local directory.
+     *
+     * Using this setting one can map the local directory to the remote directory.
+     * In this case the value of this property would be /users/xyz/remoteServer.
+     *
+     * Note: A side effect of providing this value is the fact that Session names are generated the way they are in Jupyter Notebook/Lab.
+     * I.e. the session names map to the relative path of the notebook file.
+     * As a result when attempting to create a new session for a notebook/file, Jupyter will
+     * first check if a session already exists for the same file and same kernel, and if so, will re-use that session.
      */
-    workingDirectory?: string;
+    mappedRemoteNotebookDir?: string;
     /**
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
      */
