@@ -14,10 +14,10 @@ import {
 import { SessionConnection } from '@jupyterlab/services/lib/session/default';
 import { ISignal } from '@lumino/signaling';
 import { assert } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
 
-import { ReadWrite, Resource } from '../../../platform/common/types';
+import { IDisposable, ReadWrite, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -27,7 +27,8 @@ import {
     KernelConnectionMetadata,
     LiveKernelModel,
     LiveRemoteKernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata
+    LocalKernelSpecConnectionMetadata,
+    RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { JupyterKernelService } from '../../../kernels/jupyter/session/jupyterKernelService.node';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
@@ -39,9 +40,11 @@ import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterR
 import { Signal } from '@lumino/signaling';
 import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvalidKernelError';
 import { MockOutputChannel } from '../../../test/mockClasses';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('JupyterSession', () => {
+    const disposables: IDisposable[] = [];
     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: JupyterSession;
     let connection: IJupyterConnection;
@@ -54,6 +57,7 @@ suite('JupyterSession', () => {
     let statusChangedSignal: ISignal<ISessionWithSocket, Kernel.Status>;
     let kernelChangedSignal: ISignal<ISessionWithSocket, IKernelChangedArgs>;
     let restartCount = 0;
+    let token: CancellationTokenSource;
     const newActiveRemoteKernel: LiveKernelModel = {
         argv: [],
         display_name: 'new kernel',
@@ -92,17 +96,22 @@ suite('JupyterSession', () => {
         } as any,
         id: 'liveKernel'
     };
-    function createJupyterSession(resource: Resource = undefined) {
+    function createJupyterSession(resource: Resource = undefined, kernelConnection?: KernelConnectionMetadata) {
         connection = mock<IJupyterConnection>();
-        mockKernelSpec = LocalKernelSpecConnectionMetadata.create({
-            id: 'xyz',
-            kernelSpec: {
-                argv: [],
-                display_name: '',
-                name: '',
-                executable: ''
-            }
-        });
+        token = new CancellationTokenSource();
+        disposables.push(token);
+
+        mockKernelSpec =
+            kernelConnection ||
+            LocalKernelSpecConnectionMetadata.create({
+                id: 'xyz',
+                kernelSpec: {
+                    argv: [],
+                    display_name: '',
+                    name: '',
+                    executable: ''
+                }
+            });
         session = mock<ISessionWithSocket>();
         kernel = mock<Kernel.IKernelConnection>();
         when(session.kernel).thenReturn(instance(kernel));
@@ -159,7 +168,6 @@ suite('JupyterSession', () => {
             'jupyterExtension'
         );
     }
-    setup(() => createJupyterSession());
     async function connect(
         kind: 'startUsingLocalKernelSpec' | 'connectToLiveRemoteKernel' = 'startUsingLocalKernelSpec'
     ) {
@@ -182,17 +190,26 @@ suite('JupyterSession', () => {
             token.dispose();
         }
     }
-    teardown(async () => jupyterSession.dispose().catch(noop));
-
-    test('Start a session when connecting', async () => {
-        await connect();
-
-        assert.isTrue(jupyterSession.isConnected);
-        verify(sessionManager.startNew(anything(), anything())).once();
+    teardown(async () => {
+        await jupyterSession.dispose().catch(noop);
+        disposeAllDisposables(disposables);
     });
 
+    suite('Start', () => {
+        setup(() => createJupyterSession());
+
+        test('Start a session when connecting', async () => {
+            await connect();
+
+            assert.isTrue(jupyterSession.isConnected);
+            verify(sessionManager.startNew(anything(), anything())).once();
+        });
+    });
     suite('After connecting', () => {
-        setup(connect);
+        setup(() => {
+            createJupyterSession();
+            return connect();
+        });
         test('Interrupting will result in kernel being interrupted', async () => {
             when(kernel.interrupt()).thenResolve();
 
@@ -450,6 +467,8 @@ suite('JupyterSession', () => {
         let remoteSessionInstance: ISessionWithSocket;
         suite('Switching kernels', () => {
             setup(async () => {
+                createJupyterSession();
+
                 remoteSession = mock<ISessionWithSocket>();
                 remoteKernel = mock<Kernel.IKernelConnection>();
                 remoteSessionInstance = instance(remoteSession);
@@ -487,6 +506,175 @@ suite('JupyterSession', () => {
                 assert.equal(restartCount, 1, 'Did not restart the kernel');
                 verify(remoteSession.shutdown()).never();
                 verify(remoteSession.dispose()).never();
+            });
+        });
+        suite('Session Path and Names', () => {
+            async function testSessionOptions(resource: Uri) {
+                const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
+                    baseUrl: 'http://localhost:8888',
+                    id: '1',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'Python 3',
+                        name: 'python3',
+                        language: 'python',
+                        executable: ''
+                    },
+                    serverId: '1'
+                });
+                createJupyterSession(resource, remoteKernelSpec);
+
+                remoteSession = mock<ISessionWithSocket>();
+                remoteKernel = mock<Kernel.IKernelConnection>();
+                remoteSessionInstance = instance(remoteSession);
+                remoteSessionInstance.isRemoteSession = false;
+                when(remoteSession.kernel).thenReturn(instance(remoteKernel));
+                when(remoteKernel.registerCommTarget(anything(), anything())).thenReturn();
+                const connectionStatusChanged = mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>();
+                when(remoteKernel.connectionStatusChanged).thenReturn(instance(connectionStatusChanged));
+                when(sessionManager.startNew(anything(), anything())).thenCall(() => {
+                    return Promise.resolve(instance(remoteSession));
+                });
+
+                const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
+                when(remoteSession.statusChanged).thenReturn(instance(signal));
+                when(remoteSession.unhandledMessage).thenReturn(
+                    instance(mock<ISignal<ISessionWithSocket, KernelMessage.IMessage<KernelMessage.MessageType>>>())
+                );
+                when(remoteSession.iopubMessage).thenReturn(
+                    instance(
+                        mock<ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
+                    )
+                );
+
+                const nbFile = 'file path';
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                when(contentsManager.newUntitled(anything())).thenResolve({ path: nbFile } as any);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                when(contentsManager.rename(anything(), anything())).thenResolve({ path: nbFile } as any);
+                when(contentsManager.delete(anything())).thenResolve();
+                when(sessionManager.startNew(anything(), anything())).thenResolve(instance(session));
+            }
+
+            test('Create Session with Jupyter style names (notebook)', async () => {
+                const resource = Uri.file('/foo/bar/baz/abc.ipynb');
+                await testSessionOptions(resource);
+                when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
+
+                await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+
+                verify(contentsManager.newUntitled(anything())).never();
+                verify(contentsManager.rename(anything(), anything())).never();
+                verify(contentsManager.delete(anything())).never();
+
+                const options = capture(sessionManager.startNew).first()[0];
+                assert.strictEqual(options.name, 'abc.ipynb');
+                assert.strictEqual(options.path, 'baz/abc.ipynb');
+                assert.strictEqual(options.type, 'notebook');
+                assert.deepStrictEqual(options.kernel, { name: 'python3' });
+            });
+            test('Create Session with Jupyter style names (interactive window with backing python file)', async () => {
+                const resource = Uri.file('/foo/bar/abc.py');
+                await testSessionOptions(resource);
+                when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
+
+                await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+
+                verify(contentsManager.newUntitled(anything())).never();
+                verify(contentsManager.rename(anything(), anything())).never();
+                verify(contentsManager.delete(anything())).never();
+
+                const options = capture(sessionManager.startNew).first()[0];
+                assert.strictEqual(options.name, 'abc.py');
+                assert.strictEqual(options.path, 'abc.py');
+                assert.strictEqual(options.type, 'console');
+                assert.deepStrictEqual(options.kernel, { name: 'python3' });
+            });
+            test('Create Session with Jupyter style names (interactive window without backing files)', async () => {
+                const resource = Uri.file('/Interactive-5.interactive');
+                await testSessionOptions(resource);
+                when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
+
+                await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+
+                verify(contentsManager.newUntitled(anything())).never();
+                verify(contentsManager.rename(anything(), anything())).never();
+                verify(contentsManager.delete(anything())).never();
+
+                const options = capture(sessionManager.startNew).first()[0];
+                assert.include(options.name, 'Interactive-5');
+                assert.include(options.name, '.interactive');
+                assert.include(options.path, 'Interactive-5');
+                assert.include(options.path, '.interactive');
+                assert.strictEqual(options.type, 'console');
+                assert.deepStrictEqual(options.kernel, { name: 'python3' });
+            });
+            test('Create Session with unique names (notebook, even with a mapping local path)', async () => {
+                const resource = Uri.file('/foo/bar/baz/abc.ipynb');
+                await testSessionOptions(resource);
+                when(connection.mappedRemoteNotebookDir).thenReturn('/user/hello');
+
+                await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+
+                verify(contentsManager.newUntitled(anything())).never();
+                verify(contentsManager.rename(anything(), anything())).never();
+                verify(contentsManager.delete(anything())).never();
+
+                const options = capture(sessionManager.startNew).first()[0];
+                assert.notInclude(options.name, 'abc.ipynb');
+                assert.notInclude(options.path, 'baz/abc.ipynb');
+                assert.ok(options.name.startsWith('abc'), `Starts with abc ${options.name}`);
+                assert.include(options.path, 'abc-jvsc-');
+                assert.strictEqual(options.type, 'notebook');
+                assert.deepStrictEqual(options.kernel, { name: 'python3' });
+            });
+            test('Create Session with unique names (notebook)', async () => {
+                const resource = Uri.file('/foo/bar/baz/abc.ipynb');
+                await testSessionOptions(resource);
+
+                await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+
+                verify(contentsManager.newUntitled(anything())).never();
+                verify(contentsManager.rename(anything(), anything())).never();
+                verify(contentsManager.delete(anything())).never();
+
+                const options = capture(sessionManager.startNew).first()[0];
+                assert.notInclude(options.name, 'abc.ipynb');
+                assert.notInclude(options.path, 'baz/abc.ipynb');
+                assert.strictEqual(options.type, 'notebook');
+                assert.deepStrictEqual(options.kernel, { name: 'python3' });
+            });
+            test('Create Session with unique names (interactive window with backing python file)', async () => {
+                const resource = Uri.file('/foo/bar/abc.py');
+                await testSessionOptions(resource);
+
+                await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+
+                verify(contentsManager.newUntitled(anything())).never();
+                verify(contentsManager.rename(anything(), anything())).never();
+                verify(contentsManager.delete(anything())).never();
+
+                const options = capture(sessionManager.startNew).first()[0];
+                assert.ok(options.name.startsWith('abc'), `Starts with abc ${options.name}`);
+                assert.include(options.path, 'abc.py-jvsc-');
+                assert.strictEqual(options.type, 'console');
+                assert.deepStrictEqual(options.kernel, { name: 'python3' });
+            });
+            test('Create Session with unique names (interactive window without backing files)', async () => {
+                const resource = Uri.file('/Interactive-5.interactive');
+                await testSessionOptions(resource);
+
+                await jupyterSession.connect({ ui: new DisplayOptions(false), token: token.token });
+
+                verify(contentsManager.newUntitled(anything())).never();
+                verify(contentsManager.rename(anything(), anything())).never();
+                verify(contentsManager.delete(anything())).never();
+
+                const options = capture(sessionManager.startNew).first()[0];
+                assert.ok(options.name.startsWith('Interactive-5-'), `Starts with Interactive-5 ${options.name}`);
+                assert.include(options.path, 'Interactive-5.interactive-jvsc');
+                assert.strictEqual(options.type, 'console');
+                assert.deepStrictEqual(options.kernel, { name: 'python3' });
             });
         });
     });

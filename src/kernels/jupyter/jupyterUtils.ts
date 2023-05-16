@@ -129,7 +129,7 @@ export function createRemoteConnectionInfo(
         },
         dispose: noop,
         rootDirectory: Uri.file(''),
-        workingDirectory: serverUri?.workingDirectory,
+        mappedRemoteNotebookDir: serverUri?.mappedRemoteNotebookDir,
         // For remote jupyter servers that are managed by us, we can provide the auth header.
         // Its crucial this is set to undefined, else password retrieval will not be attempted.
         getAuthHeader:
