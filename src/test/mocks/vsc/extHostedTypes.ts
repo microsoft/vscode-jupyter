@@ -2399,15 +2399,15 @@ export namespace vscMockExtHostedTypes {
 
     export class PortAttributes {
         /**
-		 * The action to be taken when this port is detected for auto forwarding.
-		 */
-		autoForwardAction: PortAutoForwardAction;
-		/**
-		 * Creates a new PortAttributes object
-		 * @param port the port number
-		 * @param autoForwardAction the action to take when this port is detected
-		 */
-		constructor(autoForwardAction: PortAutoForwardAction) {
+         * The action to be taken when this port is detected for auto forwarding.
+         */
+        autoForwardAction: PortAutoForwardAction;
+        /**
+         * Creates a new PortAttributes object
+         * @param port the port number
+         * @param autoForwardAction the action to take when this port is detected
+         */
+        constructor(autoForwardAction: PortAutoForwardAction) {
             this.autoForwardAction = autoForwardAction;
         }
     }
