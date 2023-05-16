@@ -31,7 +31,7 @@ export class PortAttributesProviders implements PortAttributesProvider, IExtensi
     ): PortAttributes | undefined {
         try {
             if (UsedPorts.has(port)) {
-                return new PortAttributes(port, PortAutoForwardAction.Ignore);
+                return new PortAttributes(PortAutoForwardAction.Ignore);
             }
         } catch (ex) {
             // In case proposed API changes.
