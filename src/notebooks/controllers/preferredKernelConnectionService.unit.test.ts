@@ -25,10 +25,12 @@ import { ServiceContainer } from '../../platform/ioc/container';
 import { uriEquals } from '../../test/datascience/helpers';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { PreferredKernelConnectionService } from './preferredKernelConnectionService';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 
 suite('Preferred Kernel Connection', () => {
     let preferredService: PreferredKernelConnectionService;
     let serviceContainer: ServiceContainer;
+    let jupyterConnection: JupyterConnection;
     let kernelFinder: IKernelFinder;
     let remoteKernelFinder: IContributedKernelFinder<RemoteKernelConnectionMetadata>;
     let localKernelSpecFinder: IContributedKernelFinder<LocalKernelConnectionMetadata>;
@@ -91,6 +93,7 @@ suite('Preferred Kernel Connection', () => {
 
     setup(() => {
         serviceContainer = mock<ServiceContainer>();
+        jupyterConnection = mock(JupyterConnection);
         const iocStub = sinon.stub(ServiceContainer, 'instance').get(() => instance(serviceContainer));
         disposables.push(new Disposable(() => iocStub.restore()));
         cancellation = new CancellationTokenSource();
@@ -151,7 +154,7 @@ suite('Preferred Kernel Connection', () => {
             instance(localPythonEnvFinder)
         ]);
 
-        preferredService = new PreferredKernelConnectionService();
+        preferredService = new PreferredKernelConnectionService(instance(jupyterConnection));
         disposables.push(preferredService);
     });
     teardown(() => disposeAllDisposables(disposables));

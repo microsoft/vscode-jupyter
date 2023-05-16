@@ -13,6 +13,7 @@ import { traceError } from '../../../platform/logging';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IQuickPickKernelItemProvider } from './types';
+import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 
 export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider {
     private readonly _onDidRefresh = new EventEmitter<void>();
@@ -41,7 +42,8 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         private readonly notebook: NotebookDocument,
         kind: ContributedKernelFinderKind,
         finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>,
-        private readonly pythonEnvFilter: PythonEnvironmentFilter
+        private readonly pythonEnvFilter: PythonEnvironmentFilter,
+        private readonly connection: JupyterConnection
     ) {
         this.refresh = async () => {
             this.refreshInvoked = true;
@@ -118,7 +120,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         const cancellationToken = new CancellationTokenSource();
         this.disposables.push(new Disposable(() => cancellationToken.cancel()));
         this.disposables.push(cancellationToken);
-        const preferred = new PreferredKernelConnectionService();
+        const preferred = new PreferredKernelConnectionService(this.connection);
         this.disposables.push(preferred);
 
         if (finder.kind === ContributedKernelFinderKind.Remote) {

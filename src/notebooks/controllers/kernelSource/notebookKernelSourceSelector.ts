@@ -47,6 +47,7 @@ import { INotebookKernelSourceSelector } from '../types';
 import { CreateAndSelectItemFromQuickPick, KernelSelector } from './kernelSelector';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
+import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 
 enum KernelFinderEntityQuickPickType {
     KernelFinder = 'finder',
@@ -84,7 +85,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(PythonEnvironmentFilter) private readonly pythonEnvFilter: PythonEnvironmentFilter,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
     ) {}
     public async selectLocalKernel(
         notebook: NotebookDocument,
@@ -364,7 +366,8 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
             state.notebook,
             ContributedKernelFinderKind.Remote,
             finderPromise,
-            this.pythonEnvFilter
+            this.pythonEnvFilter,
+            this.jupyterConnection
         );
         provider.status = 'discovering';
         state.disposables.push(provider);
@@ -378,7 +381,13 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         state: MultiStepResult
     ) {
         state.source = source;
-        const provider = new QuickPickKernelItemProvider(state.notebook, source.kind, source, this.pythonEnvFilter);
+        const provider = new QuickPickKernelItemProvider(
+            state.notebook,
+            source.kind,
+            source,
+            this.pythonEnvFilter,
+            this.jupyterConnection
+        );
         state.disposables.push(provider);
         return this.selectKernel(provider, token, multiStep, state);
     }

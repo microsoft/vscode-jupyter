@@ -21,8 +21,7 @@ import {
     IJupyterConnection,
     ISessionWithSocket,
     KernelActionSource,
-    IJupyterKernelSession,
-    isRemoteConnection
+    IJupyterKernelSession
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
@@ -285,25 +284,11 @@ export class JupyterSession
         ui: IDisplayOptions;
         createBakingFile: boolean;
     }): Promise<ISessionWithSocket> {
+        const remoteSessionOptions = getRemoteSessionOptions(this.connInfo, this.resource);
         let backingFile: IBackupFile | undefined;
-        let remoteFilePath: string | undefined;
+        let sessionPath = remoteSessionOptions?.path;
 
-        if (
-            isRemoteConnection(this.kernelConnectionMetadata) &&
-            this.connInfo.mappedRemoteNotebookDir &&
-            this.resource &&
-            this.resource.scheme !== 'untitled'
-        ) {
-            // Get Uris of both, local and remote files.
-            // Convert Uris to strings to Uri again, as its possible the Uris are not always compatible.
-            // E.g. one could be dealing with custom file system providers.
-            const filePath = Uri.file(this.resource.path);
-            const mappedLocalPath = Uri.file(this.connInfo.mappedRemoteNotebookDir);
-            if (path.isEqualOrParent(filePath, mappedLocalPath)) {
-                remoteFilePath = path.relativePath(mappedLocalPath, filePath);
-            }
-        }
-        if (!remoteFilePath && options.createBakingFile) {
+        if (!sessionPath && options.createBakingFile) {
             // Create our backing file for the notebook
             backingFile = await this.backingFileCreator.createBackingFile(
                 this.resource,
@@ -312,7 +297,7 @@ export class JupyterSession
                 this.connInfo,
                 this.contentsManager
             );
-            remoteFilePath = backingFile?.filePath;
+            sessionPath = backingFile?.filePath;
         }
 
         // Make sure the kernel has ipykernel installed if on a local machine.
@@ -353,9 +338,8 @@ export class JupyterSession
         // If its empty Jupyter will default to the relative path of the notebook.
 
         let sessionName: string;
-        if (remoteFilePath && this.resource) {
-            // If we have mapped the local dir to the remote dir, then we need to use the name of the file.
-            sessionName = path.basename(this.resource);
+        if (remoteSessionOptions?.name) {
+            sessionName = remoteSessionOptions.name;
         } else {
             // Ensure the session name is user friendly, so we can determine what it maps to.
             // This way users managing the sessions on remote servers know which session maps to a particular file on the local machine.
@@ -367,7 +351,7 @@ export class JupyterSession
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: remoteFilePath || generateBackingIPyNbFileName(this.resource), // Name has to be unique, else Jupyter will re-use the same session.
+            path: sessionPath || generateBackingIPyNbFileName(this.resource), // Name has to be unique, else Jupyter will re-use the same session.
             kernel: {
                 name: kernelName
             },
@@ -428,5 +412,31 @@ export class JupyterSession
         if (!isLocalConnection(this.kernelConnectionMetadata)) {
             this.outputChannel.appendLine(output);
         }
+    }
+}
+
+export function getRemoteSessionOptions(
+    remoteConnection: IJupyterConnection,
+    resource?: Uri
+): Pick<Session.ISessionOptions, 'path' | 'name'> | undefined | void {
+    if (!resource || resource.scheme === 'untitled' || !remoteConnection.mappedRemoteNotebookDir) {
+        return;
+    }
+    // Get Uris of both, local and remote files.
+    // Convert Uris to strings to Uri again, as its possible the Uris are not always compatible.
+    // E.g. one could be dealing with custom file system providers.
+    const filePath = Uri.file(resource.path);
+    const mappedLocalPath = Uri.file(remoteConnection.mappedRemoteNotebookDir);
+    if (!path.isEqualOrParent(filePath, mappedLocalPath)) {
+        return;
+    }
+    const sessionPath = path.relativePath(mappedLocalPath, filePath);
+    // If we have mapped the local dir to the remote dir, then we need to use the name of the file.
+    const sessionName = path.basename(resource);
+    if (sessionName && sessionPath) {
+        return {
+            path: sessionPath,
+            name: sessionName
+        };
     }
 }
