@@ -56,7 +56,7 @@ suite('Jupyter Connection', async () => {
         const serverConnectionChangeEvent = new EventEmitter<void>();
         disposables.push(serverConnectionChangeEvent);
 
-        when(serverUriStorage.onDidChangeConnectionType).thenReturn(serverConnectionChangeEvent.event);
+        when(serverUriStorage.onDidChangeUri).thenReturn(serverConnectionChangeEvent.event);
 
         jupyterConnection.activate();
     });
@@ -65,7 +65,7 @@ suite('Jupyter Connection', async () => {
     });
 
     test('Ensure event handler is added', () => {
-        verify(serverUriStorage.onDidChangeConnectionType).once();
+        verify(serverUriStorage.onDidChangeUri).once();
     });
     test('Validation will result in fetching kernels and kernelspecs', async () => {
         const uri = 'http://localhost:8888/?token=1234';

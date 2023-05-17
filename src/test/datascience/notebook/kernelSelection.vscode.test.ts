@@ -154,7 +154,6 @@ suite('Kernel Selection @kernelPicker', function () {
         ]);
 
         await startJupyterServer();
-        jupyterServerUri = (await serverUriStorage.getRemoteUri())?.uri;
         sinon.restore();
     });
 

@@ -23,7 +23,6 @@ import {
 } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
-import { removeOldCachedItems } from '../../common/commonFinder';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { JupyterPaths } from './jupyterPaths.node';
@@ -279,16 +278,13 @@ export abstract class LocalKernelSpecFinderBase<
     }
 
     protected async writeToMementoCache(values: T[], cacheKey: string) {
-        await Promise.all([
-            removeOldCachedItems(this.memento),
-            this.memento.update(
-                cacheKey,
-                JSON.stringify({
-                    kernels: values.map((item) => item.toJSON()),
-                    extensionVersion: this.env.extensionVersion
-                })
-            )
-        ]);
+        await this.memento.update(
+            cacheKey,
+            JSON.stringify({
+                kernels: values.map((item) => item.toJSON()),
+                extensionVersion: this.env.extensionVersion
+            })
+        );
     }
     protected async isValidCachedKernel(kernel: LocalKernelConnectionMetadata): Promise<boolean> {
         switch (kernel.kind) {

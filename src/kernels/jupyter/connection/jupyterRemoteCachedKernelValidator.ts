@@ -55,7 +55,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
                 return true;
             } else {
                 traceWarning(
-                    `Hiding remote kernel ${kernel.id} as the remote Jupyter Server ${item.uri} is no longer available`
+                    `Hiding remote kernel ${kernel.id} for ${provider.id} as the remote Jupyter Server ${item.serverId} is no longer available`
                 );
                 // 3rd party extensions own these kernels, if these are no longer
                 // available, then just don't display them.

@@ -244,10 +244,9 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             when(memento.update('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenResolve();
 
             const uriStorage = mock<IJupyterServerUriStorage>();
-            when(uriStorage.isLocalLaunch).thenReturn(true);
             const onDidChangeEvent = new EventEmitter<void>();
             disposables.push(onDidChangeEvent);
-            when(uriStorage.onDidChangeConnectionType).thenReturn(onDidChangeEvent.event);
+            when(uriStorage.onDidChangeUri).thenReturn(onDidChangeEvent.event);
 
             const extensions = mock<IExtensions>();
             const trustedKernels = mock<ITrustedKernelPaths>();

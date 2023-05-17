@@ -550,12 +550,6 @@
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
-                "command": "jupyter.selectjupyteruri",
-                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted"
-            },
-            {
                 "command": "jupyter.importnotebook",
                 "title": "%jupyter.command.jupyter.importnotebook.title%",
                 "category": "Jupyter",
@@ -1357,11 +1351,6 @@
                 {
                     "command": "jupyter.interactive.clearAllCells",
                     "when": "editorFocus && editorLangId == python || activeEditor == 'workbench.editor.interactive'"
-                },
-                {
-                    "command": "jupyter.selectjupyteruri",
-                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
-                    "when": "isWorkspaceTrusted && config.notebook.kernelPicker.type != mru"
                 },
                 {
                     "command": "jupyter.clearSavedJupyterUris",

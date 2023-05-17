@@ -15,7 +15,6 @@ import { IShowDataViewerFromVariablePanel } from './messageTypes';
 import { Commands as DSCommands, CommandSource } from './platform/common/constants';
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { Channel } from './platform/common/application/types';
-import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 
 export type CommandIds = keyof ICommandNameArgumentTypeMapping;
 
@@ -178,11 +177,7 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
-    [DSCommands.SelectJupyterURI]: [
-        boolean | undefined,
-        Uri | SelectJupyterUriCommandSource | undefined,
-        NotebookDocument | undefined
-    ];
+    [DSCommands.SelectJupyterURI]: [Uri];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineNext]: [NotebookCell];

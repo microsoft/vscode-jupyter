@@ -220,21 +220,21 @@ export function initializeCommonNodeApi() {
             }
             return { file: Uri.file(tempFile), dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) };
         },
-        async startJupyterServer(notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
+        async startJupyterServer(_notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
             if (IS_REMOTE_NATIVE_TEST()) {
                 const uriString = useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithToken();
                 console.info(`Jupyter started and listening at ${uriString}`);
                 try {
-                    await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
+                    await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(uriString));
                 } catch (ex) {
                     console.error('Failed to select jupyter server, retry in 1s', ex);
                 }
                 // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
                 // Possible we're trying to connect before the server is ready.
                 await sleep(5_000);
-                await commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
+                await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(uriString));
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default
             }
