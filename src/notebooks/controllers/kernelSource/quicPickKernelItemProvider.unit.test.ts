@@ -13,6 +13,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
+import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 
 suite('Quick Pick Kernel Item Provider', () => {
     [
@@ -26,6 +27,7 @@ suite('Quick Pick Kernel Item Provider', () => {
             let notebook: NotebookDocument;
             let onDidChangeKernels: EventEmitter<{ added?: any[]; removed?: any[]; updated?: any[] }>;
             let onDidChangeStatus: EventEmitter<void>;
+            let jupyterConnection: JupyterConnection;
             const disposables: IDisposable[] = [];
             let clock: fakeTimers.InstalledClock;
             const pythonEnvFilter = mock<PythonEnvironmentFilter>();
@@ -36,6 +38,7 @@ suite('Quick Pick Kernel Item Provider', () => {
             const kernelConnection4 = instance(mock<KernelConnectionMetadata>());
             setup(() => {
                 finder = mock<IContributedKernelFinder>();
+                jupyterConnection = mock(JupyterConnection);
                 onDidChangeKernels = new EventEmitter<{ added: any[]; removed: any[]; updated: any[] }>();
                 onDidChangeStatus = new EventEmitter<void>();
                 disposables.push(onDidChangeKernels);
@@ -68,7 +71,8 @@ suite('Quick Pick Kernel Item Provider', () => {
                     instance(notebook),
                     kind,
                     kind === ContributedKernelFinderKind.Remote ? Promise.resolve(instance(finder)) : instance(finder),
-                    instance(pythonEnvFilter)
+                    instance(pythonEnvFilter),
+                    instance(jupyterConnection)
                 );
             }
             teardown(() => disposeAllDisposables(disposables));

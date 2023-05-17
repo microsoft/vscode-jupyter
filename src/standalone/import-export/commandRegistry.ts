@@ -17,6 +17,7 @@ import { ExportCommands } from './exportCommands';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { IKernelFinder } from '../../kernels/types';
 import { PreferredKernelConnectionService } from '../../notebooks/controllers/preferredKernelConnectionService';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 
 /**
  * Registers the export commands if in a trusted workspace.
@@ -36,7 +37,8 @@ export class CommandRegistry implements IExtensionSyncActivationService {
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         @inject(IControllerRegistration) readonly controllerSelection: IControllerRegistration,
-        @inject(IKernelFinder) readonly kernelFinder: IKernelFinder
+        @inject(IKernelFinder) readonly kernelFinder: IKernelFinder,
+        @inject(JupyterConnection) readonly jupyterConnection: JupyterConnection
     ) {
         this.exportCommand = new ExportCommands(
             this.commandManager,
@@ -46,7 +48,7 @@ export class CommandRegistry implements IExtensionSyncActivationService {
             this.notebooks,
             this.interactiveProvider,
             controllerSelection,
-            new PreferredKernelConnectionService(),
+            new PreferredKernelConnectionService(jupyterConnection),
             kernelFinder
         );
         if (!this.workspace.isTrusted) {
