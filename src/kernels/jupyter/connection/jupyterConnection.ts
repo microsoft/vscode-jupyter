@@ -77,7 +77,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
     private async createConnectionInfoFromUri(uri: string) {
         // Prepare our map of server URIs
         await this.updateServerUri(uri);
-        return createRemoteConnectionInfo(uri, this.getServerUri.bind(this));
+        return createRemoteConnectionInfo(uri, this.getServerUri(uri));
     }
 
     private async validateRemoteConnection(connection: IJupyterConnection): Promise<void> {
