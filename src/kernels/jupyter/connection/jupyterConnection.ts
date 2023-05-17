@@ -77,7 +77,10 @@ export class JupyterConnection implements IExtensionSyncActivationService {
     private async createConnectionInfoFromUri(uri: string) {
         // Prepare our map of server URIs
         await this.updateServerUri(uri);
-        return createRemoteConnectionInfo(uri, this.getServerUri(uri));
+
+        const idAndHandle = extractJupyterServerHandleAndId(uri);
+        const server = this.uriToJupyterServerUri.get(uri);
+        return createRemoteConnectionInfo(uri, server, idAndHandle?.id);
     }
 
     private async validateRemoteConnection(connection: IJupyterConnection): Promise<void> {
@@ -96,7 +99,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         }
     }
 
-    public async updateServerUri(uri: string): Promise<void> {
+    private async updateServerUri(uri: string): Promise<void> {
         const idAndHandle = extractJupyterServerHandleAndId(uri);
         if (idAndHandle) {
             try {
@@ -122,14 +125,6 @@ export class JupyterConnection implements IExtensionSyncActivationService {
                 );
                 throw new RemoteJupyterServerUriProviderError(idAndHandle.id, idAndHandle.handle, ex, serverId);
             }
-        }
-    }
-
-    private getServerUri(uri: string): { server: IJupyterServerUri; serverId: string } | undefined {
-        const idAndHandle = extractJupyterServerHandleAndId(uri);
-        if (idAndHandle) {
-            const server = this.uriToJupyterServerUri.get(uri);
-            return server ? { server, serverId: idAndHandle.id } : undefined;
         }
     }
 }
