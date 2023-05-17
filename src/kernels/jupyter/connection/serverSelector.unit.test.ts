@@ -4,12 +4,11 @@
 import { anything, capture, instance, mock, verify } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../platform/common/application/commandManager';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { ICommandManager } from '../../../platform/common/application/types';
 import { JupyterServerSelector } from './serverSelector';
 import { Commands } from '../../../platform/common/constants';
 import { JupyterServerSelectorCommand } from './serverSelectorCommand';
 import { JupyterServerUriStorage } from './serverUriStorage';
-import { IBrowserService } from '../../../platform/common/types';
 
 /* eslint-disable  */
 suite('Server Selector Command', () => {
@@ -20,18 +19,12 @@ suite('Server Selector Command', () => {
     setup(() => {
         commandManager = mock(CommandManager);
         serverSelector = mock(JupyterServerSelector);
-        const appShell = mock<IApplicationShell>();
-        const browser = mock<IBrowserService>();
-        const notebook = mock<IVSCodeNotebook>();
         const uriStorage = mock(JupyterServerUriStorage);
 
         serverSelectorCommand = new JupyterServerSelectorCommand(
             instance(commandManager),
             instance(serverSelector),
-            instance(uriStorage),
-            instance(notebook),
-            instance(appShell),
-            instance(browser)
+            instance(uriStorage)
         );
     });
 
