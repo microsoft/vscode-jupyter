@@ -11,7 +11,8 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
-    RemoteKernelSpecConnectionMetadata
+    RemoteKernelSpecConnectionMetadata,
+    isRemoteConnection
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
@@ -22,6 +23,8 @@ import { getLanguageOfNotebookDocument } from '../languages/helpers';
 import * as path from '../../platform/vscode-path/resources';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
+import { getRemoteSessionOptions } from '../../kernels/jupyter/session/jupyterSession';
 
 /**
  * Attempt to clean up https://github.com/microsoft/vscode-jupyter/issues/11914
@@ -30,6 +33,7 @@ import { EnvironmentType } from '../../platform/pythonEnvironments/info';
  */
 export class PreferredKernelConnectionService {
     private readonly disposables: IDisposable[] = [];
+    constructor(private readonly jupyterConnection: JupyterConnection) {}
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
@@ -97,6 +101,29 @@ export class PreferredKernelConnectionService {
                 return kernel;
             }
         }
+        // If this is a remote kernel from a remote provider, we might have existing sessions.
+        // Existing sessions for the same path would be a suggestions.
+        const serverId = (
+            kernelFinder.kernels.find((item) => isRemoteConnection(item)) as RemoteKernelConnectionMetadata | undefined
+        )?.serverId;
+        if (serverId) {
+            const connection = await this.jupyterConnection.createConnectionInfo({ serverId });
+            const sessionOptions = getRemoteSessionOptions(connection, notebook.uri);
+            const matchingSession =
+                sessionOptions &&
+                kernelFinder.kernels.find(
+                    (item) =>
+                        isRemoteConnection(item) &&
+                        item.kind === 'connectToLiveRemoteKernel' &&
+                        item.kernelModel.model &&
+                        item.kernelModel.model.path === sessionOptions.path &&
+                        item.kernelModel.model.name === sessionOptions.name
+                );
+            if (matchingSession) {
+                return matchingSession as RemoteKernelConnectionMetadata;
+            }
+        }
+
         return this.findPreferredKernelSpecConnection(notebook, kernelFinder, cancelToken, findExactMatch!) as Promise<
             RemoteKernelConnectionMetadata | undefined
         >;
