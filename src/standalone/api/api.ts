@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { ExtensionMode, NotebookController, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
-import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import {
@@ -20,6 +19,7 @@ import { traceError } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
+import { isRemoteConnection } from '../../kernels/types';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -86,13 +86,8 @@ function waitForNotebookControllersCreationForServer(
     return new Promise<void>((resolve) => {
         controllerRegistration.onDidChange((e) => {
             for (let controller of e.added) {
-                if (
-                    controller.connection.kind === 'connectToLiveRemoteKernel' ||
-                    controller.connection.kind === 'startUsingRemoteKernelSpec'
-                ) {
-                    if (controller.connection.serverId === serverId) {
-                        resolve();
-                    }
+                if (isRemoteConnection(controller.connection) && controller.connection.serverId === serverId) {
+                    resolve();
                 }
             }
         });
@@ -165,7 +160,6 @@ export function buildApi(
         addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {
             sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
             await new Promise<void>(async (resolve) => {
-                const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
                 const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
                 const uri = generateUriFromRemoteProvider(providerId, handle);
                 const serverId = await computeServerId(uri);
@@ -176,23 +170,9 @@ export function buildApi(
                     controllerRegistration
                 );
 
-                await connection.updateServerUri(uri);
                 await selector.setJupyterURIToRemote(uri);
-
-                if (
-                    controllerRegistration.all.find(
-                        (metadata) =>
-                            (metadata.kind === 'connectToLiveRemoteKernel' ||
-                                metadata.kind === 'startUsingRemoteKernelSpec') &&
-                            metadata.serverId === serverId
-                    ) !== undefined
-                ) {
-                    resolve();
-                    return;
-                } else {
-                    await controllerCreatedPromise;
-                    resolve();
-                }
+                await controllerCreatedPromise;
+                resolve();
             });
         },
         openNotebook: async (uri: Uri, kernelId: string) => {
