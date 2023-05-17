@@ -41,7 +41,6 @@ suite('Server Selector Command', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handler = (capture(commandManager.registerCommand as any).first()[1] as Function).bind(
             serverSelectorCommand,
-            false,
             uri
         );
 
