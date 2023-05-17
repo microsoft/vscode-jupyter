@@ -948,15 +948,6 @@
      ]
    }
  */
-//Telemetry.SetJupyterURIToLocal
-/* __GDPR__
-   "DATASCIENCE.SET_JUPYTER_URI_LOCAL" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.SetJupyterURIUIDisplayed
 /* __GDPR__
    "DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED" : {
