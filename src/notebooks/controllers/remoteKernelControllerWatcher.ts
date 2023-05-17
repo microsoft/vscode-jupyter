@@ -10,7 +10,6 @@ import {
 } from '../../kernels/jupyter/types';
 import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { Settings } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
@@ -53,9 +52,6 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         const registeredHandles: string[] = [];
         await Promise.all(
             uris.map(async (item) => {
-                if (item.uri === Settings.JupyterServerLocalLaunch) {
-                    return;
-                }
                 // Check if this url is associated with a provider.
                 const info = extractJupyterServerHandleAndId(item.uri);
                 if (!info || info.id !== provider.id) {
@@ -76,7 +72,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 if (!handles.includes(info.handle)) {
                     // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                     await this.uriStorage.removeUri(item.uri);
-                } else if (!item.isValidated && item.serverId === this.uriStorage.currentServerId) {
+                } else if (!item.isValidated) {
                     await this.uriStorage.setUriToRemote(item.uri, item.displayName ?? item.uri).catch(noop);
                 }
             })

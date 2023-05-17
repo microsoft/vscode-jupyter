@@ -136,9 +136,6 @@ suite(`Remote Kernel Finder`, () => {
             serverId: connInfo.baseUrl,
             isValidated: true
         };
-        when(serverUriStorage.getUri()).thenResolve(serverEntry);
-        when(serverUriStorage.getRemoteUri()).thenResolve(serverEntry);
-        when(serverUriStorage.isLocalLaunch).thenReturn(false);
         const onDidChangeEvent = new EventEmitter<void>();
         disposables.push(onDidChangeEvent);
         when(serverUriStorage.onDidChangeConnectionType).thenReturn(onDidChangeEvent.event);

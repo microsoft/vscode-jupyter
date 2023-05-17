@@ -41,7 +41,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         disposables.push(this);
     }
     public activate() {
-        this.serverUriStorage.onDidChangeConnectionType(
+        this.serverUriStorage.onDidChangeUri(
             () =>
                 // When server URI changes, clear our pending URI timeouts
                 this.clearTimeouts(),

@@ -105,7 +105,6 @@ suite('Controller Registration', () => {
         removed: IContributedKernelFinder<KernelConnectionMetadata>[];
     }>;
     let onDidChangeFilter: EventEmitter<void>;
-    let onDidChangeConnectionType: EventEmitter<void>;
     let onDidChangeUri: EventEmitter<void>;
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
     let onDidChangeInterpreter: EventEmitter<PythonEnvironment | undefined>;
@@ -169,8 +168,6 @@ suite('Controller Registration', () => {
         disposables.push(onDidChangeRegistrations);
         onDidChangeFilter = new EventEmitter<void>();
         disposables.push(onDidChangeFilter);
-        onDidChangeConnectionType = new EventEmitter<void>();
-        disposables.push(onDidChangeConnectionType);
         onDidChangeUri = new EventEmitter<void>();
         disposables.push(onDidChangeUri);
         onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
@@ -195,7 +192,6 @@ suite('Controller Registration', () => {
         when(kernelFinder.onDidChangeKernels).thenReturn(onDidChangeKernels.event);
         when(kernelFinder.onDidChangeRegistrations).thenReturn(onDidChangeRegistrations.event);
         when(kernelFilter.onDidChange).thenReturn(onDidChangeFilter.event);
-        when(serverUriStorage.onDidChangeConnectionType).thenReturn(onDidChangeConnectionType.event);
         when(serverUriStorage.onDidChangeUri).thenReturn(onDidChangeUri.event);
         when(serverUriStorage.onDidRemoveUris).thenReturn(onDidRemoveUris.event);
         when(interpreters.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
@@ -283,7 +279,6 @@ suite('Controller Registration', () => {
                     condaPythonConnection,
                     javaKernelConnection
                 ]);
-                when(serverUriStorage.isLocalLaunch).thenReturn(true);
                 const controller = mock<IVSCodeNotebookController>();
                 (instance(controller) as any).then = undefined;
                 when(controller.connection).thenReturn(instance(mock<KernelConnectionMetadata>()));
@@ -313,7 +308,6 @@ suite('Controller Registration', () => {
                     condaPythonConnection,
                     javaKernelConnection
                 ]);
-                when(serverUriStorage.isLocalLaunch).thenReturn(true);
                 // const controller = mock<IVSCodeNotebookController>();
                 // (instance(controller) as any).then = undefined;
                 // when(controller.connection).thenReturn(instance(mock<KernelConnectionMetadata>()));
@@ -403,7 +397,6 @@ suite('Controller Registration', () => {
                     condaPythonConnection,
                     javaKernelConnection
                 ]);
-                when(serverUriStorage.isLocalLaunch).thenReturn(true);
                 const controller = mock<IVSCodeNotebookController>();
                 (instance(controller) as any).then = undefined;
                 when(controller.connection).thenReturn(instance(mock<KernelConnectionMetadata>()));
