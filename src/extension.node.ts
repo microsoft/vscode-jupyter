@@ -95,6 +95,7 @@ import { IInterpreterPackages } from './platform/interpreter/types';
 import { homedir, platform, arch, userInfo } from 'os';
 import { getUserHomeDir } from './platform/common/utils/platform.node';
 import { homePath } from './platform/common/platform/fs-paths.node';
+import { removeOldCachedItems } from './platform/common/cache';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -110,6 +111,7 @@ let activatedServiceContainer: IServiceContainer | undefined;
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
+        removeOldCachedItems(context.globalState).then(noop, noop);
         let api: IExtensionApi;
         let ready: Promise<void>;
         let serviceContainer: IServiceContainer;

@@ -270,13 +270,9 @@ export interface IJupyterServerUriEntry {
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
-    isLocalLaunch: boolean;
-    onDidChangeConnectionType: Event<void>;
-    readonly currentServerId: string | undefined;
     readonly onDidChangeUri: Event<void>;
     readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
     readonly onDidAddUri: Event<IJupyterServerUriEntry>;
-    addToUriList(uri: string, time: number, displayName: string): Promise<void>;
     /**
      * Adds a server to the MRU list.
      * Similar to `addToUriList` however one does not need to pass the `Uri` nor the `displayName`.
@@ -286,11 +282,8 @@ export interface IJupyterServerUriStorage {
     getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
-    getRemoteUri(): Promise<IJupyterServerUriEntry | undefined>;
     getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined>;
-    setUriToLocal(): Promise<void>;
     setUriToRemote(uri: string, displayName: string): Promise<void>;
-    setUriToNone(): Promise<void>;
 }
 
 export interface IBackupFile {

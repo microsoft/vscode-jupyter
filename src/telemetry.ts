@@ -1764,15 +1764,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Jupyter URI was set to local.
-     */
-    [Telemetry.SetJupyterURIToLocal]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: ['KernelPicker'],
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Jupyter URI was valid and set to a remote setting.
      */
     [Telemetry.SetJupyterURIToUserSpecified]: TelemetryEventInfo<{

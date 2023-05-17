@@ -128,7 +128,6 @@ suite('Remote Kernel Execution', function () {
         const uri = await JupyterServer.instance.startSecondJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Another Jupyter started and listening at ${uriString}`);
-        await jupyterServerSelector.setJupyterURIToLocal();
         await jupyterServerSelector.setJupyterURIToRemote(uriString);
 
         // Opening a notebook will trigger the refresh of the kernel list.
@@ -153,9 +152,6 @@ suite('Remote Kernel Execution', function () {
         );
     });
     test('Local Kernel state is not lost when connecting to remote @kernelPicker', async function () {
-        // After resetting connection to local only, verify all remote connections are no longer available.
-        await jupyterServerSelector.setJupyterURIToLocal();
-
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         traceInfoIfCI(`active interpreter ${activeInterpreter?.uri.path}`);
         const { notebook } = await createEmptyPythonNotebook(disposables);

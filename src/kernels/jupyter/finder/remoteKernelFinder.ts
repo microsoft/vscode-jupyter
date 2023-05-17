@@ -30,7 +30,6 @@ import { isArray } from '../../../platform/common/utils/sysTypes';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
-import { removeOldCachedItems } from '../../common/commonFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
@@ -422,10 +421,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             const key = this.cacheKey;
             this.cache = values;
             const serialized = values.map((item) => item.toJSON());
-            await Promise.all([
-                removeOldCachedItems(this.globalState),
-                this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion })
-            ]);
+            await this.globalState.update(key, { kernels: serialized, extensionVersion: this.env.extensionVersion });
 
             if (added.length || updated.length || removed.length) {
                 this._onDidChangeKernels.fire({ added, updated, removed });

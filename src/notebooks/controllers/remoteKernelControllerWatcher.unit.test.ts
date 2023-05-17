@@ -120,6 +120,7 @@ suite('RemoteKernelControllerWatcher', () => {
         when(uriStorage.getSavedUriList()).thenResolve([
             { time: 1, serverId, uri: remoteUriForProvider1, displayName: 'Something' }
         ]);
+        when(uriStorage.setUriToRemote(anything(), anything())).thenResolve();
 
         watcher.activate();
 

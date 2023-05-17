@@ -4,7 +4,6 @@
 import { NotebookDocument } from 'vscode';
 import { isPythonNotebook } from '../../../kernels/helpers';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
-import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { IDisposableRegistry, IsWebExtension, Resource } from '../../../platform/common/types';
@@ -15,20 +14,17 @@ import { isEqual } from '../../../platform/vscode-path/resources';
 import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 /**
  * Determines the 'default' kernel for a notebook. Default is what kernel should be used if there's no metadata in a notebook.
  */
 export class ControllerDefaultService {
-    private get isLocalLaunch(): boolean {
-        return this.serverUriStorage.isLocalLaunch;
-    }
     constructor(
         private readonly registration: IControllerRegistration,
         private readonly interpreters: IInterpreterService,
         private readonly notebook: IVSCodeNotebook,
         readonly disposables: IDisposableRegistry,
-        private readonly serverUriStorage: IJupyterServerUriStorage,
         private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
         private readonly isWeb: boolean
     ) {}
@@ -40,7 +36,6 @@ export class ControllerDefaultService {
                 serviceContainer.get<IInterpreterService>(IInterpreterService),
                 serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
-                serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
                 serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider),
                 serviceContainer.get<boolean>(IsWebExtension, IsWebExtension)
             );
@@ -51,7 +46,7 @@ export class ControllerDefaultService {
         resource: Resource,
         viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): Promise<IVSCodeNotebookController | undefined> {
-        if (this.isLocalLaunch) {
+        if (!IS_REMOTE_NATIVE_TEST()) {
             traceInfoIfCI('CreateActiveInterpreterController');
             return createActiveInterpreterController(viewType, resource, this.interpreters, this.registration);
         } else {

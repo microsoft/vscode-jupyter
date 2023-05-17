@@ -11,7 +11,6 @@ import {
     workspace
 } from 'vscode';
 import { getKernelConnectionLanguage, getLanguageInNotebookMetadata, isPythonNotebook } from '../../../kernels/helpers';
-import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../../kernels/telemetry/helper';
 import { KernelConnectionMetadata, isLocalConnection } from '../../../kernels/types';
 import {
@@ -48,6 +47,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { KernelRankingHelper, findKernelSpecMatchingInterpreter } from './kernelRankingHelper';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { ControllerDefaultService } from './controllerDefaultService';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 /**
  * Computes and tracks the preferred kernel for a notebook.
@@ -56,9 +56,6 @@ import { ControllerDefaultService } from './controllerDefaultService';
 export class ControllerPreferredService {
     private preferredControllers = new WeakMap<NotebookDocument, IVSCodeNotebookController>();
     private preferredCancelTokens = new WeakMap<NotebookDocument, CancellationTokenSource>();
-    private get isLocalLaunch(): boolean {
-        return this.serverUriStorage.isLocalLaunch;
-    }
     private disposables = new Set<IDisposable>();
     constructor(
         private readonly registration: IControllerRegistration,
@@ -66,7 +63,6 @@ export class ControllerPreferredService {
         private readonly interpreters: IInterpreterService,
         private readonly notebook: IVSCodeNotebook,
         private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly serverUriStorage: IJupyterServerUriStorage,
         private readonly kernelRankHelper: KernelRankingHelper,
         private readonly isWebExtension: boolean
     ) {}
@@ -79,7 +75,6 @@ export class ControllerPreferredService {
                 serviceContainer.get<IInterpreterService>(IInterpreterService),
                 serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
-                serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage),
                 new KernelRankingHelper(
                     serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider)
                 ),
@@ -155,7 +150,11 @@ export class ControllerPreferredService {
             const isPythonNbOrInteractiveWindow =
                 (isEmptyMetadata ? isPythonNotebookLanguage : isPythonNotebook(notebookMetadata)) ||
                 resourceType === 'interactive';
-            if (document.notebookType === JupyterNotebookView && !this.isLocalLaunch && isPythonNbOrInteractiveWindow) {
+            if (
+                document.notebookType === JupyterNotebookView &&
+                IS_REMOTE_NATIVE_TEST() &&
+                isPythonNbOrInteractiveWindow
+            ) {
                 const defaultPythonController = await this.defaultService.computeDefaultController(
                     document.uri,
                     document.notebookType

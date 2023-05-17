@@ -294,7 +294,6 @@ export async function createEmptyPythonNotebook(
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    const serverUriStorage = serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
     const nbFile = await createTemporaryNotebook(
@@ -312,7 +311,7 @@ export async function createEmptyPythonNotebook(
         await waitForKernelToGetAutoSelected(
             vscodeNotebook.activeNotebookEditor!,
             PYTHON_LANGUAGE,
-            !serverUriStorage.isLocalLaunch
+            IS_REMOTE_NATIVE_TEST()
         );
         await verifySelectedControllerIsRemoteForRemoteTests();
     }
@@ -345,15 +344,12 @@ async function shutdownRemoteKernels() {
     const jupyterConnection = api.serviceContainer.get<JupyterConnection>(JupyterConnection);
     const jupyterSessionManagerFactory =
         api.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
-    const uri = await serverUriStorage.getRemoteUri();
-    if (!uri) {
-        return;
-    }
     const cancelToken = new CancellationTokenSource();
     let sessionManager: IJupyterSessionManager | undefined;
     try {
+        const uris = await serverUriStorage.getSavedUriList();
         const connection = await jupyterConnection.createConnectionInfo({
-            serverId: serverUriStorage.currentServerId!
+            serverId: uris[0].serverId
         });
         if (connection.type !== 'jupyter') {
             return;
