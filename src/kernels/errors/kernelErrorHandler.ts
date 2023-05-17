@@ -9,7 +9,7 @@ import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError, traceWarning } from '../../platform/logging';
 import {
     IBrowserService,
@@ -88,7 +88,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -414,12 +413,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     return KernelInterpreterDependencyResponse.cancel;
                 }
                 case DataScience.changeRemoteJupyterConnectionButtonText: {
-                    await this.commandManager.executeCommand(
-                        Commands.SelectJupyterURI,
-                        true,
-                        'errorHandler',
-                        undefined
-                    );
                     return KernelInterpreterDependencyResponse.cancel;
                 }
                 case DataScience.selectDifferentKernel: {
