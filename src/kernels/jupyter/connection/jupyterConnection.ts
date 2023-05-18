@@ -32,27 +32,21 @@ export class JupyterConnection {
         if (!uri) {
             throw new Error('Server Not found');
         }
-        return this.createConnectionInfoFromUri(uri);
+        const server = await this.getJupyterServerUri(uri);
+        return createRemoteConnectionInfo(uri, server);
     }
     public async validateJupyterServer(uri: string): Promise<void> {
-        const connection = await this.createConnectionInfoFromUri(uri);
-        const disposable: IAsyncDisposable[] = [];
+        const connection = await this.createConnectionInfo({ uri });
+        const disposable: IAsyncDisposable[] = [{ dispose: () => Promise.resolve(connection.dispose()) }];
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
             const sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
             disposable.push(sessionManager);
             await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
-            // We should throw an exception if any of that fails.
         } finally {
-            connection.dispose();
             await Promise.all(disposable.map((d) => d.dispose().catch(noop)));
         }
-    }
-
-    private async createConnectionInfoFromUri(uri: string) {
-        const server = await this.getJupyterServerUri(uri);
-        return createRemoteConnectionInfo(uri, server);
     }
 
     private async getJupyterServerUri(uri: string) {
