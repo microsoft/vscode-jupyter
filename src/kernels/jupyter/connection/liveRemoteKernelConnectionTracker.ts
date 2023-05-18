@@ -18,7 +18,9 @@ type UriString = string;
 type UriSessionUsedByResources = Record<ServerId, Record<KernelId, UriString[]>>;
 
 /**
- * Class to track the remote kernels that have been used by notebooks or IW.
+ * Keeps track of the kernel id and server id that was last used by a resource.
+ * If a kernel is no longer used by a resource (e.g. another kernel is selected),
+ * then the previous kernel would be removed from the list of kernels for this resource.
  */
 @injectable()
 export class LiveRemoteKernelConnectionUsageTracker
