@@ -120,6 +120,7 @@ suite(`Remote Kernel Finder`, () => {
             return Promise.resolve(d.toLowerCase());
         });
         jupyterSessionManager = mock(JupyterSessionManager);
+        when(jupyterSessionManager.dispose()).thenResolve();
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
         const extensionChecker = mock(PythonExtensionChecker);
