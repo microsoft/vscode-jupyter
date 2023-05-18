@@ -49,10 +49,6 @@ export interface IJupyterServerUri {
      * Authorization header to be used when connecting to the server.
      */
     authorizationHeader: Record<string, string>;
-    /**
-     * Date/time when header expires and should be refreshed.
-     */
-    expiration?: Date;
     displayName: string;
     /**
      * The local directory that maps to the remote directory of the Jupyter Server.

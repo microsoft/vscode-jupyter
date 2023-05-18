@@ -347,7 +347,7 @@ async function shutdownRemoteKernels() {
     const cancelToken = new CancellationTokenSource();
     let sessionManager: IJupyterSessionManager | undefined;
     try {
-        const uris = await serverUriStorage.getSavedUriList();
+        const uris = await serverUriStorage.getMRUs();
         const connection = await jupyterConnection.createConnectionInfo({
             serverId: uris[0].serverId
         });

@@ -31,7 +31,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         disposables.push(this);
     }
     public activate(): void {
-        this.serverStorage.onDidRemoveUris(this.onDidRemoveServerUris, this, this.disposables);
+        this.serverStorage.onDidRemove(this.onDidRemoveServerUris, this, this.disposables);
     }
     private getStateKey(serverId: string) {
         return `LAST_EXECUTED_CELL_${serverId}`;

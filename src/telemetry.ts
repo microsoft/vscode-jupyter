@@ -21,6 +21,7 @@ import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
 import { IExtensionApi } from './standalone/api/api';
+import { IJupyterServerUri } from './kernels/jupyter/types';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -2038,6 +2039,10 @@ export class IEventNamePropertyMapping {
          * Error message when fallback module fails to load.
          */
         fallbackErrorMessage?: string;
+        /**
+         * List of binaries found on disc.
+         */
+        zmqBinaries?: string[];
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -2080,6 +2085,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             },
             fallbackErrorMessage: {
+                classification: 'CallstackOrException',
+                purpose: 'FeatureInsight'
+            },
+            zmqBinaries: {
                 classification: 'CallstackOrException',
                 purpose: 'FeatureInsight'
             }
@@ -3551,6 +3560,38 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         properties: {
             clientExtId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            pemUsed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
+     * Telemetry sent when an Jupyter Server is returned by 3rd party extension.
+     */
+    [Telemetry.JupyterServerProviderResponseApi]: TelemetryEventInfo<{
+        providerId: string;
+        /**
+         * Extension Id that's attempting to use the API.
+         */
+        extensionId: string;
+        /**
+         * Name of the API member used.
+         */
+        pemUsed: (keyof IJupyterServerUri)[];
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            providerId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            extensionId: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
             },

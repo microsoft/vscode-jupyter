@@ -452,6 +452,18 @@
      ]
    }
  */
+//Telemetry.JupyterServerProviderResponseApi
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_SERVER_PROVIDER_RESPONSE_API" : {
+     "providerId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.KernelCrash
 /* __GDPR__
    "DATASCIENCE.KERNEL_CRASH" : {
@@ -1458,6 +1470,7 @@
      "distro_version_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro version id.","owner":"donjayamanne"},
      "errorMessage": {"classification":"CallstackOrException","purpose":"FeatureInsight","comment":"Error message when azure build module fails to load.","owner":"donjayamanne"},
      "fallbackErrorMessage": {"classification":"CallstackOrException","purpose":"FeatureInsight","comment":"Error message when fallback module fails to load.","owner":"donjayamanne"},
+     "zmqBinaries": {"classification":"CallstackOrException","purpose":"FeatureInsight","comment":"List of binaries found on disc.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

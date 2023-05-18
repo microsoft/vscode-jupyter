@@ -38,7 +38,7 @@ suite('RemoteKernelControllerWatcher', () => {
         onDidChangeProviders = new EventEmitter<void>();
         disposables.push(onDidChangeProviders);
         when(uriProviderRegistration.onDidChangeProviders).thenReturn(onDidChangeProviders.event);
-        when(uriStorage.removeUri(anything())).thenResolve();
+        when(uriStorage.removeMRU(anything())).thenResolve();
         watcher = new RemoteKernelControllerWatcher(
             disposables,
             instance(uriProviderRegistration),
@@ -117,10 +117,10 @@ suite('RemoteKernelControllerWatcher', () => {
             instance(remoteLiveKernel)
         ]);
 
-        when(uriStorage.getSavedUriList()).thenResolve([
+        when(uriStorage.getMRUs()).thenResolve([
             { time: 1, serverId, uri: remoteUriForProvider1, displayName: 'Something' }
         ]);
-        when(uriStorage.setUriToRemote(anything(), anything())).thenResolve();
+        when(uriStorage.addMRU(anything(), anything())).thenResolve();
 
         watcher.activate();
 
@@ -152,7 +152,7 @@ suite('RemoteKernelControllerWatcher', () => {
         await onDidChangeHandles!();
 
         assert.isOk(onDidChangeHandles, 'onDidChangeHandles should be defined');
-        verify(uriStorage.removeUri(anything())).never();
+        verify(uriStorage.removeMRU(anything())).never();
         verify(localKernel.dispose()).never();
         verify(remoteKernelSpec.dispose()).never();
         verify(remoteLiveKernel.dispose()).never();
@@ -163,7 +163,7 @@ suite('RemoteKernelControllerWatcher', () => {
         await onDidChangeHandles!();
 
         assert.isOk(onDidChangeHandles, 'onDidChangeHandles should be defined');
-        verify(uriStorage.removeUri(remoteUriForProvider1)).once();
+        verify(uriStorage.removeMRU(remoteUriForProvider1)).once();
         verify(localKernel.dispose()).never();
         verify(remoteKernelSpec.dispose()).once();
         verify(remoteLiveKernel.dispose()).once();

@@ -56,7 +56,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, JupyterServerProvider);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
-    serviceManager.addBinding(JupyterConnection, IExtensionSyncActivationService);
     serviceManager.addSingleton<ILiveRemoteKernelConnectionUsageTracker>(
         ILiveRemoteKernelConnectionUsageTracker,
         LiveRemoteKernelConnectionUsageTracker

@@ -39,11 +39,11 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
             traceInfo(`Setting Jupyter Server URI to remote: ${source}`);
 
             // Set the uri directly
-            await this.serverSelector.setJupyterURIToRemote(source.toString(true));
+            await this.serverSelector.addJupyterServer(source.toString(true));
         }
     }
 
     private async clearJupyterUris(): Promise<void> {
-        return this.serverUriStorage.clearUriList();
+        return this.serverUriStorage.clearMRU();
     }
 }

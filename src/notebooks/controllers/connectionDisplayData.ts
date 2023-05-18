@@ -145,7 +145,7 @@ async function getRemoteServerDisplayName(
     kernelConnection: RemoteKernelConnectionMetadata,
     serverUriStorage: IJupyterServerUriStorage
 ): Promise<string> {
-    const savedUriList = await serverUriStorage.getSavedUriList();
+    const savedUriList = await serverUriStorage.getMRUs();
     const targetConnection = savedUriList.find((uriEntry) => uriEntry.serverId === kernelConnection.serverId);
 
     // We only show this if we have a display name and the name is not the same as the URI (this prevents showing the long token for user entered URIs).

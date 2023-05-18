@@ -35,7 +35,7 @@ export class LiveRemoteKernelConnectionUsageTracker
             mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
             {}
         );
-        this.uriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+        this.uriStorage.onDidRemove(this.onDidRemoveUris, this, this.disposables);
     }
 
     public wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata) {

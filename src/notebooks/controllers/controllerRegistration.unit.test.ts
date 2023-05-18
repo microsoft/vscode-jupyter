@@ -192,8 +192,8 @@ suite('Controller Registration', () => {
         when(kernelFinder.onDidChangeKernels).thenReturn(onDidChangeKernels.event);
         when(kernelFinder.onDidChangeRegistrations).thenReturn(onDidChangeRegistrations.event);
         when(kernelFilter.onDidChange).thenReturn(onDidChangeFilter.event);
-        when(serverUriStorage.onDidChangeUri).thenReturn(onDidChangeUri.event);
-        when(serverUriStorage.onDidRemoveUris).thenReturn(onDidRemoveUris.event);
+        when(serverUriStorage.onDidChange).thenReturn(onDidChangeUri.event);
+        when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveUris.event);
         when(interpreters.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
         when(interpreters.onDidChangeInterpreters).thenReturn(onDidChangeInterpreters.event);
         when(contributedLocalKernelFinder.onDidChangeKernels).thenReturn(

@@ -48,7 +48,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
-        disposables.push(jupyterServerUriStorage.onDidRemoveUris(this.handleUriRemoval.bind(this)));
+        disposables.push(jupyterServerUriStorage.onDidRemove(this.handleUriRemoval.bind(this)));
     }
 
     public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {

@@ -246,7 +246,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             const uriStorage = mock<IJupyterServerUriStorage>();
             const onDidChangeEvent = new EventEmitter<void>();
             disposables.push(onDidChangeEvent);
-            when(uriStorage.onDidChangeUri).thenReturn(onDidChangeEvent.event);
+            when(uriStorage.onDidChange).thenReturn(onDidChangeEvent.event);
 
             const extensions = mock<IExtensions>();
             const trustedKernels = mock<ITrustedKernelPaths>();
