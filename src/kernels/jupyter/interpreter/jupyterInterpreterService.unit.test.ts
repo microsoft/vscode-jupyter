@@ -15,7 +15,6 @@ import { MockMemento } from '../../../test/mocks/mementos';
 import { createPythonInterpreter } from '../../../test/utils/interpreters';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
-import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCacheStateStore.node';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
@@ -30,7 +29,6 @@ suite('Jupyter Interpreter Service', () => {
     let selectedInterpreterEventArgs: PythonEnvironment | undefined;
     let memento: Memento;
     let interpreterSelectionState: JupyterInterpreterStateStore;
-    let oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore;
     let appShell: IApplicationShell;
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
     const pythonInterpreter: PythonEnvironment = {
@@ -53,14 +51,12 @@ suite('Jupyter Interpreter Service', () => {
         interpreterService = mock<IInterpreterService>();
         memento = mock(MockMemento);
         interpreterSelectionState = mock(JupyterInterpreterStateStore);
-        oldVersionCacheStateStore = mock(JupyterInterpreterOldCacheStateStore);
         appShell = mock<IApplicationShell>();
         const workspace = mock<IWorkspaceService>();
         const onDidGrantWorkspaceTrust = new EventEmitter<void>();
         disposables.push(onDidGrantWorkspaceTrust);
         when(workspace.onDidGrantWorkspaceTrust).thenReturn(onDidGrantWorkspaceTrust.event);
         jupyterInterpreterService = new JupyterInterpreterService(
-            instance(oldVersionCacheStateStore),
             instance(interpreterSelectionState),
             instance(interpreterSelector),
             instance(interpreterConfiguration),
@@ -146,23 +142,13 @@ suite('Jupyter Interpreter Service', () => {
         verify(interpreterSelector.selectInterpreter()).never();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
     });
-    test('setInitialInterpreter if older version is set should use and clear', async () => {
-        when(oldVersionCacheStateStore.getCachedInterpreterPath()).thenReturn(pythonInterpreter.uri);
-        when(oldVersionCacheStateStore.clearCache()).thenResolve();
-        when(interpreterConfiguration.areDependenciesInstalled(pythonInterpreter, anything())).thenResolve(true);
-        const initialInterpreter = await jupyterInterpreterService.setInitialInterpreter(undefined);
-        verify(oldVersionCacheStateStore.clearCache()).once();
-        assert.equal(initialInterpreter, pythonInterpreter);
-    });
     test('setInitialInterpreter use saved interpreter if valid', async () => {
-        when(oldVersionCacheStateStore.getCachedInterpreterPath()).thenReturn(undefined);
         when(interpreterSelectionState.selectedPythonPath).thenReturn(pythonInterpreter.uri);
         when(interpreterConfiguration.areDependenciesInstalled(pythonInterpreter, anything())).thenResolve(true);
         const initialInterpreter = await jupyterInterpreterService.setInitialInterpreter(undefined);
         assert.equal(initialInterpreter, pythonInterpreter);
     });
     test('setInitialInterpreter saved interpreter invalid, clear it and use active interpreter', async () => {
-        when(oldVersionCacheStateStore.getCachedInterpreterPath()).thenReturn(undefined);
         when(interpreterSelectionState.selectedPythonPath).thenReturn(secondPythonInterpreter.uri);
         when(interpreterConfiguration.areDependenciesInstalled(secondPythonInterpreter, anything())).thenResolve(false);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(pythonInterpreter);
