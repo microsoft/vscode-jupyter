@@ -48,7 +48,7 @@ export async function validateSelectJupyterURI(
     }
     // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
     try {
-        await jupyterConnection.validateRemoteUri(inputText);
+        await jupyterConnection.validateJupyterServer(inputText);
     } catch (err) {
         traceWarning('Uri verification error', err);
         if (JupyterSelfCertsError.isSelfCertsError(err)) {
@@ -98,7 +98,7 @@ export class JupyterServerSelector {
     public async addJupyterServer(userURI: string): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
-            await this.jupyterConnection.validateRemoteUri(userURI);
+            await this.jupyterConnection.validateJupyterServer(userURI);
         } catch (err) {
             if (JupyterSelfCertsError.isSelfCertsError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);

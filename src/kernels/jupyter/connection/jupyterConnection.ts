@@ -5,19 +5,14 @@ import { inject, injectable } from 'inversify';
 import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
-import { IJupyterConnection } from '../../types';
 import {
     computeServerId,
     createRemoteConnectionInfo,
     extractJupyterServerHandleAndId,
     generateUriFromRemoteProvider
 } from '../jupyterUtils';
-import {
-    IJupyterServerUriStorage,
-    IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration
-} from '../types';
+import { IJupyterServerUriStorage, IJupyterSessionManagerFactory, IJupyterUriProviderRegistration } from '../types';
+import { IAsyncDisposable } from '../../../platform/common/types';
 
 /**
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.
@@ -33,39 +28,31 @@ export class JupyterConnection {
     ) {}
 
     public async createConnectionInfo(options: { serverId: string } | { uri: string }) {
-        const uri = 'uri' in options ? options.uri : (await this.getUriFromServerId(options.serverId))?.uri;
+        const uri = 'uri' in options ? options.uri : (await this.serverUriStorage.getMRU(options.serverId))?.uri;
         if (!uri) {
             throw new Error('Server Not found');
         }
         return this.createConnectionInfoFromUri(uri);
     }
-    public async validateRemoteUri(uri: string): Promise<void> {
-        return this.validateRemoteConnection(await this.createConnectionInfoFromUri(uri));
-    }
-
-    private async getUriFromServerId(serverId: string) {
-        return this.serverUriStorage.getMRU(serverId);
-    }
-    private async createConnectionInfoFromUri(uri: string) {
-        const server = await this.getJupyterServerUri(uri);
-        const idAndHandle = extractJupyterServerHandleAndId(uri);
-        return createRemoteConnectionInfo(uri, server, idAndHandle?.id);
-    }
-
-    private async validateRemoteConnection(connection: IJupyterConnection): Promise<void> {
-        let sessionManager: IJupyterSessionManager | undefined = undefined;
+    public async validateJupyterServer(uri: string): Promise<void> {
+        const connection = await this.createConnectionInfoFromUri(uri);
+        const disposable: IAsyncDisposable[] = [];
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
-            sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
+            const sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
+            disposable.push(sessionManager);
             await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
             // We should throw an exception if any of that fails.
         } finally {
             connection.dispose();
-            if (sessionManager) {
-                sessionManager.dispose().catch(noop);
-            }
+            await Promise.all(disposable.map((d) => d.dispose().catch(noop)));
         }
+    }
+
+    private async createConnectionInfoFromUri(uri: string) {
+        const server = await this.getJupyterServerUri(uri);
+        return createRemoteConnectionInfo(uri, server);
     }
 
     private async getJupyterServerUri(uri: string) {

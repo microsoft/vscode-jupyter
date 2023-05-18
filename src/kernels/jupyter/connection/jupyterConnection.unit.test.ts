@@ -67,7 +67,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
 
-        await jupyterConnection.validateRemoteUri(uri);
+        await jupyterConnection.validateJupyterServer(uri);
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
@@ -79,7 +79,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenReject(new Error('Kaboom kernels failure'));
 
-        await assert.isRejected(jupyterConnection.validateRemoteUri(uri), 'Kaboom kernels failure');
+        await assert.isRejected(jupyterConnection.validateJupyterServer(uri), 'Kaboom kernels failure');
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
@@ -91,7 +91,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
         when(sessionManager.getRunningKernels()).thenResolve([]);
 
-        await assert.isRejected(jupyterConnection.validateRemoteUri(uri), 'Kaboom kernelspec failure');
+        await assert.isRejected(jupyterConnection.validateJupyterServer(uri), 'Kaboom kernelspec failure');
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();

@@ -89,20 +89,9 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export function createRemoteConnectionInfo(
-    uri: string,
-    serverUri?: IJupyterServerUri,
-    providerId?: string
-): IJupyterConnection {
-    let url: URL;
-    try {
-        url = new URL(uri);
-    } catch (err) {
-        // This should already have been parsed when set, so just throw if it's not right here
-        throw err;
-    }
-
-    providerId = providerId || '';
+export function createRemoteConnectionInfo(uri: string, serverUri?: IJupyterServerUri): IJupyterConnection {
+    const url = new URL(uri);
+    const providerId = extractJupyterServerHandleAndId(uri)?.id;
 
     const baseUrl = serverUri
         ? serverUri.baseUrl
