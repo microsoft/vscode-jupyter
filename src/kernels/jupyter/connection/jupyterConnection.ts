@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
-import { IJupyterConnection } from '../../types';
 import {
     computeServerId,
     createRemoteConnectionInfo,
@@ -33,29 +32,16 @@ export class JupyterConnection {
     ) {}
 
     public async createConnectionInfo(options: { serverId: string } | { uri: string }) {
-        const uri = 'uri' in options ? options.uri : await this.getUriFromServerId(options.serverId);
+        const uri = 'uri' in options ? options.uri : (await this.serverUriStorage.get(options.serverId))?.uri;
         if (!uri) {
             throw new Error('Server Not found');
         }
         return this.createConnectionInfoFromUri(uri);
     }
+
     public async validateRemoteUri(uri: string): Promise<void> {
-        return this.validateRemoteConnection(await this.createConnectionInfoFromUri(uri));
-    }
-
-    private async getUriFromServerId(serverId: string) {
-        // Since there's one server per session, don't use a resource to figure out these settings
-        const savedList = await this.serverUriStorage.getAll();
-        return savedList.find((item) => item.serverId === serverId)?.uri;
-    }
-    private async createConnectionInfoFromUri(uri: string) {
-        const server = await this.getJupyterServerUri(uri);
-        const idAndHandle = extractJupyterServerHandleAndId(uri);
-        return createRemoteConnectionInfo(uri, server, idAndHandle?.id);
-    }
-
-    private async validateRemoteConnection(connection: IJupyterConnection): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
+        const connection = await this.createConnectionInfoFromUri(uri);
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
@@ -68,6 +54,11 @@ export class JupyterConnection {
                 sessionManager.dispose().catch(noop);
             }
         }
+    }
+    private async createConnectionInfoFromUri(uri: string) {
+        const server = await this.getJupyterServerUri(uri);
+        const idAndHandle = extractJupyterServerHandleAndId(uri);
+        return createRemoteConnectionInfo(uri, server, idAndHandle?.id);
     }
 
     private async getJupyterServerUri(uri: string) {

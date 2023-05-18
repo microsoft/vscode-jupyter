@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import uuid from 'uuid/v4';
-import { CancellationError, CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import {
     Cancellation,
     createPromiseFromCancellation,
@@ -23,7 +23,7 @@ import { JupyterConnectError } from '../../../platform/errors/jupyterConnectErro
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { JupyterConnectionWaiter } from './jupyterConnection.node';
+import { JupyterConnectionWaiter } from './jupyterConnectionWaiter.node';
 import { WrappedError } from '../../../platform/errors/types';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { ReportableAction } from '../../../platform/progress/types';
@@ -133,24 +133,19 @@ export class JupyterServerStarter implements IJupyterServerStarter {
                 launchResult,
                 Uri.file(tempDir.path),
                 workingDirectory,
-                this.jupyterInterpreterService.getRunningJupyterServers.bind(this.jupyterInterpreterService),
+                () => this.jupyterInterpreterService.getRunningJupyterServers(cancelToken),
                 this.serviceContainer,
-                interpreter,
-                cancelToken
+                interpreter
             );
             // Make sure we haven't canceled already.
             Cancellation.throwIfCanceled(cancelToken);
             const connection = await Promise.race([
-                starter.waitForConnection(),
-                createPromiseFromCancellation<void>({
+                starter.ready,
+                createPromiseFromCancellation<IJupyterConnection>({
                     cancelAction: 'reject',
                     token: cancelToken
                 })
             ]);
-
-            if (!connection) {
-                throw new CancellationError();
-            }
 
             try {
                 const port = parseInt(new URL(connection.baseUrl).port || '0', 10);
