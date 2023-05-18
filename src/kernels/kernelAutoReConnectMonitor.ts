@@ -23,7 +23,6 @@ import {
     RemoteKernelConnectionMetadata
 } from './types';
 import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
-import { extractJupyterServerHandleAndId } from './jupyter/jupyterUtils';
 
 /**
  * In the case of Jupyter kernels, when a kernel dies Jupyter will automatically restart that kernel.
@@ -216,17 +215,11 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
     ): Promise<boolean> {
         const uriItem = await this.serverUriStorage.getMRU(metadata.serverId);
 
-        if (!uriItem) {
+        if (!uriItem?.provider) {
             return false;
         }
 
-        const idAndHandle = extractJupyterServerHandleAndId(uriItem.uri);
-
-        if (!idAndHandle) {
-            return false;
-        }
-
-        const provider = await this.jupyterUriProviderRegistration.getProvider(idAndHandle.id);
+        const provider = await this.jupyterUriProviderRegistration.getProvider(uriItem.provider.id);
         if (!provider || !provider.getHandles) {
             return false;
         }
@@ -234,7 +227,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         try {
             const handles = await provider.getHandles();
 
-            if (!handles.includes(idAndHandle.handle)) {
+            if (!handles.includes(uriItem.provider.handle)) {
                 await this.serverUriStorage.removeMRU(uriItem.uri);
                 this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);

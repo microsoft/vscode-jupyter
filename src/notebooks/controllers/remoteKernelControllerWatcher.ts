@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
     IJupyterUriProvider,
@@ -53,7 +53,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         await Promise.all(
             uris.map(async (item) => {
                 // Check if this url is associated with a provider.
-                const info = extractJupyterServerHandleAndId(item.uri);
+                const info = item.provider;
                 if (!info || info.id !== provider.id) {
                     return;
                 }

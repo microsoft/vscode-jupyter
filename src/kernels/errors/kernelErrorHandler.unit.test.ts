@@ -794,7 +794,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 },
                 serverId
             });
-            when(uriStorage.getMRUs()).thenResolve([]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve();
@@ -833,7 +832,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 },
                 serverId
             });
-            when(uriStorage.getMRUs()).thenResolve([{ time: 1, uri, serverId, displayName: 'Hello Server' }]);
+            when(uriStorage.getMRU(serverId)).thenResolve({ time: 1, uri, serverId, displayName: 'Hello Server' });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve();
@@ -856,6 +855,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 )
             ).once();
             verify(uriStorage.removeMRU(uri)).never();
+            verify(uriStorage.getMRU(serverId)).atLeast(1);
         });
         test('Remove remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
@@ -876,10 +876,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText as any);
             when(uriStorage.removeMRU(anything())).thenResolve();
-            when(uriStorage.getMRUs()).thenResolve([
-                { time: 1, serverId: 'foobar', uri: 'one' },
-                { uri, serverId, time: 2 }
-            ]);
+            when(uriStorage.getMRU(serverId)).thenResolve({ uri, serverId, time: 2 });
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -889,7 +886,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
             verify(uriStorage.removeMRU(uri)).once();
-            verify(uriStorage.getMRUs()).atLeast(1);
+            verify(uriStorage.getMRU(serverId)).atLeast(1);
         });
         test('Change remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
@@ -906,7 +903,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 },
                 serverId
             });
-            when(uriStorage.getMRUs()).thenResolve([]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.changeRemoteJupyterConnectionButtonText as any);
@@ -936,7 +932,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 },
                 serverId
             });
-            when(uriStorage.getMRUs()).thenResolve([]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.selectDifferentKernel as any);

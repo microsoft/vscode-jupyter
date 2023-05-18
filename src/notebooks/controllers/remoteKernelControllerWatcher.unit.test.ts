@@ -118,8 +118,27 @@ suite('RemoteKernelControllerWatcher', () => {
         ]);
 
         when(uriStorage.getMRUs()).thenResolve([
-            { time: 1, serverId, uri: remoteUriForProvider1, displayName: 'Something' }
+            {
+                time: 1,
+                serverId,
+                uri: remoteUriForProvider1,
+                displayName: 'Something',
+                provider: {
+                    handle: provider1Handle1,
+                    id: provider1Id
+                }
+            }
         ]);
+        when(uriStorage.getMRU(serverId)).thenResolve({
+            time: 1,
+            serverId,
+            uri: remoteUriForProvider1,
+            displayName: 'Something',
+            provider: {
+                handle: provider1Handle1,
+                id: provider1Id
+            }
+        });
         when(uriStorage.addMRU(anything(), anything())).thenResolve();
 
         watcher.activate();

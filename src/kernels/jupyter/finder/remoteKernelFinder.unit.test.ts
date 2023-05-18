@@ -47,7 +47,6 @@ suite(`Remote Kernel Finder`, () => {
     let jupyterConnection: JupyterConnection;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
-        type: 'jupyter',
         localLaunch: false,
         baseUrl: 'http://foobar',
         displayName: 'foobar connection',

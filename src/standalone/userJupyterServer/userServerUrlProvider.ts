@@ -15,7 +15,6 @@ import {
     window
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
-import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
 import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUri,
@@ -91,7 +90,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 const existingServers = await this.serverUriStorage.getMRUs();
                 const migratedServers = [];
                 for (const server of existingServers) {
-                    const info = extractJupyterServerHandleAndId(server.uri);
+                    const info = server.provider;
                     if (info) {
                         continue;
                     }

@@ -62,7 +62,15 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         const editedList = uriList.filter((f, i) => f.uri !== uri && i < Settings.JupyterServerUriListMax - 1);
 
         // Add this entry into the last.
-        const entry = { uri, time: Date.now(), serverId, displayName, isValidated: true };
+        const idAndHandle = extractJupyterServerHandleAndId(uri);
+        const entry: IJupyterServerUriEntry = {
+            uri,
+            time: Date.now(),
+            serverId,
+            displayName,
+            isValidated: true,
+            provider: idAndHandle
+        };
         editedList.push(entry);
 
         // Signal that we added in the entry
@@ -132,6 +140,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                             const uriAndDisplayName = item.split(Settings.JupyterServerRemoteLaunchNameSeparator);
                             const uri = uriAndDisplayName[0];
                             const serverId = await computeServerId(uri);
+                            const idAndHandle = extractJupyterServerHandleAndId(uri);
                             // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
                             const displayName =
                                 uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
@@ -143,33 +152,25 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                                 serverId,
                                 displayName,
                                 uri,
-                                isValidated: true
+                                isValidated: true,
+                                provider: idAndHandle
                             };
 
                             if (uri === Settings.JupyterServerLocalLaunch) {
                                 return;
                             }
 
-                            try {
-                                const idAndHandle = extractJupyterServerHandleAndId(uri);
-                                if (idAndHandle) {
-                                    return this.jupyterPickerRegistration
-                                        .getJupyterServerUri(idAndHandle.id, idAndHandle.handle)
-                                        .then(
-                                            () => server,
-                                            () => {
-                                                server.isValidated = false;
-                                                return server;
-                                            }
-                                        );
-                                }
-                            } catch (ex) {
-                                traceVerbose(`Failed to extract jupyter server uri ${uri} ${ex}`);
-                                server.isValidated = false;
-                                return server;
-                            }
-
-                            return server;
+                            return idAndHandle
+                                ? this.jupyterPickerRegistration
+                                      .getJupyterServerUri(idAndHandle.id, idAndHandle.handle)
+                                      .then(
+                                          () => server,
+                                          () => {
+                                              server.isValidated = false;
+                                              return server;
+                                          }
+                                      )
+                                : server;
                         })
                     );
 

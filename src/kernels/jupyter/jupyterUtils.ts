@@ -111,9 +111,7 @@ export function createRemoteConnectionInfo(
           `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
     const token = serverUri ? serverUri.token : `${url.searchParams.get('token') ?? ''}`;
     const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
-    const isEmptyAuthHeader = Object.keys(serverUri?.authorizationHeader ?? {}).length === 0;
     return {
-        type: 'jupyter',
         baseUrl,
         providerId,
         token,
@@ -134,11 +132,11 @@ export function createRemoteConnectionInfo(
         // For remote jupyter servers that are managed by us, we can provide the auth header.
         // Its crucial this is set to undefined, else password retrieval will not be attempted.
         getAuthHeader:
-            serverUri && !providerId.startsWith('_builtin') && !isEmptyAuthHeader
+            !uri.startsWith('_builtin') && Object.keys(serverUri?.authorizationHeader ?? {}).length > 0
                 ? () => serverUri?.authorizationHeader
                 : undefined,
         getWebsocketProtocols:
-            serverUri && !providerId.startsWith('_builtin') && (serverUri?.webSocketProtocols || []).length
+            !uri.startsWith('_builtin') && serverUri?.webSocketProtocols
                 ? () => serverUri?.webSocketProtocols || []
                 : () => [],
         url: uri
@@ -165,7 +163,7 @@ export function extractJupyterServerHandleAndId(
         // Id has to be there too.
         const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
         const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-        return id && uriHandle ? { handle: uriHandle, id } : undefined;
+        return id && uriHandle ? { handle: uriHandle, id: id } : undefined;
     } catch (ex) {
         traceError('Failed to parse remote URI', uri, ex);
     }

@@ -20,7 +20,7 @@ import {
 } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { Commands, Identifiers } from '../../platform/common/constants';
+import { Commands } from '../../platform/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { translateProductToModule } from '../../platform/interpreter/installer/utils';
 import { ProductNames } from '../../platform/interpreter/installer/productNames';
@@ -47,15 +47,12 @@ import { KernelDeadError } from './kernelDeadError';
 import { DisplayOptions } from '../displayOptions';
 import {
     IJupyterInterpreterDependencyManager,
+    IJupyterServerUriEntry,
     IJupyterServerUriStorage,
     IJupyterUriProviderRegistration,
     JupyterInterpreterDependencyResponse
 } from '../jupyter/types';
-import {
-    extractJupyterServerHandleAndId,
-    handleExpiredCertsError,
-    handleSelfCertsError
-} from '../jupyter/jupyterUtils';
+import { handleExpiredCertsError, handleSelfCertsError } from '../jupyter/jupyterUtils';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterExpiredCertsError } from '../../platform/errors/jupyterExpiredCertsError';
@@ -237,10 +234,9 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         error: RemoteJupyterServerUriProviderError,
         errorContext?: KernelAction
     ) {
-        const savedList = await this.serverUriStorage.getMRUs();
+        const server = await this.serverUriStorage.getMRU(error.serverId);
         const message = error.originalError?.message || error.message;
-        const serverId = error.serverId;
-        const displayName = savedList.find((item) => item.serverId === serverId)?.displayName;
+        const displayName = server?.displayName;
         const idAndHandle = `${error.providerId}:${error.handle}`;
         const serverName = displayName || idAndHandle;
 
@@ -253,59 +249,37 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         error: RemoteJupyterServerConnectionError,
         errorContext?: KernelAction
     ) {
-        const savedList = await this.serverUriStorage.getMRUs();
+        const info = await this.serverUriStorage.getMRU(error.serverId);
         const message = error.originalError.message || '';
-        const serverId = error.serverId;
-        const displayName = savedList.find((item) => item.serverId === serverId)?.displayName;
 
-        if (error.baseUrl === Identifiers.REMOTE_URI) {
-            // 3rd party server uri error
-            const idAndHandle = extractJupyterServerHandleAndId(error.url);
-            if (idAndHandle) {
-                const serverUri = await this.jupyterUriProviderRegistration.getJupyterServerUri(
-                    idAndHandle.id,
-                    idAndHandle.handle
-                );
-
-                const serverName =
-                    serverUri?.displayName ?? this.generateJupyterIdAndHandleErrorName(error.url) ?? error.url;
-                return getUserFriendlyErrorMessage(
-                    DataScience.remoteJupyterConnectionFailedWithServerWithError(serverName, message),
-                    errorContext
-                );
-            }
+        if (info?.provider) {
+            const serverName = info?.displayName ?? error.url;
+            return getUserFriendlyErrorMessage(
+                DataScience.remoteJupyterConnectionFailedWithServerWithError(serverName, message),
+                errorContext
+            );
         }
 
         const baseUrl = error.baseUrl;
-        const serverName = displayName && baseUrl ? `${displayName} (${baseUrl})` : displayName || baseUrl;
+        const serverName =
+            info?.displayName && baseUrl ? `${info.displayName} (${baseUrl})` : info?.displayName || baseUrl;
 
         return getUserFriendlyErrorMessage(
             DataScience.remoteJupyterConnectionFailedWithServerWithError(serverName, message),
             errorContext
         );
     }
-    private generateJupyterIdAndHandleErrorName(url: string): string | undefined {
-        const idAndHandle = extractJupyterServerHandleAndId(url);
-
-        return idAndHandle ? `${idAndHandle.id}:${idAndHandle.handle}` : undefined;
-    }
-    private async handleJupyterServerProviderConnectionError(uri: string) {
-        const idAndHandle = extractJupyterServerHandleAndId(uri);
-
-        if (!idAndHandle) {
-            return false;
-        }
-
-        const provider = await this.jupyterUriProviderRegistration.getProvider(idAndHandle.id);
-        if (!provider || !provider.getHandles) {
+    private async handleJupyterServerProviderConnectionError(info: IJupyterServerUriEntry) {
+        const provider = info.provider && (await this.jupyterUriProviderRegistration.getProvider(info.serverId));
+        if (!info.provider || !provider || !provider.getHandles) {
             return false;
         }
 
         try {
             const handles = await provider.getHandles();
 
-            if (!handles.includes(idAndHandle.handle)) {
-                await this.serverUriStorage.removeMRU(uri);
+            if (!handles.includes(info.provider.handle)) {
+                await this.serverUriStorage.removeMRU(info.uri);
             }
             return true;
         } catch (_ex) {
@@ -366,7 +340,6 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             err instanceof InvalidRemoteJupyterServerUriHandleError
         ) {
             this.sendKernelTelemetry(err, errorContext, resource, err.category);
-            const savedList = await this.serverUriStorage.getMRUs();
             const message =
                 err instanceof InvalidRemoteJupyterServerUriHandleError
                     ? ''
@@ -374,7 +347,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     ? err.originalError.message || ''
                     : err.originalError?.message || err.message;
             const serverId = err instanceof RemoteJupyterServerConnectionError ? err.serverId : err.serverId;
-            const server = savedList.find((item) => item.serverId === serverId);
+            const server = await this.serverUriStorage.getMRU(serverId);
             const displayName = server?.displayName;
             const baseUrl = err instanceof RemoteJupyterServerConnectionError ? err.baseUrl : '';
             const idAndHandle =
@@ -386,7 +359,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     ? this.extensions.getExtension(err.extensionId)?.packageJSON.displayName || err.extensionId
                     : '';
             const options = actionSource === 'jupyterExtension' ? [DataScience.selectDifferentKernel] : [];
-            if (server && (await this.handleJupyterServerProviderConnectionError(server.uri))) {
+            if (server && (await this.handleJupyterServerProviderConnectionError(server))) {
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
             }
 
@@ -401,11 +374,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             );
             switch (selection) {
                 case DataScience.removeRemoteJupyterConnectionButtonText: {
-                    // Start with saved list.
-                    const uriList = await this.serverUriStorage.getMRUs();
-
                     // Remove this uri if already found (going to add again with a new time)
-                    const item = uriList.find((f) => f.serverId === serverId);
+                    const item = await this.serverUriStorage.getMRU(serverId);
                     if (item) {
                         await this.serverUriStorage.removeMRU(item.uri);
                     }

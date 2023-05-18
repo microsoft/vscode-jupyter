@@ -152,7 +152,7 @@ export interface IJupyterServerProvider {
      * Stats the local Jupyter Notebook server (if not already started)
      * and returns the connection information.
      */
-    getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection>;
+    getOrStartServer(options: GetServerOptions): Promise<IJupyterConnection>;
 }
 
 export interface IJupyterServerUri {
@@ -246,6 +246,10 @@ export interface IJupyterServerUriEntry {
      * Uri of the server to connect to
      */
     uri: string;
+    provider?: {
+        id: string;
+        handle: JupyterServerUriHandle;
+    };
     /**
      * Unique ID using a hash of the full uri
      */

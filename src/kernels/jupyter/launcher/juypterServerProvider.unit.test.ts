@@ -57,7 +57,7 @@ suite('Jupyter Server Provider', () => {
         when((connection as any).then).thenReturn(undefined);
         when(jupyterServerHelper.getJupyterServerConnection(anything())).thenResolve(instance(connection));
 
-        const server = await serverProvider.getOrCreateServer({
+        const server = await serverProvider.getOrStartServer({
             resource: undefined,
             ui: new DisplayOptions(false),
             token: source.token
@@ -72,7 +72,7 @@ suite('Jupyter Server Provider', () => {
         when(jupyterServerHelper.connectToNotebookServer(anything(), anything())).thenResolve(connection.object);
 
         // Disable UI just lets us skip mocking the progress reporter
-        const server = await serverProvider.getOrCreateServer({
+        const server = await serverProvider.getOrStartServer({
             ui: new DisplayOptions(true),
             resource: undefined,
             token: source.token

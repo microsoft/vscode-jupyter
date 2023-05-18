@@ -33,7 +33,7 @@ export class JupyterConnection {
     ) {}
 
     public async createConnectionInfo(options: { serverId: string } | { uri: string }) {
-        const uri = 'uri' in options ? options.uri : await this.getUriFromServerId(options.serverId);
+        const uri = 'uri' in options ? options.uri : (await this.getUriFromServerId(options.serverId))?.uri;
         if (!uri) {
             throw new Error('Server Not found');
         }
@@ -44,9 +44,7 @@ export class JupyterConnection {
     }
 
     private async getUriFromServerId(serverId: string) {
-        // Since there's one server per session, don't use a resource to figure out these settings
-        const savedList = await this.serverUriStorage.getMRUs();
-        return savedList.find((item) => item.serverId === serverId)?.uri;
+        return this.serverUriStorage.getMRU(serverId);
     }
     private async createConnectionInfoFromUri(uri: string) {
         const server = await this.getJupyterServerUri(uri);

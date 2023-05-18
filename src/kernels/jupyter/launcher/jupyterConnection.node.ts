@@ -96,25 +96,6 @@ export class JupyterConnectionWaiter implements IDisposable {
         return this.startPromise.promise;
     }
 
-    private createConnection(
-        url: string,
-        baseUrl: string,
-        token: string,
-        hostName: string,
-        processDisposable: Disposable
-    ) {
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return new JupyterConnection(
-            url,
-            baseUrl,
-            token,
-            hostName,
-            this.rootDir,
-            processDisposable,
-            this.launchResult.proc
-        );
-    }
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private output(data: any) {
         if (!this.connectionDisposed) {
@@ -198,13 +179,17 @@ export class JupyterConnectionWaiter implements IDisposable {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.rejected) {
-            const connection = this.createConnection(url, baseUrl, token, hostName, this.launchResult);
-            const origDispose = connection.dispose.bind(connection);
-            connection.dispose = () => {
-                // Stop listening when we disconnect
-                this.connectionDisposed = true;
-                return origDispose();
-            };
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            const connection = new JupyterConnection(
+                url,
+                baseUrl,
+                token,
+                hostName,
+                this.rootDir,
+                this.launchResult,
+                this.launchResult.proc,
+                () => (this.connectionDisposed = true)
+            );
             this.startPromise.resolve(connection);
         }
     }
@@ -234,7 +219,6 @@ export class JupyterConnectionWaiter implements IDisposable {
 // Represents an active connection to a running jupyter notebook
 class JupyterConnection implements IJupyterConnection {
     public readonly localLaunch: boolean = true;
-    public readonly type = 'jupyter';
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
     constructor(
         public readonly url: string,
@@ -243,7 +227,8 @@ class JupyterConnection implements IJupyterConnection {
         public readonly hostName: string,
         public readonly rootDirectory: Uri,
         private readonly disposable: Disposable,
-        childProc: ChildProcess | undefined
+        childProc: ChildProcess | undefined,
+        private readonly onDidDispose: () => void
     ) {
         // If the local process exits, set our exit code and fire our event
         if (childProc) {
@@ -264,6 +249,7 @@ class JupyterConnection implements IJupyterConnection {
     }
 
     public dispose() {
+        this.onDidDispose();
         if (this.disposable) {
             this.disposable.dispose();
         }

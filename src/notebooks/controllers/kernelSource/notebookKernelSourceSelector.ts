@@ -14,7 +14,7 @@ import {
     ThemeIcon
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
+import { generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUriStorage,
@@ -181,12 +181,6 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
     ): Promise<InputStep<MultiStepResult> | void> {
-        const savedURIList = await this.serverUriStorage.getMRUs();
-
-        if (token.isCancellationRequested) {
-            return;
-        }
-
         const servers = this.kernelFinder.registered.filter(
             (info) => info.kind === 'remote' && (info as IRemoteKernelFinder).serverUri.uri
         ) as IRemoteKernelFinder[];
@@ -194,30 +188,31 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
 
         for (const server of servers) {
             // remote server
-            const savedURI = savedURIList.find((uri) => uri.uri === server.serverUri.uri);
-            if (savedURI) {
-                const idAndHandle = extractJupyterServerHandleAndId(savedURI.uri);
+            const savedURI = await this.serverUriStorage.getMRU(server.serverUri.serverId);
+            if (token.isCancellationRequested) {
+                return;
+            }
 
-                if (idAndHandle && idAndHandle.id === provider.id) {
-                    // local server
-                    const uriDate = new Date(savedURI.time);
-                    items.push({
-                        type: KernelFinderEntityQuickPickType.KernelFinder,
-                        kernelFinderInfo: server,
-                        serverUri: savedURI.uri,
-                        idAndHandle: idAndHandle,
-                        label: server.displayName,
-                        detail: DataScience.jupyterSelectURIMRUDetail(uriDate),
-                        buttons: provider.removeHandle
-                            ? [
-                                  {
-                                      iconPath: new ThemeIcon('trash'),
-                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
-                                  }
-                              ]
-                            : []
-                    });
-                }
+            const idAndHandle = savedURI?.provider;
+            if (idAndHandle && idAndHandle.id === provider.id) {
+                // local server
+                const uriDate = new Date(savedURI.time);
+                items.push({
+                    type: KernelFinderEntityQuickPickType.KernelFinder,
+                    kernelFinderInfo: server,
+                    serverUri: savedURI.uri,
+                    idAndHandle,
+                    label: server.displayName,
+                    detail: DataScience.jupyterSelectURIMRUDetail(uriDate),
+                    buttons: provider.removeHandle
+                        ? [
+                              {
+                                  iconPath: new ThemeIcon('trash'),
+                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                              }
+                          ]
+                        : []
+                });
             }
         }
 

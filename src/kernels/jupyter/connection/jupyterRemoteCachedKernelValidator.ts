@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { traceWarning } from '../../../platform/logging';
 import { LiveRemoteKernelConnectionMetadata } from '../../types';
-import { extractJupyterServerHandleAndId } from '../jupyterUtils';
 import {
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriStorage,
@@ -30,14 +29,13 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
             return false;
         }
         const providersPromise = this.providerRegistration.getProviders();
-        const currentList = await this.uriStorage.getMRUs();
-        const item = currentList.find((item) => item.serverId === kernel.serverId);
+        const item = await this.uriStorage.getMRU(kernel.serverId);
         if (!item) {
             // Server has been removed and we have some old cached data.
             return false;
         }
         // Check if this has a provider associated with it.
-        const info = extractJupyterServerHandleAndId(item.uri);
+        const info = item.provider;
         if (!info) {
             // Could be a regular remote Jupyter Uri entered by the user.
             // As its in the list, its still valid.
