@@ -167,7 +167,7 @@ suite('JupyterConnection', () => {
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
     });
 
-    function createConnectionWaiter(cancelToken?: CancellationToken) {
+    function createConnectionWaiter() {
         return new JupyterConnectionWaiter(
             launchResult,
             notebookDir,
@@ -175,8 +175,7 @@ suite('JupyterConnection', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             getServerInfoStub as any,
             instance(serviceContainer),
-            undefined,
-            cancelToken
+            undefined
         );
     }
     test('Successfully gets connection info', async () => {
@@ -184,31 +183,18 @@ suite('JupyterConnection', () => {
         const waiter = createConnectionWaiter();
         observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://123.123.123:8888' });
 
-        const connection = await waiter.waitForConnection();
+        const connection = await waiter.ready;
 
         assert.equal(connection.localLaunch, true);
         assert.equal(connection.baseUrl, expectedServerInfo.url);
         assert.equal(connection.hostName, expectedServerInfo.hostname);
         assert.equal(connection.token, expectedServerInfo.token);
     });
-    test('Disconnect event is fired in connection', async () => {
-        (<any>dsSettings).jupyterLaunchTimeout = 10_000;
-        const waiter = createConnectionWaiter();
-        observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://123.123.123:8888' });
-        let disconnected = false;
-
-        const connection = await waiter.waitForConnection();
-        connection.disconnected(() => (disconnected = true));
-
-        childProc.emit('exit', 999);
-
-        assert.isTrue(disconnected);
-    });
     test('Throw timeout error', async () => {
         (<any>dsSettings).jupyterLaunchTimeout = 10;
         const waiter = createConnectionWaiter();
 
-        const promise = waiter.waitForConnection();
+        const promise = waiter.ready;
 
         await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut);
     });
@@ -216,7 +202,7 @@ suite('JupyterConnection', () => {
         const exitCode = 999;
         const waiter = createConnectionWaiter();
 
-        const promise = waiter.waitForConnection();
+        const promise = waiter.ready;
         childProc.emit('exit', exitCode);
         observableOutput.complete();
 

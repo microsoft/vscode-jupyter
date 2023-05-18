@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import uuid from 'uuid/v4';
-import { CancellationError, CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import {
     Cancellation,
     createPromiseFromCancellation,
@@ -33,7 +33,6 @@ import { INotebookStarter as IJupyterServerStarter } from '../types';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
-import { noop } from '../../../platform/common/utils/misc';
 import { UsedPorts } from '../../common/usedPorts';
 
 /**
@@ -80,13 +79,13 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         const progress = KernelProgressReporter.reportProgress(resource, ReportableAction.NotebookStart);
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
-            const tempDirPromise = this.generateTempDir();
-            tempDirPromise.then((dir) => this.disposables.push(dir)).catch(noop);
+            const tempDir = await this.generateTempDir();
+            this.disposables.push(tempDir);
             // Before starting the notebook process, make sure we generate a kernel spec
             const args = await this.generateArguments(
                 useDefaultConfig,
                 customCommandLine,
-                tempDirPromise,
+                tempDir,
                 workingDirectory.fsPath
             );
 
@@ -95,13 +94,12 @@ export class JupyterServerStarter implements IJupyterServerStarter {
 
             // Then use this to launch our notebook process.
             traceVerbose('Starting Jupyter Notebook');
-            const [launchResult, tempDir, interpreter] = await Promise.all([
+            const [launchResult, interpreter] = await Promise.all([
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
                     encoding: 'utf8',
                     token: cancelToken
                 }),
-                tempDirPromise,
                 this.jupyterInterpreterService.getSelectedInterpreter(cancelToken).catch(() => undefined)
             ]);
 
@@ -118,13 +116,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
             if (launchResult) {
-                cancelToken.onCancellationRequested(
-                    () => {
-                        launchResult.dispose();
-                    },
-                    this,
-                    disposables
-                );
+                cancelToken.onCancellationRequested(() => launchResult.dispose(), this, disposables);
             }
 
             // Wait for the connection information on this result
@@ -133,24 +125,19 @@ export class JupyterServerStarter implements IJupyterServerStarter {
                 launchResult,
                 Uri.file(tempDir.path),
                 workingDirectory,
-                this.jupyterInterpreterService.getRunningJupyterServers.bind(this.jupyterInterpreterService),
+                () => this.jupyterInterpreterService.getRunningJupyterServers(cancelToken),
                 this.serviceContainer,
-                interpreter,
-                cancelToken
+                interpreter
             );
             // Make sure we haven't canceled already.
             Cancellation.throwIfCanceled(cancelToken);
             const connection = await Promise.race([
-                starter.waitForConnection(),
-                createPromiseFromCancellation<void>({
+                starter.ready,
+                createPromiseFromCancellation<IJupyterConnection>({
                     cancelAction: 'reject',
                     token: cancelToken
                 })
             ]);
-
-            if (!connection) {
-                throw new CancellationError();
-            }
 
             try {
                 const port = parseInt(new URL(connection.baseUrl).port || '0', 10);
@@ -198,7 +185,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
 
     private async generateDefaultArguments(
         useDefaultConfig: boolean,
-        tempDirPromise: Promise<TemporaryDirectory>,
+        tempDir: TemporaryDirectory,
         workingDirectory: string
     ): Promise<string[]> {
         // Parallelize as much as possible.
@@ -206,7 +193,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         promisedArgs.push(Promise.resolve('--no-browser'));
         promisedArgs.push(Promise.resolve(this.getNotebookDirArgument(workingDirectory)));
         if (useDefaultConfig) {
-            promisedArgs.push(this.getConfigArgument(tempDirPromise));
+            promisedArgs.push(this.getConfigArgument(tempDir));
         }
         // Modify the data rate limit if starting locally. The default prevents large dataframes from being returned.
         promisedArgs.push(Promise.resolve('--NotebookApp.iopub_data_rate_limit=10000000000.0'));
@@ -240,11 +227,11 @@ export class JupyterServerStarter implements IJupyterServerStarter {
     private async generateArguments(
         useDefaultConfig: boolean,
         customCommandLine: string[],
-        tempDirPromise: Promise<TemporaryDirectory>,
+        tempDir: TemporaryDirectory,
         workingDirectory: string
     ): Promise<string[]> {
         if (!customCommandLine || customCommandLine.length === 0) {
-            return this.generateDefaultArguments(useDefaultConfig, tempDirPromise, workingDirectory);
+            return this.generateDefaultArguments(useDefaultConfig, tempDir, workingDirectory);
         }
         return this.generateCustomArguments(customCommandLine);
     }
@@ -270,8 +257,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
      * @returns {Promise<void>}
      * @memberof NotebookStarter
      */
-    private async getConfigArgument(tempDirectory: Promise<TemporaryDirectory>): Promise<string> {
-        const tempDir = await tempDirectory;
+    private async getConfigArgument(tempDir: TemporaryDirectory): Promise<string> {
         // In the temp dir, create an empty config python file. This is the same
         // as starting jupyter with all of the defaults.
         const configFile = path.join(tempDir.path, 'jupyter_notebook_config.py');

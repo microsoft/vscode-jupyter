@@ -530,7 +530,6 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
 export interface IJupyterConnection extends Disposable {
     readonly localLaunch: boolean;
     displayName: string;
-    disconnected: Event<number>;
 
     // Jupyter specific members
     readonly baseUrl: string;

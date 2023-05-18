@@ -110,9 +110,6 @@ export function createRemoteConnectionInfo(uri: string, serverUri?: IJupyterServ
             serverUri && serverUri.displayName
                 ? serverUri.displayName
                 : getJupyterConnectionDisplayName(token, baseUrl),
-        disconnected: (_l) => {
-            return { dispose: noop };
-        },
         dispose: noop,
         rootDirectory: Uri.file(''),
         // Temporarily support workingDirectory as a fallback for old extensions using that (to be removed in the next release).

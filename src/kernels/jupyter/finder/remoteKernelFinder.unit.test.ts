@@ -7,7 +7,7 @@ import type { Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { getDisplayNameOrNameOfKernelConnection } from '../../helpers';
-import { Disposable, EventEmitter, Memento, Uri } from 'vscode';
+import { Disposable, Memento, Uri } from 'vscode';
 import { CryptoUtils } from '../../../platform/common/crypto';
 import { noop } from '../../../test/core';
 import {
@@ -41,7 +41,6 @@ suite(`Remote Kernel Finder`, () => {
     let fs: IFileSystemNode;
     let memento: Memento;
     let jupyterSessionManager: IJupyterSessionManager;
-    const dummyEvent = new EventEmitter<number>();
     let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
     let kernelsChanged: TestEventHandler<void>;
     let jupyterConnection: JupyterConnection;
@@ -50,7 +49,6 @@ suite(`Remote Kernel Finder`, () => {
         localLaunch: false,
         baseUrl: 'http://foobar',
         displayName: 'foobar connection',
-        disconnected: dummyEvent.event,
         token: '',
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
