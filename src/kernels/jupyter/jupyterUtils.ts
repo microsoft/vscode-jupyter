@@ -113,7 +113,6 @@ export function createRemoteConnectionInfo(
     const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
     const isEmptyAuthHeader = Object.keys(serverUri?.authorizationHeader ?? {}).length === 0;
     return {
-        type: 'jupyter',
         baseUrl,
         providerId,
         token,
@@ -123,9 +122,6 @@ export function createRemoteConnectionInfo(
             serverUri && serverUri.displayName
                 ? serverUri.displayName
                 : getJupyterConnectionDisplayName(token, baseUrl),
-        disconnected: (_l) => {
-            return { dispose: noop };
-        },
         dispose: noop,
         rootDirectory: Uri.file(''),
         // Temporarily support workingDirectory as a fallback for old extensions using that (to be removed in the next release).
