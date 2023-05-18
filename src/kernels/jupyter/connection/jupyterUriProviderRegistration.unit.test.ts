@@ -33,20 +33,12 @@ class MockProvider implements IJupyterUriProvider {
     }
     public async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (handle === '1') {
-            const currentDate = new Date();
             return {
                 // eslint-disable-next-line
                 baseUrl: 'http://foobar:3000',
                 token: '',
                 displayName: 'dummy',
-                authorizationHeader: { Bearer: this.currentBearer.toString() },
-                expiration: new Date(
-                    currentDate.getFullYear(),
-                    currentDate.getMonth(),
-                    undefined,
-                    currentDate.getHours(),
-                    currentDate.getMinutes() + 1 // Expire after one minute
-                )
+                authorizationHeader: { Bearer: this.currentBearer.toString() }
             };
         }
 

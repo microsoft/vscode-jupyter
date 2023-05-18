@@ -30,7 +30,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
             return false;
         }
         const providersPromise = this.providerRegistration.getProviders();
-        const currentList = await this.uriStorage.getSavedUriList();
+        const currentList = await this.uriStorage.getMRUs();
         const item = currentList.find((item) => item.serverId === kernel.serverId);
         if (!item) {
             // Server has been removed and we have some old cached data.

@@ -62,7 +62,7 @@ suite('Kernel ReConnect Progress Message', () => {
         when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
         clock = fakeTimers.install();
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
-        when(jupyterServerUriStorage.getSavedUriList()).thenResolve([]);
+        when(jupyterServerUriStorage.getMRUs()).thenResolve([]);
         jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
 
         disposables.push(new Disposable(() => clock.uninstall()));
@@ -170,7 +170,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidRestartKernel.event);
         when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
-        when(jupyterServerUriStorage.getSavedUriList()).thenResolve([]);
+        when(jupyterServerUriStorage.getMRUs()).thenResolve([]);
         jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         monitor = new KernelAutoReconnectMonitor(
             instance(appShell),
@@ -326,8 +326,8 @@ suite('Kernel ReConnect Failed Monitor', () => {
             serverId: '1234',
             time: 1234
         };
-        when(jupyterServerUriStorage.getSavedUriList()).thenResolve([server]);
-        when(jupyterServerUriStorage.getUriForServer(anything())).thenResolve(server);
+        when(jupyterServerUriStorage.getMRUs()).thenResolve([server]);
+        when(jupyterServerUriStorage.getMRU(anything())).thenResolve(server);
         when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
             id: 'remoteUriProvider',
             getServerUri: (_handle) =>

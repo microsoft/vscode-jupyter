@@ -92,7 +92,7 @@ export async function handleExpiredCertsError(
 export function createRemoteConnectionInfo(
     uri: string,
     serverUri?: IJupyterServerUri,
-    serverId?: string
+    providerId?: string
 ): IJupyterConnection {
     let url: URL;
     try {
@@ -102,7 +102,7 @@ export function createRemoteConnectionInfo(
         throw err;
     }
 
-    serverId = serverId || '';
+    providerId = providerId || '';
 
     const baseUrl = serverUri
         ? serverUri.baseUrl
@@ -115,7 +115,7 @@ export function createRemoteConnectionInfo(
     return {
         type: 'jupyter',
         baseUrl,
-        serverId,
+        providerId,
         token,
         hostName,
         localLaunch: false,
@@ -134,11 +134,13 @@ export function createRemoteConnectionInfo(
         // For remote jupyter servers that are managed by us, we can provide the auth header.
         // Its crucial this is set to undefined, else password retrieval will not be attempted.
         getAuthHeader:
-            serverUri && !serverId.startsWith('_builtin') && !isEmptyAuthHeader
+            serverUri && !providerId.startsWith('_builtin') && !isEmptyAuthHeader
                 ? () => serverUri?.authorizationHeader
                 : undefined,
         getWebsocketProtocols:
-            serverUri && !serverId.startsWith('_builtin') ? () => serverUri?.webSocketProtocols || [] : () => [],
+            serverUri && !providerId.startsWith('_builtin') && (serverUri?.webSocketProtocols || []).length
+                ? () => serverUri?.webSocketProtocols || []
+                : () => [],
         url: uri
     };
 }

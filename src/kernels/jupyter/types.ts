@@ -165,10 +165,6 @@ export interface IJupyterServerUri {
      * Authorization header to be used when connecting to the server.
      */
     authorizationHeader: Record<string, string>;
-    /**
-     * Date/time when header expires and should be refreshed.
-     */
-    expiration?: Date;
     displayName: string;
     /**
      * The local directory that maps to the remote directory of the Jupyter Server.
@@ -270,20 +266,18 @@ export interface IJupyterServerUriEntry {
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
-    readonly onDidChangeUri: Event<void>;
-    readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
-    readonly onDidAddUri: Event<IJupyterServerUriEntry>;
+    readonly onDidChange: Event<void>;
+    readonly onDidRemove: Event<IJupyterServerUriEntry[]>;
+    readonly onDidAdd: Event<IJupyterServerUriEntry>;
     /**
-     * Adds a server to the MRU list.
-     * Similar to `addToUriList` however one does not need to pass the `Uri` nor the `displayName`.
-     * As Uri could contain sensitive information and `displayName` would have already been setup.
+     * Updates MRU list marking this server as the most recently used.
      */
-    addServerToUriList(serverId: string, time: number): Promise<void>;
-    getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
-    removeUri(uri: string): Promise<void>;
-    clearUriList(): Promise<void>;
-    getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined>;
-    setUriToRemote(uri: string, displayName: string): Promise<void>;
+    updateMRU(serverId: string): Promise<void>;
+    getMRUs(): Promise<IJupyterServerUriEntry[]>;
+    removeMRU(uri: string): Promise<void>;
+    clearMRU(): Promise<void>;
+    getMRU(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
+    addMRU(uri: string, displayName: string): Promise<void>;
 }
 
 export interface IBackupFile {

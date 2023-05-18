@@ -103,9 +103,9 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
             this.disposables
         );
         this.pythonEnvFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
-        this.serverUriStorage.onDidChangeUri(this.onDidChangeFilter, this, this.disposables);
-        this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
-        this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+        this.serverUriStorage.onDidChange(this.onDidChangeFilter, this, this.disposables);
+        this.serverUriStorage.onDidChange(this.onDidChangeUri, this, this.disposables);
+        this.serverUriStorage.onDidRemove(this.onDidRemoveUris, this, this.disposables);
 
         this.onDidChange(
             ({ added }) => {

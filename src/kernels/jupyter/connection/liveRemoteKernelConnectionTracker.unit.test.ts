@@ -96,7 +96,7 @@ suite('Live kernel Connection Tracker', async () => {
         memento = mock<Memento>();
         onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
         disposables.push(onDidRemoveUris);
-        when(serverUriStorage.onDidRemoveUris).thenReturn(onDidRemoveUris.event);
+        when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveUris.event);
         tracker = new LiveRemoteKernelConnectionUsageTracker(
             disposables,
             instance(serverUriStorage),
@@ -109,7 +109,7 @@ suite('Live kernel Connection Tracker', async () => {
 
     test('Ensure event handler is added', () => {
         tracker.activate();
-        verify(serverUriStorage.onDidRemoveUris).once();
+        verify(serverUriStorage.onDidRemove).once();
     });
     test('Kernel connection is not used if memento is empty', async () => {
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);

@@ -170,7 +170,7 @@ export function buildApi(
                     controllerRegistration
                 );
 
-                await selector.setJupyterURIToRemote(uri);
+                await selector.addJupyterServer(uri);
                 await controllerCreatedPromise;
                 resolve();
             });

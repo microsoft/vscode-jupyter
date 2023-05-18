@@ -128,7 +128,7 @@ suite('Remote Kernel Execution', function () {
         const uri = await JupyterServer.instance.startSecondJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Another Jupyter started and listening at ${uriString}`);
-        await jupyterServerSelector.setJupyterURIToRemote(uriString);
+        await jupyterServerSelector.addJupyterServer(uriString);
 
         // Opening a notebook will trigger the refresh of the kernel list.
         nbUri = await createTemporaryNotebook([], disposables);

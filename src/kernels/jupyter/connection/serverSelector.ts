@@ -95,16 +95,10 @@ export class JupyterServerSelector {
         @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
     ) {}
 
-    public async setJupyterURIToRemote(
-        userURI: string,
-        ignoreValidation?: boolean,
-        displayName?: string
-    ): Promise<void> {
+    public async addJupyterServer(userURI: string): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
-            if (!ignoreValidation) {
-                await this.jupyterConnection.validateRemoteUri(userURI);
-            }
+            await this.jupyterConnection.validateRemoteUri(userURI);
         } catch (err) {
             if (JupyterSelfCertsError.isSelfCertsError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
@@ -127,9 +121,7 @@ export class JupyterServerSelector {
         }
 
         const connection = await this.jupyterConnection.createConnectionInfo({ uri: userURI });
-        displayName && (connection.displayName = displayName);
-
-        await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
+        await this.serverUriStorage.addMRU(userURI, connection.displayName);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {

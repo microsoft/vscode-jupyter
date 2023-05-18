@@ -237,7 +237,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         error: RemoteJupyterServerUriProviderError,
         errorContext?: KernelAction
     ) {
-        const savedList = await this.serverUriStorage.getSavedUriList();
+        const savedList = await this.serverUriStorage.getMRUs();
         const message = error.originalError?.message || error.message;
         const serverId = error.serverId;
         const displayName = savedList.find((item) => item.serverId === serverId)?.displayName;
@@ -253,7 +253,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         error: RemoteJupyterServerConnectionError,
         errorContext?: KernelAction
     ) {
-        const savedList = await this.serverUriStorage.getSavedUriList();
+        const savedList = await this.serverUriStorage.getMRUs();
         const message = error.originalError.message || '';
         const serverId = error.serverId;
         const displayName = savedList.find((item) => item.serverId === serverId)?.displayName;
@@ -305,7 +305,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             const handles = await provider.getHandles();
 
             if (!handles.includes(idAndHandle.handle)) {
-                await this.serverUriStorage.removeUri(uri);
+                await this.serverUriStorage.removeMRU(uri);
             }
             return true;
         } catch (_ex) {
@@ -366,7 +366,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             err instanceof InvalidRemoteJupyterServerUriHandleError
         ) {
             this.sendKernelTelemetry(err, errorContext, resource, err.category);
-            const savedList = await this.serverUriStorage.getSavedUriList();
+            const savedList = await this.serverUriStorage.getMRUs();
             const message =
                 err instanceof InvalidRemoteJupyterServerUriHandleError
                     ? ''
@@ -402,12 +402,12 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             switch (selection) {
                 case DataScience.removeRemoteJupyterConnectionButtonText: {
                     // Start with saved list.
-                    const uriList = await this.serverUriStorage.getSavedUriList();
+                    const uriList = await this.serverUriStorage.getMRUs();
 
                     // Remove this uri if already found (going to add again with a new time)
                     const item = uriList.find((f) => f.serverId === serverId);
                     if (item) {
-                        await this.serverUriStorage.removeUri(item.uri);
+                        await this.serverUriStorage.removeMRU(item.uri);
                     }
                     // Wait until all of the remote controllers associated with this server have been removed.
                     return KernelInterpreterDependencyResponse.cancel;

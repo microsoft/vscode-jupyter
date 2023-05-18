@@ -536,7 +536,7 @@ export interface IJupyterConnection extends Disposable {
     // Jupyter specific members
     readonly baseUrl: string;
     readonly token: string;
-    readonly serverId?: string;
+    readonly providerId?: string;
     readonly hostName: string;
     readonly rootDirectory: Uri; // Directory where the notebook server was started.
     readonly url: string;
