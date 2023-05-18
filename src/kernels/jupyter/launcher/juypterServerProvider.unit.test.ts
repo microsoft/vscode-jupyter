@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import { SemVer } from 'semver';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -52,24 +52,11 @@ suite('Jupyter Server Provider', () => {
         disposables.push(source);
     });
     teardown(() => disposeAllDisposables(disposables));
-    test('Get Only - server', async () => {
-        const connection = mock<IJupyterConnection>();
-        when((connection as any).then).thenReturn(undefined);
-        when(jupyterServerHelper.getJupyterServerConnection(anything())).thenResolve(instance(connection));
-
-        const server = await serverProvider.getOrStartServer({
-            resource: undefined,
-            ui: new DisplayOptions(false),
-            token: source.token
-        });
-        expect(server).to.not.equal(undefined, 'Server expected to be defined');
-        verify(jupyterServerHelper.getJupyterServerConnection(anything())).once();
-    });
 
     test('Get Or Create', async () => {
         when(jupyterServerHelper.getUsableJupyterPython()).thenResolve(workingPython);
         const connection = createTypeMoq<IJupyterConnection>('jupyter server');
-        when(jupyterServerHelper.connectToNotebookServer(anything(), anything())).thenResolve(connection.object);
+        when(jupyterServerHelper.startServer(anything(), anything())).thenResolve(connection.object);
 
         // Disable UI just lets us skip mocking the progress reporter
         const server = await serverProvider.getOrStartServer({

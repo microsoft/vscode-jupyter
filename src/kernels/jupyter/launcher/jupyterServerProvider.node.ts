@@ -22,20 +22,6 @@ export class JupyterServerProvider implements IJupyterServerProvider {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
     public async getOrStartServer(options: GetServerOptions): Promise<IJupyterConnection> {
-        // If we are just fetching or only want to create for local, see if exists
-        if (this.jupyterServerHelper) {
-            const server = await this.jupyterServerHelper.getJupyterServerConnection(options.resource);
-            // Possible it wasn't created, hence create it.
-            if (server) {
-                return server;
-            }
-        }
-
-        // Otherwise create a new server
-        return this.startServer(options);
-    }
-
-    private async startServer(options: GetServerOptions): Promise<IJupyterConnection> {
         if (!this.serverPromise) {
             const promise = (this.serverPromise = this.startServerImpl(options));
             promise.catch(() => {
@@ -67,7 +53,7 @@ export class JupyterServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceVerbose(`Starting notebook server.`);
-            const result = await jupyterServerHelper.connectToNotebookServer(options.resource, options.token);
+            const result = await jupyterServerHelper.startServer(options.resource, options.token);
             Cancellation.throwIfCanceled(options.token);
             return result;
         } catch (e) {

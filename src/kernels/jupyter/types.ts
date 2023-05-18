@@ -47,9 +47,8 @@ export enum JupyterInterpreterDependencyResponse {
 export const IJupyterServerHelper = Symbol('JupyterServerHelper');
 export interface IJupyterServerHelper extends IAsyncDisposable {
     isJupyterServerSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(resource: Resource, cancelToken?: CancellationToken): Promise<IJupyterConnection>;
+    startServer(resource: Resource, cancelToken?: CancellationToken): Promise<IJupyterConnection>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getJupyterServerConnection(resource: Resource): Promise<IJupyterConnection | undefined>;
     getJupyterServerError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }

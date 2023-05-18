@@ -15,10 +15,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
         //
     }
 
-    public async connectToNotebookServer(
-        _resource: Resource,
-        _cancelToken: CancellationToken
-    ): Promise<IJupyterConnection> {
+    public async startServer(_resource: Resource, _cancelToken: CancellationToken): Promise<IJupyterConnection> {
         throw new Error('Invalid Operation in the Web');
     }
     public async getJupyterServerConnection(): Promise<IJupyterConnection | undefined> {
