@@ -39,7 +39,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         // Sign up to see if servers are removed from our uri storage list
-        this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+        this.serverUriStorage.onDidRemove(this.onDidRemoveUris, this, this.disposables);
     }
     private static _prompt?: Deferred<void>;
     public static get prompt(): Promise<void> | undefined {

@@ -47,7 +47,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         if (!provider.getHandles) {
             return;
         }
-        const [handles, uris] = await Promise.all([provider.getHandles(), this.uriStorage.getSavedUriList()]);
+        const [handles, uris] = await Promise.all([provider.getHandles(), this.uriStorage.getMRUs()]);
         const serverJupyterProviderMap = new Map<string, { uri: string; providerId: string; handle: string }>();
         const registeredHandles: string[] = [];
         await Promise.all(
@@ -71,9 +71,9 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 // If not then remove this uri from the list.
                 if (!handles.includes(info.handle)) {
                     // Looks like the 3rd party provider has updated its handles and this server is no longer available.
-                    await this.uriStorage.removeUri(item.uri);
+                    await this.uriStorage.removeMRU(item.uri);
                 } else if (!item.isValidated) {
-                    await this.uriStorage.setUriToRemote(item.uri, item.displayName ?? item.uri).catch(noop);
+                    await this.uriStorage.addMRU(item.uri, item.displayName ?? item.uri).catch(noop);
                 }
             })
         );
@@ -85,7 +85,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 try {
                     const serverUri = await provider.getServerUri(handle);
                     const uri = generateUriFromRemoteProvider(provider.id, handle);
-                    await this.uriStorage.setUriToRemote(uri, serverUri.displayName);
+                    await this.uriStorage.addMRU(uri, serverUri.displayName);
                 } catch (ex) {
                     traceError(`Failed to get server uri and add it to uri Storage for handle ${handle}`, ex);
                 }

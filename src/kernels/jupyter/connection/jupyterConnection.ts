@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { IDisposableRegistry } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
@@ -15,7 +13,6 @@ import {
     generateUriFromRemoteProvider
 } from '../jupyterUtils';
 import {
-    IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
@@ -26,37 +23,14 @@ import {
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.
  */
 @injectable()
-export class JupyterConnection implements IExtensionSyncActivationService {
-    private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
-    private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
+export class JupyterConnection {
     constructor(
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(IDisposableRegistry)
-        private readonly disposables: IDisposableRegistry,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
-    ) {
-        disposables.push(this);
-    }
-    public activate() {
-        this.serverUriStorage.onDidChangeUri(
-            () =>
-                // When server URI changes, clear our pending URI timeouts
-                this.clearTimeouts(),
-            this,
-            this.disposables
-        );
-    }
-    public dispose() {
-        this.clearTimeouts();
-    }
-    private clearTimeouts() {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
-        this.pendingTimeouts = [];
-    }
+    ) {}
 
     public async createConnectionInfo(options: { serverId: string } | { uri: string }) {
         const uri = 'uri' in options ? options.uri : await this.getUriFromServerId(options.serverId);
@@ -71,15 +45,12 @@ export class JupyterConnection implements IExtensionSyncActivationService {
 
     private async getUriFromServerId(serverId: string) {
         // Since there's one server per session, don't use a resource to figure out these settings
-        const savedList = await this.serverUriStorage.getSavedUriList();
+        const savedList = await this.serverUriStorage.getMRUs();
         return savedList.find((item) => item.serverId === serverId)?.uri;
     }
     private async createConnectionInfoFromUri(uri: string) {
-        // Prepare our map of server URIs
-        await this.updateServerUri(uri);
-
+        const server = await this.getJupyterServerUri(uri);
         const idAndHandle = extractJupyterServerHandleAndId(uri);
-        const server = this.uriToJupyterServerUri.get(uri);
         return createRemoteConnectionInfo(uri, server, idAndHandle?.id);
     }
 
@@ -99,32 +70,19 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         }
     }
 
-    private async updateServerUri(uri: string): Promise<void> {
+    private async getJupyterServerUri(uri: string) {
         const idAndHandle = extractJupyterServerHandleAndId(uri);
-        if (idAndHandle) {
-            try {
-                const serverUri = await this.jupyterPickerRegistration.getJupyterServerUri(
-                    idAndHandle.id,
-                    idAndHandle.handle
-                );
-                this.uriToJupyterServerUri.set(uri, serverUri);
-                // See if there's an expiration date
-                if (serverUri.expiration) {
-                    const timeoutInMS = serverUri.expiration.getTime() - Date.now();
-                    // Week seems long enough (in case the expiration is ridiculous)
-                    if (timeoutInMS > 0 && timeoutInMS < 604800000) {
-                        this.pendingTimeouts.push(setTimeout(() => this.updateServerUri(uri).catch(noop), timeoutInMS));
-                    }
-                }
-            } catch (ex) {
-                if (ex instanceof BaseError) {
-                    throw ex;
-                }
-                const serverId = await computeServerId(
-                    generateUriFromRemoteProvider(idAndHandle.id, idAndHandle.handle)
-                );
-                throw new RemoteJupyterServerUriProviderError(idAndHandle.id, idAndHandle.handle, ex, serverId);
+        if (!idAndHandle) {
+            return;
+        }
+        try {
+            return await this.jupyterPickerRegistration.getJupyterServerUri(idAndHandle.id, idAndHandle.handle);
+        } catch (ex) {
+            if (ex instanceof BaseError) {
+                throw ex;
             }
+            const serverId = await computeServerId(generateUriFromRemoteProvider(idAndHandle.id, idAndHandle.handle));
+            throw new RemoteJupyterServerUriProviderError(idAndHandle.id, idAndHandle.handle, ex, serverId);
         }
     }
 }

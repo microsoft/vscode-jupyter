@@ -31,14 +31,46 @@ export function getZeroMQ(): typeof import('zeromq') {
         }
     }
 }
-
+/**
+ * We need to send telemetry to understand how many users are failing to load the binaries.
+ * Its possible they have installed the wrong extension or the files do not exist or the like.
+ * This is required to ensure kernels run successfully (by understanding the cause of the failures).
+ */
+async function getLocalZmqBinaries() {
+    try {
+        const zmqFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules', 'zeromq', 'prebuilds');
+        const filesPromises = await fs.readdir(zmqFolder).then((folders) =>
+            folders.map(async (folder) => {
+                const folderPath = path.join(zmqFolder, folder);
+                const stat = await fs.stat(folderPath);
+                if (stat.isDirectory()) {
+                    return fs.readdir(folderPath).then((files) => files.map((file) => path.join(folderPath, file)));
+                }
+                return [];
+            })
+        );
+        const files = (await Promise.all(filesPromises.flat())).flat();
+        return files.map((file) =>
+            file
+                .substring(file.lastIndexOf('prebuilds') + 'prebuilds'.length + 1)
+                .replace(/\\/g, '<sep>')
+                .replace(/\//g, '<sep>')
+        );
+    } catch (ex) {
+        traceWarning(`Failed to determine local zmq binaries.`, ex);
+        return ['Failed to determine local zmq binaries.'];
+    }
+}
 async function sendZMQTelemetry(
     failed: boolean,
     fallbackTried: boolean = false,
     errorMessage = '',
     fallbackErrorMessage = ''
 ) {
-    const distro = await getDistroInfo().catch(() => <DistroInfo>{ id: '', version_id: '' });
+    const [distro, zmqBinaries] = await Promise.all([
+        getDistroInfo().catch(() => <DistroInfo>{ id: '', version_id: '' }),
+        getLocalZmqBinaries()
+    ]);
     const platformInfo = getPlatformInfo();
     sendTelemetryEvent(Telemetry.ZMQSupport, undefined, {
         distro_id: distro.id,
@@ -60,6 +92,7 @@ async function sendZMQTelemetry(
         armv: platformInfo.armv,
         zmqarch: platformInfo.zmqarch,
         errorMessage,
+        zmqBinaries,
         fallbackErrorMessage
     });
 }

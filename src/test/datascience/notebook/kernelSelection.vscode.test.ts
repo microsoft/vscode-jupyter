@@ -175,7 +175,7 @@ suite('Kernel Selection @kernelPicker', function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
         console.log(`End test completed ${this.currentTest?.title}`);
         if (jupyterServerUri) {
-            await serverUriStorage.setUriToRemote(jupyterServerUri, '');
+            await serverUriStorage.addMRU(jupyterServerUri, '');
         }
     });
 

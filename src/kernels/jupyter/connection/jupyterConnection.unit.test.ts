@@ -47,7 +47,6 @@ suite('Jupyter Connection', async () => {
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
             instance(sessionManagerFactory),
-            disposables,
             instance(serverUriStorage)
         );
 
@@ -56,17 +55,12 @@ suite('Jupyter Connection', async () => {
         const serverConnectionChangeEvent = new EventEmitter<void>();
         disposables.push(serverConnectionChangeEvent);
 
-        when(serverUriStorage.onDidChangeUri).thenReturn(serverConnectionChangeEvent.event);
-
-        jupyterConnection.activate();
+        when(serverUriStorage.onDidChange).thenReturn(serverConnectionChangeEvent.event);
     });
     teardown(() => {
         disposeAllDisposables(disposables);
     });
 
-    test('Ensure event handler is added', () => {
-        verify(serverUriStorage.onDidChangeUri).once();
-    });
     test('Validation will result in fetching kernels and kernelspecs', async () => {
         const uri = 'http://localhost:8888/?token=1234';
         when(sessionManager.dispose()).thenResolve();

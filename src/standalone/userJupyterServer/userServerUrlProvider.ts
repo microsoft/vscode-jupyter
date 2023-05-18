@@ -88,7 +88,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         this._initializeCachedServerInfo()
             .then(async () => {
                 // once cache is initialized, check if we should do migration
-                const existingServers = await this.serverUriStorage.getSavedUriList();
+                const existingServers = await this.serverUriStorage.getMRUs();
                 const migratedServers = [];
                 for (const server of existingServers) {
                     const info = extractJupyterServerHandleAndId(server.uri);

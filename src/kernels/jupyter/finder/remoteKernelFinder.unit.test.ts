@@ -25,7 +25,6 @@ import { IJupyterKernel, IJupyterRemoteCachedKernelValidator, IJupyterSessionMan
 import { KernelFinder } from '../../kernelFinder';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { JupyterServerUriStorage } from '../connection/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
@@ -129,16 +128,12 @@ suite(`Remote Kernel Finder`, () => {
         fs = mock(FileSystem);
         when(fs.delete(anything())).thenResolve();
         when(fs.exists(anything())).thenResolve(true);
-        const serverUriStorage = mock(JupyterServerUriStorage);
         const serverEntry = {
             uri: connInfo.baseUrl,
             time: Date.now(),
             serverId: connInfo.baseUrl,
             isValidated: true
         };
-        const onDidChangeEvent = new EventEmitter<void>();
-        disposables.push(onDidChangeEvent);
-        when(serverUriStorage.onDidChangeConnectionType).thenReturn(onDidChangeEvent.event);
         cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
         const env = mock<IApplicationEnvironment>();
