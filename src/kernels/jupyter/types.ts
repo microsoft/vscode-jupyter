@@ -47,9 +47,8 @@ export enum JupyterInterpreterDependencyResponse {
 export const IJupyterServerHelper = Symbol('JupyterServerHelper');
 export interface IJupyterServerHelper extends IAsyncDisposable {
     isJupyterServerSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(resource: Resource, cancelToken?: CancellationToken): Promise<IJupyterConnection>;
+    startServer(resource: Resource, cancelToken?: CancellationToken): Promise<IJupyterConnection>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getJupyterServerConnection(resource: Resource): Promise<IJupyterConnection | undefined>;
     getJupyterServerError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
@@ -152,7 +151,7 @@ export interface IJupyterServerProvider {
      * Stats the local Jupyter Notebook server (if not already started)
      * and returns the connection information.
      */
-    getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection>;
+    getOrStartServer(options: GetServerOptions): Promise<IJupyterConnection>;
 }
 
 export interface IJupyterServerUri {
@@ -246,6 +245,10 @@ export interface IJupyterServerUriEntry {
      * Uri of the server to connect to
      */
     uri: string;
+    provider?: {
+        id: string;
+        handle: JupyterServerUriHandle;
+    };
     /**
      * Unique ID using a hash of the full uri
      */
@@ -272,12 +275,12 @@ export interface IJupyterServerUriStorage {
     /**
      * Updates MRU list marking this server as the most recently used.
      */
-    updateMRU(serverId: string): Promise<void>;
-    getMRUs(): Promise<IJupyterServerUriEntry[]>;
-    removeMRU(uri: string): Promise<void>;
-    clearMRU(): Promise<void>;
-    getMRU(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
-    addMRU(uri: string, displayName: string): Promise<void>;
+    update(serverId: string): Promise<void>;
+    getAll(): Promise<IJupyterServerUriEntry[]>;
+    remove(uri: string): Promise<void>;
+    clear(): Promise<void>;
+    get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
+    add(uri: string, displayName: string): Promise<void>;
 }
 
 export interface IBackupFile {
