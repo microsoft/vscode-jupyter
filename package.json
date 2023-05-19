@@ -1880,10 +1880,16 @@
         "notebookPreload": [
             {
                 "type": "jupyter-notebook",
+                "localResourceRoots": [
+                    "./temp"
+                ],
                 "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
             },
             {
                 "type": "interactive",
+                "localResourceRoots": [
+                    "./temp"
+                ],
                 "entrypoint": "./out/webviews/webview-side/ipywidgetsKernel/ipywidgetsKernel.js"
             }
         ],

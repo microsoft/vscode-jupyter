@@ -514,30 +514,26 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
     }
     private getRendererScripts(): NotebookRendererScript[] {
-        const scripts: Uri[] = [];
-
         // Only used in tests & while debugging.
         if (
             this.context.extensionMode === ExtensionMode.Development ||
             this.context.extensionMode === ExtensionMode.Test
         ) {
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'webviews',
-                    'webview-side',
-                    'widgetTester',
-                    'widgetTester.js'
+            return [
+                new NotebookRendererScript(
+                    Uri.joinPath(
+                        this.context.extensionUri,
+                        'out',
+                        'webviews',
+                        'webview-side',
+                        'widgetTester',
+                        'widgetTester.js'
+                    )
                 )
-            );
+            ];
+        } else {
+            return [];
         }
-
-        // See comments on dummy.ts for more details.
-        scripts.push(
-            Uri.joinPath(this.context.extensionUri, 'out', 'webviews', 'webview-side', 'ipywidgetsKernel', 'dummy.js')
-        );
-        return scripts.map((uri) => new NotebookRendererScript(uri));
     }
 
     private handleInterrupt(notebook: NotebookDocument) {
