@@ -33,6 +33,8 @@ import { DebugService } from './application/debugService';
 import { HttpClient } from './net/httpClient';
 import { DataFrameScriptGenerator } from '../interpreter/dataFrameScriptGenerator';
 import { VariableScriptGenerator } from '../interpreter/variableScriptGenerator';
+import { IExtensionSyncActivationService } from '../activation/types';
+import { OldCacheCleaner } from './cache';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, false);
@@ -52,6 +54,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
     serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, OldCacheCleaner);
 
     registerPlatformTypes(serviceManager);
 }

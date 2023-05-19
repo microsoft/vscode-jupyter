@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { traceWarning } from '../../../platform/logging';
 import { LiveRemoteKernelConnectionMetadata } from '../../types';
-import { extractJupyterServerHandleAndId } from '../jupyterUtils';
 import {
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriStorage,
@@ -29,29 +28,27 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         if (!this.liveKernelConnectionTracker.wasKernelUsed(kernel)) {
             return false;
         }
-        const providersPromise = this.providerRegistration.getProviders();
-        const currentList = await this.uriStorage.getMRUs();
-        const item = currentList.find((item) => item.serverId === kernel.serverId);
+        const item = await this.uriStorage.get(kernel.serverId);
         if (!item) {
             // Server has been removed and we have some old cached data.
             return false;
         }
         // Check if this has a provider associated with it.
-        const info = extractJupyterServerHandleAndId(item.uri);
-        if (!info) {
+        if (!item.provider) {
             // Could be a regular remote Jupyter Uri entered by the user.
             // As its in the list, its still valid.
             return true;
         }
-        const providers = await providersPromise;
-        const provider = providers.find((item) => item.id === info.id);
+        const provider = await this.providerRegistration.getProvider(item.provider.id);
         if (!provider) {
-            traceWarning(`Extension may have been uninstalled for provider ${info.id}, handle ${info.handle}`);
+            traceWarning(
+                `Extension may have been uninstalled for provider ${item.provider.id}, handle ${item.provider.handle}`
+            );
             return false;
         }
         if (provider.getHandles) {
             const handles = await provider.getHandles();
-            if (handles.includes(info.handle)) {
+            if (handles.includes(item.provider.handle)) {
                 return true;
             } else {
                 traceWarning(

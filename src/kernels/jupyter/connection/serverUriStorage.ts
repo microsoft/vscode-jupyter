@@ -3,14 +3,9 @@
 
 import { EventEmitter, Memento } from 'vscode';
 import { inject, injectable, named } from 'inversify';
-import {
-    IWorkspaceService,
-    IEncryptedStorage,
-    IApplicationEnvironment
-} from '../../../platform/common/application/types';
+import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { Settings } from '../../../platform/common/constants';
-import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { computeServerId, extractJupyterServerHandleAndId } from '../jupyterUtils';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRegistration } from '../types';
@@ -34,16 +29,13 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         return this._onDidAddUri.event;
     }
     constructor(
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
     ) {}
-    public async updateMRU(serverId: string) {
-        const uriList = await this.getMRUs();
+    public async update(serverId: string) {
+        const uriList = await this.getAll();
 
         const existingEntry = uriList.find((entry) => entry.serverId === serverId);
         if (!existingEntry) {
@@ -53,7 +45,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         await this.addToUriList(existingEntry.uri, existingEntry.displayName || '');
     }
     private async addToUriList(uri: string, displayName: string) {
-        const [uriList, serverId] = await Promise.all([this.getMRUs(), computeServerId(uri)]);
+        const [uriList, serverId] = await Promise.all([this.getAll(), computeServerId(uri)]);
 
         // Check if we have already found a display name for this server
         displayName = uriList.find((entry) => entry.serverId === serverId)?.displayName || displayName || uri;
@@ -62,16 +54,24 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         const editedList = uriList.filter((f, i) => f.uri !== uri && i < Settings.JupyterServerUriListMax - 1);
 
         // Add this entry into the last.
-        const entry = { uri, time: Date.now(), serverId, displayName, isValidated: true };
+        const idAndHandle = extractJupyterServerHandleAndId(uri);
+        const entry: IJupyterServerUriEntry = {
+            uri,
+            time: Date.now(),
+            serverId,
+            displayName,
+            isValidated: true,
+            provider: idAndHandle
+        };
         editedList.push(entry);
 
         // Signal that we added in the entry
         this._onDidAddUri.fire(entry);
-
+        this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
         return this.updateMemento(editedList);
     }
-    public async removeMRU(uri: string) {
-        const uriList = await this.getMRUs();
+    public async remove(uri: string) {
+        const uriList = await this.getAll();
 
         await this.updateMemento(uriList.filter((f) => f.uri !== uri));
         const removedItem = uriList.find((f) => f.uri === uri);
@@ -111,7 +111,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             blob
         );
     }
-    public async getMRUs(): Promise<IJupyterServerUriEntry[]> {
+    public async getAll(): Promise<IJupyterServerUriEntry[]> {
         if (this.lastSavedList) {
             return this.lastSavedList;
         }
@@ -132,6 +132,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                             const uriAndDisplayName = item.split(Settings.JupyterServerRemoteLaunchNameSeparator);
                             const uri = uriAndDisplayName[0];
                             const serverId = await computeServerId(uri);
+                            const idAndHandle = extractJupyterServerHandleAndId(uri);
                             // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
                             const displayName =
                                 uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
@@ -143,33 +144,25 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                                 serverId,
                                 displayName,
                                 uri,
-                                isValidated: true
+                                isValidated: true,
+                                provider: idAndHandle
                             };
 
                             if (uri === Settings.JupyterServerLocalLaunch) {
                                 return;
                             }
 
-                            try {
-                                const idAndHandle = extractJupyterServerHandleAndId(uri);
-                                if (idAndHandle) {
-                                    return this.jupyterPickerRegistration
-                                        .getJupyterServerUri(idAndHandle.id, idAndHandle.handle)
-                                        .then(
-                                            () => server,
-                                            () => {
-                                                server.isValidated = false;
-                                                return server;
-                                            }
-                                        );
-                                }
-                            } catch (ex) {
-                                traceVerbose(`Failed to extract jupyter server uri ${uri} ${ex}`);
-                                server.isValidated = false;
-                                return server;
-                            }
-
-                            return server;
+                            return idAndHandle
+                                ? this.jupyterPickerRegistration
+                                      .getJupyterServerUri(idAndHandle.id, idAndHandle.handle)
+                                      .then(
+                                          () => server,
+                                          () => {
+                                              server.isValidated = false;
+                                              return server;
+                                          }
+                                      )
+                                : server;
                         })
                     );
 
@@ -183,8 +176,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         return this.lastSavedList;
     }
 
-    public async clearMRU(): Promise<void> {
-        const uriList = await this.getMRUs();
+    public async clear(): Promise<void> {
+        const uriList = await this.getAll();
         this.lastSavedList = Promise.resolve([]);
         // Clear out memento and encrypted storage
         await this.globalMemento.update(Settings.JupyterServerUriList, []);
@@ -197,33 +190,15 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         // Notify out that we've removed the list to clean up controller entries, passwords, ect
         this._onDidRemoveUris.fire(uriList);
     }
-    public async getMRU(id: string): Promise<IJupyterServerUriEntry | undefined> {
-        const savedList = await this.getMRUs();
+    public async get(id: string): Promise<IJupyterServerUriEntry | undefined> {
+        const savedList = await this.getAll();
         return savedList.find((item) => item.serverId === id);
     }
-    public async addMRU(uri: string, displayName: string): Promise<void> {
+    public async add(uri: string, displayName: string): Promise<void> {
         traceInfoIfCI(`setUri: ${uri}`);
 
         // display name is wrong here
         await this.addToUriList(uri, displayName ?? uri);
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
-
-        // Save in the storage (unique account per workspace)
-        const key = await this.getUriAccountKey();
-        await this.encryptedStorage.store(Settings.JupyterServerRemoteLaunchService, key, uri);
-    }
-
-    /**
-     * Returns a unique identifier for the current workspace
-     */
-    private async getUriAccountKey(): Promise<string> {
-        if (this.workspaceService.rootFolder) {
-            // Folder situation
-            return this.crypto.createHash(getFilePath(this.workspaceService.rootFolder), 'SHA-512');
-        } else if (this.workspaceService.workspaceFile) {
-            // Workspace situation
-            return this.crypto.createHash(getFilePath(this.workspaceService.workspaceFile), 'SHA-512');
-        }
-        return this.appEnv.machineId; // Global key when no folder or workspace file
     }
 }

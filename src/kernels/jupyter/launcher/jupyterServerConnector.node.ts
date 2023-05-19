@@ -13,7 +13,7 @@ export class JupyterServerConnector implements IJupyterServerConnector {
     private readonly startupUi = new DisplayOptions(true);
     constructor(
         @inject(IJupyterServerProvider)
-        private readonly jupyterNotebookProvider: IJupyterServerProvider,
+        private readonly jupyterServerProvider: IJupyterServerProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
@@ -29,7 +29,7 @@ export class JupyterServerConnector implements IJupyterServerConnector {
         });
         options.ui = this.startupUi;
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            return this.jupyterNotebookProvider.getOrCreateServer(options).finally(() => handler.dispose());
+            return this.jupyterServerProvider.getOrStartServer(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
             if (!this.startupUi.disableUI) {

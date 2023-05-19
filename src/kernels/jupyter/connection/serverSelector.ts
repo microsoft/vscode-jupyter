@@ -121,7 +121,7 @@ export class JupyterServerSelector {
         }
 
         const connection = await this.jupyterConnection.createConnectionInfo({ uri: userURI });
-        await this.serverUriStorage.addMRU(userURI, connection.displayName);
+        await this.serverUriStorage.add(userURI, connection.displayName);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {

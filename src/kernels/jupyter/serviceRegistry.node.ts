@@ -8,7 +8,6 @@ import { IDataScienceErrorHandler } from '../errors/types';
 import { IKernelSessionFactory, IJupyterServerConnector } from '../types';
 import { JupyterCommandFactory } from './interpreter/jupyterCommand.node';
 import { JupyterInterpreterDependencyService } from './interpreter/jupyterInterpreterDependencyService.node';
-import { JupyterInterpreterOldCacheStateStore } from './interpreter/jupyterInterpreterOldCacheStateStore.node';
 import { JupyterInterpreterSelectionCommand } from './interpreter/jupyterInterpreterSelectionCommand.node';
 import { JupyterInterpreterSelector } from './interpreter/jupyterInterpreterSelector.node';
 import { JupyterInterpreterService } from './interpreter/jupyterInterpreterService.node';
@@ -88,10 +87,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<INbConvertExportToPythonService>(
         INbConvertExportToPythonService,
         NbConvertExportToPythonService
-    );
-    serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(
-        JupyterInterpreterOldCacheStateStore,
-        JupyterInterpreterOldCacheStateStore
     );
     serviceManager.addSingleton<JupyterInterpreterSelector>(JupyterInterpreterSelector, JupyterInterpreterSelector);
     serviceManager.addSingleton<JupyterInterpreterService>(JupyterInterpreterService, JupyterInterpreterService);
