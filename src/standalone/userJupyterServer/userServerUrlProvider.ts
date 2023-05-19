@@ -24,7 +24,7 @@ import {
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
-import { Settings } from '../../platform/common/constants';
+import { Identifiers, Settings } from '../../platform/common/constants';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -37,6 +37,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError } from '../../platform/logging';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
+import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
@@ -84,19 +85,17 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             })
         );
 
-        this._initializeCachedServerInfo()
+        this.migrateOldUserEnteredUrlsToProviderUri()
             .then(async () => {
                 // once cache is initialized, check if we should do migration
                 const existingServers = await this.serverUriStorage.getAll();
                 const migratedServers = [];
                 for (const server of existingServers) {
-                    const info = server.provider;
-                    if (info) {
-                        continue;
-                    }
-
                     if (this._servers.find((s) => s.uri === server.uri)) {
                         // already exist
+                        continue;
+                    }
+                    if (server.provider.id !== this.id) {
                         continue;
                     }
 
@@ -110,13 +109,15 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                     }
                 }
 
-                this._servers.push(...migratedServers);
-                this._onDidChangeHandles.fire();
+                if (migratedServers.length > 0) {
+                    this._servers.push(...migratedServers);
+                    this._onDidChangeHandles.fire();
+                }
             })
             .catch(noop);
     }
 
-    private async _initializeCachedServerInfo(): Promise<void> {
+    private async migrateOldUserEnteredUrlsToProviderUri(): Promise<void> {
         if (this._cachedServerInfoInitialized) {
             return this._cachedServerInfoInitialized;
         }
@@ -132,24 +133,24 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             );
 
             if (!cache || !serverList || serverList.length === 0) {
-                resolve();
-                return;
+                return resolve();
             }
 
             const encryptedList = cache.split(Settings.JupyterServerRemoteLaunchUriSeparator);
-
             if (encryptedList.length === 0 || encryptedList.length !== serverList.length) {
                 traceError('Invalid server list, unable to retrieve server info');
-                resolve();
-                return;
+                return resolve();
             }
 
             const servers = [];
 
             for (let i = 0; i < encryptedList.length; i += 1) {
+                if (encryptedList[i].startsWith(Identifiers.REMOTE_URI)) {
+                    continue;
+                }
                 const serverInfo = this.parseUri(encryptedList[i]);
                 if (!serverInfo) {
-                    traceError('Unable to parse server info', serverInfo);
+                    traceError('Unable to parse server info', encryptedList[i]);
                 } else {
                     servers.push({
                         handle: serverList[i].handle,
@@ -167,12 +168,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         return this._cachedServerInfoInitialized;
     }
 
-    getQuickPickEntryItems(): (QuickPickItem & {
-        /**
-         * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
-         */
-        default?: boolean;
-    })[] {
+    getQuickPickEntryItems(): (QuickPickItem & { default?: boolean })[] {
         return [
             {
                 default: true,
@@ -183,7 +179,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
-        await this._cachedServerInfoInitialized;
+        await this.migrateOldUserEnteredUrlsToProviderUri();
         if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
         }
@@ -239,12 +235,31 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         traceError('Failed to check if server already exists', ex);
                     }
 
+                    try {
+                        new URL(uri);
+                    } catch (err) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
+                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+                        return;
+                    }
+                    const jupyterServerUri = this.parseUri(uri, '');
+                    if (!jupyterServerUri) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
+                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+                        return;
+                    }
+                    const handle = uuid();
                     const message = await validateSelectJupyterURI(
                         this.jupyterConnection,
                         this.applicationShell,
                         this.configService,
                         this.isWebExtension,
-                        uri
+                        { id: this.id, handle },
+                        jupyterServerUri
                     );
 
                     if (message) {
@@ -256,23 +271,18 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         promptingForServerName = true;
                         // Offer the user a chance to pick a display name for the server
                         // Leaving it blank will use the URI as the display name
-                        const displayName = await this.applicationShell.showInputBox({
-                            title: DataScience.jupyterRenameServer
-                        });
+                        jupyterServerUri.displayName =
+                            (await this.applicationShell.showInputBox({
+                                title: DataScience.jupyterRenameServer
+                            })) || jupyterServerUri.displayName;
 
-                        const serverInfo = this.parseUri(uri, (displayName || '').trim());
-                        if (serverInfo) {
-                            const handle = uuid();
-                            this._servers.push({
-                                handle: handle,
-                                uri: uri,
-                                serverInfo
-                            });
-                            await this.updateMemento();
-                            resolve(handle);
-                        } else {
-                            resolve(undefined);
-                        }
+                        this._servers.push({
+                            handle: handle,
+                            uri: uri,
+                            serverInfo: jupyterServerUri
+                        });
+                        await this.updateMemento();
+                        resolve(handle);
                     }
                 }),
                 input.onDidHide(() => {
@@ -290,28 +300,27 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     private parseUri(uri: string, displayName?: string): IJupyterServerUri | undefined {
-        let url: URL;
         try {
-            url = new URL(uri);
+            extractJupyterServerHandleAndId(uri);
+            // This is a url that we crafted. It's not a valid Jupyter Server Url.
+            return;
+        } catch (ex) {
+            // This is a valid Jupyter Server Url.
+        }
+        try {
+            const url = new URL(uri);
 
             // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
             // the location for connecting to jupyterlab
             const baseUrl = `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
 
-            const token = `${url.searchParams.get('token')}`;
-            const isTokenEmpty = token === '' || token === 'null';
-            const authorizationHeader = {
-                Authorization: `token ${token}`
-            };
-            const hostName = url.hostname;
-
             return {
                 baseUrl: baseUrl,
-                token: isTokenEmpty ? '' : token,
-                displayName: displayName || hostName,
-                authorizationHeader: isTokenEmpty ? {} : authorizationHeader
+                token: url.searchParams.get('token') || '',
+                displayName: displayName || url.hostname
             };
         } catch (err) {
+            traceError(`Failed to parse URI ${uri}`, err);
             // This should already have been parsed when set, so just throw if it's not right here
             return undefined;
         }
@@ -319,16 +328,14 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
 
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         const server = this._servers.find((s) => s.handle === handle);
-
         if (!server) {
             throw new Error('Server not found');
         }
-
         return server.serverInfo;
     }
 
     async getHandles(): Promise<string[]> {
-        await this._initializeCachedServerInfo();
+        await this.migrateOldUserEnteredUrlsToProviderUri();
         return this._servers.map((s) => s.handle);
     }
 

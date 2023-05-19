@@ -12,10 +12,12 @@ import {
     generateUriFromRemoteProvider
 } from '../jupyterUtils';
 import {
+    IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    JupyterServerUriHandle
 } from '../types';
 
 /**
@@ -31,17 +33,23 @@ export class JupyterConnection {
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
 
-    public async createConnectionInfo(options: { serverId: string } | { uri: string }) {
-        const uri = 'uri' in options ? options.uri : (await this.serverUriStorage.get(options.serverId))?.uri;
-        if (!uri) {
+    public async createConnectionInfo(serverId: string) {
+        const server = await this.serverUriStorage.get(serverId);
+        if (!server) {
             throw new Error('Server Not found');
         }
-        return this.createConnectionInfoFromUri(uri);
+        const provider = extractJupyterServerHandleAndId(server.uri);
+        const serverUri = await this.getJupyterServerUri(provider);
+        return createRemoteConnectionInfo(provider, serverUri);
     }
 
-    public async validateRemoteUri(uri: string): Promise<void> {
+    public async validateRemoteUri(
+        provider: { id: string; handle: JupyterServerUriHandle },
+        serverUri?: IJupyterServerUri
+    ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
-        const connection = await this.createConnectionInfoFromUri(uri);
+        serverUri = serverUri || (await this.getJupyterServerUri(provider));
+        const connection = await createRemoteConnectionInfo(provider, serverUri);
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
@@ -55,25 +63,16 @@ export class JupyterConnection {
             }
         }
     }
-    private async createConnectionInfoFromUri(uri: string) {
-        const server = await this.getJupyterServerUri(uri);
-        const idAndHandle = extractJupyterServerHandleAndId(uri);
-        return createRemoteConnectionInfo(uri, server, idAndHandle?.id);
-    }
 
-    private async getJupyterServerUri(uri: string) {
-        const idAndHandle = extractJupyterServerHandleAndId(uri);
-        if (!idAndHandle) {
-            return;
-        }
+    private async getJupyterServerUri(provider: { id: string; handle: JupyterServerUriHandle }) {
         try {
-            return await this.jupyterPickerRegistration.getJupyterServerUri(idAndHandle.id, idAndHandle.handle);
+            return await this.jupyterPickerRegistration.getJupyterServerUri(provider.id, provider.handle);
         } catch (ex) {
             if (ex instanceof BaseError) {
                 throw ex;
             }
-            const serverId = await computeServerId(generateUriFromRemoteProvider(idAndHandle.id, idAndHandle.handle));
-            throw new RemoteJupyterServerUriProviderError(idAndHandle.id, idAndHandle.handle, ex, serverId);
+            const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
+            throw new RemoteJupyterServerUriProviderError(provider.id, provider.handle, ex, serverId);
         }
     }
 }

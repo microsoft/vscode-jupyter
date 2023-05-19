@@ -9,10 +9,15 @@ import { traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
-import { IJupyterServerUriStorage } from '../types';
+import { IJupyterServerUri, IJupyterServerUriStorage, JupyterServerUriHandle } from '../types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
-import { handleExpiredCertsError, handleSelfCertsError, computeServerId } from '../jupyterUtils';
+import {
+    handleExpiredCertsError,
+    handleSelfCertsError,
+    computeServerId,
+    generateUriFromRemoteProvider
+} from '../jupyterUtils';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
@@ -33,22 +38,12 @@ export async function validateSelectJupyterURI(
     applicationShell: IApplicationShell,
     configService: IConfigurationService,
     isWebExtension: boolean,
-    inputText: string
+    provider: { id: string; handle: JupyterServerUriHandle },
+    serverUri: IJupyterServerUri
 ): Promise<string | undefined> {
-    inputText = inputText.trim();
-    try {
-        new URL(inputText);
-    } catch {
-        return DataScience.jupyterSelectURIInvalidURI;
-    }
-
-    // Double check http
-    if (!inputText.toLowerCase().startsWith('http')) {
-        return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps;
-    }
     // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
     try {
-        await jupyterConnection.validateRemoteUri(inputText);
+        await jupyterConnection.validateRemoteUri(provider, serverUri);
     } catch (err) {
         traceWarning('Uri verification error', err);
         if (JupyterSelfCertsError.isSelfCertsError(err)) {
@@ -95,10 +90,12 @@ export class JupyterServerSelector {
         @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
     ) {}
 
-    public async addJupyterServer(userURI: string): Promise<void> {
+    public async addJupyterServer(provider: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
+        const userURI = generateUriFromRemoteProvider(provider.id, provider.handle);
+        const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
-            await this.jupyterConnection.validateRemoteUri(userURI);
+            await this.jupyterConnection.validateRemoteUri(provider);
         } catch (err) {
             if (JupyterSelfCertsError.isSelfCertsError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
@@ -112,16 +109,16 @@ export class JupyterServerSelector {
                 if (!handled) {
                     return;
                 }
+            } else if (err && err instanceof JupyterInvalidPasswordError) {
+                return;
             } else {
-                const serverId = await computeServerId(userURI);
                 await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
                 // Can't set the URI in this case.
                 return;
             }
         }
 
-        const connection = await this.jupyterConnection.createConnectionInfo({ uri: userURI });
-        await this.serverUriStorage.add(userURI, connection.displayName);
+        await this.serverUriStorage.add(provider);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {

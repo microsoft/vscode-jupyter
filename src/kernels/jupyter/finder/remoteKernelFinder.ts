@@ -23,7 +23,6 @@ import {
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { computeServerId } from '../jupyterUtils';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -266,9 +265,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(KernelProgressReporter.createProgressReporter(undefined, DataScience.connectingToJupyter));
         }
         return this.jupyterConnection
-            .createConnectionInfo({
-                serverId: this.serverUri.serverId
-            })
+            .createConnectionInfo(this.serverUri.serverId)
             .finally(() => disposeAllDisposables(disposables));
     }
 
@@ -331,11 +328,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
-            const [running, specs, sessions, serverId] = await Promise.all([
+            const serverId = connInfo.serverId;
+            const [running, specs, sessions] = await Promise.all([
                 sessionManager.getRunningKernels(),
                 sessionManager.getKernelSpecs(),
-                sessionManager.getRunningSessions(),
-                computeServerId(connInfo.url)
+                sessionManager.getRunningSessions()
             ]);
 
             // Turn them both into a combined list

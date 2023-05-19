@@ -93,7 +93,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
                 const host = matchInfo.hostname;
-                this.resolveStartPromise(url, url, token, host);
+                this.resolveStartPromise(url, token, host);
             }
         }
         // At this point we failed to get the server info or a matching server via the python code, so fall back to
@@ -120,7 +120,6 @@ export class JupyterConnectionWaiter implements IDisposable {
                 const pathName = url.pathname.endsWith('/tree') ? url.pathname.replace('/tree', '') : url.pathname;
                 // Here we parsed the URL correctly
                 this.resolveStartPromise(
-                    uriString,
                     `${url.protocol}//${url.host}${pathName}`,
                     `${url.searchParams.get('token')}`,
                     url.hostname
@@ -129,13 +128,14 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     }
 
-    private resolveStartPromise(url: string, baseUrl: string, token: string, hostName: string) {
+    private resolveStartPromise(baseUrl: string, token: string, hostName: string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.rejected) {
             const connection: IJupyterConnection = {
                 localLaunch: true,
-                url,
+                serverId: 'bogus',
+                providerId: '_builtin.jupyterServerLauncher',
                 baseUrl,
                 token,
                 hostName,

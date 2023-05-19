@@ -33,6 +33,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -45,11 +46,12 @@ suite(`Remote Kernel Finder`, () => {
     let kernelsChanged: TestEventHandler<void>;
     let jupyterConnection: JupyterConnection;
     const connInfo: IJupyterConnection = {
-        url: 'http://foobar',
+        serverId: 'a',
         localLaunch: false,
         baseUrl: 'http://foobar',
         displayName: 'foobar connection',
         token: '',
+        providerId: 'a',
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
         dispose: noop
@@ -104,7 +106,9 @@ suite(`Remote Kernel Finder`, () => {
             }
         };
     });
-
+    suiteSetup(async () => {
+        connInfo.serverId = await computeServerId(generateUriFromRemoteProvider('a', 'b'));
+    });
     setup(() => {
         memento = mock<Memento>();
         when(memento.get(anything(), anything())).thenCall((key: string, defaultValue: unknown) => {
@@ -130,7 +134,11 @@ suite(`Remote Kernel Finder`, () => {
             uri: connInfo.baseUrl,
             time: Date.now(),
             serverId: connInfo.baseUrl,
-            isValidated: true
+            isValidated: true,
+            provider: {
+                id: '1',
+                handle: '2'
+            }
         };
         cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
