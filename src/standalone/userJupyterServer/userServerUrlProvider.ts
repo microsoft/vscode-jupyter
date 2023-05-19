@@ -24,7 +24,7 @@ import {
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
-import { Settings } from '../../platform/common/constants';
+import { Identifiers, Settings } from '../../platform/common/constants';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -85,7 +85,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             })
         );
 
-        this._initializeCachedServerInfo()
+        this.migrateOldUserEnteredUrlsToProviderUri()
             .then(async () => {
                 // once cache is initialized, check if we should do migration
                 const existingServers = await this.serverUriStorage.getAll();
@@ -117,7 +117,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             .catch(noop);
     }
 
-    private async _initializeCachedServerInfo(): Promise<void> {
+    private async migrateOldUserEnteredUrlsToProviderUri(): Promise<void> {
         if (this._cachedServerInfoInitialized) {
             return this._cachedServerInfoInitialized;
         }
@@ -133,21 +133,21 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             );
 
             if (!cache || !serverList || serverList.length === 0) {
-                resolve();
-                return;
+                return resolve();
             }
 
             const encryptedList = cache.split(Settings.JupyterServerRemoteLaunchUriSeparator);
-
             if (encryptedList.length === 0 || encryptedList.length !== serverList.length) {
                 traceError('Invalid server list, unable to retrieve server info');
-                resolve();
-                return;
+                return resolve();
             }
 
             const servers = [];
 
             for (let i = 0; i < encryptedList.length; i += 1) {
+                if (encryptedList[i].startsWith(Identifiers.REMOTE_URI)) {
+                    continue;
+                }
                 const serverInfo = this.parseUri(encryptedList[i]);
                 if (!serverInfo) {
                     traceError('Unable to parse server info', encryptedList[i]);
@@ -168,12 +168,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         return this._cachedServerInfoInitialized;
     }
 
-    getQuickPickEntryItems(): (QuickPickItem & {
-        /**
-         * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
-         */
-        default?: boolean;
-    })[] {
+    getQuickPickEntryItems(): (QuickPickItem & { default?: boolean })[] {
         return [
             {
                 default: true,
@@ -184,7 +179,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
-        await this._cachedServerInfoInitialized;
+        await this.migrateOldUserEnteredUrlsToProviderUri();
         if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
         }
@@ -319,20 +314,13 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             // the location for connecting to jupyterlab
             const baseUrl = `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
 
-            const token = `${url.searchParams.get('token')}`;
-            const isTokenEmpty = token === '' || token === 'null';
-            const authorizationHeader = {
-                Authorization: `token ${token}`
-            };
-            const hostName = url.hostname;
-
             return {
                 baseUrl: baseUrl,
-                token: isTokenEmpty ? '' : token,
-                displayName: displayName || hostName,
-                authorizationHeader: isTokenEmpty ? undefined : authorizationHeader
+                token: url.searchParams.get('token') || '',
+                displayName: displayName || url.hostname
             };
         } catch (err) {
+            traceError(`Failed to parse URI ${uri}`, err);
             // This should already have been parsed when set, so just throw if it's not right here
             return undefined;
         }
@@ -340,16 +328,14 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
 
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         const server = this._servers.find((s) => s.handle === handle);
-
         if (!server) {
             throw new Error('Server not found');
         }
-
         return server.serverInfo;
     }
 
     async getHandles(): Promise<string[]> {
-        await this._initializeCachedServerInfo();
+        await this.migrateOldUserEnteredUrlsToProviderUri();
         return this._servers.map((s) => s.handle);
     }
 

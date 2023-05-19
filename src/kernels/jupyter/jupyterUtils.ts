@@ -97,14 +97,9 @@ export async function createRemoteConnectionInfo(
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
     const hostName = new URL(serverUri.baseUrl).hostname;
-    const webSocketProtocols =
-        !jupyterHandle.id.startsWith('_builtin') && (serverUri?.webSocketProtocols || []).length
-            ? serverUri?.webSocketProtocols || []
-            : [];
+    const webSocketProtocols = (serverUri?.webSocketProtocols || []).length ? serverUri?.webSocketProtocols || [] : [];
     const authHeader =
-        !jupyterHandle.id.startsWith('_builtin') &&
-        serverUri.authorizationHeader &&
-        Object.keys(serverUri?.authorizationHeader ?? {}).length > 0
+        serverUri.authorizationHeader && Object.keys(serverUri?.authorizationHeader ?? {}).length > 0
             ? serverUri.authorizationHeader
             : undefined;
     return {
