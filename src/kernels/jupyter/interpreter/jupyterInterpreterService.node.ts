@@ -11,7 +11,6 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
-import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCacheStateStore.node';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
 import { JupyterInterpreterDependencyResponse } from '../types';
@@ -34,8 +33,6 @@ export class JupyterInterpreterService {
     }
 
     constructor(
-        @inject(JupyterInterpreterOldCacheStateStore)
-        private readonly oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore,
         @inject(JupyterInterpreterStateStore) private readonly interpreterSelectionState: JupyterInterpreterStateStore,
         @inject(JupyterInterpreterSelector) private readonly jupyterInterpreterSelector: JupyterInterpreterSelector,
         @inject(JupyterInterpreterDependencyService)
@@ -174,19 +171,6 @@ export class JupyterInterpreterService {
         this.changeSelectedInterpreterProperty(interpreter);
     }
 
-    // Check the location that we stored jupyter launch path in the old version
-    // if it's there, return it and clear the location
-    private getInterpreterFromChangeOfOlderVersionOfExtension(): Uri | undefined {
-        const pythonPath = this.oldVersionCacheStateStore.getCachedInterpreterPath();
-        if (!pythonPath) {
-            return;
-        }
-
-        // Clear the cache to not check again
-        this.oldVersionCacheStateStore.clearCache().catch(noop);
-        return pythonPath;
-    }
-
     private changeSelectedInterpreterProperty(interpreter: PythonEnvironment) {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
@@ -236,14 +220,8 @@ export class JupyterInterpreterService {
     private async getInitialInterpreterImpl(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         let interpreter: PythonEnvironment | undefined;
 
-        // Check the old version location first, we will clear it if we find it here
-        const oldVersionPythonPath = this.getInterpreterFromChangeOfOlderVersionOfExtension();
-        if (oldVersionPythonPath) {
-            interpreter = await this.validateInterpreterPath(oldVersionPythonPath, token);
-        }
-
         // Next check the saved global path
-        if (!interpreter && this.interpreterSelectionState.selectedPythonPath) {
+        if (this.interpreterSelectionState.selectedPythonPath) {
             interpreter = await this.validateInterpreterPath(this.interpreterSelectionState.selectedPythonPath, token);
 
             // If we had a global path, but it's not valid, trash it

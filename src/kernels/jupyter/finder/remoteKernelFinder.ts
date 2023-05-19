@@ -13,10 +13,9 @@ import {
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
-import { IDisposable, IExtensions } from '../../../platform/common/types';
+import { IAsyncDisposable, IDisposable, IExtensions } from '../../../platform/common/types';
 import {
     IJupyterSessionManagerFactory,
-    IJupyterSessionManager,
     IJupyterRemoteCachedKernelValidator,
     IRemoteKernelFinder,
     IJupyterServerUriEntry
@@ -326,81 +325,71 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
     // Talk to the remote server to determine sessions
     public async listKernelsFromConnection(connInfo: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
-        // Get a jupyter session manager to talk to
-        let sessionManager: IJupyterSessionManager | undefined;
-        // This should only be used when doing remote.
-        if (connInfo.type === 'jupyter') {
-            try {
-                sessionManager = await this.jupyterSessionManagerFactory.create(connInfo);
+        const disposables: IAsyncDisposable[] = [];
+        try {
+            const sessionManager = await this.jupyterSessionManagerFactory.create(connInfo);
+            disposables.push(sessionManager);
 
-                // Get running and specs at the same time
-                const [running, specs, sessions, serverId] = await Promise.all([
-                    sessionManager.getRunningKernels(),
-                    sessionManager.getKernelSpecs(),
-                    sessionManager.getRunningSessions(),
-                    computeServerId(connInfo.url)
-                ]);
+            // Get running and specs at the same time
+            const [running, specs, sessions, serverId] = await Promise.all([
+                sessionManager.getRunningKernels(),
+                sessionManager.getKernelSpecs(),
+                sessionManager.getRunningSessions(),
+                computeServerId(connInfo.url)
+            ]);
 
-                // Turn them both into a combined list
-                const mappedSpecs = await Promise.all(
-                    specs.map(async (s) => {
-                        await sendKernelSpecTelemetry(s, 'remote');
-                        const kernel = RemoteKernelSpecConnectionMetadata.create({
-                            kernelSpec: s,
-                            id: getKernelId(s, undefined, serverId),
-                            baseUrl: connInfo.baseUrl,
-                            serverId: serverId
-                        });
-                        return kernel;
-                    })
-                );
-                const mappedLive = sessions.map((s) => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const liveKernel = s.kernel as any;
-                    const lastActivityTime = liveKernel.last_activity
-                        ? new Date(Date.parse(liveKernel.last_activity.toString()))
-                        : new Date();
-                    const numberOfConnections = liveKernel.connections
-                        ? parseInt(liveKernel.connections.toString(), 10)
-                        : 0;
-                    const activeKernel = running.find((active) => active.id === s.kernel?.id) || {};
-                    const matchingSpec: Partial<IJupyterKernelSpec> =
-                        specs.find((spec) => spec.name === s.kernel?.name) || {};
-
-                    const kernel = LiveRemoteKernelConnectionMetadata.create({
-                        kernelModel: {
-                            ...s.kernel,
-                            ...matchingSpec,
-                            ...activeKernel,
-                            name: s.kernel?.name || '',
-                            lastActivityTime,
-                            numberOfConnections,
-                            model: s
-                        },
+            // Turn them both into a combined list
+            const mappedSpecs = await Promise.all(
+                specs.map(async (s) => {
+                    await sendKernelSpecTelemetry(s, 'remote');
+                    const kernel = RemoteKernelSpecConnectionMetadata.create({
+                        kernelSpec: s,
+                        id: getKernelId(s, undefined, serverId),
                         baseUrl: connInfo.baseUrl,
-                        id: s.kernel?.id || '',
-                        serverId
+                        serverId: serverId
                     });
                     return kernel;
-                });
+                })
+            );
+            const mappedLive = sessions.map((s) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const liveKernel = s.kernel as any;
+                const lastActivityTime = liveKernel.last_activity
+                    ? new Date(Date.parse(liveKernel.last_activity.toString()))
+                    : new Date();
+                const numberOfConnections = liveKernel.connections
+                    ? parseInt(liveKernel.connections.toString(), 10)
+                    : 0;
+                const activeKernel = running.find((active) => active.id === s.kernel?.id) || {};
+                const matchingSpec: Partial<IJupyterKernelSpec> =
+                    specs.find((spec) => spec.name === s.kernel?.name) || {};
 
-                // Filter out excluded ids
-                const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
-                const items = [...filtered, ...mappedSpecs];
-                return items;
-            } catch (ex) {
-                traceError(
-                    `Error fetching kernels from ${connInfo.baseUrl} (${connInfo.displayName}, ${connInfo.type}):`,
-                    ex
-                );
-                throw ex;
-            } finally {
-                if (sessionManager) {
-                    await sessionManager.dispose();
-                }
-            }
+                const kernel = LiveRemoteKernelConnectionMetadata.create({
+                    kernelModel: {
+                        ...s.kernel,
+                        ...matchingSpec,
+                        ...activeKernel,
+                        name: s.kernel?.name || '',
+                        lastActivityTime,
+                        numberOfConnections,
+                        model: s
+                    },
+                    baseUrl: connInfo.baseUrl,
+                    id: s.kernel?.id || '',
+                    serverId
+                });
+                return kernel;
+            });
+
+            // Filter out excluded ids
+            const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
+            return [...filtered, ...mappedSpecs];
+        } catch (ex) {
+            traceError(`Error fetching kernels from ${connInfo.baseUrl} (${connInfo.displayName}):`, ex);
+            throw ex;
+        } finally {
+            await Promise.all(disposables.map((d) => d.dispose().catch(noop)));
         }
-        return [];
     }
 
     private async writeToCache(values: RemoteKernelConnectionMetadata[]) {

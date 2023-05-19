@@ -44,6 +44,6 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
     }
 
     private async clearJupyterUris(): Promise<void> {
-        return this.serverUriStorage.clearMRU();
+        return this.serverUriStorage.clear();
     }
 }

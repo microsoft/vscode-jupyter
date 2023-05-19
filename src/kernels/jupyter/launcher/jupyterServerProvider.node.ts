@@ -21,24 +21,9 @@ export class JupyterServerProvider implements IJupyterServerProvider {
         private readonly jupyterServerHelper: IJupyterServerHelper | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
-    public async getOrCreateServer(options: GetServerOptions): Promise<IJupyterConnection> {
-        // If we are just fetching or only want to create for local, see if exists
-        if (this.jupyterServerHelper) {
-            const server = await this.jupyterServerHelper.getJupyterServerConnection(options.resource);
-            // Possible it wasn't created, hence create it.
-            if (server) {
-                return server;
-            }
-        }
-
-        // Otherwise create a new server
-        return this.createServer(options);
-    }
-
-    private async createServer(options: GetServerOptions): Promise<IJupyterConnection> {
+    public async getOrStartServer(options: GetServerOptions): Promise<IJupyterConnection> {
         if (!this.serverPromise) {
-            // Start a server
-            const promise = (this.serverPromise = this.startServer(options));
+            const promise = (this.serverPromise = this.startServerImpl(options));
             promise.catch(() => {
                 if (promise === this.serverPromise) {
                     this.serverPromise = undefined;
@@ -48,7 +33,7 @@ export class JupyterServerProvider implements IJupyterServerProvider {
         return this.serverPromise;
     }
 
-    private async startServer(options: GetServerOptions): Promise<IJupyterConnection> {
+    private async startServerImpl(options: GetServerOptions): Promise<IJupyterConnection> {
         const jupyterServerHelper = this.jupyterServerHelper;
         if (!jupyterServerHelper) {
             throw new NotSupportedInWebError();
@@ -68,7 +53,7 @@ export class JupyterServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceVerbose(`Starting notebook server.`);
-            const result = await jupyterServerHelper.connectToNotebookServer(options.resource, options.token);
+            const result = await jupyterServerHelper.startServer(options.resource, options.token);
             Cancellation.throwIfCanceled(options.token);
             return result;
         } catch (e) {

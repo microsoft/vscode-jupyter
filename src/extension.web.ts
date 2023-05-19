@@ -100,7 +100,6 @@ import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
-import { removeOldCachedItems } from './platform/common/cache';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -116,7 +115,6 @@ let activatedServiceContainer: IServiceContainer | undefined;
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     context.subscriptions.push({ dispose: () => (Exiting.isExiting = true) });
     try {
-        removeOldCachedItems(context.globalState).then(noop, noop);
         let api: IExtensionApi;
         let ready: Promise<void>;
         let serviceContainer: IServiceContainer;

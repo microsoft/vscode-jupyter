@@ -7,7 +7,7 @@ import type { Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { getDisplayNameOrNameOfKernelConnection } from '../../helpers';
-import { Disposable, EventEmitter, Memento, Uri } from 'vscode';
+import { Disposable, Memento, Uri } from 'vscode';
 import { CryptoUtils } from '../../../platform/common/crypto';
 import { noop } from '../../../test/core';
 import {
@@ -41,17 +41,14 @@ suite(`Remote Kernel Finder`, () => {
     let fs: IFileSystemNode;
     let memento: Memento;
     let jupyterSessionManager: IJupyterSessionManager;
-    const dummyEvent = new EventEmitter<number>();
     let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
     let kernelsChanged: TestEventHandler<void>;
     let jupyterConnection: JupyterConnection;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
-        type: 'jupyter',
         localLaunch: false,
         baseUrl: 'http://foobar',
         displayName: 'foobar connection',
-        disconnected: dummyEvent.event,
         token: '',
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
@@ -121,6 +118,7 @@ suite(`Remote Kernel Finder`, () => {
             return Promise.resolve(d.toLowerCase());
         });
         jupyterSessionManager = mock(JupyterSessionManager);
+        when(jupyterSessionManager.dispose()).thenResolve();
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
         const extensionChecker = mock(PythonExtensionChecker);

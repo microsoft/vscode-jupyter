@@ -72,7 +72,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 ? await this.jupyterConnection.createConnectionInfo({
                       serverId: options.kernelConnection.serverId
                   })
-                : await this.jupyterNotebookProvider.getOrCreateServer({
+                : await this.jupyterNotebookProvider.getOrStartServer({
                       resource: options.resource,
                       token: options.token,
                       ui: options.ui

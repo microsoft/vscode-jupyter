@@ -76,25 +76,12 @@ export class JupyterServerHelper implements IJupyterServerHelper {
         traceVerbose(`Finished disposing HostJupyterExecution`);
     }
 
-    private async hostConnectToNotebookServer(
-        resource: Resource,
-        cancelToken: CancellationToken
-    ): Promise<IJupyterConnection> {
-        if (!this._disposed) {
-            return this.connectToNotebookServerImpl(resource, cancelToken);
-        }
-        throw new Error('Notebook server is disposed');
-    }
-
-    public async connectToNotebookServer(
-        resource: Resource,
-        cancelToken: CancellationToken
-    ): Promise<IJupyterConnection> {
+    public async startServer(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         if (this._disposed) {
             throw new Error('Notebook server is disposed');
         }
         if (!this.cache) {
-            const promise = (this.cache = this.hostConnectToNotebookServer(resource, cancelToken));
+            const promise = (this.cache = this.startJupyterWithRetry(resource, cancelToken));
             promise.catch((ex) => {
                 traceError(`Failed to start the Jupyter Server`, ex);
                 if (this.cache === promise) {
@@ -105,10 +92,6 @@ export class JupyterServerHelper implements IJupyterServerHelper {
 
         return this.cache;
     }
-    public async getJupyterServerConnection(): Promise<IJupyterConnection | undefined> {
-        return !this._disposed && this.cache ? this.cache : undefined;
-    }
-
     public async refreshCommands(): Promise<void> {
         await this.jupyterInterpreterService?.refreshCommands();
     }
@@ -136,10 +119,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
     }
 
     /* eslint-disable complexity,  */
-    public connectToNotebookServerImpl(
-        resource: Resource,
-        cancelToken: CancellationToken
-    ): Promise<IJupyterConnection> {
+    private startJupyterWithRetry(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         // Return nothing if we cancel
         // eslint-disable-next-line
         return Cancellation.race(async () => {
@@ -152,7 +132,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
             while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
-                    connection = await this.start(resource, cancelToken);
+                    connection = await this.startImpl(resource, cancelToken);
 
                     traceVerbose(`Connection complete server`);
                     return connection;
@@ -182,7 +162,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
         }, cancelToken);
     }
 
-    private async start(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
+    private async startImpl(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         // If that works, then attempt to start the server
         traceInfo(`Launching server`);

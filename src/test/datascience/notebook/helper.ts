@@ -347,13 +347,9 @@ async function shutdownRemoteKernels() {
     const cancelToken = new CancellationTokenSource();
     let sessionManager: IJupyterSessionManager | undefined;
     try {
-        const uris = await serverUriStorage.getMRUs();
         const connection = await jupyterConnection.createConnectionInfo({
-            serverId: uris[0].serverId
+            serverId: (await serverUriStorage.getAll())[0].serverId
         });
-        if (connection.type !== 'jupyter') {
-            return;
-        }
         const sessionManager = await jupyterSessionManagerFactory.create(connection);
         const liveKernels = await sessionManager.getRunningKernels();
         await Promise.all(

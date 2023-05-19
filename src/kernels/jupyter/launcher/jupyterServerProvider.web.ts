@@ -7,7 +7,7 @@ import { IJupyterServerProvider } from '../types';
 
 @injectable()
 export class JupyterServerProvider implements IJupyterServerProvider {
-    public async getOrCreateServer(_: GetServerOptions): Promise<IJupyterConnection> {
+    public async getOrStartServer(_: GetServerOptions): Promise<IJupyterConnection> {
         throw new Error('Invalid Operation in Web');
     }
 }
