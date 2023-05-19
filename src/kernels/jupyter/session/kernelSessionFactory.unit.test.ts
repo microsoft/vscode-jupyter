@@ -55,7 +55,7 @@ suite('NotebookProvider', () => {
             localLaunch: true,
             baseUrl: 'http://localhost:8888'
         } as any);
-        when(jupyterNotebookProvider.getOrCreateServer(anything())).thenResolve({
+        when(jupyterNotebookProvider.getOrStartServer(anything())).thenResolve({
             localLaunch: true,
             baseUrl: 'http://localhost:8888'
         } as any);
@@ -75,7 +75,7 @@ suite('NotebookProvider', () => {
         await asyncDisposables.dispose();
     });
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
-        when(jupyterNotebookProvider.getOrCreateServer(anything())).thenResolve({} as any);
+        when(jupyterNotebookProvider.getOrStartServer(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
         const session = await jupyterKernelSessionFactory.create({
@@ -89,7 +89,7 @@ suite('NotebookProvider', () => {
     });
 
     test('NotebookProvider getOrCreateNotebook second request should return the notebook already cached', async () => {
-        when(jupyterNotebookProvider.getOrCreateServer(anything())).thenResolve({} as any);
+        when(jupyterNotebookProvider.getOrStartServer(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 

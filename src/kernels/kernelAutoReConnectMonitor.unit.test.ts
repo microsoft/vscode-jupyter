@@ -31,7 +31,7 @@ import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { CellExecutionCreator, NotebookCellExecutionWrapper } from './execution/cellExecutionCreator';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { JupyterNotebookView } from '../platform/common/constants';
-import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
 import { noop } from '../test/core';
 
 suite('Kernel ReConnect Progress Message', () => {
@@ -62,7 +62,7 @@ suite('Kernel ReConnect Progress Message', () => {
         when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
         clock = fakeTimers.install();
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
-        when(jupyterServerUriStorage.getMRUs()).thenResolve([]);
+        when(jupyterServerUriStorage.getAll()).thenResolve([]);
         jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
 
         disposables.push(new Disposable(() => clock.uninstall()));
@@ -170,7 +170,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidRestartKernel.event);
         when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
-        when(jupyterServerUriStorage.getMRUs()).thenResolve([]);
+        when(jupyterServerUriStorage.getAll()).thenResolve([]);
         jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         monitor = new KernelAutoReconnectMonitor(
             instance(appShell),
@@ -321,13 +321,17 @@ suite('Kernel ReConnect Failed Monitor', () => {
 
     test('Handle contributed server disconnect (server contributed by uri provider)', async () => {
         const kernel = createKernel();
-        const server = {
+        const server: IJupyterServerUriEntry = {
             uri: 'https://remote?id=remoteUriProvider&uriHandle=1',
             serverId: '1234',
-            time: 1234
+            time: 1234,
+            provider: {
+                handle: '1',
+                id: '1'
+            }
         };
-        when(jupyterServerUriStorage.getMRUs()).thenResolve([server]);
-        when(jupyterServerUriStorage.getMRU(anything())).thenResolve(server);
+        when(jupyterServerUriStorage.getAll()).thenResolve([server]);
+        when(jupyterServerUriStorage.get(server.serverId)).thenResolve(server);
         when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
             id: 'remoteUriProvider',
             getServerUri: (_handle) =>

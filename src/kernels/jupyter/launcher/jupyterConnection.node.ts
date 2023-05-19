@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs/Subscription';
-import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationError, CancellationToken, Disposable, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { traceError, traceWarning, traceVerbose } from '../../../platform/logging';
@@ -104,15 +103,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         processDisposable: Disposable
     ) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return new JupyterConnection(
-            url,
-            baseUrl,
-            token,
-            hostName,
-            this.rootDir,
-            processDisposable,
-            this.launchResult.proc
-        );
+        return new JupyterConnection(url, baseUrl, token, hostName, this.rootDir, processDisposable);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -234,33 +225,17 @@ export class JupyterConnectionWaiter implements IDisposable {
 // Represents an active connection to a running jupyter notebook
 class JupyterConnection implements IJupyterConnection {
     public readonly localLaunch: boolean = true;
-    public readonly type = 'jupyter';
-    private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
     constructor(
         public readonly url: string,
         public readonly baseUrl: string,
         public readonly token: string,
         public readonly hostName: string,
         public readonly rootDirectory: Uri,
-        private readonly disposable: Disposable,
-        childProc: ChildProcess | undefined
-    ) {
-        // If the local process exits, set our exit code and fire our event
-        if (childProc) {
-            childProc.on('exit', (c) => {
-                // Our code expects the exit code to be of type `number` or `undefined`.
-                const code = typeof c === 'number' ? c : 0;
-                this.eventEmitter.fire(code);
-            });
-        }
-    }
+        private readonly disposable: Disposable
+    ) {}
 
     public get displayName(): string {
         return getJupyterConnectionDisplayName(this.token, this.baseUrl);
-    }
-
-    public get disconnected(): Event<number> {
-        return this.eventEmitter.event;
     }
 
     public dispose() {

@@ -47,6 +47,7 @@ import { registerTypes as processRegisterTypes } from './process/serviceRegistry
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
 import { TerminalManager } from './application/terminalManager.node';
+import { OldCacheCleaner } from './cache';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -72,6 +73,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LanguageInitializer);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, OldCacheCleaner);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ReloadVSCodeCommandHandler

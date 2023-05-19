@@ -45,7 +45,7 @@ export class JupyterConnection {
 
     private async getUriFromServerId(serverId: string) {
         // Since there's one server per session, don't use a resource to figure out these settings
-        const savedList = await this.serverUriStorage.getMRUs();
+        const savedList = await this.serverUriStorage.getAll();
         return savedList.find((item) => item.serverId === serverId)?.uri;
     }
     private async createConnectionInfoFromUri(uri: string) {
