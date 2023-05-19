@@ -35,8 +35,8 @@ import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyterServerMruUpdate';
 import { KernelDependencyService } from './kernelDependencyService.web';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
-import { JupyterServerSelectorCommand } from './jupyter/connection/serverSelectorCommand';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
+import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -97,7 +97,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        JupyterServerSelectorCommand
+        ClearJupyterServersCommand
     );
     serviceManager.addSingleton<LastCellExecutionTracker>(LastCellExecutionTracker, LastCellExecutionTracker);
     serviceManager.addBinding(LastCellExecutionTracker, IExtensionSyncActivationService);

@@ -214,7 +214,7 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Forget the Uri connection all together.
-        onDidRemoveUris.fire([{ uri: server2Uri, serverId: server2Id, time: 0 }]);
+        onDidRemoveUris.fire([{ uri: server2Uri, serverId: server2Id, time: 0, provider: { id: '1', handle: '2' } }]);
 
         await waitForCondition(
             () => {

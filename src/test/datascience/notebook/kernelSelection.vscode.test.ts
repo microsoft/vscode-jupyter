@@ -35,7 +35,6 @@ import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 import { noop } from '../../core';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('Kernel Selection @kernelPicker', function () {
@@ -67,8 +66,6 @@ suite('Kernel Selection @kernelPicker', function () {
     const venvNoRegSearchString = '.venvnoreg';
     let activeInterpreterSearchString = '';
     let vscodeNotebook: IVSCodeNotebook;
-    let serverUriStorage: IJupyterServerUriStorage;
-    let jupyterServerUri: string | undefined;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     /*
     This test requires a virtual environment to be created & registered as a kernel.
@@ -91,7 +88,6 @@ suite('Kernel Selection @kernelPicker', function () {
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
 
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
@@ -174,9 +170,6 @@ suite('Kernel Selection @kernelPicker', function () {
         console.log(`End test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         console.log(`End test completed ${this.currentTest?.title}`);
-        if (jupyterServerUri) {
-            await serverUriStorage.add(jupyterServerUri, '');
-        }
     });
 
     test('Ensure we select active interpreter as kernel (when Raw Kernels)', async function () {

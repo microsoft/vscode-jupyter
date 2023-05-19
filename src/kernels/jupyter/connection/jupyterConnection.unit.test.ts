@@ -9,6 +9,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { JupyterConnection } from './jupyterConnection';
 import {
+    IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
@@ -39,6 +40,15 @@ suite('Jupyter Connection', async () => {
     let sessionManager: IJupyterSessionManager;
     let serverUriStorage: IJupyterServerUriStorage;
     const disposables: IDisposable[] = [];
+    const provider = {
+        id: 'someProvider',
+        handle: 'someHandle'
+    };
+    const server: IJupyterServerUri = {
+        baseUrl: 'http://localhost:8888',
+        displayName: 'someDisplayName',
+        token: '1234'
+    };
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
         sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
@@ -61,37 +71,61 @@ suite('Jupyter Connection', async () => {
         disposeAllDisposables(disposables);
     });
 
-    test('Validation will result in fetching kernels and kernelspecs', async () => {
-        const uri = 'http://localhost:8888/?token=1234';
+    test('Validation will result in fetching kernels and kernelSpecs (Uri info provided)', async () => {
         when(sessionManager.dispose()).thenResolve();
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
 
-        await jupyterConnection.validateRemoteUri(uri);
+        await jupyterConnection.validateRemoteUri(provider, server);
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
         verify(sessionManager.dispose()).once();
+        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).never();
+    });
+    test('Validation will result in fetching kernels and kernelSpecs (Uri info fetched from provider)', async () => {
+        when(sessionManager.dispose()).thenResolve();
+        when(sessionManager.getKernelSpecs()).thenResolve([]);
+        when(sessionManager.getRunningKernels()).thenResolve([]);
+        when(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).thenResolve(server);
+
+        await jupyterConnection.validateRemoteUri(provider);
+
+        verify(sessionManager.getKernelSpecs()).once();
+        verify(sessionManager.getRunningKernels()).once();
+        verify(sessionManager.dispose()).once();
+        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).atLeast(1);
+    });
+    test('Validation will fail if info could not be fetched from provider', async () => {
+        when(sessionManager.dispose()).thenResolve();
+        when(sessionManager.getKernelSpecs()).thenResolve([]);
+        when(sessionManager.getRunningKernels()).thenResolve([]);
+        when(registrationPicker.getJupyterServerUri(anything(), anything())).thenReject(new Error('kaboom'));
+
+        await assert.isRejected(jupyterConnection.validateRemoteUri(provider));
+
+        verify(sessionManager.getKernelSpecs()).never();
+        verify(sessionManager.getRunningKernels()).never();
+        verify(sessionManager.dispose()).never();
+        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).atLeast(1);
     });
     test('Validation will fail if fetching kernels fail', async () => {
-        const uri = 'http://localhost:8888/?token=1234';
         when(sessionManager.dispose()).thenResolve();
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenReject(new Error('Kaboom kernels failure'));
 
-        await assert.isRejected(jupyterConnection.validateRemoteUri(uri), 'Kaboom kernels failure');
+        await assert.isRejected(jupyterConnection.validateRemoteUri(provider, server), 'Kaboom kernels failure');
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
         verify(sessionManager.dispose()).once();
     });
     test('Validation will fail if fetching kernelspecs fail', async () => {
-        const uri = 'http://localhost:8888/?token=1234';
         when(sessionManager.dispose()).thenResolve();
         when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
         when(sessionManager.getRunningKernels()).thenResolve([]);
 
-        await assert.isRejected(jupyterConnection.validateRemoteUri(uri), 'Kaboom kernelspec failure');
+        await assert.isRejected(jupyterConnection.validateRemoteUri(provider, server), 'Kaboom kernelspec failure');
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();

@@ -253,7 +253,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         const message = error.originalError.message || '';
 
         if (info?.provider) {
-            const serverName = info?.displayName ?? error.url;
+            const serverName = info.displayName ?? error.url;
             return getUserFriendlyErrorMessage(
                 DataScience.remoteJupyterConnectionFailedWithServerWithError(serverName, message),
                 errorContext
@@ -270,8 +270,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         );
     }
     private async handleJupyterServerProviderConnectionError(info: IJupyterServerUriEntry) {
-        const provider = info.provider && (await this.jupyterUriProviderRegistration.getProvider(info.serverId));
-        if (!info.provider || !provider || !provider.getHandles) {
+        const provider = await this.jupyterUriProviderRegistration.getProvider(info.serverId);
+        if (!provider || !provider.getHandles) {
             return false;
         }
 
@@ -279,7 +279,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             const handles = await provider.getHandles();
 
             if (!handles.includes(info.provider.handle)) {
-                await this.serverUriStorage.remove(info.uri);
+                await this.serverUriStorage.remove(info.serverId);
             }
             return true;
         } catch (_ex) {
@@ -377,7 +377,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     // Remove this uri if already found (going to add again with a new time)
                     const item = await this.serverUriStorage.get(serverId);
                     if (item) {
-                        await this.serverUriStorage.remove(item.uri);
+                        await this.serverUriStorage.remove(item.serverId);
                     }
                     // Wait until all of the remote controllers associated with this server have been removed.
                     return KernelInterpreterDependencyResponse.cancel;

@@ -528,18 +528,18 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
 }
 
 export interface IJupyterConnection extends Disposable {
+    serverId: string;
     readonly localLaunch: boolean;
     displayName: string;
-
-    // Jupyter specific members
     readonly baseUrl: string;
     readonly token: string;
-    readonly providerId?: string;
+    readonly providerId: string;
     readonly hostName: string;
-    readonly rootDirectory: Uri; // Directory where the notebook server was started.
-    readonly url: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getAuthHeader?(): any; // Snould be a json object
+    /**
+     * Directory where the notebook server was started.
+     */
+    readonly rootDirectory: Uri;
+    getAuthHeader?(): Record<string, string>;
     /**
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
      */

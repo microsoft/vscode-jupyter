@@ -139,7 +139,7 @@ suite('RemoteKernelControllerWatcher', () => {
                 id: provider1Id
             }
         });
-        when(uriStorage.add(anything(), anything())).thenResolve();
+        when(uriStorage.add(anything())).thenResolve();
 
         watcher.activate();
 
@@ -182,7 +182,7 @@ suite('RemoteKernelControllerWatcher', () => {
         await onDidChangeHandles!();
 
         assert.isOk(onDidChangeHandles, 'onDidChangeHandles should be defined');
-        verify(uriStorage.remove(remoteUriForProvider1)).once();
+        verify(uriStorage.remove(serverId)).once();
         verify(localKernel.dispose()).never();
         verify(remoteKernelSpec.dispose()).once();
         verify(remoteLiveKernel.dispose()).once();

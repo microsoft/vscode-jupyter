@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
     IJupyterUriProvider,
@@ -53,27 +52,26 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         await Promise.all(
             uris.map(async (item) => {
                 // Check if this url is associated with a provider.
-                const info = item.provider;
-                if (!info || info.id !== provider.id) {
+                if (item.provider.id !== provider.id) {
                     return;
                 }
                 serverJupyterProviderMap.set(item.serverId, {
                     uri: item.uri,
-                    providerId: info.id,
-                    handle: info.handle
+                    providerId: item.provider.id,
+                    handle: item.provider.handle
                 });
 
-                if (handles.includes(info.handle)) {
-                    registeredHandles.push(info.handle);
+                if (handles.includes(item.provider.handle)) {
+                    registeredHandles.push(item.provider.handle);
                 }
 
                 // Check if this handle is still valid.
                 // If not then remove this uri from the list.
-                if (!handles.includes(info.handle)) {
+                if (!handles.includes(item.provider.handle)) {
                     // Looks like the 3rd party provider has updated its handles and this server is no longer available.
-                    await this.uriStorage.remove(item.uri);
+                    await this.uriStorage.remove(item.serverId);
                 } else if (!item.isValidated) {
-                    await this.uriStorage.add(item.uri, item.displayName ?? item.uri).catch(noop);
+                    await this.uriStorage.add(item.provider).catch(noop);
                 }
             })
         );
@@ -83,9 +81,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         await Promise.all(
             unregisteredHandles.map(async (handle) => {
                 try {
-                    const serverUri = await provider.getServerUri(handle);
-                    const uri = generateUriFromRemoteProvider(provider.id, handle);
-                    await this.uriStorage.add(uri, serverUri.displayName);
+                    await this.uriStorage.add({ id: provider.id, handle });
                 } catch (ex) {
                     traceError(`Failed to get server uri and add it to uri Storage for handle ${handle}`, ex);
                 }

@@ -90,11 +90,6 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 const existingServers = await this.serverUriStorage.getAll();
                 const migratedServers = [];
                 for (const server of existingServers) {
-                    const info = server.provider;
-                    if (info) {
-                        continue;
-                    }
-
                     if (this._servers.find((s) => s.uri === server.uri)) {
                         // already exist
                         continue;
@@ -239,12 +234,28 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         traceError('Failed to check if server already exists', ex);
                     }
 
+                    let url: URL;
+                    try {
+                        url = new URL(uri);
+                    } catch (err) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
+                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+                        return;
+                    }
+
                     const message = await validateSelectJupyterURI(
                         this.jupyterConnection,
                         this.applicationShell,
                         this.configService,
                         this.isWebExtension,
-                        uri
+                        { id: this.id, handle: 'bogusHandle' },
+                        {
+                            baseUrl: `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`,
+                            displayName: uri,
+                            token: url.searchParams.get('token') ?? ''
+                        }
                     );
 
                     if (message) {
@@ -309,7 +320,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 baseUrl: baseUrl,
                 token: isTokenEmpty ? '' : token,
                 displayName: displayName || hostName,
-                authorizationHeader: isTokenEmpty ? {} : authorizationHeader
+                authorizationHeader: isTokenEmpty ? undefined : authorizationHeader
             };
         } catch (err) {
             // This should already have been parsed when set, so just throw if it's not right here
