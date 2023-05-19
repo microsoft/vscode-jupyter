@@ -215,11 +215,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
     ): Promise<boolean> {
         const uriItem = await this.serverUriStorage.get(metadata.serverId);
 
-        if (!uriItem?.provider) {
-            return false;
-        }
-
-        const provider = await this.jupyterUriProviderRegistration.getProvider(uriItem.provider.id);
+        const provider = uriItem && (await this.jupyterUriProviderRegistration.getProvider(uriItem.provider.id));
         if (!provider || !provider.getHandles) {
             return false;
         }
@@ -228,7 +224,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             const handles = await provider.getHandles();
 
             if (!handles.includes(uriItem.provider.handle)) {
-                await this.serverUriStorage.remove(uriItem.uri);
+                await this.serverUriStorage.remove(uriItem.serverId);
                 this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);
             }

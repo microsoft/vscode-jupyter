@@ -89,32 +89,23 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export function createRemoteConnectionInfo(
-    uri: string,
-    serverUri?: IJupyterServerUri,
-    providerId?: string
-): IJupyterConnection {
-    let url: URL;
-    try {
-        url = new URL(uri);
-    } catch (err) {
-        // This should already have been parsed when set, so just throw if it's not right here
-        throw err;
-    }
-
-    providerId = providerId || '';
-
-    const baseUrl = serverUri
-        ? serverUri.baseUrl
-        : // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
-          // the location for connecting to jupyterlab
-          `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
-    const token = serverUri ? serverUri.token : `${url.searchParams.get('token') ?? ''}`;
-    const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;
-    const isEmptyAuthHeader = Object.keys(serverUri?.authorizationHeader ?? {}).length === 0;
+export async function createRemoteConnectionInfo(
+    jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+    serverUri: IJupyterServerUri
+): Promise<IJupyterConnection> {
+    const serverId = await computeServerId(generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle));
+    const baseUrl = serverUri.baseUrl;
+    const token = serverUri.token;
+    const hostName = new URL(serverUri.baseUrl).hostname;
+    const webSocketProtocols = (serverUri?.webSocketProtocols || []).length ? serverUri?.webSocketProtocols || [] : [];
+    const authHeader =
+        serverUri.authorizationHeader && Object.keys(serverUri?.authorizationHeader ?? {}).length > 0
+            ? serverUri.authorizationHeader
+            : undefined;
     return {
+        serverId,
         baseUrl,
-        providerId,
+        providerId: jupyterHandle.id,
         token,
         hostName,
         localLaunch: false,
@@ -129,15 +120,8 @@ export function createRemoteConnectionInfo(
         mappedRemoteNotebookDir: serverUri?.mappedRemoteNotebookDir || (serverUri as any)?.workingDirectory,
         // For remote jupyter servers that are managed by us, we can provide the auth header.
         // Its crucial this is set to undefined, else password retrieval will not be attempted.
-        getAuthHeader:
-            serverUri && !providerId.startsWith('_builtin') && !isEmptyAuthHeader
-                ? () => serverUri?.authorizationHeader
-                : undefined,
-        getWebsocketProtocols:
-            serverUri && !providerId.startsWith('_builtin') && (serverUri?.webSocketProtocols || []).length
-                ? () => serverUri?.webSocketProtocols || []
-                : () => [],
-        url: uri
+        getAuthHeader: authHeader ? () => authHeader : undefined,
+        getWebsocketProtocols: webSocketProtocols ? () => webSocketProtocols : () => []
     };
 }
 
@@ -152,17 +136,19 @@ export function generateUriFromRemoteProvider(id: string, result: JupyterServerU
     }=${encodeURI(result)}`;
 }
 
-export function extractJupyterServerHandleAndId(
-    uri: string
-): { handle: JupyterServerUriHandle; id: string } | undefined {
+export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } {
     try {
         const url: URL = new URL(uri);
 
         // Id has to be there too.
         const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
         const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-        return id && uriHandle ? { handle: uriHandle, id } : undefined;
+        if (id && uriHandle) {
+            return { handle: uriHandle, id };
+        }
+        throw new Error('Invalid remote URI');
     } catch (ex) {
         traceError('Failed to parse remote URI', uri, ex);
+        throw new Error(`'Failed to parse remote URI ${uri}`);
     }
 }

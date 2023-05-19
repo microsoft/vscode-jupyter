@@ -6,15 +6,12 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, Uri, workspace } from 'vscode';
-import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
-import { RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
-import { JupyterServer } from '../jupyterServer.node';
 import { closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
 import {
     createEmptyPythonNotebook,
@@ -36,7 +33,6 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 suite('Remote Kernel Execution', function () {
     let controllerRegistration: IControllerRegistration;
-    let jupyterServerSelector: JupyterServerSelector;
     let vscodeNotebook: IVSCodeNotebook;
     let ipynbFile: Uri;
     let svcContainer: IServiceContainer;
@@ -57,7 +53,6 @@ suite('Remote Kernel Execution', function () {
         const serviceContainer = api.serviceContainer;
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        jupyterServerSelector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
         vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         svcContainer = serviceContainer;
         interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -100,57 +95,6 @@ suite('Remote Kernel Execution', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-
-    // This test needs to run in node only as we have to start another jupyter server
-    test('Old Remote kernels are removed when switching to new Remote Server @kernelPicker', async function () {
-        // Opening a notebook will trigger the refresh of the kernel list.
-        let nbUri = await createTemporaryNotebook([], disposables);
-        await openNotebook(nbUri);
-
-        const baseUrls = new Set<string>();
-        // Wait til we get new controllers with a different base url.
-        await waitForCondition(
-            async () => {
-                const controllers = controllerRegistration.registered;
-                const remoteKernelSpecs = controllers
-                    .filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec')
-                    .map((item) => item.connection as RemoteKernelSpecConnectionMetadata);
-                remoteKernelSpecs.forEach((item) => baseUrls.add(item.baseUrl));
-                return remoteKernelSpecs.length > 0;
-            },
-            defaultNotebookTestTimeout,
-            () => `Should have at least one remote kernelspec, ${JSON.stringify(controllerRegistration.registered)}`
-        );
-
-        traceInfoIfCI(`Base Url is ${Array.from(baseUrls).join(', ')}`);
-
-        // Start another jupyter server with a new port.
-        const uri = await JupyterServer.instance.startSecondJupyterWithToken();
-        const uriString = decodeURIComponent(uri.toString());
-        traceInfo(`Another Jupyter started and listening at ${uriString}`);
-        await jupyterServerSelector.addJupyterServer(uriString);
-
-        // Opening a notebook will trigger the refresh of the kernel list.
-        nbUri = await createTemporaryNotebook([], disposables);
-        await openNotebook(nbUri);
-        traceInfo(`Waiting for kernels to get refreshed for Jupyter Remotenp ${uriString}`);
-
-        // Wait til we get new controllers with a different base url.
-        await waitForCondition(
-            async () => {
-                const controllers = controllerRegistration.registered;
-                return controllers.some(
-                    (item) =>
-                        item.connection.kind === 'startUsingRemoteKernelSpec' && !baseUrls.has(item.connection.baseUrl)
-                );
-            },
-            defaultNotebookTestTimeout,
-            () =>
-                `Should have at least one remote kernelspec with different baseUrls, ${JSON.stringify(
-                    controllerRegistration.registered.map((item) => item.connection.kind)
-                )}`
-        );
-    });
     test('Local Kernel state is not lost when connecting to remote @kernelPicker', async function () {
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         traceInfoIfCI(`active interpreter ${activeInterpreter?.uri.path}`);

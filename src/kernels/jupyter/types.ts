@@ -163,7 +163,7 @@ export interface IJupyterServerUri {
     /**
      * Authorization header to be used when connecting to the server.
      */
-    authorizationHeader: Record<string, string>;
+    authorizationHeader?: Record<string, string>;
     displayName: string;
     /**
      * The local directory that maps to the remote directory of the Jupyter Server.
@@ -245,7 +245,7 @@ export interface IJupyterServerUriEntry {
      * Uri of the server to connect to
      */
     uri: string;
-    provider?: {
+    provider: {
         id: string;
         handle: JupyterServerUriHandle;
     };
@@ -277,10 +277,10 @@ export interface IJupyterServerUriStorage {
      */
     update(serverId: string): Promise<void>;
     getAll(): Promise<IJupyterServerUriEntry[]>;
-    remove(uri: string): Promise<void>;
+    remove(serverId: string): Promise<void>;
     clear(): Promise<void>;
     get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
-    add(uri: string, displayName: string): Promise<void>;
+    add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void>;
 }
 
 export interface IBackupFile {

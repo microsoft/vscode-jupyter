@@ -170,7 +170,7 @@ export function buildApi(
                     controllerRegistration
                 );
 
-                await selector.addJupyterServer(uri);
+                await selector.addJupyterServer({ id: providerId, handle });
                 await controllerCreatedPromise;
                 resolve();
             });

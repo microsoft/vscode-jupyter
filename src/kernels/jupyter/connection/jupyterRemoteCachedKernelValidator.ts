@@ -33,12 +33,6 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
             // Server has been removed and we have some old cached data.
             return false;
         }
-        // Check if this has a provider associated with it.
-        if (!item.provider) {
-            // Could be a regular remote Jupyter Uri entered by the user.
-            // As its in the list, its still valid.
-            return true;
-        }
         const provider = await this.providerRegistration.getProvider(item.provider.id);
         if (!provider) {
             traceWarning(

@@ -7,8 +7,13 @@ import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { Settings } from '../../../platform/common/constants';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { traceInfoIfCI, traceVerbose } from '../../../platform/logging';
-import { computeServerId, extractJupyterServerHandleAndId } from '../jupyterUtils';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRegistration } from '../types';
+import { computeServerId, extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import {
+    IJupyterServerUriEntry,
+    IJupyterServerUriStorage,
+    IJupyterUriProviderRegistration,
+    JupyterServerUriHandle
+} from '../types';
 
 /**
  * Class for storing Jupyter Server URI values, also manages the MRU list of the servers/urls.
@@ -42,9 +47,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             throw new Error(`Uri not found for Server Id ${serverId}`);
         }
 
-        await this.addToUriList(existingEntry.uri, existingEntry.displayName || '');
+        await this.addToUriList(existingEntry.provider, existingEntry.displayName || '');
     }
-    private async addToUriList(uri: string, displayName: string) {
+    private async addToUriList(jupyterHandle: { id: string; handle: JupyterServerUriHandle }, displayName: string) {
+        const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
         const [uriList, serverId] = await Promise.all([this.getAll(), computeServerId(uri)]);
 
         // Check if we have already found a display name for this server
@@ -70,18 +76,21 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
         return this.updateMemento(editedList);
     }
-    public async remove(uri: string) {
+    public async remove(serverId: string) {
         const uriList = await this.getAll();
 
-        await this.updateMemento(uriList.filter((f) => f.uri !== uri));
-        const removedItem = uriList.find((f) => f.uri === uri);
+        await this.updateMemento(uriList.filter((f) => f.serverId !== serverId));
+        const removedItem = uriList.find((f) => f.uri === serverId);
         if (removedItem) {
             this._onDidRemoveUris.fire([removedItem]);
         }
     }
     private async updateMemento(editedList: IJupyterServerUriEntry[]) {
         // Sort based on time. Newest time first
-        const sorted = editedList.sort((a, b) => b.time - a.time);
+        const sorted = editedList
+            .sort((a, b) => b.time - a.time)
+            // We have may stored some old bogus entries in the past.
+            .filter((item) => item.uri !== Settings.JupyterServerLocalLaunch);
 
         // Transform the sorted into just indexes. Uris can't show up in
         // non encrypted storage (so remove even the display name)
@@ -148,21 +157,20 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                                 provider: idAndHandle
                             };
 
+                            // Old code (we may have stored a bogus url in the past).
                             if (uri === Settings.JupyterServerLocalLaunch) {
                                 return;
                             }
-
-                            return idAndHandle
-                                ? this.jupyterPickerRegistration
-                                      .getJupyterServerUri(idAndHandle.id, idAndHandle.handle)
-                                      .then(
-                                          () => server,
-                                          () => {
-                                              server.isValidated = false;
-                                              return server;
-                                          }
-                                      )
-                                : server;
+                            try {
+                                await this.jupyterPickerRegistration.getJupyterServerUri(
+                                    idAndHandle.id,
+                                    idAndHandle.handle
+                                );
+                                return server;
+                            } catch (ex) {
+                                server.isValidated = false;
+                                return server;
+                            }
                         })
                     );
 
@@ -194,11 +202,11 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         const savedList = await this.getAll();
         return savedList.find((item) => item.serverId === id);
     }
-    public async add(uri: string, displayName: string): Promise<void> {
-        traceInfoIfCI(`setUri: ${uri}`);
+    public async add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
+        traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
+        const server = await this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle.id, jupyterHandle.handle);
 
         // display name is wrong here
-        await this.addToUriList(uri, displayName ?? uri);
-        this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
+        await this.addToUriList(jupyterHandle, server.displayName);
     }
 }
