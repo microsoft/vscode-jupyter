@@ -402,6 +402,18 @@ export function getInterpreterFromKernelConnectionMetadata(
         : undefined;
     return deserializePythonEnvironment(kernelSpec?.metadata?.interpreter, '');
 }
+
+export function isUserRegisteredKernelSpecConnection(
+    kernelConnection: KernelConnectionMetadata
+): kernelConnection is LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata {
+    return (
+        kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+        (kernelConnection.kind === 'startUsingPythonInterpreter' &&
+            kernelConnection.kernelSpec &&
+            // Also include kernel Specs that are in a non-global directory.
+            getKernelRegistrationInfo(kernelConnection.kernelSpec) === 'registeredByNewVersionOfExtForCustomKernelSpec')
+    );
+}
 export function isPythonKernelConnection(kernelConnection?: KernelConnectionMetadata): boolean {
     if (!kernelConnection) {
         return false;

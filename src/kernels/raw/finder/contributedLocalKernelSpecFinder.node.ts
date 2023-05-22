@@ -16,7 +16,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../internalTypes';
 import { PYTHON_LANGUAGE, isUnitTestExecution } from '../../../platform/common/constants';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
-import { getKernelRegistrationInfo } from '../../helpers';
+import { getKernelRegistrationInfo, isUserRegisteredKernelSpecConnection } from '../../helpers';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
@@ -157,12 +157,8 @@ export class ContributedLocalKernelSpecFinder
                 }
                 return true;
             });
-            const kernelSpecsFromPythonKernelFinder = this.pythonKernelFinder.kernels.filter(
-                (item) =>
-                    item.kind === 'startUsingLocalKernelSpec' ||
-                    (item.kind === 'startUsingPythonInterpreter' &&
-                        // Also include kernel Specs that are in a non-global directory.
-                        getKernelRegistrationInfo(item.kernelSpec) === 'registeredByNewVersionOfExtForCustomKernelSpec')
+            const kernelSpecsFromPythonKernelFinder = this.pythonKernelFinder.kernels.filter((item) =>
+                isUserRegisteredKernelSpecConnection(item)
             ) as LocalKernelConnectionMetadata[];
             kernels = kernels.concat(kernelSpecs).concat(kernelSpecsFromPythonKernelFinder);
             await this.writeToCache(kernels);

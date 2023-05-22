@@ -14,7 +14,7 @@ import {
     window
 } from 'vscode';
 import { DisplayOptions } from '../../../kernels/displayOptions';
-import { isPythonKernelConnection } from '../../../kernels/helpers';
+import { isPythonKernelConnection, isUserRegisteredKernelSpecConnection } from '../../../kernels/helpers';
 import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../../kernels/telemetry/helper';
@@ -108,7 +108,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     return;
                 }
 
-                if (this.kernelFinder.kernels.some((k) => k.kind === 'startUsingLocalKernelSpec')) {
+                if (this.kernelFinder.kernels.some((k) => isUserRegisteredKernelSpecConnection(k))) {
                     this.kernelSpecsSourceRegistered = true;
                     kernelSpecActions = [
                         {
