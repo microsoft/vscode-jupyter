@@ -8,7 +8,7 @@ import uuid from 'uuid/v4';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { getNameOfKernelConnection } from '../../../kernels/helpers';
+import { getNameOfKernelConnection, isUserRegisteredKernelSpecConnection } from '../../../kernels/helpers';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';
@@ -94,7 +94,7 @@ export class RawKernel implements Kernel.IKernelConnection {
         this.stopHandlingKernelMessages();
     }
     public get spec(): Promise<KernelSpec.ISpecModel | undefined> {
-        if (this.kernelProcess.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec') {
+        if (isUserRegisteredKernelSpecConnection(this.kernelProcess.kernelConnectionMetadata)) {
             const kernelSpec = cloneDeep(this.kernelProcess.kernelConnectionMetadata.kernelSpec) as any;
             const resources = 'resources' in kernelSpec ? kernelSpec.resources : {};
             return {
