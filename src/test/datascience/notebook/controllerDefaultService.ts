@@ -9,7 +9,7 @@ import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../
 import { IDisposableRegistry, IsWebExtension, Resource } from '../../../platform/common/types';
 import { getNotebookMetadata } from '../../../platform/common/utils';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../../platform/logging';
+import { traceInfoIfCI, traceDecoratorVerbose, traceError } from '../../../platform/logging';
 import { isEqual } from '../../../platform/vscode-path/resources';
 import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
@@ -60,8 +60,8 @@ export class ControllerDefaultService {
             if (controller || this.isWeb) {
                 return controller;
             }
-            traceVerbose('No default remote controller, hence returning the active interpreter');
-            return createActiveInterpreterController(viewType, resource, this.interpreters, this.registration);
+            // This should never happen.
+            throw new Error('No default remote controller, hence returning the active interpreter');
         }
     }
 
