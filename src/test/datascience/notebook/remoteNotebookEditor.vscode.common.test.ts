@@ -196,7 +196,7 @@ export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
     );
 
     const { editor } = await openNotebook(ipynbFile);
-    await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true);
+    await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
     let nbEditor = window.activeNotebookEditor!;
     assert.isOk(nbEditor, 'No active notebook');
     // Cell 1 = `a = "Hello World"`
@@ -231,7 +231,7 @@ export async function reopeningNotebookUsesSameRemoteKernel(ipynbFile: Uri, serv
     // Second cell should display the value of existing variable from previous execution.
 
     const { editor } = await openNotebook(ipynbFile);
-    await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true, 100_000, true);
+    await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, 100_000, true);
     nbEditor = window.activeNotebookEditor!;
     assert.isOk(nbEditor, 'No active notebook');
 

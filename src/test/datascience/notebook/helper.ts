@@ -308,11 +308,7 @@ export async function createEmptyPythonNotebook(
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     if (!dontWaitForKernel) {
-        await waitForKernelToGetAutoSelected(
-            vscodeNotebook.activeNotebookEditor!,
-            PYTHON_LANGUAGE,
-            IS_REMOTE_NATIVE_TEST()
-        );
+        await waitForKernelToGetAutoSelected(vscodeNotebook.activeNotebookEditor!, PYTHON_LANGUAGE);
         await verifySelectedControllerIsRemoteForRemoteTests();
     }
     await deleteAllCellsAndWait();
@@ -699,7 +695,6 @@ async function selectPythonRemoteKernelConnectionForActiveInterpreter(
 export async function waitForKernelToGetAutoSelected(
     notebookEditor: NotebookEditor,
     expectedLanguage: string,
-    preferRemoteKernelSpec: boolean = false,
     timeout = 100_000,
     skipAutoSelection: boolean = false
 ) {
@@ -724,13 +719,7 @@ export async function waitForKernelToGetAutoSelected(
 
             // Try the test.
             try {
-                await waitForKernelToGetAutoSelectedImpl(
-                    notebookEditor,
-                    expectedLanguage,
-                    preferRemoteKernelSpec,
-                    timeout,
-                    skipAutoSelection
-                );
+                await waitForKernelToGetAutoSelectedImpl(notebookEditor, expectedLanguage, timeout, skipAutoSelection);
                 return true;
             } catch (ex) {
                 lastError = ex;
@@ -745,13 +734,12 @@ export async function waitForKernelToGetAutoSelected(
 export async function waitForKernelToGetAutoSelectedImpl(
     notebookEditor?: NotebookEditor,
     expectedLanguage?: string,
-    preferRemoteKernelSpec: boolean = false,
     timeout = 100_000,
     skipAutoSelection: boolean = false
 ) {
     traceInfoIfCI('Wait for kernel to get auto selected');
     const { controllerRegistration, controllerPreferred, interpreterService, isWebExtension } = await getServices();
-    const useRemoteKernelSpec = preferRemoteKernelSpec || isWebExtension; // Web is only remote
+    const useRemoteKernelSpec = IS_REMOTE_NATIVE_TEST() || isWebExtension; // Web is only remote
 
     // Wait for the active editor to come up
     notebookEditor = await waitForActiveNotebookEditor(notebookEditor);
@@ -1253,7 +1241,7 @@ export async function runCell(cell: NotebookCell, waitForExecutionToComplete = f
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     const notebookEditor = vscodeNotebook.notebookEditors.find((e) => e.notebook === cell.notebook);
-    await waitForKernelToGetAutoSelected(notebookEditor!, language, false, 60_000);
+    await waitForKernelToGetAutoSelected(notebookEditor!, language, 60_000);
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No notebook or document');
     }
@@ -1275,7 +1263,7 @@ export async function runAllCellsInActiveNotebook(
 ) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    await waitForKernelToGetAutoSelected(activeEditor!, language, false, 60_000);
+    await waitForKernelToGetAutoSelected(activeEditor!, language, 60_000);
 
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No editor or document');
