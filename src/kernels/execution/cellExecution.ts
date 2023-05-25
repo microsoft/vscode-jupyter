@@ -464,7 +464,6 @@ export class CellExecution implements IDisposable {
             } catch {
                 //
             }
-            console.error(reply);
             traceCellMessage(this.cell, 'Jupyter execution completed');
             this.completedSuccessfully(completedTime);
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
