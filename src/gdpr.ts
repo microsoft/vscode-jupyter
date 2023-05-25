@@ -1832,16 +1832,6 @@
      ]
    }
  */
-//Telemetry.DataScienceSettings
-/* __GDPR__
-   "DS_INTERNAL.SETTINGS" : {
-     "settingsJson": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A json representation of settings that the user has set. The values for string based settings are transalted to 'default' | 'non-default' unless white-listed.","owner":"amunger"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ShiftEnterBannerShown
 /* __GDPR__
    "DS_INTERNAL.SHIFTENTER_BANNER_SHOWN" : {

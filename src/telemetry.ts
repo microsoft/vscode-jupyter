@@ -776,26 +776,6 @@ export class IEventNamePropertyMapping {
         tags: ['KernelStartup']
     };
     /**
-     * The list of settings a user has set. Sent on activation.
-     */
-    [Telemetry.DataScienceSettings]: TelemetryEventInfo<{
-        /**
-         * A json representation of settings that the user has set.
-         * The values for string based settings are transalted to 'default' | 'non-default' unless white-listed.
-         */
-        settingsJson: string;
-    }> = {
-        owner: 'amunger',
-        feature: 'N/A',
-        source: 'N/A',
-        properties: {
-            settingsJson: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Telemetry event sent when user hits the `continue` button while debugging IW
      */
     [Telemetry.DebugContinue]: TelemetryEventInfo<never | undefined> = {

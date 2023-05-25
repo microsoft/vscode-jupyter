@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE, Telemetry } from '../../platform/common/constants';
+import { ICommandManager, IDocumentManager } from '../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import {
     IConfigurationService,
@@ -12,13 +11,11 @@ import {
     IDisposable,
     IDisposableRegistry
 } from '../../platform/common/types';
-import { debounceAsync, swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { EditorContexts } from '../../platform/common/constants';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
-import { sendTelemetryEvent } from '../../telemetry';
 
 /**
  * Singleton class that activate a bunch of random things that didn't fit anywhere else.
@@ -34,7 +31,6 @@ export class GlobalActivation implements IExtensionSyncActivationService {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IRawNotebookSupportedService)
         @optional()
         private rawSupported: IRawNotebookSupportedService | undefined,
@@ -57,9 +53,6 @@ export class GlobalActivation implements IExtensionSyncActivationService {
             this.documentManager.onDidChangeActiveTextEditor(() => this.onChangedActiveTextEditor())
         );
         this.onChangedActiveTextEditor();
-
-        // Send telemetry for all of our settings
-        this.sendSettingsTelemetry().catch(noop);
 
         // Figure out the ZMQ available context key
         this.computeZmqAvailable();
@@ -99,45 +92,6 @@ export class GlobalActivation implements IExtensionSyncActivationService {
             editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch(noop);
         } else {
             editorContext.set(false).catch(noop);
-        }
-    }
-
-    @debounceAsync(1)
-    @swallowExceptions('Sending DataScience Settings Telemetry failed')
-    private async sendSettingsTelemetry(): Promise<void> {
-        // Get our current settings. This is what we want to send.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const settings = this.configuration.getSettings() as any;
-
-        // Translate all of the 'string' based settings into known values or not.
-        const jupyterConfig = this.workspace.getConfiguration('jupyter');
-        if (jupyterConfig) {
-            const keys = Object.keys(settings);
-            const resultSettings: JSONObject = {};
-            for (const k of keys) {
-                const currentValue = settings[k];
-                // We don't have properties starting with '_'
-                if (k.startsWith('_')) {
-                    continue;
-                }
-                if (typeof currentValue === 'function') {
-                    continue;
-                }
-                if (typeof currentValue === 'string' && k !== 'interactiveWindow.creationMode') {
-                    const inspectResult = jupyterConfig.inspect<string>(`${k}`);
-                    if (inspectResult && inspectResult.defaultValue !== currentValue) {
-                        resultSettings[k] = 'non-default';
-                    } else {
-                        resultSettings[k] = 'default';
-                    }
-                } else {
-                    resultSettings[k] = currentValue;
-                }
-            }
-
-            sendTelemetryEvent(Telemetry.DataScienceSettings, undefined, {
-                settingsJson: JSON.stringify(resultSettings)
-            });
         }
     }
 }
