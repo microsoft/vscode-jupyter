@@ -223,19 +223,6 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                     const uri = input.value;
 
                     try {
-                        for (let server of this._servers) {
-                            if (server.uri === uri) {
-                                // already exist
-                                input.validationMessage = DataScience.UserJupyterServerUrlAlreadyExistError;
-                                return;
-                            }
-                        }
-                    } catch (ex) {
-                        // Ignore errors.
-                        traceError('Failed to check if server already exists', ex);
-                    }
-
-                    try {
                         new URL(uri);
                     } catch (err) {
                         if (inputWasHidden) {
