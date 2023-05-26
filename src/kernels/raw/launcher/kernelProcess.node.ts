@@ -442,6 +442,7 @@ export class KernelProcess implements IKernelProcess {
 
             // Add in our connection command line args
             this.launchKernelSpec.argv.push(...this.addPythonConnectionArgs());
+            await this.fileSystem.writeFile(Uri.file(this.connectionFile), JSON.stringify(this._connection));
         } else {
             await this.fileSystem.writeFile(Uri.file(this.connectionFile), JSON.stringify(this._connection));
 
