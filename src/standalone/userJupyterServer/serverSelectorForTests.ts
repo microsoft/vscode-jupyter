@@ -30,7 +30,7 @@ export class JupyterServerSelectorCommand
     ) {
         super();
     }
-    public readonly id = 'JupyterServerSelectorForTesting';
+    public readonly id = '_builtin.JupyterServerSelectorForTesting';
     public readonly displayName = 'Jupyter Server for Testing';
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
     public activate() {

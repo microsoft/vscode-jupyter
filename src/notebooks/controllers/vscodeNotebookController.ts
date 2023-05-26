@@ -28,14 +28,7 @@ import {
 } from '../../platform/common/application/types';
 import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import {
-    traceInfoIfCI,
-    traceInfo,
-    traceVerbose,
-    traceWarning,
-    traceDecoratorVerbose,
-    traceError
-} from '../../platform/logging';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IBrowserService,
@@ -70,7 +63,7 @@ import {
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
-import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
+import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
 import { IVSCodeNotebookController } from './types';
 import { isCancellationError } from '../../platform/common/cancellation';
@@ -372,8 +365,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 : this.displayData.serverDisplayName;
         }
     }
-    // Handle the execution of notebook cell
-    @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
             return;
@@ -400,6 +391,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!this.workspace.isTrusted) {
             return;
         }
+        traceInfo(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         // Notebook is trusted. Continue to execute cells
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
@@ -563,7 +555,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     public async executeCell(doc: NotebookDocument, cell: NotebookCell, codeOverride?: string) {
-        traceVerbose(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
         let exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
 
