@@ -607,7 +607,7 @@ jobs:
 
       - name: Install Dot.net
         if: matrix.os != 'windows-latest' && matrix.tags != '^[^@]+$|@mandatory'
-        uses: actions/setup-dotnet@v3.0.3
+        uses: actions/setup-dotnet@v3.1.0
         with:
           dotnet-version: ${{env.DOTNET_VERSION}}
 
