@@ -16,7 +16,11 @@ const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
-    public getRequestCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
+    public getRequestCtor(
+        cookieString?: string,
+        allowUnauthorized?: boolean,
+        getAuthHeaders?: () => Record<string, string>
+    ) {
         class AuthorizingRequest extends Request {
             constructor(input: RequestInfo, init?: RequestInit) {
                 super(input, init);
@@ -56,7 +60,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getWebsocketCtor(
         _cookieString?: string,
         _allowUnauthorized?: boolean,
-        _getAuthHeaders?: () => any,
+        _getAuthHeaders?: () => Record<string, string>,
         getWebSocketProtocols?: () => string | string[] | undefined
     ) {
         const getProtocols = (protocols?: string | string[]): string | string[] | undefined => {

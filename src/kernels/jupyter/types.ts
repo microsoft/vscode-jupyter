@@ -326,7 +326,7 @@ export interface IJupyterRequestCreator {
     getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,
-        getAuthHeaders?: () => any,
+        getAuthHeaders?: () => Record<string, string>,
         getWebSocketProtocols?: () => string | string[] | undefined
     ): ClassType<WebSocket>;
     getWebsocket(id: string): IKernelSocket | undefined;

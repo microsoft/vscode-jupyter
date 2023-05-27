@@ -50,7 +50,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,
-        getAuthHeaders?: () => any,
+        getAuthHeaders?: () => Record<string, string>,
         getWebSocketProtocols?: () => string | string[] | undefined
     ): ClassType<WebSocket> {
         const generateOptions = (): WebSocketIsomorphic.ClientOptions => {
