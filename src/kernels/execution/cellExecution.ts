@@ -414,7 +414,7 @@ export class CellExecution implements IDisposable {
         try {
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
-
+            traceVerbose(`Execution Request Sent to Kernel for cell ${this.cell.index}`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = session.requestExecute(
