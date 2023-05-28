@@ -220,9 +220,8 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
             let promptingForServerName = false;
             disposables.push(
                 input.onDidAccept(async () => {
-                    let uri = input.value.trim();
                     // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
-                    uri = uri.replace(/\/(lab|tree)(\?|$)/, '');
+                    const uri = input.value.trim().replace(/\/(lab|tree)(\??)$/, '');
                     try {
                         new URL(uri);
                     } catch (err) {
