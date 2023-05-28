@@ -6,7 +6,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 
 import * as vscode from 'vscode';
 import { format } from '../platform/common/helpers';
-import { noop } from '../platform/common/utils/misc';
 import * as vscodeMocks from './mocks/vsc';
 import { vscMockTelemetryReporter } from './mocks/vsc/telemetryReporter';
 const Module = require('module');
@@ -21,30 +20,6 @@ function generateMock<K extends keyof VSCode>(name: K): void {
     const mockedObj = mock<VSCode[K]>();
     (mockedVSCode as any)[name] = instance(mockedObj);
     mockedVSCodeNamespaces[name] = mockedObj;
-}
-
-export class MockCommands {
-    public log: string[] = [];
-    public registerCommand(_command: string, _callback: (...args: any[]) => any, _thisArg?: any): vscode.Disposable {
-        return { dispose: noop };
-    }
-
-    public registerTextEditorCommand(
-        _command: string,
-        _callback: (textEditor: vscode.TextEditor, edit: vscode.TextEditorEdit, ...args: any[]) => void,
-        _thisArg?: any
-    ): vscode.Disposable {
-        return { dispose: noop };
-    }
-
-    public executeCommand<T>(command: string, ..._rest: any[]): Thenable<T | undefined> {
-        this.log.push(command);
-        return Promise.resolve(undefined);
-    }
-
-    public getCommands(_filterInternal?: boolean): Thenable<string[]> {
-        return Promise.resolve([]);
-    }
 }
 
 class MockClipboard {
