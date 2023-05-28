@@ -267,7 +267,16 @@ export namespace DataScience {
     export const rawKernelStartFailedDueToTimeout = (kernelName: string) =>
         l10n.t({
             message:
-                "Unable to start Kernel '{0}' due to connection timeout. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
+                "Unable to start Kernel '{0}' due to a connection timeout. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
+            args: [kernelName],
+            comment: [
+                'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel'
+            ]
+        });
+    export const rawKernelStartFailedDueToTimeoutWaitingForPort = (kernelName: string) =>
+        l10n.t({
+            message:
+                "Unable to start Kernel '{0}' due to a timeout waiting for the ports to get used. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
             args: [kernelName],
             comment: [
                 'Do not translate the text "command:jupyter.viewOutput", that is a command Id that will be used by VS Code to open the output panel'
