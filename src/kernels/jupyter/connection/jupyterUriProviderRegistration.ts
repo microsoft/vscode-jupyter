@@ -16,15 +16,15 @@ import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InvalidRemoteJupyterServerUriHandleError } from '../../errors/invalidRemoteJupyterServerUriHandleError';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
+    JupyterServerProviderHandle
 } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
+import { isBuiltInJupyterServerProvider } from '../helpers';
 
 const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 
@@ -77,24 +77,25 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
             }
         };
     }
-    public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+    public async getJupyterServerUri(serverHandle: JupyterServerProviderHandle): Promise<IJupyterServerUri> {
         await this.loadOtherExtensions();
 
-        const providerPromise = this.providers.get(id)?.[0];
+        const providerPromise = this.providers.get(serverHandle.id)?.[0];
         if (!providerPromise) {
-            traceError(`${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${handle}`);
+            traceError(
+                `${localize.DataScience.unknownServerUri}. Provider Id=${serverHandle.id} and handle=${serverHandle.handle}`
+            );
             throw new Error(localize.DataScience.unknownServerUri);
         }
         const provider = await providerPromise;
         if (provider.getHandles) {
             const handles = await provider.getHandles();
-            if (!handles.includes(handle)) {
-                const extensionId = this.providerExtensionMapping.get(id)!;
-                const serverId = await computeServerId(generateUriFromRemoteProvider(id, handle));
-                throw new InvalidRemoteJupyterServerUriHandleError(id, handle, extensionId, serverId);
+            if (!handles.includes(serverHandle.handle)) {
+                const extensionId = this.providerExtensionMapping.get(serverHandle.id)!;
+                throw new InvalidRemoteJupyterServerUriHandleError(serverHandle, extensionId);
             }
         }
-        return provider.getServerUri(handle);
+        return provider.getServerUri(serverHandle.handle);
     }
 
     private loadOtherExtensions(): Promise<void> {
@@ -121,7 +122,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         provider: IJupyterUriProvider,
         localDisposables: IDisposable[]
     ): Promise<JupyterUriProviderWrapper> {
-        const extensionId = provider.id.startsWith('_builtin')
+        const extensionId = isBuiltInJupyterServerProvider(provider.id)
             ? JVSC_EXTENSION_ID
             : (await this.extensions.determineExtensionFromCallStack()).extensionId;
         this.updateRegistrationInfo(provider.id, extensionId).catch(noop);
@@ -159,12 +160,12 @@ class JupyterUriProviderWrapper implements IJupyterUriProvider {
     public readonly detail: string | undefined;
 
     public readonly onDidChangeHandles?: Event<void>;
-    public readonly getHandles?: () => Promise<JupyterServerUriHandle[]>;
-    public readonly removeHandle?: (handle: JupyterServerUriHandle) => Promise<void>;
+    public readonly getHandles?: () => Promise<string[]>;
+    public readonly removeHandle?: (handle: string) => Promise<void>;
 
     constructor(
         private readonly provider: IJupyterUriProvider,
-        private extensionId: string,
+        public readonly extensionId: string,
         disposables: IDisposableRegistry
     ) {
         this.id = this.provider.id;
@@ -184,7 +185,7 @@ class JupyterUriProviderWrapper implements IJupyterUriProvider {
         }
 
         if (provider.removeHandle) {
-            this.removeHandle = (handle: JupyterServerUriHandle) => provider.removeHandle!(handle);
+            this.removeHandle = (handle: string) => provider.removeHandle!(handle);
         }
     }
     public async getQuickPickEntryItems(): Promise<QuickPickItem[]> {
@@ -200,10 +201,7 @@ class JupyterUriProviderWrapper implements IJupyterUriProvider {
             };
         });
     }
-    public async handleQuickPick(
-        item: QuickPickItem,
-        back: boolean
-    ): Promise<JupyterServerUriHandle | 'back' | undefined> {
+    public async handleQuickPick(item: QuickPickItem, back: boolean): Promise<string | 'back' | undefined> {
         if (!this.provider.handleQuickPick) {
             return;
         }
@@ -215,9 +213,9 @@ class JupyterUriProviderWrapper implements IJupyterUriProvider {
         return this.provider.handleQuickPick(item, back);
     }
 
-    public async getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+    public async getServerUri(handle: string): Promise<IJupyterServerUri> {
         const server = await this.provider.getServerUri(handle);
-        if (!this.id.startsWith('_builtin') && !handlesForWhichWeHaveSentTelemetry.has(handle)) {
+        if (!isBuiltInJupyterServerProvider(this.id) && !handlesForWhichWeHaveSentTelemetry.has(handle)) {
             handlesForWhichWeHaveSentTelemetry.add(handle);
             // Need this info to try and remove some of the properties from the API.
             // Before we do that we need to determine what extensions are using which properties.

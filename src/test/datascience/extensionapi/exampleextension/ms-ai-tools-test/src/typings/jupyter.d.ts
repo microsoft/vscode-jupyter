@@ -54,11 +54,9 @@ export interface IJupyterServerUri {
     authorizationHeader: any; // JSON object for authorization header.
 }
 
-export type JupyterServerUriHandle = string;
-
 export interface IJupyterUriProvider {
     readonly id: string; // Should be a unique string (like a guid)
     getQuickPickEntryItems(): QuickPickItem[];
-    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
-    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | 'back' | undefined>;
+    getServerUri(handle: string): Promise<IJupyterServerUri>;
 }

@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import { ExtensionMode, NotebookController, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
-import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { jupyterServerHandleToString } from '../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
+    JupyterServerProviderHandle
 } from '../../kernels/jupyter/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './extension';
@@ -62,14 +62,14 @@ export interface IExtensionApi {
      */
     getSuggestedController(
         providerId: string,
-        handle: JupyterServerUriHandle,
+        handle: string,
         notebook: NotebookDocument
     ): Promise<NotebookController | undefined>;
     /**
      * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
      * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
      */
-    addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
+    addRemoteJupyterServer(providerId: string, handle: string): Promise<void>;
     /**
      * Opens a notebook with a specific kernel as the active kernel.
      * @param {Uri} uri Uri of the notebook to open.
@@ -80,13 +80,17 @@ export interface IExtensionApi {
 }
 
 function waitForNotebookControllersCreationForServer(
-    serverId: string,
+    serverHandle: JupyterServerProviderHandle,
     controllerRegistration: IControllerRegistration
 ) {
+    const serverHandleId = jupyterServerHandleToString(serverHandle);
     return new Promise<void>((resolve) => {
         controllerRegistration.onDidChange((e) => {
             for (let controller of e.added) {
-                if (isRemoteConnection(controller.connection) && controller.connection.serverId === serverId) {
+                if (
+                    isRemoteConnection(controller.connection) &&
+                    jupyterServerHandleToString(controller.connection.serverHandle) === serverHandleId
+                ) {
                     resolve();
                 }
             }
@@ -144,11 +148,7 @@ export function buildApi(
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
         },
-        getSuggestedController: async (
-            _providerId: string,
-            _handle: JupyterServerUriHandle,
-            _notebook: NotebookDocument
-        ) => {
+        getSuggestedController: async (_providerId: string, _handle: string, _notebook: NotebookDocument) => {
             traceError('The API getSuggestedController is being deprecated.');
             if (context.extensionMode === ExtensionMode.Development || context.extensionMode === ExtensionMode.Test) {
                 window.showErrorMessage('The Jupyter API getSuggestedController is being deprecated.').then(noop, noop);
@@ -157,20 +157,19 @@ export function buildApi(
             sendApiUsageTelemetry(extensions, 'getSuggestedController');
             return undefined;
         },
-        addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {
+        addRemoteJupyterServer: async (providerId: string, handle: string) => {
             sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
             await new Promise<void>(async (resolve) => {
+                const caller = await extensions.determineExtensionFromCallStack();
                 const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-                const uri = generateUriFromRemoteProvider(providerId, handle);
-                const serverId = await computeServerId(uri);
-
+                const serverHandle = { extensionId: caller.extensionId, id: providerId, handle };
                 const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
                 const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
-                    serverId,
+                    serverHandle,
                     controllerRegistration
                 );
 
-                await selector.addJupyterServer({ id: providerId, handle });
+                await selector.addJupyterServer(serverHandle);
                 await controllerCreatedPromise;
                 resolve();
             });

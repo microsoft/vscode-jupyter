@@ -16,9 +16,11 @@ import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
     IJupyterServerUriEntry,
-    IJupyterServerUriStorage
+    IJupyterServerUriStorage,
+    JupyterServerProviderHandle
 } from '../types';
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
+import { jupyterServerHandleToString } from '../jupyterUtils';
 
 /**
  * Responsible for intercepting connections to a remote server and asking for a password if necessary
@@ -47,10 +49,12 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
     public getPasswordConnectionInfo({
         url,
-        isTokenEmpty
+        isTokenEmpty,
+        serverHandle
     }: {
         url: string;
         isTokenEmpty: boolean;
+        serverHandle: JupyterServerProviderHandle;
     }): Promise<IJupyterPasswordConnectInfo | undefined> {
         JupyterPasswordConnect._prompt = undefined;
         if (!url || url.length < 1) {
@@ -59,16 +63,16 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         // Add on a trailing slash to our URL if it's not there already
         const newUrl = addTrailingSlash(url);
-
+        const id = jupyterServerHandleToString(serverHandle);
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
-        let result = this.savedConnectInfo.get(newUrl);
+        let result = this.savedConnectInfo.get(id);
         if (!result) {
             const deferred = (JupyterPasswordConnect._prompt = createDeferred());
             result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty }).then((value) => {
                 // If we fail to get a valid password connect info, don't save the value
                 traceWarning(`Password for ${newUrl} was invalid.`);
                 if (!value) {
-                    this.savedConnectInfo.delete(newUrl);
+                    this.savedConnectInfo.delete(id);
                 }
 
                 return value;
@@ -79,7 +83,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                     JupyterPasswordConnect._prompt = undefined;
                 }
             });
-            this.savedConnectInfo.set(newUrl, result);
+            this.savedConnectInfo.set(id, result);
         }
 
         return result;
@@ -533,10 +537,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
      * When URIs are removed from the server list also remove them from
      */
     private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
-        uriEntries.forEach((uriEntry) => {
-            const newUrl = addTrailingSlash(uriEntry.uri);
-            this.savedConnectInfo.delete(newUrl);
-        });
+        uriEntries.forEach((uriEntry) =>
+            this.savedConnectInfo.delete(jupyterServerHandleToString(uriEntry.serverHandle))
+        );
     }
 }
 

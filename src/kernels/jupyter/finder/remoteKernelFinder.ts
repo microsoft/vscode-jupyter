@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, CancellationTokenSource, Disposable, EventEmitter, Memento } from 'vscode';
-import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
@@ -265,7 +264,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(KernelProgressReporter.createProgressReporter(undefined, DataScience.connectingToJupyter));
         }
         return this.jupyterConnection
-            .createConnectionInfo(this.serverUri.serverId)
+            .createConnectionInfo(this.serverUri.serverHandle)
             .finally(() => disposeAllDisposables(disposables));
     }
 
@@ -275,7 +274,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
             let results: RemoteKernelConnectionMetadata[] = this.cache;
             const key = this.cacheKey;
-
             // If not in memory, check memento
             if (!results || results.length === 0) {
                 // Check memento too
@@ -328,7 +326,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
-            const serverId = connInfo.serverId;
             const [running, specs, sessions] = await Promise.all([
                 sessionManager.getRunningKernels(),
                 sessionManager.getKernelSpecs(),
@@ -339,13 +336,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             const mappedSpecs = await Promise.all(
                 specs.map(async (s) => {
                     await sendKernelSpecTelemetry(s, 'remote');
-                    const kernel = RemoteKernelSpecConnectionMetadata.create({
+                    return RemoteKernelSpecConnectionMetadata.create({
                         kernelSpec: s,
-                        id: getKernelId(s, undefined, serverId),
                         baseUrl: connInfo.baseUrl,
-                        serverId: serverId
+                        serverHandle: connInfo.serverHandle
                     });
-                    return kernel;
                 })
             );
             const mappedLive = sessions.map((s) => {
@@ -361,7 +356,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 const matchingSpec: Partial<IJupyterKernelSpec> =
                     specs.find((spec) => spec.name === s.kernel?.name) || {};
 
-                const kernel = LiveRemoteKernelConnectionMetadata.create({
+                return LiveRemoteKernelConnectionMetadata.create({
                     kernelModel: {
                         ...s.kernel,
                         ...matchingSpec,
@@ -372,10 +367,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                         model: s
                     },
                     baseUrl: connInfo.baseUrl,
-                    id: s.kernel?.id || '',
-                    serverId
+                    serverHandle: connInfo.serverHandle
                 });
-                return kernel;
             });
 
             // Filter out excluded ids

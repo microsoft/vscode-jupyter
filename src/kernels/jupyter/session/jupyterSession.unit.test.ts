@@ -105,7 +105,6 @@ suite('JupyterSession', () => {
         mockKernelSpec =
             kernelConnection ||
             LocalKernelSpecConnectionMetadata.create({
-                id: 'xyz',
                 kernelSpec: {
                     argv: [],
                     display_name: '',
@@ -229,8 +228,12 @@ suite('JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn(
                     LocalKernelSpecConnectionMetadata.create({
-                        id: '',
-                        kernelSpec: {} as any
+                        kernelSpec: {
+                            argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                            display_name: 'Python 3',
+                            executable: 'python',
+                            name: 'python3'
+                        }
                     })
                 );
                 when(session.shutdown()).thenResolve();
@@ -253,10 +256,13 @@ suite('JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn(
                     LiveRemoteKernelConnectionMetadata.create({
-                        id: '',
                         kernelModel: {} as any,
                         baseUrl: '',
-                        serverId: ''
+                        serverHandle: {
+                            extensionId: '1',
+                            id: '1',
+                            handle: '1'
+                        }
                     })
                 );
                 when(session.shutdown()).thenResolve();
@@ -279,8 +285,12 @@ suite('JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn(
                     LocalKernelSpecConnectionMetadata.create({
-                        id: '',
-                        kernelSpec: {} as any
+                        kernelSpec: {
+                            argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                            display_name: 'Python 3',
+                            executable: 'python',
+                            name: 'python3'
+                        }
                     })
                 );
                 when(session.shutdown()).thenResolve();
@@ -303,10 +313,27 @@ suite('JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn(
                     LiveRemoteKernelConnectionMetadata.create({
-                        id: '',
-                        kernelModel: {} as any,
+                        kernelModel: {
+                            lastActivityTime: new Date(),
+                            model: {
+                                id: '1',
+                                kernel: {
+                                    id: '1',
+                                    name: '1'
+                                },
+                                name: '1',
+                                path: '1',
+                                type: 'notebook'
+                            },
+                            name: '1',
+                            numberOfConnections: 1
+                        },
                         baseUrl: '',
-                        serverId: ''
+                        serverHandle: {
+                            extensionId: '1',
+                            id: '1',
+                            handle: '1'
+                        }
                     })
                 );
                 when(session.shutdown()).thenResolve();
@@ -511,9 +538,8 @@ suite('JupyterSession', () => {
         });
         suite('Session Path and Names', () => {
             async function testSessionOptions(resource: Uri) {
-                const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
+                const remoteKernelSpec = await RemoteKernelSpecConnectionMetadata.create({
                     baseUrl: 'http://localhost:8888',
-                    id: '1',
                     kernelSpec: {
                         argv: [],
                         display_name: 'Python 3',
@@ -521,7 +547,11 @@ suite('JupyterSession', () => {
                         language: 'python',
                         executable: ''
                     },
-                    serverId: '1'
+                    serverHandle: {
+                        extensionId: '1',
+                        id: '1',
+                        handle: '1'
+                    }
                 });
                 createJupyterSession(resource, remoteKernelSpec);
 

@@ -5,19 +5,19 @@
 
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { traceWarning } from '../../../platform/logging';
+import { traceError, traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
-import { IJupyterServerUri, IJupyterServerUriStorage, JupyterServerUriHandle } from '../types';
+import {
+    IJupyterServerUri,
+    IJupyterServerUriStorage,
+    IJupyterUriProviderRegistration,
+    JupyterServerProviderHandle
+} from '../types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
-import {
-    handleExpiredCertsError,
-    handleSelfCertsError,
-    computeServerId,
-    generateUriFromRemoteProvider
-} from '../jupyterUtils';
+import { handleExpiredCertsError, handleSelfCertsError, jupyterServerHandleToString } from '../jupyterUtils';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
@@ -38,12 +38,12 @@ export async function validateSelectJupyterURI(
     applicationShell: IApplicationShell,
     configService: IConfigurationService,
     isWebExtension: boolean,
-    provider: { id: string; handle: JupyterServerUriHandle },
+    serverHandle: JupyterServerProviderHandle,
     serverUri: IJupyterServerUri
 ): Promise<string | undefined> {
     // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
     try {
-        await jupyterConnection.validateRemoteUri(provider, serverUri);
+        await jupyterConnection.validateRemoteUri(serverHandle, serverUri);
     } catch (err) {
         traceWarning('Uri verification error', err);
         if (JupyterSelfCertsError.isSelfCertsError(err)) {
@@ -87,15 +87,18 @@ export class JupyterServerSelector {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry,
+        @inject(IJupyterUriProviderRegistration)
+        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
     ) {}
 
-    public async addJupyterServer(provider: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
-        const userURI = generateUriFromRemoteProvider(provider.id, provider.handle);
-        const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
+    public async addJupyterServer(serverHandle: JupyterServerProviderHandle): Promise<void> {
+        const serverHandleId = jupyterServerHandleToString(serverHandle);
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
+        let serverUri: undefined | IJupyterServerUri;
         try {
-            await this.jupyterConnection.validateRemoteUri(provider);
+            serverUri = await this.jupyterPickerRegistration.getJupyterServerUri(serverHandle);
+            await this.jupyterConnection.validateRemoteUri(serverHandle);
         } catch (err) {
             if (JupyterSelfCertsError.isSelfCertsError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
@@ -111,18 +114,25 @@ export class JupyterServerSelector {
                 }
             } else if (err && err instanceof JupyterInvalidPasswordError) {
                 return;
-            } else {
-                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
+            } else if (serverUri) {
+                await this.errorHandler.handleError(
+                    new RemoteJupyterServerConnectionError(serverUri.baseUrl, serverHandle, err)
+                );
                 // Can't set the URI in this case.
                 return;
+            } else {
+                traceError(
+                    `Uri verification error ${serverHandle.extensionId}, id=${serverHandle.id}, handle=${serverHandle.handle}`,
+                    err
+                );
             }
         }
 
-        await this.serverUriStorage.add(provider);
+        await this.serverUriStorage.add(serverHandle);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
-            azure: userURI.toLowerCase().includes('azure')
+            azure: serverHandleId.toLowerCase().includes('azure')
         });
     }
 }

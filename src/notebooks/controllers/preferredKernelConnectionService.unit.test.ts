@@ -57,52 +57,11 @@ suite('Preferred Kernel Connection', () => {
         updated?: PythonKernelConnectionMetadata[];
     }>;
     let interpreterService: IInterpreterService;
-    const remoteLiveKernelConnection1 = LiveRemoteKernelConnectionMetadata.create({
-        baseUrl: '',
-        id: 'liveRemote1',
-        kernelModel: instance(mock<LiveKernelModel>()),
-        serverId: 'remoteServerId1'
-    });
-    const remoteLiveKernelConnection2 = LiveRemoteKernelConnectionMetadata.create({
-        baseUrl: '',
-        id: 'liveRemote2',
-        kernelModel: instance(mock<LiveKernelModel>()),
-        serverId: 'remoteServerId2'
-    });
-    const remoteLiveJavaKernelConnection = LiveRemoteKernelConnectionMetadata.create({
-        baseUrl: '',
-        id: 'liveRemoteJava',
-        kernelModel: {
-            lastActivityTime: new Date(),
-            model: {
-                id: 'xyz',
-                kernel: {
-                    name: 'java',
-                    id: 'xyz'
-                },
-                path: 'baz/sample.ipynb',
-                name: 'sample.ipynb',
-                type: 'notebook'
-            },
-            name: 'java',
-            numberOfConnections: 1
-        },
-        serverId: 'remoteServerId2'
-    });
-    const remoteJavaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
-        baseUrl: '',
-        id: 'remoteJavaKernelSpec',
-        kernelSpec: {
-            argv: [],
-            display_name: 'Java KernelSpec',
-            executable: '',
-            name: 'javaName',
-            language: 'java'
-        },
-        serverId: 'remoteServerId2'
-    });
+    let remoteLiveKernelConnection1: LiveRemoteKernelConnectionMetadata;
+    let remoteLiveKernelConnection2: LiveRemoteKernelConnectionMetadata;
+    let remoteLiveJavaKernelConnection: LiveRemoteKernelConnectionMetadata;
+    let remoteJavaKernelSpec: RemoteKernelSpecConnectionMetadata;
     const localJavaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'localJava',
         kernelSpec: {
             argv: [],
             display_name: 'Java KernelSpec',
@@ -112,7 +71,63 @@ suite('Preferred Kernel Connection', () => {
         }
     });
     let connection: IJupyterConnection;
-    setup(() => {
+    setup(async () => {
+        remoteLiveKernelConnection1 = LiveRemoteKernelConnectionMetadata.create({
+            baseUrl: '',
+            kernelModel: instance(mock<LiveKernelModel>()),
+            serverHandle: {
+                extensionId: 'ext',
+                handle: 'javaProviderHandle',
+                id: 'javaProviderId'
+            }
+        });
+        remoteLiveKernelConnection2 = LiveRemoteKernelConnectionMetadata.create({
+            baseUrl: '',
+            kernelModel: instance(mock<LiveKernelModel>()),
+            serverHandle: {
+                extensionId: 'ext',
+                handle: 'javaProviderHandle',
+                id: 'javaProviderId'
+            }
+        });
+        remoteLiveJavaKernelConnection = LiveRemoteKernelConnectionMetadata.create({
+            baseUrl: '',
+            kernelModel: {
+                lastActivityTime: new Date(),
+                model: {
+                    id: 'xyz',
+                    kernel: {
+                        name: 'java',
+                        id: 'xyz'
+                    },
+                    path: 'baz/sample.ipynb',
+                    name: 'sample.ipynb',
+                    type: 'notebook'
+                },
+                name: 'java',
+                numberOfConnections: 1
+            },
+            serverHandle: {
+                extensionId: 'ext',
+                handle: 'javaProviderHandle',
+                id: 'javaProviderId'
+            }
+        });
+        remoteJavaKernelSpec = await RemoteKernelSpecConnectionMetadata.create({
+            baseUrl: '',
+            kernelSpec: {
+                argv: [],
+                display_name: 'Java KernelSpec',
+                executable: '',
+                name: 'javaName',
+                language: 'java'
+            },
+            serverHandle: {
+                extensionId: 'ext',
+                handle: 'javaProviderHandle',
+                id: 'javaProviderId'
+            }
+        });
         serviceContainer = mock<ServiceContainer>();
         jupyterConnection = mock(JupyterConnection);
         connection = mock<IJupyterConnection>();
@@ -197,7 +212,7 @@ suite('Preferred Kernel Connection', () => {
                 cancellation.token
             );
 
-            assert.strictEqual(preferredKernel, remoteJavaKernelSpec);
+            assert.deepEqual(preferredKernel, remoteJavaKernelSpec);
         });
         test('Find preferred kernel spec if there is no exact match for the live kernel connection (match kernel spec language)', async () => {
             when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
@@ -213,7 +228,7 @@ suite('Preferred Kernel Connection', () => {
                 cancellation.token
             );
 
-            assert.strictEqual(preferredKernel, remoteJavaKernelSpec);
+            assert.deepEqual(preferredKernel, remoteJavaKernelSpec);
         });
         test('Find existing session if there is an exact match for the notebook', async () => {
             when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar/');

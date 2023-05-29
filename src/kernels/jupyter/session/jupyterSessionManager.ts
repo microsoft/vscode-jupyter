@@ -43,6 +43,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
 import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
+import { isBuiltInJupyterServerProvider } from '../helpers';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -456,7 +457,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let serverSecurePromise = JupyterSessionManager.secureServers.get(connInfo.baseUrl);
 
         if (serverSecurePromise === undefined) {
-            if (!connInfo.providerId.startsWith('_builtin') || connInfo.localLaunch) {
+            if (!isBuiltInJupyterServerProvider(connInfo.serverHandle.id) || connInfo.localLaunch) {
                 // If a Jupyter URI provider is providing this URI, then we trust it.
                 serverSecurePromise = Promise.resolve(true);
                 JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);

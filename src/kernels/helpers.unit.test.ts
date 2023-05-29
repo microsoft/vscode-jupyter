@@ -14,10 +14,9 @@ import {
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 
 suite('Kernel Connection Helpers', () => {
-    test('Live kernels should display the name`', () => {
+    test('Live kernels should display the name`', async () => {
         const name = getDisplayNameOrNameOfKernelConnection(
             LiveRemoteKernelConnectionMetadata.create({
-                id: '',
                 interpreter: undefined,
                 kernelModel: {
                     model: undefined,
@@ -26,7 +25,11 @@ suite('Kernel Connection Helpers', () => {
                     numberOfConnections: 1
                 },
                 baseUrl: '',
-                serverId: ''
+                serverHandle: {
+                    extensionId: 'ext',
+                    id: '1',
+                    handle: 'a'
+                }
             })
         );
 
@@ -36,7 +39,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display the name if language is not specified', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -51,7 +53,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display the name if language is not python', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -67,7 +68,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display the name even if kernel is inside an unknown Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -86,7 +86,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name even if kernel is inside a global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -106,7 +105,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name if kernel is inside a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -128,7 +126,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name if kernel is inside a non-global 64bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -150,7 +147,6 @@ suite('Kernel Connection Helpers', () => {
         test('Prefixed with `<env name>` kernel is inside a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -172,7 +168,6 @@ suite('Kernel Connection Helpers', () => {
         test('Prefixed with `<env name>` kernel is inside a non-global 64-bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -196,7 +191,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name if language is python', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -212,7 +206,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name even if kernel is associated an unknown Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -234,7 +227,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name even if kernel is associated with a global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -257,7 +249,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name if kernel is associated with a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -281,7 +272,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name if kernel is associated with a non-global 64bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -304,7 +294,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name if kernel is associated with a non-global 64bit Python environment and includes version', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -333,7 +322,6 @@ suite('Kernel Connection Helpers', () => {
         test('Prefixed with `<env name>` kernel is associated with a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -362,7 +350,6 @@ suite('Kernel Connection Helpers', () => {
         test('Prefixed with `<env name>` kernel is associated with a non-global 64-bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -393,7 +380,6 @@ suite('Kernel Connection Helpers', () => {
         test('Return current label if we do not know the type of python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 LocalKernelSpecConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -415,7 +401,6 @@ suite('Kernel Connection Helpers', () => {
         test('Return Python Version for global python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -438,7 +423,6 @@ suite('Kernel Connection Helpers', () => {
         test('Return Python Version for global python environment with a version', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -462,7 +446,6 @@ suite('Kernel Connection Helpers', () => {
         test('Display name if kernel is associated with a non-global Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -485,7 +468,6 @@ suite('Kernel Connection Helpers', () => {
         test('DIsplay name if kernel is associated with a non-global 64bit Python environment', () => {
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
-                    id: '',
                     kernelSpec: {
                         argv: [],
                         display_name: 'kspecname',
@@ -509,7 +491,13 @@ suite('Kernel Connection Helpers', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
+            when(kernelSpec.interpreterPath).thenReturn();
+            when(kernelSpec.metadata).thenReturn();
+            when(kernelSpec.name).thenReturn('python');
+            when(kernelSpec.executable).thenReturn('python');
+            when(kernelSpec.argv).thenReturn(['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}']);
             when(interpreter.envName).thenReturn('');
+            when(interpreter.uri).thenReturn(Uri.file('python'));
             when(interpreter.version).thenReturn({
                 major: 9,
                 minor: 8,
@@ -521,7 +509,6 @@ suite('Kernel Connection Helpers', () => {
 
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
-                    id: '',
                     kernelSpec: instance(kernelSpec),
                     interpreter: instance(interpreter)
                 })
@@ -532,7 +519,13 @@ suite('Kernel Connection Helpers', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
+            when(kernelSpec.interpreterPath).thenReturn();
+            when(kernelSpec.metadata).thenReturn();
             when(interpreter.envName).thenReturn('.env');
+            when(kernelSpec.language).thenReturn('python');
+            when(kernelSpec.name).thenReturn('python');
+            when(kernelSpec.executable).thenReturn('python');
+            when(kernelSpec.argv).thenReturn(['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}']);
             when(interpreter.version).thenReturn({
                 major: 9,
                 minor: 8,
@@ -544,7 +537,6 @@ suite('Kernel Connection Helpers', () => {
 
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
-                    id: '',
                     kernelSpec: instance(kernelSpec),
                     interpreter: instance(interpreter)
                 })
@@ -555,7 +547,13 @@ suite('Kernel Connection Helpers', () => {
             const kernelSpec = mock<IJupyterKernelSpec>();
             const interpreter = mock<PythonEnvironment>();
             when(kernelSpec.language).thenReturn('python');
+            when(kernelSpec.interpreterPath).thenReturn();
+            when(kernelSpec.metadata).thenReturn();
             when(interpreter.envName).thenReturn('.env');
+            when(kernelSpec.language).thenReturn('python');
+            when(kernelSpec.name).thenReturn('python');
+            when(kernelSpec.executable).thenReturn('python');
+            when(kernelSpec.argv).thenReturn(['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}']);
             when(interpreter.version).thenReturn({
                 major: 9,
                 minor: 8,
@@ -567,7 +565,6 @@ suite('Kernel Connection Helpers', () => {
 
             const name = getDisplayNameOrNameOfKernelConnection(
                 PythonKernelConnectionMetadata.create({
-                    id: '',
                     kernelSpec: instance(kernelSpec),
                     interpreter: instance(interpreter)
                 })

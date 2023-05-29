@@ -48,6 +48,7 @@ import { KernelRankingHelper, findKernelSpecMatchingInterpreter } from './kernel
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { ControllerDefaultService } from './controllerDefaultService';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { JupyterServerProviderHandle } from '../../../kernels/jupyter/types';
 
 /**
  * Computes and tracks the preferred kernel for a notebook.
@@ -116,7 +117,7 @@ export class ControllerPreferredService {
     @traceDecoratorVerbose('Compute Preferred Controller')
     public async computePreferred(
         @logValue<NotebookDocument>('uri') document: NotebookDocument,
-        serverId?: string | undefined,
+        provider?: JupyterServerProviderHandle,
         cancelToken?: CancellationToken
     ): Promise<{
         preferredConnection?: KernelConnectionMetadata | undefined;
@@ -177,15 +178,15 @@ export class ControllerPreferredService {
             }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
                 const preferredInterpreter =
-                    !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                    !provider && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
                 traceInfoIfCI(
                     `Fetching TargetController document  ${getDisplayPath(document.uri)}  with preferred Interpreter ${
                         preferredInterpreter ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
                     } for condition ${
-                        !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
-                    } (${serverId} && ${isPythonNbOrInteractiveWindow} && ${
+                        !provider && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                    } (${provider?.id}.${provider?.handle} && ${isPythonNbOrInteractiveWindow} && ${
                         this.extensionChecker.isPythonExtensionInstalled
                     }).`
                 );
@@ -201,7 +202,7 @@ export class ControllerPreferredService {
                     notebookMetadata,
                     preferredSearchToken.token,
                     preferredInterpreter,
-                    serverId
+                    provider
                 );
                 if (preferredConnection) {
                     traceInfoIfCI(
@@ -222,7 +223,7 @@ export class ControllerPreferredService {
                         notebookMetadata,
                         preferredSearchToken.token,
                         preferredInterpreter,
-                        serverId
+                        provider
                     );
                     if (preferredConnection) {
                         traceInfoIfCI(
@@ -443,7 +444,7 @@ export class ControllerPreferredService {
         notebookMetadata: INotebookMetadata | undefined,
         cancelToken: CancellationToken,
         preferredInterpreter: PythonEnvironment | undefined,
-        serverId: string | undefined
+        provider?: JupyterServerProviderHandle
     ): Promise<KernelConnectionMetadata | undefined> {
         const uri = notebook.uri;
         let preferredConnection: KernelConnectionMetadata | undefined;
@@ -453,7 +454,7 @@ export class ControllerPreferredService {
             notebookMetadata,
             preferredInterpreter,
             cancelToken,
-            serverId
+            provider
         );
         if (cancelToken.isCancellationRequested) {
             return;

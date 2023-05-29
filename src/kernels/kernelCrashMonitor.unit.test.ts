@@ -42,19 +42,8 @@ suite('Kernel Crash Monitor', () => {
     let notebook: TestNotebookDocument;
     let controller: IKernelController;
     let clock: fakeTimers.InstalledClock;
-    let remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
-        id: 'remote',
-        baseUrl: '1',
-        kernelSpec: {
-            argv: [],
-            display_name: 'remote',
-            executable: '',
-            name: 'remote'
-        },
-        serverId: '1'
-    });
+    let remoteKernelSpec: RemoteKernelSpecConnectionMetadata;
     let localKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'local',
         kernelSpec: {
             argv: [],
             display_name: 'remote',
@@ -63,6 +52,20 @@ suite('Kernel Crash Monitor', () => {
         }
     });
     setup(async () => {
+        remoteKernelSpec = await RemoteKernelSpecConnectionMetadata.create({
+            baseUrl: '1',
+            kernelSpec: {
+                argv: [],
+                display_name: 'remote',
+                executable: '',
+                name: 'remote'
+            },
+            serverHandle: {
+                extensionId: '1',
+                id: '1',
+                handle: '1'
+            }
+        });
         kernelProvider = mock<IKernelProvider>();
         kernel = mock<IKernel>();
         appShell = mock<IApplicationShell>();

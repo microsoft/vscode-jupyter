@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { createInterpreterKernelSpec, getKernelId } from '../../kernels/helpers';
+import { createInterpreterKernelSpec } from '../../kernels/helpers';
 import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
@@ -25,8 +25,7 @@ export async function createActiveInterpreterController(
         const spec = await createInterpreterKernelSpec(pythonInterpreter);
         const metadata = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
-            interpreter: pythonInterpreter,
-            id: getKernelId(spec, pythonInterpreter)
+            interpreter: pythonInterpreter
         });
         const controllers = registration.addOrUpdate(metadata, [viewType]);
         const controller = controllers[0]; // Should only create one because only one view type

@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { IKernel, RemoteKernelSpecConnectionMetadata, IJupyterKernelSpec } from '../../../../kernels/types';
+import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../../kernels/types';
 import { IWidgetScriptSourceProvider, IIPyWidgetScriptManagerFactory, IIPyWidgetScriptManager } from '../types';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 
@@ -15,16 +15,24 @@ suite('ipywidget - Remote Widget Script Source', () => {
     let scriptManagerFactory: IIPyWidgetScriptManagerFactory;
     let scriptManager: IIPyWidgetScriptManager;
     const baseUrl = 'http://hello.com/';
-    setup(() => {
+    setup(async () => {
         scriptManagerFactory = mock<IIPyWidgetScriptManagerFactory>();
         scriptManager = mock<IIPyWidgetScriptManager>();
         when(scriptManagerFactory.getOrCreate(anything())).thenReturn(instance(scriptManager));
         kernel = mock<IKernel>();
-        const kernelConnection = RemoteKernelSpecConnectionMetadata.create({
+        const kernelConnection = await RemoteKernelSpecConnectionMetadata.create({
             baseUrl,
-            id: '1',
-            kernelSpec: instance(mock<IJupyterKernelSpec>()),
-            serverId: '2'
+            kernelSpec: {
+                argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                display_name: 'Python 3',
+                executable: 'python',
+                name: 'python3'
+            },
+            serverHandle: {
+                extensionId: '1',
+                handle: '1',
+                id: '1'
+            }
         });
         when(kernel.kernelConnectionMetadata).thenReturn(kernelConnection);
         scriptSourceProvider = new RemoteWidgetScriptSourceProvider(instance(kernel), instance(scriptManagerFactory));

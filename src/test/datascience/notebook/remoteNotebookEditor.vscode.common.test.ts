@@ -111,8 +111,18 @@ suite('Remote Execution @kernelCore', function () {
 
         // Wait for MRU to get updated & encrypted storage to get updated.
         await waitForCondition(async () => encryptedStorageSpiedStore.called, 5_000, 'Encrypted storage not updated');
-        const newList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
-        assert.notDeepEqual(previousList, newList, 'MRU not updated');
+        await waitForCondition(
+            async () => {
+                const newList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
+                assert.notDeepEqual(previousList, newList, 'MRU not updated');
+                return true;
+            },
+            5_000,
+            () =>
+                `MRU not updated, previously ${JSON.stringify(previousList)}, now ${JSON.stringify(
+                    globalMemento.get<{}[]>(Settings.JupyterServerUriList, [])
+                )}`
+        );
     });
     test('Use same kernel when re-opening notebook', async function () {
         await reopeningNotebookUsesSameRemoteKernel(ipynbFile, serviceContainer);

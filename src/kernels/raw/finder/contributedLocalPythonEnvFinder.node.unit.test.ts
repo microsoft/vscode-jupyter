@@ -35,7 +35,6 @@ suite('Contributed Python Kernel Finder', () => {
     let onDidChangePythonKernels: EventEmitter<void>;
     let onDidChangeInterpreterStatus: EventEmitter<void>;
     const javaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'java',
         kernelSpec: {
             argv: ['java'],
             display_name: 'java',
@@ -45,7 +44,6 @@ suite('Contributed Python Kernel Finder', () => {
         }
     });
     const pythonKernelSpec = PythonKernelConnectionMetadata.create({
-        id: 'python',
         interpreter: {
             id: 'python',
             sysPrefix: '',
@@ -59,7 +57,6 @@ suite('Contributed Python Kernel Finder', () => {
         }
     });
     const condaKernelSpec = PythonKernelConnectionMetadata.create({
-        id: 'conda',
         interpreter: {
             id: 'conda',
             sysPrefix: '',

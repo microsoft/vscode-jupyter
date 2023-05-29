@@ -41,6 +41,7 @@ suite('Jupyter Connection', async () => {
     let serverUriStorage: IJupyterServerUriStorage;
     const disposables: IDisposable[] = [];
     const provider = {
+        extensionId: 'ext',
         id: 'someProvider',
         handle: 'someHandle'
     };
@@ -81,33 +82,33 @@ suite('Jupyter Connection', async () => {
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
         verify(sessionManager.dispose()).once();
-        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).never();
+        verify(registrationPicker.getJupyterServerUri(provider)).never();
     });
     test('Validation will result in fetching kernels and kernelSpecs (Uri info fetched from provider)', async () => {
         when(sessionManager.dispose()).thenResolve();
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
-        when(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).thenResolve(server);
+        when(registrationPicker.getJupyterServerUri(provider)).thenResolve(server);
 
         await jupyterConnection.validateRemoteUri(provider);
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
         verify(sessionManager.dispose()).once();
-        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).atLeast(1);
+        verify(registrationPicker.getJupyterServerUri(provider)).atLeast(1);
     });
     test('Validation will fail if info could not be fetched from provider', async () => {
         when(sessionManager.dispose()).thenResolve();
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
-        when(registrationPicker.getJupyterServerUri(anything(), anything())).thenReject(new Error('kaboom'));
+        when(registrationPicker.getJupyterServerUri(anything())).thenReject(new Error('kaboom'));
 
         await assert.isRejected(jupyterConnection.validateRemoteUri(provider));
 
         verify(sessionManager.getKernelSpecs()).never();
         verify(sessionManager.getRunningKernels()).never();
         verify(sessionManager.dispose()).never();
-        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).atLeast(1);
+        verify(registrationPicker.getJupyterServerUri(provider)).atLeast(1);
     });
     test('Validation will fail if fetching kernels fail', async () => {
         when(sessionManager.dispose()).thenResolve();

@@ -18,13 +18,13 @@ import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConne
 import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUri,
-    IJupyterServerUriStorage,
     IJupyterUriProvider,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    JupyterServerProviderHandle
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
-import { Identifiers, Settings } from '../../platform/common/constants';
+import { Identifiers, JVSC_EXTENSION_ID, Settings } from '../../platform/common/constants';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -34,10 +34,9 @@ import {
     IsWebExtension
 } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
 import { traceError } from '../../platform/logging';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
-import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
+import { jupyterServerHandleFromString, jupyterServerHandleToString } from '../../kernels/jupyter/jupyterUtils';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
@@ -45,11 +44,12 @@ const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.ur
 @injectable()
 export class UserJupyterServerUrlProvider implements IExtensionSyncActivationService, IDisposable, IJupyterUriProvider {
     readonly id: string = '_builtin.jupyterServerUrlProvider';
+    readonly extensionId = JVSC_EXTENSION_ID;
     readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName;
     readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail;
     private _onDidChangeHandles = new EventEmitter<void>();
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
-    private _servers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
+    private _servers: { serverHandle: JupyterServerProviderHandle; serverInfo: IJupyterServerUri }[] = [];
     private _cachedServerInfoInitialized: Promise<void> | undefined;
     private _localDisposables: Disposable[] = [];
     constructor(
@@ -61,7 +61,6 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
@@ -84,40 +83,9 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 this._onDidChangeHandles.fire();
             })
         );
-
-        this.migrateOldUserEnteredUrlsToProviderUri()
-            .then(async () => {
-                // once cache is initialized, check if we should do migration
-                const existingServers = await this.serverUriStorage.getAll();
-                const migratedServers = [];
-                for (const server of existingServers) {
-                    if (this._servers.find((s) => s.uri === server.uri)) {
-                        // already exist
-                        continue;
-                    }
-                    if (server.provider.id !== this.id) {
-                        continue;
-                    }
-
-                    const serverInfo = this.parseUri(server.uri);
-                    if (serverInfo) {
-                        migratedServers.push({
-                            handle: uuid(),
-                            uri: server.uri,
-                            serverInfo: serverInfo
-                        });
-                    }
-                }
-
-                if (migratedServers.length > 0) {
-                    this._servers.push(...migratedServers);
-                    this._onDidChangeHandles.fire();
-                }
-            })
-            .catch(noop);
     }
 
-    private async migrateOldUserEnteredUrlsToProviderUri(): Promise<void> {
+    private async loadUserEnteredUrls(): Promise<void> {
         if (this._cachedServerInfoInitialized) {
             return this._cachedServerInfoInitialized;
         }
@@ -142,7 +110,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 return resolve();
             }
 
-            const servers = [];
+            const servers: { serverHandle: JupyterServerProviderHandle; serverInfo: IJupyterServerUri }[] = [];
 
             for (let i = 0; i < encryptedList.length; i += 1) {
                 if (encryptedList[i].startsWith(Identifiers.REMOTE_URI)) {
@@ -153,8 +121,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                     traceError('Unable to parse server info', encryptedList[i]);
                 } else {
                     servers.push({
-                        handle: serverList[i].handle,
-                        uri: encryptedList[i],
+                        serverHandle: { extensionId: JVSC_EXTENSION_ID, handle: serverList[i].handle, id: this.id },
                         serverInfo
                     });
                 }
@@ -179,7 +146,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
-        await this.migrateOldUserEnteredUrlsToProviderUri();
+        await this.loadUserEnteredUrls();
         if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
         }
@@ -239,13 +206,14 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
                         return;
                     }
-                    const handle = uuid();
+
+                    const serverHandle = { extensionId: JVSC_EXTENSION_ID, handle: uuid(), id: this.id };
                     const message = await validateSelectJupyterURI(
                         this.jupyterConnection,
                         this.applicationShell,
                         this.configService,
                         this.isWebExtension,
-                        { id: this.id, handle },
+                        serverHandle,
                         jupyterServerUri
                     );
 
@@ -264,12 +232,11 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                             })) || jupyterServerUri.displayName;
 
                         this._servers.push({
-                            handle: handle,
-                            uri: uri,
+                            serverHandle,
                             serverInfo: jupyterServerUri
                         });
                         await this.updateMemento();
-                        resolve(handle);
+                        resolve(serverHandle.handle);
                     }
                 }),
                 input.onDidHide(() => {
@@ -287,8 +254,13 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     private parseUri(uri: string, displayName?: string): IJupyterServerUri | undefined {
+        // This is a url that we crafted. It's not a valid Jupyter Server Url.
+        if (uri.startsWith(Identifiers.REMOTE_URI)) {
+            return;
+        }
         try {
-            extractJupyterServerHandleAndId(uri);
+            // Do not call this if we can avoid it, as this logs errors.
+            jupyterServerHandleFromString(uri);
             // This is a url that we crafted. It's not a valid Jupyter Server Url.
             return;
         } catch (ex) {
@@ -314,7 +286,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
-        const server = this._servers.find((s) => s.handle === handle);
+        const server = this._servers.find((s) => s.serverHandle.handle === handle);
         if (!server) {
             throw new Error('Server not found');
         }
@@ -322,19 +294,21 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
     }
 
     async getHandles(): Promise<string[]> {
-        await this.migrateOldUserEnteredUrlsToProviderUri();
-        return this._servers.map((s) => s.handle);
+        await this.loadUserEnteredUrls();
+        return this._servers.map((s) => s.serverHandle.handle);
     }
 
     async removeHandle(handle: string): Promise<void> {
-        this._servers = this._servers.filter((s) => s.handle !== handle);
+        this._servers = this._servers.filter((s) => s.serverHandle.handle !== handle);
         await this.updateMemento();
         this._onDidChangeHandles.fire();
     }
 
     private async updateMemento() {
-        const blob = this._servers.map((e) => `${e.uri}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
-        const mementoList = this._servers.map((v, i) => ({ index: i, handle: v.handle }));
+        const blob = this._servers
+            .map((e) => `${jupyterServerHandleToString(e.serverHandle)}`)
+            .join(Settings.JupyterServerRemoteLaunchUriSeparator);
+        const mementoList = this._servers.map((v, i) => ({ index: i, handle: v.serverHandle.handle }));
         await this.globalMemento.update(UserJupyterServerUriListMementoKey, mementoList);
         return this.encryptedStorage.store(
             Settings.JupyterServerRemoteLaunchService,

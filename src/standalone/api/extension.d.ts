@@ -22,7 +22,7 @@ export interface JupyterAPI {
      * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
      * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
      */
-    addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
+    addRemoteJupyterServer(providerId: string, handle: string): Promise<void>;
     /**
      * Gets the service that provides access to kernels.
      * Returns `undefined` if the calling extension is not allowed to access this API. This could
@@ -74,8 +74,6 @@ export interface IJupyterServerUri {
     webSocketProtocols?: string[];
 }
 
-export type JupyterServerUriHandle = string;
-
 export interface IJupyterUriProvider {
     /**
      * Should be a unique string (like a guid)
@@ -99,19 +97,19 @@ export interface IJupyterUriProvider {
                */
               default?: boolean;
           })[];
-    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<string | 'back' | undefined>;
     /**
      * Given the handle, returns the Jupyter Server information.
      */
-    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    getServerUri(handle: string): Promise<IJupyterServerUri>;
     /**
      * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
      */
-    getHandles?(): Promise<JupyterServerUriHandle[]>;
+    getHandles?(): Promise<string[]>;
     /**
      * Users request to remove a handle.
      */
-    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
+    removeHandle?(handle: string): Promise<void>;
 }
 
 /**

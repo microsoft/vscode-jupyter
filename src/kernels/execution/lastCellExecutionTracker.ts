@@ -4,16 +4,21 @@
 import { injectable, inject, named } from 'inversify';
 import { IDisposable, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
 import { Disposables } from '../../platform/common/utils';
-import { IKernel, ResumeCellExecutionInformation, isRemoteConnection } from '../types';
+import { IKernel, RemoteKernelConnectionMetadata, ResumeCellExecutionInformation, isRemoteConnection } from '../types';
 import type { KernelMessage } from '@jupyterlab/services';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { Disposable, Memento, NotebookCell, NotebookDocument } from 'vscode';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { getParentHeaderMsgId } from './cellExecutionMessageHandler';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../jupyter/types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { jupyterServerHandleToString } from '../jupyter/jupyterUtils';
 
+const LAST_EXECUTED_CELL_PREFIX = `LAST_EXECUTED_CELL_V2_`;
+function getConnectionStatePrefix(provider: JupyterServerProviderHandle) {
+    return `${LAST_EXECUTED_CELL_PREFIX}${jupyterServerHandleToString(provider)}`;
+}
 type CellExecutionInfo = Omit<ResumeCellExecutionInformation, 'token'> & { kernelId: string; cellIndex: number };
 /**
  * Keeps track of the last cell that was executed for a notebook along with the time and execution count.
@@ -33,10 +38,13 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
     public activate(): void {
         this.serverStorage.onDidRemove(this.onDidRemoveServerUris, this, this.disposables);
     }
-    private getStateKey(serverId: string) {
-        return `LAST_EXECUTED_CELL_${serverId}`;
+    private async getStateKey(connection: RemoteKernelConnectionMetadata) {
+        return `${getConnectionStatePrefix(connection.serverHandle)}${connection.id}`;
     }
-    public getLastTrackedCellExecution(notebook: NotebookDocument, kernel: IKernel): CellExecutionInfo | undefined {
+    public async getLastTrackedCellExecution(
+        notebook: NotebookDocument,
+        kernel: IKernel
+    ): Promise<CellExecutionInfo | undefined> {
         if (notebook.isUntitled) {
             return;
         }
@@ -44,7 +52,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             return;
         }
         const data = this.workspaceMemento.get<{ [key: string]: CellExecutionInfo }>(
-            this.getStateKey(kernel.kernelConnectionMetadata.serverId),
+            await this.getStateKey(kernel.kernelConnectionMetadata),
             {}
         );
         return data[notebook.uri.toString()];
@@ -58,7 +66,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
 
         let disposable: IDisposable | undefined;
         const disposables: IDisposable[] = [];
-        const anyMessageHandler = (_: unknown, msg: IAnyMessageArgs) => {
+        const anyMessageHandler = async (_: unknown, msg: IAnyMessageArgs) => {
             if (msg.direction === 'send') {
                 const request = msg.msg as KernelMessage.IExecuteRequestMsg;
                 if (
@@ -99,7 +107,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
                         if (info.executionCount !== ioPub.content.execution_count) {
                             info.executionCount = ioPub.content.execution_count;
                             this.executedCells.set(cell, info);
-                            this.trackLastExecution(cell, kernel, info);
+                            await this.trackLastExecution(cell, kernel, info);
                             disposeAllDisposables(disposables);
                         }
                     }
@@ -122,7 +130,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             hookUpSession();
         }
     }
-    public deleteTrackedCellExecution(cell: NotebookCell, kernel: IKernel) {
+    public async deleteTrackedCellExecution(cell: NotebookCell, kernel: IKernel) {
         if (cell.notebook.isUntitled) {
             return;
         }
@@ -130,7 +138,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             return;
         }
 
-        const id = this.getStateKey(kernel.kernelConnectionMetadata.serverId);
+        const id = await this.getStateKey(kernel.kernelConnectionMetadata);
         this.chainedPromises = this.chainedPromises.finally(() => {
             const notebookId = cell.notebook.uri.toString();
             const currentState = this.workspaceMemento.get<{ [key: string]: Partial<CellExecutionInfo> }>(id, {});
@@ -140,7 +148,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             }
         });
     }
-    private trackLastExecution(cell: NotebookCell, kernel: IKernel, info: Partial<CellExecutionInfo>) {
+    private async trackLastExecution(cell: NotebookCell, kernel: IKernel, info: Partial<CellExecutionInfo>) {
         if (!info.executionCount && !info.msg_id && !info.startTime) {
             return;
         }
@@ -148,7 +156,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             return;
         }
 
-        const id = this.getStateKey(kernel.kernelConnectionMetadata.serverId);
+        const id = await this.getStateKey(kernel.kernelConnectionMetadata);
         this.chainedPromises = this.chainedPromises.finally(() => {
             const notebookId = cell.notebook.uri.toString();
             const currentState = this.workspaceMemento.get<{ [key: string]: Partial<CellExecutionInfo> }>(id, {});
@@ -159,9 +167,11 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
     private onDidRemoveServerUris(removedServers: IJupyterServerUriEntry[]) {
         this.chainedPromises = this.chainedPromises.finally(() =>
             Promise.all(
-                removedServers
-                    .map((item) => this.getStateKey(item.serverId))
-                    .map((id) => this.workspaceMemento.update(id, undefined).then(noop, noop))
+                removedServers.map(async (id) => {
+                    const prefixOfKeysToRemove = getConnectionStatePrefix(id.serverHandle);
+                    const keys = this.workspaceMemento.keys().filter((k) => k.startsWith(prefixOfKeysToRemove));
+                    await Promise.all(keys.map((key) => this.workspaceMemento.update(key, undefined).then(noop, noop)));
+                })
             )
         );
     }

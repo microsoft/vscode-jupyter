@@ -20,6 +20,7 @@ import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
+import { jupyterServerHandleToString } from '../jupyterUtils';
 
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
@@ -63,11 +64,12 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
             return;
         }
 
-        if (!this.serverFinderMapping.has(serverUri.serverId)) {
+        const serverHandleId = jupyterServerHandleToString(serverUri.serverHandle);
+        if (!this.serverFinderMapping.has(serverHandleId)) {
             const finder = new RemoteKernelFinder(
-                `${ContributedKernelFinderKind.Remote}-${serverUri.serverId}`,
-                serverUri.displayName || serverUri.uri,
-                `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
+                `${ContributedKernelFinderKind.Remote}-${serverHandleId}`,
+                serverUri.displayName || jupyterServerHandleToString(serverUri.serverHandle),
+                `${RemoteKernelSpecsCacheKey}-${serverHandleId}`,
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,
                 this.globalState,
@@ -80,8 +82,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
                 this.jupyterConnection
             );
             this.disposables.push(finder);
-
-            this.serverFinderMapping.set(serverUri.serverId, finder);
+            this.serverFinderMapping.set(serverHandleId, finder);
 
             finder.activate().then(noop, noop);
         }
@@ -90,9 +91,10 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     // When a URI is removed, dispose the kernel finder for it
     urisRemoved(uris: IJupyterServerUriEntry[]) {
         uris.forEach((uri) => {
-            const serverFinder = this.serverFinderMapping.get(uri.serverId);
+            const serverHandleId = jupyterServerHandleToString(uri.serverHandle);
+            const serverFinder = this.serverFinderMapping.get(serverHandleId);
             serverFinder && serverFinder.dispose();
-            this.serverFinderMapping.delete(uri.serverId);
+            this.serverFinderMapping.delete(serverHandleId);
         });
     }
 

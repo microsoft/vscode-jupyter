@@ -253,7 +253,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
         const lastCellExecutionTracker = this.serviceContainer.get<LastCellExecutionTracker>(LastCellExecutionTracker);
-        const info = lastCellExecutionTracker.getLastTrackedCellExecution(notebook, kernel);
+        const info = await lastCellExecutionTracker.getLastTrackedCellExecution(notebook, kernel);
 
         if (
             !kernel.session?.kernel ||

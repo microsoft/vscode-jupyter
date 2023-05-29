@@ -31,7 +31,12 @@ import { KernelAutoReconnectMonitor } from './kernelAutoReConnectMonitor';
 import { CellExecutionCreator, NotebookCellExecutionWrapper } from './execution/cellExecutionCreator';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 import { JupyterNotebookView } from '../platform/common/constants';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
+import {
+    IJupyterServerUriEntry,
+    IJupyterServerUriStorage,
+    IJupyterUriProviderRegistration,
+    JupyterServerProviderHandle
+} from './jupyter/types';
 import { noop } from '../test/core';
 
 suite('Kernel ReConnect Progress Message', () => {
@@ -76,7 +81,7 @@ suite('Kernel ReConnect Progress Message', () => {
         monitor.activate();
     });
     teardown(() => disposeAllDisposables(disposables));
-    function createKernel() {
+    async function createKernel() {
         const kernel = mock<IKernel>();
         const onRestarted = new EventEmitter<void>();
         const onPreExecute = new EventEmitter<NotebookCell>();
@@ -87,11 +92,14 @@ suite('Kernel ReConnect Progress Message', () => {
         const kernelConnectionStatusSignal = new Signal<Kernel.IKernelConnection, Kernel.ConnectionStatus>(
             instance(kernelConnection)
         );
-        const connectionMetadata = RemoteKernelSpecConnectionMetadata.create({
+        const connectionMetadata = await RemoteKernelSpecConnectionMetadata.create({
             baseUrl: '<baseUrl>',
-            id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverId: '1234'
+            serverHandle: {
+                extensionId: '1',
+                id: '1',
+                handle: '1'
+            }
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.session).thenReturn(instance(session));
@@ -113,7 +121,7 @@ suite('Kernel ReConnect Progress Message', () => {
         return { kernel, onRestarted, kernelConnectionStatusSignal, onWillRestart: () => onWillRestart('willRestart') };
     }
     test('Display message when kernel is re-connecting', async () => {
-        const kernel = createKernel();
+        const kernel = await createKernel();
 
         onDidStartKernel.fire(instance(kernel.kernel));
 
@@ -125,7 +133,7 @@ suite('Kernel ReConnect Progress Message', () => {
         verify(appShell.withProgress(anything(), anything())).once();
     });
     test('Do not display a message if kernel is restarting', async () => {
-        const kernel = createKernel();
+        const kernel = await createKernel();
 
         onDidStartKernel.fire(instance(kernel.kernel));
 
@@ -155,7 +163,19 @@ suite('Kernel ReConnect Failed Monitor', () => {
     let cellExecution: NotebookCellExecutionWrapper;
     let onDidChangeNotebookCellExecutionState: EventEmitter<NotebookCellExecutionStateChangeEvent>;
     let kernelExecution: INotebookKernelExecution;
-    setup(() => {
+    const serverHandle: JupyterServerProviderHandle = {
+        extensionId: '1',
+        id: '1',
+        handle: 'handle1'
+    };
+    const jupyterUriServer: IJupyterServerUriEntry = {
+        serverHandle,
+        time: Date.now(),
+        displayName: 'Display Name',
+        isValidated: true
+    };
+
+    setup(async () => {
         onDidStartKernel = new EventEmitter<IKernel>();
         onDidDisposeKernel = new EventEmitter<IKernel>();
         onDidRestartKernel = new EventEmitter<IKernel>();
@@ -170,7 +190,8 @@ suite('Kernel ReConnect Failed Monitor', () => {
         when(kernelProvider.onDidRestartKernel).thenReturn(onDidRestartKernel.event);
         when(kernelProvider.getKernelExecution(anything())).thenReturn(instance(kernelExecution));
         jupyterServerUriStorage = mock<IJupyterServerUriStorage>();
-        when(jupyterServerUriStorage.getAll()).thenResolve([]);
+        when(jupyterServerUriStorage.getAll()).thenResolve([jupyterUriServer]);
+        when(jupyterServerUriStorage.get(serverHandle)).thenResolve(jupyterUriServer);
         jupyterUriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         monitor = new KernelAutoReconnectMonitor(
             instance(appShell),
@@ -179,7 +200,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
             instance(jupyterServerUriStorage),
             instance(jupyterUriProviderRegistration)
         );
-        clock = fakeTimers.install();
 
         cellExecution = mock<NotebookCellExecutionWrapper>();
         when(cellExecution.started).thenReturn(true);
@@ -193,9 +213,12 @@ suite('Kernel ReConnect Failed Monitor', () => {
             onDidChangeNotebookCellExecutionState.event
         );
         monitor.activate();
+
+        clock = fakeTimers.install();
+        disposables.push(new Disposable(() => clock.uninstall()));
     });
     teardown(() => disposeAllDisposables(disposables));
-    function createKernel() {
+    async function createKernel() {
         const kernel = mock<IKernel>();
         const onPreExecute = new EventEmitter<NotebookCell>();
         const onRestarted = new EventEmitter<void>();
@@ -206,11 +229,10 @@ suite('Kernel ReConnect Failed Monitor', () => {
         const kernelConnectionStatusSignal = new Signal<Kernel.IKernelConnection, Kernel.ConnectionStatus>(
             instance(kernelConnection)
         );
-        const connectionMetadata = RemoteKernelSpecConnectionMetadata.create({
+        const connectionMetadata = await RemoteKernelSpecConnectionMetadata.create({
             baseUrl: '<baseUrl>',
-            id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverId: '1234'
+            serverHandle
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.disposed).thenReturn(false);
@@ -241,7 +263,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         return cell;
     }
     test('Display message when kernel is disconnected (without any pending cells)', async () => {
-        const kernel = createKernel();
+        const kernel = await createKernel();
 
         onDidStartKernel.fire(instance(kernel.kernel));
 
@@ -254,7 +276,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         verify(cellExecution.appendOutput(anything())).never();
     });
     test('Do not display a message if kernel was restarted', async () => {
-        const kernel = createKernel();
+        const kernel = await createKernel();
 
         onDidStartKernel.fire(instance(kernel.kernel));
 
@@ -268,7 +290,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         verify(cellExecution.appendOutput(anything())).never();
     });
     test('Do not display a message if kernel is disposed', async () => {
-        const kernel = createKernel();
+        const kernel = await createKernel();
 
         onDidStartKernel.fire(instance(kernel.kernel));
 
@@ -282,7 +304,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         verify(cellExecution.appendOutput(anything())).never();
     });
     test('Display message when kernel is disconnected with a pending cells)', async () => {
-        const kernel = createKernel();
+        const kernel = await createKernel();
 
         const nb = createNotebook();
         const cell = createCell(instance(nb));
@@ -299,7 +321,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         verify(cellExecution.appendOutput(anything())).once();
     });
     test('Do not display a message in the cell if the cell completed execution', async () => {
-        const kernel = createKernel();
+        const kernel = await createKernel();
 
         const nb = createNotebook();
         const cell = createCell(instance(nb));
@@ -320,20 +342,20 @@ suite('Kernel ReConnect Failed Monitor', () => {
     });
 
     test('Handle contributed server disconnect (server contributed by uri provider)', async () => {
-        const kernel = createKernel();
+        const kernel = await createKernel();
         const server: IJupyterServerUriEntry = {
-            uri: 'https://remote?id=remoteUriProvider&uriHandle=1',
-            serverId: '1234',
             time: 1234,
-            provider: {
-                handle: '1',
+            serverHandle: {
+                extensionId: '1',
+                handle: 'handle1',
                 id: '1'
             }
         };
         when(jupyterServerUriStorage.getAll()).thenResolve([server]);
-        when(jupyterServerUriStorage.get(server.serverId)).thenResolve(server);
+        when(jupyterServerUriStorage.get(server.serverHandle)).thenResolve(server);
         when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
             id: 'remoteUriProvider',
+            extensionId: '1',
             getServerUri: (_handle) =>
                 Promise.resolve({
                     baseUrl: '<baseUrl>',
@@ -341,7 +363,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
                     authorizationHeader: {},
                     displayName: 'Remote Uri Provider server 1'
                 }),
-            getHandles: () => Promise.resolve(['1'])
+            getHandles: () => Promise.resolve(['handle1'])
         });
 
         onDidStartKernel.fire(instance(kernel.kernel));

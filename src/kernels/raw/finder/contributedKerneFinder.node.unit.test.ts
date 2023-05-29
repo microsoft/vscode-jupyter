@@ -15,12 +15,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { InterpreterService } from '../../../platform/api/pythonApi';
-import {
-    createInterpreterKernelSpec,
-    getInterpreterKernelSpecName,
-    getKernelId,
-    getNameOfKernelConnection
-} from '../../helpers';
+import { createInterpreterKernelSpec, getInterpreterKernelSpecName, getNameOfKernelConnection } from '../../helpers';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
@@ -507,7 +502,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                     if (spec) {
                         expectedKernelSpecs.push(
                             LocalKernelSpecConnectionMetadata.create({
-                                id: getKernelId(spec!, interpreter),
                                 kernelSpec: spec,
                                 interpreter
                             })
@@ -535,12 +529,10 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                         expectedKernelSpecs.push(
                             spec.language === PYTHON_LANGUAGE && interpreter
                                 ? PythonKernelConnectionMetadata.create({
-                                      id: getKernelId(spec!, interpreter),
                                       kernelSpec: spec,
                                       interpreter
                                   })
                                 : LocalKernelSpecConnectionMetadata.create({
-                                      id: getKernelId(spec!, interpreter),
                                       kernelSpec: spec,
                                       interpreter: spec.language === PYTHON_LANGUAGE ? interpreter : undefined
                                   })
@@ -553,7 +545,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                     const spec = await createInterpreterKernelSpec(interpreter, tempDirForKernelSpecs);
                     expectedKernelSpecs.push(
                         PythonKernelConnectionMetadata.create({
-                            id: getKernelId(spec!, interpreter),
                             kernelSpec: spec,
                             interpreter
                         })

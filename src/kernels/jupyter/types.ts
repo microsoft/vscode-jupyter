@@ -187,13 +187,23 @@ export interface IJupyterServerUri {
     webSocketProtocols?: string[];
 }
 
-export type JupyterServerUriHandle = string;
-
+export type JupyterServerProviderHandle = {
+    extensionId: string;
+    /**
+     * Jupyter Server Provider Id.
+     */
+    id: string;
+    /**
+     * Jupyter Server handle, unique for each server.
+     */
+    handle: string;
+};
 export interface IJupyterUriProvider {
     /**
      * Should be a unique string (like a guid)
      */
     readonly id: string;
+    readonly extensionId: string;
     readonly displayName?: string;
     readonly detail?: string;
     onDidChangeHandles?: Event<void>;
@@ -212,19 +222,19 @@ export interface IJupyterUriProvider {
                */
               default?: boolean;
           })[];
-    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<string | 'back' | undefined>;
     /**
      * Given the handle, returns the Jupyter Server information.
      */
-    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    getServerUri(handle: string): Promise<IJupyterServerUri>;
     /**
      * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
      */
-    getHandles?(): Promise<JupyterServerUriHandle[]>;
+    getHandles?(): Promise<string[]>;
     /**
      * Users request to remove a handle.
      */
-    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
+    removeHandle?(handle: string): Promise<void>;
 }
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
@@ -234,7 +244,7 @@ export interface IJupyterUriProviderRegistration {
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
     getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
     registerProvider(picker: IJupyterUriProvider): IDisposable;
-    getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    getJupyterServerUri(serverHandle: JupyterServerProviderHandle): Promise<IJupyterServerUri>;
 }
 
 /**
@@ -243,16 +253,10 @@ export interface IJupyterUriProviderRegistration {
 export interface IJupyterServerUriEntry {
     /**
      * Uri of the server to connect to
+     * @deprecated
      */
-    uri: string;
-    provider: {
-        id: string;
-        handle: JupyterServerUriHandle;
-    };
-    /**
-     * Unique ID using a hash of the full uri
-     */
-    serverId: string;
+    uri?: string;
+    serverHandle: JupyterServerProviderHandle;
     /**
      * The most recent time that we connected to this server
      */
@@ -275,12 +279,12 @@ export interface IJupyterServerUriStorage {
     /**
      * Updates MRU list marking this server as the most recently used.
      */
-    update(serverId: string): Promise<void>;
+    update(serverHandle: JupyterServerProviderHandle): Promise<void>;
     getAll(): Promise<IJupyterServerUriEntry[]>;
-    remove(serverId: string): Promise<void>;
+    remove(serverHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
-    get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
-    add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void>;
+    get(serverHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined>;
+    add(serverHandle: JupyterServerProviderHandle): Promise<void>;
 }
 
 export interface IBackupFile {
@@ -353,11 +357,11 @@ export interface ILiveRemoteKernelConnectionUsageTracker {
     /**
      * Tracks the fact that the provided remote kernel for a given server was used by a notebook defined by the uri.
      */
-    trackKernelIdAsUsed(resource: Uri, serverId: string, kernelId: string): void;
+    trackKernelIdAsUsed(resource: Uri, serverHandle: JupyterServerProviderHandle, kernelId: string): void;
     /**
      * Tracks the fact that the provided remote kernel for a given server is no longer used by a notebook defined by the uri.
      */
-    trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string): void;
+    trackKernelIdAsNotUsed(resource: Uri, serverHandle: JupyterServerProviderHandle, kernelId: string): void;
 }
 
 export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedKernelValidator');

@@ -70,7 +70,6 @@ suite('kernel Launcher', () => {
     teardown(() => disposeAllDisposables(disposables));
     async function launchKernel() {
         const kernelSpec = PythonKernelConnectionMetadata.create({
-            id: '1',
             interpreter: {
                 id: '2',
                 sysPrefix: '',

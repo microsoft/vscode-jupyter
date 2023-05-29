@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { Extensions } from '../../../platform/common/application/extensions.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
-import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '../types';
+import { IJupyterUriProvider, IJupyterServerUri } from '../types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 
@@ -18,6 +18,7 @@ class MockProvider implements IJupyterUriProvider {
         return this._id;
     }
     private currentBearer = 1;
+    public readonly extensionId = 'Hello';
     private result: string = '1';
     constructor(private readonly _id: string) {
         // Id should be readonly
@@ -25,10 +26,7 @@ class MockProvider implements IJupyterUriProvider {
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         return [{ label: 'Foo' }];
     }
-    public async handleQuickPick(
-        _item: vscode.QuickPickItem,
-        back: boolean
-    ): Promise<JupyterServerUriHandle | 'back' | undefined> {
+    public async handleQuickPick(_item: vscode.QuickPickItem, back: boolean): Promise<string | 'back' | undefined> {
         return back ? 'back' : this.result;
     }
     public async getServerUri(handle: string): Promise<IJupyterServerUri> {
@@ -95,7 +93,7 @@ suite('URI Picker', () => {
         assert.equal(quickPick.length, 1, 'No quick pick items added');
         const handle = await pickers[0].handleQuickPick!(quickPick[0], false);
         assert.ok(handle, 'Handle not set');
-        const uri = await registration.getJupyterServerUri('1', handle!);
+        const uri = await registration.getJupyterServerUri({ extensionId: '1', id: '1', handle: handle! });
         // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
         assert.equal(uri.displayName, 'dummy', 'Display name not found');
@@ -116,7 +114,7 @@ suite('URI Picker', () => {
         const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
         try {
-            await registration.getJupyterServerUri('1', 'foobar');
+            await registration.getJupyterServerUri({ extensionId: '1', id: '1', handle: 'foobar' });
             // eslint-disable-next-line
             assert.fail('Should not get here');
         } catch {
@@ -125,23 +123,23 @@ suite('URI Picker', () => {
     });
     test('No picker call', async () => {
         const registration = await createRegistration(['1']);
-        const uri = await registration.getJupyterServerUri('1', '1');
+        const uri = await registration.getJupyterServerUri({ extensionId: '1', id: '1', handle: '1' });
         // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
     test('Two pickers', async () => {
         const registration = await createRegistration(['1', '2']);
-        let uri = await registration.getJupyterServerUri('1', '1');
+        let uri = await registration.getJupyterServerUri({ extensionId: '1', id: '1', handle: '1' });
         // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
-        uri = await registration.getJupyterServerUri('2', '1');
+        uri = await registration.getJupyterServerUri({ extensionId: '1', id: '2', handle: '1' });
         // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
     test('Two pickers with same id', async () => {
         try {
             const registration = await createRegistration(['1', '1']);
-            await registration.getJupyterServerUri('1', '1');
+            await registration.getJupyterServerUri({ extensionId: '1', id: '1', handle: '1' });
             // eslint-disable-next-line
             assert.fail('Should have failed if calling with same picker');
         } catch {

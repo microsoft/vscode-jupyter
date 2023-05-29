@@ -41,8 +41,7 @@ suite('Kernel Dependency Service', () => {
     suiteSetup(async () => {
         metadata = PythonKernelConnectionMetadata.create({
             interpreter,
-            kernelSpec: await createInterpreterKernelSpec(interpreter, Uri.file('')),
-            id: '1'
+            kernelSpec: await createInterpreterKernelSpec(interpreter, Uri.file(''))
         });
     });
     setup(() => {

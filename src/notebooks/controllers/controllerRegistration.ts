@@ -39,6 +39,7 @@ import {
     IVSCodeNotebookControllerUpdateEvent
 } from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
+import { jupyterServerHandleToString } from '../../kernels/jupyter/jupyterUtils';
 
 /**
  * Keeps track of registered controllers and available KernelConnectionMetadatas.
@@ -254,8 +255,12 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     private async onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         // Remove any connections that are no longer available.
         uriEntries.forEach((item) => {
+            const itemServerHandleId = jupyterServerHandleToString(item.serverHandle);
             this.registered.forEach((c) => {
-                if (isRemoteConnection(c.connection) && c.connection.serverId === item.serverId) {
+                if (
+                    isRemoteConnection(c.connection) &&
+                    jupyterServerHandleToString(c.connection.serverHandle) === itemServerHandleId
+                ) {
                     traceWarning(
                         `Deleting controller ${c.id} as it is associated with a connection that has been removed`
                     );

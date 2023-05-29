@@ -6,15 +6,15 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
-import { IJupyterServerUri, JupyterServerUriHandle } from './types';
-import { getJupyterConnectionDisplayName } from './helpers';
+import { IJupyterServerUri, JupyterServerProviderHandle } from './types';
+import { getJupyterConnectionDisplayName, isBuiltInJupyterServerProvider } from './helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../../platform/common/constants';
-import { computeHash } from '../../platform/common/crypto';
+import { Identifiers, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
+import { computeHash } from '../../platform/common/crypto';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -89,11 +89,10 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export async function createRemoteConnectionInfo(
-    jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+export function createRemoteConnectionInfo(
+    serverHandle: JupyterServerProviderHandle,
     serverUri: IJupyterServerUri
-): Promise<IJupyterConnection> {
-    const serverId = await computeServerId(generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle));
+): IJupyterConnection {
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
     const hostName = new URL(serverUri.baseUrl).hostname;
@@ -103,9 +102,8 @@ export async function createRemoteConnectionInfo(
             ? serverUri.authorizationHeader
             : undefined;
     return {
-        serverId,
         baseUrl,
-        providerId: jupyterHandle.id,
+        serverHandle,
         token,
         hostName,
         localLaunch: false,
@@ -125,30 +123,51 @@ export async function createRemoteConnectionInfo(
     };
 }
 
-export async function computeServerId(uri: string) {
+export async function computeServerId(serverHandle: JupyterServerProviderHandle) {
+    const uri = jupyterServerHandleToString(serverHandle);
     return computeHash(uri, 'SHA-256');
 }
 
-export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
-    // eslint-disable-next-line
-    return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
+const OLD_EXTENSION_ID_THAT_DID_NOT_HAVE_EXT_ID_IN_URL = ['ms-toolsai.jupyter', 'ms-toolsai.vscode-ai'];
+export function jupyterServerHandleToString(serverHandle: JupyterServerProviderHandle) {
+    if (OLD_EXTENSION_ID_THAT_DID_NOT_HAVE_EXT_ID_IN_URL.includes(serverHandle.extensionId)) {
+        // Jupyter extension and AzML extension did not have extension id in the generated Id.
+        // Hence lets not store them in the future as well, however
+        // for all other extensions we will (it will only break the MRU for a few set of users using other extensions that contribute Jupyter servers via Jupyter extension).
+        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${serverHandle.id}&${
+            Identifiers.REMOTE_URI_HANDLE_PARAM
+        }=${encodeURI(serverHandle.handle)}`;
+    }
+    return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${serverHandle.id}&${
         Identifiers.REMOTE_URI_HANDLE_PARAM
-    }=${encodeURI(result)}`;
+    }=${encodeURI(serverHandle.handle)}&${Identifiers.REMOTE_URI_EXTENSION_ID_PARAM}=${encodeURI(
+        serverHandle.extensionId
+    )}`;
 }
 
-export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } {
+export function jupyterServerHandleFromString(serverHandleId: string): JupyterServerProviderHandle {
     try {
-        const url: URL = new URL(uri);
+        const url: URL = new URL(serverHandleId);
 
         // Id has to be there too.
-        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
+        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM) || '';
         const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-        if (id && uriHandle) {
-            return { handle: uriHandle, id };
+        let extensionId = url.searchParams.get(Identifiers.REMOTE_URI_EXTENSION_ID_PARAM);
+        extensionId =
+            extensionId ||
+            // We know the extension ids for some of the providers.
+            // This is for backward compatibility (with data from old versions of the extension).
+            (isBuiltInJupyterServerProvider(id)
+                ? JVSC_EXTENSION_ID
+                : id.startsWith('azureml_compute_instances') || id.startsWith('azureml_connected_compute_instances')
+                ? 'ms-toolsai.vscode-ai'
+                : '');
+        if (id && uriHandle && extensionId) {
+            return { handle: uriHandle, id, extensionId };
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
-        traceError('Failed to parse remote URI', uri, ex);
-        throw new Error(`'Failed to parse remote URI ${uri}`);
+        traceError('Failed to parse remote URI', serverHandleId, ex);
+        throw new Error(`'Failed to parse remote URI ${serverHandleId}`);
     }
 }

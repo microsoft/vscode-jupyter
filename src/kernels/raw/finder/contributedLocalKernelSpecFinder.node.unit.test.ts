@@ -33,7 +33,6 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
     let onDidChangePythonKernels: EventEmitter<void>;
     let onDidChangeInterpreterStatus: EventEmitter<void>;
     const javaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'java',
         kernelSpec: {
             argv: ['java'],
             display_name: 'java',
@@ -43,7 +42,6 @@ suite(`Contributed Local Kernel Spec Finder`, () => {
         }
     });
     const rustKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'rust',
         kernelSpec: {
             argv: ['rust'],
             display_name: 'rust',

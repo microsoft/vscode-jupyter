@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { ICommandManager } from '../../platform/common/application/types';
-import { Commands } from '../../platform/common/constants';
+import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { traceInfo } from '../../platform/logging';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IJupyterServerUri, IJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
@@ -16,10 +16,11 @@ import { Disposables } from '../../platform/common/utils';
  * Registers commands to allow the user to set the remote server URI.
  */
 @injectable()
-export class JupyterServerSelectorCommand
+export class JupyterServerSelectorForTests
     extends Disposables
     implements IExtensionSyncActivationService, IJupyterUriProvider
 {
+    public readonly extensionId = JVSC_EXTENSION_ID;
     private handleMappings = new Map<string, { uri: Uri; server: IJupyterServerUri }>();
     private _onDidChangeHandles = new EventEmitter<void>();
     constructor(
@@ -61,8 +62,7 @@ export class JupyterServerSelectorCommand
             token
         };
         this.handleMappings.set(handle, { uri: source, server: serverUri });
-        // Set the uri directly
-        await this.serverSelector.addJupyterServer({ id: this.id, handle });
+        await this.serverSelector.addJupyterServer({ extensionId: JVSC_EXTENSION_ID, id: this.id, handle });
         this._onDidChangeHandles.fire();
     }
 }

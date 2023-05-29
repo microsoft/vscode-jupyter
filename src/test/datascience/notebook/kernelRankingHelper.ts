@@ -7,7 +7,6 @@ import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connec
 import * as nbformat from '@jupyterlab/nbformat';
 import {
     createInterpreterKernelSpec,
-    getKernelId,
     getKernelRegistrationInfo,
     isDefaultKernelSpec,
     isDefaultPythonKernelSpecName,
@@ -28,6 +27,8 @@ import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging'
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import * as path from '../../../platform/vscode-path/path';
+import { JupyterServerProviderHandle } from '../../../kernels/jupyter/types';
+import { jupyterServerHandleToString } from '../../../kernels/jupyter/jupyterUtils';
 
 /**
  * Given an interpreter, find the kernel connection that matches this interpreter.
@@ -120,8 +121,7 @@ export async function rankKernels(
         const spec = await createInterpreterKernelSpec(preferredInterpreter);
         preferredInterpreterKernelSpec = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
-            interpreter: preferredInterpreter,
-            id: getKernelId(spec, preferredInterpreter)
+            interpreter: preferredInterpreter
         });
         // Active interpreter isn't in the list of kernels,
         // Either because we're using a cached list or Python API isn't returning active interpreter
@@ -989,12 +989,17 @@ export class KernelRankingHelper {
         notebookMetadata?: INotebookMetadata | undefined,
         preferredInterpreter?: PythonEnvironment,
         cancelToken?: CancellationToken,
-        serverId?: string
+        provider?: JupyterServerProviderHandle
     ): Promise<KernelConnectionMetadata[] | undefined> {
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            if (serverId) {
-                kernels = kernels.filter((kernel) => !isLocalConnection(kernel) && kernel.serverId === serverId);
+            if (provider) {
+                const providerServerHandleId = jupyterServerHandleToString(provider);
+                kernels = kernels.filter(
+                    (kernel) =>
+                        !isLocalConnection(kernel) &&
+                        jupyterServerHandleToString(kernel.serverHandle) === providerServerHandleId
+                );
             }
             const preferredRemoteKernelId =
                 resource && this.preferredRemoteFinder

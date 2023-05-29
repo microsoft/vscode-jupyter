@@ -5,19 +5,14 @@ import { inject, injectable } from 'inversify';
 import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
-import {
-    computeServerId,
-    createRemoteConnectionInfo,
-    extractJupyterServerHandleAndId,
-    generateUriFromRemoteProvider
-} from '../jupyterUtils';
+import { createRemoteConnectionInfo } from '../jupyterUtils';
 import {
     IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
+    JupyterServerProviderHandle
 } from '../types';
 
 /**
@@ -33,23 +28,22 @@ export class JupyterConnection {
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
 
-    public async createConnectionInfo(serverId: string) {
-        const server = await this.serverUriStorage.get(serverId);
+    public async createConnectionInfo(serverHandle: JupyterServerProviderHandle) {
+        const server = await this.serverUriStorage.get(serverHandle);
         if (!server) {
             throw new Error('Server Not found');
         }
-        const provider = extractJupyterServerHandleAndId(server.uri);
-        const serverUri = await this.getJupyterServerUri(provider);
-        return createRemoteConnectionInfo(provider, serverUri);
+        const serverUri = await this.getJupyterServerUri(serverHandle);
+        return createRemoteConnectionInfo(serverHandle, serverUri);
     }
 
     public async validateRemoteUri(
-        provider: { id: string; handle: JupyterServerUriHandle },
+        serverHandle: JupyterServerProviderHandle,
         serverUri?: IJupyterServerUri
     ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
-        serverUri = serverUri || (await this.getJupyterServerUri(provider));
-        const connection = await createRemoteConnectionInfo(provider, serverUri);
+        serverUri = serverUri || (await this.getJupyterServerUri(serverHandle));
+        const connection = createRemoteConnectionInfo(serverHandle, serverUri);
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
@@ -64,15 +58,14 @@ export class JupyterConnection {
         }
     }
 
-    private async getJupyterServerUri(provider: { id: string; handle: JupyterServerUriHandle }) {
+    private async getJupyterServerUri(serverHandle: JupyterServerProviderHandle) {
         try {
-            return await this.jupyterPickerRegistration.getJupyterServerUri(provider.id, provider.handle);
+            return await this.jupyterPickerRegistration.getJupyterServerUri(serverHandle);
         } catch (ex) {
             if (ex instanceof BaseError) {
                 throw ex;
             }
-            const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
-            throw new RemoteJupyterServerUriProviderError(provider.id, provider.handle, ex, serverId);
+            throw new RemoteJupyterServerUriProviderError(serverHandle, ex);
         }
     }
 }

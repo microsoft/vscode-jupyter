@@ -7,7 +7,6 @@ import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-m
 import { CancellationTokenSource, Disposable, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
 import {
-    IJupyterKernelSpec,
     IKernelDependencyService,
     IKernelFinder,
     KernelInterpreterDependencyResponse,
@@ -42,7 +41,6 @@ suite('Python Environment Kernel Connection Creator', () => {
     let onControllerSelected: EventEmitter<{ notebook: NotebookDocument; controller: IVSCodeNotebookController }>;
     let cancellation: CancellationTokenSource;
     const venvPythonKernel = PythonKernelConnectionMetadata.create({
-        id: 'venvPython',
         kernelSpec: {
             argv: [],
             display_name: 'Venv Python',
@@ -57,7 +55,6 @@ suite('Python Environment Kernel Connection Creator', () => {
         }
     });
     const newCondaPythonKernel = PythonKernelConnectionMetadata.create({
-        id: 'condaPython',
         kernelSpec: {
             argv: [],
             display_name: 'Conda Python',
@@ -179,8 +176,13 @@ suite('Python Environment Kernel Connection Creator', () => {
         when(interpreterService.getInterpreterDetails(deepEqual({ path: newCondaEnvPath }))).thenCall(async () => {
             const differentController = mock<IVSCodeNotebookController>();
             const differentConnection = LocalKernelSpecConnectionMetadata.create({
-                id: '1234',
-                kernelSpec: instance(mock<IJupyterKernelSpec>())
+                kernelSpec: {
+                    argv: [],
+                    display_name: 'Java KernelSpec',
+                    executable: '',
+                    name: 'javaName',
+                    language: 'java'
+                }
             });
             when(differentController.connection).thenReturn(differentConnection);
             onControllerSelected.fire({ notebook, controller: differentController });

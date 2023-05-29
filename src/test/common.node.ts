@@ -204,6 +204,7 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     }
 }
 
+let remoteUrisCleared = false;
 export function initializeCommonNodeApi() {
     const { commands, Uri } = require('vscode');
     const { initialize } = require('./initialize.node');
@@ -222,6 +223,10 @@ export function initializeCommonNodeApi() {
         },
         async startJupyterServer(_notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
             if (IS_REMOTE_NATIVE_TEST()) {
+                if (!remoteUrisCleared) {
+                    await commands.executeCommand('jupyter.clearSavedJupyterUris');
+                    remoteUrisCleared = true;
+                }
                 const uriString = useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithToken();

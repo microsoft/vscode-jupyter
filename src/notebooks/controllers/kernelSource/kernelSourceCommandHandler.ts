@@ -35,6 +35,7 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError, traceWarning } from '../../../platform/logging';
 import { INotebookEditorProvider } from '../../types';
 import { IControllerRegistration, INotebookKernelSourceSelector, IVSCodeNotebookController } from '../types';
+import { isBuiltInJupyterServerProvider } from '../../../kernels/jupyter/helpers';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -168,7 +169,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                     label:
                                         provider.displayName ??
                                         (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
-                                    documentation: provider.id.startsWith('_builtin')
+                                    documentation: isBuiltInJupyterServerProvider(provider.id)
                                         ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
                                         : undefined,
                                     command: {
@@ -187,7 +188,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                     label:
                                         provider.displayName ??
                                         (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
-                                    documentation: provider.id.startsWith('_builtin')
+                                    documentation: isBuiltInJupyterServerProvider(provider.id)
                                         ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
                                         : undefined,
                                     command: {

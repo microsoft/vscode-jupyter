@@ -27,7 +27,7 @@ import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistr
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
-import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
+import { JupyterServerSelectorForTests } from './userJupyterServer/serverSelectorForTests';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -49,7 +49,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ImportTracker);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        JupyterServerSelectorCommand
+        JupyterServerSelectorForTests
     );
 
     // Import/Export

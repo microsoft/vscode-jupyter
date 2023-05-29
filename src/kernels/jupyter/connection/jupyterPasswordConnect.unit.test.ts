@@ -14,7 +14,7 @@ import { MockInputBox } from '../../../test/datascience/mockInputBox';
 import { MockQuickPick } from '../../../test/datascience/mockQuickPick';
 import { JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { JupyterRequestCreator } from '../session/jupyterRequestCreator.node';
-import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../types';
+import { IJupyterRequestCreator, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
@@ -23,7 +23,11 @@ suite('JupyterPasswordConnect', () => {
     let appShell: ApplicationShell;
     let configService: ConfigurationService;
     let requestCreator: IJupyterRequestCreator;
-
+    const serverHandle: JupyterServerProviderHandle = {
+        extensionId: '1',
+        id: '1',
+        handle: 'handle1'
+    };
     const xsrfValue: string = '12341234';
     const sessionName: string = 'sessionName';
     const sessionValue: string = 'sessionValue';
@@ -156,7 +160,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            serverHandle
         });
         assert(result, 'Failed to get password');
         if (result) {
@@ -213,7 +218,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            serverHandle
         });
         assert(result, 'Failed to get password');
         if (result) {
@@ -265,7 +271,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'https://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            serverHandle
         });
         assert(result, 'Failed to get password');
         if (result) {
@@ -287,7 +294,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            serverHandle
         });
         assert(!result);
 
@@ -340,7 +348,8 @@ suite('JupyterPasswordConnect', () => {
 
         let result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            serverHandle
         });
         assert(!result, 'First call to get password should have failed');
 
@@ -386,7 +395,8 @@ suite('JupyterPasswordConnect', () => {
         // Retry the password
         result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            serverHandle
         });
         assert(result, 'Expected to get a result on the second call');
 
@@ -459,7 +469,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            serverHandle
         });
         assert.ok(result, 'No hub connection info');
         assert.equal(result?.remappedBaseUrl, 'http://testname:8888/user/test', 'Url not remapped');
