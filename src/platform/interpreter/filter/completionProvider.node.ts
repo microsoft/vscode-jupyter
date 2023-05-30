@@ -47,7 +47,7 @@ export class PythonEnvFilterCompletionProvider implements CompletionItemProvider
             return {
                 label,
                 detail: envPath,
-                insertText: `"${envPath}"`,
+                insertText: `"${envPath.replace(/\\/g, '\\\\')}"`,
                 filterText: `${label} ${envPath}`
             };
         });
