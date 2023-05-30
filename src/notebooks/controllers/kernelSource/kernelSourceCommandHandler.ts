@@ -26,7 +26,12 @@ import {
     KernelConnectionMetadata
 } from '../../../kernels/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { InteractiveWindowView, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
+import {
+    InteractiveWindowView,
+    JupyterNotebookView,
+    Telemetry,
+    TestingKernelPickerProviderId
+} from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -157,6 +162,9 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             .then((providers) => {
                 const existingItems = new Set<string>();
                 providers.map((provider) => {
+                    if (provider.id === TestingKernelPickerProviderId) {
+                        return;
+                    }
                     existingItems.add(provider.id);
                     if (this.providerMappings.has(provider.id)) {
                         return;
