@@ -1,19 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import uuid from 'uuid/v4';
+import * as urlPath from '../../platform/vscode-path/resources';
 import * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { Uri, CancellationToken, NotebookDocument } from 'vscode';
 import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
-import { executeSilently } from '../../kernels/helpers';
-import {
-    IJupyterConnection,
-    IKernel,
-    IKernelProvider,
-    RemoteKernelConnectionMetadata,
-    isRemoteConnection
-} from '../../kernels/types';
+import { executeSilently, jvscIdentifier } from '../../kernels/helpers';
+import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -22,11 +18,12 @@ import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './ty
 import { traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
-import type { ContentsManager } from '@jupyterlab/services';
-import { IBackupFile, IJupyterBackingFileCreator, IJupyterSessionManagerFactory } from '../../kernels/jupyter/types';
+import { Contents, ContentsManager } from '@jupyterlab/services';
+import { IBackupFile, IJupyterSessionManagerFactory } from '../../kernels/jupyter/types';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { noop } from '../../platform/common/utils/misc';
 import { Resource } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
 
 /**
  * Base class for exporting on web. Uses the kernel to perform the export and then translates the blob sent back to a file.
@@ -39,8 +36,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         @inject(IExportDialog) protected readonly filePicker: IExportDialog,
         @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
         @inject(IJupyterSessionManagerFactory) protected readonly factory: IJupyterSessionManagerFactory,
-        @inject(JupyterConnection) protected readonly connection: JupyterConnection,
-        @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator
+        @inject(JupyterConnection) protected readonly connection: JupyterConnection
     ) {}
 
     public async export(
@@ -76,35 +72,27 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
         if (kernel.session.isServerSession()) {
             const connection = await this.connection.createConnectionInfo(kernel.kernelConnectionMetadata.serverHandle);
-            const sessionManager = this.factory.create(
-                connection,
-                this.connection.toServerConnectionSettings(connection)
-            );
-            const contentManager = sessionManager.contentsManager;
-            const session = kernel.session;
-            let contents = await this.exportUtil.getContent(sourceDocument);
+            const serverSettings = this.connection.toServerConnectionSettings(connection);
+            const contentManager = new ContentsManager({ serverSettings });
+            try {
+                const session = kernel.session;
+                let contents = await this.exportUtil.getContent(sourceDocument);
 
-            let fileExt = '';
+                let fileExt = '';
 
-            switch (format) {
-                case ExportFormat.html:
-                    fileExt = '.html';
-                    break;
-                case ExportFormat.pdf:
-                    fileExt = '.pdf';
-                    break;
-                case ExportFormat.python:
-                    fileExt = '.py';
-                    break;
-            }
+                switch (format) {
+                    case ExportFormat.html:
+                        fileExt = '.html';
+                        break;
+                    case ExportFormat.pdf:
+                        fileExt = '.pdf';
+                        break;
+                    case ExportFormat.python:
+                        fileExt = '.py';
+                        break;
+                }
 
-            await this.invokeWithFileSynced(
-                contentManager,
-                connection,
-                kernel.kernelConnectionMetadata,
-                kernel.resourceUri,
-                contents,
-                async (file) => {
+                await this.invokeWithFileSynced(contentManager, kernel.resourceUri, contents, async (file) => {
                     const pwd = await this.getCWD(kernel);
                     const filePath = `${pwd}/${file.filePath}`;
                     const tempTarget = await contentManager.newUntitled({ type: 'file', ext: fileExt });
@@ -140,10 +128,10 @@ export class ExportBase implements INbConvertExport, IExportBase {
                         await this.fs.writeFile(target!, content.content as string);
                         await contentManager.delete(tempTarget.path);
                     }
-                }
-            );
-
-            return;
+                });
+            } finally {
+                contentManager.dispose();
+            }
         } else {
             // no op
         }
@@ -151,8 +139,6 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
     async invokeWithFileSynced(
         contentsManager: ContentsManager,
-        connection: IJupyterConnection,
-        kernelConnectionMetadata: RemoteKernelConnectionMetadata,
         resource: Resource,
         contents: string,
         handler: (file: IBackupFile) => Promise<void>
@@ -161,17 +147,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
             return;
         }
 
-        const backingFile = await this.backingFileCreator.createBackingFile(
-            resource,
-            Uri.file(''),
-            kernelConnectionMetadata,
-            connection,
-            contentsManager
-        );
-
-        if (!backingFile) {
-            return;
-        }
+        const backingFile = await this.createBackingFile(resource, contentsManager);
 
         await contentsManager
             .save(backingFile!.filePath, {
@@ -189,6 +165,30 @@ export class ExportBase implements INbConvertExport, IExportBase {
         await contentsManager.delete(backingFile.filePath).catch(noop);
     }
 
+    public async createBackingFile(
+        resource: Uri,
+        contentsManager: ContentsManager
+    ): Promise<{ dispose: () => Promise<unknown>; filePath: string }> {
+        // However jupyter does not support relative paths outside of the original root.
+        const backingFileOptions: Contents.ICreateOptions = { type: 'notebook' };
+
+        // Generate a more descriptive name
+        const newName = generateBackingIPyNbFileName(resource);
+
+        // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
+        let backingFile = await contentsManager.newUntitled(backingFileOptions);
+        const backingFileDir = path.dirname(backingFile.path);
+        backingFile = await contentsManager.rename(
+            backingFile.path,
+            backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
+        );
+
+        const filePath = backingFile.path;
+        return {
+            filePath,
+            dispose: () => contentsManager.delete(filePath)
+        };
+    }
     private b64toBlob(b64Data: string, contentType: string | undefined) {
         contentType = contentType || '';
         const sliceSize = 512;
@@ -248,4 +248,15 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
         return output.data['text/plain'];
     }
+}
+function getRemoteIPynbSuffix(): string {
+    return `${jvscIdentifier}${uuid()}`;
+}
+
+function generateBackingIPyNbFileName(resource: Resource) {
+    // Generate a more descriptive name
+    const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
+    return resource
+        ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
+        : `${DataScience.defaultNotebookName}${suffix}`;
 }

@@ -1420,18 +1420,6 @@
      ]
    }
  */
-//Telemetry.StartedRemoteJupyterSessionWithBackingFile
-/* __GDPR__
-   "DS_INTERNAL.JUPYTER_STARTED_SESSION_WITH_BACKING_FILE" : {
-     "failedWithoutBackingFile": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Failed to start the session without the backing file.","owner":"donjayamanne"},
-     "failedWithBackingFile": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Failed to start the session without the backing file.","owner":"donjayamanne"},
-     "localHost": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this is a local host connection or remote.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ZMQSupport
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_ZMQ_SUPPORT" : {

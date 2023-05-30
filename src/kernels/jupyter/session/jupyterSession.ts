@@ -1,32 +1,33 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { ContentsManager, Session, SessionManager } from '@jupyterlab/services';
+import * as urlPath from '../../../platform/vscode-path/resources';
+import type { Session, SessionManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
-import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
-import { Resource, IOutputChannel, IDisplayOptions, ReadWrite } from '../../../platform/common/types';
+import { traceVerbose, traceError, traceWarning, traceInfo } from '../../../platform/logging';
+import { Resource, IDisplayOptions, ReadWrite } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
-import { getNameOfKernelConnection } from '../../helpers';
+import { getNameOfKernelConnection, jvscIdentifier } from '../../helpers';
 import {
     KernelConnectionMetadata,
     isLocalConnection,
     IJupyterConnection,
     ISessionWithSocket,
     KernelActionSource,
-    IJupyterKernelSession
+    IJupyterKernelSession,
+    isRemoteConnection
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
-import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
+import { IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { CancellationError, Uri } from 'vscode';
-import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
 import * as path from '../../../platform/vscode-path/resources';
 
@@ -41,13 +42,10 @@ export class JupyterSession
         kernelConnectionMetadata: KernelConnectionMetadata,
         private nameOfDefaultKernelSpec: string | undefined,
         private sessionManager: SessionManager,
-        private contentsManager: ContentsManager,
-        private readonly outputChannel: IOutputChannel,
         override readonly workingDirectory: Uri,
         private readonly idleTimeout: number,
         private readonly kernelService: IJupyterKernelService | undefined,
         interruptTimeout: number,
-        private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly sessionCreator: KernelActionSource
     ) {
@@ -160,7 +158,7 @@ export class JupyterSession
         cancelToken: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
-        if (!session || !this.contentsManager || !this.sessionManager) {
+        if (!session || !this.sessionManager) {
             throw new SessionDisposedError();
         }
         let result: ISessionWithSocket | undefined;
@@ -207,51 +205,8 @@ export class JupyterSession
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
-        const telemetryInfo = {
-            failedWithoutBackingFile: false,
-            failedWithBackingFile: false,
-            localHost: this.connection.localLaunch
-        };
-
-        try {
-            return await this.createSessionImpl({ ...options, createBakingFile: false });
-        } catch (ex) {
-            traceWarning(`Failed to create a session without a backing file, trying again with a backing file`, ex);
-            try {
-                telemetryInfo.failedWithoutBackingFile = true;
-                return await this.createSessionImpl({
-                    ...options,
-                    createBakingFile: true
-                });
-            } catch (ex) {
-                telemetryInfo.failedWithBackingFile = true;
-                throw ex;
-            }
-        } finally {
-            sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
-        }
-    }
-
-    private async createSessionImpl(options: {
-        token: CancellationToken;
-        ui: IDisplayOptions;
-        createBakingFile: boolean;
-    }): Promise<ISessionWithSocket> {
         const remoteSessionOptions = getRemoteSessionOptions(this.connection, this.resource);
-        let backingFile: IBackupFile | undefined;
         let sessionPath = remoteSessionOptions?.path;
-
-        if (!sessionPath && options.createBakingFile) {
-            // Create our backing file for the notebook
-            backingFile = await this.backingFileCreator.createBackingFile(
-                this.resource,
-                this.workingDirectory,
-                this.kernelConnectionMetadata,
-                this.connection,
-                this.contentsManager
-            );
-            sessionPath = backingFile?.filePath;
-        }
 
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (
@@ -260,28 +215,19 @@ export class JupyterSession
             this.kernelService
         ) {
             // Make sure the kernel actually exists and is up to date.
-            try {
-                await this.kernelService.ensureKernelIsUsable(
-                    this.resource,
-                    this.kernelConnectionMetadata,
-                    options.ui,
-                    options.token,
-                    this.sessionCreator === '3rdPartyExtension'
-                );
-            } catch (ex) {
-                // If we failed to create the kernel, we need to clean up the file.
-                if (this.connection && backingFile) {
-                    this.contentsManager.delete(backingFile.filePath).catch(noop);
-                }
-                throw ex;
-            }
+            await this.kernelService.ensureKernelIsUsable(
+                this.resource,
+                this.kernelConnectionMetadata,
+                options.ui,
+                options.token,
+                this.sessionCreator === '3rdPartyExtension'
+            );
         }
 
         // If kernelName is empty this can cause problems for servers that don't
         // understand that empty kernel name means the default kernel.
         // See https://github.com/microsoft/vscode-jupyter/issues/5290
-        const kernelName =
-            getNameOfKernelConnection(this.kernelConnectionMetadata) ?? this.nameOfDefaultKernelSpec ?? '';
+        const kernelName = getNameOfKernelConnection(this.kernelConnectionMetadata, this.nameOfDefaultKernelSpec || '');
 
         // NOTE: If the path is a constant value such as `remoteFilePath` then Jupyter will alway re-use the same kernel sessions.
         // I.e. if we select Remote Kernel A for Notebook a.ipynb, then a session S1 will be created.
@@ -323,9 +269,9 @@ export class JupyterSession
                 })
                     .then(async (session) => {
                         if (session.kernel) {
-                            this.logRemoteOutput(
-                                DataScience.createdNewKernel(this.connection.baseUrl, session?.kernel?.id || '')
-                            );
+                            if (isRemoteConnection(this.kernelConnectionMetadata)) {
+                                traceInfo(DataScience.createdNewKernel(this.connection.baseUrl, session.kernel.id));
+                            }
                             const sessionWithSocket = session as ISessionWithSocket;
 
                             // Add on the kernel metadata & sock information
@@ -351,20 +297,9 @@ export class JupyterSession
                         }
                         throw new JupyterSessionStartError(new Error(`No kernel created`));
                     })
-                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
-                    .finally(async () => {
-                        if (this.connection && backingFile) {
-                            this.contentsManager.delete(backingFile.filePath).catch(noop);
-                        }
-                    }),
+                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),
             options.token
         );
-    }
-
-    private logRemoteOutput(output: string) {
-        if (!isLocalConnection(this.kernelConnectionMetadata)) {
-            this.outputChannel.appendLine(output);
-        }
     }
 }
 
@@ -392,4 +327,15 @@ export function getRemoteSessionOptions(
             name: sessionName
         };
     }
+}
+function getRemoteIPynbSuffix(): string {
+    return `${jvscIdentifier}${uuid()}`;
+}
+
+function generateBackingIPyNbFileName(resource: Resource) {
+    // Generate a more descriptive name
+    const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
+    return resource
+        ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
+        : `${DataScience.defaultNotebookName}${suffix}`;
 }

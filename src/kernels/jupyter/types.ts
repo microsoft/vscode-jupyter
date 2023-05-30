@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Session, ContentsManager, ServerConnection } from '@jupyterlab/services';
+import type { Session, ServerConnection } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
@@ -59,7 +59,6 @@ export interface IJupyterSessionManagerFactory {
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
-    readonly contentsManager: ContentsManager;
     readonly isDisposed: boolean;
     startNew(
         resource: Resource,
@@ -285,17 +284,6 @@ export interface IBackupFile {
     filePath: string;
 }
 
-export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');
-export interface IJupyterBackingFileCreator {
-    createBackingFile(
-        resource: Resource,
-        workingDirectory: Uri,
-        kernel: KernelConnectionMetadata,
-        connInfo: IJupyterConnection,
-        contentsManager: ContentsManager
-    ): Promise<IBackupFile | undefined>;
-}
-
 export const IJupyterKernelService = Symbol('IJupyterKernelService');
 export interface IJupyterKernelService {
     ensureKernelIsUsable(
@@ -315,11 +303,9 @@ export interface IJupyterRequestAgentCreator {
 
 export const IJupyterRequestCreator = Symbol('IJupyterRequestCreator');
 export interface IJupyterRequestCreator {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getRequestCtor(allowUnauthorized?: boolean, getAuthHeader?: () => Record<string, string>): ClassType<Request>;
-    getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+    getFetchMethod(): typeof fetch;
     getHeadersCtor(): ClassType<Headers>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getWebsocketCtor(
         allowUnauthorized?: boolean,
         getAuthHeaders?: () => Record<string, string>,

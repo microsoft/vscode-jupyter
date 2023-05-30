@@ -12,26 +12,13 @@ import type {
 import { JSONObject } from '@lumino/coreutils';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { traceError, traceVerbose } from '../../../platform/logging';
-import {
-    IConfigurationService,
-    IOutputChannel,
-    Resource,
-    IDisplayOptions,
-    IDisposable
-} from '../../../platform/common/types';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
+import { IConfigurationService, Resource, IDisplayOptions, IDisposable } from '../../../platform/common/types';
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import {
-    IJupyterSessionManager,
-    IJupyterKernel,
-    IJupyterKernelService,
-    IJupyterBackingFileCreator,
-    IJupyterRequestCreator
-} from '../types';
+import { IJupyterSessionManager, IJupyterKernel, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
@@ -43,7 +30,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private readonly sessionManager: SessionManager;
     private readonly specsManager: KernelSpecManager;
     private readonly kernelManager: KernelManager;
-    public readonly contentsManager: ContentsManager;
+    private readonly contentsManager: ContentsManager;
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private disposed?: boolean;
     public get isDisposed() {
@@ -57,10 +44,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return this._jupyterlab!;
     }
     constructor(
-        private outputChannel: IOutputChannel,
         private configService: IConfigurationService,
         private readonly kernelService: IJupyterKernelService | undefined,
-        private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly connection: IJupyterConnection,
         private readonly serverSettings: ServerConnection.ISettings
@@ -165,13 +150,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             kernelConnection,
             this.specsManager.specs?.default,
             this.sessionManager,
-            this.contentsManager,
-            this.outputChannel,
             workingDirectory,
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
             this.configService.getSettings(resource).jupyterInterruptTimeout,
-            this.backingFileCreator,
             this.requestCreator,
             creator
         );
@@ -186,9 +168,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
-        if (!this.sessionManager || !this.contentsManager) {
-            throw new SessionDisposedError();
-        }
         try {
             const stopWatch = new StopWatch();
             const specsManager = this.specsManager;

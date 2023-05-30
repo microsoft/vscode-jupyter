@@ -122,7 +122,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
         return JupyterWebSockets.get(id);
     }
 
-    public getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
+    public getFetchMethod(): typeof fetch {
         return nodeFetch.default as any;
     }
 

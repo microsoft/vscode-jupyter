@@ -6,7 +6,7 @@ import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 
 import { anything, instance, mock, when } from 'ts-mockito';
-import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.node';
+import { JupyterRequestCreator } from '../../kernels/jupyter/connection/jupyterRequestCreator.node';
 import {
     IJupyterRequestCreator,
     JupyterServerProviderHandle,
