@@ -12,7 +12,7 @@ import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../.
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
 import { computeHash } from '../../platform/common/crypto';
 
@@ -129,20 +129,23 @@ export async function computeServerId(serverHandle: JupyterServerProviderHandle)
 }
 
 const OLD_EXTENSION_ID_THAT_DID_NOT_HAVE_EXT_ID_IN_URL = ['ms-toolsai.jupyter', 'ms-toolsai.vscode-ai'];
+const REMOTE_URI = 'https://remote/';
+const REMOTE_URI_ID_PARAM = 'id';
+const REMOTE_URI_HANDLE_PARAM = 'uriHandle';
+const REMOTE_URI_EXTENSION_ID_PARAM = 'extensionId';
+
 export function jupyterServerHandleToString(serverHandle: JupyterServerProviderHandle) {
     if (OLD_EXTENSION_ID_THAT_DID_NOT_HAVE_EXT_ID_IN_URL.includes(serverHandle.extensionId)) {
         // Jupyter extension and AzML extension did not have extension id in the generated Id.
         // Hence lets not store them in the future as well, however
         // for all other extensions we will (it will only break the MRU for a few set of users using other extensions that contribute Jupyter servers via Jupyter extension).
-        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${serverHandle.id}&${
-            Identifiers.REMOTE_URI_HANDLE_PARAM
-        }=${encodeURI(serverHandle.handle)}`;
+        return `${REMOTE_URI}?${REMOTE_URI_ID_PARAM}=${serverHandle.id}&${REMOTE_URI_HANDLE_PARAM}=${encodeURI(
+            serverHandle.handle
+        )}`;
     }
-    return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${serverHandle.id}&${
-        Identifiers.REMOTE_URI_HANDLE_PARAM
-    }=${encodeURI(serverHandle.handle)}&${Identifiers.REMOTE_URI_EXTENSION_ID_PARAM}=${encodeURI(
-        serverHandle.extensionId
-    )}`;
+    return `${REMOTE_URI}?${REMOTE_URI_ID_PARAM}=${serverHandle.id}&${REMOTE_URI_HANDLE_PARAM}=${encodeURI(
+        serverHandle.handle
+    )}&${REMOTE_URI_EXTENSION_ID_PARAM}=${encodeURI(serverHandle.extensionId)}`;
 }
 
 export function jupyterServerHandleFromString(serverHandleId: string): JupyterServerProviderHandle {
@@ -150,9 +153,9 @@ export function jupyterServerHandleFromString(serverHandleId: string): JupyterSe
         const url: URL = new URL(serverHandleId);
 
         // Id has to be there too.
-        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM) || '';
-        const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-        let extensionId = url.searchParams.get(Identifiers.REMOTE_URI_EXTENSION_ID_PARAM);
+        const id = url.searchParams.get(REMOTE_URI_ID_PARAM) || '';
+        const uriHandle = url.searchParams.get(REMOTE_URI_HANDLE_PARAM);
+        let extensionId = url.searchParams.get(REMOTE_URI_EXTENSION_ID_PARAM);
         extensionId =
             extensionId ||
             // We know the extension ids for some of the providers.

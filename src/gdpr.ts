@@ -970,16 +970,6 @@
      ]
    }
  */
-//Telemetry.SetJupyterURIToUserSpecified
-/* __GDPR__
-   "DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED" : {
-     "azure": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the URI set to an Azure uri.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ShowDataViewer
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER" : {

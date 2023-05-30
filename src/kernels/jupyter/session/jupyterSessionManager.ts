@@ -20,7 +20,8 @@ import {
     IPersistentStateFactory,
     Resource,
     IDisplayOptions,
-    IDisposable
+    IDisposable,
+    ReadWrite
 } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
@@ -364,19 +365,23 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             serverSettings = { ...serverSettings, token: '' };
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo({
                 url: connInfo.baseUrl,
-                isTokenEmpty
+                isTokenEmpty,
+                serverHandle: connInfo.serverHandle
             });
             if (pwSettings && pwSettings.requestHeaders) {
                 requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
-                cookieString = (pwSettings.requestHeaders as any).Cookie || '';
+                cookieString = pwSettings.requestHeaders.Cookie || '';
 
                 // Password may have overwritten the base url and token as well
                 if (pwSettings.remappedBaseUrl) {
-                    (serverSettings as any).baseUrl = pwSettings.remappedBaseUrl;
-                    (serverSettings as any).wsUrl = pwSettings.remappedBaseUrl.replace('http', 'ws');
+                    (serverSettings as ReadWrite<typeof serverSettings>).baseUrl = pwSettings.remappedBaseUrl;
+                    (serverSettings as ReadWrite<typeof serverSettings>).wsUrl = pwSettings.remappedBaseUrl.replace(
+                        'http',
+                        'ws'
+                    );
                 }
                 if (pwSettings.remappedToken) {
-                    (serverSettings as any).token = pwSettings.remappedToken;
+                    (serverSettings as ReadWrite<typeof serverSettings>).token = pwSettings.remappedToken;
                 }
             } else if (pwSettings) {
                 serverSettings = { ...serverSettings, token: '' };

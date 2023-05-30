@@ -32,6 +32,8 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from '../launcher/jupyterConnectionWaiter.node';
 import { noop } from '../../../test/core';
+import { IDataScienceErrorHandler } from '../../errors/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
@@ -39,6 +41,9 @@ suite('Jupyter Connection', async () => {
     let sessionManagerFactory: IJupyterSessionManagerFactory;
     let sessionManager: IJupyterSessionManager;
     let serverUriStorage: IJupyterServerUriStorage;
+    let errorHandler: IDataScienceErrorHandler;
+    let applicationShell: IApplicationShell;
+    let configService: IConfigurationService;
     const disposables: IDisposable[] = [];
     const provider = {
         extensionId: 'ext',
@@ -55,10 +60,16 @@ suite('Jupyter Connection', async () => {
         sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
         sessionManager = mock<IJupyterSessionManager>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
+        errorHandler = mock<IDataScienceErrorHandler>();
+        applicationShell = mock<IApplicationShell>();
+        configService = mock<IConfigurationService>();
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
             instance(sessionManagerFactory),
-            instance(serverUriStorage)
+            instance(serverUriStorage),
+            instance(errorHandler),
+            instance(applicationShell),
+            instance(configService)
         );
 
         (instance(sessionManager) as any).then = undefined;
@@ -77,7 +88,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
 
-        await jupyterConnection.validateRemoteUri(provider, server);
+        await jupyterConnection.validateJupyterServer(provider, server);
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
@@ -90,7 +101,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.getRunningKernels()).thenResolve([]);
         when(registrationPicker.getJupyterServerUri(provider)).thenResolve(server);
 
-        await jupyterConnection.validateRemoteUri(provider);
+        await jupyterConnection.validateJupyterServer(provider);
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
@@ -103,7 +114,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.getRunningKernels()).thenResolve([]);
         when(registrationPicker.getJupyterServerUri(anything())).thenReject(new Error('kaboom'));
 
-        await assert.isRejected(jupyterConnection.validateRemoteUri(provider));
+        await assert.isRejected(jupyterConnection.validateJupyterServer(provider));
 
         verify(sessionManager.getKernelSpecs()).never();
         verify(sessionManager.getRunningKernels()).never();
@@ -115,7 +126,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenReject(new Error('Kaboom kernels failure'));
 
-        await assert.isRejected(jupyterConnection.validateRemoteUri(provider, server), 'Kaboom kernels failure');
+        await assert.isRejected(jupyterConnection.validateJupyterServer(provider, server), 'Kaboom kernels failure');
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();
@@ -126,7 +137,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
         when(sessionManager.getRunningKernels()).thenResolve([]);
 
-        await assert.isRejected(jupyterConnection.validateRemoteUri(provider, server), 'Kaboom kernelspec failure');
+        await assert.isRejected(jupyterConnection.validateJupyterServer(provider, server), 'Kaboom kernelspec failure');
 
         verify(sessionManager.getKernelSpecs()).once();
         verify(sessionManager.getRunningKernels()).once();

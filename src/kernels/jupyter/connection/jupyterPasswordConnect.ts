@@ -419,10 +419,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         // Try once and see if it fails with unauthorized.
         try {
-            return await this.requestCreator.getFetchMethod()(
-                url,
-                this.addAllowUnauthorized(url, allowUnauthorized ? true : false, options)
-            );
+            const requestInit = this.addAllowUnauthorized(url, allowUnauthorized ? true : false, options);
+            const result = await this.requestCreator.getFetchMethod()(url, requestInit);
+            return result;
         } catch (e) {
             if (e.message.indexOf('reason: self signed certificate') >= 0) {
                 // Ask user to change setting and possibly try again.

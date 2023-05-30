@@ -54,7 +54,7 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
 }
 
 export interface IJupyterPasswordConnectInfo {
-    requestHeaders?: HeadersInit;
+    requestHeaders?: Record<string, string>;
     remappedBaseUrl?: string;
     remappedToken?: string;
 }
@@ -64,6 +64,7 @@ export interface IJupyterPasswordConnect {
     getPasswordConnectionInfo(options: {
         url: string;
         isTokenEmpty: boolean;
+        serverHandle: JupyterServerProviderHandle;
     }): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 

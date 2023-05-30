@@ -33,15 +33,7 @@ export namespace HelpLinks {
 }
 
 export namespace Settings {
-    export const JupyterServerLocalLaunch = 'local';
-    export const JupyterServerRemoteLaunch = 'remote';
-    export const JupyterServerUriList = 'jupyter.jupyterServer.uriList';
-    export const JupyterServerRemoteLaunchUriListKey = 'remote-uri-list';
     export const JupyterServerRemoteLaunchUriSeparator = '\r';
-    export const JupyterServerRemoteLaunchNameSeparator = '\n';
-    export const JupyterServerRemoteLaunchUriEqualsDisplayName = 'same';
-    export const JupyterServerRemoteLaunchService = JVSC_EXTENSION_ID;
-    export const JupyterServerUriListMax = 10;
     // If this timeout expires, ignore the completion request sent to Jupyter.
     export const IntellisenseTimeout = 2000;
 }
@@ -86,10 +78,6 @@ export namespace Identifiers {
     export const PYTHON_VARIABLES_REQUESTER = 'PYTHON_VARIABLES_REQUESTER';
     export const MULTIPLEXING_DEBUGSERVICE = 'MULTIPLEXING_DEBUGSERVICE';
     export const RUN_BY_LINE_DEBUGSERVICE = 'RUN_BY_LINE_DEBUGSERVICE';
-    export const REMOTE_URI = 'https://remote/';
-    export const REMOTE_URI_ID_PARAM = 'id';
-    export const REMOTE_URI_HANDLE_PARAM = 'uriHandle';
-    export const REMOTE_URI_EXTENSION_ID_PARAM = 'extensionId';
 }
 
 export namespace CodeSnippets {

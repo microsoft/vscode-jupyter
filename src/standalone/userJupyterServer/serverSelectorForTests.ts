@@ -51,6 +51,10 @@ export class JupyterServerSelectorForTests
     }
     private async selectJupyterUri(source: Uri): Promise<void> {
         traceInfo(`Setting Jupyter Server URI to remote: ${source}`);
+        if (Array.from(this.handleMappings.values()).some((item) => item.uri.toString() === source.toString())) {
+            this._onDidChangeHandles.fire();
+            return;
+        }
         const uri = source.toString(true);
         const url = new URL(uri);
         const baseUrl = `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;

@@ -166,7 +166,7 @@ suite('JupyterPasswordConnect', () => {
         assert(result, 'Failed to get password');
         if (result) {
             // eslint-disable-next-line
-            assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
+            assert.ok(result.requestHeaders?.Cookie, 'No cookie');
         }
 
         // Verfiy calls
@@ -224,7 +224,7 @@ suite('JupyterPasswordConnect', () => {
         assert(result, 'Failed to get password');
         if (result) {
             // eslint-disable-next-line
-            assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
+            assert.ok(result.requestHeaders?.Cookie, 'No cookie');
         }
 
         // Verfiy calls
@@ -277,7 +277,7 @@ suite('JupyterPasswordConnect', () => {
         assert(result, 'Failed to get password');
         if (result) {
             // eslint-disable-next-line
-            assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
+            assert.ok(result.requestHeaders?.Cookie, 'No cookie');
         }
 
         // Verfiy calls

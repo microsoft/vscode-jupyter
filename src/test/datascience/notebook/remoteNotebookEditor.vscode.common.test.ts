@@ -4,10 +4,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, CompletionList, Memento, Position, Uri, window } from 'vscode';
-import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { commands, CompletionList, Position, Uri, window } from 'vscode';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
+import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, initialize, startJupyterServer, waitForCondition } from '../../common';
 import { closeActiveWindows } from '../../initialize';
 import {
@@ -25,13 +25,14 @@ import {
     defaultNotebookTestTimeout
 } from './helper';
 import { openNotebook } from '../helpers';
-import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { ControllerDefaultService } from './controllerDefaultService';
+import { IFileSystem } from '../../../platform/common/platform/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Remote Execution @kernelCore', function () {
@@ -41,10 +42,10 @@ suite('Remote Execution @kernelCore', function () {
     let vscodeNotebook: IVSCodeNotebook;
     let ipynbFile: Uri;
     let serviceContainer: IServiceContainer;
-    let globalMemento: Memento;
-    let encryptedStorage: IEncryptedStorage;
+    let fs: IFileSystem;
     let controllerRegistration: IControllerRegistration;
     let controllerDefault: ControllerDefaultService;
+    let storageFile: Uri;
 
     suiteSetup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
@@ -54,10 +55,13 @@ suite('Remote Execution @kernelCore', function () {
         api = await initialize();
         await startJupyterServer();
         sinon.restore();
+        storageFile = Uri.joinPath(
+            api.serviceContainer.get<IExtensionContext>(IExtensionContext).globalStorageUri,
+            'remoteServersMRUList.json'
+        );
         serviceContainer = api.serviceContainer;
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        encryptedStorage = api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage);
-        globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+        fs = api.serviceContainer.get<IFileSystem>(IFileSystem);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         controllerDefault = ControllerDefaultService.create(api.serviceContainer);
     });
@@ -100,8 +104,11 @@ suite('Remote Execution @kernelCore', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('MRU and encrypted storage should be updated with remote Uri info', async function () {
-        const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
-        const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
+        const previousContents = await fs
+            .readFile(storageFile)
+            .then((b) => JSON.parse(b.toString()))
+            .catch(() => []);
+        const fsWriteSpy = sinon.spy(fs, 'writeFile');
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
@@ -109,19 +116,20 @@ suite('Remote Execution @kernelCore', function () {
         const cell = editor.notebook.cellAt(0)!;
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
-        // Wait for MRU to get updated & encrypted storage to get updated.
-        await waitForCondition(async () => encryptedStorageSpiedStore.called, 5_000, 'Encrypted storage not updated');
+        // Wait for MRU to get updated
+        await waitForCondition(async () => fsWriteSpy.called, 5_000, 'Storage not updated');
+        let newContents: unknown[];
         await waitForCondition(
             async () => {
-                const newList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
-                assert.notDeepEqual(previousList, newList, 'MRU not updated');
+                newContents = await fs
+                    .readFile(storageFile)
+                    .then((b) => JSON.parse(b.toString()))
+                    .catch(() => []);
+                assert.notDeepEqual(newContents, previousContents, 'MRU not updated');
                 return true;
             },
             5_000,
-            () =>
-                `MRU not updated, previously ${JSON.stringify(previousList)}, now ${JSON.stringify(
-                    globalMemento.get<{}[]>(Settings.JupyterServerUriList, [])
-                )}`
+            () => `MRU not updated, previously ${JSON.stringify(previousContents)}, now ${JSON.stringify(newContents)}`
         );
     });
     test('Use same kernel when re-opening notebook', async function () {
