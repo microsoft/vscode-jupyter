@@ -1131,15 +1131,6 @@
      ]
    }
  */
-//Telemetry.ConnectRemoteJupyterViaLocalHost
-/* __GDPR__
-   "DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ConnectRemoteSelfCertFailedJupyter
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER" : {

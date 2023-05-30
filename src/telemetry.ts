@@ -739,15 +739,6 @@ export class IEventNamePropertyMapping {
         properties: commonClassificationForErrorProperties()
     };
     /**
-     * Connecting to an existing Jupyter server, but connecting to localhost.
-     */
-    [Telemetry.ConnectRemoteJupyterViaLocalHost]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
      * Sent when we fail to connect to a remote jupyter server.
      */
     [Telemetry.ConnectRemoteFailedJupyter]: TelemetryEventInfo<TelemetryErrorProperties> = {
