@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Session, ContentsManager } from '@jupyterlab/services';
+import type { Session, ContentsManager, ServerConnection } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
@@ -53,24 +53,9 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
     refreshCommands(): Promise<void>;
 }
 
-export interface IJupyterPasswordConnectInfo {
-    requestHeaders?: Record<string, string>;
-    remappedBaseUrl?: string;
-    remappedToken?: string;
-}
-
-export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
-export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(options: {
-        url: string;
-        isTokenEmpty: boolean;
-        serverHandle: JupyterServerProviderHandle;
-    }): Promise<IJupyterPasswordConnectInfo | undefined>;
-}
-
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
-    create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
+    create(connInfo: IJupyterConnection, settings: ServerConnection.ISettings): IJupyterSessionManager;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
@@ -242,6 +227,12 @@ export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegist
 
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
+    /**
+     * Calling `getJupyterServerUri` just to get the display name could have unnecessary side effects.
+     * E.g. we could end up connecting to a remote server or prompting for username/password, etc.
+     * This will just return the display name if we have one, or if previously cached.
+     */
+    getDisplayName(serverHandle: JupyterServerProviderHandle): Promise<string>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
     getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
     registerProvider(picker: IJupyterUriProvider): IDisposable;
@@ -324,16 +315,15 @@ export interface IJupyterRequestAgentCreator {
 export const IJupyterRequestCreator = Symbol('IJupyterRequestCreator');
 export interface IJupyterRequestCreator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getRequestCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeader?: () => any): ClassType<Request>;
+    getRequestCtor(allowUnauthorized?: boolean, getAuthHeader?: () => Record<string, string>): ClassType<Request>;
     getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     getHeadersCtor(): ClassType<Headers>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getWebsocketCtor(
-        cookieString?: string,
         allowUnauthorized?: boolean,
         getAuthHeaders?: () => Record<string, string>,
         getWebSocketProtocols?: () => string | string[] | undefined
-    ): ClassType<WebSocket>;
+    ): typeof WebSocket;
     getWebsocket(id: string): IKernelSocket | undefined;
     getRequestInit(): RequestInit;
 }

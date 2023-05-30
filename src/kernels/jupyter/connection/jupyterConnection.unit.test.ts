@@ -9,6 +9,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { JupyterConnection } from './jupyterConnection';
 import {
+    IJupyterRequestCreator,
     IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
@@ -17,7 +18,12 @@ import {
     JupyterServerInfo
 } from '../types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IConfigurationService, IDisposable, IJupyterSettings } from '../../../platform/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IJupyterSettings,
+    IWatchableJupyterSettings
+} from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import events from 'events';
 import { Subject } from 'rxjs/Subject';
@@ -55,6 +61,8 @@ suite('Jupyter Connection', async () => {
         displayName: 'someDisplayName',
         token: '1234'
     };
+    let requestCreator: IJupyterRequestCreator;
+
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
         sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
@@ -63,17 +71,22 @@ suite('Jupyter Connection', async () => {
         errorHandler = mock<IDataScienceErrorHandler>();
         applicationShell = mock<IApplicationShell>();
         configService = mock<IConfigurationService>();
+        const settings = mock<IWatchableJupyterSettings>();
+        when(configService.getSettings(anything())).thenReturn(instance(settings));
+        requestCreator = mock<IJupyterRequestCreator>();
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
             instance(sessionManagerFactory),
             instance(serverUriStorage),
             instance(errorHandler),
             instance(applicationShell),
-            instance(configService)
+            instance(configService),
+            instance(requestCreator),
+            undefined
         );
 
         (instance(sessionManager) as any).then = undefined;
-        when(sessionManagerFactory.create(anything(), anything())).thenResolve(instance(sessionManager));
+        when(sessionManagerFactory.create(anything(), anything())).thenReturn(instance(sessionManager));
         const serverConnectionChangeEvent = new EventEmitter<void>();
         disposables.push(serverConnectionChangeEvent);
 

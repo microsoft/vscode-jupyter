@@ -48,8 +48,11 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     public get onDidAdd() {
         return this._onDidAddUri.event;
     }
+    private pendingUpdate = Promise.resolve();
     private readonly migration: MigrateOldMRU;
     private readonly storageFile: Uri;
+    private previousGetAll?: Promise<IJupyterServerUriEntry[]>;
+
     constructor(
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
@@ -65,7 +68,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.disposables.push(this._onDidChangeUri);
         this.disposables.push(this._onDidRemoveUris);
         this._onDidRemoveUris.event(
-            (e) => this.removeHandles(e.map((item) => item.serverHandle)),
+            (e) => this.onDidRemoveHandles(e.map((item) => item.serverHandle)),
             this,
             this.disposables
         );
@@ -80,63 +83,51 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     }
     public async remove(serverHandle: JupyterServerProviderHandle) {
         await this.migration.migrateMRU();
-        const uriList = await this.getAll();
-        const serverHandleId = jupyterServerHandleToString(serverHandle);
-        const newList = uriList.filter((f) => jupyterServerHandleToString(f.serverHandle) !== serverHandleId);
-        const removedItem = uriList.find((f) => jupyterServerHandleToString(f.serverHandle) === serverHandleId);
-        if (removedItem) {
-            await this.updateStore(
-                newList.map(
-                    (item) =>
-                        <StorageMRUItem>{
-                            displayName: item.displayName,
-                            time: item.time,
-                            serverHandle: item.serverHandle
-                        }
-                )
-            );
-            this._onDidRemoveUris.fire([removedItem]);
-            this._onDidChangeUri.fire();
-        }
+        await this.updateStore({ remove: serverHandle });
     }
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
-        await this.migration.migrateMRU();
-        let items: StorageMRUItem[] = [];
-        if (await this.fs.exists(this.storageFile)) {
-            items = JSON.parse(await this.fs.readFile(this.storageFile)) as StorageMRUItem[];
-        } else {
-            return [];
+        if (this.previousGetAll) {
+            return this.previousGetAll;
         }
-        const result = await Promise.all(
-            items.map(async (item) => {
-                // This can fail if the URI is invalid
-                const server: IJupyterServerUriEntry = {
-                    time: item.time,
-                    displayName: item.displayName,
-                    isValidated: true,
-                    serverHandle: item.serverHandle
-                };
+        this.previousGetAll = (async () => {
+            await this.migration.migrateMRU();
+            let items: StorageMRUItem[] = [];
+            if (await this.fs.exists(this.storageFile)) {
+                items = JSON.parse(await this.fs.readFile(this.storageFile)) as StorageMRUItem[];
+            } else {
+                return [];
+            }
+            const result = await Promise.all(
+                items.map(async (item) => {
+                    // This can fail if the URI is invalid
+                    const server: IJupyterServerUriEntry = {
+                        time: item.time,
+                        displayName: item.displayName,
+                        isValidated: true,
+                        serverHandle: item.serverHandle
+                    };
 
-                try {
-                    const info = await this.jupyterPickerRegistration.getJupyterServerUri(item.serverHandle);
-                    server.displayName = info.displayName || server.displayName || new URL(info.baseUrl).hostname;
-                    return server;
-                } catch (ex) {
-                    server.isValidated = false;
-                    return server;
-                }
-            })
-        );
+                    try {
+                        const displayName = await this.jupyterPickerRegistration.getDisplayName(item.serverHandle);
+                        server.displayName = displayName || server.displayName || item.displayName;
+                        return server;
+                    } catch (ex) {
+                        server.isValidated = false;
+                        return server;
+                    }
+                })
+            );
 
-        traceVerbose(`Found ${result.length} saved URIs, ${JSON.stringify(result)}`);
-        return result;
+            traceVerbose(`Found ${result.length} saved URIs, ${JSON.stringify(result)}`);
+            return result;
+        })();
+        // Once we're done with the promise, remove the cache.
+        // We don't want to cache, but we want to reduce multiple concurrent calls to `getAll` to a single call.
+        this.previousGetAll.finally(() => (this.previousGetAll = undefined));
+        return this.previousGetAll;
     }
     public async clear(): Promise<void> {
-        const uriList = await this.getAll();
-        await this.updateStore([]);
-        // Notify out that we've removed the list to clean up controller entries, passwords, ect
-        this._onDidRemoveUris.fire(uriList);
-        this._onDidChangeUri.fire();
+        await this.updateStore({ clearAll: true });
     }
     public async get(serverHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined> {
         await this.migration.migrateMRU();
@@ -147,33 +138,8 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     public async add(serverHandle: JupyterServerProviderHandle): Promise<void> {
         await this.migration.migrateMRU();
         traceInfoIfCI(`setUri: ${serverHandle.id}.${serverHandle.handle}`);
-        const server = await this.jupyterPickerRegistration.getJupyterServerUri(serverHandle);
-        let uriList = await this.getAll();
-        const id = jupyterServerHandleToString(serverHandle);
-        const storageItems = uriList
-            .filter((item) => jupyterServerHandleToString(item.serverHandle) !== id)
-            .map(
-                (item) =>
-                    <StorageMRUItem>{
-                        displayName: item.displayName,
-                        serverHandle: item.serverHandle,
-                        time: item.time
-                    }
-            );
-        const entry: IJupyterServerUriEntry = {
-            serverHandle,
-            time: Date.now(),
-            displayName: server.displayName,
-            isValidated: true
-        };
-        storageItems.push({
-            serverHandle,
-            time: entry.time,
-            displayName: server.displayName
-        });
-        await this.updateStore(storageItems);
-        this._onDidChangeUri.fire();
-        this._onDidAddUri.fire(entry);
+        const displayName = await this.jupyterPickerRegistration.getDisplayName(serverHandle);
+        await this.updateStore({ add: { serverHandle, time: Date.now(), displayName } });
     }
     /**
      * If we're no longer in a handle, then notify the jupyter uri providers as well.
@@ -181,7 +147,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
      * E.g. in the case of User userServerUriProvider.ts, we need to clear the old server list
      * if the corresponding entry is removed from MRU.
      */
-    private async removeHandles(serverHandles: JupyterServerProviderHandle[]) {
+    private async onDidRemoveHandles(serverHandles: JupyterServerProviderHandle[]) {
         for (const handle of serverHandles) {
             try {
                 const provider = await this.jupyterPickerRegistration.getProvider(handle.id);
@@ -193,28 +159,88 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
             }
         }
     }
-    private async updateStore(items: StorageMRUItem[]) {
-        const itemsToSave = items.slice(0, MAX_MRU_COUNT - 1);
-        const itemsToRemove = items.slice(MAX_MRU_COUNT);
-        const dir = path.dirname(this.storageFile);
-        if (!(await this.fs.exists(dir))) {
-            await this.fs.createDirectory(dir);
-        }
-        await this.fs.writeFile(this.storageFile, JSON.stringify(itemsToSave));
+    private async updateStore(
+        options: { add: StorageMRUItem } | { remove: JupyterServerProviderHandle } | { clearAll: true }
+    ) {
+        this.pendingUpdate = this.pendingUpdate
+            .catch((ex) => traceError('Error in updating MRU', ex))
+            .finally(async () => {
+                const dir = path.dirname(this.storageFile);
+                if (!(await this.fs.exists(dir))) {
+                    await this.fs.createDirectory(dir);
+                }
+                const uriList = await this.getAll();
+                let items = uriList.map(
+                    (item) =>
+                        <StorageMRUItem>{
+                            displayName: item.displayName,
+                            serverHandle: item.serverHandle,
+                            time: item.time
+                        }
+                );
 
-        // This is required so the individual publishers of JupyterUris can clean up their state
-        // I.e. they need to know that these handles are no longer saved in MRU, so they too can clean their state.
-        this._onDidRemoveUris.fire(
-            itemsToRemove.map(
-                (item) =>
-                    <IJupyterServerUriEntry>{
-                        serverHandle: item.serverHandle,
-                        time: item.time,
-                        displayName: item.displayName,
-                        isValidated: false
+                if ('clearAll' in options) {
+                    await this.fs.writeFile(this.storageFile, JSON.stringify([]));
+
+                    // This is required so the individual publishers of JupyterUris can clean up their state
+                    // I.e. they need to know that these handles are no longer saved in MRU, so they too can clean their state.
+                    this._onDidRemoveUris.fire(uriList);
+                    this._onDidChangeUri.fire();
+                    return;
+                }
+                let entryToRemove: IJupyterServerUriEntry | undefined;
+                if ('add' in options) {
+                    // Ensure we don't have duplicates.
+                    const id = jupyterServerHandleToString(options.add.serverHandle);
+                    items = items.filter((item) => jupyterServerHandleToString(item.serverHandle) !== id);
+                    items.push(options.add);
+                } else {
+                    // Remove them
+                    const id = jupyterServerHandleToString(options.remove);
+                    items = items.filter((item) => jupyterServerHandleToString(item.serverHandle) !== id);
+                    entryToRemove = uriList.find((item) => jupyterServerHandleToString(item.serverHandle) === id);
+                    if (!entryToRemove) {
+                        // Not found, nothing to remove
+                        return;
                     }
-            )
-        );
+                }
+                const itemsToSave = items.slice(0, MAX_MRU_COUNT - 1);
+                const itemsToRemove = items.slice(MAX_MRU_COUNT);
+                if (!(await this.fs.exists(dir))) {
+                    await this.fs.createDirectory(dir);
+                }
+                await this.fs.writeFile(this.storageFile, JSON.stringify(itemsToSave));
+
+                if (itemsToRemove.length) {
+                    // This is required so the individual publishers of JupyterUris can clean up their state
+                    // I.e. they need to know that these handles are no longer saved in MRU, so they too can clean their state.
+                    this._onDidRemoveUris.fire(
+                        itemsToRemove.map(
+                            (item) =>
+                                <IJupyterServerUriEntry>{
+                                    serverHandle: item.serverHandle,
+                                    time: item.time,
+                                    displayName: item.displayName,
+                                    isValidated: false
+                                }
+                        )
+                    );
+                }
+
+                this._onDidChangeUri.fire();
+
+                if ('add' in options) {
+                    this._onDidAddUri.fire({
+                        serverHandle: options.add.serverHandle,
+                        time: options.add.time,
+                        displayName: options.add.displayName,
+                        isValidated: true
+                    });
+                } else if (entryToRemove) {
+                    this._onDidRemoveUris.fire([entryToRemove]);
+                }
+            });
+        await this.pendingUpdate;
     }
 }
 

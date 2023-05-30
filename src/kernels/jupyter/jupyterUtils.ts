@@ -2,18 +2,15 @@
 // Licensed under the MIT License.
 
 import * as path from '../../platform/vscode-path/path';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { noop } from '../../platform/common/utils/misc';
-import { IJupyterConnection } from '../types';
-import { IJupyterServerUri, JupyterServerProviderHandle } from './types';
-import { getJupyterConnectionDisplayName, isBuiltInJupyterServerProvider } from './helpers';
+import { JupyterServerProviderHandle } from './types';
+import { isBuiltInJupyterServerProvider } from './helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
-import { traceError } from '../../platform/logging';
 import { computeHash } from '../../platform/common/crypto';
 
 export function expandWorkingDir(
@@ -89,40 +86,6 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export function createRemoteConnectionInfo(
-    serverHandle: JupyterServerProviderHandle,
-    serverUri: IJupyterServerUri
-): IJupyterConnection {
-    const baseUrl = serverUri.baseUrl;
-    const token = serverUri.token;
-    const hostName = new URL(serverUri.baseUrl).hostname;
-    const webSocketProtocols = (serverUri?.webSocketProtocols || []).length ? serverUri?.webSocketProtocols || [] : [];
-    const authHeader =
-        serverUri.authorizationHeader && Object.keys(serverUri?.authorizationHeader ?? {}).length > 0
-            ? serverUri.authorizationHeader
-            : undefined;
-    return {
-        baseUrl,
-        serverHandle,
-        token,
-        hostName,
-        localLaunch: false,
-        displayName:
-            serverUri && serverUri.displayName
-                ? serverUri.displayName
-                : getJupyterConnectionDisplayName(token, baseUrl),
-        dispose: noop,
-        rootDirectory: Uri.file(''),
-        // Temporarily support workingDirectory as a fallback for old extensions using that (to be removed in the next release).
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mappedRemoteNotebookDir: serverUri?.mappedRemoteNotebookDir || (serverUri as any)?.workingDirectory,
-        // For remote jupyter servers that are managed by us, we can provide the auth header.
-        // Its crucial this is set to undefined, else password retrieval will not be attempted.
-        getAuthHeader: authHeader ? () => authHeader : undefined,
-        getWebsocketProtocols: webSocketProtocols ? () => webSocketProtocols : () => []
-    };
-}
-
 export async function computeServerId(serverHandle: JupyterServerProviderHandle) {
     const uri = jupyterServerHandleToString(serverHandle);
     return computeHash(uri, 'SHA-256');
@@ -170,7 +133,6 @@ export function jupyterServerHandleFromString(serverHandleId: string): JupyterSe
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
-        traceError('Failed to parse remote URI', serverHandleId, ex);
         throw new Error(`'Failed to parse remote URI ${serverHandleId}`);
     }
 }

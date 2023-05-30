@@ -31,15 +31,15 @@ import {
     IMemento,
     IsWebExtension
 } from '../../platform/common/types';
-import { DataScience } from '../../platform/common/utils/localize';
+import { Common, DataScience } from '../../platform/common/utils/localize';
 import { traceError, traceWarning } from '../../platform/logging';
-import { JupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
+import { JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { jupyterServerHandleFromString } from '../../kernels/jupyter/jupyterUtils';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { Disposables } from '../../platform/common/utils';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
-import { JupyterInvalidPasswordError } from '../../kernels/errors/jupyterInvalidPassword';
+import { IJupyterPasswordConnect } from './types';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
@@ -74,7 +74,8 @@ export class UserJupyterServerUrlProvider
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IJupyterPasswordConnect) private readonly passwordConnect: IJupyterPasswordConnect
     ) {
         super();
         disposables.push(this);
@@ -171,15 +172,6 @@ export class UserJupyterServerUrlProvider
                 input.onDidAccept(async () => {
                     // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
                     const uri = input.value.trim().replace(/\/(lab|tree)(\??)$/, '');
-                    try {
-                        new URL(uri);
-                    } catch (err) {
-                        if (inputWasHidden) {
-                            input.show();
-                        }
-                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
-                        return;
-                    }
                     const jupyterServerUri = parseUri(uri);
                     if (!jupyterServerUri) {
                         if (inputWasHidden) {
@@ -190,6 +182,31 @@ export class UserJupyterServerUrlProvider
                     }
 
                     const serverHandle = { extensionId: JVSC_EXTENSION_ID, handle: uuid(), id: this.id };
+                    const passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
+                        url: jupyterServerUri.baseUrl,
+                        isTokenEmpty: jupyterServerUri.token.length === 0,
+                        serverHandle
+                    });
+                    if (passwordResult.requestHeaders) {
+                        jupyterServerUri.authorizationHeader = passwordResult?.requestHeaders;
+                    }
+
+                    // If we do not have any auth header information & there is no token & no password, & this is HTTP then this is an insecure server
+                    // & we need to ask the user for consent to use this insecure server.
+                    if (
+                        !passwordResult.requiresPassword &&
+                        jupyterServerUri.token.length === 0 &&
+                        new URL(jupyterServerUri.baseUrl).protocol.toLowerCase() === 'http'
+                    ) {
+                        const proceed = await this.secureConnectionCheck();
+                        if (!proceed) {
+                            resolve(undefined);
+                            input.hide();
+                            return;
+                        }
+                    }
+
+                    //
                     let message = '';
                     try {
                         await this.jupyterConnection.validateJupyterServer(serverHandle, jupyterServerUri, true);
@@ -199,7 +216,7 @@ export class UserJupyterServerUrlProvider
                             message = DataScience.jupyterSelfCertFailErrorMessageOnly;
                         } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
                             message = DataScience.jupyterSelfCertExpiredErrorMessageOnly;
-                        } else if (err && err instanceof JupyterInvalidPasswordError) {
+                        } else if (passwordResult.requiresPassword && jupyterServerUri.token.length === 0) {
                             message = DataScience.passwordFailure;
                         } else {
                             // Return the general connection error to show in the validation box
@@ -258,9 +275,23 @@ export class UserJupyterServerUrlProvider
         if (!server) {
             throw new Error('Server not found');
         }
-        return server.serverInfo;
+        return this.getAuthHeaders(server.serverInfo, server.serverHandle);
     }
 
+    private async getAuthHeaders(
+        server: IJupyterServerUri,
+        serverHandle: JupyterServerProviderHandle
+    ): Promise<IJupyterServerUri> {
+        const passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
+            url: server.baseUrl,
+            isTokenEmpty: server.token.length === 0,
+            serverHandle,
+            displayName: server.displayName
+        });
+        return Object.assign({}, server, {
+            authorizationHeader: passwordResult.requestHeaders || server.authorizationHeader
+        });
+    }
     async getHandles(): Promise<string[]> {
         await this.loadUserEnteredUrls();
         return this._servers.map((s) => s.serverHandle.handle);
@@ -283,6 +314,16 @@ export class UserJupyterServerUrlProvider
         }
         await this.encryptedStorage.store(NewSecretStorageKey, JSON.stringify(this._servers));
         this._onDidChangeHandles.fire();
+    }
+
+    /**
+     * Check if our server connection is considered secure. If it is not, ask the user if they want to connect
+     */
+    private async secureConnectionCheck(): Promise<boolean> {
+        const insecureMessage = DataScience.insecureSessionMessage;
+        const insecureLabels = [Common.bannerLabelYes, Common.bannerLabelNo];
+        const response = await this.applicationShell.showWarningMessage(insecureMessage, ...insecureLabels);
+        return response === Common.bannerLabelYes;
     }
 }
 

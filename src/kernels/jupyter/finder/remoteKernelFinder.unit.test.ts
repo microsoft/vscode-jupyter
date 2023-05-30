@@ -139,7 +139,7 @@ suite(`Remote Kernel Finder`, () => {
         jupyterSessionManager = mock(JupyterSessionManager);
         when(jupyterSessionManager.dispose()).thenResolve();
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
-        when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
+        when(jupyterSessionManagerFactory.create(anything(), anything())).thenReturn(instance(jupyterSessionManager));
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         fs = mock(FileSystem);

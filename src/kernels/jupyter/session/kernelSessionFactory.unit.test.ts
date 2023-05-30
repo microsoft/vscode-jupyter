@@ -49,7 +49,7 @@ suite('NotebookProvider', () => {
             jupyterSessionManager.startNew(anything(), anything(), anything(), anything(), anything(), anything())
         ).thenResolve(instance(mockSession));
         const sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
-        when(sessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
+        when(sessionManagerFactory.create(anything(), anything())).thenReturn(instance(jupyterSessionManager));
         const jupyterConnection = mock<JupyterConnection>();
         when(jupyterConnection.createConnectionInfo(anything())).thenResolve({
             localLaunch: true,

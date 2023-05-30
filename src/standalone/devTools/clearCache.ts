@@ -1,22 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { commands } from 'vscode';
+import { commands, window, workspace } from 'vscode';
 import { IExtensionContext } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
+import { traceInfo } from '../../platform/logging';
 
 export function addClearCacheCommand(context: IExtensionContext, isDevMode: boolean) {
     if (!isDevMode) {
         return;
     }
-    commands.registerCommand('dataScience.ClearCache', () => {
-        // eslint-disable-next-line no-restricted-syntax
-        for (const key of context.globalState.keys()) {
-            context.globalState.update(key, undefined).then(noop, noop);
-        }
-        // eslint-disable-next-line no-restricted-syntax
-        for (const key of context.workspaceState.keys()) {
-            context.workspaceState.update(key, undefined).then(noop, noop);
-        }
+    commands.registerCommand('dataScience.ClearCache', async () => {
+        const promises: Thenable<unknown>[] = [];
+        context.globalState
+            .keys()
+            .forEach((k) => promises.push(context.globalState.update(k, undefined).then(noop, noop)));
+        context.workspaceState
+            .keys()
+            .forEach((k) => promises.push(context.workspaceState.update(k, undefined).then(noop, noop)));
+        promises.push(
+            workspace.fs.delete(context.globalStorageUri, { recursive: true, useTrash: false }).then(noop, noop)
+        );
+        await Promise.all(promises);
+
+        traceInfo('Cache cleared');
+        window.showInformationMessage('Cache cleared').then(noop, noop);
     });
 }

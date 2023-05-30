@@ -12,6 +12,7 @@ import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration
 import { IJupyterUriProvider, IJupyterServerUri } from '../types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IFileSystem } from '../../../platform/common/platform/types';
 
 class MockProvider implements IJupyterUriProvider {
     public get id() {
@@ -57,13 +58,22 @@ suite('URI Picker', () => {
         const extensionList: vscode.Extension<any>[] = [];
         const fileSystem = mock(FileSystem);
         const allStub = sinon.stub(Extensions.prototype, 'all');
+        const context = mock<vscode.ExtensionContext>();
+        when(context.globalStorageUri).thenReturn(vscode.Uri.file('globalDir'));
+        const fs = mock<IFileSystem>();
         allStub.callsFake(() => extensionList);
         const extensions = new Extensions(instance(fileSystem));
         when(fileSystem.exists(anything())).thenResolve(false);
         const memento = mock<vscode.Memento>();
         when(memento.get<string[]>(anything())).thenReturn([]);
         when(memento.get<string[]>(anything(), anything())).thenReturn([]);
-        registration = new JupyterUriProviderRegistration(extensions, disposables, instance(memento));
+        registration = new JupyterUriProviderRegistration(
+            extensions,
+            disposables,
+            instance(memento),
+            instance(context),
+            instance(fs)
+        );
         await Promise.all(
             providerIds.map(async (id) => {
                 const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();

@@ -19,12 +19,11 @@ import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupy
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
 import { JupyterConnection } from './connection/jupyterConnection';
-import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
+import { JupyterDetectionTelemetry } from './launcher/jupyterDetectionTelemetry.node';
 import { JupyterKernelService } from './session/jupyterKernelService.node';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector.node';
-import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { JupyterServerHelper } from './launcher/jupyterServerHelper.node';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector.node';
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.node';
@@ -37,7 +36,6 @@ import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
-    IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
     INbConvertInterpreterDependencyChecker,
     INbConvertExportToPythonService,
@@ -70,7 +68,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         MigrateJupyterInterpreterStateService
     );
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
-    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(
         IJupyterSessionManagerFactory,
         JupyterSessionManagerFactory
