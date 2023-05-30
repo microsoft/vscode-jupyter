@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ICommandManager } from '../../platform/common/application/types';
-import { Commands } from '../../platform/common/constants';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './types';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { ICommandManager } from '../../../platform/common/application/types';
+import { Commands } from '../../../platform/common/constants';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from '../types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { isBuiltInJupyterServerProvider } from '../helpers';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
@@ -26,7 +27,7 @@ export class ClearJupyterServersCommand implements IExtensionSyncActivationServi
                 async () => {
                     await this.serverUriStorage.clear();
                     const builtInProviders = (await this.registrations.getProviders()).filter((p) =>
-                        p.id.startsWith('_builtin')
+                        isBuiltInJupyterServerProvider(p.id)
                     );
 
                     await Promise.all(

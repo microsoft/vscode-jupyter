@@ -27,6 +27,7 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
             [
                 await this.getUriAccountKey(),
                 'currentServerHash',
+                'DataScienceAllowInsecureConnections',
                 'connectToLocalKernelsOnly',
                 'JUPYTER_LOCAL_KERNELSPECS',
                 'JUPYTER_LOCAL_KERNELSPECS_V1',

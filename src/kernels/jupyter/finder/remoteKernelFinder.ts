@@ -319,10 +319,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     // Talk to the remote server to determine sessions
-    public async listKernelsFromConnection(connInfo: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
+    public async listKernelsFromConnection(connection: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
         const disposables: IAsyncDisposable[] = [];
         try {
-            const sessionManager = await this.jupyterSessionManagerFactory.create(connInfo);
+            const sessionManager = this.jupyterSessionManagerFactory.create(
+                connection,
+                this.jupyterConnection.toServerConnectionSettings(connection)
+            );
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
@@ -338,8 +341,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     await sendKernelSpecTelemetry(s, 'remote');
                     return RemoteKernelSpecConnectionMetadata.create({
                         kernelSpec: s,
-                        baseUrl: connInfo.baseUrl,
-                        serverHandle: connInfo.serverHandle
+                        baseUrl: connection.baseUrl,
+                        serverHandle: connection.serverHandle
                     });
                 })
             );
@@ -366,8 +369,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                         numberOfConnections,
                         model: s
                     },
-                    baseUrl: connInfo.baseUrl,
-                    serverHandle: connInfo.serverHandle
+                    baseUrl: connection.baseUrl,
+                    serverHandle: connection.serverHandle
                 });
             });
 
@@ -375,7 +378,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
             return [...filtered, ...mappedSpecs];
         } catch (ex) {
-            traceError(`Error fetching kernels from ${connInfo.baseUrl} (${connInfo.displayName}):`, ex);
+            traceError(`Error fetching kernels from ${connection.baseUrl} (${connection.displayName}):`, ex);
             throw ex;
         } finally {
             await Promise.all(disposables.map((d) => d.dispose().catch(noop)));

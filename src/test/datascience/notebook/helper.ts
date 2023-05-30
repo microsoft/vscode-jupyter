@@ -348,7 +348,10 @@ async function shutdownRemoteKernels() {
                 await serverUriStorage.getAll()
             )[0].serverHandle
         );
-        const sessionManager = await jupyterSessionManagerFactory.create(connection);
+        const sessionManager = jupyterSessionManagerFactory.create(
+            connection,
+            jupyterConnection.toServerConnectionSettings(connection)
+        );
         const liveKernels = await sessionManager.getRunningKernels();
         await Promise.all(
             liveKernels.filter((item) => item.id).map((item) => KernelAPI.shutdownKernel(item.id!).catch(noop))

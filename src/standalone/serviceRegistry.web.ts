@@ -19,6 +19,8 @@ import { PythonExtensionRestartNotification } from './notification/pythonExtensi
 import { ImportTracker } from './import-export/importTracker';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorForTests } from './userJupyterServer/serverSelectorForTests';
+import { JupyterPasswordConnect } from './userJupyterServer/jupyterPasswordConnect';
+import { IJupyterPasswordConnect } from './userJupyterServer/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -66,4 +68,5 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         UserJupyterServerUrlProvider
     );
+    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
 }

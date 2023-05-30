@@ -10,7 +10,6 @@ import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterKernelService } from './session/jupyterKernelService.web';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
-import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { JupyterServerHelper } from './launcher/jupyterServerHelper.web';
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.web';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
@@ -20,7 +19,6 @@ import { BackingFileCreator } from './session/backingFileCreator.web';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import {
-    IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
@@ -38,7 +36,6 @@ import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFacto
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
-    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(
         IJupyterSessionManagerFactory,
         JupyterSessionManagerFactory

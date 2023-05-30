@@ -2,36 +2,31 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../../../platform/common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
-import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
-import { traceWarning } from '../../../platform/logging';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { CancellationError, ConfigurationTarget } from 'vscode';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { traceWarning } from '../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import {
-    IJupyterPasswordConnect,
-    IJupyterPasswordConnectInfo,
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
     IJupyterServerUriEntry,
     IJupyterServerUriStorage,
     JupyterServerProviderHandle
-} from '../types';
-import { Deferred, createDeferred } from '../../../platform/common/utils/async';
-import { jupyterServerHandleToString } from '../jupyterUtils';
+} from '../../kernels/jupyter/types';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
+import { jupyterServerHandleToString } from '../../kernels/jupyter/jupyterUtils';
+import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from './types';
 
 /**
  * Responsible for intercepting connections to a remote server and asking for a password if necessary
  */
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
-    private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo | undefined>>();
+    private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo>>();
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IJupyterRequestAgentCreator)
         @optional()
@@ -50,17 +45,15 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     public getPasswordConnectionInfo({
         url,
         isTokenEmpty,
-        serverHandle
+        serverHandle,
+        displayName
     }: {
         url: string;
         isTokenEmpty: boolean;
         serverHandle: JupyterServerProviderHandle;
-    }): Promise<IJupyterPasswordConnectInfo | undefined> {
+        displayName?: string;
+    }): Promise<IJupyterPasswordConnectInfo> {
         JupyterPasswordConnect._prompt = undefined;
-        if (!url || url.length < 1) {
-            return Promise.resolve(undefined);
-        }
-
         // Add on a trailing slash to our URL if it's not there already
         const newUrl = addTrailingSlash(url);
         const id = jupyterServerHandleToString(serverHandle);
@@ -68,10 +61,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         let result = this.savedConnectInfo.get(id);
         if (!result) {
             const deferred = (JupyterPasswordConnect._prompt = createDeferred());
-            result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty }).then((value) => {
-                // If we fail to get a valid password connect info, don't save the value
-                traceWarning(`Password for ${newUrl} was invalid.`);
+            result = this.getJupyterConnectionInfo({ url: newUrl, isTokenEmpty, displayName }).then((value) => {
                 if (!value) {
+                    // If we fail to get a valid password connect info, don't save the value
+                    traceWarning(`Password for ${newUrl} was invalid.`);
                     this.savedConnectInfo.delete(id);
                 }
 
@@ -83,182 +76,49 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                     JupyterPasswordConnect._prompt = undefined;
                 }
             });
+            result.catch(() => {
+                if (this.savedConnectInfo.get(id) === result) {
+                    this.savedConnectInfo.delete(id);
+                }
+            });
             this.savedConnectInfo.set(id, result);
         }
 
         return result;
     }
 
-    private async getNonCachedPasswordConnectionInfo(options: {
-        url: string;
-        isTokenEmpty: boolean;
-    }): Promise<IJupyterPasswordConnectInfo | undefined> {
-        // If jupyter hub, go down a special path of asking jupyter hub for a token
-        if (await this.isJupyterHub(options.url)) {
-            return this.getJupyterHubConnectionInfo(options.url);
-        } else {
-            return this.getJupyterConnectionInfo(options);
-        }
-    }
-
-    private async getJupyterHubConnectionInfo(uri: string): Promise<IJupyterPasswordConnectInfo | undefined> {
-        // First ask for the user name and password
-        const userNameAndPassword = await this.getUserNameAndPassword();
-        if (userNameAndPassword.username || userNameAndPassword.password) {
-            // Try the login method. It should work and doesn't require a token to be generated.
-            const result = await this.getJupyterHubConnectionInfoFromLogin(
-                uri,
-                userNameAndPassword.username,
-                userNameAndPassword.password
-            );
-
-            // If login method fails, try generating a token
-            if (!result) {
-                return this.getJupyterHubConnectionInfoFromApi(
-                    uri,
-                    userNameAndPassword.username,
-                    userNameAndPassword.password
-                );
-            }
-
-            return result;
-        }
-    }
-
-    private async getJupyterHubConnectionInfoFromLogin(
-        uri: string,
-        username: string,
-        password: string
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
-        // We're using jupyter hub. Get the base url
-        const url = new URL(uri);
-        const baseUrl = `${url.protocol}//${url.host}`;
-
-        const postParams = new URLSearchParams();
-        postParams.append('username', username || '');
-        postParams.append('password', password || '');
-
-        let response = await this.makeRequest(`${baseUrl}/hub/login?next=`, {
-            method: 'POST',
-            headers: {
-                Connection: 'keep-alive',
-                Referer: `${baseUrl}/hub/login`,
-                'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
-            },
-            body: postParams.toString(),
-            redirect: 'manual'
-        });
-
-        // The cookies from that response should be used to make the next set of requests
-        if (response && response.status === 302) {
-            const cookies = this.getCookies(response);
-            const cookieString = [...cookies.entries()].reduce((p, c) => `${p};${c[0]}=${c[1]}`, '');
-            // See this API for creating a token
-            // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html#operation--users--name--tokens-post
-            response = await this.makeRequest(`${baseUrl}/hub/api/users/${username}/tokens`, {
-                method: 'POST',
-                headers: {
-                    Connection: 'keep-alive',
-                    Cookie: cookieString,
-                    Referer: `${baseUrl}/hub/login`
-                }
-            });
-
-            // That should give us a new token. For now server name is hard coded. Not sure
-            // how to fetch it other than in the info for a default token
-            if (response.ok && response.status === 200) {
-                const body = await response.json();
-                if (body && body.token && body.id) {
-                    // Response should have the token to use for this user.
-
-                    // Make sure the server is running for this user. Don't need
-                    // to check response as it will fail if already running.
-                    // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html#operation--users--name--server-post
-                    await this.makeRequest(`${baseUrl}/hub/api/users/${username}/server`, {
-                        method: 'POST',
-                        headers: {
-                            Connection: 'keep-alive',
-                            Cookie: cookieString,
-                            Referer: `${baseUrl}/hub/login`
-                        }
-                    });
-
-                    // This token was generated for this request. We should clean it up when
-                    // the user closes VS code
-                    this.asyncDisposableRegistry.push({
-                        dispose: async () => {
-                            this.makeRequest(`${baseUrl}/hub/api/users/${username}/tokens/${body.id}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    Connection: 'keep-alive',
-                                    Cookie: cookieString,
-                                    Referer: `${baseUrl}/hub/login`
-                                }
-                            }).catch(noop); // Don't wait for this during shutdown. Just make the request
-                        }
-                    });
-
-                    return {
-                        requestHeaders: {},
-                        remappedBaseUrl: `${baseUrl}/user/${username}`,
-                        remappedToken: body.token
-                    };
-                }
-            }
-        }
-    }
-
-    private async getJupyterHubConnectionInfoFromApi(
-        uri: string,
-        username: string,
-        password: string
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
-        // We're using jupyter hub. Get the base url
-        const url = new URL(uri);
-        const baseUrl = `${url.protocol}//${url.host}`;
-        // Use these in a post request to get the token to use
-        const response = await this.makeRequest(
-            `${baseUrl}/hub/api/authorizations/token`, // This seems to be deprecated, but it works. It requests a new token
-            {
-                method: 'POST',
-                headers: {
-                    Connection: 'keep-alive',
-                    'content-type': 'application/json;charset=UTF-8'
-                },
-                body: `{ "username": "${username || ''}", "password": "${password || ''}"  }`,
-                redirect: 'manual'
-            }
-        );
-
-        if (response.ok && response.status === 200) {
-            const body = await response.json();
-            if (body && body.user && body.user.server && body.token) {
-                // Response should have the token to use for this user.
-                return {
-                    requestHeaders: {},
-                    remappedBaseUrl: `${baseUrl}${body.user.server}`,
-                    remappedToken: body.token
-                };
-            }
-        }
-    }
-
     private async getJupyterConnectionInfo({
         url,
-        isTokenEmpty
+        isTokenEmpty,
+        displayName
     }: {
         url: string;
         isTokenEmpty: boolean;
-    }): Promise<IJupyterPasswordConnectInfo | undefined> {
+        displayName?: string;
+    }): Promise<IJupyterPasswordConnectInfo> {
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
-
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
-        const needsPassword = await this.needPassword(url);
-        if (needsPassword || isTokenEmpty) {
-            // Get password first
-            let userPassword = needsPassword ? await this.getUserPassword(url) : '';
+        const requiresPassword = await this.needPassword(url);
+        if (requiresPassword || isTokenEmpty) {
+            let userPassword: undefined | string;
+            if (requiresPassword) {
+                let friendlyUrl = url;
+                const uri = new URL(url);
+                friendlyUrl = `${uri.protocol}//${uri.hostname}`;
+                friendlyUrl = displayName ? `${displayName} (${friendlyUrl})` : friendlyUrl;
+                userPassword = await this.appShell.showInputBox({
+                    title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
+                    prompt: DataScience.jupyterSelectPasswordPrompt,
+                    ignoreFocusOut: true,
+                    password: true
+                });
+                if (typeof userPassword === undefined && !userPassword && isTokenEmpty) {
+                    // User exited out of the processes, same as hitting ESC.
+                    throw new CancellationError();
+                }
+            }
 
             // If we do not have a password, but token is empty, then generate an xsrf token with session cookie
             if (userPassword || isTokenEmpty) {
@@ -280,12 +140,11 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             } else {
                 // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
                 // like a standard connection. Might be the case where there is no token and no password
-                return {};
+                return { requiresPassword };
             }
-            userPassword = undefined;
         } else {
             // If no password needed, act like empty password and no cookie
-            return {};
+            return { requiresPassword };
         }
 
         // If we found everything return it all back if not, undefined as partial is useless
@@ -294,10 +153,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
-            return { requestHeaders };
+            return { requestHeaders, requiresPassword };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
-            return undefined;
+            return { requiresPassword };
         }
     }
 
@@ -312,62 +171,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
 
         return options;
-    }
-
-    private async getUserNameAndPassword(): Promise<{ username: string; password: string }> {
-        const multistep = this.multiStepFactory.create<{ username: string; password: string }>();
-        const state = { username: '', password: '' };
-        await multistep.run(this.getUserNameMultiStep.bind(this), state);
-        return state;
-    }
-
-    private async getUserNameMultiStep(
-        input: IMultiStepInput<{ username: string; password: string }>,
-        state: { username: string; password: string }
-    ) {
-        state.username = await input.showInputBox({
-            title: DataScience.jupyterSelectUserAndPasswordTitle,
-            prompt: DataScience.jupyterSelectUserPrompt,
-            validate: this.validateUserNameOrPassword,
-            value: ''
-        });
-        if (state.username) {
-            return this.getPasswordMultiStep.bind(this);
-        }
-    }
-
-    private async validateUserNameOrPassword(_value: string): Promise<string | undefined> {
-        return undefined;
-    }
-
-    private async getPasswordMultiStep(
-        input: IMultiStepInput<{ username: string; password: string }>,
-        state: { username: string; password: string }
-    ) {
-        state.password = await input.showInputBox({
-            title: DataScience.jupyterSelectUserAndPasswordTitle,
-            prompt: DataScience.jupyterSelectPasswordPrompt,
-            validate: this.validateUserNameOrPassword,
-            value: '',
-            password: true
-        });
-    }
-
-    private async getUserPassword(url: string): Promise<string | undefined> {
-        let friendlyUrl = url;
-        try {
-            const uri = new URL(url);
-            friendlyUrl = `${uri.protocol}//${uri.hostname}`;
-        } catch {
-            //
-        }
-
-        return this.appShell.showInputBox({
-            title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
-            prompt: DataScience.jupyterSelectPasswordPrompt,
-            ignoreFocusOut: true,
-            password: true
-        });
     }
 
     private async getXSRFToken(url: string, sessionCookie: string): Promise<string | undefined> {
@@ -448,26 +251,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             }
             throw e;
         }
-    }
-
-    private async isJupyterHub(url: string): Promise<boolean> {
-        // See this for the different REST endpoints:
-        // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html
-
-        // If the URL has the /user/ option in it, it's likely this is jupyter hub
-        if (url.toLowerCase().includes('/user/')) {
-            return true;
-        }
-
-        // Otherwise request hub/api. This should return the json with the hub version
-        // if this is a hub url
-        const response = await this.makeRequest(`${url}hub/api`, {
-            method: 'get',
-            redirect: 'manual',
-            headers: { Connection: 'keep-alive' }
-        });
-
-        return response.status === 200;
     }
 
     /**

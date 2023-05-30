@@ -50,7 +50,7 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarm
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
-import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
+import { ClearJupyterServersCommand } from './jupyter/connection/clearJupyterServersCommand';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
