@@ -11,7 +11,6 @@ import {
     IJupyterRequestCreator,
     IJupyterServerUri,
     IJupyterServerUriStorage,
-    IJupyterSessionManager,
     IJupyterUriProviderRegistration,
     JupyterServerProviderHandle
 } from '../types';
@@ -149,7 +148,7 @@ export class JupyterConnection {
         serverUri?: IJupyterServerUri,
         doNotDisplayUnActionableMessages?: boolean
     ): Promise<void> {
-        let sessionManager: IJupyterSessionManager | undefined = undefined;
+        let sessionManager: JupyterLabHelper | undefined = undefined;
         serverUri = serverUri || (await this.getJupyterServerUri(serverHandle));
         const partialConnection = createRemoteConnectionInfo(serverHandle, serverUri);
         const connection = { ...partialConnection, serverSettings: this.toServerConnectionSettings(partialConnection) };

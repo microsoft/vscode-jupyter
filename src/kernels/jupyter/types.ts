@@ -50,7 +50,7 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
     getJupyterServerError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
-export interface IJupyterSessionManager extends IAsyncDisposable {
+export interface IJupyterLabHelper extends IAsyncDisposable {
     readonly isDisposed: boolean;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;

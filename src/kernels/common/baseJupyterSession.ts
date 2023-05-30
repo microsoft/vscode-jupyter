@@ -384,15 +384,14 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
                 sessionDisposed.promise.catch(noop);
                 sleepPromise.catch(noop);
                 kernelStatus.promise.catch(noop);
-                const result = await Promise.race([kernelStatus.promise, sleepPromise, sessionDisposed.promise]);
+                await Promise.race([kernelStatus.promise, sleepPromise, sessionDisposed.promise]);
                 if (session.isDisposed) {
                     traceError('Session disposed while waiting for session to be idle.');
                     throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
                 }
 
                 traceVerbose(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
-
-                if (typeof result === 'string' && result.toString() == 'idle') {
+                if (kernelStatus.completed && kernelStatus.value == 'idle') {
                     return;
                 }
                 traceError(

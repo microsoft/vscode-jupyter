@@ -13,14 +13,10 @@ import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platfo
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { JupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
-import {
-    IJupyterKernelService,
-    IJupyterRequestCreator,
-    IJupyterServerProvider,
-    IJupyterSessionManager
-} from '../types';
+import { IJupyterKernelService, IJupyterRequestCreator, IJupyterServerProvider } from '../types';
 import { IJupyterKernelSession, KernelConnectionMetadata } from '../../types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
+import { JupyterLabHelper } from './jupyterLabHelper';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -50,7 +46,7 @@ suite('NotebookProvider', () => {
         const mockSession = mock<IJupyterKernelSession>();
         when(mockSession.onDidShutdown).thenReturn(onDidShutdown.event);
         instance(mockSession as any).then = undefined;
-        const jupyterSessionManager = mock<IJupyterSessionManager>();
+        const jupyterSessionManager = mock<JupyterLabHelper>();
         instance(jupyterSessionManager as any).then = undefined;
         when(jupyterSessionManager.isDisposed).thenReturn(false);
         const jupyterConnection = mock<JupyterConnection>();

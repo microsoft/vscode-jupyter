@@ -24,7 +24,6 @@ import {
     IJupyterKernel,
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriEntry,
-    IJupyterSessionManager
 } from '../types';
 import { KernelFinder } from '../../kernelFinder';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
@@ -45,7 +44,7 @@ suite(`Remote Kernel Finder`, () => {
     let kernelFinder: KernelFinder;
     let fs: IFileSystemNode;
     let memento: Memento;
-    let jupyterSessionManager: IJupyterSessionManager;
+    let jupyterSessionManager: JupyterLabHelper;
     let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
     let kernelsChanged: TestEventHandler<void>;
     let jupyterConnection: JupyterConnection;

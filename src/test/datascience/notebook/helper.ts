@@ -53,7 +53,7 @@ import {
     hasErrorOutput
 } from '../../../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
-import { IJupyterServerUriStorage, IJupyterSessionManager } from '../../../kernels/jupyter/types';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import {
     IKernelFinder,
     IKernelProvider,
@@ -336,7 +336,7 @@ async function shutdownRemoteKernels() {
     const serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     const jupyterConnection = api.serviceContainer.get<JupyterConnection>(JupyterConnection);
     const cancelToken = new CancellationTokenSource();
-    let sessionManager: IJupyterSessionManager | undefined;
+    let labHelper: JupyterLabHelper | undefined;
     try {
         const connection = await jupyterConnection.createRemoveConnectionInfo(
             (
@@ -352,7 +352,7 @@ async function shutdownRemoteKernels() {
         // ignore
     } finally {
         cancelToken.dispose();
-        await sessionManager?.dispose().catch(noop);
+        await labHelper?.dispose().catch(noop);
     }
 }
 export const MockNotebookDocuments: NotebookDocument[] = [];

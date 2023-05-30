@@ -10,7 +10,7 @@ import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { IJupyterSessionManager, IJupyterKernel } from '../types';
+import { IJupyterKernel } from '../types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
@@ -18,7 +18,7 @@ import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class JupyterLabHelper implements IJupyterSessionManager {
+export class JupyterLabHelper {
     private readonly sessionManager: SessionManager;
     private readonly specsManager: KernelSpecManager;
     private readonly kernelManager: KernelManager;
