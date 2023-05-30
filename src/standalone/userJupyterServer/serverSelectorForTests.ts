@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { ICommandManager } from '../../platform/common/application/types';
-import { Commands } from '../../platform/common/constants';
+import { Commands, TestingKernelPickerProviderId } from '../../platform/common/constants';
 import { traceInfo } from '../../platform/logging';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IJupyterServerUri, IJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
@@ -30,7 +30,7 @@ export class JupyterServerSelectorCommand
     ) {
         super();
     }
-    public readonly id = '_builtin.JupyterServerSelectorForTesting';
+    public readonly id = TestingKernelPickerProviderId;
     public readonly displayName = 'Jupyter Server for Testing';
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
     public activate() {
