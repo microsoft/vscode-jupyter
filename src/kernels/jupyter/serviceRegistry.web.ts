@@ -15,9 +15,7 @@ import { JupyterServerProvider } from './launcher/jupyterServerProvider.web';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
 import { JupyterServerSelector } from './connection/serverSelector';
-import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import {
-    IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
     IJupyterKernelService,
@@ -34,10 +32,6 @@ import { JupyterRequestCreator } from './connection/jupyterRequestCreator.web';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
-    serviceManager.addSingleton<IJupyterSessionManagerFactory>(
-        IJupyterSessionManagerFactory,
-        JupyterSessionManagerFactory
-    );
     serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
     serviceManager.addSingleton<IJupyterKernelService>(IJupyterKernelService, JupyterKernelService);
     serviceManager.addSingleton<IJupyterUriProviderRegistration>(

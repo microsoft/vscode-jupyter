@@ -32,10 +32,8 @@ import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
 import { JupyterServerSelector } from './connection/serverSelector';
 import { JupyterRequestCreator } from './connection/jupyterRequestCreator.node';
-import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
-import { RequestAgentCreator } from './session/requestAgentCreator.node';
+import { RequestAgentCreator } from './connection/requestAgentCreator.node';
 import {
-    IJupyterSessionManagerFactory,
     INbConvertInterpreterDependencyChecker,
     INbConvertExportToPythonService,
     IJupyterServerProvider,
@@ -66,10 +64,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         MigrateJupyterInterpreterStateService
     );
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
-    serviceManager.addSingleton<IJupyterSessionManagerFactory>(
-        IJupyterSessionManagerFactory,
-        JupyterSessionManagerFactory
-    );
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<JupyterInterpreterDependencyService>(
         JupyterInterpreterDependencyService,

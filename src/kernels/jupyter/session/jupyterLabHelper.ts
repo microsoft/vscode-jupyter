@@ -1,24 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type {
-    ContentsManager,
-    KernelSpecManager,
-    KernelManager,
-    ServerConnection,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
+import type { ContentsManager, KernelSpecManager, KernelManager, Session, SessionManager } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
-import { CancellationToken, Disposable, Uri } from 'vscode';
+import { Disposable } from 'vscode';
 import { traceError, traceVerbose } from '../../../platform/logging';
-import { IConfigurationService, Resource, IDisplayOptions, IDisposable } from '../../../platform/common/types';
+import { IDisposable } from '../../../platform/common/types';
 import { createInterpreterKernelSpec } from '../../helpers';
-import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
+import { IJupyterConnection, IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
-import { JupyterSession } from './jupyterSession';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { IJupyterSessionManager, IJupyterKernel, IJupyterKernelService, IJupyterRequestCreator } from '../types';
+import { IJupyterSessionManager, IJupyterKernel } from '../types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
@@ -26,7 +18,7 @@ import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class JupyterSessionManager implements IJupyterSessionManager {
+export class JupyterLabHelper implements IJupyterSessionManager {
     private readonly sessionManager: SessionManager;
     private readonly specsManager: KernelSpecManager;
     private readonly kernelManager: KernelManager;
@@ -43,13 +35,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         return this._jupyterlab!;
     }
-    constructor(
-        private configService: IConfigurationService,
-        private readonly kernelService: IJupyterKernelService | undefined,
-        private readonly requestCreator: IJupyterRequestCreator,
-        private readonly connection: IJupyterConnection,
-        private readonly serverSettings: ServerConnection.ISettings
-    ) {
+    constructor(private readonly connection: IJupyterConnection) {
+        const serverSettings = connection.serverSettings;
         this.specsManager = new this.jupyterlab.KernelSpecManager({ serverSettings });
         this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings });
         this.sessionManager = new this.jupyterlab.SessionManager({
@@ -111,7 +98,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async getRunningKernels(): Promise<IJupyterKernel[]> {
-        const models = await this.jupyterlab.KernelAPI.listRunning(this.serverSettings);
+        const models = await this.jupyterlab.KernelAPI.listRunning(this.connection.serverSettings);
         // Remove duplicates.
         const dup = new Set<string>();
         return models
@@ -133,38 +120,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 dup.add(item.id);
                 return true;
             });
-    }
-
-    public async startNew(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        workingDirectory: Uri,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken,
-        creator: KernelActionSource
-    ): Promise<JupyterSession> {
-        // Create a new session and attempt to connect to it
-        const session = new JupyterSession(
-            resource,
-            this.connection,
-            kernelConnection,
-            this.specsManager.specs?.default,
-            this.sessionManager,
-            workingDirectory,
-            this.configService.getSettings(resource).jupyterLaunchTimeout,
-            this.kernelService,
-            this.configService.getSettings(resource).jupyterInterruptTimeout,
-            this.requestCreator,
-            creator
-        );
-        try {
-            await session.connect({ token: cancelToken, ui });
-        } finally {
-            if (!session.isConnected) {
-                await session.dispose();
-            }
-        }
-        return session;
     }
 
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {

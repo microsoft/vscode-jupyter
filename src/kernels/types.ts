@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { JSONObject } from '@lumino/coreutils';
 import type {
@@ -26,8 +26,9 @@ import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
-import { computeServerId } from './jupyter/jupyterUtils';
+import { jupyterServerHandleToString } from './jupyter/jupyterUtils';
 import { getKernelId } from './helpers';
+import { computeHash } from '../platform/common/crypto';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -238,7 +239,8 @@ export class RemoteKernelSpecConnectionMetadata {
         baseUrl: string;
         serverHandle: JupyterServerProviderHandle;
     }) {
-        const serverId = await computeServerId(options.serverHandle);
+        const uri = jupyterServerHandleToString(options.serverHandle);
+        const serverId = await computeHash(uri, 'SHA-256');
         const id = getKernelId(options.kernelSpec, options.interpreter, serverId);
         return new RemoteKernelSpecConnectionMetadata({ ...options, id });
     }
@@ -564,6 +566,7 @@ export interface IJupyterConnection extends Disposable {
      * @see IJupyterServerUri
      */
     readonly mappedRemoteNotebookDir?: string;
+    readonly serverSettings: ServerConnection.ISettings;
 }
 
 export enum InterruptResult {
@@ -582,7 +585,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    isServerSession(): this is IJupyterKernelSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
@@ -620,18 +622,9 @@ export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
 export type ISessionWithSocket = Session.ISessionConnection & {
     /**
-     * The resource associated with this session.
-     */
-    resource: Resource;
-    /**
-     * Whether this is a remote session that we attached to.
-     */
-    isRemoteSession?: boolean;
-    /**
      * Socket information used for hooking messages to the kernel.
      */
     kernelSocketInformation: KernelSocketInformation;
-    kernelConnectionMetadata: KernelConnectionMetadata;
 };
 
 export interface IJupyterKernelSpec {

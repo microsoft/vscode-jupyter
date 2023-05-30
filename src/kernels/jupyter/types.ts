@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Session, ServerConnection } from '@jupyterlab/services';
+import type { Session } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
@@ -15,11 +15,9 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     IJupyterConnection,
-    IJupyterKernelSession,
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
-    KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../types';
@@ -52,22 +50,8 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
     getJupyterServerError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
-
-export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
-export interface IJupyterSessionManagerFactory {
-    create(connInfo: IJupyterConnection, settings: ServerConnection.ISettings): IJupyterSessionManager;
-}
-
 export interface IJupyterSessionManager extends IAsyncDisposable {
     readonly isDisposed: boolean;
-    startNew(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        workingDirectory: Uri,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken,
-        creator: KernelActionSource
-    ): Promise<IJupyterKernelSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;

@@ -5,12 +5,7 @@ import { injectable, inject, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IKernelFinder, IKernelProvider } from '../../types';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
-import {
-    IJupyterSessionManagerFactory,
-    IJupyterServerUriStorage,
-    IJupyterRemoteCachedKernelValidator,
-    IJupyterServerUriEntry
-} from '../types';
+import { IJupyterServerUriStorage, IJupyterRemoteCachedKernelValidator, IJupyterServerUriEntry } from '../types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -27,8 +22,6 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     private serverFinderMapping: Map<string, RemoteKernelFinder> = new Map<string, RemoteKernelFinder>();
 
     constructor(
-        @inject(IJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
@@ -70,7 +63,6 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
                 `${ContributedKernelFinderKind.Remote}-${serverHandleId}`,
                 serverUri.displayName || jupyterServerHandleToString(serverUri.serverHandle),
                 `${RemoteKernelSpecsCacheKey}-${serverHandleId}`,
-                this.jupyterSessionManagerFactory,
                 this.extensionChecker,
                 this.globalState,
                 this.env,

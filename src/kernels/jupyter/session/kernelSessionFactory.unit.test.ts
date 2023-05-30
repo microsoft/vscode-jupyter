@@ -9,11 +9,16 @@ import { EventEmitter } from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { AsyncDisposableRegistry } from '../../../platform/common/asyncDisposableRegistry';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IAsyncDisposableRegistry } from '../../../platform/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { JupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
-import { IJupyterServerProvider, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
+import {
+    IJupyterKernelService,
+    IJupyterRequestCreator,
+    IJupyterServerProvider,
+    IJupyterSessionManager
+} from '../types';
 import { IJupyterKernelSession, KernelConnectionMetadata } from '../../types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 
@@ -29,6 +34,9 @@ suite('NotebookProvider', () => {
     const disposables: IDisposable[] = [];
     let asyncDisposables: IAsyncDisposableRegistry;
     let onDidShutdown: EventEmitter<void>;
+    let configService: IConfigurationService;
+    let kernelService: IJupyterKernelService;
+    let requestCreator: IJupyterRequestCreator;
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterServerProvider>();
         cancelToken = new vscode.CancellationTokenSource();
@@ -45,13 +53,8 @@ suite('NotebookProvider', () => {
         const jupyterSessionManager = mock<IJupyterSessionManager>();
         instance(jupyterSessionManager as any).then = undefined;
         when(jupyterSessionManager.isDisposed).thenReturn(false);
-        when(
-            jupyterSessionManager.startNew(anything(), anything(), anything(), anything(), anything(), anything())
-        ).thenResolve(instance(mockSession));
-        const sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
-        when(sessionManagerFactory.create(anything(), anything())).thenReturn(instance(jupyterSessionManager));
         const jupyterConnection = mock<JupyterConnection>();
-        when(jupyterConnection.createConnectionInfo(anything())).thenResolve({
+        when(jupyterConnection.createRemoveConnectionInfo(anything())).thenResolve({
             localLaunch: true,
             baseUrl: 'http://localhost:8888'
         } as any);
@@ -62,12 +65,17 @@ suite('NotebookProvider', () => {
         asyncDisposables = new AsyncDisposableRegistry();
         const workspace = mock<IWorkspaceService>();
         when(workspace.computeWorkingDirectory(anything())).thenResolve('');
+        configService = mock<IConfigurationService>();
+        kernelService = mock<IJupyterKernelService>();
+        requestCreator = mock<IJupyterRequestCreator>();
         jupyterKernelSessionFactory = new JupyterKernelSessionFactory(
             instance(jupyterNotebookProvider),
-            instance(sessionManagerFactory),
             instance(jupyterConnection),
             asyncDisposables,
-            instance(workspace)
+            instance(workspace),
+            instance(configService),
+            instance(kernelService),
+            instance(requestCreator)
         );
     });
     teardown(async () => {

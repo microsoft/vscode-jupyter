@@ -11,12 +11,11 @@ import {
     isLocalConnection,
     isRemoteConnection
 } from '../../types';
-import { IJupyterServerProvider, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
+import { IJupyterKernelService, IJupyterRequestCreator, IJupyterServerProvider } from '../types';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { noop } from '../../../platform/common/utils/misc';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
@@ -24,10 +23,12 @@ import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSe
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
 import { BaseError } from '../../../platform/errors/types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { JupyterSession } from './jupyterSession';
+import { JupyterLabHelper } from './jupyterLabHelper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -37,10 +38,13 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
     constructor(
         @inject(IJupyterServerProvider)
         private readonly jupyterNotebookProvider: IJupyterServerProvider,
-        @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IJupyterKernelService) @optional() private readonly kernelService: IJupyterKernelService | undefined,
+        @inject(IJupyterRequestCreator)
+        private readonly requestCreator: IJupyterRequestCreator
     ) {}
     public async create(options: KernelSessionCreationOptions): Promise<IJupyterKernelSession> {
         const disposables: IDisposable[] = [];
@@ -69,7 +73,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         const disposablesWhenThereAreFailures: IDisposable[] = [];
         try {
             connection = isRemoteConnection(options.kernelConnection)
-                ? await this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverHandle)
+                ? await this.jupyterConnection.createRemoveConnectionInfo(options.kernelConnection.serverHandle)
                 : await this.jupyterNotebookProvider.getOrStartServer({
                       resource: options.resource,
                       token: options.token,
@@ -82,18 +86,31 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
 
             Cancellation.throwIfCanceled(options.token);
 
-            const sessionManager = this.sessionManagerFactory.create(
-                connection,
-                this.jupyterConnection.toServerConnectionSettings(connection)
-            );
-            this.asyncDisposables.push(sessionManager);
-            disposablesWhenThereAreFailures.push(new Disposable(() => sessionManager.dispose().catch(noop)));
+            const labHelper = new JupyterLabHelper(connection);
+            this.asyncDisposables.push(labHelper);
+            disposablesWhenThereAreFailures.push(new Disposable(() => labHelper.dispose().catch(noop)));
+
+            if (isRemoteConnection(options.kernelConnection)) {
+                try {
+                    await Promise.all([labHelper.getRunningKernels(), labHelper.getKernelSpecs()]);
+                } catch (ex) {
+                    traceError(
+                        'Failed to fetch running kernels from remote server, connection may be outdated or remote server may be unreachable',
+                        ex
+                    );
+                    throw new RemoteJupyterServerConnectionError(
+                        options.kernelConnection.baseUrl,
+                        options.kernelConnection.serverHandle,
+                        ex
+                    );
+                }
+            }
 
             Cancellation.throwIfCanceled(options.token);
             // Disposing session manager will dispose all sessions that were started by that session manager.
             // Hence Session managers should be disposed only if the corresponding session is shutdown.
-            const session = await this.createSession(options, sessionManager);
-            session.onDidShutdown(() => sessionManager.dispose());
+            const session = await this.createSession(options, connection);
+            session.onDidShutdown(() => labHelper.dispose());
             return session;
         } catch (ex) {
             disposeAllDisposables(disposablesWhenThereAreFailures);
@@ -128,29 +145,10 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             disposeAllDisposables(disposables);
         }
     }
-    public async createSession(
+    private async createSession(
         options: KernelSessionCreationOptions,
-        sessionManager: IJupyterSessionManager
+        connection: IJupyterConnection
     ): Promise<IJupyterKernelSession> {
-        if (sessionManager.isDisposed) {
-            throw new SessionDisposedError();
-        }
-        if (isRemoteConnection(options.kernelConnection)) {
-            try {
-                await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
-            } catch (ex) {
-                traceError(
-                    'Failed to fetch running kernels from remote server, connection may be outdated or remote server may be unreachable',
-                    ex
-                );
-                throw new RemoteJupyterServerConnectionError(
-                    options.kernelConnection.baseUrl,
-                    options.kernelConnection.serverHandle,
-                    ex
-                );
-            }
-        }
-
         Cancellation.throwIfCanceled(options.token);
         // Figure out the working directory we need for our new notebook. This is only necessary for local.
         const workingDirectory = isLocalConnection(options.kernelConnection)
@@ -158,14 +156,25 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             : '';
         Cancellation.throwIfCanceled(options.token);
         // Start a session (or use the existing one if allowed)
-        const session = await sessionManager.startNew(
+        const session = new JupyterSession(
             options.resource,
+            connection,
             options.kernelConnection,
             Uri.file(workingDirectory),
-            options.ui,
-            options.token,
+            this.configService.getSettings(options.resource).jupyterLaunchTimeout,
+            this.kernelService,
+            this.configService.getSettings(options.resource).jupyterInterruptTimeout,
+            this.requestCreator,
             options.creator
         );
+        try {
+            await session.connect({ token: options.token, ui: options.ui });
+        } finally {
+            if (!session.isConnected) {
+                await session.dispose();
+            }
+        }
+
         if (options.token.isCancellationRequested) {
             // Even if this is a remote kernel, we should shut this down as it's not needed.
             session.shutdown().catch(noop);

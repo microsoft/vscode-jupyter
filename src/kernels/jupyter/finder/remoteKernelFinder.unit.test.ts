@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { Session } from '@jupyterlab/services';
+import { ServerConnection, type Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { getDisplayNameOrNameOfKernelConnection } from '../../helpers';
@@ -18,8 +18,7 @@ import {
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
-import { JupyterSessionManager } from '../session/jupyterSessionManager';
-import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
+import { JupyterLabHelper } from '../session/jupyterLabHelper';
 import { ActiveKernelIdList } from '../connection/preferredRemoteKernelIdProvider';
 import {
     IJupyterKernel,
@@ -62,7 +61,8 @@ suite(`Remote Kernel Finder`, () => {
         token: '',
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
-        dispose: noop
+        dispose: noop,
+        serverSettings: instance(mock<ServerConnection.ISettings>())
     };
     const defaultPython3Name = 'python3';
     const python3spec: IJupyterKernelSpec = {
@@ -136,10 +136,8 @@ suite(`Remote Kernel Finder`, () => {
         when(crypto.createHash(anything(), anything())).thenCall((d, _c) => {
             return Promise.resolve(d.toLowerCase());
         });
-        jupyterSessionManager = mock(JupyterSessionManager);
+        jupyterSessionManager = mock(JupyterLabHelper);
         when(jupyterSessionManager.dispose()).thenResolve();
-        const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
-        when(jupyterSessionManagerFactory.create(anything(), anything())).thenReturn(instance(jupyterSessionManager));
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         fs = mock(FileSystem);
@@ -155,12 +153,11 @@ suite(`Remote Kernel Finder`, () => {
         kernelsChanged = createEventHandler(kernelFinder, 'onDidChangeKernels');
         disposables.push(kernelsChanged);
         jupyterConnection = mock<JupyterConnection>();
-        when(jupyterConnection.createConnectionInfo(anything())).thenResolve(connInfo);
+        when(jupyterConnection.createRemoveConnectionInfo(anything())).thenResolve(connInfo);
         remoteKernelFinder = new RemoteKernelFinder(
             'currentremote',
             'Remove Kernels',
             `${RemoteKernelSpecsCacheKey}-${jupyterServerHandleToString(serverEntry.serverHandle)}`,
-            instance(jupyterSessionManagerFactory),
             instance(extensionChecker),
             instance(memento),
             instance(env),

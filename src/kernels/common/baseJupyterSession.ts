@@ -27,13 +27,7 @@ import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { KernelInterruptTimeoutError } from '../errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
-import {
-    IJupyterKernelSession,
-    ISessionWithSocket,
-    KernelConnectionMetadata,
-    KernelSocketInformation,
-    IBaseKernelSession
-} from '../types';
+import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation, IBaseKernelSession } from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
@@ -133,7 +127,18 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         return this.onStatusChangedEvent.event;
     }
     public get status(): KernelMessage.Status {
-        return this.getServerStatus();
+        if (this.disposed) {
+            return 'dead';
+        }
+        if (this.session?.kernel) {
+            return this.session.kernel.status;
+        }
+        traceInfoIfCI(
+            `Kernel status not started because real session is ${
+                this.session ? 'defined' : 'undefined'
+            } & real kernel is ${this.session?.kernel ? 'defined' : 'undefined'}`
+        );
+        return 'unknown';
     }
 
     public get isConnected(): boolean {
@@ -161,9 +166,6 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         this.unhandledMessageHandler = (_s, m) => {
             traceWarning(`Unhandled message found: ${m.header.msg_type}`);
         };
-    }
-    public isServerSession(): this is IJupyterKernelSession {
-        return false;
     }
     public async dispose(): Promise<void> {
         await this.shutdownImplementation(false);
@@ -206,7 +208,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         return this.session.kernel?.requestKernelInfo();
     }
     public async restart(): Promise<void> {
-        if (this.session?.isRemoteSession && this.session.kernel) {
+        if (this.kind === 'remoteJupyter' && this.session?.kernel) {
             await this.session.kernel.restart();
             this.setSession(this.session, true);
             traceInfo(`Restarted ${this.session?.kernel?.id}`);
@@ -479,19 +481,19 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         shutdownEvenIfRemote?: boolean
     ): Promise<void> {
         if (session && session.kernel) {
-            const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
+            const kernelIdForLogging = `${session.kernel.id}, ${this.kernelConnectionMetadata?.id}`;
             traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
             try {
                 if (statusHandler) {
                     session.statusChanged.disconnect(statusHandler);
                 }
-                if (!this.canShutdownSession(session, isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
-                    traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
+                if (!this.canShutdownSession(isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
+                    traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata?.id}`);
                     session.dispose();
                     return;
                 }
                 try {
-                    traceVerbose(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
+                    traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata?.id}`);
                     suppressShutdownErrors(session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!session.isDisposed) {
@@ -542,12 +544,11 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         traceVerbose('Shutdown session -- complete');
     }
     private canShutdownSession(
-        session: ISessionWithSocket,
         isRequestToShutDownRestartSession: boolean | undefined,
         shutdownEvenIfRemote?: boolean
     ): boolean {
         // We can never shut down existing (live) kernels.
-        if (session.kernelConnectionMetadata?.kind === 'connectToLiveRemoteKernel' && !shutdownEvenIfRemote) {
+        if (this.kernelConnectionMetadata?.kind === 'connectToLiveRemoteKernel' && !shutdownEvenIfRemote) {
             return false;
         }
         // We can always shutdown restart sessions.
@@ -555,14 +556,14 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
             return true;
         }
         // If this Interactive Window, then always shutdown sessions (even with remote Jupyter).
-        if (session.resource && getResourceType(session.resource) === 'interactive') {
+        if (this.resource && getResourceType(this.resource) === 'interactive') {
             return true;
         }
         // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
         if (
-            session.resource &&
-            getResourceType(session.resource) === 'notebook' &&
-            session.isRemoteSession === true &&
+            this.resource &&
+            getResourceType(this.resource) === 'notebook' &&
+            this.kind === 'remoteJupyter' &&
             !shutdownEvenIfRemote
         ) {
             return false;
@@ -570,30 +571,15 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
 
         return true;
     }
-    private getServerStatus(): KernelMessage.Status {
-        if (this.disposed) {
-            return 'dead';
-        }
-        if (this.session?.kernel) {
-            return this.session.kernel.status;
-        }
-        traceInfoIfCI(
-            `Kernel status not started because real session is ${
-                this.session ? 'defined' : 'undefined'
-            } & real kernel is ${this.session?.kernel ? 'defined' : 'undefined'}`
-        );
-        return 'unknown';
-    }
 
     private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
         traceInfoIfCI(`Server Kernel Status = ${kernelConnection}`);
         if (kernelConnection === 'disconnected') {
-            const status = this.getServerStatus();
-            this.onStatusChangedEvent.fire(status);
+            this.onStatusChangedEvent.fire(this.status);
         }
     }
     private onStatusChanged(_s: Session.ISessionConnection) {
-        const status = this.getServerStatus();
+        const status = this.status;
         traceInfoIfCI(`Server Status = ${status}`);
         this.onStatusChangedEvent.fire(status);
     }

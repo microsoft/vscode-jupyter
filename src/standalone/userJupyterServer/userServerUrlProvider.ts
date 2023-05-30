@@ -3,17 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import uuid from 'uuid/v4';
-import {
-    commands,
-    Disposable,
-    Event,
-    EventEmitter,
-    Memento,
-    QuickInputButtons,
-    QuickPickItem,
-    Uri,
-    window
-} from 'vscode';
+import { Disposable, Event, EventEmitter, Memento, QuickInputButtons, QuickPickItem, Uri } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
     IJupyterServerUri,
@@ -22,7 +12,12 @@ import {
     JupyterServerProviderHandle
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
+import {
+    IApplicationShell,
+    IClipboard,
+    ICommandManager,
+    IEncryptedStorage
+} from '../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, Settings } from '../../platform/common/constants';
 import {
     GLOBAL_MEMENTO,
@@ -75,7 +70,8 @@ export class UserJupyterServerUrlProvider
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IJupyterPasswordConnect) private readonly passwordConnect: IJupyterPasswordConnect
+        @inject(IJupyterPasswordConnect) private readonly passwordConnect: IJupyterPasswordConnect,
+        @inject(ICommandManager) private readonly commands: ICommandManager
     ) {
         super();
         disposables.push(this);
@@ -88,7 +84,7 @@ export class UserJupyterServerUrlProvider
         this._servers = [];
 
         this.disposables.push(
-            commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
+            this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
                 await Promise.all([
                     this.encryptedStorage.store(OldSecretStorageKey, undefined),
                     this.encryptedStorage.store(NewSecretStorageKey, undefined),
@@ -147,7 +143,7 @@ export class UserJupyterServerUrlProvider
         const disposables: Disposable[] = [];
 
         // Ask the user to enter a URI to connect to.
-        const input = window.createInputBox();
+        const input = this.applicationShell.createInputBox();
         input.title = DataScience.jupyterSelectURIPrompt;
         input.value = initialValue;
         input.ignoreFocusOut = true;

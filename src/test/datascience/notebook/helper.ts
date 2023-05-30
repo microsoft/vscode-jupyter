@@ -53,11 +53,7 @@ import {
     hasErrorOutput
 } from '../../../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
-import {
-    IJupyterServerUriStorage,
-    IJupyterSessionManager,
-    IJupyterSessionManagerFactory
-} from '../../../kernels/jupyter/types';
+import { IJupyterServerUriStorage, IJupyterSessionManager } from '../../../kernels/jupyter/types';
 import {
     IKernelFinder,
     IKernelProvider,
@@ -103,6 +99,7 @@ import { closeActiveWindows, isInsiders } from '../../initialize';
 import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
 import { ControllerPreferredService } from './controllerPreferredService';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
+import { JupyterLabHelper } from '../../../kernels/jupyter/session/jupyterLabHelper';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -338,20 +335,15 @@ async function shutdownRemoteKernels() {
     const api = await initialize();
     const serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     const jupyterConnection = api.serviceContainer.get<JupyterConnection>(JupyterConnection);
-    const jupyterSessionManagerFactory =
-        api.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
     const cancelToken = new CancellationTokenSource();
     let sessionManager: IJupyterSessionManager | undefined;
     try {
-        const connection = await jupyterConnection.createConnectionInfo(
+        const connection = await jupyterConnection.createRemoveConnectionInfo(
             (
                 await serverUriStorage.getAll()
             )[0].serverHandle
         );
-        const sessionManager = jupyterSessionManagerFactory.create(
-            connection,
-            jupyterConnection.toServerConnectionSettings(connection)
-        );
+        const sessionManager = new JupyterLabHelper(connection);
         const liveKernels = await sessionManager.getRunningKernels();
         await Promise.all(
             liveKernels.filter((item) => item.id).map((item) => KernelAPI.shutdownKernel(item.id!).catch(noop))

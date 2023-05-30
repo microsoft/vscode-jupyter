@@ -11,7 +11,6 @@ import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
-import { computeHash } from '../../platform/common/crypto';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -84,11 +83,6 @@ export async function handleExpiredCertsError(
         sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
     }
     return false;
-}
-
-export async function computeServerId(serverHandle: JupyterServerProviderHandle) {
-    const uri = jupyterServerHandleToString(serverHandle);
-    return computeHash(uri, 'SHA-256');
 }
 
 const OLD_EXTENSION_ID_THAT_DID_NOT_HAVE_EXT_ID_IN_URL = ['ms-toolsai.jupyter', 'ms-toolsai.vscode-ai'];

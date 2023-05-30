@@ -35,6 +35,7 @@ import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNot
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
 import { noop } from '../../../platform/common/utils/misc';
 import { UsedPorts } from '../../common/usedPorts';
+import { JupyterConnection } from '../connection/jupyterConnection';
 
 /**
  * Responsible for starting a notebook.
@@ -50,7 +51,8 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IOutputChannel)
         @named(JUPYTER_OUTPUT_CHANNEL)
-        private readonly jupyterOutputChannel: IOutputChannel
+        private readonly jupyterOutputChannel: IOutputChannel,
+        @inject(JupyterConnection) private readonly connection: JupyterConnection
     ) {}
     public dispose() {
         while (this.disposables.length > 0) {
@@ -135,7 +137,8 @@ export class JupyterServerStarter implements IJupyterServerStarter {
                 workingDirectory,
                 () => this.jupyterInterpreterService.getRunningJupyterServers(cancelToken),
                 this.serviceContainer,
-                interpreter
+                interpreter,
+                this.connection
             );
             // Make sure we haven't canceled already.
             Cancellation.throwIfCanceled(cancelToken);

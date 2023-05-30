@@ -19,7 +19,7 @@ import { traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 import { Contents, ContentsManager } from '@jupyterlab/services';
-import { IBackupFile, IJupyterSessionManagerFactory } from '../../kernels/jupyter/types';
+import { IBackupFile } from '../../kernels/jupyter/types';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { noop } from '../../platform/common/utils/misc';
 import { Resource } from '../../platform/common/types';
@@ -35,7 +35,6 @@ export class ExportBase implements INbConvertExport, IExportBase {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExportDialog) protected readonly filePicker: IExportDialog,
         @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
-        @inject(IJupyterSessionManagerFactory) protected readonly factory: IJupyterSessionManagerFactory,
         @inject(JupyterConnection) protected readonly connection: JupyterConnection
     ) {}
 
@@ -70,70 +69,67 @@ export class ExportBase implements INbConvertExport, IExportBase {
             return;
         }
 
-        if (kernel.session.isServerSession()) {
-            const connection = await this.connection.createConnectionInfo(kernel.kernelConnectionMetadata.serverHandle);
-            const serverSettings = this.connection.toServerConnectionSettings(connection);
-            const contentManager = new ContentsManager({ serverSettings });
-            try {
-                const session = kernel.session;
-                let contents = await this.exportUtil.getContent(sourceDocument);
+        const connection = await this.connection.createRemoveConnectionInfo(
+            kernel.kernelConnectionMetadata.serverHandle
+        );
+        const contentManager = new ContentsManager({ serverSettings: connection.serverSettings });
+        try {
+            const session = kernel.session;
+            let contents = await this.exportUtil.getContent(sourceDocument);
 
-                let fileExt = '';
+            let fileExt = '';
 
-                switch (format) {
-                    case ExportFormat.html:
-                        fileExt = '.html';
-                        break;
-                    case ExportFormat.pdf:
-                        fileExt = '.pdf';
-                        break;
-                    case ExportFormat.python:
-                        fileExt = '.py';
-                        break;
+            switch (format) {
+                case ExportFormat.html:
+                    fileExt = '.html';
+                    break;
+                case ExportFormat.pdf:
+                    fileExt = '.pdf';
+                    break;
+                case ExportFormat.python:
+                    fileExt = '.py';
+                    break;
+            }
+
+            await this.invokeWithFileSynced(contentManager, kernel.resourceUri, contents, async (file) => {
+                const pwd = await this.getCWD(kernel);
+                const filePath = `${pwd}/${file.filePath}`;
+                const tempTarget = await contentManager.newUntitled({ type: 'file', ext: fileExt });
+                const outputs = await executeSilently(
+                    session,
+                    `!jupyter nbconvert ${filePath} --to ${format} --output ${path.basename(tempTarget.path)}`
+                );
+
+                const text = this.parseStreamOutput(outputs);
+                if (this.isExportFailed(text)) {
+                    throw new Error(text || `Failed to export to ${format}`);
+                } else if (text) {
+                    // trace the output in case we didn't identify all errors
+                    traceLog(text);
                 }
 
-                await this.invokeWithFileSynced(contentManager, kernel.resourceUri, contents, async (file) => {
-                    const pwd = await this.getCWD(kernel);
-                    const filePath = `${pwd}/${file.filePath}`;
-                    const tempTarget = await contentManager.newUntitled({ type: 'file', ext: fileExt });
-                    const outputs = await executeSilently(
-                        session,
-                        `!jupyter nbconvert ${filePath} --to ${format} --output ${path.basename(tempTarget.path)}`
-                    );
-
-                    const text = this.parseStreamOutput(outputs);
-                    if (this.isExportFailed(text)) {
-                        throw new Error(text || `Failed to export to ${format}`);
-                    } else if (text) {
-                        // trace the output in case we didn't identify all errors
-                        traceLog(text);
-                    }
-
-                    if (format === ExportFormat.pdf) {
-                        const content = await contentManager.get(tempTarget.path, {
-                            type: 'file',
-                            format: 'base64',
-                            content: true
-                        });
-                        const bytes = this.b64toBlob(content.content, 'application/pdf');
-                        const buffer = await bytes.arrayBuffer();
-                        await this.fs.writeFile(target!, Buffer.from(buffer));
-                        await contentManager.delete(tempTarget.path);
-                    } else {
-                        const content = await contentManager.get(tempTarget.path, {
-                            type: 'file',
-                            format: 'text',
-                            content: true
-                        });
-                        await this.fs.writeFile(target!, content.content as string);
-                        await contentManager.delete(tempTarget.path);
-                    }
-                });
-            } finally {
-                contentManager.dispose();
-            }
-        } else {
-            // no op
+                if (format === ExportFormat.pdf) {
+                    const content = await contentManager.get(tempTarget.path, {
+                        type: 'file',
+                        format: 'base64',
+                        content: true
+                    });
+                    const bytes = this.b64toBlob(content.content, 'application/pdf');
+                    const buffer = await bytes.arrayBuffer();
+                    await this.fs.writeFile(target!, Buffer.from(buffer));
+                    await contentManager.delete(tempTarget.path);
+                } else {
+                    const content = await contentManager.get(tempTarget.path, {
+                        type: 'file',
+                        format: 'text',
+                        content: true
+                    });
+                    await this.fs.writeFile(target!, content.content as string);
+                    await contentManager.delete(tempTarget.path);
+                }
+            });
+        } finally {
+            contentManager.dispose();
         }
     }
 

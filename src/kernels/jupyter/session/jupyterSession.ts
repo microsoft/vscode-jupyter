@@ -36,12 +36,12 @@ export class JupyterSession
     extends BaseJupyterSession<'localJupyter' | 'remoteJupyter'>
     implements IJupyterKernelSession
 {
+    private readonly nameOfDefaultKernelSpec: string | undefined;
+    private readonly sessionManager: SessionManager;
     constructor(
         resource: Resource,
         private connection: IJupyterConnection,
         kernelConnectionMetadata: KernelConnectionMetadata,
-        private nameOfDefaultKernelSpec: string | undefined,
-        private sessionManager: SessionManager,
         override readonly workingDirectory: Uri,
         private readonly idleTimeout: number,
         private readonly kernelService: IJupyterKernelService | undefined,
@@ -56,10 +56,19 @@ export class JupyterSession
             workingDirectory,
             interruptTimeout
         );
-    }
 
-    public override isServerSession(): this is IJupyterKernelSession {
-        return true;
+        const jlab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        const serverSettings = connection.serverSettings;
+        const specsManager = new jlab.KernelSpecManager({ serverSettings });
+        this.nameOfDefaultKernelSpec = specsManager.specs?.default;
+        specsManager.dispose();
+        const kernelManager = new jlab.KernelManager({ serverSettings });
+        this.disposables.push(kernelManager);
+        this.sessionManager = new jlab.SessionManager({
+            serverSettings,
+            kernelManager
+        });
+        this.disposables.push(this.sessionManager);
     }
 
     @capturePerfTelemetry(Telemetry.WaitForIdleJupyter)
@@ -96,7 +105,6 @@ export class JupyterSession
                     ...this.kernelConnectionMetadata.kernelModel,
                     model: this.kernelConnectionMetadata.kernelModel.model
                 }) as ISessionWithSocket;
-                newSession.kernelConnectionMetadata = this.kernelConnectionMetadata;
                 newSession.kernelSocketInformation = {
                     socket: this.requestCreator.getWebsocket(this.kernelConnectionMetadata.id),
                     options: {
@@ -106,8 +114,6 @@ export class JupyterSession
                         userName: ''
                     }
                 };
-                newSession.isRemoteSession = true;
-                newSession.resource = this.resource;
 
                 // newSession.kernel?.connectionStatus
                 await waitForCondition(
@@ -122,7 +128,6 @@ export class JupyterSession
             } else {
                 traceVerbose(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
                 newSession = await this.createSession(options);
-                newSession.resource = this.resource;
 
                 // Make sure it is idle before we return
                 await this.waitForIdleOnSession(newSession, this.idleTimeout, options.token);
@@ -268,34 +273,29 @@ export class JupyterSession
                     }
                 })
                     .then(async (session) => {
-                        if (session.kernel) {
-                            if (isRemoteConnection(this.kernelConnectionMetadata)) {
-                                traceInfo(DataScience.createdNewKernel(this.connection.baseUrl, session.kernel.id));
-                            }
-                            const sessionWithSocket = session as ISessionWithSocket;
-
-                            // Add on the kernel metadata & sock information
-                            sessionWithSocket.resource = this.resource;
-                            sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
-                            sessionWithSocket.kernelSocketInformation = {
-                                get socket() {
-                                    // When we restart kernels, a new websocket is created and we need to get the new one.
-                                    // & the id in the dictionary is the kernel.id.
-                                    return requestCreator.getWebsocket(session.kernel!.id);
-                                },
-                                options: {
-                                    clientId: session.kernel.clientId,
-                                    id: session.kernel.id,
-                                    model: { ...session.kernel.model },
-                                    userName: session.kernel.username
-                                }
-                            };
-                            if (!isLocalConnection(this.kernelConnectionMetadata)) {
-                                sessionWithSocket.isRemoteSession = true;
-                            }
-                            return sessionWithSocket;
+                        if (!session.kernel) {
+                            throw new JupyterSessionStartError(new Error(`No kernel created`));
                         }
-                        throw new JupyterSessionStartError(new Error(`No kernel created`));
+                        if (isRemoteConnection(this.kernelConnectionMetadata)) {
+                            traceInfo(DataScience.createdNewKernel(this.connection.baseUrl, session.kernel.id));
+                        }
+                        const sessionWithSocket = session as ISessionWithSocket;
+
+                        // Add on the kernel metadata & sock information
+                        sessionWithSocket.kernelSocketInformation = {
+                            get socket() {
+                                // When we restart kernels, a new websocket is created and we need to get the new one.
+                                // & the id in the dictionary is the kernel.id.
+                                return requestCreator.getWebsocket(session.kernel!.id);
+                            },
+                            options: {
+                                clientId: session.kernel.clientId,
+                                id: session.kernel.id,
+                                model: { ...session.kernel.model },
+                                userName: session.kernel.username
+                            }
+                        };
+                        return sessionWithSocket;
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),
             options.token

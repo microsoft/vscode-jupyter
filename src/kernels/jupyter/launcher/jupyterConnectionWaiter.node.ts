@@ -9,16 +9,16 @@ import { ObservableExecutionResult, Output } from '../../../platform/common/proc
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { JVSC_EXTENSION_ID, RegExpValues } from '../../../platform/common/constants';
+import { RegExpValues } from '../../../platform/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
-import { getJupyterConnectionDisplayName } from '../helpers';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
+import { JupyterConnection } from '../connection/jupyterConnection';
 
 const urlMatcher = new RegExp(RegExpValues.UrlPatternRegEx);
 
@@ -38,7 +38,8 @@ export class JupyterConnectionWaiter implements IDisposable {
         private readonly rootDir: Uri,
         private readonly getServerInfo: () => Promise<JupyterServerInfo[] | undefined>,
         serviceContainer: IServiceContainer,
-        private readonly interpreter: PythonEnvironment | undefined
+        private readonly interpreter: PythonEnvironment | undefined,
+        private readonly connection: JupyterConnection
     ) {
         // We want to reject our Jupyter connection after a specific timeout
         const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -92,8 +93,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             if (matchInfo) {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
-                const host = matchInfo.hostname;
-                this.resolveStartPromise(url, token, host);
+                this.resolveStartPromise(url, token);
             }
         }
         // At this point we failed to get the server info or a matching server via the python code, so fall back to
@@ -119,34 +119,23 @@ export class JupyterConnectionWaiter implements IDisposable {
                 // For more recent versions of Jupyter the web pages are served from `/tree` and the api is at the root.
                 const pathName = url.pathname.endsWith('/tree') ? url.pathname.replace('/tree', '') : url.pathname;
                 // Here we parsed the URL correctly
-                this.resolveStartPromise(
-                    `${url.protocol}//${url.host}${pathName}`,
-                    `${url.searchParams.get('token')}`,
-                    url.hostname
-                );
+                this.resolveStartPromise(`${url.protocol}//${url.host}${pathName}`, `${url.searchParams.get('token')}`);
             }
         }
     }
 
-    private resolveStartPromise(baseUrl: string, token: string, hostName: string) {
+    private resolveStartPromise(baseUrl: string, token: string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.rejected) {
-            const connection: IJupyterConnection = {
-                localLaunch: true,
-                serverHandle: {
-                    extensionId: JVSC_EXTENSION_ID,
-                    id: '_builtin.jupyterServerLauncher',
-                    handle: 'local'
-                },
-                baseUrl,
-                token,
-                hostName,
-                rootDirectory: this.rootDir,
-                displayName: getJupyterConnectionDisplayName(token, baseUrl),
-                dispose: () => this.launchResult.dispose()
-            };
-            this.startPromise.resolve(connection);
+            this.startPromise.resolve(
+                this.connection.createLocalConnectionInfo({
+                    baseUrl,
+                    disposable: this.launchResult,
+                    token,
+                    rootDirectory: this.rootDir
+                })
+            );
         }
     }
 

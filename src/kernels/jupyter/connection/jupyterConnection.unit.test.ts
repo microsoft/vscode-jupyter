@@ -13,7 +13,6 @@ import {
     IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
     JupyterServerInfo
 } from '../types';
@@ -44,7 +43,6 @@ use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
     let registrationPicker: IJupyterUriProviderRegistration;
-    let sessionManagerFactory: IJupyterSessionManagerFactory;
     let sessionManager: IJupyterSessionManager;
     let serverUriStorage: IJupyterServerUriStorage;
     let errorHandler: IDataScienceErrorHandler;
@@ -65,7 +63,6 @@ suite('Jupyter Connection', async () => {
 
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
-        sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
         sessionManager = mock<IJupyterSessionManager>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
         errorHandler = mock<IDataScienceErrorHandler>();
@@ -76,7 +73,6 @@ suite('Jupyter Connection', async () => {
         requestCreator = mock<IJupyterRequestCreator>();
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
-            instance(sessionManagerFactory),
             instance(serverUriStorage),
             instance(errorHandler),
             instance(applicationShell),
@@ -86,7 +82,6 @@ suite('Jupyter Connection', async () => {
         );
 
         (instance(sessionManager) as any).then = undefined;
-        when(sessionManagerFactory.create(anything(), anything())).thenReturn(instance(sessionManager));
         const serverConnectionChangeEvent = new EventEmitter<void>();
         disposables.push(serverConnectionChangeEvent);
 
@@ -164,6 +159,7 @@ suite('JupyterConnection', () => {
     let launchResult: ObservableExecutionResult<string>;
     let getServerInfoStub: sinon.SinonStub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>;
     let configService: IConfigurationService;
+    let jupyterConnection: JupyterConnection;
     let fs: IFileSystemNode;
     let serviceContainer: IServiceContainer;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -218,6 +214,7 @@ suite('JupyterConnection', () => {
         getServerInfoStub = sinon.stub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>();
         serviceContainer = mock(ServiceContainer);
         fs = mock<IFileSystemNode>();
+        jupyterConnection = mock<JupyterConnection>();
         configService = mock(ConfigurationService);
         const settings = mock(JupyterSettings);
         getServerInfoStub.resolves(dummyServerInfos);
@@ -234,7 +231,8 @@ suite('JupyterConnection', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             getServerInfoStub as any,
             instance(serviceContainer),
-            undefined
+            undefined,
+            instance(jupyterConnection)
         );
     }
     test('Successfully gets connection info', async () => {

@@ -103,7 +103,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         const requiresPassword = await this.needPassword(url);
         if (requiresPassword || isTokenEmpty) {
             let userPassword: undefined | string;
-            if (requiresPassword) {
+            if (requiresPassword && isTokenEmpty) {
                 let friendlyUrl = url;
                 const uri = new URL(url);
                 friendlyUrl = `${uri.protocol}//${uri.hostname}`;

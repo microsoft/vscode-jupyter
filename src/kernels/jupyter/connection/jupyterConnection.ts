@@ -12,22 +12,22 @@ import {
     IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
     JupyterServerProviderHandle
 } from '../types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { IConfigurationService } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
-import { traceError } from '../../../platform/logging';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { ServerConnection } from '@jupyterlab/services';
 import { IJupyterConnection } from '../../types';
 import { Uri } from 'vscode';
 import { getJupyterConnectionDisplayName } from '../helpers';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { JupyterLabHelper } from '../session/jupyterLabHelper';
 
 /**
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.
@@ -46,8 +46,6 @@ export class JupyterConnection {
     constructor(
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        @inject(IJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IDataScienceErrorHandler)
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -59,16 +57,50 @@ export class JupyterConnection {
         private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined
     ) {}
 
-    public async createConnectionInfo(serverHandle: JupyterServerProviderHandle) {
+    public async createRemoveConnectionInfo(serverHandle: JupyterServerProviderHandle) {
         const server = await this.serverUriStorage.get(serverHandle);
         if (!server) {
             throw new Error('Server Not found');
         }
         const serverUri = await this.getJupyterServerUri(serverHandle);
-        return createRemoteConnectionInfo(serverHandle, serverUri);
+        const partialConnection = createRemoteConnectionInfo(serverHandle, serverUri);
+        return { ...partialConnection, serverSettings: this.toServerConnectionSettings(partialConnection) };
     }
 
-    public toServerConnectionSettings(connection: IJupyterConnection): ServerConnection.ISettings {
+    public async createLocalConnectionInfo({
+        baseUrl,
+        token,
+        disposable,
+        rootDirectory
+    }: {
+        baseUrl: string;
+        token: string;
+        rootDirectory: Uri;
+        disposable: IDisposable;
+    }) {
+        const partialConnection: Omit<IJupyterConnection, 'serverSettings'> = {
+            localLaunch: true,
+            serverHandle: {
+                extensionId: JVSC_EXTENSION_ID,
+                id: '_builtin.jupyterServerLauncher',
+                handle: 'local'
+            },
+            baseUrl,
+            token,
+            hostName: new URL(baseUrl).hostname,
+            rootDirectory,
+            displayName: getJupyterConnectionDisplayName(token, baseUrl),
+            dispose: () => disposable.dispose()
+        };
+        return {
+            ...partialConnection,
+            serverSettings: this.toServerConnectionSettings(partialConnection)
+        };
+    }
+
+    private toServerConnectionSettings(
+        connection: Omit<IJupyterConnection, 'serverSettings'>
+    ): ServerConnection.ISettings {
         let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connection.baseUrl,
             appUrl: '',
@@ -119,14 +151,12 @@ export class JupyterConnection {
     ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
         serverUri = serverUri || (await this.getJupyterServerUri(serverHandle));
-        const connection = createRemoteConnectionInfo(serverHandle, serverUri);
+        const partialConnection = createRemoteConnectionInfo(serverHandle, serverUri);
+        const connection = { ...partialConnection, serverSettings: this.toServerConnectionSettings(partialConnection) };
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
-            sessionManager = this.jupyterSessionManagerFactory.create(
-                connection,
-                this.toServerConnectionSettings(connection)
-            );
+            sessionManager = new JupyterLabHelper(connection);
             await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
             // We should throw an exception if any of that fails.
         } catch (err) {
@@ -149,10 +179,6 @@ export class JupyterConnection {
                 // Can't set the URI in this case.
                 throw err;
             } else {
-                traceError(
-                    `Uri verification error ${serverHandle.extensionId}, id=${serverHandle.id}, handle=${serverHandle.handle}`,
-                    err
-                );
                 throw err;
             }
         } finally {
@@ -178,7 +204,7 @@ export class JupyterConnection {
 function createRemoteConnectionInfo(
     serverHandle: JupyterServerProviderHandle,
     serverUri: IJupyterServerUri
-): IJupyterConnection {
+): Omit<IJupyterConnection, 'serverSettings'> {
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
     const hostName = new URL(serverUri.baseUrl).hostname;
