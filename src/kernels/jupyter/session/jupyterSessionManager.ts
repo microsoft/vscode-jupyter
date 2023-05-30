@@ -43,7 +43,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private readonly sessionManager: SessionManager;
     private readonly specsManager: KernelSpecManager;
     private readonly kernelManager: KernelManager;
-    private readonly contentsManager: ContentsManager;
+    public readonly contentsManager: ContentsManager;
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private disposed?: boolean;
     public get isDisposed() {
@@ -163,7 +163,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             resource,
             this.connection,
             kernelConnection,
-            this.specsManager,
+            this.specsManager.specs?.default,
             this.sessionManager,
             this.contentsManager,
             this.outputChannel,

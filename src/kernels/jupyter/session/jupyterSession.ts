@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
+import type { ContentsManager, Session, SessionManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
@@ -37,9 +37,9 @@ export class JupyterSession
 {
     constructor(
         resource: Resource,
-        private connInfo: IJupyterConnection,
+        private connection: IJupyterConnection,
         kernelConnectionMetadata: KernelConnectionMetadata,
-        private specsManager: KernelSpecManager,
+        private nameOfDefaultKernelSpec: string | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
         private readonly outputChannel: IOutputChannel,
@@ -52,7 +52,7 @@ export class JupyterSession
         private readonly sessionCreator: KernelActionSource
     ) {
         super(
-            connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
+            connection.localLaunch ? 'localJupyter' : 'remoteJupyter',
             resource,
             kernelConnectionMetadata,
             workingDirectory,
@@ -203,53 +203,6 @@ export class JupyterSession
         return promise;
     }
 
-    async invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void> {
-        if (!this.resource) {
-            return;
-        }
-
-        const backingFile = await this.backingFileCreator.createBackingFile(
-            this.resource,
-            this.workingDirectory,
-            this.kernelConnectionMetadata,
-            this.connInfo,
-            this.contentsManager
-        );
-
-        if (!backingFile) {
-            return;
-        }
-
-        await this.contentsManager
-            .save(backingFile!.filePath, {
-                content: JSON.parse(contents),
-                type: 'notebook'
-            })
-            .catch(noop);
-
-        await handler({
-            filePath: backingFile.filePath,
-            dispose: backingFile.dispose.bind(backingFile)
-        });
-
-        await backingFile.dispose();
-        await this.contentsManager.delete(backingFile.filePath).catch(noop);
-    }
-
-    async createTempfile(ext: string): Promise<string> {
-        const tempFile = await this.contentsManager.newUntitled({ type: 'file', ext });
-        return tempFile.path;
-    }
-
-    async deleteTempfile(file: string): Promise<void> {
-        await this.contentsManager.delete(file);
-    }
-
-    async getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel> {
-        const data = await this.contentsManager.get(file, { type: 'file', format: format, content: true });
-        return data;
-    }
-
     private async createSession(options: {
         token: CancellationToken;
         ui: IDisplayOptions;
@@ -257,7 +210,7 @@ export class JupyterSession
         const telemetryInfo = {
             failedWithoutBackingFile: false,
             failedWithBackingFile: false,
-            localHost: this.connInfo.localLaunch
+            localHost: this.connection.localLaunch
         };
 
         try {
@@ -284,7 +237,7 @@ export class JupyterSession
         ui: IDisplayOptions;
         createBakingFile: boolean;
     }): Promise<ISessionWithSocket> {
-        const remoteSessionOptions = getRemoteSessionOptions(this.connInfo, this.resource);
+        const remoteSessionOptions = getRemoteSessionOptions(this.connection, this.resource);
         let backingFile: IBackupFile | undefined;
         let sessionPath = remoteSessionOptions?.path;
 
@@ -294,7 +247,7 @@ export class JupyterSession
                 this.resource,
                 this.workingDirectory,
                 this.kernelConnectionMetadata,
-                this.connInfo,
+                this.connection,
                 this.contentsManager
             );
             sessionPath = backingFile?.filePath;
@@ -317,7 +270,7 @@ export class JupyterSession
                 );
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
-                if (this.connInfo && backingFile) {
+                if (this.connection && backingFile) {
                     this.contentsManager.delete(backingFile.filePath).catch(noop);
                 }
                 throw ex;
@@ -328,7 +281,7 @@ export class JupyterSession
         // understand that empty kernel name means the default kernel.
         // See https://github.com/microsoft/vscode-jupyter/issues/5290
         const kernelName =
-            getNameOfKernelConnection(this.kernelConnectionMetadata) ?? this.specsManager?.specs?.default ?? '';
+            getNameOfKernelConnection(this.kernelConnectionMetadata) ?? this.nameOfDefaultKernelSpec ?? '';
 
         // NOTE: If the path is a constant value such as `remoteFilePath` then Jupyter will alway re-use the same kernel sessions.
         // I.e. if we select Remote Kernel A for Notebook a.ipynb, then a session S1 will be created.
@@ -371,7 +324,7 @@ export class JupyterSession
                     .then(async (session) => {
                         if (session.kernel) {
                             this.logRemoteOutput(
-                                DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || '')
+                                DataScience.createdNewKernel(this.connection.baseUrl, session?.kernel?.id || '')
                             );
                             const sessionWithSocket = session as ISessionWithSocket;
 
@@ -400,7 +353,7 @@ export class JupyterSession
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(async () => {
-                        if (this.connInfo && backingFile) {
+                        if (this.connection && backingFile) {
                             this.contentsManager.delete(backingFile.filePath).catch(noop);
                         }
                     }),

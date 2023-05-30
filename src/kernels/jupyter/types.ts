@@ -59,6 +59,7 @@ export interface IJupyterSessionManagerFactory {
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
+    readonly contentsManager: ContentsManager;
     readonly isDisposed: boolean;
     startNew(
         resource: Resource,

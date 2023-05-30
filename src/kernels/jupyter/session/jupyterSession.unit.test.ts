@@ -6,7 +6,6 @@ import {
     ContentsManager,
     Kernel,
     KernelMessage,
-    KernelSpecManager,
     ServerConnection,
     Session,
     SessionManager
@@ -51,7 +50,6 @@ suite('JupyterSession', () => {
     let mockKernelSpec: ReadWrite<KernelConnectionMetadata>;
     let sessionManager: SessionManager;
     let contentsManager: ContentsManager;
-    let specManager: KernelSpecManager;
     let session: ISessionWithSocket;
     let kernel: Kernel.IKernelConnection;
     let statusChangedSignal: ISignal<ISessionWithSocket, Kernel.Status>;
@@ -141,7 +139,6 @@ suite('JupyterSession', () => {
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);
         contentsManager = mock(ContentsManager);
-        specManager = mock(KernelSpecManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
         const fs = mock<FileSystem>();
@@ -155,7 +152,7 @@ suite('JupyterSession', () => {
             resource,
             instance(connection),
             mockKernelSpec,
-            instance(specManager),
+            '',
             instance(sessionManager),
             instance(contentsManager),
             channel,
