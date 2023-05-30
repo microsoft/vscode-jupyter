@@ -55,20 +55,20 @@ export class PythonEnvironmentFilter implements IDisposable {
              * E.g. `~/miniconda3/envs/wow/hello/python`
              * Paths defined here can be case insensitive and path seprators can be either / or \
              */
+            const displayPath = getDisplayPath(item.trim()).toLowerCase().replace(/\\/g, '/');
             item = item.trim().toLowerCase().replace(/\\/g, '/');
             if (item.length === 0) {
                 return false;
             }
-            if (item === getDisplayPath(interpreter.uri).toLowerCase().replace(/\\/g, '/')) {
+            const displayInterpreterPath = getDisplayPath(interpreter.uri).toLowerCase().replace(/\\/g, '/');
+            if (item === displayInterpreterPath || displayPath === displayInterpreterPath) {
                 return true;
             }
             // Possible user entered the path to the environment instead of the executable.
-            if (
-                item ===
-                getDisplayPath(interpreter.envPath || '')
-                    .toLowerCase()
-                    .replace(/\\/g, '/')
-            ) {
+            const displayEnvPath = getDisplayPath(interpreter.envPath || '')
+                .toLowerCase()
+                .replace(/\\/g, '/');
+            if (item === displayEnvPath || displayPath === displayEnvPath) {
                 return true;
             }
             return false;
