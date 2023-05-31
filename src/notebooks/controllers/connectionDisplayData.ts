@@ -108,7 +108,6 @@ export class ConnectionDisplayDataProvider {
                     this,
                     this.disposables
                 );
-                this.interpreters.onDidChangeInterpreters(updateInterpreterInfo, this, this.disposables);
             }
         }
         const details: ConnectionDisplayData = this.details.get(connection.id)!;
