@@ -53,6 +53,8 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         this.refreshedOnceBefore = true;
 
         const displayProgress = () => {
+            const id = Date.now().toString();
+            traceInfo(`Start refreshing Kernel Picker (${id})`);
             const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
             const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
             this.disposables.push(taskNb);
@@ -61,6 +63,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             this.kernelFinder.onDidChangeStatus(
                 () => {
                     if (this.kernelFinder.status === 'idle') {
+                        traceInfo(`End refreshing Kernel Picker (${id})`);
                         taskNb.dispose();
                         taskIW.dispose();
                     }
@@ -94,7 +97,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         }
         this.refreshedOnceBefore = true;
         const id = Date.now().toString();
-        traceInfo(`Start refreshing Kernel Picker (${id})`);
+        traceInfo(`Start refreshing Interpreter Kernel Picker (${id})`);
         const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
         const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
         this.disposables.push(taskNb);
@@ -102,7 +105,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
 
         this.interpreterService.refreshInterpreters().finally(() => {
             if (this.kernelFinder.status === 'idle') {
-                traceInfo(`End refreshing Kernel Picker (${id})`);
+                traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
                 taskNb.dispose();
                 taskIW.dispose();
                 return;
@@ -110,7 +113,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             this.kernelFinder.onDidChangeStatus(
                 () => {
                     if (this.kernelFinder.status === 'idle') {
-                        traceInfo(`End refreshing Kernel Picker (${id})`);
+                        traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
                         taskNb.dispose();
                         taskIW.dispose();
                     }
