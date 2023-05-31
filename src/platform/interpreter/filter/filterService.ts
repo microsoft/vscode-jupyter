@@ -55,19 +55,34 @@ export class PythonEnvironmentFilter implements IDisposable {
              * E.g. `~/miniconda3/envs/wow/hello/python`
              * Paths defined here can be case insensitive and path seprators can be either / or \
              */
+            const displayPath = getDisplayPath(item.trim()).toLowerCase().replace(/\\/g, '/');
             item = item.trim().toLowerCase().replace(/\\/g, '/');
             if (item.length === 0) {
                 return false;
             }
-            if (item === getDisplayPath(interpreter.uri).toLowerCase().replace(/\\/g, '/')) {
+            const displayInterpreterPath = getDisplayPath(interpreter.uri).toLowerCase().replace(/\\/g, '/');
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            const interpreterPath = interpreter.uri.fsPath.toLowerCase().replace(/\\/g, '/');
+            if (
+                item === displayInterpreterPath ||
+                displayPath === displayInterpreterPath ||
+                item === interpreterPath ||
+                displayPath === interpreterPath
+            ) {
                 return true;
             }
             // Possible user entered the path to the environment instead of the executable.
+            const displayEnvPath = getDisplayPath(interpreter.envPath || '')
+                .toLowerCase()
+                .replace(/\\/g, '/');
+            const envPath = getDisplayPath(interpreter.envPath || '')
+                .toLowerCase()
+                .replace(/\\/g, '/');
             if (
-                item ===
-                getDisplayPath(interpreter.envPath || '')
-                    .toLowerCase()
-                    .replace(/\\/g, '/')
+                item === displayEnvPath ||
+                displayPath === displayEnvPath ||
+                item === envPath ||
+                displayPath === envPath
             ) {
                 return true;
             }
