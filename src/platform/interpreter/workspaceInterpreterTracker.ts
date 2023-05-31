@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { IDisposableRegistry, IExtensions, Resource } from '../common/types';
+import { IDisposableRegistry, IExtensions, IsWebExtension, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
@@ -24,7 +24,8 @@ export class WorkspaceInterpreterTracker implements IExtensionSyncActivationServ
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IsWebExtension) private readonly webExtension: boolean
     ) {
         WorkspaceInterpreterTracker.getWorkspaceIdentifier = this.workspaceService.getWorkspaceFolderIdentifier.bind(
             this.workspaceService
@@ -46,6 +47,9 @@ export class WorkspaceInterpreterTracker implements IExtensionSyncActivationServ
         return areInterpreterPathsSame(activeInterpreterPath, interpreter.uri);
     }
     private trackActiveInterpreters() {
+        if (this.webExtension) {
+            return;
+        }
         if (this.trackingInterpreters || !this.pythonExtensionChecker.isPythonExtensionActive) {
             return;
         }
