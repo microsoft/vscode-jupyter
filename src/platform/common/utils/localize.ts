@@ -35,6 +35,8 @@ export namespace Common {
 }
 
 export namespace Experiments {
+    export const notInGroup = (groupName: string) =>
+        l10n.t("User does not belong to experiment group '{0}'", groupName);
     export const inGroup = (groupName: string) => l10n.t("User belongs to experiment group '{0}'", groupName);
 }
 export namespace OutputChannelNames {
