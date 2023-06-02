@@ -271,8 +271,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<RemoteKernelConnectionMetadata[]> {
         try {
-            traceVerbose('UniversalRemoteKernelFinder: get from cache');
-
             let results: RemoteKernelConnectionMetadata[] = this.cache;
             const key = this.cacheKey;
 
