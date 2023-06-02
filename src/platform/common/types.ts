@@ -6,7 +6,6 @@ import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, Ou
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandIds } from '../../commands';
 import { ICommandManager } from './application/types';
-import { Experiments } from './experiments/groups';
 import { ISystemVariables } from './variables/types';
 
 export const IsCodeSpace = Symbol('IsCodeSpace');
@@ -295,6 +294,8 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
 }
 
+export enum Experiments {}
+
 /**
  * Experiment service leveraging VS Code's experiment framework.
  */
@@ -302,8 +303,8 @@ export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
     activate(): Promise<void>;
     inExperiment(experimentName: Experiments): Promise<boolean>;
-    getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
-    logExperiments(): void;
+    inExperimentSync(experimentName: Experiments): boolean;
+    getExperimentValue<T extends boolean | number | string>(experimentName: Experiments): Promise<T | undefined>;
 }
 
 export type InterpreterUri = Resource | PythonEnvironment;

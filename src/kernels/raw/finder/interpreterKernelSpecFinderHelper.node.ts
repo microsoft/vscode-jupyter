@@ -95,7 +95,9 @@ export async function findKernelSpecsInInterpreter(
         }
     });
     results = results.filter((r) => !r.specFile || !originalSpecFiles.has(r.specFile));
-    traceVerbose(`Kernel Specs found in interpreter ${interpreter.id} are ${JSON.stringify(results)}`);
+    if (results.length) {
+        traceVerbose(`Kernel Specs found in interpreter ${interpreter.id} are ${JSON.stringify(results)}`);
+    }
     // There was also an old bug where the same item would be registered more than once. Eliminate these dupes
     // too.
     const uniqueKernelSpecs: IJupyterKernelSpec[] = [];
@@ -169,7 +171,7 @@ export class InterpreterSpecificKernelSpecsFinder implements IDisposable {
     private async listKernelSpecsImpl() {
         const cancelToken = this.cancelToken.token;
 
-        traceVerbose(`Listing Python & non-Python kernels for Interpreter ${getDisplayPath(this.interpreter.uri)}`);
+        traceVerbose(`Search for KernelSpecs in Interpreter ${getDisplayPath(this.interpreter.uri)}`);
         const [kernelSpecsBelongingToPythonEnvironment, tempDirForKernelSpecs] = await Promise.all([
             findKernelSpecsInInterpreter(this.interpreter, cancelToken, this.jupyterPaths, this.kernelSpecFinder),
             this.jupyterPaths.getKernelSpecTempRegistrationFolder()
@@ -215,7 +217,6 @@ export class InterpreterSpecificKernelSpecsFinder implements IDisposable {
                       id: getKernelId(k, this.interpreter)
                   });
 
-            traceVerbose(`Found kernel spec at end of discovery ${kernelSpec?.id}`);
             // Check if we have already seen this.
             if (kernelSpec && !distinctKernelMetadata.has(kernelSpec.id)) {
                 distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
@@ -233,7 +234,6 @@ export class InterpreterSpecificKernelSpecsFinder implements IDisposable {
             interpreter: this.interpreter,
             id: getKernelId(spec, this.interpreter)
         });
-        traceVerbose(`Kernel for interpreter ${this.interpreter.id} is ${result.id}`);
         if (!distinctKernelMetadata.has(result.id)) {
             distinctKernelMetadata.set(result.id, result);
         }

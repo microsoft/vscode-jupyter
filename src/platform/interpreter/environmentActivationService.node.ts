@@ -109,11 +109,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 if (token?.isCancellationRequested) {
                     return;
                 }
-                traceVerbose(
-                    `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms with ${
-                        Object.keys(env || {}).length
-                    } variables`
-                );
                 return env;
             })
             .catch((ex) => {
