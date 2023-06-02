@@ -119,7 +119,7 @@ export class ExperimentService implements IExperimentService {
     ): Promise<T | undefined> {
         if (
             !this.experimentationService ||
-            this._optOutFrom.includes('All') ||
+            !this.enabled ||
             this._optOutFrom.includes(experiment as unknown as string)
         ) {
             return;
@@ -180,7 +180,7 @@ export class ExperimentService implements IExperimentService {
                 // Filter out experiment groups that are not from the Python extension.
                 // Filter out experiment groups that are not already opted out or opted into.
                 if (
-                    exp.toLowerCase().startsWith('python') &&
+                    exp.toLowerCase().startsWith('jupyter') &&
                     !this._optOutFrom.includes(exp) &&
                     !this._optInto.includes(exp)
                 ) {
