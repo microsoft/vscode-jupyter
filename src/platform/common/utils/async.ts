@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CancellationToken, CancellationTokenSource, EventEmitter } from 'vscode';
+import type { CancellationToken, CancellationTokenSource, Disposable, Event, EventEmitter } from 'vscode';
 import type { IDisposable } from '../types';
 import { MicrotaskDelay } from './symbols';
-import { Event } from 'vscode';
 import { toPromise } from './events';
 
 export type PromiseFunction = (...any: any[]) => Promise<any>;
@@ -276,7 +275,7 @@ function createCancellationError() {
     }
 }
 export function createCancelablePromise<T>(callback: (token: CancellationToken) => Promise<T>): CancelablePromise<T> {
-    const source = new CancellationTokenSource();
+    const source = createCancellationTokenSource();
 
     const thenable = callback(source.token);
     const promise = new Promise<T>((resolve, reject) => {
@@ -464,7 +463,11 @@ export class Throttler {
                 };
 
                 this.queuedPromise = new Promise((resolve) => {
-                    this.activePromise!.then(onComplete, onComplete).then(resolve);
+                    this.activePromise!.then(onComplete, onComplete)
+                        .then(resolve)
+                        .catch((ex) => {
+                            console.error('Error from queued promise: ', ex);
+                        });
                 });
             }
 
@@ -507,7 +510,9 @@ export class SequencerByKey<TKey> {
     queue<T>(key: TKey, promiseTask: ITask<Promise<T>>): Promise<T> {
         const runningPromise = this.promiseMap.get(key) ?? Promise.resolve();
         const newPromise = runningPromise
-            .catch(() => {})
+            .catch(() => {
+                //
+            })
             .then(promiseTask)
             .finally(() => {
                 if (this.promiseMap.get(key) === newPromise) {
@@ -893,7 +898,7 @@ export class Limiter<T> implements ILimiter<T> {
         this.maxDegreeOfParalellism = maxDegreeOfParalellism;
         this.outstandingPromises = [];
         this.runningPromises = 0;
-        this._onDrained = new EventEmitter<void>();
+        this._onDrained = createEventEmitter<void>();
     }
 
     /**
@@ -1852,7 +1857,7 @@ export class AsyncIterableObject<T> implements AsyncIterable<T> {
         this._state = AsyncIterableSourceState.Initial;
         this._results = [];
         this._error = null;
-        this._onStateChanged = new EventEmitter<void>();
+        this._onStateChanged = createEventEmitter<void>();
 
         queueMicrotask(async () => {
             const writer: AsyncIterableEmitter<T> = {
@@ -2012,7 +2017,7 @@ export class CancelableAsyncIterableObject<T> extends AsyncIterableObject<T> {
 export function createCancelableAsyncIterable<T>(
     callback: (token: CancellationToken) => AsyncIterable<T>
 ): CancelableAsyncIterableObject<T> {
-    const source = new CancellationTokenSource();
+    const source = createCancellationTokenSource();
     const innerIterable = callback(source.token);
 
     return new CancelableAsyncIterableObject<T>(source, async (emitter) => {
@@ -2040,3 +2045,62 @@ export function createCancelableAsyncIterable<T>(
 }
 
 //#endregion
+
+function createEventEmitter<T>() {
+    const Cls = require('vscode').EventEmitter as typeof EventEmitter;
+    if (Cls) {
+        return new Cls<T>();
+    }
+    throw new Error('Not Found');
+}
+
+function createCancellationTokenSource() {
+    try {
+        const Cls = require('vscode').CancellationTokenSource as typeof CancellationTokenSource;
+        if (Cls) {
+            return new Cls();
+        }
+        throw new Error('Not Found');
+    } catch (err) {
+        return new (class CancellationTokenSourceFromAbortSignal implements CancellationTokenSource, CancellationToken {
+            private listeners: ((e: undefined) => any)[] = [];
+            public isCancellationRequested: boolean;
+            public onCancellationRequested(
+                listener: (e: undefined) => any,
+                thisArgs?: any,
+                disposables?: Disposable[]
+            ): Disposable {
+                listener = thisArgs ? listener.bind(thisArgs) : listener;
+                this.listeners.push(listener);
+                const disposable = {
+                    dispose: () => {
+                        const index = this.listeners.indexOf(listener);
+                        if (index >= 0) {
+                            this.listeners.splice(index, 1);
+                        }
+                    }
+                };
+                if (disposables) {
+                    disposables.push(disposable);
+                }
+                return disposable;
+            }
+            public get token(): CancellationToken {
+                return this;
+            }
+            cancel(): void {
+                this.isCancellationRequested = true;
+                this.listeners.forEach((listener) => {
+                    try {
+                        listener(undefined);
+                    } catch {
+                        //
+                    }
+                });
+            }
+            dispose(): void {
+                this.listeners = [];
+            }
+        })();
+    }
+}
