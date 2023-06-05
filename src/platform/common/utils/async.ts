@@ -265,8 +265,9 @@ function createCancellationError() {
         }
     }
     try {
-        if (require('vscode').CancellationError) {
-            return new (require('vscode').CancellationError)();
+        const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
+        if (requireFunc('vscode').CancellationError) {
+            return new (requireFunc('vscode').CancellationError)();
         } else {
             return new InternalCancellationError();
         }
@@ -2047,7 +2048,8 @@ export function createCancelableAsyncIterable<T>(
 //#endregion
 
 function createEventEmitter<T>() {
-    const Cls = require('vscode').EventEmitter as typeof EventEmitter;
+    const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
+    const Cls = requireFunc('vscode').EventEmitter as typeof EventEmitter;
     if (Cls) {
         return new Cls<T>();
     }
@@ -2056,7 +2058,8 @@ function createEventEmitter<T>() {
 
 function createCancellationTokenSource() {
     try {
-        const Cls = require('vscode').CancellationTokenSource as typeof CancellationTokenSource;
+        const requireFunc = typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
+        const Cls = requireFunc('vscode').CancellationTokenSource as typeof CancellationTokenSource;
         if (Cls) {
             return new Cls();
         }

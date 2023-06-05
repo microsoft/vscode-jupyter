@@ -147,7 +147,7 @@ function buildConfiguration(bundle) {
         devtool: isProdBuild ? undefined : 'inline-source-map',
         optimization: undefined,
         plugins,
-        externals: ['log4js', 'vscode'],
+        externals: ['log4js'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
             extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
