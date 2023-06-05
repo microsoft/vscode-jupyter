@@ -8,7 +8,7 @@ import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
-import { isPromise } from '../platform/common/utils/async';
+import { isPromise } from '../platform/common/utils/async.core';
 import { computeHash } from '../platform/common/crypto';
 import { AsyncFunc, Func, Suite, Test } from 'mocha';
 

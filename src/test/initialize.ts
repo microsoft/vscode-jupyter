@@ -6,7 +6,7 @@ import { clearPendingChainedUpdatesForTests } from '../kernels/execution/noteboo
 import { IExtensionApi } from '../standalone/api/api';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
-import { sleep } from '../platform/common/utils/async';
+import { sleep } from '../platform/common/utils/async.core';
 import { clearPendingTimers, IExtensionTestApi } from './common';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 import { noop } from './core';

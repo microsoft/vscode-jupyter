@@ -4,7 +4,7 @@
 import type { TextDocument, Uri } from 'vscode';
 import { NotebookCellScheme } from '../constants';
 import { InterpreterUri, Resource } from '../types';
-import { isPromise } from './async';
+import { isPromise } from './async.core';
 import { StopWatch } from './stopWatch';
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
