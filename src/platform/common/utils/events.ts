@@ -10,7 +10,6 @@ import { BaseDisposable, DisposableStore, SafeDisposable, combinedDisposable, to
 import { StopWatch } from './stopWatch';
 import { once as onceFn } from './functional';
 import { LinkedList } from './linkedList';
-import { traceWarning } from '../../logging';
 import { noop } from './misc';
 import { IObservable, IObserver } from './observableImpl/base';
 import { MicrotaskDelay } from './symbols';
@@ -1275,7 +1274,7 @@ export class AsyncEmitter<T extends IWaitUntil> extends Emitter<T> {
             try {
                 listener.invoke(event);
             } catch (e) {
-                traceWarning(`[event] invoke listener failed with an error`, e);
+                console.warn(`[event] invoke listener failed with an error`, e);
                 continue;
             }
 
@@ -1286,7 +1285,7 @@ export class AsyncEmitter<T extends IWaitUntil> extends Emitter<T> {
             await Promise.allSettled(thenables).then((values) => {
                 for (const value of values) {
                     if (value.status === 'rejected') {
-                        traceWarning(`[event] invoke listener failed`, value.reason);
+                        console.warn(`[event] invoke listener failed`, value.reason);
                     }
                 }
             });
