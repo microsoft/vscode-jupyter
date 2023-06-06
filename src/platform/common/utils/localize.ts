@@ -672,9 +672,11 @@ export namespace DataScience {
             extensionLink,
             prompt
         );
-    export const thanksForUsingJupyterKernelApiPleaseRegisterWithUs = l10n.t(
-        'Thanks for trying the Jupyter API. Please file an issue on our repo to use this API in production. This would prevent us from breaking your extension when updating the API (as it is still a work in progress).'
-    );
+    export const thanksForUsingJupyterKernelApiPleaseRegisterWithUs = (extension: string) =>
+        l10n.t(
+            'Thank you for trying the Jupyter API. Please file an issue on our repo to allow the extension {0} to use this API in production. This would prevent us from breaking your extension when updating the API (as it is still a work in progress).',
+            extension
+        );
     export const activatingPythonEnvironment = (pythonEnvName: string) =>
         l10n.t("Activating Python Environment '{0}'", pythonEnvName);
 
