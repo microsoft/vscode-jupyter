@@ -1201,6 +1201,33 @@ export class IEventNamePropertyMapping {
         source: 'N/A'
     };
     /**
+     * Sent when checking for passwords for Jupyter Hub
+     */
+    [Telemetry.CheckPasswordJupyterHub]: TelemetryEventInfo<{
+        failed: boolean;
+        info:
+            | 'passwordNotRequired'
+            | 'emptyResponseFromLogin'
+            | 'gotResponseFromLogin'
+            | 'emptyResponseFromApi'
+            | 'gotResponseFromApi'
+            | 'failure';
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            info: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
+    };
+    /**
      * User tried to open the data viewer and Pandas package was not installed.
      * Note: Not a failure state, as we prompt for install after this.
      */
