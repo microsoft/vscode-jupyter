@@ -208,7 +208,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                                 progress.report({ message });
                             }
                         }
-                        await raceCancellation(token, true, deferred.promise);
+                        await raceCancellation(token, deferred.promise);
                         if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
                             KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
                         }

@@ -248,12 +248,14 @@ export class JupyterInterpreterDependencyService {
 
         await raceCancellation(
             token,
-            this.installer
-                .isInstalled(Product.jupyter, interpreter)
-                .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter))),
-            this.installer
-                .isInstalled(Product.notebook, interpreter)
-                .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook)))
+            Promise.all([
+                this.installer
+                    .isInstalled(Product.jupyter, interpreter)
+                    .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter))),
+                this.installer
+                    .isInstalled(Product.notebook, interpreter)
+                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook)))
+            ])
         );
 
         if (notInstalled.length > 0) {
