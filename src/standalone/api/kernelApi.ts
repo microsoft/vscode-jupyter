@@ -15,7 +15,6 @@ import {
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../../platform/common/types';
-import { PromiseChain } from '../../platform/common/utils/async';
 import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { ApiAccessService } from './apiAccessService';
@@ -36,7 +35,6 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
-    private readonly chainedApiAccess = new PromiseChain();
     private readonly extensionApi = new Map<string, IExportedKernelService>();
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
@@ -50,7 +48,7 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
     ) {}
     public async getService() {
         const info = await this.extensions.determineExtensionFromCallStack();
-        const accessInfo = await this.chainedApiAccess.chainFinally(() => this.apiAccess.getAccessInformation(info));
+        const accessInfo = await this.apiAccess.getAccessInformation(info);
         if (!accessInfo.accessAllowed) {
             return;
         }

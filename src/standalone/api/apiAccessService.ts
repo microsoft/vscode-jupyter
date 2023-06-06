@@ -6,11 +6,11 @@ import { ExtensionMode, Memento } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../../platform/common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../platform/common/types';
-import { PromiseChain } from '../../platform/common/utils/async';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
+import { PromiseChain } from '../../platform/common/utils/async';
 
 type ApiExtensionInfo = {
     extensionId: string;

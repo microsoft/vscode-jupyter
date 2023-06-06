@@ -17,7 +17,7 @@ import { raceCancellation } from '../../platform/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
-import { waitForPromise } from '../../platform/common/utils/async';
+import { raceTimeout } from '../../platform/common/utils/async';
 import { isNotebookCell } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IKernelSession, IKernelProvider } from '../../kernels/types';
@@ -90,11 +90,11 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         // Allow slower timeouts for CI (testing).
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const [result, pylanceResults] = await Promise.all([
-            waitForPromise(
-                this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token),
-                IntellisenseTimeout
+            raceTimeout(
+                IntellisenseTimeout,
+                this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token)
             ),
-            waitForPromise(this.getPylanceCompletions(document, position, context, token), IntellisenseTimeout)
+            raceTimeout(IntellisenseTimeout, this.getPylanceCompletions(document, position, context, token))
         ]);
         if (!result) {
             traceInfoIfCI(`Notebook completions not found.`);

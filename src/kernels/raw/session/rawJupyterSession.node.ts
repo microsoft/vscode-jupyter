@@ -272,11 +272,11 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
             try {
                 traceVerbose('Sending request for kernelinfo');
                 await raceTimeout(
+                    Math.min(this.launchTimeout, 1_500),
                     raceCancellationError(
                         options.token,
                         Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise])
-                    ),
-                    Math.min(this.launchTimeout, 1_500)
+                    )
                 );
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
