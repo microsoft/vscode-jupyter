@@ -6,11 +6,10 @@ import { inject, injectable, named } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { raceCancellation } from '../../platform/common/cancellation';
+import { raceCancellationError } from '../../platform/common/cancellation';
 import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
-
 import { sleep } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -108,7 +107,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
                 const notebooks = this.getMatchingKernels(document);
                 if (notebooks.length) {
                     // Just use the first one to reply if more than one.
-                    const attributes = await raceCancellation(
+                    const attributes = await raceCancellationError(
                         token,
                         // Note, getVariableProperties is non null here because we are specifically
                         // injecting kernelVariables, which does define this interface method
