@@ -5,15 +5,11 @@ import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import {
-    Cancellation,
-    createPromiseFromCancellation,
-    isCancellationError
-} from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
@@ -243,10 +239,7 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
         try {
             // Wait for it to be ready
             traceVerbose('Waiting for Raw Session to be ready in postStartRawSession');
-            await Promise.race([
-                result.waitForReady(),
-                createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
-            ]);
+            await raceCancellationError(options.token, result.waitForReady());
             traceVerbose('Successfully waited for Raw Session to be ready in postStartRawSession');
         } catch (ex) {
             traceError('Failed waiting for Raw Session to be ready', ex);
@@ -278,11 +271,13 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
             result.iopubMessage.connect(iopubHandler);
             try {
                 traceVerbose('Sending request for kernelinfo');
-                await Promise.race([
-                    Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(this.launchTimeout, 1_500)),
-                    createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
-                ]);
+                await raceTimeout(
+                    raceCancellationError(
+                        options.token,
+                        Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise])
+                    ),
+                    Math.min(this.launchTimeout, 1_500)
+                );
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
                 await process.dispose();

@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { createPromiseFromCancellation, Cancellation } from '../../../platform/common/cancellation';
+import { raceCancellation } from '../../../platform/common/cancellation';
 import { traceError } from '../../../platform/logging';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -170,23 +170,19 @@ export class JupyterInterpreterDependencyService {
                     sortProductsInOrderForInstallation(productsToInstall);
 
                     let productToInstall = productsToInstall.shift();
-                    const cancellationPromise = createPromiseFromCancellation({
-                        cancelAction: 'resolve',
-                        defaultValue: InstallerResponse.Ignore,
-                        token: tokenSource.token
-                    });
                     while (productToInstall) {
                         // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
-                        const response = await Promise.race([
+                        const response = await raceCancellation(
+                            tokenSource.token,
+                            InstallerResponse.Ignore,
                             this.installer.install(
                                 productToInstall,
                                 interpreter,
                                 tokenSource,
                                 undefined,
                                 pipInstalledInNonCondaEnv === false
-                            ),
-                            cancellationPromise
-                        ]);
+                            )
+                        );
                         if (response === InstallerResponse.Installed) {
                             productToInstall = productsToInstall.shift();
                             continue;
@@ -250,22 +246,20 @@ export class JupyterInterpreterDependencyService {
 
         const notInstalled: Product[] = [];
 
-        await Promise.race([
-            Promise.all([
-                this.installer
-                    .isInstalled(Product.jupyter, interpreter)
-                    .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter))),
-                this.installer
-                    .isInstalled(Product.notebook, interpreter)
-                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook)))
-            ]),
-            createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
-        ]);
+        await raceCancellation(
+            token,
+            this.installer
+                .isInstalled(Product.jupyter, interpreter)
+                .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter))),
+            this.installer
+                .isInstalled(Product.notebook, interpreter)
+                .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook)))
+        );
 
         if (notInstalled.length > 0) {
             return notInstalled;
         }
-        if (Cancellation.isCanceled(token)) {
+        if (token?.isCancellationRequested) {
             return [];
         }
         // Perform this check only if jupyter & notebook modules are installed.
@@ -324,7 +318,7 @@ export class JupyterInterpreterDependencyService {
         }
         // Indicate no kernel spec module.
         sendTelemetryEvent(Telemetry.JupyterInstalledButNotKernelSpecModule);
-        if (Cancellation.isCanceled(token)) {
+        if (token?.isCancellationRequested) {
             return JupyterInterpreterDependencyResponse.cancel;
         }
         const selectionFromError = await this.applicationShell.showErrorMessage(

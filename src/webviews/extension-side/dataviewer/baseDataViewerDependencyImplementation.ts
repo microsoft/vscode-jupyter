@@ -13,7 +13,6 @@ import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../te
 import { ProductNames } from '../../../platform/interpreter/installer/productNames';
 import { Product } from '../../../platform/interpreter/installer/types';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { Cancellation } from '../../../platform/common/cancellation';
 import { traceWarning } from '../../../platform/logging';
 
 /**
@@ -68,7 +67,7 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
         try {
             const pandasVersion = await this.getVersion(executer, tokenSource.token);
 
-            if (Cancellation.isCanceled(tokenSource.token)) {
+            if (tokenSource.token.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PandasInstallCanceled);
                 return;
             }
