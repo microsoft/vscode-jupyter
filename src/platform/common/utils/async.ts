@@ -146,7 +146,6 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
 //================================
 // iterators
 
-
 /**
  * Provides the ability to chain promises.
  */
