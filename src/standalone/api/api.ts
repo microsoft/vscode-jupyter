@@ -138,7 +138,8 @@ export function buildApi(
                 const extensionId = provider.id.startsWith('_builtin')
                     ? JVSC_EXTENSION_ID
                     : (await extensions.determineExtensionFromCallStack()).extensionId;
-                container.registerProvider(Object.assign(provider, { extensionId }));
+                const disposable = container.registerProvider(provider, extensionId);
+                disposeHook = () => disposable.dispose();
             };
             register().catch(noop);
             return {

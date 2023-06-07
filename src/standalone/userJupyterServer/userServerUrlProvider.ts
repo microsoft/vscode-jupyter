@@ -72,7 +72,7 @@ export class UserJupyterServerUrlProvider
     }
 
     activate() {
-        this._localDisposables.push(this.uriProviderRegistration.registerProvider(this));
+        this._localDisposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
         this._servers = [];
 
         this._localDisposables.push(

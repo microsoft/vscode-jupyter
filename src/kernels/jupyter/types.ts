@@ -165,7 +165,7 @@ export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>>;
     getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
-    registerProvider(picker: IInternalJupyterUriProvider): IDisposable;
+    registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 

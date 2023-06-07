@@ -68,24 +68,22 @@ suite('URI Picker', () => {
         when(memento.get<string[]>(anything())).thenReturn([]);
         when(memento.get<string[]>(anything(), anything())).thenReturn([]);
         registration = new JupyterUriProviderRegistration(extensions, disposables, instance(memento));
-        await Promise.all(
-            providerIds.map(async (id) => {
-                const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
-                const packageJson = TypeMoq.Mock.ofType<any>();
-                const contributes = TypeMoq.Mock.ofType<any>();
-                extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
-                packageJson.setup((p) => p.contributes).returns(() => contributes.object);
-                contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
-                extension
-                    .setup((e) => e.activate())
-                    .returns(() => {
-                        return Promise.resolve();
-                    });
-                extension.setup((e) => e.isActive).returns(() => false);
-                extensionList.push(extension.object);
-                await registration?.registerProvider(new MockProvider(id));
-            })
-        );
+        providerIds.map(async (id) => {
+            const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
+            const packageJson = TypeMoq.Mock.ofType<any>();
+            const contributes = TypeMoq.Mock.ofType<any>();
+            extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
+            packageJson.setup((p) => p.contributes).returns(() => contributes.object);
+            contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
+            extension
+                .setup((e) => e.activate())
+                .returns(() => {
+                    return Promise.resolve();
+                });
+            extension.setup((e) => e.isActive).returns(() => false);
+            extensionList.push(extension.object);
+            registration?.registerProvider(new MockProvider(id), '1');
+        });
         return registration;
     }
 

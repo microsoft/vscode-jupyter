@@ -36,7 +36,7 @@ export class JupyterServerSelectorCommand
     public readonly displayName = 'Jupyter Server for Testing';
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
     public activate() {
-        this.disposables.push(this.uriProviderRegistration.registerProvider(this));
+        this.disposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SelectJupyterURI, this.selectJupyterUri, this)
         );
