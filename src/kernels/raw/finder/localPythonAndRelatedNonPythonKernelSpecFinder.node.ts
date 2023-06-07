@@ -28,7 +28,7 @@ import {
     localPythonKernelsCacheKey
 } from './interpreterKernelSpecFinderHelper.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { raceCancellation } from '../../../platform/common/cancellation';
 
 type InterpreterId = string;
 
@@ -299,30 +299,17 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     this.disposables.push(finder);
                     this.interpreterKernelSpecs.set(interpreter.id, finder);
                 }
-                const kernels = await Promise.race([
-                    finder.listKernelSpecs(forceRefresh),
-                    createPromiseFromCancellation<LocalKernelConnectionMetadata[]>({
-                        cancelAction: 'resolve',
-                        defaultValue: [],
-                        token: cancelToken
-                    })
-                ]);
-                if (cancelToken.isCancellationRequested) {
-                    return [];
-                }
+                const kernels = await raceCancellation(cancelToken, [], finder.listKernelSpecs(forceRefresh));
                 traceVerbose(`Kernels for interpreter ${interpreter.id} are ${kernels.map((k) => k.id).join(', ')}`);
                 await this.appendNewKernels(kernels);
             })
         );
 
-        const globalPythonKernelSpecsPromise = Promise.race([
-            this.globalPythonKernelSpecFinder.listKernelSpecs(forceRefresh),
-            createPromiseFromCancellation<LocalKernelConnectionMetadata[]>({
-                token: cancelToken,
-                defaultValue: [],
-                cancelAction: 'resolve'
-            })
-        ]).then((kernels) => this.appendNewKernels(kernels));
+        const globalPythonKernelSpecsPromise = raceCancellation(
+            cancelToken,
+            [],
+            this.globalPythonKernelSpecFinder.listKernelSpecs(forceRefresh)
+        ).then((kernels) => this.appendNewKernels(kernels));
 
         await Promise.all([interpreterPromise, globalPythonKernelSpecsPromise]);
     }

@@ -49,11 +49,14 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
         ? InterpreterPackages.instance
               .getPackageVersion(interpreter, packageName)
               .then((version) => (typeof version === 'string' ? 'found' : 'notfound'))
-              .catch((ex) => traceError('Failed to get interpreter package version', ex))
-        : Promise.resolve(500);
+              .catch((ex) => {
+                  traceError('Failed to get interpreter package version', ex);
+                  return undefined;
+              })
+        : Promise.resolve(undefined);
     try {
         // Dont wait for too long we don't want to delay installation prompt.
-        const version = await Promise.race([sleep(500), packageVersionPromise]);
+        const version = await Promise.race([sleep(500).then(() => undefined), packageVersionPromise]);
         if (typeof version === 'string') {
             return version === 'found';
         }

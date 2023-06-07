@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../activation/types';
-import { createPromiseFromCancellation } from '../common/cancellation';
+import { raceCancellation } from '../common/cancellation';
 import { disposeAllDisposables } from '../common/helpers';
 import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -208,10 +208,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                                 progress.report({ message });
                             }
                         }
-                        await Promise.race([
-                            createPromiseFromCancellation({ token, cancelAction: 'resolve', defaultValue: true }),
-                            deferred.promise
-                        ]);
+                        await raceCancellation(token, deferred.promise);
                         if (KernelProgressReporter.instance!.kernelResourceProgressReporter.get(key) === info) {
                             KernelProgressReporter.instance!.kernelResourceProgressReporter.delete(key);
                         }

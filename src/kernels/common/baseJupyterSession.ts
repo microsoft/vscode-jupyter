@@ -371,14 +371,15 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
                     kernelStatus.resolve(session.kernel.status);
                 }
                 // Check for possibility that kernel has died.
-                const sessionDisposed = createDeferred<unknown>();
-                session.disposed.connect(sessionDisposed.resolve, sessionDisposed);
+                const sessionDisposed = createDeferred<string>();
+                const sessionDisposedHandler = () => sessionDisposed.resolve('');
+                session.disposed.connect(sessionDisposedHandler, sessionDisposed);
                 disposables.push(
                     new Disposable(() =>
-                        swallowExceptions(() => session.disposed.disconnect(sessionDisposed.resolve, sessionDisposed))
+                        swallowExceptions(() => session.disposed.disconnect(sessionDisposedHandler, sessionDisposed))
                     )
                 );
-                const sleepPromise = sleep(timeout);
+                const sleepPromise = sleep(timeout).then(() => '');
                 sessionDisposed.promise.catch(noop);
                 sleepPromise.catch(noop);
                 kernelStatus.promise.catch(noop);
@@ -390,13 +391,13 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
 
                 traceVerbose(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-                if (typeof result === 'string' && result.toString() == 'idle') {
+                if (result == 'idle') {
                     return;
                 }
                 traceError(
                     `Shutting down after failing to wait for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
                 );
-                // If we throw an exception, make sure to shutdown the session as it's not usable anymore
+                // Before we throw an exception, make sure to shutdown the session as it's not usable anymore
                 this.shutdownSession(session, this.statusHandler, isRestartSession).catch(noop);
                 throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
             } catch (ex) {

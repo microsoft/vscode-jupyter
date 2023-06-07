@@ -23,7 +23,7 @@ import {
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { raceCancellation } from '../../../platform/common/cancellation';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -298,18 +298,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     }
                 })
             );
-            if (cancelToken) {
-                await Promise.race([
-                    promise,
-                    createPromiseFromCancellation({
-                        token: cancelToken,
-                        cancelAction: 'resolve',
-                        defaultValue: undefined
-                    })
-                ]);
-            } else {
-                await promise;
-            }
+            await raceCancellation(cancelToken, promise);
             return validValues;
         } catch (ex) {
             traceError('UniversalRemoteKernelFinder: Failed to get from cache', ex);
