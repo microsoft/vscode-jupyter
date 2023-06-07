@@ -9,7 +9,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/a
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { Commands, JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import { sleep } from '../../../platform/common/utils/async';
+import { raceTimeout } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { traceError, traceVerbose } from '../../../platform/logging';
@@ -114,10 +114,15 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                 // Don't move forward until we have hooked the API
                 // Note extensions.installExtension seems to return "mostly" after the install is done, but at that
                 // point we don't see it installed via the checker and don't have the API so wait for it here
-                const hookResult = await Promise.race([sleep(60_000), this.pythonApi.pythonExtensionHooked]);
+                const hooked = 'hooked';
+                const hookResult = await raceTimeout(
+                    60_000,
+                    'timeout',
+                    this.pythonApi.pythonExtensionHooked.then(() => hooked)
+                );
 
                 // Make sure that we didn't timeout waiting for the hook
-                if (this.extensionChecker.isPythonExtensionInstalled && typeof hookResult !== 'number') {
+                if (this.extensionChecker.isPythonExtensionInstalled && hookResult !== hooked) {
                     traceVerbose('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'

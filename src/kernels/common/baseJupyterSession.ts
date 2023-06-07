@@ -19,7 +19,7 @@ import { WrappedError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async';
+import { createDeferred, raceTimeout, raceTimeoutError } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
@@ -178,12 +178,11 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         if (this.session && this.session.kernel) {
             traceInfo(`Interrupting kernel: ${this.session.kernel.name}`);
 
-            await Promise.race([
-                this.session.kernel.interrupt(),
-                sleep(this.interruptTimeout).then(() => {
-                    throw new KernelInterruptTimeoutError(this.kernelConnectionMetadata);
-                })
-            ]);
+            await raceTimeoutError(
+                this.interruptTimeout,
+                new KernelInterruptTimeoutError(this.kernelConnectionMetadata),
+                this.session.kernel.interrupt()
+            );
         }
     }
     public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
@@ -379,11 +378,9 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
                         swallowExceptions(() => session.disposed.disconnect(sessionDisposedHandler, sessionDisposed))
                     )
                 );
-                const sleepPromise = sleep(timeout).then(() => '');
                 sessionDisposed.promise.catch(noop);
-                sleepPromise.catch(noop);
                 kernelStatus.promise.catch(noop);
-                const result = await Promise.race([kernelStatus.promise, sleepPromise, sessionDisposed.promise]);
+                const result = await raceTimeout(timeout, '', kernelStatus.promise, sessionDisposed.promise);
                 if (session.isDisposed) {
                     traceError('Session disposed while waiting for session to be idle.');
                     throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
@@ -496,7 +493,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
                     suppressShutdownErrors(session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!session.isDisposed) {
-                        await waitForPromise(session.shutdown(), 1000);
+                        await raceTimeout(1000, session.shutdown());
                     }
                 } catch {
                     noop();

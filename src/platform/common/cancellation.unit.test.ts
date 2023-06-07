@@ -178,6 +178,19 @@ suite('Cancellation', () => {
         await assert.isRejected(p, new CancellationError().message);
         assert.ok(!triggered);
     });
+    test('no raceCancellation error', async () => {
+        const cts = new CancellationTokenSource();
+        disposables.push(cts);
+
+        const p = raceCancellationError(
+            cts.token,
+            sleep(10)
+                .catch(noop)
+                .then(() => 'timeout')
+        );
+
+        assert.equal(await p, 'timeout');
+    });
 
     test('raceCancellation error without a token', async () => {
         const p = raceCancellationError(
@@ -214,6 +227,25 @@ suite('Cancellation', () => {
 
         await assert.isRejected(p, new CancellationError().message);
         assert.ok(!triggered);
+    });
+    test('no raceCancellation error with multiple promises', async () => {
+        const cts = new CancellationTokenSource();
+        disposables.push(cts);
+
+        const p = raceCancellationError(
+            cts.token,
+            sleep(100)
+                .catch(noop)
+                .then(() => 'timeout'),
+            sleep(10)
+                .catch(noop)
+                .then(() => 'timeout2'),
+            sleep(100)
+                .catch(noop)
+                .then(() => 'timeout')
+        );
+
+        assert.equal(await p, 'timeout2');
     });
     test('raceCancellation error with multiple promises and without a token', async () => {
         const p = raceCancellationError(

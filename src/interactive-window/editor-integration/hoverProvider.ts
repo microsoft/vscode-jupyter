@@ -10,7 +10,7 @@ import { raceCancellation } from '../../platform/common/cancellation';
 import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { sleep } from '../../platform/common/utils/async';
+import { raceTimeout } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IKernel, IKernelProvider } from '../../kernels/types';
@@ -74,9 +74,8 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         position: vscode.Position,
         token: vscode.CancellationToken
     ): Promise<vscode.Hover | undefined> {
-        const timeoutHandler = sleep(300).then(() => undefined);
         this.stopWatch.reset();
-        const result = await Promise.race([timeoutHandler, this.getVariableHover(document, position, token)]);
+        const result = await raceTimeout(300, this.getVariableHover(document, position, token));
         sendTelemetryEvent(
             Telemetry.InteractiveFileTooltipsPerf,
             { duration: this.stopWatch.elapsedTime },

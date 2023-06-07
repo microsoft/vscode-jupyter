@@ -28,7 +28,7 @@ import { disposeAllDisposables, splitLines } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
-import { createDeferred, sleep } from '../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -494,12 +494,12 @@ abstract class BaseKernel implements IBaseKernel {
         const promise = (async () => {
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
-                return await Promise.race([
+                return await raceTimeout(
+                    this.kernelSettings.interruptTimeout,
+                    InterruptResult.TimedOut,
                     pendingExecutions.then(() => InterruptResult.Success),
-                    restarted.promise.then(() => InterruptResult.Restarted),
-
-                    sleep(this.kernelSettings.interruptTimeout).then(() => InterruptResult.TimedOut)
-                ]);
+                    restarted.promise.then(() => InterruptResult.Restarted)
+                );
             } catch (exc) {
                 // Something failed. See if we restarted or not.
                 if (restarted.completed) {
