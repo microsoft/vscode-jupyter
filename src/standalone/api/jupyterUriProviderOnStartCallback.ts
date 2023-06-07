@@ -60,7 +60,8 @@ export class JupyterUriProviderOnStartCallback extends Disposables implements IE
                         );
                     },
                     this,
-                    this.disposables
+                    this.disposables,
+                    100
                 );
             },
             this,

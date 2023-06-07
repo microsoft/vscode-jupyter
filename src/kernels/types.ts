@@ -389,7 +389,8 @@ export interface IBaseKernel extends IAsyncDisposable {
         event: 'willInterrupt' | 'restartCompleted' | 'interruptCompleted' | 'didStart' | 'willCancel',
         hook: () => Promise<void>,
         thisArgs?: unknown,
-        disposables?: IDisposable[]
+        disposables?: IDisposable[],
+        priority?: number // Higher the number, earlier the execution.
     ): IDisposable;
 }
 
