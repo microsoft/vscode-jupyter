@@ -18,7 +18,7 @@ import { computeServerId, generateUriFromRemoteProvider } from '../../../kernels
 import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUriStorage,
-    IJupyterUriProvider,
+    IInternalJupyterUriProvider,
     IJupyterUriProviderRegistration,
     IRemoteKernelFinder
 } from '../../../kernels/jupyter/types';
@@ -68,7 +68,7 @@ interface KernelProviderItemsQuickPickItem extends QuickPickItem {
      */
     default?: boolean;
     type: KernelFinderEntityQuickPickType.UriProviderQuickPick;
-    provider: IJupyterUriProvider;
+    provider: IInternalJupyterUriProvider;
     originalItem: QuickPickItem & { default?: boolean };
 }
 
@@ -176,7 +176,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
     }
     private async getRemoteServersFromProvider(
-        provider: IJupyterUriProvider,
+        provider: IInternalJupyterUriProvider,
         token: CancellationToken,
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult

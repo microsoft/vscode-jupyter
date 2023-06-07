@@ -9,16 +9,18 @@ import * as vscode from 'vscode';
 import { Extensions } from '../../../platform/common/application/extensions.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
-import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '../types';
+import { IInternalJupyterUriProvider } from '../types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
 
-class MockProvider implements IJupyterUriProvider {
+class MockProvider implements IInternalJupyterUriProvider {
     public get id() {
         return this._id;
     }
     private currentBearer = 1;
     private result: string = '1';
+    public readonly extensionId: string = 'foo.bar';
     constructor(private readonly _id: string) {
         // Id should be readonly
     }

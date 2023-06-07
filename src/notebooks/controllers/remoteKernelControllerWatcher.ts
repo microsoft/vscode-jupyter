@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import {
     IJupyterServerUriStorage,
-    IJupyterUriProvider,
+    IInternalJupyterUriProvider,
     IJupyterUriProviderRegistration
 } from '../../kernels/jupyter/types';
 import { isLocalConnection } from '../../kernels/types';
@@ -20,7 +20,7 @@ import { IControllerRegistration } from './types';
  */
 @injectable()
 export class RemoteKernelControllerWatcher implements IExtensionSyncActivationService {
-    private readonly handledProviders = new WeakSet<IJupyterUriProvider>();
+    private readonly handledProviders = new WeakSet<IInternalJupyterUriProvider>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistry: IJupyterUriProviderRegistration,
@@ -42,7 +42,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             }
         });
     }
-    private async onProviderHandlesChanged(provider: IJupyterUriProvider) {
+    private async onProviderHandlesChanged(provider: IInternalJupyterUriProvider) {
         if (!provider.getHandles) {
             return;
         }

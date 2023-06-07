@@ -19,8 +19,8 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { createKernelController, TestNotebookDocument } from '../datascience/notebook/executionHelper';
 import { IKernelProvider, IKernelFinder } from '../../kernels/types';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
-import { KernelConnectionMetadata } from '../../standalone/api/extension';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { KernelConnectionMetadata } from '../../api';
 
 suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;

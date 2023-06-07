@@ -17,14 +17,10 @@ import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InvalidRemoteJupyterServerUriHandleError } from '../../errors/invalidRemoteJupyterServerUriHandleError';
 import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
-import {
-    IJupyterServerUri,
-    IJupyterUriProvider,
-    IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
-} from '../types';
+import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
+import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
 
 const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 
@@ -35,7 +31,7 @@ const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_O
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
     private readonly _onProvidersChanged = new EventEmitter<void>();
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
-    private providers = new Map<string, [Promise<JupyterUriProviderWrapper>, IDisposable[]]>();
+    private providers = new Map<string, [Promise<IInternalJupyterUriProvider>, IDisposable[]]>();
     private providerExtensionMapping = new Map<string, string>();
     public readonly onDidChangeProviders = this._onProvidersChanged.event;
 
@@ -47,20 +43,20 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         disposables.push(this._onProvidersChanged);
     }
 
-    public async getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>> {
+    public async getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>> {
         await this.loadOtherExtensions();
 
         // Other extensions should have registered in their activate callback
         return Promise.all([...this.providers.values()].map((p) => p[0]));
     }
 
-    public async getProvider(id: string): Promise<IJupyterUriProvider | undefined> {
+    public async getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined> {
         await this.loadOtherExtensions();
         const value = this.providers.get(id);
         return value ? value[0] : undefined;
     }
 
-    public registerProvider(provider: IJupyterUriProvider) {
+    public registerProvider(provider: IInternalJupyterUriProvider) {
         if (!this.providers.has(provider.id)) {
             const localDisposables: IDisposable[] = [];
             this.providers.set(provider.id, [this.createProvider(provider, localDisposables), localDisposables]);
@@ -118,9 +114,9 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
     }
 
     private async createProvider(
-        provider: IJupyterUriProvider,
+        provider: IInternalJupyterUriProvider,
         localDisposables: IDisposable[]
-    ): Promise<JupyterUriProviderWrapper> {
+    ): Promise<IInternalJupyterUriProvider> {
         const extensionId = provider.id.startsWith('_builtin')
             ? JVSC_EXTENSION_ID
             : (await this.extensions.determineExtensionFromCallStack()).extensionId;
@@ -153,7 +149,7 @@ const handlesForWhichWeHaveSentTelemetry = new Set<string>();
  * This class wraps an IJupyterUriProvider provided by another extension. It allows us to show
  * extra data on the other extension's UI.
  */
-class JupyterUriProviderWrapper implements IJupyterUriProvider {
+class JupyterUriProviderWrapper implements IInternalJupyterUriProvider {
     public readonly id: string;
     public readonly displayName: string | undefined;
     public readonly detail: string | undefined;
@@ -163,8 +159,8 @@ class JupyterUriProviderWrapper implements IJupyterUriProvider {
     public readonly removeHandle?: (handle: JupyterServerUriHandle) => Promise<void>;
 
     constructor(
-        private readonly provider: IJupyterUriProvider,
-        private extensionId: string,
+        private readonly provider: IInternalJupyterUriProvider,
+        public extensionId: string,
         disposables: IDisposableRegistry
     ) {
         this.id = this.provider.id;

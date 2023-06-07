@@ -17,14 +17,13 @@ import {
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
 import {
-    IJupyterServerUri,
     IJupyterServerUriStorage,
-    IJupyterUriProvider,
+    IInternalJupyterUriProvider,
     IJupyterUriProviderRegistration
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
-import { Identifiers, Settings } from '../../platform/common/constants';
+import { Identifiers, JVSC_EXTENSION_ID, Settings } from '../../platform/common/constants';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -38,13 +37,17 @@ import { noop } from '../../platform/common/utils/misc';
 import { traceError } from '../../platform/logging';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
 import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
+import { IJupyterServerUri } from '../../api';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
 
 @injectable()
-export class UserJupyterServerUrlProvider implements IExtensionSyncActivationService, IDisposable, IJupyterUriProvider {
+export class UserJupyterServerUrlProvider
+    implements IExtensionSyncActivationService, IDisposable, IInternalJupyterUriProvider
+{
     readonly id: string = '_builtin.jupyterServerUrlProvider';
+    public readonly extensionId: string = JVSC_EXTENSION_ID;
     readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName;
     readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail;
     private _onDidChangeHandles = new EventEmitter<void>();
