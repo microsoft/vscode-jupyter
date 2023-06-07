@@ -7,7 +7,7 @@ import uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceVerbose, traceInfoIfCI, traceError, traceWarning } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { Telemetry } from '../../../telemetry';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
@@ -172,7 +172,7 @@ export class RawSession implements ISessionWithSocket {
         }
 
         traceVerbose('Waiting for Raw session to be ready for 30s');
-        const result = await Promise.race([deferred.promise, sleep(30_000)]);
+        const result = await raceTimeout(30_000, deferred.promise);
         this.connectionStatusChanged.disconnect(handler);
         traceVerbose(`Waited for Raw session to be ready & got ${result}`);
 

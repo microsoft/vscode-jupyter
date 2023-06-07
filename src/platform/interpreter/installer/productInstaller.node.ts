@@ -33,7 +33,7 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { InterpreterPackages } from '../interpreterPackages.node';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { sleep } from '../../common/utils/async';
+import { raceTimeout } from '../../common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';
 import { translateProductToModule } from './utils';
 import { IInterpreterPackages } from '../types';
@@ -56,7 +56,7 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
         : Promise.resolve(undefined);
     try {
         // Dont wait for too long we don't want to delay installation prompt.
-        const version = await Promise.race([sleep(500).then(() => undefined), packageVersionPromise]);
+        const version = await raceTimeout(500, packageVersionPromise);
         if (typeof version === 'string') {
             return version === 'found';
         }
