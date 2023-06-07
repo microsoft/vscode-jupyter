@@ -4,7 +4,7 @@
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IInstaller, Product, InstallerResponse } from '../../../platform/interpreter/installer/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { raceCancellation } from '../../../platform/common/cancellation';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -46,20 +46,16 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
         const interpreterToInstallDependenciesInto =
             interpreter || (await this.interpreterService.getActiveInterpreter());
 
-        if (Cancellation.isCanceled(tokenSource.token)) {
+        if (tokenSource.token.isCancellationRequested) {
             return;
         }
 
-        const cancellationPromise = createPromiseFromCancellation({
-            cancelAction: 'resolve',
-            defaultValue: InstallerResponse.Ignore,
-            token: tokenSource.token
-        });
         // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
-        const response = await Promise.race([
-            this.installer.install(Product.pandas, interpreterToInstallDependenciesInto, tokenSource),
-            cancellationPromise
-        ]);
+        const response = await raceCancellation(
+            tokenSource.token,
+            InstallerResponse.Ignore,
+            this.installer.install(Product.pandas, interpreterToInstallDependenciesInto, tokenSource)
+        );
         if (response === InstallerResponse.Installed) {
             sendTelemetryEvent(Telemetry.UserInstalledPandas);
         }

@@ -7,11 +7,7 @@ import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
-import {
-    Cancellation,
-    createPromiseFromCancellation,
-    isCancellationError
-} from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
@@ -139,13 +135,7 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             );
             // Make sure we haven't canceled already.
             Cancellation.throwIfCanceled(cancelToken);
-            const connection = await Promise.race([
-                starter.ready,
-                createPromiseFromCancellation<IJupyterConnection>({
-                    cancelAction: 'reject',
-                    token: cancelToken
-                })
-            ]);
+            const connection = await raceCancellationError(cancelToken, starter.ready);
 
             try {
                 const port = parseInt(new URL(connection.baseUrl).port || '0', 10);

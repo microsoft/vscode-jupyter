@@ -18,7 +18,7 @@ import * as urlPath from '../../../platform/vscode-path/resources';
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { raceCancellationError } from '../../../platform/common/cancellation';
 import { IJupyterConnection } from '../../types';
 import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
 import { expandWorkingDir } from '../jupyterUtils';
@@ -110,9 +110,9 @@ export class JupyterServerHelper implements IJupyterServerHelper {
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
         // Only try to compute this once.
         if (!this.usablePythonInterpreter && !this.disposed && this.jupyterInterpreterService) {
-            this.usablePythonInterpreter = await Cancellation.race(
-                () => this.jupyterInterpreterService!.getSelectedInterpreter(cancelToken),
-                cancelToken
+            this.usablePythonInterpreter = await raceCancellationError(
+                cancelToken,
+                this.jupyterInterpreterService!.getSelectedInterpreter(cancelToken)
             );
         }
         return this.usablePythonInterpreter;
@@ -120,9 +120,7 @@ export class JupyterServerHelper implements IJupyterServerHelper {
 
     /* eslint-disable complexity,  */
     private startJupyterWithRetry(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {
-        // Return nothing if we cancel
-        // eslint-disable-next-line
-        return Cancellation.race(async () => {
+        const work = async () => {
             let connection: IJupyterConnection | undefined;
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
@@ -159,7 +157,8 @@ export class JupyterServerHelper implements IJupyterServerHelper {
                 throw lastTryError;
             }
             throw new Error('Max number of attempts reached');
-        }, cancelToken);
+        };
+        return raceCancellationError(cancelToken, work());
     }
 
     private async startImpl(resource: Resource, cancelToken: CancellationToken): Promise<IJupyterConnection> {

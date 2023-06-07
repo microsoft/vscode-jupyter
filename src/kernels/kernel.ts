@@ -28,7 +28,7 @@ import { disposeAllDisposables, splitLines } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
-import { createDeferred, waitForPromise } from '../platform/common/utils/async';
+import { createDeferred, sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -494,24 +494,12 @@ abstract class BaseKernel implements IBaseKernel {
         const promise = (async () => {
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
-                const result = await waitForPromise(
-                    Promise.race([pendingExecutions, restarted.promise]),
-                    this.kernelSettings.interruptTimeout
-                );
+                return await Promise.race([
+                    pendingExecutions.then(() => InterruptResult.Success),
+                    restarted.promise.then(() => InterruptResult.Restarted),
 
-                // See if we restarted or not
-                if (restarted.completed) {
-                    return InterruptResult.Restarted;
-                }
-
-                if (result === null) {
-                    // We timed out. You might think we should stop our pending list, but that's not
-                    // up to us. The cells are still executing. The user has to request a restart or try again
-                    return InterruptResult.TimedOut;
-                }
-
-                // Indicate the interrupt worked.
-                return InterruptResult.Success;
+                    sleep(this.kernelSettings.interruptTimeout).then(() => InterruptResult.TimedOut)
+                ]);
             } catch (exc) {
                 // Something failed. See if we restarted or not.
                 if (restarted.completed) {
