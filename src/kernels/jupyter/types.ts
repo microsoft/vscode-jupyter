@@ -25,6 +25,8 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
+// eslint-disable-next-line import/no-restricted-paths
+import { IKernelConnectionInfo } from '../../standalone/api/extension';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -197,6 +199,11 @@ export interface IJupyterUriProvider {
     readonly displayName?: string;
     readonly detail?: string;
     onDidChangeHandles?: Event<void>;
+    onDidStartKernel?(options: {
+        uri: Resource;
+        metadata: KernelConnectionMetadata;
+        connection: IKernelConnectionInfo;
+    }): Promise<void>;
     getQuickPickEntryItems?():
         | Promise<
               (QuickPickItem & {
@@ -232,7 +239,7 @@ export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegist
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
-    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
+    getProvider(id: string): Promise<(IJupyterUriProvider & { extensionId: string }) | undefined>;
     registerProvider(picker: IJupyterUriProvider): IDisposable;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }

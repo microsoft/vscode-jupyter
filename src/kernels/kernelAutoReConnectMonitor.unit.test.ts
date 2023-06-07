@@ -334,6 +334,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         when(jupyterServerUriStorage.get(server.serverId)).thenResolve(server);
         when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
             id: 'remoteUriProvider',
+            extensionId: 'publisher.extension',
             getServerUri: (_handle) =>
                 Promise.resolve({
                     baseUrl: '<baseUrl>',

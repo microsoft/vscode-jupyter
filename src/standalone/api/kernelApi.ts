@@ -37,7 +37,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
     private readonly chainedApiAccess = new PromiseChain();
-    private readonly extensionApi = new Map<string, IExportedKernelService>();
+    private readonly extensionApi = new Map<string, JupyterKernelService>();
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
@@ -54,20 +54,23 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
         if (!accessInfo.accessAllowed) {
             return;
         }
-        if (this.extensionApi.get(accessInfo.extensionId)) {
-            return this.extensionApi.get(accessInfo.extensionId);
+        return this.getServiceForExtension(accessInfo.extensionId);
+    }
+    public getServiceForExtension(extensionId: string) {
+        let service = this.extensionApi.get(extensionId);
+        if (!service) {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            service = new JupyterKernelService(
+                extensionId,
+                this.kernelProvider,
+                this.kernelFinder,
+                this.thirdPartyKernelProvider,
+                this.disposables,
+                this.controllerRegistration,
+                this.serviceContainer
+            );
+            this.extensionApi.set(extensionId, service);
         }
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        const service = new JupyterKernelService(
-            accessInfo.extensionId,
-            this.kernelProvider,
-            this.kernelFinder,
-            this.thirdPartyKernelProvider,
-            this.disposables,
-            this.controllerRegistration,
-            this.serviceContainer
-        );
-        this.extensionApi.set(accessInfo.extensionId, service);
         return service;
     }
 }
@@ -294,7 +297,7 @@ class JupyterKernelService implements IExportedKernelService {
         }
         return this.wrapKernelConnection(kernel);
     }
-    private wrapKernelConnection(kernel: IBaseKernel): IKernelConnectionInfo {
+    public wrapKernelConnection(kernel: IBaseKernel): IKernelConnectionInfo {
         if (JupyterKernelService.wrappedKernelConnections.get(kernel)) {
             return JupyterKernelService.wrappedKernelConnections.get(kernel)!;
         }

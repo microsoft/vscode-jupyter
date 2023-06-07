@@ -565,10 +565,10 @@ abstract class BaseKernel implements IBaseKernel {
                 creator: this.creator
             });
             Cancellation.throwIfCanceled(this.startCancellation.token);
+            this._session = session;
             await this.initializeAfterStart(session);
 
             this.sendKernelStartedTelemetry();
-            this._session = session;
             this._onStarted.fire();
             return session;
         } catch (ex) {
