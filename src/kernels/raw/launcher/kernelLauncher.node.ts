@@ -9,7 +9,7 @@ import { promisify } from 'util';
 import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { Cancellation, raceCancellationError } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import {
     ignoreLogging,
@@ -207,14 +207,7 @@ export class KernelLauncher implements IKernelLauncher {
         timeout: number,
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
-        const connection = await Promise.race([
-            this.getKernelConnection(kernelConnectionMetadata),
-            createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: undefined, token: cancelToken })
-        ]);
-        if (!connection || cancelToken?.isCancellationRequested) {
-            throw new CancellationError();
-        }
-
+        const connection = await raceCancellationError(cancelToken, this.getKernelConnection(kernelConnectionMetadata));
         // Create a new output channel for this kernel
         const baseName = resource ? path.basename(resource.fsPath) : '';
         const jupyterSettings = this.configService.getSettings(resource);
@@ -243,10 +236,7 @@ export class KernelLauncher implements IKernelLauncher {
 
         kernelProcess.exited(() => outputChannel?.dispose(), this, this.disposables);
         try {
-            await Promise.race([
-                kernelProcess.launch(workingDirectory, timeout, cancelToken),
-                createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' })
-            ]);
+            await raceCancellationError(cancelToken, kernelProcess.launch(workingDirectory, timeout, cancelToken));
         } catch (ex) {
             await kernelProcess.dispose();
             Cancellation.throwIfCanceled(cancelToken);

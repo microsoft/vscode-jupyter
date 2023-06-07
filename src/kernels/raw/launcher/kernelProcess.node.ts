@@ -20,11 +20,7 @@ import {
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import {
-    Cancellation,
-    createPromiseFromCancellation,
-    isCancellationError
-} from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
@@ -276,14 +272,7 @@ export class KernelProcess implements IKernelProcess {
                 // Throw an error we recognize.
                 return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
             });
-            await Promise.race([
-                portsUsed,
-                deferred.promise,
-                createPromiseFromCancellation({
-                    token: cancelToken,
-                    cancelAction: 'reject'
-                })
-            ]);
+            await raceCancellationError(cancelToken, portsUsed, deferred.promise);
         } catch (e) {
             const stdErrToLog = (stderrProc || stderr || '').trim();
             if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {

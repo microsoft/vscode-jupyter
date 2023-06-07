@@ -13,7 +13,7 @@ import {
     TextDocument,
     workspace
 } from 'vscode';
-import { createPromiseFromCancellation } from '../../platform/common/cancellation';
+import { raceCancellation } from '../../platform/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
@@ -172,13 +172,13 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
                 metadata: {}
             };
         }
-        const result = await Promise.race([
+        const result = await raceCancellation(
+            cancelToken,
             session.requestComplete({
                 code: cellCode,
                 cursor_pos: offsetInCode
-            }),
-            createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })
-        ]);
+            })
+        );
         traceInfoIfCI(
             `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${
                 result ? JSON.stringify(result) : 'empty'

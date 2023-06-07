@@ -6,11 +6,10 @@ import { inject, injectable, named } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { Cancellation } from '../../platform/common/cancellation';
+import { raceCancellation } from '../../platform/common/cancellation';
 import { Identifiers, InteractiveWindowView, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
-
 import { sleep } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -94,40 +93,40 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         }
     }
 
-    private getVariableHover(
+    private async getVariableHover(
         document: vscode.TextDocument,
         position: vscode.Position,
         token: vscode.CancellationToken
     ): Promise<vscode.Hover | undefined> {
         // Make sure to fail as soon as the cancel token is signaled
-        return Cancellation.race(async (t) => {
-            const range = document.getWordRangeAtPosition(position);
-            if (range) {
-                const word = document.getText(range);
-                if (word) {
-                    // See if we have any matching notebooks
-                    const notebooks = this.getMatchingKernels(document);
-                    if (notebooks.length) {
-                        // Just use the first one to reply if more than one.
-                        const attributes = await Promise.race(
-                            // Note, getVariableProperties is non null here because we are specifically
-                            // injecting kernelVariables, which does define this interface method
-                            notebooks.map((n) => this.variableProvider.getVariableProperties!(word, n, t))
-                        );
-                        const entries = Object.entries(attributes);
-                        if (entries.length > 0) {
-                            const asMarkdown =
-                                entries.reduce((accum, entry) => accum + `${entry[0]}: ${entry[1]}\n`, '```\n') + '```';
-                            const result = {
-                                contents: [new vscode.MarkdownString(asMarkdown)]
-                            };
-                            return result;
-                        }
+        const range = document.getWordRangeAtPosition(position);
+        if (range) {
+            const word = document.getText(range);
+            if (word) {
+                // See if we have any matching notebooks
+                const notebooks = this.getMatchingKernels(document);
+                if (notebooks.length) {
+                    // Just use the first one to reply if more than one.
+                    const attributes = await raceCancellation(
+                        token,
+                        {},
+                        // Note, getVariableProperties is non null here because we are specifically
+                        // injecting kernelVariables, which does define this interface method
+                        ...notebooks.map((n) => this.variableProvider.getVariableProperties!(word, n, token))
+                    );
+                    const entries = Object.entries(attributes || {});
+                    if (entries.length > 0) {
+                        const asMarkdown =
+                            entries.reduce((accum, entry) => accum + `${entry[0]}: ${entry[1]}\n`, '```\n') + '```';
+                        const result = {
+                            contents: [new vscode.MarkdownString(asMarkdown)]
+                        };
+                        return result;
                     }
                 }
             }
-            return;
-        }, token);
+        }
+        return;
     }
 
     private getMatchingKernels(document: vscode.TextDocument): IKernel[] {

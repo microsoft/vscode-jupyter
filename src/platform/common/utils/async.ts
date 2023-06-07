@@ -58,6 +58,10 @@ export async function waitForCondition(
 export function isPromise<T>(v: any): v is Promise<T> {
     return typeof v?.then === 'function' && typeof v?.catch === 'function';
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isPromiseLike<T>(v: any): v is PromiseLike<T> {
+    return typeof v?.then === 'function';
+}
 
 //======================
 // Deferred

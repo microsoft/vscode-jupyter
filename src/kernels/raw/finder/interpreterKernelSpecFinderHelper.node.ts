@@ -29,7 +29,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ITrustedKernelPaths } from './types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { raceCancellation } from '../../../platform/common/cancellation';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
@@ -486,10 +486,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         );
 
         traceVerbose(`Finding Global Python KernelSpecs`);
-        const activeInterpreters = await Promise.race([
-            activeInterpreterInAWorkspacePromise,
-            createPromiseFromCancellation({ token: cancelToken, defaultValue: [], cancelAction: 'resolve' })
-        ]);
+        const activeInterpreters = await raceCancellation(cancelToken, [], activeInterpreterInAWorkspacePromise);
         if (cancelToken.isCancellationRequested) {
             return [];
         }

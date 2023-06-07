@@ -4,7 +4,7 @@
 import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { raceCancellationError } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { Resource, IOutputChannel, IDisplayOptions, ReadWrite } from '../../../platform/common/types';
@@ -360,52 +360,49 @@ export class JupyterSession
         };
 
         const requestCreator = this.requestCreator;
+        const work = () =>
+            this.sessionManager!.startNew(sessionOptions, {
+                kernelConnectionOptions: {
+                    handleComms: true // This has to be true for ipywidgets to work
+                }
+            })
+                .then(async (session) => {
+                    if (session.kernel) {
+                        this.logRemoteOutput(
+                            DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || '')
+                        );
+                        const sessionWithSocket = session as ISessionWithSocket;
 
-        return Cancellation.race(
-            () =>
-                this.sessionManager!.startNew(sessionOptions, {
-                    kernelConnectionOptions: {
-                        handleComms: true // This has to be true for ipywidgets to work
-                    }
-                })
-                    .then(async (session) => {
-                        if (session.kernel) {
-                            this.logRemoteOutput(
-                                DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || '')
-                            );
-                            const sessionWithSocket = session as ISessionWithSocket;
-
-                            // Add on the kernel metadata & sock information
-                            sessionWithSocket.resource = this.resource;
-                            sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
-                            sessionWithSocket.kernelSocketInformation = {
-                                get socket() {
-                                    // When we restart kernels, a new websocket is created and we need to get the new one.
-                                    // & the id in the dictionary is the kernel.id.
-                                    return requestCreator.getWebsocket(session.kernel!.id);
-                                },
-                                options: {
-                                    clientId: session.kernel.clientId,
-                                    id: session.kernel.id,
-                                    model: { ...session.kernel.model },
-                                    userName: session.kernel.username
-                                }
-                            };
-                            if (!isLocalConnection(this.kernelConnectionMetadata)) {
-                                sessionWithSocket.isRemoteSession = true;
+                        // Add on the kernel metadata & sock information
+                        sessionWithSocket.resource = this.resource;
+                        sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
+                        sessionWithSocket.kernelSocketInformation = {
+                            get socket() {
+                                // When we restart kernels, a new websocket is created and we need to get the new one.
+                                // & the id in the dictionary is the kernel.id.
+                                return requestCreator.getWebsocket(session.kernel!.id);
+                            },
+                            options: {
+                                clientId: session.kernel.clientId,
+                                id: session.kernel.id,
+                                model: { ...session.kernel.model },
+                                userName: session.kernel.username
                             }
-                            return sessionWithSocket;
+                        };
+                        if (!isLocalConnection(this.kernelConnectionMetadata)) {
+                            sessionWithSocket.isRemoteSession = true;
                         }
-                        throw new JupyterSessionStartError(new Error(`No kernel created`));
-                    })
-                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
-                    .finally(async () => {
-                        if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.filePath).catch(noop);
-                        }
-                    }),
-            options.token
-        );
+                        return sessionWithSocket;
+                    }
+                    throw new JupyterSessionStartError(new Error(`No kernel created`));
+                })
+                .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
+                .finally(async () => {
+                    if (this.connInfo && backingFile) {
+                        this.contentsManager.delete(backingFile.filePath).catch(noop);
+                    }
+                });
+        return raceCancellationError(options.token, work());
     }
 
     private logRemoteOutput(output: string) {

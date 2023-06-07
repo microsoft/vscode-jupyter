@@ -6,7 +6,6 @@ import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Uri } from 'vscode';
-import { Cancellation } from '../../../platform/common/cancellation';
 import {
     traceInfo,
     traceVerbose,
@@ -245,7 +244,7 @@ export class JupyterKernelService implements IJupyterKernelService {
             try {
                 // Read spec from the file.
                 let specModel: ReadWrite<KernelSpec.ISpecModel> = JSON.parse(await this.fs.readFile(uri));
-                if (Cancellation.isCanceled(cancelToken)) {
+                if (cancelToken?.isCancellationRequested) {
                     return;
                 }
 
@@ -291,14 +290,14 @@ export class JupyterKernelService implements IJupyterKernelService {
                     )} with env variables ${JSON.stringify(specModel.env)}}`
                 );
 
-                if (Cancellation.isCanceled(cancelToken)) {
+                if (cancelToken?.isCancellationRequested) {
                     return;
                 }
 
                 // Always update the metadata for the original kernel.
                 specedKernel.metadata = specModel.metadata;
             } catch (ex) {
-                if (Cancellation.isCanceled(cancelToken)) {
+                if (cancelToken?.isCancellationRequested) {
                     return;
                 }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any

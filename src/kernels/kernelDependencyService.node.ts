@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
-import { createPromiseFromCancellation } from '../platform/common/cancellation';
+import { raceCancellation } from '../platform/common/cancellation';
 import { traceInfo, traceError, traceInfoIfCI, traceDecoratorVerbose, logValue } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
@@ -208,10 +208,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                 ).catch(noop);
             }
         }, noop);
-        return Promise.race([
-            installedPromise,
-            createPromiseFromCancellation({ token, defaultValue: false, cancelAction: 'resolve' })
-        ]);
+        return raceCancellation(token, false, installedPromise);
     }
 
     private async runInstaller(
@@ -258,11 +255,6 @@ export class KernelDependencyService implements IKernelDependencyService {
             resourceHash,
             pythonEnvType: interpreter.envType
         });
-        const promptCancellationPromise = createPromiseFromCancellation({
-            cancelAction: 'resolve',
-            defaultValue: undefined,
-            token: cancelTokenSource.token
-        });
 
         // Build our set of prompt actions
         const installOption = Common.install;
@@ -292,10 +284,10 @@ export class KernelDependencyService implements IKernelDependencyService {
                 selection =
                     this.isCodeSpace || installWithoutPrompting
                         ? installOption
-                        : await Promise.race([
-                              this.appShell.showInformationMessage(message, { modal: true }, ...options),
-                              promptCancellationPromise
-                          ]);
+                        : await raceCancellation(
+                              cancelTokenSource.token,
+                              this.appShell.showInformationMessage(message, { modal: true }, ...options)
+                          );
 
                 if (selection === moreInfoOption) {
                     sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
@@ -339,22 +331,18 @@ export class KernelDependencyService implements IKernelDependencyService {
                     resourceHash,
                     pythonEnvType: interpreter.envType
                 });
-                const cancellationPromise = createPromiseFromCancellation({
-                    cancelAction: 'resolve',
-                    defaultValue: InstallerResponse.Cancelled,
-                    token: cancelTokenSource.token
-                });
                 // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
-                const response = await Promise.race([
+                const response = await raceCancellation(
+                    cancelTokenSource.token,
+                    InstallerResponse.Cancelled,
                     this.installer.install(
                         Product.ipykernel,
                         interpreter,
                         cancelTokenSource,
                         isModulePresent === true,
                         isPipAvailableForNonConda === false
-                    ),
-                    cancellationPromise
-                ]);
+                    )
+                );
                 if (response === InstallerResponse.Installed) {
                     sendKernelTelemetryEvent(resource, Telemetry.PythonModuleInstall, undefined, {
                         action: 'installed',
