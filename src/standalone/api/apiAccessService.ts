@@ -3,9 +3,9 @@
 
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
-import { IApplicationShell } from '../../platform/common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../../platform/common/constants';
-import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../../platform/common/types';
+import { GLOBAL_MEMENTO, IExtensionContext, IExtensions, IMemento } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -35,7 +35,9 @@ export class ApiAccessService {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IExtensionContext) private context: IExtensionContext
+        @inject(IExtensionContext) private context: IExtensionContext,
+        @inject(IApplicationEnvironment) private env: IApplicationEnvironment,
+        @inject(IExtensions) private extensions: IExtensions
     ) {}
     public async getAccessInformation(info: {
         extensionId: string;
@@ -43,11 +45,16 @@ export class ApiAccessService {
     }): Promise<{ extensionId: string; accessAllowed: boolean }> {
         const publisherId =
             !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
-        if (this.context.extensionMode === ExtensionMode.Test || !publisherId) {
+        if (this.context.extensionMode === ExtensionMode.Test || !publisherId || this.env.channel === 'insiders') {
             traceError(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
+                const displayName = this.extensions.getExtension(info.extensionId)?.packageJSON?.displayName || '';
+                const extensionDisplay =
+                    displayName && info.extensionId
+                        ? `${displayName} (${info.extensionId})`
+                        : info.extensionId || publisherId;
                 this.appShell
-                    .showInformationMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs)
+                    .showErrorMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs(extensionDisplay))
                     .then(noop, noop);
             }
             return { extensionId: info.extensionId, accessAllowed: true };
