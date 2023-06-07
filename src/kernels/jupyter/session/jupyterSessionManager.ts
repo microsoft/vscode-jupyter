@@ -28,7 +28,7 @@ import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import {
     IJupyterSessionManager,
     IJupyterPasswordConnect,
@@ -104,7 +104,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             if (this.sessionManager && !this.sessionManager.isDisposed) {
                 traceVerbose('ShutdownSessionAndConnection - dispose session manager');
                 // Make sure it finishes startup.
-                await Promise.race([sleep(10_000), this.sessionManager.ready]);
+                await raceTimeout(10_000, this.sessionManager.ready);
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
@@ -262,11 +262,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             const oldKernelSpecs = getKernelSpecs();
 
             // Wait for the session to be ready
-            await Promise.race([sleep(10_000), this.sessionManager.ready]);
+            await raceTimeout(10_000, this.sessionManager.ready);
             telemetryProperties.sessionManagerReady = this.sessionManager.isReady;
             // Ask the session manager to refresh its list of kernel specs. This might never
             // come back so only wait for ten seconds.
-            await Promise.race([sleep(10_000), specsManager.refreshSpecs()]);
+            await raceTimeout(10_000, specsManager.refreshSpecs());
             telemetryProperties.specsManagerReady = specsManager.isReady;
 
             let telemetrySent = false;
@@ -283,7 +283,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     specsManager.refreshSpecs(),
                     this.sessionManager.ready
                 ]);
-                await Promise.race([sleep(10_000), allPromises]);
+                await raceTimeout(10_000, allPromises);
                 telemetryProperties.waitedForChangeEvent = true;
                 if (!promise.completed) {
                     telemetrySent = true;
