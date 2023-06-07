@@ -13,9 +13,7 @@ import { noop } from '../../platform/common/utils/misc';
  */
 @injectable()
 export class EagerlyActivateJupyterUriProviders implements IExtensionSyncActivationService {
-    constructor(
-        @inject(IExtensions) private readonly extensions: IExtensions
-    ) {}
+    constructor(@inject(IExtensions) private readonly extensions: IExtensions) {}
 
     public activate(): void {
         this.eagerlyActivateOtherExtensions().catch(noop);
