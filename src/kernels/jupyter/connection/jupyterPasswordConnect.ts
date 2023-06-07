@@ -98,26 +98,52 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
 
     private async getJupyterHubConnectionInfo(uri: string): Promise<IJupyterPasswordConnectInfo | undefined> {
-        // First ask for the user name and password
-        const userNameAndPassword = await this.getUserNameAndPassword();
-        if (userNameAndPassword.username || userNameAndPassword.password) {
-            // Try the login method. It should work and doesn't require a token to be generated.
-            const result = await this.getJupyterHubConnectionInfoFromLogin(
-                uri,
-                userNameAndPassword.username,
-                userNameAndPassword.password
-            );
-
-            // If login method fails, try generating a token
-            if (!result) {
-                return this.getJupyterHubConnectionInfoFromApi(
+        try {
+            // First ask for the user name and password
+            const userNameAndPassword = await this.getUserNameAndPassword();
+            if (userNameAndPassword.username || userNameAndPassword.password) {
+                // Try the login method. It should work and doesn't require a token to be generated.
+                let result = await this.getJupyterHubConnectionInfoFromLogin(
                     uri,
                     userNameAndPassword.username,
                     userNameAndPassword.password
                 );
-            }
 
-            return result;
+                // If login method fails, try generating a token
+                if (result) {
+                    const failed = Object.keys(result || {}).length === 0;
+                    const info = failed ? 'emptyResponseFromLogin' : 'gotResponseFromLogin';
+                    sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, {
+                        failed,
+                        info
+                    });
+                } else {
+                    sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, {
+                        failed: true,
+                        info: 'emptyResponseFromLogin'
+                    });
+                    result = await this.getJupyterHubConnectionInfoFromApi(
+                        uri,
+                        userNameAndPassword.username,
+                        userNameAndPassword.password
+                    );
+                    const failed = Object.keys(result || {}).length === 0;
+                    const info = failed ? 'emptyResponseFromApi' : 'gotResponseFromApi';
+                    sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, {
+                        failed,
+                        info
+                    });
+                }
+
+                return result;
+            }
+            sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, {
+                failed: false,
+                info: 'passwordNotRequired'
+            });
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, { failed: true, info: 'failure' });
+            throw ex;
         }
     }
 

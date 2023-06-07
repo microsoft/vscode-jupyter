@@ -1386,6 +1386,16 @@
      ]
    }
  */
+//Telemetry.CheckPasswordJupyterHub
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_HUB_PASSWORD" : {
+     "info": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.JupyterInstalledButNotKernelSpecModule
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE" : {
