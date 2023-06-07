@@ -389,6 +389,7 @@ export enum Telemetry {
     AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
     GetPasswordFailure = 'DS_INTERNAL.GET_PASSWORD_FAILURE',
     GetPasswordSuccess = 'DS_INTERNAL.GET_PASSWORD_SUCCESS',
+    CheckPasswordJupyterHub = 'DS_INTERNAL.JUPYTER_HUB_PASSWORD',
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
