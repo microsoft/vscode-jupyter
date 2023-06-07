@@ -3,7 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Disposable, Event, EventEmitter, Memento, QuickPickItem } from 'vscode';
-import { Telemetry } from '../../../platform/common/constants';
+import { JVSC_EXTENSION_ID, Telemetry } from '../../../platform/common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import * as localize from '../../../platform/common/utils/localize';
@@ -25,17 +25,20 @@ const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_O
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
     private readonly _onProvidersChanged = new EventEmitter<void>();
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
-    private providers = new Map<string, JupyterUriProviderWrapper>();
+    private _providers = new Map<string, JupyterUriProviderWrapper>();
     private providerExtensionMapping = new Map<string, string>();
     public readonly onDidChangeProviders = this._onProvidersChanged.event;
-
+    public get providers() {
+        this.loadOtherExtensions().catch(noop);
+        return Array.from(this._providers.values());
+    }
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {
         disposables.push(this._onProvidersChanged);
-        disposables.push(new Disposable(() => this.providers.forEach((p) => p.dispose())));
+        disposables.push(new Disposable(() => this._providers.forEach((p) => p.dispose())));
     }
 
     public async getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>> {
@@ -47,13 +50,16 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
 
     public async getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined> {
         await this.loadOtherExtensions();
-        return this.providers.get(id);
+        if (!this._providers.has(id)) {
+            debugger;
+        }
+        return this._providers.get(id);
     }
 
     public registerProvider(provider: IJupyterUriProvider, extensionId: string) {
-        if (!this.providers.has(provider.id)) {
+        if (!this._providers.has(provider.id)) {
             this.updateRegistrationInfo(provider.id, extensionId).catch(noop);
-            this.providers.set(
+            this._providers.set(
                 provider.id,
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 new JupyterUriProviderWrapper(provider, extensionId)
@@ -65,8 +71,8 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
 
         return {
             dispose: () => {
-                this.providers.get(provider.id)?.dispose();
-                this.providers.delete(provider.id);
+                this._providers.get(provider.id)?.dispose();
+                this._providers.delete(provider.id);
                 this._onProvidersChanged.fire();
             }
         };
@@ -74,7 +80,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
     public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
         await this.loadOtherExtensions();
 
-        const provider = this.providers.get(id);
+        const provider = this._providers.get(id);
         if (!provider) {
             traceError(`${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${handle}`);
             throw new Error(localize.DataScience.unknownServerUri);
@@ -104,18 +110,39 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
             .get<{ extensionId: string; providerId: string }[]>(REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY, [])
             .forEach((item) => extensionIds.add(item.extensionId));
 
-        const list = this.extensions.all
+        const extensions = this.extensions.all
             .filter((e) => e.packageJSON?.contributes?.pythonRemoteServerProvider || extensionIds.has(e.id))
-            .map((e) => (e.isActive ? Promise.resolve() : e.activate().then(noop, noop)));
-        await Promise.all(list);
+            .filter((e) => e.id !== JVSC_EXTENSION_ID);
+        await Promise.all(extensions.map((e) => (e.isActive ? Promise.resolve() : e.activate().then(noop, noop))));
     }
+
+    // /**
+    //  * Ideally we should activate just the extension that registered the provider.
+    //  * Debt, we should fix this.
+    //  */
+    // private async loadProviderExtension(providerId: string): Promise<void> {
+    //     this.loadOtherExtensions().catch(noop);
+    //     this.loadExistingProviderExtensionMapping();
+    //     const extensionId = this.providerExtensionMapping.get(providerId);
+    //     if (!extensionId) {
+    //         return;
+    //     }
+
+    //     const extension = this.extensions.getExtension(extensionId);
+    //     if (extension) {
+    //         if (!extension.isActive) {
+    //             await extension.activate().then(noop, noop);
+    //         }
+    //     }
+    // }
+
     @swallowExceptions()
     private async updateRegistrationInfo(providerId: string, extensionId: string): Promise<void> {
         this.loadExistingProviderExtensionMapping();
         this.providerExtensionMapping.set(providerId, extensionId);
 
         const newList: { extensionId: string; providerId: string }[] = [];
-        this.providerExtensionMapping.forEach((providerId, extensionId) => {
+        this.providerExtensionMapping.forEach((extensionId, providerId) => {
             newList.push({ extensionId, providerId });
         });
         await this.globalMemento.update(REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY, newList);

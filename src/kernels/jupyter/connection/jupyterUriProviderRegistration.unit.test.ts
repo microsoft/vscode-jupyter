@@ -89,7 +89,7 @@ suite('URI Picker', () => {
 
     test('Simple', async () => {
         const registration = await createRegistration(['1']);
-        const pickers = await registration.getProviders();
+        const pickers = registration.providers;
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
@@ -102,7 +102,7 @@ suite('URI Picker', () => {
     });
     test('Back', async () => {
         const registration = await createRegistration(['1']);
-        const pickers = await registration.getProviders();
+        const pickers = registration.providers;
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
@@ -111,7 +111,7 @@ suite('URI Picker', () => {
     });
     test('Error', async () => {
         const registration = await createRegistration(['1']);
-        const pickers = await registration.getProviders();
+        const pickers = registration.providers;
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');

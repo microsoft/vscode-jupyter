@@ -163,6 +163,7 @@ export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegist
 
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
+    readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
     getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>>;
     getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;

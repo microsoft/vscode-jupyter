@@ -77,7 +77,7 @@ suite('RemoteKernelControllerWatcher', () => {
             (cb: Function, ctx: Object) => (onDidChangeHandles3 = cb.bind(ctx))
         );
 
-        when(uriProviderRegistration.getProviders()).thenResolve([
+        when(uriProviderRegistration.providers).thenReturn([
             instance(provider1),
             instance(provider2),
             instance(provider3)

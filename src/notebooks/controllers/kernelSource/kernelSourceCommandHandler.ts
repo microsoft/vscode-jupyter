@@ -157,68 +157,63 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         const uriRegistration = ServiceContainer.instance.get<IJupyterUriProviderRegistration>(
             IJupyterUriProviderRegistration
         );
-        uriRegistration
-            .getProviders()
-            .then((providers) => {
-                const existingItems = new Set<string>();
-                providers.map((provider) => {
-                    if (provider.id === TestingKernelPickerProviderId) {
-                        return;
-                    }
-                    existingItems.add(provider.id);
-                    if (this.providerMappings.has(provider.id)) {
-                        return;
-                    }
-                    const providerItemNb = notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
-                        provideNotebookKernelSourceActions: () => {
-                            return [
-                                {
-                                    label:
-                                        provider.displayName ??
-                                        (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
-                                    documentation: provider.id.startsWith('_builtin')
-                                        ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
-                                        : undefined,
-                                    command: {
-                                        command: 'jupyter.kernel.selectJupyterServerKernel',
-                                        arguments: [provider.id],
-                                        title: provider.displayName ?? provider.id
-                                    }
-                                }
-                            ];
+        const existingItems = new Set<string>();
+        uriRegistration.providers.map((provider) => {
+            if (provider.id === TestingKernelPickerProviderId) {
+                return;
+            }
+            existingItems.add(provider.id);
+            if (this.providerMappings.has(provider.id)) {
+                return;
+            }
+            const providerItemNb = notebooks.registerKernelSourceActionProvider(JupyterNotebookView, {
+                provideNotebookKernelSourceActions: () => {
+                    return [
+                        {
+                            label:
+                                provider.displayName ??
+                                (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
+                            documentation: provider.id.startsWith('_builtin')
+                                ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
+                                : undefined,
+                            command: {
+                                command: 'jupyter.kernel.selectJupyterServerKernel',
+                                arguments: [provider.id],
+                                title: provider.displayName ?? provider.id
+                            }
                         }
-                    });
-                    const providerItemIW = notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
-                        provideNotebookKernelSourceActions: () => {
-                            return [
-                                {
-                                    label:
-                                        provider.displayName ??
-                                        (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
-                                    documentation: provider.id.startsWith('_builtin')
-                                        ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
-                                        : undefined,
-                                    command: {
-                                        command: 'jupyter.kernel.selectJupyterServerKernel',
-                                        arguments: [provider.id],
-                                        title: provider.displayName ?? provider.id
-                                    }
-                                }
-                            ];
+                    ];
+                }
+            });
+            const providerItemIW = notebooks.registerKernelSourceActionProvider(InteractiveWindowView, {
+                provideNotebookKernelSourceActions: () => {
+                    return [
+                        {
+                            label:
+                                provider.displayName ??
+                                (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
+                            documentation: provider.id.startsWith('_builtin')
+                                ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
+                                : undefined,
+                            command: {
+                                command: 'jupyter.kernel.selectJupyterServerKernel',
+                                arguments: [provider.id],
+                                title: provider.displayName ?? provider.id
+                            }
                         }
-                    });
-                    this.localDisposables.push(providerItemNb);
-                    this.localDisposables.push(providerItemIW);
-                    this.providerMappings.set(provider.id, [providerItemNb, providerItemIW]);
-                });
-                this.providerMappings.forEach((disposables, providerId) => {
-                    if (!existingItems.has(providerId)) {
-                        disposeAllDisposables(disposables);
-                        this.providerMappings.delete(providerId);
-                    }
-                });
-            })
-            .catch((ex) => traceError(`Failed to register commands for remote Jupyter URI providers`, ex));
+                    ];
+                }
+            });
+            this.localDisposables.push(providerItemNb);
+            this.localDisposables.push(providerItemIW);
+            this.providerMappings.set(provider.id, [providerItemNb, providerItemIW]);
+        });
+        this.providerMappings.forEach((disposables, providerId) => {
+            if (!existingItems.has(providerId)) {
+                disposeAllDisposables(disposables);
+                this.providerMappings.delete(providerId);
+            }
+        });
     }
     private async onSelectLocalKernel(
         kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment,
