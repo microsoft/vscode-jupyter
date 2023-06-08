@@ -22,3 +22,9 @@ export interface IInterpreterPackages {
     getPackageVersion(interpreter: PythonEnvironment, packageName: string): Promise<string | undefined>;
     trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean): void;
 }
+
+export const IWorkspaceInterpreterTracker = Symbol('IWorkspaceInterpreterTracker');
+export interface IWorkspaceInterpreterTracker {
+    activate(): void;
+    isActiveWorkspaceInterpreter(resource: Resource, interpreter?: PythonEnvironment): boolean;
+}
