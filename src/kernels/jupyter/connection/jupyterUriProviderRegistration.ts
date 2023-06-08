@@ -2,29 +2,19 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Event, EventEmitter, Memento, QuickPickItem } from 'vscode';
+import { Disposable, Event, EventEmitter, Memento, QuickPickItem } from 'vscode';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../../platform/common/constants';
-
-import {
-    GLOBAL_MEMENTO,
-    IDisposable,
-    IDisposableRegistry,
-    IExtensions,
-    IMemento
-} from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InvalidRemoteJupyterServerUriHandleError } from '../../errors/invalidRemoteJupyterServerUriHandleError';
 import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
-import {
-    IJupyterServerUri,
-    IJupyterUriProvider,
-    IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
-} from '../types';
+import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../../api';
+import { Disposables } from '../../../platform/common/utils';
 
 const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 
@@ -35,35 +25,45 @@ const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_O
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
     private readonly _onProvidersChanged = new EventEmitter<void>();
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
-    private providers = new Map<string, [Promise<JupyterUriProviderWrapper>, IDisposable[]]>();
+    private _providers = new Map<string, JupyterUriProviderWrapper>();
     private providerExtensionMapping = new Map<string, string>();
     public readonly onDidChangeProviders = this._onProvidersChanged.event;
-
+    public get providers() {
+        this.loadOtherExtensions().catch(noop);
+        return Array.from(this._providers.values());
+    }
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {
         disposables.push(this._onProvidersChanged);
+        disposables.push(new Disposable(() => this._providers.forEach((p) => p.dispose())));
     }
 
-    public async getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>> {
+    public async getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>> {
         await this.loadOtherExtensions();
 
         // Other extensions should have registered in their activate callback
-        return Promise.all([...this.providers.values()].map((p) => p[0]));
+        return Array.from(this.providers.values());
     }
 
-    public async getProvider(id: string): Promise<IJupyterUriProvider | undefined> {
+    public async getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined> {
         await this.loadOtherExtensions();
-        const value = this.providers.get(id);
-        return value ? value[0] : undefined;
+        if (!this._providers.has(id)) {
+            debugger;
+        }
+        return this._providers.get(id);
     }
 
-    public registerProvider(provider: IJupyterUriProvider) {
-        if (!this.providers.has(provider.id)) {
-            const localDisposables: IDisposable[] = [];
-            this.providers.set(provider.id, [this.createProvider(provider, localDisposables), localDisposables]);
+    public registerProvider(provider: IJupyterUriProvider, extensionId: string) {
+        if (!this._providers.has(provider.id)) {
+            this.updateRegistrationInfo(provider.id, extensionId).catch(noop);
+            this._providers.set(
+                provider.id,
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                new JupyterUriProviderWrapper(provider, extensionId)
+            );
         } else {
             throw new Error(`IJupyterUriProvider already exists with id ${provider.id}`);
         }
@@ -71,8 +71,8 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
 
         return {
             dispose: () => {
-                this.providers.get(provider.id)?.[1].forEach((d) => d.dispose());
-                this.providers.delete(provider.id);
+                this._providers.get(provider.id)?.dispose();
+                this._providers.delete(provider.id);
                 this._onProvidersChanged.fire();
             }
         };
@@ -80,12 +80,11 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
     public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
         await this.loadOtherExtensions();
 
-        const providerPromise = this.providers.get(id)?.[0];
-        if (!providerPromise) {
+        const provider = this._providers.get(id);
+        if (!provider) {
             traceError(`${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${handle}`);
             throw new Error(localize.DataScience.unknownServerUri);
         }
-        const provider = await providerPromise;
         if (provider.getHandles) {
             const handles = await provider.getHandles();
             if (!handles.includes(handle)) {
@@ -111,30 +110,39 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
             .get<{ extensionId: string; providerId: string }[]>(REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY, [])
             .forEach((item) => extensionIds.add(item.extensionId));
 
-        const list = this.extensions.all
+        const extensions = this.extensions.all
             .filter((e) => e.packageJSON?.contributes?.pythonRemoteServerProvider || extensionIds.has(e.id))
-            .map((e) => (e.isActive ? Promise.resolve() : e.activate().then(noop, noop)));
-        await Promise.all(list);
+            .filter((e) => e.id !== JVSC_EXTENSION_ID);
+        await Promise.all(extensions.map((e) => (e.isActive ? Promise.resolve() : e.activate().then(noop, noop))));
     }
 
-    private async createProvider(
-        provider: IJupyterUriProvider,
-        localDisposables: IDisposable[]
-    ): Promise<JupyterUriProviderWrapper> {
-        const extensionId = provider.id.startsWith('_builtin')
-            ? JVSC_EXTENSION_ID
-            : (await this.extensions.determineExtensionFromCallStack()).extensionId;
-        this.updateRegistrationInfo(provider.id, extensionId).catch(noop);
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return new JupyterUriProviderWrapper(provider, extensionId, localDisposables);
-    }
+    // /**
+    //  * Ideally we should activate just the extension that registered the provider.
+    //  * Debt, we should fix this.
+    //  */
+    // private async loadProviderExtension(providerId: string): Promise<void> {
+    //     this.loadOtherExtensions().catch(noop);
+    //     this.loadExistingProviderExtensionMapping();
+    //     const extensionId = this.providerExtensionMapping.get(providerId);
+    //     if (!extensionId) {
+    //         return;
+    //     }
+
+    //     const extension = this.extensions.getExtension(extensionId);
+    //     if (extension) {
+    //         if (!extension.isActive) {
+    //             await extension.activate().then(noop, noop);
+    //         }
+    //     }
+    // }
+
     @swallowExceptions()
     private async updateRegistrationInfo(providerId: string, extensionId: string): Promise<void> {
         this.loadExistingProviderExtensionMapping();
         this.providerExtensionMapping.set(providerId, extensionId);
 
         const newList: { extensionId: string; providerId: string }[] = [];
-        this.providerExtensionMapping.forEach((providerId, extensionId) => {
+        this.providerExtensionMapping.forEach((extensionId, providerId) => {
             newList.push({ extensionId, providerId });
         });
         await this.globalMemento.update(REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY, newList);
@@ -153,7 +161,7 @@ const handlesForWhichWeHaveSentTelemetry = new Set<string>();
  * This class wraps an IJupyterUriProvider provided by another extension. It allows us to show
  * extra data on the other extension's UI.
  */
-class JupyterUriProviderWrapper implements IJupyterUriProvider {
+class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterUriProvider {
     public readonly id: string;
     public readonly displayName: string | undefined;
     public readonly detail: string | undefined;
@@ -162,11 +170,8 @@ class JupyterUriProviderWrapper implements IJupyterUriProvider {
     public readonly getHandles?: () => Promise<JupyterServerUriHandle[]>;
     public readonly removeHandle?: (handle: JupyterServerUriHandle) => Promise<void>;
 
-    constructor(
-        private readonly provider: IJupyterUriProvider,
-        private extensionId: string,
-        disposables: IDisposableRegistry
-    ) {
+    constructor(private readonly provider: IJupyterUriProvider, public extensionId: string) {
+        super();
         this.id = this.provider.id;
         this.displayName = this.provider.displayName;
         this.detail = this.provider.detail;
@@ -175,8 +180,8 @@ class JupyterUriProviderWrapper implements IJupyterUriProvider {
             const _onDidChangeHandles = new EventEmitter<void>();
             this.onDidChangeHandles = _onDidChangeHandles.event.bind(this);
 
-            disposables.push(_onDidChangeHandles);
-            disposables.push(provider.onDidChangeHandles(() => _onDidChangeHandles.fire()));
+            this.disposables.push(_onDidChangeHandles);
+            this.disposables.push(provider.onDidChangeHandles(() => _onDidChangeHandles.fire()));
         }
 
         if (provider.getHandles) {

@@ -4,13 +4,14 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { ICommandManager } from '../../platform/common/application/types';
-import { Commands, TestingKernelPickerProviderId } from '../../platform/common/constants';
+import { Commands, JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../platform/common/constants';
 import { traceInfo } from '../../platform/logging';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
-import { IJupyterServerUri, IJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { computeHash } from '../../platform/common/crypto';
 import { Disposables } from '../../platform/common/utils';
+import { IJupyterServerUri } from '../../api';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
@@ -18,10 +19,11 @@ import { Disposables } from '../../platform/common/utils';
 @injectable()
 export class JupyterServerSelectorCommand
     extends Disposables
-    implements IExtensionSyncActivationService, IJupyterUriProvider
+    implements IExtensionSyncActivationService, IInternalJupyterUriProvider
 {
     private handleMappings = new Map<string, { uri: Uri; server: IJupyterServerUri }>();
     private _onDidChangeHandles = new EventEmitter<void>();
+    public readonly extensionId: string = JVSC_EXTENSION_ID;
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
@@ -34,7 +36,7 @@ export class JupyterServerSelectorCommand
     public readonly displayName = 'Jupyter Server for Testing';
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
     public activate() {
-        this.disposables.push(this.uriProviderRegistration.registerProvider(this));
+        this.disposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SelectJupyterURI, this.selectJupyterUri, this)
         );

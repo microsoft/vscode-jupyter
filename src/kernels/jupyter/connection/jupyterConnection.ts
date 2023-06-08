@@ -12,13 +12,12 @@ import {
     generateUriFromRemoteProvider
 } from '../jupyterUtils';
 import {
-    IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
+    IJupyterUriProviderRegistration
 } from '../types';
+import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
 
 /**
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.

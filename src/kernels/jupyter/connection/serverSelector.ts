@@ -9,7 +9,7 @@ import { traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
-import { IJupyterServerUri, IJupyterServerUriStorage, JupyterServerUriHandle } from '../types';
+import { IJupyterServerUriStorage } from '../types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import {
@@ -23,6 +23,7 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
+import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
 
 export type SelectJupyterUriCommandSource =
     | 'nonUser'

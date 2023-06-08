@@ -4,16 +4,12 @@
 import { ExtensionMode, NotebookController, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
-import {
-    IJupyterUriProvider,
-    IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
-} from '../../kernels/jupyter/types';
+import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
-import { IExportedKernelService } from './extension';
+import { IExportedKernelService, IJupyterUriProvider, JupyterServerUriHandle } from '../../api';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
-import { IExtensionContext, IExtensions } from '../../platform/common/types';
+import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
@@ -133,10 +129,24 @@ export function buildApi(
             const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
             await dataViewerProviderService.create(dataProvider, title);
         },
-        registerRemoteServerProvider(picker: IJupyterUriProvider): void {
+        registerRemoteServerProvider(provider: IJupyterUriProvider): IDisposable {
             sendApiUsageTelemetry(extensions, 'registerRemoteServerProvider');
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
-            container.registerProvider(picker);
+            let disposeHook = noop;
+            const register = async () => {
+                const extensions = serviceContainer.get<IExtensions>(IExtensions);
+                const extensionId = provider.id.startsWith('_builtin')
+                    ? JVSC_EXTENSION_ID
+                    : (await extensions.determineExtensionFromCallStack()).extensionId;
+                const disposable = container.registerProvider(provider, extensionId);
+                disposeHook = () => disposable.dispose();
+            };
+            register().catch(noop);
+            return {
+                dispose: () => {
+                    disposeHook();
+                }
+            };
         },
         getKernelService: async () => {
             sendApiUsageTelemetry(extensions, 'getKernelService');

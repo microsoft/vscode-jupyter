@@ -8,12 +8,8 @@ import { Settings } from '../../../platform/common/constants';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { computeServerId, extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../jupyterUtils';
-import {
-    IJupyterServerUriEntry,
-    IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
-} from '../types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, IJupyterUriProviderRegistration } from '../types';
+import { JupyterServerUriHandle } from '../../../api';
 
 /**
  * Class for storing Jupyter Server URI values, also manages the MRU list of the servers/urls.

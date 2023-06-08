@@ -9,7 +9,6 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { JupyterConnection } from './jupyterConnection';
 import {
-    IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
@@ -32,6 +31,7 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from '../launcher/jupyterConnectionWaiter.node';
 import { noop } from '../../../test/core';
+import { IJupyterServerUri } from '../../../api';
 use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;

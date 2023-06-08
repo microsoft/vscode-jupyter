@@ -25,19 +25,17 @@ export class ClearJupyterServersCommand implements IExtensionSyncActivationServi
                 Commands.ClearSavedJupyterUris,
                 async () => {
                     await this.serverUriStorage.clear();
-                    const builtInProviders = (await this.registrations.getProviders()).filter((p) =>
-                        p.id.startsWith('_builtin')
-                    );
-
                     await Promise.all(
-                        builtInProviders.map(async (provider) => {
-                            if (provider.getHandles && provider.removeHandle) {
-                                const handles = await provider.getHandles();
-                                for (const handle of handles) {
-                                    await provider.removeHandle(handle);
+                        this.registrations.providers
+                            .filter((p) => p.id.startsWith('_builtin'))
+                            .map(async (provider) => {
+                                if (provider.getHandles && provider.removeHandle) {
+                                    const handles = await provider.getHandles();
+                                    for (const handle of handles) {
+                                        await provider.removeHandle(handle);
+                                    }
                                 }
-                            }
-                        })
+                            })
                     );
                 },
                 this
