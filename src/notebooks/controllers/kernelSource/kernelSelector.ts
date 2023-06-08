@@ -249,11 +249,6 @@ export class KernelSelector implements IDisposable {
                 this.provider.onDidChangeStatus(updatePythonItems, this, this.disposables);
                 this.provider.onDidChange(updatePythonItems, this, this.disposables);
             }
-        }
-        if (
-            this.extensionChecker.isPythonExtensionInstalled &&
-            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
-        ) {
             if (this.provider.kernels.length > 0) {
                 // Python extension cannot create envs if there are no python environments.
                 this.createPythonItems.push(this.createPythonEnvQuickPickItem);
