@@ -3,7 +3,6 @@
 
 import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
-import type { JSONObject } from '@lumino/coreutils';
 import type {
     CancellationToken,
     Disposable,
@@ -571,31 +570,8 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
-    interrupt(): Promise<void>;
     restart(): Promise<void>;
     waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
-    requestExecute(
-        content: KernelMessage.IExecuteRequestMsg['content'],
-        disposeOnDone?: boolean,
-        metadata?: JSONObject
-    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
-    requestDebug(
-        content: KernelMessage.IDebugRequestMsg['content'],
-        disposeOnDone?: boolean
-    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg>;
-    requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg>;
-    requestInspect(content: KernelMessage.IInspectRequestMsg['content']): Promise<KernelMessage.IInspectReplyMsg>;
-    sendInputReply(content: KernelMessage.IInputReply): void;
-    registerCommTarget(
-        targetName: string,
-        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
-    ): void;
-    registerMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): void;
-    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
-    requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
     shutdown(): Promise<void>;
 }
 

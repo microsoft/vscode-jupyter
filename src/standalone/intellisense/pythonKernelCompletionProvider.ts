@@ -83,7 +83,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         }
 
         const kernel = this.kernelProvider.get(notebookDocument);
-        if (!kernel || !kernel.session) {
+        if (!kernel || !kernel.session || !kernel.session.kernel) {
             traceVerbose(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
             return [];
         }
@@ -162,6 +162,13 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion> {
         const stopWatch = new StopWatch();
+        if (!session.kernel) {
+            return {
+                matches: [],
+                cursor: { start: 0, end: 0 },
+                metadata: {}
+            };
+        }
         // If server is busy, then don't send code completions. Otherwise
         // they can stack up and slow down the server significantly.
         // However during testing we'll just wait.
@@ -174,7 +181,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         }
         const result = await raceCancellation(
             cancelToken,
-            session.requestComplete({
+            session.kernel.requestComplete({
                 code: cellCode,
                 cursor_pos: offsetInCode
             })

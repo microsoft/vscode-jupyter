@@ -50,11 +50,10 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
         workingDirectory: Uri,
-        interruptTimeout: number,
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super('localRaw', resource, kernelConnection, workingDirectory, interruptTimeout);
+        super('localRaw', resource, kernelConnection, workingDirectory);
     }
 
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {

@@ -71,13 +71,13 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         }
 
         const code = await this.getCodeToExecute();
-        if (!this.kernel.session) {
+        if (!this.kernel.session?.kernel) {
             traceInfoIfCI('No Kernel session to get list of widget entry points');
             return [];
         }
         const promises: Promise<nbformat.IOutput[]>[] = [];
         promises.push(
-            executeSilently(this.kernel.session, code, {
+            executeSilently(this.kernel.session.kernel, code, {
                 traceErrors: true,
                 traceErrorsMessage: 'Failed to get widget entry points from remote kernel'
             })

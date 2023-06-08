@@ -8,6 +8,7 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { executeSilently } from '../../../kernels/helpers';
 import { IKernel, IKernelSession } from '../../../kernels/types';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
+import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 
 export const kernelGetPandasVersion =
     'import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);del _VSCODE_pandas';
@@ -31,7 +32,10 @@ function kernelHasSession(kernel: IKernel): kernel is IKernelWithSession {
  */
 export class KernelDataViewerDependencyImplementation extends BaseDataViewerDependencyImplementation<IKernel> {
     protected async execute(command: string, kernel: IKernelWithSession): Promise<(string | undefined)[]> {
-        const outputs = await executeSilently(kernel.session, command);
+        if (!kernel.session.kernel) {
+            throw new SessionDisposedError();
+        }
+        const outputs = await executeSilently(kernel.session.kernel, command);
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
             traceWarning(DataScience.failedToGetVersionOfPandas, error.message);

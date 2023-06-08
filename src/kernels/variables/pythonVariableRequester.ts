@@ -42,14 +42,20 @@ async function safeExecuteSilently(
     { code, initializeCode, cleanupCode }: { code: string; initializeCode?: string; cleanupCode?: string },
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
-    if (kernel.disposed || kernel.disposing || !kernel.session || !kernel.session.kernel || kernel.session.disposed) {
+    if (
+        kernel.disposed ||
+        kernel.disposing ||
+        !kernel.session?.kernel ||
+        !kernel.session.kernel ||
+        kernel.session.disposed
+    ) {
         return [];
     }
     try {
         if (initializeCode) {
-            await executeSilently(kernel.session, initializeCode, errorOptions);
+            await executeSilently(kernel.session.kernel, initializeCode, errorOptions);
         }
-        return await executeSilently(kernel.session, code, errorOptions);
+        return await executeSilently(kernel.session.kernel, code, errorOptions);
     } catch (ex) {
         if (ex instanceof SessionDisposedError) {
             return [];
@@ -57,7 +63,7 @@ async function safeExecuteSilently(
         throw ex;
     } finally {
         if (cleanupCode) {
-            await executeSilently(kernel.session, cleanupCode, errorOptions);
+            await executeSilently(kernel.session.kernel, cleanupCode, errorOptions);
         }
     }
 }

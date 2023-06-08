@@ -9,7 +9,7 @@ import { IConfigurationService, IDisposableRegistry } from '../../platform/commo
 import { createDeferred } from '../../platform/common/utils/async';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel, IKernelSession, IKernelProvider } from '../types';
+import { IKernel, IKernelProvider } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
@@ -17,6 +17,7 @@ import {
     IJupyterVariablesResponse,
     IKernelVariableRequester
 } from './types';
+import type { Kernel } from '@jupyterlab/services';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 
@@ -295,7 +296,7 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     private inspect(
-        session: IKernelSession,
+        kernelConnection: Kernel.IKernelConnection,
         code: string,
         offsetInCode = 0,
         cancelToken?: CancellationToken
@@ -305,7 +306,7 @@ export class KernelVariables implements IJupyterVariables {
 
         try {
             // Ask session for inspect result
-            session
+            kernelConnection
                 .requestInspect({ code, cursor_pos: offsetInCode, detail_level: 0 })
                 .then((r) => {
                     if (r && r.content.status === 'ok') {
@@ -334,8 +335,8 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
-        if (!kernel.disposed && kernel.session) {
-            const output = await this.inspect(kernel.session, targetVariable.name, 0, token);
+        if (!kernel.disposed && kernel.session?.kernel) {
+            const output = await this.inspect(kernel.session.kernel, targetVariable.name, 0, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {

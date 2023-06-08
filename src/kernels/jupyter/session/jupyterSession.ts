@@ -46,7 +46,6 @@ export class JupyterSession
         override readonly workingDirectory: Uri,
         private readonly idleTimeout: number,
         private readonly kernelService: IJupyterKernelService | undefined,
-        interruptTimeout: number,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly sessionCreator: KernelActionSource
@@ -55,8 +54,7 @@ export class JupyterSession
             connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
             resource,
             kernelConnectionMetadata,
-            workingDirectory,
-            interruptTimeout
+            workingDirectory
         );
     }
 

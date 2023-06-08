@@ -163,7 +163,6 @@ suite('JupyterSession', () => {
             Uri.file(''),
             1,
             instance(kernelService),
-            1,
             backingFileCreator,
             requestCreator,
             'jupyterExtension'
@@ -210,13 +209,6 @@ suite('JupyterSession', () => {
         setup(() => {
             createJupyterSession();
             return connect();
-        });
-        test('Interrupting will result in kernel being interrupted', async () => {
-            when(kernel.interrupt()).thenResolve();
-
-            await jupyterSession.interrupt();
-
-            verify(kernel.interrupt()).once();
         });
         suite('Shutdown', () => {
             test('Remote session with Interactive and starting a new session', async () => {
@@ -405,7 +397,11 @@ suite('JupyterSession', () => {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(kernel.requestExecute(anything(), anything(), anything())).thenReturn(instance(future) as any);
 
-                    const result = jupyterSession.requestExecute({ code: '', allow_stdin: false, silent: false });
+                    const result = jupyterSession.kernel!.requestExecute({
+                        code: '',
+                        allow_stdin: false,
+                        silent: false
+                    });
 
                     assert.isOk(result);
                     await result!.done;
