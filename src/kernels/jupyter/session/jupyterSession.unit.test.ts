@@ -130,6 +130,17 @@ suite('JupyterSession', () => {
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
         when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
+        when(kernel.iopubMessage).thenReturn(
+            instance(
+                mock<ISignal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
+            )
+        );
+        // when(kernel.anyMessage).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.IAnyMessageArgs>>()));
+        when(kernel.anyMessage).thenReturn({ connect: noop, disconnect: noop } as any);
+        when(kernel.unhandledMessage).thenReturn(
+            instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
+        );
+        when(kernel.disposed).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, void>>()));
         when(kernel.connectionStatusChanged).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
         );
@@ -371,13 +382,16 @@ suite('JupyterSession', () => {
                 when(newKernelConnection.id).thenReturn('restartId');
                 when(newKernelConnection.clientId).thenReturn('restartClientId');
                 when(newKernelConnection.status).thenReturn('idle');
+                when(newKernelConnection.disposed).thenReturn({ connect: noop, disconnect: noop } as any);
+                when(newKernelConnection.statusChanged).thenReturn({ connect: noop, disconnect: noop } as any);
+                when(newKernelConnection.connectionStatusChanged).thenReturn({
+                    connect: noop,
+                    disconnect: noop
+                } as any);
+                when(newKernelConnection.anyMessage).thenReturn({ connect: noop, disconnect: noop } as any);
+                when(newKernelConnection.iopubMessage).thenReturn({ connect: noop, disconnect: noop } as any);
+                when(newKernelConnection.unhandledMessage).thenReturn({ connect: noop, disconnect: noop } as any);
                 when(newSession.kernel).thenReturn(instance(newKernelConnection));
-                when(newKernelConnection.statusChanged).thenReturn(
-                    instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>())
-                );
-                when(newKernelConnection.connectionStatusChanged).thenReturn(
-                    instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
-                );
                 when(sessionManager.startNew(anything(), anything())).thenCall(() => {
                     newSessionCreated.resolve();
                     return Promise.resolve(instance(newSession));
