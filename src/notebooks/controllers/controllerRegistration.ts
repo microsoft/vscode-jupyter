@@ -30,9 +30,9 @@ import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../pla
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import {
+    IConnectionDisplayDataProvider,
     IControllerRegistration,
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController,
@@ -381,7 +381,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.serviceContainer.get<IBrowserService>(IBrowserService),
                         this.extensionChecker,
                         this.serviceContainer,
-                        this.serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)
+                        this.serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     const controllerDisposables: IDisposable[] = [];

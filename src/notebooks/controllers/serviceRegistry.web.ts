@@ -3,18 +3,18 @@
 
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData.web';
 import { ControllerRegistration } from './controllerRegistration';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.web';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
 import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
-import { IControllerRegistration, INotebookKernelSourceSelector } from './types';
+import { IConnectionDisplayDataProvider, IControllerRegistration, INotebookKernelSourceSelector } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addBinding(IControllerRegistration, IExtensionSyncActivationService);
-    serviceManager.addSingleton<ConnectionDisplayDataProvider>(
-        ConnectionDisplayDataProvider,
+    serviceManager.addSingleton<IConnectionDisplayDataProvider>(
+        IConnectionDisplayDataProvider,
         ConnectionDisplayDataProvider
     );
     serviceManager.addSingleton<INotebookKernelSourceSelector>(
