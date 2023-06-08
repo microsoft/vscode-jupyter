@@ -24,7 +24,6 @@ import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { ConnectionDisplayDataProvider, IConnectionDisplayData } from '../connectionDisplayData';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
 import {
     CommandQuickPickItem,
@@ -33,6 +32,7 @@ import {
     ConnectionSeparatorQuickPickItem,
     IQuickPickKernelItemProvider
 } from './types';
+import { IConnectionDisplayData, IConnectionDisplayDataProvider } from '../types';
 type CompoundQuickPickItem =
     | CommandQuickPickItem
     | ConnectionQuickPickItem
@@ -87,7 +87,7 @@ class SomeOtherActionError extends Error {}
 
 export class KernelSelector implements IDisposable {
     private disposables: IDisposable[] = [];
-    private readonly displayDataProvider: ConnectionDisplayDataProvider;
+    private readonly displayDataProvider: IConnectionDisplayDataProvider;
     private readonly extensionChecker: IPythonExtensionChecker;
     private readonly recommendedItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
     private readonly createPythonItems: CompoundQuickPickItem[] = [];
@@ -105,7 +105,7 @@ export class KernelSelector implements IDisposable {
         private readonly token: CancellationToken
     ) {
         this.displayDataProvider =
-            ServiceContainer.instance.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider);
+            ServiceContainer.instance.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider);
         this.extensionChecker = ServiceContainer.instance.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         this.createPythonEnvQuickPickItem = {
             label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`,
@@ -249,11 +249,6 @@ export class KernelSelector implements IDisposable {
                 this.provider.onDidChangeStatus(updatePythonItems, this, this.disposables);
                 this.provider.onDidChange(updatePythonItems, this, this.disposables);
             }
-        }
-        if (
-            this.extensionChecker.isPythonExtensionInstalled &&
-            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
-        ) {
             if (this.provider.kernels.length > 0) {
                 // Python extension cannot create envs if there are no python environments.
                 this.createPythonItems.push(this.createPythonEnvQuickPickItem);
@@ -326,7 +321,7 @@ export class KernelSelector implements IDisposable {
         this.updateQuickPickItems(quickPick);
         this.provider.onDidChangeRecommended(() => this.updateRecommended(quickPick), this, this.disposables);
         this.provider.onDidFailToListKernels(
-            (error) => this.updateListWithError(quickPick, error),
+            (error) => this.rebuildQuickPickItems(quickPick, error),
             this,
             this.disposables
         );
@@ -529,9 +524,6 @@ export class KernelSelector implements IDisposable {
         }
     }
 
-    private updateListWithError(quickPick: QuickPick<CompoundQuickPickItem>, error: Error) {
-        this.rebuildQuickPickItems(quickPick, error);
-    }
     private updateRecommended(quickPick: QuickPick<CompoundQuickPickItem>) {
         if (!this.provider.recommended) {
             this.recommendedItems.length = 0;
@@ -631,7 +623,7 @@ function compareIgnoreCase(a: string, b: string) {
 }
 function getCategoryForSorting(
     connection: KernelConnectionMetadata,
-    displayDataProvider: ConnectionDisplayDataProvider
+    displayDataProvider: IConnectionDisplayDataProvider
 ) {
     if (connection.kind === 'startUsingPythonInterpreter' && connection.interpreter.isCondaEnvWithoutPython) {
         // Conda environments without Python are always at the bottom.

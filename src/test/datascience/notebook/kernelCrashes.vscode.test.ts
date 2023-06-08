@@ -58,8 +58,8 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 import { instance, mock, when } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData.node';
 
 const codeToKillKernel = dedent`
 import IPython

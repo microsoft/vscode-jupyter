@@ -11,7 +11,7 @@ import { getNotebookMetadata } from '../../../platform/common/utils';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceInfoIfCI, traceDecoratorVerbose, traceError } from '../../../platform/logging';
 import { isEqual } from '../../../platform/vscode-path/resources';
-import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
+import { createActiveInterpreterController } from './helpers';
 import { IControllerRegistration, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';

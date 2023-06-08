@@ -30,10 +30,9 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { ControllerRegistration } from './controllerRegistration';
 import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
-import { IVSCodeNotebookController } from './types';
+import { IConnectionDisplayDataProvider, IVSCodeNotebookController } from './types';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
 suite('Controller Registration', () => {
@@ -121,7 +120,7 @@ suite('Controller Registration', () => {
     let appShell: IApplicationShell;
     let browser: IBrowserService;
     let serviceContainer: IServiceContainer;
-    let displayDataProvider: ConnectionDisplayDataProvider;
+    let displayDataProvider: IConnectionDisplayDataProvider;
     let addOrUpdateCalled = false;
     setup(() => {
         vscNotebook = mock<IVSCodeNotebook>();
@@ -142,7 +141,7 @@ suite('Controller Registration', () => {
         appShell = mock<IApplicationShell>();
         browser = mock<IBrowserService>();
         serviceContainer = mock<IServiceContainer>();
-        displayDataProvider = mock<ConnectionDisplayDataProvider>();
+        displayDataProvider = mock<IConnectionDisplayDataProvider>();
         onDidChangeKernels = new EventEmitter<void>();
         disposables.push(onDidChangeKernels);
         when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
@@ -151,7 +150,7 @@ suite('Controller Registration', () => {
         when(serviceContainer.get<IBrowserService>(IBrowserService)).thenReturn(instance(browser));
         when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspace));
         when(serviceContainer.get<IDocumentManager>(IDocumentManager)).thenReturn(instance(documentManager));
-        when(serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)).thenReturn(
+        when(serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)).thenReturn(
             instance(displayDataProvider)
         );
         when(serviceContainer.get<NotebookCellLanguageService>(NotebookCellLanguageService)).thenReturn(

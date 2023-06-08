@@ -120,3 +120,18 @@ export interface INotebookKernelSourceSelector {
         providerId: string
     ): Promise<RemoteKernelConnectionMetadata | undefined>;
 }
+
+export interface IConnectionDisplayData extends IDisposable {
+    readonly onDidChange: vscode.Event<IConnectionDisplayData>;
+    readonly connectionId: string;
+    readonly label: string;
+    readonly description: string | undefined;
+    readonly detail: string;
+    readonly category: string;
+    readonly serverDisplayName?: string;
+}
+
+export const IConnectionDisplayDataProvider = Symbol('IConnectionDisplayData');
+export interface IConnectionDisplayDataProvider {
+    getDisplayData(connection: KernelConnectionMetadata): IConnectionDisplayData;
+}
