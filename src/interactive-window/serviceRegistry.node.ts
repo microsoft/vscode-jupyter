@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
-import { IStartupCodeProvider, ITracebackFormatter } from '../kernels/types';
-import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
+import { ITracebackFormatter } from '../kernels/types';
 import { IJupyterExtensionBanner } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -25,17 +22,29 @@ import {
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
-import { IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
+import {
+    IInteractiveControllerHelper,
+    IInteractiveWindowDebugger,
+    IInteractiveWindowDebuggingManager,
+    IInteractiveWindowProvider
+} from './types';
 import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from './shiftEnterBanner';
 import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
 import { PythonCellFoldingProvider } from './editor-integration/pythonCellFoldingProvider';
 import { CodeLensProviderActivator } from './editor-integration/codelensProviderActivator';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
+import { InteractiveControllerHelper } from './InteractiveControllerHelper';
+import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
+    serviceManager.addSingleton<IInteractiveControllerHelper>(
+        IInteractiveControllerHelper,
+        InteractiveControllerHelper
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
@@ -51,10 +60,18 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         PythonCellFoldingProvider
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Decorator);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         GeneratedCodeStorageManager
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelStartupCodeProvider
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        InteractiveWindowDebuggingStartupCodeProvider
     );
     serviceManager.addSingleton<ICodeGeneratorFactory>(ICodeGeneratorFactory, CodeGeneratorFactory, undefined, [
         IExtensionSyncActivationService
@@ -69,15 +86,11 @@ export function registerTypes(serviceManager: IServiceManager) {
         IInteractiveWindowDebuggingManager,
         InteractiveWindowDebuggingManager,
         undefined,
-        [IExtensionSingleActivationService]
+        [IExtensionSyncActivationService]
     );
     serviceManager.addSingleton<IJupyterExtensionBanner>(
         IJupyterExtensionBanner,
         InteractiveShiftEnterBanner,
         BANNER_NAME_INTERACTIVE_SHIFTENTER
-    );
-    serviceManager.addSingleton<IStartupCodeProvider>(
-        IStartupCodeProvider,
-        InteractiveWindowDebuggingStartupCodeProvider
     );
 }

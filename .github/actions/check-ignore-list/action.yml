@@ -1,6 +1,0 @@
-name: 'Check ignore list'
-description: "Make sure changed files are not in the ignore list for the linter"
-
-runs:
-  using: 'node16'
-  main: 'index.js'

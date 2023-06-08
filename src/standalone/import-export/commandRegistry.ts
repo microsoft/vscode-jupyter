@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -14,13 +14,16 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IFileConverter } from '../../notebooks/export/types';
 import { ExportCommands } from './exportCommands';
-import { IControllerSelection, IControllerPreferredService } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { IKernelFinder } from '../../kernels/types';
+import { PreferredKernelConnectionService } from '../../notebooks/controllers/preferredKernelConnectionService';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 
 /**
  * Registers the export commands if in a trusted workspace.
  */
 @injectable()
-export class CommandRegistry implements IExtensionSingleActivationService {
+export class CommandRegistry implements IExtensionSyncActivationService {
     private exportCommand?: ExportCommands;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -33,8 +36,9 @@ export class CommandRegistry implements IExtensionSingleActivationService {
         @inject(IInteractiveWindowProvider)
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        @inject(IControllerSelection) readonly controllerSelection: IControllerSelection,
-        @inject(IControllerPreferredService) readonly controllerPreferred: IControllerPreferredService
+        @inject(IControllerRegistration) readonly controllerSelection: IControllerRegistration,
+        @inject(IKernelFinder) readonly kernelFinder: IKernelFinder,
+        @inject(JupyterConnection) readonly jupyterConnection: JupyterConnection
     ) {
         this.exportCommand = new ExportCommands(
             this.commandManager,
@@ -44,14 +48,15 @@ export class CommandRegistry implements IExtensionSingleActivationService {
             this.notebooks,
             this.interactiveProvider,
             controllerSelection,
-            controllerPreferred
+            new PreferredKernelConnectionService(jupyterConnection),
+            kernelFinder
         );
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
     }
 
-    async activate(): Promise<void> {
+    activate() {
         this.registerCommandsIfTrusted();
     }
 

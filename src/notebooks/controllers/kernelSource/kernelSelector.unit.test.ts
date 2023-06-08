@@ -23,6 +23,7 @@ import {
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, ReadWrite } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
@@ -34,13 +35,10 @@ import {
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../test/core';
-import {
-    ConnectionDisplayData,
-    ConnectionDisplayDataProvider,
-    getKernelConnectionCategorySync
-} from '../connectionDisplayData';
+import { getKernelConnectionCategorySync } from '../connectionDisplayData';
 import { CreateAndSelectItemFromQuickPick, isKernelPickItem, KernelSelector } from './kernelSelector';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
+import { IConnectionDisplayData, IConnectionDisplayDataProvider } from '../types';
 
 suite('Kernel Selector', () => {
     let kernelSelector: KernelSelector;
@@ -48,10 +46,12 @@ suite('Kernel Selector', () => {
     let onDidChangeProvider: EventEmitter<void>;
     let onDidChangeProviderStatus: EventEmitter<void>;
     let onDidChangeRecommended: EventEmitter<void>;
+    let onDidFailToListKernels: EventEmitter<Error>;
     const disposables: IDisposable[] = [];
     let cancellation: CancellationTokenSource;
     let notebook: NotebookDocument;
-    let displayDataProvider: ConnectionDisplayDataProvider;
+    let workspaceService: IWorkspaceService;
+    let displayDataProvider: IConnectionDisplayDataProvider;
     let pythonChecker: IPythonExtensionChecker;
     let provider: ReadWrite<IQuickPickKernelItemProvider>;
     let kernelFinder: IContributedKernelFinder<KernelConnectionMetadata>;
@@ -167,16 +167,18 @@ suite('Kernel Selector', () => {
         notebook = mock<NotebookDocument>();
         pythonChecker = mock<IPythonExtensionChecker>();
         kernelFinder = mock<IContributedKernelFinder<KernelConnectionMetadata>>();
-        displayDataProvider = mock<ConnectionDisplayDataProvider>();
-
+        displayDataProvider = mock<IConnectionDisplayDataProvider>();
+        workspaceService = mock<IWorkspaceService>();
         onDidChangeProvider = new EventEmitter<void>();
         onDidChangeProviderStatus = new EventEmitter<void>();
         onDidChangeRecommended = new EventEmitter<void>();
         onDidTriggerQuickPickButton = new EventEmitter<QuickInputButton>();
+        onDidFailToListKernels = new EventEmitter<Error>();
         disposables.push(onDidChangeProvider);
         disposables.push(onDidChangeProviderStatus);
         disposables.push(onDidChangeRecommended);
         disposables.push(onDidTriggerQuickPickButton);
+        disposables.push(onDidFailToListKernels);
 
         quickPick = {
             title: '',
@@ -202,6 +204,7 @@ suite('Kernel Selector', () => {
         } as any;
 
         provider = {
+            onDidFailToListKernels: onDidFailToListKernels.event,
             title: '',
             kind: ContributedKernelFinderKind.LocalKernelSpec,
             onDidChange: onDidChangeProvider.event,
@@ -212,20 +215,23 @@ suite('Kernel Selector', () => {
             refresh: async () => noop(),
             recommended: undefined
         };
-
-        when(serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)).thenReturn(
+        when(workspaceService.isTrusted).thenReturn(true);
+        when(serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)).thenReturn(
             instance(displayDataProvider)
         );
         when(serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)).thenReturn(
             instance(pythonChecker)
         );
+        const onDidChange = new EventEmitter<IConnectionDisplayData>();
+        disposables.push(onDidChange);
         when(displayDataProvider.getDisplayData(anything())).thenCall((c: KernelConnectionMetadata) => {
-            return <ConnectionDisplayData>{
+            return <IConnectionDisplayData>{
                 category: getKernelConnectionCategorySync(c),
                 label: getDisplayNameOrNameOfKernelConnection(c),
                 connectionId: c.id,
                 description: c.id,
-                detail: c.id
+                detail: c.id,
+                onDidChange: onDidChange.event
             };
         });
         when(pythonChecker.isPythonExtensionInstalled).thenReturn(true);
@@ -242,7 +248,12 @@ suite('Kernel Selector', () => {
             };
         };
 
-        kernelSelector = new KernelSelector(instance(notebook), provider, cancellation.token);
+        kernelSelector = new KernelSelector(
+            instance(workspaceService),
+            instance(notebook),
+            provider,
+            cancellation.token
+        );
         disposables.push(kernelSelector);
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
@@ -299,7 +310,7 @@ suite('Kernel Selector', () => {
 
         assert.isUndefined(kernelConnection?.selection);
         assert.strictEqual(options.items.length, 4);
-        assert.strictEqual(options.items[0].label, DataScience.kernelCategoryForJupyterKernel());
+        assert.strictEqual(options.items[0].label, DataScience.kernelCategoryForJupyterKernel);
 
         const last3QuickPickItems = options.items.slice(1) as ConnectionQuickPickItem[];
         verifyExistenceOfConnectionsInQuickPick(last3QuickPickItems, provider.kernels);
@@ -322,9 +333,9 @@ suite('Kernel Selector', () => {
         );
 
         const nonConnectionItems = options.items.filter((item) => !isKernelPickItem(item));
-        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda());
-        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForVirtual());
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda);
+        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForVirtual);
 
         const connectionItems = options.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[];
         verifyExistenceOfConnectionsInQuickPick(connectionItems, provider.kernels);
@@ -340,8 +351,8 @@ suite('Kernel Selector', () => {
         await clock.runAllAsync();
 
         assert.strictEqual(quickPick.items.length, 3);
-        assert.strictEqual(quickPick.items[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(quickPick.items[1].label, DataScience.kernelCategoryForVirtual());
+        assert.strictEqual(quickPick.items[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(quickPick.items[1].label, DataScience.kernelCategoryForVirtual);
         verifyExistenceOfConnectionsInQuickPick(options.items.slice(2) as ConnectionQuickPickItem[], provider.kernels);
 
         // Update the items.
@@ -354,9 +365,9 @@ suite('Kernel Selector', () => {
         assert.strictEqual(quickPick.busy, true);
         let nonConnectionItems = quickPick.items.filter((item) => !isKernelPickItem(item));
         assert.strictEqual(nonConnectionItems.length, 3);
-        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda());
-        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForVirtual());
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda);
+        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForVirtual);
         verifyExistenceOfConnectionsInQuickPick(
             quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
             provider.kernels
@@ -371,10 +382,10 @@ suite('Kernel Selector', () => {
 
         nonConnectionItems = quickPick.items.filter((item) => !isKernelPickItem(item));
         assert.strictEqual(nonConnectionItems.length, 4);
-        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda());
-        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForGlobal());
-        assert.strictEqual(nonConnectionItems[3].label, DataScience.kernelCategoryForVirtual());
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForConda);
+        assert.strictEqual(nonConnectionItems[2].label, DataScience.kernelCategoryForGlobal);
+        assert.strictEqual(nonConnectionItems[3].label, DataScience.kernelCategoryForVirtual);
         verifyExistenceOfConnectionsInQuickPick(
             quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
             provider.kernels
@@ -389,8 +400,8 @@ suite('Kernel Selector', () => {
 
         nonConnectionItems = quickPick.items.filter((item) => !isKernelPickItem(item));
         assert.strictEqual(nonConnectionItems.length, 2);
-        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick()}`);
-        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForGlobal());
+        assert.strictEqual(nonConnectionItems[0].label, `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`);
+        assert.strictEqual(nonConnectionItems[1].label, DataScience.kernelCategoryForGlobal);
         verifyExistenceOfConnectionsInQuickPick(
             quickPick.items.filter((item) => isKernelPickItem(item)) as ConnectionQuickPickItem[],
             provider.kernels

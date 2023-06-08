@@ -64,6 +64,7 @@ export async function trackKernelResourceInformation(
             disableUI: undefined,
             kernelLanguage: undefined,
             kernelId: undefined,
+            kernelSpecHash: undefined,
             isUsingActiveInterpreter: undefined,
             pythonEnvironmentType: undefined,
             pythonEnvironmentPath: undefined,
@@ -111,9 +112,14 @@ export async function trackKernelResourceInformation(
             default:
                 break;
         }
-        [currentData.kernelLanguage, currentData.kernelId] = await Promise.all([
+        const kernelSpecHash =
+            'kernelSpec' in kernelConnection && kernelConnection.kernelSpec.specFile
+                ? getTelemetrySafeHashedString(kernelConnection.kernelSpec.specFile)
+                : Promise.resolve('');
+        [currentData.kernelLanguage, currentData.kernelId, currentData.kernelSpecHash] = await Promise.all([
             language,
-            getTelemetrySafeHashedString(kernelConnection.id)
+            getTelemetrySafeHashedString(kernelConnection.id),
+            kernelSpecHash
         ]);
 
         // Keep track of the kernel that was last selected.

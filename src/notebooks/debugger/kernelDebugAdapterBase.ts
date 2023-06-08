@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type { KernelMessage } from '@jupyterlab/services';
 import {
     debug,
@@ -23,7 +21,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { executeSilently } from '../../kernels/helpers';
-import { IKernel, IKernelConnectionSession } from '../../kernels/types';
+import { IKernel, IKernelSession } from '../../kernels/types';
 import { IDebugService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IDisposable } from '../../platform/common/types';
@@ -65,7 +63,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     constructor(
         protected session: DebugSession,
         protected notebookDocument: NotebookDocument,
-        protected readonly jupyterSession: IKernelConnectionSession,
+        protected readonly jupyterSession: IKernelSession,
         private readonly kernel: IKernel | undefined,
         private readonly platformService: IPlatformService,
         private readonly debugService: IDebugService
@@ -90,7 +88,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 this.kernel.onDisposed(() => {
                     if (!this.disconnected) {
                         debug.stopDebugging(this.session).then(noop, noop);
-                        this.disconnect().ignoreErrors();
+                        this.disconnect().catch(noop);
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
                     }
                 })
@@ -107,7 +105,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                         !this.disconnected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                        this.disconnect().ignoreErrors();
+                        this.disconnect().catch(noop);
                     }
                 },
                 this,
@@ -121,7 +119,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                     e.contentChanges.forEach((change) => {
                         change.removedCells.forEach((cell: NotebookCell) => {
                             if (cell === this.debugCell) {
-                                this.disconnect().ignoreErrors();
+                                this.disconnect().catch(noop);
                             }
                         });
                     });
@@ -133,7 +131,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         this.disposables.push(
             this.debugService.onDidTerminateDebugSession((e) => {
                 if (e === this.session) {
-                    this.disconnect().ignoreErrors();
+                    this.disconnect().catch(noop);
                 }
             })
         );
@@ -165,7 +163,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
      * Handle a message from the client to the debug adapter.
      */
     handleMessage(message: DebugProtocol.ProtocolMessage): void {
-        this.handleClientMessageAsync(message).ignoreErrors();
+        this.handleClientMessageAsync(message).catch(noop);
     }
 
     protected async handleClientMessageAsync(message: DebugProtocol.ProtocolMessage): Promise<void> {
@@ -196,7 +194,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 }
             }
 
-            await this.sendRequestToJupyterSession(message);
+            await this.sendMessageToJupyterSession(message);
         } catch (e) {
             traceError(`KernelDebugAdapter::handleMessage failure: ${e}`);
         }
@@ -284,41 +282,20 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         return undefined;
     }
 
-    protected async sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
+    protected async sendMessageToJupyterSession(message: DebugProtocol.ProtocolMessage) {
         if (this.jupyterSession.disposed || this.jupyterSession.status === 'dead') {
             traceInfo(`Skipping sending message ${message.type} because session is disposed`);
             return;
         }
 
-        // map Source paths from VS Code to Ipykernel temp files
-        getMessageSourceAndHookIt(message, this.translateRealFileToDebuggerFile.bind(this));
-
         this.trace('to kernel', JSON.stringify(message));
         if (message.type === 'request') {
-            const request = message as DebugProtocol.Request;
-            const control = this.jupyterSession.requestDebug(
-                {
-                    seq: request.seq,
-                    type: 'request',
-                    command: request.command,
-                    arguments: request.arguments
-                },
-                true
-            );
-
-            control.onReply = async (msg) => {
-                const message = msg.content as DebugProtocol.Response;
-                getMessageSourceAndHookIt(message, this.translateDebuggerFileToRealFile.bind(this));
-
-                for (const d of this.delegates ?? []) {
-                    await d?.willSendResponse?.(message);
-                }
-
-                this.trace('response', JSON.stringify(message));
-                this.sendMessage.fire(message);
-            };
-            return control.done;
+            const response = await this.sendRequestToJupyterSession(message);
+            if (response) {
+                this.sendMessage.fire(response);
+            }
         } else if (message.type === 'response') {
+            getMessageSourceAndHookIt(message, this.translateRealLocationToDebuggerLocation.bind(this));
             // responses of reverse requests
             const response = message as DebugProtocol.Response;
             const control = this.jupyterSession.requestDebug(
@@ -335,10 +312,44 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             traceError(`Unknown message type to send ${message.type}`);
         }
     }
-    protected translateDebuggerFileToRealFile(
-        source: DebugProtocol.Source | undefined,
-        _lines?: { line?: number; endLine?: number; lines?: number[] }
+
+    protected async sendRequestToJupyterSession(
+        message: DebugProtocol.ProtocolMessage
+    ): Promise<DebugProtocol.Response> {
+        getMessageSourceAndHookIt(message, this.translateRealLocationToDebuggerLocation.bind(this));
+
+        this.trace('to kernel, mapped', JSON.stringify(message));
+        const request = message as DebugProtocol.Request;
+        const control = this.jupyterSession.requestDebug(
+            {
+                seq: request.seq,
+                type: 'request',
+                command: request.command,
+                arguments: request.arguments
+            },
+            true
+        );
+        const msg = await control.done;
+        const response = msg.content as DebugProtocol.Response;
+        getMessageSourceAndHookIt(response, this.translateDebuggerLocationToRealLocation.bind(this));
+
+        for (const d of this.delegates ?? []) {
+            await d?.willSendResponse?.(response);
+        }
+
+        this.trace('response', JSON.stringify(response));
+        return response;
+    }
+
+    protected translateDebuggerLocationToRealLocation(
+        location: {
+            source?: DebugProtocol.Source;
+            line?: number;
+            endLine?: number;
+        },
+        source?: DebugProtocol.Source
     ) {
+        source = location?.source ?? source;
         if (source && source.path) {
             const mapping = this.fileToCell.get(source.path) ?? this.lookupCellByLongName(source.path);
             if (mapping) {
@@ -347,9 +358,14 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             }
         }
     }
-    protected abstract translateRealFileToDebuggerFile(
-        source: DebugProtocol.Source | undefined,
-        _lines?: { line?: number; endLine?: number; lines?: number[] }
+
+    protected abstract translateRealLocationToDebuggerLocation(
+        location: {
+            source?: DebugProtocol.Source;
+            line?: number;
+            endLine?: number;
+        },
+        source?: DebugProtocol.Source
     ): void;
 
     protected abstract getDumpFilesForDeletion(): string[];
@@ -366,14 +382,15 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 .join(',');
 
             // Insert into our delete snippet
-            const deleteFilesCode = `import os
+            const deleteFilesCode = `import os as _VSCODE_os
 _VSCODE_fileList = [${fileListString}]
 for file in _VSCODE_fileList:
     try:
-        os.remove(file)
+        _VSCODE_os.remove(file)
     except:
         pass
-del _VSCODE_fileList`;
+del _VSCODE_fileList
+del _VSCODE_os`;
 
             await executeSilently(this.jupyterSession, deleteFilesCode, {
                 traceErrors: true,

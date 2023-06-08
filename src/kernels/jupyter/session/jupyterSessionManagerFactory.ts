@@ -1,12 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, named, optional } from 'inversify';
 import { JupyterSessionManager } from './jupyterSessionManager';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
-import { IConfigurationService, IOutputChannel, IPersistentStateFactory } from '../../../platform/common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IOutputChannel,
+    IPersistentStateFactory
+} from '../../../platform/common/types';
 import { IJupyterConnection } from '../../types';
 import {
     IJupyterSessionManagerFactory,
@@ -31,7 +35,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         @inject(IJupyterRequestAgentCreator)
         @optional()
         private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined,
-        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
+        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator,
+        @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry
     ) {}
 
     /**
@@ -53,6 +58,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.requestAgentCreator,
             this.requestCreator
         );
+        this.asyncDisposables.push(result);
         await result.initialize(connInfo);
         return result;
     }

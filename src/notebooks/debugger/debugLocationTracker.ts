@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { DebugAdapterTracker, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugLocation } from './debuggingTypes';

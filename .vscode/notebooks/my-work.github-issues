@@ -1,0 +1,62 @@
+[
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "// list of repos we work in\n$repos=repo:microsoft/vscode-jupyter repo:microsoft/vscode-jupyter-internal\n\n// current milestone name\n$milestone=milestone:\"December 2022\""
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Personal Inbox\n"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "#### Triage Needed"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "repo:microsoft/vscode is:open assignee:@me label:triage-needed"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "\n#### Missing Type label"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$repos assignee:@me is:open type:issue -label:bug -label:\"info-needed\" -label:feature-request -label:under-discussion -label:debt -label:plan-item -label:upstream -label:polish -label:testplan-item -label:error-telemetry -label:engineering"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "#### Missing Area Label\n\nFeature area labels are light or strong blue (`1d76db` or `c5def5`) and they denote a specific feature or feature area, like `editor-clipboard` or `file-explorer`"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$repos assignee:@me is:open type:issue -label:azureml -label:cell-magics -label:data-viewer -label:plot-viewer -label:pyspark -label:pytorch -label:tensorboard -label:remote-picker -label:variable-explorer -label:zmq -label:vscode-web -label:kernel-default -label:kernel-crash -label:kernel-enumeration -label:kernel-env-vars -label:kernel-picker -label:kernel-protocol -label:language-any -label:language-python -label:interactive-window -label:ipywidgets -label:jupyter-output -label:notebook-automated-testing -label:notebook-codespaces -label:notebook-context-keys -label:notebook-liveshare -label:notebook-extensibility -label:notebook-import-export -label:notebook-polyglot -label:notebook-prompts-notifications -label:notebook-remote -label:notebook-run-by-line -label:notebook -label:notebook-api -label:notebook-builtin-renderers -label:notebook-cell-editor -label:notebook-celltoolbar -label:notebook-clipboard -label:notebook-commenting -label:notebook-debugging -label:notebook-diff -label:notebook-dnd -label:notebook-execution -label:notebook-find -label:notebook-folding -label:notebook-getting-started -label:notebook-globaltoolbar -label:notebook-ipynb -label:notebook-kernel -label:notebook-kernel-picker -label:notebook-keybinding -label:notebook-language -label:notebook-layout -label:notebook-markdown -label:notebook-math -label:notebook-minimap -label:notebook-multiselect -label:notebook-output -label:notebook-perf -label:notebook-remote -label:notebook-rendering -label:notebook-serialization -label:notebook-serverless-web -label:notebook-statusbar -label:notebook-toc-outline -label:notebook-undo-redo -label:notebook-variables -label:notebook-workbench-integration -label:notebook-workflow"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "### Missing Milestone"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$repos assignee:@me is:open type:issue no:milestone -label:info-needed -label:triage-needed"
+  },
+  {
+    "kind": 1,
+    "language": "markdown",
+    "value": "#### Not Actionable"
+  },
+  {
+    "kind": 2,
+    "language": "github-issues",
+    "value": "$repos assignee:@me is:open label:\"info-needed\""
+  }
+]

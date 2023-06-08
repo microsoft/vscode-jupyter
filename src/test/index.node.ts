@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
+// Custom mocha reporter
+import './common/exitCIAfterTestReporter';
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
-// Always place at the top, to ensure other modules are imported first.
-require('./common/exitCIAfterTestReporter');
+// reflect-metadata is needed by inversify, this must come before any inversify references
+import '../platform/ioc/reflectMetadata';
 
-if ((Reflect as any).metadata === undefined) {
-    require('reflect-metadata');
-}
 // Always place at top, must be done before we import any of the files from src/client folder.
 // We need to ensure nyc gets a change to setup necessary hooks before files are loaded.
 const { setupCoverage } = require('./coverage.node');
@@ -45,7 +42,7 @@ type SetupOptions = Mocha.MochaOptions & {
     exit: boolean;
 };
 
-process.on('unhandledRejection', (ex: any, _a) => {
+process.on('unhandledRejection', (ex: Error, _a) => {
     if (typeof ex === 'object' && ex && ex.name === 'Canceled' && ex instanceof Error) {
         // We don't care about unhandled `Cancellation` errors.
         // When we shutdown tests some of these cancellations (cancelling starting of Kernels, etc) bubble upto VS Code.
@@ -66,7 +63,8 @@ process.on('unhandledRejection', (ex: any, _a) => {
         msg.includes('Error: custom request failed') ||
         msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
         msg.includes('ms-python.isort') || // We don't care about unhanded promise rejections from the Python related extensions.
-        msg.includes('extensions/git/dist/main.js') // git extension often throws errors from calling extension APIs after EH has been disconnected
+        msg.includes('extensions/git/dist/main.js') || // git extension often throws errors from calling extension APIs after EH has been disconnected
+        msg.includes('@vscode/lsp-notebook-concat/dist/index.js') // Flaky LSP issues.
     ) {
         // Some error from VS Code, we can ignore this.
         return;
@@ -201,7 +199,7 @@ export async function run(): Promise<void> {
             : options.testFilesSuffix;
         glob(
             `**/*${pattern}.js`,
-            { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'].concat(ignoreGlob), cwd: testsRoot },
+            { ignore: ['**/**.unit.test.js'].concat(ignoreGlob), cwd: testsRoot },
             (error, files) => {
                 if (error) {
                     return reject(error);

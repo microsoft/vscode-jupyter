@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import {
     IBaseKernel,
     IKernel,
@@ -25,20 +23,21 @@ import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTele
 import { IServiceContainer } from '../../platform/ioc/types';
 import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
-import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';
-import { Product } from '../../kernels/installer/types';
+import { clearInstalledIntoInterpreterMemento } from '../../platform/interpreter/installer/productInstaller';
+import { Product } from '../../platform/interpreter/installer/types';
 import { INotebookEditorProvider } from '../types';
 import { selectKernel } from './kernelSelector';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { noop } from '../../platform/common/utils/misc';
-import { IRawNotebookProvider } from '../../kernels/raw/types';
-import { IControllerSelection, IVSCodeNotebookController } from './types';
+import { IRawNotebookSupportedService } from '../../kernels/raw/types';
+import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelSpecNotTrustedError } from '../../kernels/errors/kernelSpecNotTrustedError';
+import { isKernelDead } from '../../kernels/kernel';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel
@@ -53,7 +52,7 @@ export class KernelConnector {
         const editor = notebookEditorProvider.findNotebookEditor(resource);
 
         // Listen for selection change events (may not fire if user cancels)
-        const controllerManager = serviceContainer.get<IControllerSelection>(IControllerSelection);
+        const controllerManager = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         let controller: IVSCodeNotebookController | undefined;
         const waitForSelection = createDeferred<IVSCodeNotebookController>();
         const disposable = controllerManager.onControllerSelected((e) => waitForSelection.resolve(e.controller));
@@ -74,21 +73,21 @@ export class KernelConnector {
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
 
         const selection = await appShell.showErrorMessage(
-            DataScience.cannotRunCellKernelIsDead().format(
+            DataScience.cannotRunCellKernelIsDead(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             ),
             { modal: true },
-            DataScience.showJupyterLogs(),
-            DataScience.restartKernel()
+            DataScience.showJupyterLogs,
+            DataScience.restartKernel
         );
         let restartedKernel = false;
         switch (selection) {
-            case DataScience.restartKernel(): {
+            case DataScience.restartKernel: {
                 await kernel.restart();
                 restartedKernel = true;
                 break;
             }
-            case DataScience.showJupyterLogs(): {
+            case DataScience.showJupyterLogs: {
                 commandManager.executeCommand(Commands.ViewJupyterOutput).then(noop, noop);
             }
         }
@@ -113,7 +112,7 @@ export class KernelConnector {
             // If we failed to start the kernel, then clear cache used to track
             // whether we have dependencies installed or not.
             // Possible something is missing.
-            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).ignoreErrors();
+            clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).catch(noop);
         }
 
         const handleResult = await errorHandler.handleKernelError(
@@ -128,7 +127,7 @@ export class KernelConnector {
         const isLocal = isLocalConnection(metadata);
 
         // Raw notebook provider is not available in web
-        const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookProvider>(IRawNotebookProvider);
+        const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookSupportedService>(IRawNotebookSupportedService);
         const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
         if (rawLocalKernel && errorContext === 'start') {
             sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
@@ -137,7 +136,7 @@ export class KernelConnector {
         }
 
         // Dispose the kernel no matter what happened as we need to go around again when there's an error
-        kernel.dispose().ignoreErrors();
+        kernel.dispose().catch(noop);
 
         switch (handleResult) {
             case KernelInterpreterDependencyResponse.cancel:
@@ -217,7 +216,7 @@ export class KernelConnector {
         // Before returning, but without disposing the kernel, double check it's still valid
         // If a restart didn't happen, then we can't connect. Throw an error.
         // Do this outside of the loop so that subsequent calls will still ask because the kernel isn't disposed
-        if (kernel.status === 'dead' || (kernel.status === 'terminating' && !kernel.disposed && !kernel.disposing)) {
+        if (isKernelDead(kernel)) {
             // If the kernel is dead, then remove the cached promise, & try to get the kernel again.
             // At that point, it will get restarted.
             this.deleteKernelInfo(notebookResource, promise);
@@ -421,9 +420,6 @@ export class KernelConnector {
                           metadata,
                           resourceUri: notebookResource.resource
                       });
-
-            const isKernelDead = (k: IBaseKernel) =>
-                k.status === 'dead' || (k.status === 'terminating' && !k.disposed && !k.disposing);
 
             try {
                 // If the kernel is dead, ask the user if they want to restart.

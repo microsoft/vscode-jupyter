@@ -26,16 +26,9 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import {
-    traceInfoIfCI,
-    traceInfo,
-    traceVerbose,
-    traceWarning,
-    traceDecoratorVerbose,
-    traceError
-} from '../../platform/logging';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IBrowserService,
@@ -47,7 +40,7 @@ import {
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { Commands } from '../../platform/common/constants';
@@ -55,7 +48,6 @@ import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../messageTypes';
 import {
-    getRemoteKernelSessionInformation,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
     areKernelConnectionsEqual
@@ -65,14 +57,15 @@ import {
     IKernelController,
     IKernelProvider,
     isLocalConnection,
-    KernelConnectionMetadata
+    KernelConnectionMetadata,
+    NotebookCellRunState
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
-import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
+import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
-import { IVSCodeNotebookController } from './types';
+import { IConnectionDisplayData, IConnectionDisplayDataProvider, IVSCodeNotebookController } from './types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreator';
 import {
@@ -86,7 +79,10 @@ import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
+import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
+import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecutionTracker';
+import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
+import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessageHandler';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -143,8 +139,48 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     public isAssociatedWithDocument(doc: NotebookDocument) {
         return this.associatedDocuments.has(doc);
     }
+    private readonly displayData: IConnectionDisplayData;
 
     private readonly associatedDocuments = new WeakMap<NotebookDocument, Promise<void>>();
+    public static create(
+        kernelConnection: KernelConnectionMetadata,
+        id: string,
+        _viewType: string,
+        notebookApi: IVSCodeNotebook,
+        commandManager: ICommandManager,
+        kernelProvider: IKernelProvider,
+        context: IExtensionContext,
+        disposableRegistry: IDisposableRegistry,
+        languageService: NotebookCellLanguageService,
+        workspace: IWorkspaceService,
+        configuration: IConfigurationService,
+        documentManager: IDocumentManager,
+        appShell: IApplicationShell,
+        browser: IBrowserService,
+        extensionChecker: IPythonExtensionChecker,
+        serviceContainer: IServiceContainer,
+        displayDataProvider: IConnectionDisplayDataProvider
+    ): IVSCodeNotebookController {
+        return new VSCodeNotebookController(
+            kernelConnection,
+            id,
+            _viewType,
+            notebookApi,
+            commandManager,
+            kernelProvider,
+            context,
+            disposableRegistry,
+            languageService,
+            workspace,
+            configuration,
+            documentManager,
+            appShell,
+            browser,
+            extensionChecker,
+            serviceContainer,
+            displayDataProvider
+        );
+    }
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -162,35 +198,24 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: ConnectionDisplayDataProvider
+        private readonly displayDataProvider: IConnectionDisplayDataProvider
     ) {
         disposableRegistry.push(this);
-        displayDataProvider.onDidChange(
-            (e) => {
-                if (e.connectionId === this.connection.id) {
-                    this.updateDisplayData();
-                }
-            },
-            this,
-            this.disposables
-        );
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
             controller: VSCodeNotebookController;
         }>();
 
-        const displayData = this.displayDataProvider.getDisplayData(this.connection);
-        traceVerbose(
-            `Creating notebook controller for ${kernelConnection.kind} & view ${_viewType} (id='${kernelConnection.id}') with name '${displayData.label}'`
-        );
+        this.displayData = this.displayDataProvider.getDisplayData(this.connection);
         this.controller = this.notebookApi.createNotebookController(
             id,
             _viewType,
-            displayData.label,
+            this.displayData.label,
             this.handleExecution.bind(this),
             this.getRendererScripts(),
             []
         );
+        this.displayData.onDidChange(this.updateDisplayData, this, this.disposables);
         this.updateDisplayData();
 
         // Fill in extended info for our controller
@@ -212,10 +237,73 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             this.disposables
         );
     }
+    private readonly restoredConnections = new WeakSet<NotebookDocument>();
+    public async restoreConnection(notebook: NotebookDocument) {
+        if (this.restoredConnections.has(notebook)) {
+            return;
+        }
+        this.restoredConnections.add(notebook);
+        const kernel = await this.connectToKernel(notebook, new DisplayOptions(true));
+        if (this.kernelConnection.kind === 'connectToLiveRemoteKernel') {
+            const indicator = new RemoteKernelReconnectBusyIndicator(kernel, this.controller, notebook);
+            this.disposables.push(indicator);
+            indicator.initialize();
+        }
+
+        const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
+        const lastCellExecutionTracker = this.serviceContainer.get<LastCellExecutionTracker>(LastCellExecutionTracker);
+        const info = lastCellExecutionTracker.getLastTrackedCellExecution(notebook, kernel);
+
+        if (
+            !kernel.session?.kernel ||
+            kernelExecution.pendingCells.length ||
+            !info ||
+            notebook.cellCount < info.cellIndex ||
+            notebook.cellAt(info.cellIndex).kind !== NotebookCellKind.Code
+        ) {
+            return;
+        }
+
+        // If we're connected to the same kernel session and the same cell is still getting executed,
+        // then ensure to mark the cell as busy and attach the outputs of the execution to the cell.
+        let resumed = false;
+        const localDisposables: IDisposable[] = [];
+        let disposeAnyHandler: IDisposable | undefined;
+        const anyMessageHandler = (_: unknown, msg: IAnyMessageArgs) => {
+            if (msg.direction === 'send' || resumed) {
+                return;
+            }
+            if (getParentHeaderMsgId(msg.msg as KernelMessage.IMessage) === info.msg_id) {
+                // If we have an idle state, then the request is done.
+                if (
+                    'msg_type' in msg.msg &&
+                    msg.msg.msg_type === 'status' &&
+                    'execution_state' in msg.msg.content &&
+                    msg.msg.content.execution_state === 'idle'
+                ) {
+                    return;
+                }
+                resumed = true;
+                kernelExecution
+                    .resumeCellExecution(notebook.cellAt(info.cellIndex), {
+                        msg_id: info.msg_id,
+                        startTime: info.startTime,
+                        executionCount: info.executionCount
+                    })
+                    .catch(noop);
+                disposeAllDisposables(localDisposables);
+            }
+        };
+        // Check if we're still getting messages for the previous execution.
+        kernel.session.kernel.anyMessage.connect(anyMessageHandler);
+        disposeAnyHandler = new Disposable(() => {
+            swallowExceptions(() => kernel.session?.kernel?.anyMessage.disconnect(anyMessageHandler));
+        });
+        localDisposables.push(disposeAnyHandler);
+        this.disposables.push(disposeAnyHandler);
+    }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
-        if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
-            this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
-        } else {
+        if (kernelConnection.kind !== 'connectToLiveRemoteKernel') {
             this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
         }
     }
@@ -267,14 +355,15 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         disposeAllDisposables(this.disposables);
     }
     private updateDisplayData() {
-        const displayData = this.displayDataProvider.getDisplayData(this.connection);
-        this.controller.label = displayData.label;
-        this.controller.description = displayData.description;
-        this.controller.detail = displayData.detail;
-        this.controller.kind = displayData.category;
+        this.controller.label = this.displayData.label;
+        this.controller.description = this.displayData.description;
+        if (this.displayData.serverDisplayName) {
+            // MRU kernel picker doesn't show controller kind/category, so add server name to description
+            this.controller.description = this.displayData.description
+                ? `${this.displayData.description} (${this.displayData.serverDisplayName})`
+                : this.displayData.serverDisplayName;
+        }
     }
-    // Handle the execution of notebook cell
-    @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
             return;
@@ -301,6 +390,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!this.workspace.isTrusted) {
             return;
         }
+        traceInfo(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         // Notebook is trusted. Continue to execute cells
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
@@ -318,12 +408,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
             this.appShell
-                .showWarningMessage(
-                    DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion(),
-                    Common.learnMore()
-                )
+                .showWarningMessage(DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion, Common.learnMore)
                 .then((selection) => {
-                    if (selection !== Common.learnMore()) {
+                    if (selection !== Common.learnMore) {
                         return;
                     }
                     return this.browser.launch('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
@@ -418,62 +505,26 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
     }
     private getRendererScripts(): NotebookRendererScript[] {
-        const scripts: Uri[] = [];
-
         // Only used in tests & while debugging.
         if (
             this.context.extensionMode === ExtensionMode.Development ||
             this.context.extensionMode === ExtensionMode.Test
         ) {
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'webviews/webview-side',
-                    'widgetTester',
-                    'widgetTester.js'
+            return [
+                new NotebookRendererScript(
+                    Uri.joinPath(
+                        this.context.extensionUri,
+                        'out',
+                        'webviews',
+                        'webview-side',
+                        'widgetTester',
+                        'widgetTester.js'
+                    )
                 )
-            );
-
-            // In development mode, ipywidgets is not under the 'out' folder.
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'node_modules',
-                    '@vscode',
-                    'jupyter-ipywidgets7',
-                    'dist',
-                    'ipywidgets.js'
-                )
-            );
+            ];
         } else {
-            // Normal package mode, ipywidgets ends up next to extension.ts
-            scripts.push(
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'node_modules',
-                    '@vscode',
-                    'jupyter-ipywidgets7',
-                    'dist',
-                    'ipywidgets.js'
-                )
-            );
+            return [];
         }
-        scripts.push(
-            ...[
-                Uri.joinPath(
-                    this.context.extensionUri,
-                    'out',
-                    'webviews',
-                    'webview-side',
-                    'ipywidgetsKernel',
-                    'ipywidgetsKernel.js'
-                ),
-                Uri.joinPath(this.context.extensionUri, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
-            ]
-        );
-        return scripts.map((uri) => new NotebookRendererScript(uri));
     }
 
     private handleInterrupt(notebook: NotebookDocument) {
@@ -481,7 +532,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
             .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: notebook.uri } })
-            .then(noop, (ex) => console.error(ex));
+            .then(noop, (ex) => traceError('Failed to interrupt', ex));
     }
 
     private createCellExecutionIfNecessary(cell: NotebookCell, controller: IKernelController) {
@@ -489,7 +540,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         let currentExecution = this.runningCellExecutions.get(cell.notebook);
         if (!currentExecution || currentExecution.cell === cell) {
             currentExecution?.end(undefined, undefined);
-            currentExecution = CellExecutionCreator.getOrCreate(cell, controller);
+            currentExecution = CellExecutionCreator.getOrCreate(cell, controller, true);
             this.runningCellExecutions.set(cell.notebook, currentExecution);
 
             // When this execution ends, we don't have a current one anymore.
@@ -502,8 +553,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         return currentExecution;
     }
 
-    private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
-        traceVerbose(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
+    public async executeCell(doc: NotebookDocument, cell: NotebookCell, codeOverride?: string) {
         // Start execution now (from the user's point of view)
         let exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
 
@@ -512,6 +562,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         let kernel: IKernel | undefined;
         let controller: IKernelController = new KernelController(this.controller);
         let kernelStarted = false;
+        const lastCellExecutionTracker = this.serviceContainer.get<LastCellExecutionTracker>(LastCellExecutionTracker);
+
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
             kernelStarted = true;
@@ -524,7 +576,33 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             }
-            return await this.kernelProvider.getKernelExecution(kernel).executeCell(cell);
+
+            // Track the information so we can restore execution upon reloading vs code or the like.
+            lastCellExecutionTracker.trackCellExecution(cell, kernel);
+            const promise = this.kernelProvider.getKernelExecution(kernel).executeCell(cell, codeOverride);
+
+            // If we complete execution, then there is nothing to be restored.
+            promise
+                .then((state) => {
+                    if (!kernel) {
+                        return;
+                    }
+                    if (Exiting.isExiting) {
+                        // If we're exiting vs code, then no need to clear the last execution info, we need to preserve that.
+                        return;
+                    }
+                    // When closing VS Code, execution tasks get disposed, same as when we restart the kernel or interrupt kernels.
+                    // Hence we need to ensure we don't clear last execution state if the status is idle.
+                    // Completion of cells is marked by status being success or error.
+                    // Idle means the cell execution did not complete.
+                    if (state === NotebookCellRunState.Idle) {
+                        return;
+                    }
+
+                    return lastCellExecutionTracker.deleteTrackedCellExecution(cell, kernel);
+                })
+                .catch(noop);
+            return await promise;
         } catch (ex) {
             if (!isCancellationError(ex)) {
                 traceError(`Error in execution`, ex);

@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import '../common/extensions';
-
 import { Uri, ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
 
 import { WebviewHost } from './webviewHost';

@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named, optional } from 'inversify';
 import { DebugConfiguration, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import {
     IApplicationShell,
@@ -27,13 +25,13 @@ import { traceError, traceInfo } from '../../../platform/logging';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../platform/telemetry/constants';
-import { PythonEnvironment } from '../../../standalone/api/extension';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { DataViewerChecker } from './dataViewerChecker';
 import { IDataViewerDependencyService, IDataViewerFactory, IJupyterVariableDataProviderFactory } from './types';
+import { PythonEnvironment } from '../../../api';
 
 @injectable()
-export class DataViewerCommandRegistry implements IExtensionSingleActivationService {
+export class DataViewerCommandRegistry implements IExtensionSyncActivationService {
     private dataViewerChecker: DataViewerChecker;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -62,7 +60,7 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
     }
-    async activate(): Promise<void> {
+    activate() {
         this.registerCommandsIfTrusted();
     }
     private registerCommandsIfTrusted() {
@@ -112,7 +110,7 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
                 const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
                 const columnSize = dataFrameInfo?.columns?.length;
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
-                    const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                    const title: string = `${DataScience.dataExplorerTitle} - ${jupyterVariable.name}`;
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }

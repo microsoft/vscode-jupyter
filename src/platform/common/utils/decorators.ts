@@ -3,7 +3,6 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, , no-invalid-this */
 
-import '../extensions';
 import { isTestExecution } from '../constants';
 import { createDeferred, Deferred } from './async';
 import { DataWithExpiry, getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
@@ -152,7 +151,7 @@ export function cache(expiryDurationMs: number) {
             const promise = originalMethod.apply(this, args) as Promise<any>;
             promise
                 .then((result) => cacheStoreForMethods.set(key, new DataWithExpiry(expiryDurationMs, result)))
-                .ignoreErrors();
+                .catch(noop);
             return promise;
         };
     };

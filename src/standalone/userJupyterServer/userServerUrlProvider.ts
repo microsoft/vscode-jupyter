@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, named } from 'inversify';
 import uuid from 'uuid/v4';
 import {
@@ -15,32 +14,42 @@ import {
     Uri,
     window
 } from 'vscode';
-import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
-import { validateSelectJupyterURI } from '../../kernels/jupyter/serverSelector';
-import { IJupyterServerUri, IJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
+import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
+import {
+    IJupyterServerUriStorage,
+    IInternalJupyterUriProvider,
+    IJupyterUriProviderRegistration
+} from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
-import { Settings } from '../../platform/common/constants';
+import { Identifiers, JVSC_EXTENSION_ID, Settings } from '../../platform/common/constants';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IDisposable,
     IDisposableRegistry,
-    IFeaturesManager,
     IMemento,
     IsWebExtension
 } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
 import { traceError } from '../../platform/logging';
+import { JupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
+import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
+import { IJupyterServerUri } from '../../api';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
 
 @injectable()
-export class UserJupyterServerUrlProvider implements IExtensionSyncActivationService, IDisposable, IJupyterUriProvider {
+export class UserJupyterServerUrlProvider
+    implements IExtensionSyncActivationService, IDisposable, IInternalJupyterUriProvider
+{
     readonly id: string = '_builtin.jupyterServerUrlProvider';
-    readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName();
-    readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail();
+    public readonly extensionId: string = JVSC_EXTENSION_ID;
+    readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName;
+    readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail;
     private _onDidChangeHandles = new EventEmitter<void>();
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
     private _servers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
@@ -55,29 +64,15 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IFeaturesManager) private readonly featuresManager: IFeaturesManager
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         this.disposables.push(this);
     }
 
     activate() {
-        const updatePerFeature = () => {
-            if (this.featuresManager.features.kernelPickerType === 'Insiders') {
-                this._activateProvider();
-            } else {
-                this._localDisposables.forEach((d) => d.dispose());
-                this._localDisposables = [];
-            }
-        };
-
-        this.disposables.push(this.featuresManager.onDidChangeFeatures(() => updatePerFeature()));
-        updatePerFeature();
-    }
-
-    private _activateProvider() {
-        this._localDisposables.push(this.uriProviderRegistration.registerProvider(this));
+        this._localDisposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
         this._servers = [];
 
         this._localDisposables.push(
@@ -92,9 +87,40 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 this._onDidChangeHandles.fire();
             })
         );
+
+        this.migrateOldUserEnteredUrlsToProviderUri()
+            .then(async () => {
+                // once cache is initialized, check if we should do migration
+                const existingServers = await this.serverUriStorage.getAll();
+                const migratedServers = [];
+                for (const server of existingServers) {
+                    if (this._servers.find((s) => s.uri === server.uri)) {
+                        // already exist
+                        continue;
+                    }
+                    if (server.provider.id !== this.id) {
+                        continue;
+                    }
+
+                    const serverInfo = this.parseUri(server.uri);
+                    if (serverInfo) {
+                        migratedServers.push({
+                            handle: uuid(),
+                            uri: server.uri,
+                            serverInfo: serverInfo
+                        });
+                    }
+                }
+
+                if (migratedServers.length > 0) {
+                    this._servers.push(...migratedServers);
+                    this._onDidChangeHandles.fire();
+                }
+            })
+            .catch(noop);
     }
 
-    private async _initializeCachedServerInfo(): Promise<void> {
+    private async migrateOldUserEnteredUrlsToProviderUri(): Promise<void> {
         if (this._cachedServerInfoInitialized) {
             return this._cachedServerInfoInitialized;
         }
@@ -109,25 +135,25 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 UserJupyterServerUriListKey
             );
 
-            if (!cache || !serverList) {
-                resolve();
-                return;
+            if (!cache || !serverList || serverList.length === 0) {
+                return resolve();
             }
 
             const encryptedList = cache.split(Settings.JupyterServerRemoteLaunchUriSeparator);
-
-            if (encryptedList.length === 0) {
+            if (encryptedList.length === 0 || encryptedList.length !== serverList.length) {
                 traceError('Invalid server list, unable to retrieve server info');
-                resolve();
-                return;
+                return resolve();
             }
 
             const servers = [];
 
             for (let i = 0; i < encryptedList.length; i += 1) {
+                if (encryptedList[i].startsWith(Identifiers.REMOTE_URI)) {
+                    continue;
+                }
                 const serverInfo = this.parseUri(encryptedList[i]);
                 if (!serverInfo) {
-                    traceError('Unable to parse server info', serverInfo);
+                    traceError('Unable to parse server info', encryptedList[i]);
                 } else {
                     servers.push({
                         handle: serverList[i].handle,
@@ -145,18 +171,19 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         return this._cachedServerInfoInitialized;
     }
 
-    getQuickPickEntryItems(): QuickPickItem[] {
+    getQuickPickEntryItems(): (QuickPickItem & { default?: boolean })[] {
         return [
             {
-                label: DataScience.jupyterSelectURIPrompt(),
-                detail: DataScience.jupyterSelectURINewDetail()
+                default: true,
+                label: DataScience.jupyterSelectURIPrompt,
+                detail: DataScience.jupyterSelectURINewDetail
             }
         ];
     }
 
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
-        await this._cachedServerInfoInitialized;
-        if (item.label !== DataScience.jupyterSelectURIPrompt()) {
+        await this.migrateOldUserEnteredUrlsToProviderUri();
+        if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
         }
 
@@ -174,7 +201,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
 
         // Ask the user to enter a URI to connect to.
         const input = window.createInputBox();
-        input.title = DataScience.jupyterSelectURIPrompt();
+        input.title = DataScience.jupyterSelectURIPrompt;
         input.value = initialValue;
         input.ignoreFocusOut = true;
 
@@ -192,51 +219,67 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 );
             }
 
+            let inputWasHidden = false;
+            let promptingForServerName = false;
             disposables.push(
                 input.onDidAccept(async () => {
-                    const uri = input.value;
-
+                    // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
+                    const uri = input.value.trim().replace(/\/(lab|tree)(\??)$/, '');
                     try {
-                        for (let server of this._servers) {
-                            if (server.uri === uri) {
-                                // already exist
-                                input.validationMessage = DataScience.UserJupyterServerUrlAlreadyExistError();
-                                return;
-                            }
+                        new URL(uri);
+                    } catch (err) {
+                        if (inputWasHidden) {
+                            input.show();
                         }
-                    } catch (ex) {
-                        // Ignore errors.
-                        traceError('Failed to check if server already exists', ex);
+                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+                        return;
                     }
-
+                    const jupyterServerUri = this.parseUri(uri, '');
+                    if (!jupyterServerUri) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
+                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+                        return;
+                    }
+                    const handle = uuid();
                     const message = await validateSelectJupyterURI(
                         this.jupyterConnection,
                         this.applicationShell,
                         this.configService,
                         this.isWebExtension,
-                        uri
+                        { id: this.id, handle },
+                        jupyterServerUri
                     );
 
                     if (message) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
                         input.validationMessage = message;
                     } else {
-                        const serverInfo = this.parseUri(uri);
-                        if (serverInfo) {
-                            const handle = uuid();
-                            this._servers.push({
-                                handle: handle,
-                                uri: uri,
-                                serverInfo
-                            });
-                            await this.updateMemento();
-                            resolve(handle);
-                        } else {
-                            resolve(undefined);
-                        }
+                        promptingForServerName = true;
+                        // Offer the user a chance to pick a display name for the server
+                        // Leaving it blank will use the URI as the display name
+                        jupyterServerUri.displayName =
+                            (await this.applicationShell.showInputBox({
+                                title: DataScience.jupyterRenameServer
+                            })) || jupyterServerUri.displayName;
+
+                        this._servers.push({
+                            handle: handle,
+                            uri: uri,
+                            serverInfo: jupyterServerUri
+                        });
+                        await this.updateMemento();
+                        resolve(handle);
                     }
                 }),
                 input.onDidHide(() => {
-                    resolve(undefined);
+                    inputWasHidden = true;
+                    if (!JupyterPasswordConnect.prompt && !promptingForServerName) {
+                        resolve(undefined);
+                    }
                 })
             );
 
@@ -246,28 +289,28 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         });
     }
 
-    private parseUri(uri: string): IJupyterServerUri | undefined {
-        let url: URL;
+    private parseUri(uri: string, displayName?: string): IJupyterServerUri | undefined {
         try {
-            url = new URL(uri);
+            extractJupyterServerHandleAndId(uri);
+            // This is a url that we crafted. It's not a valid Jupyter Server Url.
+            return;
+        } catch (ex) {
+            // This is a valid Jupyter Server Url.
+        }
+        try {
+            const url = new URL(uri);
 
             // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
             // the location for connecting to jupyterlab
             const baseUrl = `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
 
-            const token = `${url.searchParams.get('token')}`;
-            const authorizationHeader = {
-                Authorization: `token ${token}`
-            };
-            const hostName = url.hostname;
-
             return {
                 baseUrl: baseUrl,
-                token: token,
-                displayName: hostName,
-                authorizationHeader
+                token: url.searchParams.get('token') || '',
+                displayName: displayName || url.hostname
             };
         } catch (err) {
+            traceError(`Failed to parse URI ${uri}`, err);
             // This should already have been parsed when set, so just throw if it's not right here
             return undefined;
         }
@@ -275,16 +318,14 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
 
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         const server = this._servers.find((s) => s.handle === handle);
-
         if (!server) {
             throw new Error('Server not found');
         }
-
         return server.serverInfo;
     }
 
     async getHandles(): Promise<string[]> {
-        await this._initializeCachedServerInfo();
+        await this.migrateOldUserEnteredUrlsToProviderUri();
         return this._servers.map((s) => s.handle);
     }
 

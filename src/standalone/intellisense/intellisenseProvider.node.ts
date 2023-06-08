@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable } from 'inversify';
 import {
     CancellationToken,
@@ -20,11 +19,13 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
 import { LanguageServer } from './languageServer.node';
-import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { CompletionRequest } from 'vscode-languageclient';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { isJupyterNotebook } from '../../platform/common/utils';
+import { noop } from '../../platform/common/utils/misc';
+import { traceInfoIfCI } from '../../platform/logging';
 
 const EmptyWorkspaceKey = '';
 
@@ -42,7 +43,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
 
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -54,13 +55,13 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
 
     public activate() {
         // Sign up for kernel change events on notebooks
-        this.notebookControllerSelection.onControllerSelected(this.controllerChanged, this, this.disposables);
+        this.controllerRegistration.onControllerSelected(this.controllerChanged, this, this.disposables);
         // Sign up for notebook open and close events.
         this.notebooks.onDidOpenNotebookDocument(this.openedNotebook, this, this.disposables);
         this.notebooks.onDidCloseNotebookDocument(this.closedNotebook, this, this.disposables);
 
         // For all currently open notebooks, launch their language server
-        this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).ignoreErrors());
+        this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).catch(noop));
 
         // Track active interpreter, but synchronously. We need synchronously so we
         // can compare during intellisense operations.
@@ -72,7 +73,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
     }
 
     public async getLanguageClient(notebook: NotebookDocument) {
-        const controller = this.notebookControllerSelection.getSelected(notebook);
+        const controller = this.controllerRegistration.getSelected(notebook);
         const interpreter = controller
             ? controller.connection.interpreter
             : await this.interpreterService.getActiveInterpreter(notebook.uri);
@@ -123,13 +124,13 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
                 .then((a) => {
                     this.activeInterpreterCache.set(key, a);
                 })
-                .ignoreErrors();
+                .catch(noop);
         }
         return this.activeInterpreterCache.get(key);
     }
 
     private async controllerChanged(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
-        if (!this.notebookPythonPathService.isPylanceUsingLspNotebooks()) {
+        if (!this.notebookPythonPathService.isUsingPylance()) {
             // Create the language server for this connection
             const newServer = await this.ensureLanguageServer(e.controller.connection.interpreter, e.notebook);
 
@@ -160,10 +161,10 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         if (
             isJupyterNotebook(n) &&
             this.extensionChecker.isPythonExtensionInstalled &&
-            !this.notebookPythonPathService.isPylanceUsingLspNotebooks()
+            !this.notebookPythonPathService.isUsingPylance()
         ) {
             // Create a language server as soon as we open. Otherwise intellisense will wait until we run.
-            const controller = this.notebookControllerSelection.getSelected(n);
+            const controller = this.controllerRegistration.getSelected(n);
 
             // Save mapping from notebook to controller
             if (controller) {
@@ -194,7 +195,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         // We should allow intellisense for a URI when the interpreter matches
         // the controller for the uri
         const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
-        const controller = notebook ? this.notebookControllerSelection.getSelected(notebook) : undefined;
+        const controller = notebook ? this.controllerRegistration.getSelected(notebook) : undefined;
         const notebookInterpreter = controller ? controller.connection.interpreter : this.getActiveInterpreterSync(uri);
         let notebookId = notebookInterpreter ? getComparisonKey(notebookInterpreter.uri) : undefined;
 
@@ -256,12 +257,13 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
 
     private onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (event.affectsConfiguration('python.languageServer')) {
+            traceInfoIfCI('Dispose all language servers due to changes in configuration');
             // Dispose all servers and start over for each open notebook
             this.servers.forEach((p) => p.then((s) => s?.dispose()));
             this.servers.clear();
 
             // For all currently open notebooks, launch their language server
-            this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).ignoreErrors());
+            this.notebooks.notebookDocuments.forEach((n) => this.openedNotebook(n).catch(noop));
         }
     }
 }

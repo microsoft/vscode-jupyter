@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { CommandsWithoutArgs } from '../../commands';
+import { CommandIds } from '../../commands';
 import { ICommandManager } from './application/types';
-import { Experiments } from './experiments/groups';
 import { ISystemVariables } from './variables/types';
 
 export const IsCodeSpace = Symbol('IsCodeSpace');
@@ -55,27 +52,20 @@ export interface IJupyterSettings {
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
-    readonly allowImportFromNotebook: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
     readonly notebookFileRoot: string;
     readonly useDefaultConfigForJupyter: boolean;
     readonly searchForJupyter: boolean;
-    readonly allowInput: boolean;
-    readonly showCellInputCode: boolean;
-    readonly maxOutputSize: number;
-    readonly enableScrollingForCellOutputs: boolean;
     readonly enablePythonKernelLogging: boolean;
     readonly sendSelectionToInteractiveWindow: boolean;
     readonly markdownRegularExpression: string;
     readonly codeRegularExpression: string;
-    readonly allowLiveShare: boolean;
     readonly errorBackgroundColor: string;
     readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
-    readonly liveShareConnectionTimeout: number;
-    readonly decorateCells: boolean;
+    readonly decorateCells: 'currentCell' | 'allCells' | 'disabled';
     readonly enableCellCodeLens: boolean;
     askForLargeDataFrames: boolean;
     readonly enableAutoMoveToNextCell: boolean;
@@ -85,12 +75,10 @@ export interface IJupyterSettings {
     readonly debugCodeLenses: string;
     readonly debugpyDistPath: string;
     readonly stopOnFirstLineWhileDebugging: boolean;
-    readonly textOutputLimit: number;
     readonly magicCommandsAsComments: boolean;
     readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
     readonly stopOnError: boolean;
     readonly remoteDebuggerPort: number;
-    readonly colorizeInputBox: boolean;
     readonly addGotoCodeLenses: boolean;
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;
@@ -99,6 +87,7 @@ export interface IJupyterSettings {
     readonly themeMatplotlibPlots: boolean;
     readonly variableQueries: IVariableQuery[];
     readonly disableJupyterAutoStart: boolean;
+    readonly development: boolean;
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
     readonly interactiveWindowMode: InteractiveWindowMode;
@@ -114,6 +103,11 @@ export interface IJupyterSettings {
     readonly poetryPath: string;
     readonly excludeUserSitePackages: boolean;
     readonly enableExtendedKernelCompletions: boolean;
+    /**
+     * To be removed in the future (remove around April 2023)
+     * Added as a fallback in case the new approach of resolving Python env variables for Kernels fails or does not work as expected.
+     */
+    readonly useOldKernelResolve: boolean;
 }
 
 export interface IVariableTooltipFields {
@@ -127,7 +121,7 @@ export interface IWatchableJupyterSettings extends IJupyterSettings {
     createSystemVariables(resource: Resource): ISystemVariables;
 }
 
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose' | 'everything';
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
 
 export interface ILoggingSettings {
     readonly level: LoggingLevelSettingType | 'off';
@@ -157,8 +151,6 @@ export interface IVariableQuery {
 export type InteractiveWindowMode = 'perFile' | 'single' | 'multiple';
 
 export type InteractiveWindowViewColumn = 'beside' | 'active' | 'secondGroup';
-
-export type KernelPickerType = 'Stable' | 'Insiders';
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 
@@ -261,13 +253,11 @@ export type DeprecatedFeatureInfo = {
     doNotDisplayPromptStateKey: string;
     message: string;
     moreInfoUrl: string;
-    commands?: CommandsWithoutArgs[];
+    commands?: CommandIds[];
     setting?: DeprecatedSettingAndValue;
 };
 
-export interface IFeatureSet {
-    readonly kernelPickerType: KernelPickerType;
-}
+export interface IFeatureSet {}
 
 export const IFeaturesManager = Symbol('IFeaturesManager');
 
@@ -304,6 +294,8 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
 }
 
+export enum Experiments {}
+
 /**
  * Experiment service leveraging VS Code's experiment framework.
  */
@@ -311,8 +303,8 @@ export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
     activate(): Promise<void>;
     inExperiment(experimentName: Experiments): Promise<boolean>;
-    getExperimentValue<T extends boolean | number | string>(experimentName: string): Promise<T | undefined>;
-    logExperiments(): void;
+    inExperimentSync(experimentName: Experiments): boolean;
+    getExperimentValue<T extends boolean | number | string>(experimentName: Experiments): Promise<T | undefined>;
 }
 
 export type InterpreterUri = Resource | PythonEnvironment;

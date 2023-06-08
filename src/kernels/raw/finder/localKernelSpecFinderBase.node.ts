@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
+import { traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable, IDisposableRegistry, ReadWrite } from '../../../platform/common/types';
@@ -25,7 +23,6 @@ import {
 } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
-import { removeOldCachedItems } from '../../common/commonFinder';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { JupyterPaths } from './jupyterPaths.node';
@@ -58,7 +55,7 @@ export class LocalKernelSpecFinder implements IDisposable {
         private readonly jupyterPaths: JupyterPaths
     ) {
         if (this.oldKernelSpecsFolder) {
-            traceInfo(
+            traceVerbose(
                 `Old kernelSpecs (created by Jupyter Extension) stored in directory ${this.oldKernelSpecsFolder}`
             );
         }
@@ -130,7 +127,7 @@ export class LocalKernelSpecFinder implements IDisposable {
         await this.fs.createDirectory(Uri.file(path.dirname(destinationFile)));
         await this.fs.copy(Uri.file(kernelSpecFile), Uri.file(destinationFile)).catch(noop);
         await this.fs.delete(Uri.file(kernelSpecFile));
-        traceInfo(`Old KernelSpec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
+        traceVerbose(`Old KernelSpec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
     }
     /**
      * Load kernelspec json from disk
@@ -158,7 +155,6 @@ export class LocalKernelSpecFinder implements IDisposable {
                 const files = await this.fs.searchLocal(`**/kernel.json`, kernelSearchPath.fsPath, true);
                 return files.map((item) => uriPath.joinPath(kernelSearchPath, item));
             } else {
-                traceVerbose(`Not Searching for kernels as path does not exist, ${getDisplayPath(kernelSearchPath)}`);
                 return [];
             }
         })();
@@ -243,11 +239,14 @@ export abstract class LocalKernelSpecFinderBase<
     protected async listKernelsFirstTimeFromMemento(cacheKey: string): Promise<T[]> {
         const promise = (async () => {
             // Check memento too
-            const cache = this.memento.get<{ kernels: T[]; extensionVersion: string }>(cacheKey, {
-                kernels: [],
-                extensionVersion: ''
-            });
-
+            const jsonStr = this.memento.get<string>(
+                cacheKey,
+                JSON.stringify({
+                    kernels: [],
+                    extensionVersion: ''
+                })
+            );
+            const cache: { kernels: T[]; extensionVersion: string } = JSON.parse(jsonStr);
             let kernels: T[] = [];
             /**
              * The cached list of raw kernels is pointing to kernelSpec.json files in the extensions directory.
@@ -278,14 +277,13 @@ export abstract class LocalKernelSpecFinderBase<
     }
 
     protected async writeToMementoCache(values: T[], cacheKey: string) {
-        const serialized = values.map((item) => item.toJSON());
-        await Promise.all([
-            removeOldCachedItems(this.memento),
-            this.memento.update(cacheKey, {
-                kernels: serialized,
+        await this.memento.update(
+            cacheKey,
+            JSON.stringify({
+                kernels: values.map((item) => item.toJSON()),
                 extensionVersion: this.env.extensionVersion
             })
-        ]);
+        );
     }
     protected async isValidCachedKernel(kernel: LocalKernelConnectionMetadata): Promise<boolean> {
         switch (kernel.kind) {
@@ -321,8 +319,8 @@ export async function loadKernelSpec(
     let kernelJson: ReadWrite<IJupyterKernelSpec>;
     try {
         traceVerbose(
-            `Loading kernelspec from ${getDisplayPath(specPath)} for ${
-                interpreter?.uri ? getDisplayPath(interpreter.uri) : ''
+            `Loading kernelspec from ${getDisplayPath(specPath)} ${
+                interpreter?.uri ? `for ${getDisplayPath(interpreter.uri)}` : ''
             }`
         );
         kernelJson = JSON.parse(await fs.readFile(specPath));
@@ -384,7 +382,8 @@ export async function loadKernelSpec(
 
     // Possible user deleted the underlying interpreter.
     const interpreterPath = interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path;
-    if (interpreterPath && !(await fs.exists(Uri.file(interpreterPath)))) {
+    const isEmptyCondaEnv = interpreter?.isCondaEnvWithoutPython ? true : false;
+    if (interpreterPath && !isEmptyCondaEnv && !(await fs.exists(Uri.file(interpreterPath)))) {
         return;
     }
 

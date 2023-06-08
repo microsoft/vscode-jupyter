@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
-import { CondaService } from '../../platform/common/process/condaService.node';
+import { CondaService } from '../../platform/interpreter/condaService.node';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
@@ -17,7 +15,7 @@ import { IRawNotebookSupportedService } from '../raw/types';
  * Computes interpreter environment variables when starting up.
  */
 @injectable()
-export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSingleActivationService {
+export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSyncActivationService {
     constructor(
         @inject(IEnvironmentActivationService) private readonly activationService: IEnvironmentActivationService,
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
@@ -27,7 +25,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
         @inject(CondaService) private readonly condaService: CondaService
     ) {}
-    public async activate(): Promise<void> {
+    public activate() {
         // Don't prewarm global interpreter if running with ZMQ
         if (!this.rawNotebookSupported.isSupported) {
             this.disposables.push(
@@ -35,12 +33,12 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
                     this.preWarmInterpreterVariables().catch(noop)
                 )
             );
-            this.preWarmInterpreterVariables().ignoreErrors();
+            this.preWarmInterpreterVariables().catch(noop);
             this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
         }
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            this.condaService.getCondaFile().ignoreErrors();
-            this.condaService.getCondaVersion().ignoreErrors();
+            this.condaService.getCondaFile().catch(noop);
+            this.condaService.getCondaVersion().catch(noop);
         }
     }
 
@@ -52,6 +50,6 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         if (!interpreter) {
             return;
         }
-        this.activationService.getActivatedEnvironmentVariables(undefined, interpreter).ignoreErrors();
+        this.activationService.getActivatedEnvironmentVariables(undefined, interpreter).catch(noop);
     }
 }

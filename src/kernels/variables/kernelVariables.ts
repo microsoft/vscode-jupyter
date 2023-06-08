@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { Experiments } from '../../platform/common/experiments/groups';
-import { IConfigurationService, IDisposableRegistry, IExperimentService } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
+import { stripAnsi } from '../../platform/common/utils/regexp';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernel, IKernelConnectionSession, IKernelProvider } from '../types';
+import { IKernel, IKernelSession, IKernelProvider } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
@@ -23,11 +22,11 @@ import {
 
 // Regexes for parsing data from Python kernel. Not sure yet if other
 // kernels will add the ansi encoding.
-const TypeRegex = /.*?\[.*?;31mType:.*?\[0m\s+(\w+)/;
-const ValueRegex = /.*?\[.*?;31mValue:.*?\[0m\s+(.*)/;
-const StringFormRegex = /.*?\[.*?;31mString form:.*?\[0m\s+?([\s\S]+?)\n(.*\[.*;31m?)/;
-const DocStringRegex = /.*?\[.*?;31mDocstring:.*?\[0m\s+(.*)/;
-const CountRegex = /.*?\[.*?;31mLength:.*?\[0m\s+(.*)/;
+const TypeRegex = /Type:\s*(\w+)/;
+const ValueRegex = /Value:\s*(.*)/;
+const StringFormRegex = /String form:\s*([\s\S]+?)\n/;
+const DocStringRegex = /Docstring:\s*(.*)/;
+const CountRegex = /Length:\s+(.*)/;
 const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
 const DataViewableTypes: Set<string> = new Set<string>([
@@ -54,11 +53,9 @@ export class KernelVariables implements IJupyterVariables {
     private variableRequesters = new Map<string, IKernelVariableRequester>();
     private cachedVariables = new Map<string, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
-    private enhancedTooltipsExperimentPromise: boolean | undefined;
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IExperimentService) private experimentService: IExperimentService,
         @inject(IKernelVariableRequester)
         @named(Identifiers.PYTHON_VARIABLES_REQUESTER)
         pythonVariableRequester: IKernelVariableRequester,
@@ -118,10 +115,14 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        kernel: IKernel,
+        kernel?: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
+        if (!kernel) {
+            return targetVariable;
+        }
+
         const languageId = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
@@ -243,9 +244,10 @@ export class KernelVariables implements IJupyterVariables {
                     continue;
                 }
 
-                const fullVariable = list.variables[i].value
-                    ? list.variables[i]
-                    : await this.getVariableValueFromKernel(list.variables[i], kernel);
+                const fullVariable =
+                    typeof list.variables[i].value === 'string'
+                        ? list.variables[i]
+                        : await this.getVariableValueFromKernel(list.variables[i], kernel);
 
                 list.variables[i] = fullVariable;
                 result.pageResponse.push(fullVariable);
@@ -268,21 +270,11 @@ export class KernelVariables implements IJupyterVariables {
         cancelToken: CancellationToken | undefined
     ): Promise<{ [attributeName: string]: string }> {
         const matchingVariable = await this.getMatchingVariable(word, kernel, cancelToken);
-        const settings = this.configService.getSettings().variableTooltipFields;
         const languageId = getKernelConnectionLanguage(kernel.kernelConnectionMetadata) || PYTHON_LANGUAGE;
-        const languageSettings = settings[languageId];
-        const inEnhancedTooltipsExperiment = await this.inEnhancedTooltipsExperiment();
 
         const variableRequester = this.variableRequesters.get(languageId);
         if (variableRequester) {
-            return variableRequester.getVariableProperties(
-                word,
-                kernel,
-                cancelToken,
-                matchingVariable,
-                languageSettings,
-                inEnhancedTooltipsExperiment
-            );
+            return variableRequester.getVariableProperties(word, cancelToken, matchingVariable);
         }
 
         return {};
@@ -303,7 +295,7 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     private inspect(
-        session: IKernelConnectionSession,
+        session: IKernelSession,
         code: string,
         offsetInCode = 0,
         cancelToken?: CancellationToken
@@ -347,8 +339,7 @@ export class KernelVariables implements IJupyterVariables {
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const text = (output as any)['text/plain'].toString() as string;
+                const text = stripAnsi(output['text/plain']!.toString());
 
                 // Parse into bits
                 const type = TypeRegex.exec(text);
@@ -400,14 +391,5 @@ export class KernelVariables implements IJupyterVariables {
         }
 
         return result;
-    }
-
-    private async inEnhancedTooltipsExperiment() {
-        if (!this.enhancedTooltipsExperimentPromise) {
-            this.enhancedTooltipsExperimentPromise = await this.experimentService.inExperiment(
-                Experiments.EnhancedTooltips
-            );
-        }
-        return this.enhancedTooltipsExperimentPromise;
     }
 }

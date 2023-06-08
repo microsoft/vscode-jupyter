@@ -5,7 +5,15 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import * as path from '../../vscode-path/path';
 import * as uriPath from '../../vscode-path/resources';
 import { getOSType, OSType } from '../utils/platform';
+import { isWeb } from '../utils/misc';
 
+function getHomeDir() {
+    if (isWeb()) {
+        return undefined;
+    }
+    // eslint-disable-next-line local-rules/node-imports
+    return Uri.file(require('os').homedir()); // This is the only thing requiring a node version
+}
 export function getFilePath(file: Uri | undefined) {
     const isWindows = getOSType() === OSType.Windows;
     if (file) {
@@ -23,13 +31,21 @@ export function getFilePath(file: Uri | undefined) {
 }
 
 export function getDisplayPath(
-    filename: Uri | undefined,
+    filename: Uri | string | undefined,
     workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = [],
-    homePath: Uri | undefined = undefined
+    homePathUri?: Uri
 ) {
-    const relativeToHome = getDisplayPathImpl(filename, undefined, homePath);
+    homePathUri = homePathUri || getHomeDir();
+    let fileUri: Uri | undefined = undefined;
+    if (typeof filename && typeof filename === 'string') {
+        fileUri = Uri.file(filename);
+    }
+    if (typeof filename && typeof filename !== 'string') {
+        fileUri = filename;
+    }
+    const relativeToHome = getDisplayPathImpl(fileUri, undefined, homePathUri);
     const relativeToWorkspaceFolders = workspaceFolders.map((folder) =>
-        getDisplayPathImpl(filename, folder.uri, homePath)
+        getDisplayPathImpl(fileUri, folder.uri, homePathUri)
     );
     // Pick the shortest path for display purposes.
     // As those are most likely relative to some workspace folder.

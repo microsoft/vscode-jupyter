@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ApplicationEnvironment } from './common/application/applicationEnvironment.web';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
@@ -18,6 +16,7 @@ import { ConfigurationService } from './common/configuration/service.web';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.web';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.web';
 import { IConfigurationService, IDataScienceCommandListener } from './common/types';
+import { registerTypes as registerInterpreterTypes } from './interpreter/serviceRegistry.web';
 import { IServiceManager } from './ioc/types';
 import { ProgressReporter } from './progress/progressReporter';
 import { WorkspaceService } from './common/application/workspace.web';
@@ -29,8 +28,6 @@ import { FileSystem } from './common/platform/fileSystem';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { WebviewPanelProvider } from './webviews/webviewPanelProvider';
 import { WebviewViewProvider } from './webviews/webviewViewProvider';
-import { InterpreterPackages } from './interpreter/interpreterPackages.web';
-import { IInterpreterPackages } from './interpreter/types';
 import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -45,13 +42,13 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);
+    registerInterpreterTypes(serviceManager);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelProgressReporter
     );
 
-    serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker

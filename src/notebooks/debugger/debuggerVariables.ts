@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
@@ -251,7 +250,7 @@ export class DebuggerVariables
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'event' && message.event === 'stopped' && this.activeNotebookIsDebugging()) {
-            this.handleNotebookVariables(message as DebugProtocol.StoppedEvent).ignoreErrors();
+            this.handleNotebookVariables(message as DebugProtocol.StoppedEvent).catch(noop);
         } else if (message.type === 'response' && message.command === 'scopes' && message.body && message.body.scopes) {
             const response = message as DebugProtocol.ScopesResponse;
 

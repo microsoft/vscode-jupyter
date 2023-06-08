@@ -1,19 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import '../../common/extensions';
-
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 
 import { traceError } from '../../logging';
-import * as internalScripts from '../../common/process/internal/scripts/index.node';
+import * as internalScripts from '../../interpreter/internal/scripts/index.node';
 import { createDeferred } from '../../common/utils/async';
 import { getFilePath } from '../../common/platform/fs-paths';
 import { CodeExecutionHelperBase } from './codeExecutionHelper';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { splitLines } from '../../common/helpers';
 
 /**
  * Node version of the code execution helper. Node version is necessary because we can't create processes in the web version.
@@ -77,12 +76,14 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
 
             const normalizedLines = parse(object.normalized);
             // Python will remove leading empty spaces, add them back.
-            const indexOfFirstNonEmptyLineInOriginalCode = code
-                .splitLines({ trim: true, removeEmptyEntries: false })
-                .findIndex((line) => line.length);
-            const indexOfFirstNonEmptyLineInNormalizedCode = normalizedLines
-                .splitLines({ trim: true, removeEmptyEntries: false })
-                .findIndex((line) => line.length);
+            const indexOfFirstNonEmptyLineInOriginalCode = splitLines(code, {
+                trim: true,
+                removeEmptyEntries: false
+            }).findIndex((line) => line.length);
+            const indexOfFirstNonEmptyLineInNormalizedCode = splitLines(normalizedLines, {
+                trim: true,
+                removeEmptyEntries: false
+            }).findIndex((line) => line.length);
             if (indexOfFirstNonEmptyLineInOriginalCode > indexOfFirstNonEmptyLineInNormalizedCode) {
                 // Some white space has been trimmed, add them back.
                 const trimmedLineCount =

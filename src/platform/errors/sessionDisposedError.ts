@@ -16,6 +16,6 @@ import { BaseError } from './types';
  */
 export class SessionDisposedError extends BaseError {
     constructor() {
-        super('sessionDisposed', DataScience.sessionDisposed());
+        super('sessionDisposed', DataScience.sessionDisposed);
     }
 }

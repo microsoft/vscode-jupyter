@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { Event, NotebookDocument, QuickPickItem } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
@@ -10,6 +8,12 @@ import { IDisposable } from '../../../platform/common/types';
 export interface ConnectionQuickPickItem extends QuickPickItem {
     connection: KernelConnectionMetadata;
     isRecommended?: boolean;
+}
+export interface KernelListErrorQuickPickItem extends QuickPickItem {
+    error: Error;
+}
+export interface ConnectionSeparatorQuickPickItem extends QuickPickItem {
+    isEmptyCondaEnvironment?: boolean;
 }
 export interface CommandQuickPickItem extends QuickPickItem {
     command: () => Promise<PythonKernelConnectionMetadata | undefined>;
@@ -25,6 +29,7 @@ export interface IQuickPickKernelItemProvider {
     readonly title: string;
     readonly kind: ContributedKernelFinderKind;
     readonly onDidChange: Event<void>;
+    readonly onDidFailToListKernels: Event<Error>;
     readonly kernels: KernelConnectionMetadata[];
     onDidChangeStatus: Event<void>;
     onDidChangeRecommended: Event<void>;

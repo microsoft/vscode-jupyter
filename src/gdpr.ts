@@ -39,9 +39,12 @@
      ]
    }
  */
-//Telemetry.CreateNewInteractive
+//Telemetry.CreatePythonEnvironment
 /* __GDPR__
-   "DATASCIENCE.CREATE_NEW_INTERACTIVE" : {
+   "DATASCIENCE.CREATE_PYTHON_ENVIRONMENT" : {
+     "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Reason for failure. cancelled - User cancelled the operation (cancellation token cancelled). kernelConnectionNotCreated - Kernel connection not created via the kernel finder.","owner":"donjayamanne"},
+     "dependenciesInstalled": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the kernel dependencies were installed or not.","owner":"donjayamanne"},
+     "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the Python environment.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -246,10 +249,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -317,6 +322,15 @@
      ]
    }
  */
+//Telemetry.FailedToCreateNotebookCellExecution
+/* __GDPR__
+   "DATASCIENCE.FAILED_TO_CREATE_CELL_EXECUTION" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.FailedToCreateNotebookController
 /* __GDPR__
    "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER" : {
@@ -364,6 +378,17 @@
      ]
    }
  */
+//Telemetry.JupyterApiUsage
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_API_USAGE" : {
+     "clientExtId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.JupyterKernelApiAccess
 /* __GDPR__
    "DATASCIENCE.JUPYTER_KERNEL_API_ACCESS" : {
@@ -404,9 +429,35 @@
      ]
    }
  */
+//Telemetry.JupyterKernelSpecEnumeration
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_KERNEL_SPEC_FETCH_FAILURE" : {
+     "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Reason for failure to fetch kernel specs. Reason for the failure","owner":"donjayamanne"},
+     "sessionManagerReady": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether Jupyter session manager was ready before we started. Whether Jupyter session manager was ready after we started.","owner":"donjayamanne"},
+     "specsManagerReady": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether Jupyter spec manager was ready before we started. Whether Jupyter spec manager was ready after we started.","owner":"donjayamanne"},
+     "wasSessionManagerReady": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether Jupyter session manager was ready before we started.","owner":"donjayamanne"},
+     "wasSpecsManagerReady": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether Jupyter spec manager was ready before we started.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.JupyterNotInstalledErrorShown
 /* __GDPR__
    "DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.JupyterServerProviderResponseApi
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_SERVER_PROVIDER_RESPONSE_API" : {
+     "providerId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "pemUsed": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Name of the API member used.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -426,10 +477,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -452,8 +505,8 @@
 //Telemetry.OpenNotebookAll
 /* __GDPR__
    "DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL" : {
-     "nbformat": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Major Format of the Notebook. Useful in determining the most popular versions of nbformats used by users.","owner":"IanMatthewHuff","isMeasurement":true},
-     "nbformat_minor": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Minor Format of the Notebook. Useful in determining the most popular versions of nbformats used by users.","owner":"IanMatthewHuff","isMeasurement":true},
+     "nbformat": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Major Format of the Notebook. Useful in determining the most popular versions of nbformats used by users.","owner":"donjayamanne","isMeasurement":true},
+     "nbformat_minor": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Minor Format of the Notebook. Useful in determining the most popular versions of nbformats used by users.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -484,10 +537,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -508,10 +563,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -531,10 +588,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -563,8 +622,8 @@
 //Telemetry.RecommendExtension
 /* __GDPR__
    "DATASCIENCE.RECOMMENT_EXTENSION" : {
-     "extensionId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Extension we recommended the user to install.","owner":"IanMatthewHuff"},
-     "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"`displayed` - If prompt was displayed `dismissed` - If prompt was displayed & dismissed by the user `ok` - If prompt was displayed & ok clicked by the user `cancel` - If prompt was displayed & cancel clicked by the user `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user","owner":"IanMatthewHuff"},
+     "extensionId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Extension we recommended the user to install.","owner":"donjayamanne"},
+     "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"`displayed` - If prompt was displayed `dismissed` - If prompt was displayed & dismissed by the user `ok` - If prompt was displayed & ok clicked by the user `cancel` - If prompt was displayed & cancel clicked by the user `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -574,6 +633,32 @@
 //Telemetry.RefreshDataViewer
 /* __GDPR__
    "DATASCIENCE.REFRESH_DATA_VIEWER" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.ResumeCellExecution
+/* __GDPR__
+   "DATASCIENCE.RESUME_EXECUTE_CELL" : {
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -808,21 +893,23 @@
 //Telemetry.SelectLocalJupyterKernel
 /* __GDPR__
    "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL" : {
-     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"IanMatthewHuff"},
-     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"IanMatthewHuff"},
-     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"IanMatthewHuff"},
-     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"IanMatthewHuff"},
-     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"IanMatthewHuff"},
-     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"IanMatthewHuff"},
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -832,21 +919,23 @@
 //Telemetry.SelectRemoteJupyterKernel
 /* __GDPR__
    "DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL" : {
-     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"IanMatthewHuff"},
-     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"IanMatthewHuff"},
-     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"IanMatthewHuff"},
-     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"IanMatthewHuff"},
-     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"IanMatthewHuff"},
-     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"IanMatthewHuff"},
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -871,19 +960,10 @@
      ]
    }
  */
-//Telemetry.SetJupyterURIToLocal
-/* __GDPR__
-   "DATASCIENCE.SET_JUPYTER_URI_LOCAL" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.SetJupyterURIUIDisplayed
 /* __GDPR__
    "DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED" : {
-     "commandSource": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"This telemetry tracks the source of this UI. nonUser - Invoked internally by our code. toolbar - Invoked by user from Native or Interactive window toolbar. commandPalette - Invoked from command palette by the user. nativeNotebookStatusBar - Invoked from Native notebook statusbar. nativeNotebookToolbar - Invoked from Native notebook toolbar.","owner":"IanMatthewHuff"},
+     "commandSource": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"This telemetry tracks the source of this UI. nonUser - Invoked internally by our code. toolbar - Invoked by user from Native or Interactive window toolbar. commandPalette - Invoked from command palette by the user. nativeNotebookStatusBar - Invoked from Native notebook statusbar. nativeNotebookToolbar - Invoked from Native notebook toolbar.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -893,7 +973,7 @@
 //Telemetry.SetJupyterURIToUserSpecified
 /* __GDPR__
    "DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED" : {
-     "azure": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the URI set to an Azure uri.","owner":"IanMatthewHuff"},
+     "azure": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the URI set to an Azure uri.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1073,6 +1153,20 @@
 //Telemetry.ConnectRemoteSelfCertFailedJupyter
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.CreateInteractiveWindow
+/* __GDPR__
+   "DS_INTERNAL.CREATED_INTERACTIVE_WINDOW" : {
+     "hasKernel": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the kernel was known at the time of creation","owner":"amunger"},
+     "hasOwner": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the window was created for a text file","owner":"amunger"},
+     "mode": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Creation mode: multiple, perfile or single","owner":"amunger"},
+     "restored": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the window restored from a previous session","owner":"amunger"},
+     "windowCount": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Number of active interactive windows the user has open","owner":"amunger","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -1292,6 +1386,16 @@
      ]
    }
  */
+//Telemetry.CheckPasswordJupyterHub
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_HUB_PASSWORD" : {
+     "info": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.JupyterInstalledButNotKernelSpecModule
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE" : {
@@ -1301,9 +1405,82 @@
      ]
    }
  */
+//Telemetry.KernelSpec
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_KERNEL_SPEC" : {
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "kernelId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"What kind of kernel spec did we fail to create.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
+     "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the Python environment.","owner":"donjayamanne"},
+     "isArgv0SameAsInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the argv0 is same as the interpreter.","owner":"donjayamanne"},
+     "argv0": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"First argument of the kernelSpec argv (without the full path) Helps determine if we have python/conda executables used for kernelSpecs.","owner":"donjayamanne"},
+     "argv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"argv of KernelSpec Helps determine if we have ipykernel, ipykernel_launcher, etc and other combinations In the case of paths, all path values are stripped, exe names are not.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.RegisterInterpreterAsKernel
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.JupyterServerZMQStreamError
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_SERVER_ZMQ_STREAM_ERROR" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.StartedRemoteJupyterSessionWithBackingFile
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_STARTED_SESSION_WITH_BACKING_FILE" : {
+     "failedWithoutBackingFile": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Failed to start the session without the backing file.","owner":"donjayamanne"},
+     "failedWithBackingFile": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Failed to start the session without the backing file.","owner":"donjayamanne"},
+     "localHost": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this is a local host connection or remote.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.ZMQSupport
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_ZMQ_SUPPORT" : {
+     "fallbackTried": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether we tried a fallback to to the older versions of the binaries.","owner":"donjayamanne"},
+     "alpine": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether alpine or not.","owner":"donjayamanne"},
+     "zmqarch": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arch","owner":"donjayamanne"},
+     "libc": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"libc implementation, from env variable LIBC If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)","owner":"donjayamanne"},
+     "armv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arm version","owner":"donjayamanne"},
+     "distro_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro id.","owner":"donjayamanne"},
+     "distro_version_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro version id.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.ZMQSupportFailure
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_ZMQ_SUPPORT_FAILURE" : {
+     "fallbackTried": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether we tried a fallback to to the older versions of the binaries.","owner":"donjayamanne"},
+     "alpine": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether alpine or not.","owner":"donjayamanne"},
+     "zmqarch": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arch","owner":"donjayamanne"},
+     "libc": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"libc implementation, from env variable LIBC If the env var LIBC is empty then fallback to 'musl' for Alpine and 'glibc' for others)","owner":"donjayamanne"},
+     "armv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"arm version","owner":"donjayamanne"},
+     "distro_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro id.","owner":"donjayamanne"},
+     "distro_version_id": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Linux distro version id.","owner":"donjayamanne"},
+     "errorMessage": {"classification":"CallstackOrException","purpose":"FeatureInsight","comment":"Error message when azure build module fails to load.","owner":"donjayamanne"},
+     "fallbackErrorMessage": {"classification":"CallstackOrException","purpose":"FeatureInsight","comment":"Error message when fallback module fails to load.","owner":"donjayamanne"},
+     "zmqBinaries": {"classification":"CallstackOrException","purpose":"FeatureInsight","comment":"List of binaries found on disc.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1337,16 +1514,6 @@
 /* __GDPR__
    "DS_INTERNAL.KERNEL_LAUNCHER_PERF" : {
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.KernelListingPerf
-/* __GDPR__
-   "DS_INTERNAL.KERNEL_LISTING_PERF" : {
-     "kind": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this telemetry is for listing of all kernels or just python or just non-python. (fetching kernels first time in the session is slower, later its cached).","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1392,7 +1559,7 @@
 //Telemetry.NumberOfSavedRemoteKernelIds
 /* __GDPR__
    "DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED" : {
-     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Count is the number of kernels saved in the list.","owner":"IanMatthewHuff","isMeasurement":true},
+     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Count is the number of kernels saved in the list.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -1412,10 +1579,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
@@ -1426,10 +1595,10 @@
 //Telemetry.PreferredKernel
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL" : {
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
-     "hasActiveInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If we have an active interpreter or not.","owner":"IanMatthewHuff"},
-     "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"IanMatthewHuff"},
-     "result": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Note if we did or did not find a preferred kernel.","owner":"IanMatthewHuff"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "hasActiveInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If we have an active interpreter or not.","owner":"donjayamanne"},
+     "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"donjayamanne"},
+     "result": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Note if we did or did not find a preferred kernel.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1439,7 +1608,7 @@
 //Telemetry.PreferredKernelExactMatch
 /* __GDPR__
    "DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH" : {
-     "matchedReason": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How/why the preferred kernel was matched the way it was.","owner":"IanMatthewHuff","isMeasurement":true},
+     "matchedReason": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"How/why the preferred kernel was matched the way it was.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -1449,7 +1618,7 @@
 //Telemetry.PythonExtensionInstalledViaKernelPicker
 /* __GDPR__
    "DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER" : {
-     "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Did the Extension install succeed or fail?","owner":"IanMatthewHuff"},
+     "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Did the Extension install succeed or fail?","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1459,7 +1628,7 @@
 //Telemetry.PythonExtensionNotInstalled
 /* __GDPR__
    "DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED" : {
-     "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The message was displayed, or indicate that the user dismissed or downloaded the message.","owner":"IanMatthewHuff"},
+     "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The message was displayed, or indicate that the user dismissed or downloaded the message.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1513,10 +1682,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "timedout": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Whether we timedout while waiting for response for Kernel info request.","owner":"donjayamanne"},
      "attempts": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Total number of attempts and sending a request and waiting for response.","owner":"donjayamanne","isMeasurement":true},
@@ -1550,10 +1721,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1575,10 +1748,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "exitCode": {"classification":"CallstackOrException","purpose":"PerformanceAndHealth","comment":"The kernel process's exit code.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
@@ -1600,10 +1775,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "reason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Captures the result of the error message, whether user dismissed this or picked a new kernel or the like.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
@@ -1627,10 +1804,12 @@
      "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
      "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
      "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
      "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1655,16 +1834,8 @@
 /* __GDPR__
    "DS_INTERNAL.SELECT_JUPYTER_INTERPRETER" : {
      "result": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the value or `result` is empty this means we displayed the message to the user and user hasn't made a choice yet.  The result of the selection. notSelected - No interpreter was selected. selected - An interpreter was selected (and configured to have jupyter and notebook). installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter. selectAnotherInterpreter - Selected another interpreter.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.DataScienceSettings
-/* __GDPR__
-   "DS_INTERNAL.SETTINGS" : {
-     "settingsJson": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A json representation of settings that the user has set. The values for string based settings are transalted to 'default' | 'non-default' unless white-listed.","owner":"amunger"},
+     "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the Python environment.","owner":"donjayamanne"},
+     "envVersion": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Python version. (only contains the numbers, no letters and empty if version is not available)","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1728,21 +1899,23 @@
 //Telemetry.SwitchKernel
 /* __GDPR__
    "DS_INTERNAL.SWITCH_KERNEL" : {
-     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"IanMatthewHuff"},
-     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"IanMatthewHuff"},
-     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"IanMatthewHuff"},
-     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"IanMatthewHuff"},
-     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"IanMatthewHuff"},
-     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"IanMatthewHuff"},
-     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"IanMatthewHuff"},
-     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"IanMatthewHuff"},
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"IanMatthewHuff"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this was started by Jupyter extension or a 3rd party. Common to most of the events.","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the notebook startup UI (progress indicator & the like) was displayed to the user or not. If its not displayed, then its considered an auto start (start in the background, like pre-warming kernel) Common to most of the events.","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether the user executed a cell. Common to most of the events.","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the resource (notebook.uri or pythonfile.uri associated with this). If we run the same notebook tomorrow, the hash will be the same. Used to check whether a particular notebook fails across time or not. This is also used to map different telemetry events related to this same resource. E.g. we could have an event sent for starting a notebook with this hash, and then later we get yet another event indicating starting a notebook failed. And another event indicating the Python environment used for this notebook is a conda environment or we have some other event indicating some other piece of data for this resource. With the information across multiple resources we can now join the different data points and have a better understanding of what is going on, e.g. why something failed. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting Conda Python 3.7, Python 3.7 Python 3.9 (in early days when ipykernel was not up to date) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Found plenty of issues when starting kernels with conda, hence useful to capture this info. Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"A key, so that rest of the information is tied to this. (hash) Common to most of the events.","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Comma delimited list of hashed packages & their versions. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Unique identifier for an instance of a notebook session. If we restart or run this notebook tomorrow, this id will be different. Id could be something as simple as a hash of the current Epoch time. Common to most of the events.","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Language of the kernel connection. Common to most of the events.","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Hash of the Kernel Connection id. Common to most of the events.","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether kernel was started using kernel spec, interpreter, etc. Common to most of the events.","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this resource is using the active Python interpreter or not. Common to most of the events.","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1819,6 +1992,22 @@
    "EXTENSION.LOAD" : {
      "totalActivateTime": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Time taken to activate the extension.","owner":"donjayamanne","isMeasurement":true},
      "workspaceFolderCount": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Number of workspace folders opened","owner":"donjayamanne","isMeasurement":true},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.AmbiguousGlobalKernelSpec
+/* __GDPR__
+   "GLOBAL_PYTHON_KERNELSPEC" : {
+     "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether kernel was started using kernel spec, interpreter, etc.","owner":"donjayamanne"},
+     "pythonPathDefined": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the fully qualified path to the python executable has been defined or not in the KernleSpec file.","owner":"donjayamanne"},
+     "pythonEnvFound": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the python path is defined, then this property will be set to true if we found the python env.","owner":"donjayamanne"},
+     "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "argv0": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"First argument of the kernelSpec argv (without the full path) Helps determine if we have python/conda executables used for kernelSpecs.","owner":"donjayamanne"},
+     "isCreatedByUs": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this is a kernelspec created by us.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 

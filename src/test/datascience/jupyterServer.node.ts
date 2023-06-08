@@ -258,7 +258,9 @@ export class JupyterServer {
                 if (!result.proc) {
                     throw new Error('Starting Jupyter failed, no process');
                 }
-                this.pid = result.proc.pid;
+                if (result.proc.pid) {
+                    this.pid = result.proc.pid;
+                }
                 result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'));
                 result.proc.once('disconnect', () =>
                     traceInfo('Shutting Jupyter server used for remote tests (disconnected)')
@@ -354,8 +356,11 @@ export class JupyterServer {
         };
     }
 
-    public static kill(pid: number): void {
+    public static kill(pid?: number): void {
         try {
+            if (!pid) {
+                return;
+            }
             if (process.platform === 'win32') {
                 // Windows doesn't support SIGTERM, so execute taskkill to kill the process
                 child_process.execSync(`taskkill /pid ${pid} /T /F`);

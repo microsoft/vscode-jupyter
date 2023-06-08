@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { QuickPickOptions } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { Cancellation } from '../../../platform/common/cancellation';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterSelector } from '../../../platform/interpreter/configuration/types';
@@ -37,18 +34,18 @@ export class JupyterInterpreterSelector {
      */
     public async selectInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         const currentPythonPath = this.interpreterSelectionState.selectedPythonPath
-            ? getDisplayPath(this.interpreterSelectionState.selectedPythonPath, this.workspace.workspaceFolders)
+            ? getDisplayPath(this.interpreterSelectionState.selectedPythonPath, this.workspace.workspaceFolders || [])
             : undefined;
 
         const suggestions = await this.interpreterSelector.getSuggestions(undefined);
-        if (Cancellation.isCanceled(token)) {
+        if (token?.isCancellationRequested) {
             return;
         }
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
             placeHolder: currentPythonPath
-                ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder().format(currentPythonPath)
+                ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder(currentPythonPath)
                 : ''
         };
 

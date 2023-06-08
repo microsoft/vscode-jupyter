@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 export const DataViewableTypes: Set<string> = new Set<string>([

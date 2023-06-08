@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 // From here:
 // https://stackoverflow.com/questions/37257911/detect-light-dark-theme-programatically-in-visual-studio-code
 // Detect vscode-light, vscode-dark, and vscode-high-contrast class name on the body element.

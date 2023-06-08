@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 export enum OSType {
     Unknown = 'Unknown',
     Windows = 'Windows',

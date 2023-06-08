@@ -18,10 +18,12 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { IControllerSelection } from './types';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { IControllerRegistration } from './types';
 
 type CreateEnvironmentResult = {
     path: string | undefined;
+    action?: 'Back' | 'Cancel';
 };
 
 /**
@@ -36,7 +38,7 @@ export class PythonEnvKernelConnectionCreator {
         disposeAllDisposables(this.disposables);
     }
     constructor(private readonly notebook: NotebookDocument, cancelToken: CancellationToken) {
-        const controllerSelection = ServiceContainer.instance.get<IControllerSelection>(IControllerSelection);
+        const controllerSelection = ServiceContainer.instance.get<IControllerRegistration>(IControllerRegistration);
         // If user selects another controller for this notebook, then stop waiting for the environment to be created.
         controllerSelection.onControllerSelected(
             (e) => {
@@ -60,22 +62,40 @@ export class PythonEnvKernelConnectionCreator {
     /**
      * Creates a Python Environment & then returns the corresponding kernel connection for the newly created python env.
      */
-    public async createPythonEnvFromKernelPicker() {
+    public async createPythonEnvFromKernelPicker(): Promise<
+        | {
+              kernelConnection: PythonKernelConnectionMetadata;
+          }
+        | {
+              action: 'Back' | 'Cancel';
+          }
+    > {
         let env: PythonEnvironment | undefined;
 
-        env = await this.createPythonEnvironment();
-        if (this.cancelTokeSource.token.isCancellationRequested || !env) {
-            return;
+        const envResult = await this.createPythonEnvironment();
+        if (this.cancelTokeSource.token.isCancellationRequested || envResult.action) {
+            sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { failed: true, reason: 'cancelled' });
+            return { action: envResult.action || 'Cancel' };
         }
+        if (!envResult.interpreter) {
+            sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { failed: true, reason: 'cancelled' });
+            return { action: 'Cancel' };
+        }
+        env = envResult.interpreter;
         traceVerbose(`Python Environment created ${env.id}`);
 
-        const kernelConnection = await this.waitForPythonKernel(env);
+        const kernelConnection = await this.waitForPythonKernel(envResult.interpreter);
         if (this.cancelTokeSource.token.isCancellationRequested) {
-            return;
+            sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, { failed: true, reason: 'cancelled' });
+            return { action: 'Cancel' };
         }
         if (!kernelConnection) {
+            sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, {
+                failed: true,
+                reason: 'kernelConnectionNotCreated'
+            });
             traceVerbose(`Python Environment ${env.id} not found as a kernel`);
-            return;
+            return { action: 'Cancel' };
         }
         traceVerbose(`Python Environment ${env.id} found as a kernel ${kernelConnection.kind}:${kernelConnection.id}`);
         const dependencyService = ServiceContainer.instance.get<IKernelDependencyService>(IKernelDependencyService);
@@ -88,7 +108,9 @@ export class PythonEnvKernelConnectionCreator {
             cannotChangeKernels: true,
             installWithoutPrompting: true
         });
+        let dependenciesInstalled = true;
         if (result !== KernelInterpreterDependencyResponse.ok) {
+            dependenciesInstalled = false;
             traceWarning(
                 `Dependencies not installed for new Python Env ${getDisplayPath(env.uri)} for notebook ${getDisplayPath(
                     this.notebook.uri
@@ -96,7 +118,11 @@ export class PythonEnvKernelConnectionCreator {
             );
         }
 
-        return kernelConnection;
+        sendTelemetryEvent(Telemetry.CreatePythonEnvironment, undefined, {
+            dependenciesInstalled,
+            envType: envResult.interpreter.envType
+        });
+        return { kernelConnection };
     }
     private async waitForPythonKernel(env: PythonEnvironment) {
         const kernelFinder = ServiceContainer.instance.get<IKernelFinder>(IKernelFinder);
@@ -152,7 +178,7 @@ export class PythonEnvKernelConnectionCreator {
             return kernel;
         });
     }
-    private async createPythonEnvironment() {
+    private async createPythonEnvironment(): Promise<{ interpreter?: PythonEnvironment; action?: 'Back' | 'Cancel' }> {
         const interpreterService = ServiceContainer.instance.get<IInterpreterService>(IInterpreterService);
         const cancellation = new CancellationTokenSource();
         // While we're busy creating this env ignore other events from python extension
@@ -161,28 +187,37 @@ export class PythonEnvKernelConnectionCreator {
         // we'll end up creating a controller for this venv and that will get selected by vscode
         interpreterService.pauseInterpreterDetection(cancellation.token);
         try {
-            const result: CreateEnvironmentResult = await commands.executeCommand('python.createEnvironment');
+            const result: CreateEnvironmentResult = await commands.executeCommand('python.createEnvironment', {
+                showBackButton: true,
+                selectEnvironment: true
+            });
+            if (result?.action === 'Cancel') {
+                return { action: 'Cancel' };
+            }
+            if (result?.action === 'Back') {
+                return { action: 'Back' };
+            }
             const path = result?.path;
             if (this.cancelTokeSource.token.isCancellationRequested) {
-                return;
+                return { action: 'Cancel' };
             }
             if (!path) {
                 traceWarning(
                     `Python Environment not created, either user cancelled the creation or there was an error in the Python Extension`
                 );
-                return;
+                return { action: 'Cancel' };
             }
             this.createdEnvId = path;
             traceVerbose(`Python Environment created ${path}`);
             const env = await interpreterService.getInterpreterDetails({ path });
             if (this.cancelTokeSource.token.isCancellationRequested) {
-                return;
+                return { action: 'Cancel' };
             }
             if (!env) {
                 traceWarning(`No interpreter details for New Python Environment ${getDisplayPath(Uri.file(path))}`);
             }
             this.createdEnvId = env?.id;
-            return env;
+            return { interpreter: env };
         } finally {
             cancellation.cancel();
             cancellation.dispose();

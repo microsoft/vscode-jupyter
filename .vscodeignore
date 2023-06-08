@@ -5,6 +5,7 @@ images/**
 docs/**
 *.vsix
 .appveyor.yml
+.devcontainer*/**
 .editorconfig
 .env
 .eslintrc
@@ -24,6 +25,7 @@ CONTRIBUTING - LANGUAGE SERVER.md
 coverconfig.json
 cucumber-report.json
 gulpfile.js
+news/**
 package.webviews/webview-side.dependencies.json
 package-lock.json
 packageExtension.cmd
@@ -110,6 +112,7 @@ pythonFiles/tests/**
 scripts/**
 src/**
 test/**
+temp/**
 tmp/**
 typings/**
 types/**

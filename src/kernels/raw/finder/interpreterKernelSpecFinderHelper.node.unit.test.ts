@@ -10,16 +10,18 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { InterpreterKernelSpecFinderHelper } from './interpreterKernelSpecFinderHelper.node';
+import { GlobalPythonKernelSpecFinder, findKernelSpecsInInterpreter } from './interpreterKernelSpecFinderHelper.node';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { ITrustedKernelPaths } from './types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { IJupyterKernelSpec } from '../../types';
 import { noop } from '../../../test/core';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 
 suite('Interpreter Kernel Spec Finder Helper', () => {
-    let helper: InterpreterKernelSpecFinderHelper;
+    let helper: GlobalPythonKernelSpecFinder;
     const disposables: IDisposable[] = [];
     let jupyterPaths: JupyterPaths;
     let kernelSpecFinder: LocalKernelSpecFinder;
@@ -45,11 +47,13 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         interpreterService = mock<IInterpreterService>();
         extensionChecker = mock<IPythonExtensionChecker>();
         trustedKernels = mock<ITrustedKernelPaths>();
-
-        helper = new InterpreterKernelSpecFinderHelper(
-            instance(jupyterPaths),
-            instance(kernelSpecFinder),
+        const workspaceService = mock<IWorkspaceService>();
+        when(workspaceService.workspaceFolders).thenReturn([]);
+        const knownPathKernelSpecFinder = mock<LocalKnownPathKernelSpecFinder>();
+        helper = new GlobalPythonKernelSpecFinder(
             instance(interpreterService),
+            instance(workspaceService),
+            instance(knownPathKernelSpecFinder),
             instance(extensionChecker),
             instance(trustedKernels)
         );
@@ -70,7 +74,12 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix, baseKernelPath));
 
         when(kernelSpecFinder.findKernelSpecsInPaths(uriEquals(searchPath), anything())).thenResolve([]);
-        const kernelSpecs = await helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token);
+        const kernelSpecs = await findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        );
 
         assert.strictEqual(kernelSpecs.length, 0);
     });
@@ -91,7 +100,12 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(kernelSpecFinder.loadKernelSpec(uriEquals(kernelSpecUri), anything(), venvInterpreter)).thenResolve(
             kernelSpec
         );
-        const kernelSpecs = await helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token);
+        const kernelSpecs = await findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        );
 
         assert.deepEqual(kernelSpecs, [kernelSpec]);
     });
@@ -126,7 +140,12 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(kernelSpecFinder.loadKernelSpec(uriEquals(kernelSpecUri2), anything(), venvInterpreter)).thenResolve(
             kernelSpec2
         );
-        const kernelSpecs = await helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token);
+        const kernelSpecs = await findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        );
 
         assert.strictEqual(kernelSpecs.length, 2);
         assert.deepEqual(kernelSpecs, [kernelSpec1, kernelSpec2]);
@@ -152,16 +171,61 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         );
 
         // Run a couple of times, and cancel.
-        helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token).catch(noop);
-        helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token).catch(noop);
-        helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token).catch(noop);
-        helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token).catch(noop);
-        helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token).catch(noop);
-        helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token).catch(noop);
-        helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token).catch(noop);
-        helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken.token).catch(noop);
+        findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        ).catch(noop);
+        findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        ).catch(noop);
+        findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        ).catch(noop);
+        findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        ).catch(noop);
+        findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        ).catch(noop);
+        findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        ).catch(noop);
+        findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        ).catch(noop);
+        findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        ).catch(noop);
         cancelToken.cancel();
-        const kernelSpecs = await helper.findKernelSpecsInInterpreter(venvInterpreter, cancelToken2.token);
+        const kernelSpecs = await findKernelSpecsInInterpreter(
+            venvInterpreter,
+            cancelToken2.token,
+            instance(jupyterPaths),
+            instance(kernelSpecFinder)
+        );
 
         assert.deepEqual(kernelSpecs, [kernelSpec]);
     });
@@ -180,7 +244,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
             condaInterpreter,
             globalInterpreter
         ]);
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, 'startUsingPythonInterpreter');
 
         assert.strictEqual(interpreter, venvInterpreter);
     });
@@ -204,7 +268,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
             condaInterpreter,
             globalInterpreter
         ]);
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, 'startUsingPythonInterpreter');
 
         assert.strictEqual(interpreter, venvInterpreter);
     });
@@ -227,7 +291,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(venvInterpreter);
         when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(true);
 
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, 'startUsingPythonInterpreter');
 
         assert.strictEqual(interpreter, venvInterpreter);
     });
@@ -251,7 +315,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(venvInterpreter);
         when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(false);
 
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, 'startUsingPythonInterpreter');
 
         assert.isUndefined(interpreter);
     });
@@ -275,7 +339,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         when(interpreterService.getInterpreterDetails(uriEquals(venvInterpreter.uri))).thenResolve(undefined);
         when(trustedKernels.isTrusted(uriEquals(venvInterpreter.uri))).thenReturn(true);
 
-        const interpreter = await helper.findMatchingInterpreter(kernelSpec);
+        const interpreter = await helper.findMatchingInterpreter(kernelSpec, 'startUsingPythonInterpreter');
 
         assert.isUndefined(interpreter);
     });

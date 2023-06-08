@@ -59,14 +59,11 @@ export function validateSliceExpression(sliceExpression: string, shape: number[]
 
         if (hasOutOfRangeIndex) {
             const { shapeIndex, value } = hasOutOfRangeIndex;
-            const localized = getLocString(
-                'DataScience.sliceIndexError',
-                'Index {0} out of range for axis {1} with {2} elements'
-            );
+            const localized = getLocString('sliceIndexError', 'Index {0} out of range for axis {1} with {2} elements');
             return format(localized, value.toString(), shapeIndex.toString(), shape[shapeIndex].toString());
         } else if (parsedExpression && parsedExpression.length !== shape.length) {
             const localized = getLocString(
-                'DataScience.sliceMismatchedAxesError',
+                'sliceMismatchedAxesError',
                 'Expected {0} axes, got {1} in slice expression'
             );
             return format(localized, shape.length.toString(), parsedExpression.length.toString());

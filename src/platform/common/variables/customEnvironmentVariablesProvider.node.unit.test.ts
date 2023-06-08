@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use strict';
 import { assert } from 'chai';
 import { EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../application/types';
 import { disposeAllDisposables } from '../helpers';
-import { IDisposable, IExtensionContext, IHttpClient } from '../types';
+import { IDisposable, IHttpClient } from '../types';
 import { CustomEnvironmentVariablesProvider } from './customEnvironmentVariablesProvider.node';
 import { IEnvironmentVariablesService } from './types';
 import * as fs from 'fs-extra';
@@ -47,9 +46,7 @@ suite('Custom Environment Variables Provider', () => {
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         clearCache();
-        envVarsService = new EnvironmentVariablesService(
-            new FileSystem(instance(mock<IExtensionContext>()), instance(mock<IHttpClient>()))
-        );
+        envVarsService = new EnvironmentVariablesService(new FileSystem(instance(mock<IHttpClient>())));
         pythonExtChecker = mock<IPythonExtensionChecker>();
         when(pythonExtChecker.isPythonExtensionInstalled).thenReturn(true);
         pythonApiProvider = mock<IPythonApiProvider>();

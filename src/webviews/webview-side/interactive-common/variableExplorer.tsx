@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import './variableExplorer.css';
 
 import fastDeepEqual from 'fast-deep-equal';
@@ -128,7 +127,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             },
             {
                 key: 'name',
-                name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
+                name: getLocString('variableExplorerNameColumn', 'Name'),
                 type: 'string',
                 width: 120,
                 sortable: true,
@@ -137,7 +136,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             },
             {
                 key: 'type',
-                name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'),
+                name: getLocString('variableExplorerTypeColumn', 'Type'),
                 type: 'string',
                 width: 120,
                 sortable: true,
@@ -146,7 +145,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             },
             {
                 key: 'size',
-                name: getLocString('DataScience.variableExplorerCountColumn', 'Size'),
+                name: getLocString('variableExplorerCountColumn', 'Size'),
                 type: 'string',
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />,
@@ -154,7 +153,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             },
             {
                 key: 'value',
-                name: getLocString('DataScience.variableExplorerValueColumn', 'Value'),
+                name: getLocString('variableExplorerValueColumn', 'Value'),
                 type: 'string',
                 width: 300,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
@@ -213,7 +212,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     <div className="variable-explorer" ref={this.variableExplorerRef} style={variableExplorerStyles}>
                         <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
                             <label className="inputLabel variable-explorer-label">
-                                {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                                {getLocString('collapseVariableExplorerLabel', 'Variables')}
                             </label>
                         </div>
                         <div className={contentClassName}>{this.renderGrid()}</div>
@@ -238,7 +237,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             <div
                 id="variable-explorer-data-grid"
                 role="table"
-                aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                aria-label={getLocString('collapseVariableExplorerLabel', 'Variables')}
             >
                 <AdazzleReactDataGrid
                     columns={this.gridColumns.map((c) => {
@@ -341,7 +340,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private getRow = (index: number): IGridRow => {
         if (index >= 0 && index < this.props.variables.length) {
             const variable = this.props.variables[index];
-            if (variable && variable.value) {
+            if (variable && typeof variable.value === 'string') {
                 let newSize = '';
                 if (variable.shape && variable.shape !== '') {
                     newSize = variable.shape;
@@ -363,7 +362,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     type: variable.type,
                     size: newSize,
                     index,
-                    value: value ? value : getLocString('DataScience.variableLoadingValue', 'Loading...')
+                    value: typeof value === 'string' ? value : getLocString('variableLoadingValue', 'Loading...')
                 };
             }
         }
@@ -374,7 +373,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             type: '',
             size: '',
             index,
-            value: getLocString('DataScience.variableLoadingValue', 'Loading...')
+            value: getLocString('variableLoadingValue', 'Loading...')
         };
     };
 

@@ -6,12 +6,13 @@ import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
 import { EnvironmentType } from '../pythonEnvironments/info';
-import { Environment, ProposedExtensionAPI } from './pythonApiTypes';
+import { ProposedExtensionAPI } from './pythonApiTypes';
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
     onDidActivatePythonExtension: Event<void>;
     pythonExtensionHooked: Promise<void>;
+    pythonExtensionVersion: SemVer | undefined;
     getApi(): Promise<PythonApi>;
     getNewApi(): Promise<ProposedExtensionAPI | undefined>;
     setApi(api: PythonApi): void;
@@ -121,5 +122,3 @@ export type PythonApi = {
      */
     registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
 };
-
-export type PythonEnvironmentV2 = Environment;

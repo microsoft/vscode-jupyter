@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type {
     ContentsManager,
     KernelSpecManager,
@@ -11,16 +10,17 @@ import type {
     SessionManager
 } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Disposable, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import {
     IPersistentState,
     IConfigurationService,
     IOutputChannel,
     IPersistentStateFactory,
     Resource,
-    IDisplayOptions
+    IDisplayOptions,
+    IDisposable
 } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
@@ -28,7 +28,7 @@ import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
-import { sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import {
     IJupyterSessionManager,
     IJupyterPasswordConnect,
@@ -38,6 +38,11 @@ import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator
 } from '../types';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
+import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -55,6 +60,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private readonly userAllowsInsecureConnections: IPersistentState<boolean>;
     private disposed?: boolean;
+    public get isDisposed() {
+        return this.disposed === true;
+    }
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -96,7 +104,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             if (this.sessionManager && !this.sessionManager.isDisposed) {
                 traceVerbose('ShutdownSessionAndConnection - dispose session manager');
                 // Make sure it finishes startup.
-                await Promise.race([sleep(10_000), this.sessionManager.ready]);
+                await raceTimeout(10_000, this.sessionManager.ready);
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
@@ -221,34 +229,104 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             throw new SessionDisposedError();
         }
         try {
-            // Fetch the list the session manager already knows about. Refreshing may not work.
-            const oldKernelSpecs =
-                this.specsManager?.specs && Object.keys(this.specsManager.specs.kernelspecs).length
-                    ? this.specsManager.specs.kernelspecs
-                    : {};
+            const stopWatch = new StopWatch();
+            const specsManager = this.specsManager;
+            if (!specsManager) {
+                traceError(
+                    `No SessionManager to enumerate kernelspecs (no specs manager). Returning a default kernel. Specs ${JSON.stringify(
+                        this.specsManager?.specs?.kernelspecs || {}
+                    )}.`
+                );
+                sendTelemetryEvent(Telemetry.JupyterKernelSpecEnumeration, undefined, {
+                    failed: true,
+                    reason: 'NoSpecsManager'
+                });
+                // If for some reason the session manager refuses to communicate, fall
+                // back to a default. This may not exist, but it's likely.
+                return [await createInterpreterKernelSpec()];
+            }
+            const telemetryProperties = {
+                wasSessionManagerReady: this.sessionManager.isReady,
+                wasSpecsManagerReady: specsManager.isReady,
+                sessionManagerReady: this.sessionManager.isReady,
+                specsManagerReady: specsManager.isReady,
+                waitedForChangeEvent: false
+            };
+            const getKernelSpecs = (defaultValue: Record<string, ISpecModel | undefined> = {}) => {
+                return specsManager.specs && Object.keys(specsManager.specs.kernelspecs).length
+                    ? specsManager.specs.kernelspecs
+                    : defaultValue;
+            };
+
+            // Fetch the list the session manager already knows about. Refreshing may not work or could be very slow.
+            const oldKernelSpecs = getKernelSpecs();
 
             // Wait for the session to be ready
-            await Promise.race([sleep(10_000), this.sessionManager.ready]);
-
+            await raceTimeout(10_000, this.sessionManager.ready);
+            telemetryProperties.sessionManagerReady = this.sessionManager.isReady;
             // Ask the session manager to refresh its list of kernel specs. This might never
             // come back so only wait for ten seconds.
-            await Promise.race([sleep(10_000), this.specsManager?.refreshSpecs()]);
+            await raceTimeout(10_000, specsManager.refreshSpecs());
+            telemetryProperties.specsManagerReady = specsManager.isReady;
 
-            // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
-            const kernelspecs =
-                this.specsManager?.specs && Object.keys(this.specsManager.specs.kernelspecs).length
-                    ? this.specsManager.specs.kernelspecs
-                    : oldKernelSpecs;
-            const keys = Object.keys(kernelspecs);
-            if (keys && keys.length) {
-                return keys.map((k) => {
-                    const spec = kernelspecs[k];
-                    return new JupyterKernelSpec(spec!) as IJupyterKernelSpec;
+            let telemetrySent = false;
+            if (specsManager && Object.keys(specsManager.specs?.kernelspecs || {}).length === 0) {
+                // At this point wait for the specs to change
+                const disposables: IDisposable[] = [];
+                const promise = createDeferred();
+                const resolve = promise.resolve.bind(promise);
+                specsManager.specsChanged.connect(resolve);
+                disposables.push(new Disposable(() => specsManager.specsChanged.disconnect(resolve)));
+                const allPromises = Promise.all([
+                    promise.promise,
+                    specsManager.ready,
+                    specsManager.refreshSpecs(),
+                    this.sessionManager.ready
+                ]);
+                await raceTimeout(10_000, allPromises);
+                telemetryProperties.waitedForChangeEvent = true;
+                if (!promise.completed) {
+                    telemetrySent = true;
+                    sendTelemetryEvent(Telemetry.JupyterKernelSpecEnumeration, undefined, {
+                        failed: true,
+                        sessionManagerReady: this.sessionManager.isReady,
+                        specsManagerReady: specsManager.isReady,
+                        reason: specsManager.isReady
+                            ? this.sessionManager.isReady
+                                ? 'SpecsDidNotChangeInTime'
+                                : 'SessionManagerIsNotReady'
+                            : 'SpecManagerIsNotReady'
+                    });
+                }
+                disposeAllDisposables(disposables);
+            }
+
+            const kernelspecs = getKernelSpecs(oldKernelSpecs);
+            if (Object.keys(kernelspecs || {}).length) {
+                const specs: IJupyterKernelSpec[] = [];
+                Object.entries(kernelspecs).forEach(([_key, value]) => {
+                    if (value) {
+                        specs.push(new JupyterKernelSpec(value));
+                    }
                 });
+                sendTelemetryEvent(
+                    Telemetry.JupyterKernelSpecEnumeration,
+                    { duration: stopWatch.elapsedTime },
+                    telemetryProperties
+                );
+                return specs;
             } else {
                 traceError(
-                    `SessionManager cannot enumerate kernelspecs. Returning default ${JSON.stringify(kernelspecs)}.`
+                    `SessionManager cannot enumerate kernelspecs. Returning a default kernel. Specs ${JSON.stringify(
+                        kernelspecs
+                    )}.`
                 );
+                if (!telemetrySent) {
+                    sendTelemetryEvent(Telemetry.JupyterKernelSpecEnumeration, undefined, {
+                        failed: true,
+                        reason: 'NoSpecsEventAfterRefresh'
+                    });
+                }
                 // If for some reason the session manager refuses to communicate, fall
                 // back to a default. This may not exist, but it's likely.
                 return [await createInterpreterKernelSpec()];
@@ -277,12 +355,16 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let cookieString;
 
         // If no token is specified prompt for a password
-        if ((connInfo.token === '' || connInfo.token === 'null') && !connInfo.getAuthHeader) {
+        const isTokenEmpty = connInfo.token === '' || connInfo.token === 'null';
+        if (isTokenEmpty && !connInfo.getAuthHeader) {
             if (this.failOnPassword) {
                 throw new Error('Password request not allowed.');
             }
             serverSettings = { ...serverSettings, token: '' };
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo({
+                url: connInfo.baseUrl,
+                isTokenEmpty
+            });
             if (pwSettings && pwSettings.requestHeaders) {
                 requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
                 cookieString = (pwSettings.requestHeaders as any).Cookie || '';
@@ -296,10 +378,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     (serverSettings as any).token = pwSettings.remappedToken;
                 }
             } else if (pwSettings) {
-                serverSettings = { ...serverSettings, token: connInfo.token };
+                serverSettings = { ...serverSettings, token: '' };
             } else {
-                // Failed to get password info, notify the user
-                throw new Error(DataScience.passwordFailure());
+                throw new JupyterInvalidPasswordError();
             }
         } else {
             serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
@@ -322,7 +403,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             WebSocket: this.requestCreator.getWebsocketCtor(
                 cookieString,
                 allowUnauthorized,
-                connInfo.getAuthHeader
+                connInfo.getAuthHeader,
+                connInfo.getWebsocketProtocols?.bind(connInfo)
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any,
             fetch: this.requestCreator.getFetchMethod(),
@@ -330,27 +412,26 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             Headers: this.requestCreator.getHeadersCtor()
         };
 
-        traceInfo(`Creating server with url : ${serverSettings.baseUrl}`);
         return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
     }
 
     // If connecting on HTTP without a token prompt the user that this connection may not be secure
     private async insecureServerWarningPrompt(): Promise<boolean> {
-        const insecureMessage = DataScience.insecureSessionMessage();
-        const insecureLabels = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
+        const insecureMessage = DataScience.insecureSessionMessage;
+        const insecureLabels = [Common.bannerLabelYes, Common.bannerLabelNo, Common.doNotShowAgain];
         const response = await this.appShell.showWarningMessage(insecureMessage, ...insecureLabels);
 
         switch (response) {
-            case Common.bannerLabelYes():
+            case Common.bannerLabelYes:
                 // On yes just proceed as normal
                 return true;
 
-            case Common.doNotShowAgain():
+            case Common.doNotShowAgain:
                 // For don't ask again turn on the global true
                 await this.userAllowsInsecureConnections.updateValue(true);
                 return true;
 
-            case Common.bannerLabelNo():
+            case Common.bannerLabelNo:
             default:
                 // No or for no choice return back false to block
                 return false;
@@ -366,7 +447,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
 
         // If they are local launch, https, or have a token, then they are secure
-        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || connInfo.token !== 'null') {
+        const isEmptyToken = connInfo.token === '' || connInfo.token === 'null';
+        if (connInfo.localLaunch || connInfo.baseUrl.startsWith('https') || !isEmptyToken) {
             return;
         }
 
@@ -374,13 +456,19 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let serverSecurePromise = JupyterSessionManager.secureServers.get(connInfo.baseUrl);
 
         if (serverSecurePromise === undefined) {
-            serverSecurePromise = this.insecureServerWarningPrompt();
-            JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            if (!connInfo.providerId.startsWith('_builtin') || connInfo.localLaunch) {
+                // If a Jupyter URI provider is providing this URI, then we trust it.
+                serverSecurePromise = Promise.resolve(true);
+                JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            } else {
+                serverSecurePromise = this.insecureServerWarningPrompt();
+                JupyterSessionManager.secureServers.set(connInfo.baseUrl, serverSecurePromise);
+            }
         }
 
         // If our server is not secure, throw here to bail out on the process
         if (!(await serverSecurePromise)) {
-            throw new Error(DataScience.insecureSessionDenied());
+            throw new Error(DataScience.insecureSessionDenied);
         }
     }
 }

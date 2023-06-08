@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { Uri } from 'vscode';
 import type { KernelMessage } from '@jupyterlab/services';
 import {
@@ -69,6 +68,8 @@ export enum IPyWidgetMessages {
     IPyWidgets_AttemptToDownloadFailedWidgetsAgain = 'IPyWidgets_AttemptToDownloadFailedWidgetsAgain',
     IPyWidgets_IsOnline = 'IPyWidgets_IsOnline',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
+    IPyWidgets_Request_Widget_Version = 'IPyWidgets_Request_Widget_Version',
+    IPyWidgets_Reply_Widget_Version = 'IPyWidgets_Reply_Widget_Version',
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
     IPyWidgets_onKernelChanged = 'IPyWidgets_onKernelChanged',
     /**
@@ -124,6 +125,44 @@ export enum SharedMessages {
     LocInit = 'loc_init'
 }
 
+export type LocalizedMessages = {
+    collapseSingle: string;
+    expandSingle: string;
+    openExportFileYes: string;
+    openExportFileNo: string;
+    noRowsInDataViewer: string;
+    sliceIndexError: string;
+    sliceMismatchedAxesError: string;
+    filterRowsTooltip: string;
+    fetchingDataViewer: string;
+    dataViewerHideFilters: string;
+    dataViewerShowFilters: string;
+    refreshDataViewer: string;
+    clearFilters: string;
+    sliceSummaryTitle: string;
+    sliceData: string;
+    sliceSubmitButton: string;
+    sliceDropdownAxisLabel: string;
+    sliceDropdownIndexLabel: string;
+    variableExplorerNameColumn: string;
+    variableExplorerTypeColumn: string;
+    variableExplorerCountColumn: string;
+    variableExplorerValueColumn: string;
+    collapseVariableExplorerLabel: string;
+    variableLoadingValue: string;
+    showDataExplorerTooltip: string;
+    noRowsInVariableExplorer: string;
+    loadingRowsInVariableExplorer: string;
+    previousPlot: string;
+    nextPlot: string;
+    panPlot: string;
+    zoomInPlot: string;
+    zoomOutPlot: string;
+    exportPlot: string;
+    deletePlot: string;
+    selectedImageListLabel: string;
+    selectedImageLabel: string;
+};
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
@@ -189,3 +228,11 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetHTMLByIdRequest]: string;
     public [InteractiveWindowMessages.GetHTMLByIdResponse]: string;
 }
+
+export const enum ErrorRendererMessageType {
+    RequestLoadLoc = 2,
+    ResponseLoadLoc = 3
+}
+export type Localizations = {
+    errorOutputExceedsLinkToOpenFormatString: string;
+};

@@ -1,21 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { ITracebackFormatter } from '../kernels/types';
 import { IJupyterVariables } from '../kernels/variables/types';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { Identifiers } from '../platform/common/constants';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
-import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
-import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.web';
 import { CommandRegistry } from './debugger/commandRegistry';
 import { DebuggerVariables } from './debugger/debuggerVariables';
@@ -43,22 +38,13 @@ import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
-import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
+import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
-import { JupyterServerSelectorCommand } from './serverSelectorCommand';
-import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 import { INotebookEditorProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     registerControllerTypes(serviceManager, isDevMode);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
-
-    serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        LiveKernelSwitcher
-    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LiveKernelSwitcher);
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -74,24 +60,16 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         RemoteKernelConnectionHandler
     );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        JupyterServerSelectorCommand
-    );
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
+    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
+    serviceManager.addBinding(NotebookCellLanguageService, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        InterpreterPackageTracker
-    );
-    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
-    serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
     );
 
     serviceManager.addSingleton<IDebuggingManager>(INotebookDebuggingManager, DebuggingManager, undefined, [
-        IExtensionSingleActivationService
+        IExtensionSyncActivationService
     ]);
     serviceManager.addSingleton<IJupyterDebugService>(
         IJupyterDebugService,
@@ -106,11 +84,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         DebuggerVariables,
         Identifiers.DEBUGGER_VARIABLES
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
-
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, CommandRegistry);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        ErrorRendererCommunicationHandler
+        CellOutputMimeTypeTracker
     );
 
     serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);

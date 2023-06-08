@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { RegExpValues } from '../../platform/common/constants';
-import '../../platform/common/extensions';
+import { splitLines } from '../../platform/common/helpers';
 import { IJupyterSettings } from '../../platform/common/types';
 
 import { noop } from '../../platform/common/utils/misc';
@@ -54,7 +53,7 @@ export class CellMatcher {
     }
 
     public stripFirstMarker(code: string): string {
-        const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+        const lines = splitLines(code, { trim: false, removeEmptyEntries: false });
 
         // Only strip this off the first line. Otherwise we want the markers in the code.
         if (lines.length > 0 && (this.isCode(lines[0]) || this.isMarkdown(lines[0]))) {
@@ -72,7 +71,7 @@ export class CellMatcher {
     }
 
     public getFirstMarker(code: string): string | undefined {
-        const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+        const lines = splitLines(code, { trim: false, removeEmptyEntries: false });
 
         if (lines.length > 0 && (this.isCode(lines[0]) || this.isMarkdown(lines[0]))) {
             return lines[0];

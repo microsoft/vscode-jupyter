@@ -4,13 +4,23 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { isPythonKernelConnection } from '../../kernels/helpers';
-import { IKernel, isLocalConnection, IStartupCodeProvider, StartupCodePriority } from '../../kernels/types';
+import {
+    IKernel,
+    isLocalConnection,
+    IStartupCodeProvider,
+    IStartupCodeProviders,
+    StartupCodePriority
+} from '../../kernels/types';
 import { InteractiveWindowView } from '../../platform/common/constants';
+import { splitLines } from '../../platform/common/helpers';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService, IExtensionContext, IsWebExtension } from '../../platform/common/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
 @injectable()
-export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCodeProvider {
+export class InteractiveWindowDebuggingStartupCodeProvider
+    implements IStartupCodeProvider, IExtensionSyncActivationService
+{
     public priority = StartupCodePriority.Debugging;
     private addRunCellHookContents?: Promise<string>;
 
@@ -18,9 +28,13 @@ export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCo
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        @inject(IsWebExtension) private readonly isWebExtension: boolean,
+        @inject(IStartupCodeProviders) private readonly registry: IStartupCodeProviders
     ) {}
 
+    activate(): void {
+        this.registry.register(this, InteractiveWindowView);
+    }
     async getCode(kernel: IKernel): Promise<string[]> {
         if (!isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
             return [];
@@ -57,7 +71,7 @@ export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCo
             }
             const addRunCellHook = await this.addRunCellHookContents;
 
-            return addRunCellHook.splitLines({ trim: false });
+            return splitLines(addRunCellHook, { trim: false });
         }
         return [];
     }

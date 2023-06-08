@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
@@ -15,9 +14,9 @@ import {
     WORKSPACE_MEMENTO
 } from '../../../platform/common/types';
 import { getKernelConnectionLanguage } from '../../helpers';
-import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
+import { IKernel, IKernelProvider, IJupyterServerConnector } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
-import { IRawNotebookProvider } from '../../raw/types';
+import { IRawNotebookSupportedService } from '../../raw/types';
 import { isJupyterNotebook } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -28,20 +27,20 @@ const LastNotebookCreatedKey = 'last-notebook-created';
  * Class used for preloading a kernel. Makes first run of a kernel faster as it loads as soon as the extension does.
  */
 @injectable()
-export class ServerPreload implements IExtensionSingleActivationService {
+export class ServerPreload implements IExtensionSyncActivationService {
     constructor(
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IJupyterServerConnector) private serverConnector: IJupyterServerConnector,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
+        @inject(IRawNotebookSupportedService) private readonly rawKernelSupport: IRawNotebookSupportedService,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook.bind(this), this, disposables);
     }
-    public activate(): Promise<void> {
+    public activate() {
         // This is the list of things that should cause us to start a local server
         // 1) Notebook is opened
         // 2) Notebook was opened in the past 7 days
@@ -51,9 +50,6 @@ export class ServerPreload implements IExtensionSingleActivationService {
         this.checkDateForServerStart();
 
         this.disposables.push(this.kernelProvider.onDidStartKernel(this.kernelStarted, this));
-
-        // Don't hold up activation though
-        return Promise.resolve();
     }
 
     private get lastNotebookCreated() {
@@ -63,7 +59,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
 
     private checkDateForServerStart() {
         if (this.shouldAutoStartStartServer(this.lastNotebookCreated)) {
-            this.createServerIfNecessary().ignoreErrors();
+            this.createServerIfNecessary().catch(noop);
         }
     }
     private shouldAutoStartStartServer(lastTime?: Date) {
@@ -77,7 +73,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
     }
 
     private async createServerIfNecessary() {
-        if (!this.workspace.isTrusted || this.rawNotebookProvider.isSupported) {
+        if (!this.workspace.isTrusted || this.rawKernelSupport.isSupported) {
             return;
         }
         const source = new CancellationTokenSource();
@@ -88,10 +84,9 @@ export class ServerPreload implements IExtensionSingleActivationService {
             // If it didn't start, attempt for local and if allowed.
             if (!this.configService.getSettings(undefined).disableJupyterAutoStart) {
                 // Local case, try creating one
-                await this.notebookProvider.connect({
+                await this.serverConnector.connect({
                     resource: undefined,
                     ui,
-                    localJupyter: true,
                     token: source.token
                 });
             }
@@ -108,7 +103,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
             return;
         }
         // Automatically start a server whenever we open a notebook
-        this.createServerIfNecessary().ignoreErrors();
+        this.createServerIfNecessary().catch(noop);
     }
 
     // Callback for when a notebook is created by the notebook provider

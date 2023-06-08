@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import * as ReduxCommon from '../../interactive-common/redux/store';
 import { PostOffice } from '../../react-common/postOffice';
 import { reducerMap } from './reducers';

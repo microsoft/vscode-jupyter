@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -20,11 +20,11 @@ import {
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
-import { noop, sleep } from '../core';
+import { sleep } from '../core';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { isWeb } from '../../platform/common/utils/misc';
-import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { isEqual } from '../../platform/vscode-path/resources';
@@ -49,7 +49,6 @@ export function defaultDataScienceSettings(): IJupyterSettings {
             optOutFrom: [],
             optInto: []
         },
-        allowImportFromNotebook: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         // eslint-disable-next-line no-template-curly-in-string
@@ -57,10 +56,6 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
         searchForJupyter: true,
-        showCellInputCode: true,
-        allowInput: true,
-        maxOutputSize: 400,
-        enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         variableExplorerExclude: 'module;function;builtin_function_or_method',
@@ -77,27 +72,6 @@ export function defaultDataScienceSettings(): IJupyterSettings {
     } as any;
 }
 
-export function takeSnapshot() {
-    // If you're investigating memory leaks in the tests, using the node-memwatch
-    // code below can be helpful. It will at least write out what objects are taking up the most
-    // memory.
-    // Alternatively, using the test:functional:memleak task and sticking breakpoints here and in
-    // writeDiffSnapshot can be used as convenient locations to create heap snapshots and diff them.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    //const memwatch = require('@raghb1/node-memwatch');
-    return {}; //new memwatch.HeapDiff();
-}
-
-//let snapshotCounter = 1;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
-    noop(); // Stick breakpoint here when generating heap snapshots
-    // const diff = snapshot.end();
-    // const file = path.join(EXTENSION_ROOT_DIR, 'tmp', `SD-${snapshotCounter}-${prefix}.json`);
-    // snapshotCounter += 1;
-    // fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
-}
-
 export async function createStandaloneInteractiveWindow(interactiveWindowProvider: InteractiveWindowProvider) {
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
     await waitForInteractiveWindow(activeInteractiveWindow);
@@ -111,8 +85,16 @@ export async function insertIntoInputEditor(source: string, interactiveWindow?: 
         inputBox = vscode.window.visibleTextEditors.find(
             (e) => e.document.uri.path === interactiveWindow.inputUri.path
         );
+        if (!inputBox) {
+            traceError(
+                `couldn't find input box ${interactiveWindow.inputUri.path} in visible text editors ${JSON.stringify(
+                    vscode.window.visibleTextEditors.map((e) => e.document.uri.path)
+                )}`
+            );
+        }
     }
     if (!inputBox) {
+        await vscode.commands.executeCommand('interactive.input.focus');
         inputBox = vscode.window.activeTextEditor;
     }
 
@@ -205,7 +187,7 @@ export async function runNewPythonFile(
 }
 
 export async function runCurrentFile(interactiveWindowProvider: IInteractiveWindowProvider, file: vscode.TextDocument) {
-    await vscode.window.showTextDocument(file);
+    await vscode.window.showTextDocument(file, vscode.ViewColumn.One);
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(file.uri)) as InteractiveWindow;
     await waitForInteractiveWindow(activeInteractiveWindow);
     await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows, file.uri);
@@ -236,11 +218,19 @@ export async function waitForInteractiveWindow(
             notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === interactiveWindow?.notebookUri?.toString()
             );
-            return notebookDocument !== undefined;
+            let inputBox = vscode.window.visibleTextEditors.find(
+                (e) => e.document.uri.path === interactiveWindow?.inputUri?.path
+            );
+            traceVerbose(
+                `Waiting for Interactive Window '${interactiveWindow.notebookUri?.toString()}',`,
+                `found notebook '${notebookDocument?.uri.toString()}' and input '${inputBox?.document.uri.toString()}'`
+            );
+            return !!notebookDocument && !!inputBox;
         },
         defaultNotebookTestTimeout,
         'Interactive window notebook document not found'
     );
+
     return notebookDocument!;
 }
 
@@ -324,7 +314,7 @@ export async function verifySelectedControllerIsRemoteForRemoteTests(notebook?: 
     }
     notebook = notebook || vscode.window.activeNotebookEditor!.notebook;
     const api = await initialize();
-    const controller = api.serviceContainer.get<IControllerSelection>(IControllerSelection).getSelected(notebook);
+    const controller = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration).getSelected(notebook);
     if (!controller) {
         return;
     }

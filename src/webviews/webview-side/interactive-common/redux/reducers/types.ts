@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IJupyterVariablesRequest } from '../../../../../kernels/variables/types';
 import {
     IShowDataViewer,
@@ -75,10 +73,6 @@ export interface ICellAction {
     cellId: string | undefined;
 }
 export interface IShowDataViewerAction extends IShowDataViewer {}
-
-export interface IOpenSettingsAction {
-    setting: string | undefined;
-}
 
 export interface IVariableExplorerHeight {
     containerHeight: number;

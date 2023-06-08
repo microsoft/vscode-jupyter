@@ -16,6 +16,10 @@ export function isJustMyCodeNotification(msg: string): boolean {
     return msg.includes('Frame skipped from debugging during step-in');
 }
 
+export function isDebugpyAttachRequest(msg: DebugProtocol.Event): boolean {
+    return msg.event === 'debugpyAttach';
+}
+
 /**
  * Controls starting execution on a cell when debugging a cell.
  */
@@ -34,6 +38,11 @@ export class DebugCellController implements IDebuggingDelegate {
     }
 
     public async willSendEvent(msg: DebugProtocol.Event): Promise<boolean> {
+        if (isDebugpyAttachRequest(msg)) {
+            this.trace('intercept', 'debugpyAttach request for subprocess, not supported');
+            return true;
+        }
+
         if (msg.event === 'output') {
             if (isJustMyCodeNotification(msg.body.output)) {
                 this.trace('intercept', 'justMyCode notification');

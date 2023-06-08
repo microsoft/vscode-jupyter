@@ -13,7 +13,7 @@ export class KernelPortNotUsedTimeoutError extends BaseKernelError {
     constructor(kernelConnection: KernelConnectionMetadata) {
         super(
             'timeout',
-            DataScience.rawKernelStartFailedDueToTimeout().format(
+            DataScience.rawKernelStartFailedDueToTimeoutWaitingForPort(
                 getDisplayNameOrNameOfKernelConnection(kernelConnection)
             ),
             kernelConnection

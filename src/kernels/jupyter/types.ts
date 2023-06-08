@@ -3,12 +3,11 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
-import { Uri, QuickPickItem } from 'vscode';
+import { Uri } from 'vscode';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 import { IAsyncDisposable, ICell, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
@@ -16,19 +15,17 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     IJupyterConnection,
-    ConnectNotebookProviderOptions,
-    NotebookCreationOptions,
-    IJupyterKernelConnectionSession,
+    IJupyterKernelSession,
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
-    IKernelConnectionSession,
     RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../api';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -48,57 +45,12 @@ export enum JupyterInterpreterDependencyResponse {
     cancel
 }
 
-// Talks to a jupyter ipython kernel to retrieve data for cells
-export const INotebookServer = Symbol('INotebookServer');
-export interface INotebookServer extends IAsyncDisposable {
-    createNotebook(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        cancelToken: CancellationToken,
-        ui: IDisplayOptions,
-        creator: KernelActionSource
-    ): Promise<IKernelConnectionSession>;
-    readonly connection: IJupyterConnection;
-}
-
-export const INotebookServerFactory = Symbol('INotebookServerFactory');
-export interface INotebookServerFactory {
-    createNotebookServer(connection: IJupyterConnection): Promise<INotebookServer>;
-}
-
-// Provides notebooks that talk to jupyter servers
-export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
-export interface IJupyterNotebookProvider {
-    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
-    createNotebook(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
-}
-
-export type INotebookServerLocalOptions = {
-    resource: Resource;
-    ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: true;
-};
-export type INotebookServerRemoteOptions = {
-    serverId: string;
-    resource: Resource;
-    ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: false;
-};
-export type INotebookServerOptions = INotebookServerLocalOptions | INotebookServerRemoteOptions;
-
-export const IJupyterExecution = Symbol('IJupyterExecution');
-export interface IJupyterExecution extends IAsyncDisposable {
-    isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(options: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer>;
+export const IJupyterServerHelper = Symbol('JupyterServerHelper');
+export interface IJupyterServerHelper extends IAsyncDisposable {
+    isJupyterServerSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    startServer(resource: Resource, cancelToken?: CancellationToken): Promise<IJupyterConnection>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
-    getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
-    getNotebookError(): Promise<string>;
+    getJupyterServerError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
 
@@ -110,7 +62,10 @@ export interface IJupyterPasswordConnectInfo {
 
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
 export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
+    getPasswordConnectionInfo(options: {
+        url: string;
+        isTokenEmpty: boolean;
+    }): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -119,6 +74,7 @@ export interface IJupyterSessionManagerFactory {
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
+    readonly isDisposed: boolean;
     startNew(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
@@ -126,7 +82,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         ui: IDisplayOptions,
         cancelToken: CancellationToken,
         creator: KernelActionSource
-    ): Promise<IJupyterKernelConnectionSession>;
+    ): Promise<IJupyterKernelSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;
@@ -188,55 +144,29 @@ export interface INbConvertExportToPythonService {
 }
 
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
+/**
+ * Provides a wrapper around a local Jupyter Notebook Server.
+ */
 export interface IJupyterServerProvider {
     /**
-     * Gets the server used for starting notebooks
+     * Stats the local Jupyter Notebook server (if not already started)
+     * and returns the connection information.
      */
-    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer>;
+    getOrStartServer(options: GetServerOptions): Promise<IJupyterConnection>;
 }
 
-export interface IJupyterServerUri {
-    baseUrl: string;
-    token: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    authorizationHeader: any; // JSON object for authorization header.
-    expiration?: Date; // Date/time when header expires and should be refreshed.
-    displayName: string;
-}
-
-export type JupyterServerUriHandle = string;
-
-export interface IJupyterUriProvider {
-    /**
-     * Should be a unique string (like a guid)
-     */
-    readonly id: string;
-    readonly displayName?: string;
-    readonly detail?: string;
-    onDidChangeHandles?: Event<void>;
-    getQuickPickEntryItems?(): Promise<QuickPickItem[]> | QuickPickItem[];
-    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
-    /**
-     * Given the handle, returns the Jupyter Server information.
-     */
-    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
-    /**
-     * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
-     */
-    getHandles?(): Promise<JupyterServerUriHandle[]>;
-    /**
-     * Users request to remove a handle.
-     */
-    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
+export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
+    readonly extensionId: string;
 }
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
-    getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
-    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
-    registerProvider(picker: IJupyterUriProvider): IDisposable;
+    readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
+    getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>>;
+    getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
+    registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 
@@ -248,6 +178,10 @@ export interface IJupyterServerUriEntry {
      * Uri of the server to connect to
      */
     uri: string;
+    provider: {
+        id: string;
+        handle: JupyterServerUriHandle;
+    };
     /**
      * Unique ID using a hash of the full uri
      */
@@ -268,21 +202,18 @@ export interface IJupyterServerUriEntry {
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
-    isLocalLaunch: boolean;
-    onDidChangeConnectionType: Event<void>;
-    readonly currentServerId: string | undefined;
-    readonly onDidChangeUri: Event<void>;
-    readonly onDidRemoveUris: Event<IJupyterServerUriEntry[]>;
-    readonly onDidAddUri: Event<IJupyterServerUriEntry>;
-    addToUriList(uri: string, time: number, displayName: string): Promise<void>;
-    getSavedUriList(): Promise<IJupyterServerUriEntry[]>;
-    removeUri(uri: string): Promise<void>;
-    clearUriList(): Promise<void>;
-    getRemoteUri(): Promise<IJupyterServerUriEntry | undefined>;
-    getUriForServer(id: string): Promise<IJupyterServerUriEntry | undefined>;
-    setUriToLocal(): Promise<void>;
-    setUriToRemote(uri: string, displayName: string): Promise<void>;
-    setUriToNone(): Promise<void>;
+    readonly onDidChange: Event<void>;
+    readonly onDidRemove: Event<IJupyterServerUriEntry[]>;
+    readonly onDidAdd: Event<IJupyterServerUriEntry>;
+    /**
+     * Updates MRU list marking this server as the most recently used.
+     */
+    update(serverId: string): Promise<void>;
+    getAll(): Promise<IJupyterServerUriEntry[]>;
+    remove(serverId: string): Promise<void>;
+    clear(): Promise<void>;
+    get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
+    add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void>;
 }
 
 export interface IBackupFile {
@@ -328,7 +259,8 @@ export interface IJupyterRequestCreator {
     getWebsocketCtor(
         cookieString?: string,
         allowUnauthorized?: boolean,
-        getAuthHeaders?: () => any
+        getAuthHeaders?: () => Record<string, string>,
+        getWebSocketProtocols?: () => string | string[] | undefined
     ): ClassType<WebSocket>;
     getWebsocket(id: string): IKernelSocket | undefined;
     getRequestInit(): RequestInit;

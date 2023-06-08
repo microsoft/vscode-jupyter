@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import * as Redux from 'redux';
-import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
+import { IInteractiveWindowMapping } from '../../../../messageTypes';
 
 import { PostOffice } from '../../react-common/postOffice';
 import { isAllowedAction, unwrapPostableAction } from './helpers';
 import { CommonActionType } from './reducers/types';
-
-export const AllowedIPyWidgetMessages = [...Object.values(IPyWidgetMessages)];
 
 export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Reducer<{}, Redux.AnyAction> {
     // eslint-disable-next-line

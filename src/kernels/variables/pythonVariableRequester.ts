@@ -130,38 +130,12 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     public async getVariableProperties(
         word: string,
-        kernel: IKernel,
         _cancelToken: CancellationToken | undefined,
-        matchingVariable: IJupyterVariable | undefined,
-        languageSettings: { [typeNameKey: string]: string[] },
-        inEnhancedTooltipsExperiment: boolean
+        matchingVariable: IJupyterVariable | undefined
     ): Promise<{ [attributeName: string]: string }> {
         let result: { [attributeName: string]: string } = {};
         if (matchingVariable && matchingVariable.value) {
-            const type = matchingVariable?.type;
-            if (type && type in languageSettings && inEnhancedTooltipsExperiment) {
-                const attributeNames = languageSettings[type];
-                const stringifiedAttributeNameList =
-                    '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
-                const { code, cleanupCode, initializeCode } =
-                    await this.varScriptGenerator.generateCodeToGetVariableProperties({
-                        isDebugging: false,
-                        variableName: matchingVariable.name,
-                        stringifiedAttributeNameList
-                    });
-                const attributes = await safeExecuteSilently(
-                    kernel,
-                    { code, cleanupCode, initializeCode },
-                    {
-                        traceErrors: true,
-                        traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
-                        telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                    }
-                );
-                result = { ...result, ...this.deserializeJupyterResult(attributes) };
-            } else {
-                result[`${word}`] = matchingVariable.value;
-            }
+            result[`${word}`] = matchingVariable.value;
         }
         return result;
     }
@@ -251,7 +225,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 if (resultString.includes('iopub_data_rate_limit')) {
                     throw new JupyterDataRateLimitError();
                 } else {
-                    const error = DataScience.jupyterGetVariablesExecutionError().format(resultString);
+                    const error = DataScience.jupyterGetVariablesExecutionError(resultString);
                     traceError(error);
                     throw new Error(error);
                 }
@@ -273,13 +247,13 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             ) {
                 const traceback: string[] = codeCellOutput.traceback as string[];
                 const stripped = traceback.map(stripAnsi).join('\r\n');
-                const error = DataScience.jupyterGetVariablesExecutionError().format(stripped);
+                const error = DataScience.jupyterGetVariablesExecutionError(stripped);
                 traceError(error);
                 throw new Error(error);
             }
         }
 
-        throw new Error(DataScience.jupyterGetVariablesBadResults());
+        throw new Error(DataScience.jupyterGetVariablesBadResults);
     }
 
     // Pull our text result out of the Jupyter cell

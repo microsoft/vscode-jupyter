@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { Uri, NotebookEditor, window } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import '../platform/common/extensions';
 import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { getComparisonKey } from '../platform/vscode-path/resources';

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IExtensionSingleActivationService } from '../activation/types';
-import { IDataFrameScriptGenerator, IExperimentService, IHttpClient, IVariableScriptGenerator } from '../common/types';
+import { IExtensionSyncActivationService } from '../activation/types';
+import { IExperimentService, IHttpClient } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
 import { ClipboardService } from './application/clipboard';
@@ -31,8 +31,6 @@ import { BrowserService } from './net/browser';
 import { HttpClient } from './net/httpClient';
 import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants.node';
-import { ProcessLogger } from './process/logger.node';
-import { IProcessLogger } from './process/types.node';
 import {
     IAsyncDisposableRegistry,
     IBrowserService,
@@ -49,8 +47,7 @@ import { registerTypes as processRegisterTypes } from './process/serviceRegistry
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
 import { TerminalManager } from './application/terminalManager.node';
-import { VariableScriptGenerator } from './variableScriptGenerator';
-import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
+import { OldCacheCleaner } from './cache';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -60,7 +57,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
     serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
-    serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
@@ -71,23 +67,19 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
-    serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
-    serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
 
     serviceManager.addSingleton<IFeaturesManager>(IFeaturesManager, FeatureManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        LanguageInitializer
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, LanguageInitializer);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, OldCacheCleaner);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         ReloadVSCodeCommandHandler
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
         RunInDedicatedExtensionHostCommandHandler
     );
     registerPlatformTypes(serviceManager);

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { DataScience } from '../../platform/common/utils/localize';
 import { KernelConnectionMetadata } from '../types';
 import { BaseKernelError } from './types';
@@ -20,6 +18,6 @@ import { BaseKernelError } from './types';
  */
 export class JupyterWaitForIdleError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {
-        super('timeout', DataScience.jupyterLaunchTimedOut(), kernelConnectionMetadata);
+        super('timeout', DataScience.jupyterLaunchTimedOut, kernelConnectionMetadata);
     }
 }

@@ -1,27 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-import { inject, injectable, multiInject } from 'inversify';
+import { inject, injectable, multiInject, named } from 'inversify';
 import { IApplicationShell, IVSCodeNotebook } from '../platform/common/application/types';
-import { InteractiveWindowView } from '../platform/common/constants';
-import { NotebookDocument, Uri } from 'vscode';
+import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
+import { Memento, NotebookDocument, Uri } from 'vscode';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExtensionContext
+    IExtensionContext,
+    IMemento,
+    WORKSPACE_MEMENTO
 } from '../platform/common/types';
 import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import {
     IThirdPartyKernel,
     IKernel,
-    INotebookProvider,
-    IStartupCodeProvider,
     ITracebackFormatter,
     KernelOptions,
-    ThirdPartyKernelOptions
+    ThirdPartyKernelOptions,
+    IStartupCodeProviders,
+    IKernelSessionFactory
 } from './types';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { createKernelSettings } from './kernelSettings';
@@ -35,17 +36,18 @@ export class KernelProvider extends BaseCoreKernelProvider {
     constructor(
         @inject(IAsyncDisposableRegistry) asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterServerUriStorage) jupyterServerUriStorage: IJupyterServerUriStorage,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
-        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
-        disposables.push(jupyterServerUriStorage.onDidRemoveUris(this.handleUriRemoval.bind(this)));
+        disposables.push(jupyterServerUriStorage.onDidRemove(this.handleUriRemoval.bind(this)));
     }
 
     public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {
@@ -57,15 +59,20 @@ export class KernelProvider extends BaseCoreKernelProvider {
 
         const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : notebook.uri;
         const settings = createKernelSettings(this.configService, resourceUri);
+        const notebookType =
+            notebook.uri.path.endsWith('.interactive') || options.resourceUri?.path.endsWith('.interactive')
+                ? InteractiveWindowView
+                : JupyterNotebookView;
         const kernel = new Kernel(
             resourceUri,
             notebook,
             options.metadata,
-            this.notebookProvider,
+            this.sessionCreator,
             settings,
             this.appShell,
             options.controller,
-            this.startupCodeProviders
+            this.startupCodeProviders.getProviders(notebookType),
+            this.workspaceStorage
         ) as IKernel;
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
@@ -92,11 +99,12 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
     constructor(
         @inject(IAsyncDisposableRegistry) asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IKernelSessionFactory) private sessionCreator: IKernelSessionFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
+        @inject(IStartupCodeProviders) private readonly startupCodeProviders: IStartupCodeProviders,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceStorage: Memento
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -110,14 +118,19 @@ export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
 
         const resourceUri = uri;
         const settings = createKernelSettings(this.configService, resourceUri);
+        const notebookType =
+            uri.path.endsWith('.interactive') || options.resourceUri?.path.endsWith('.interactive')
+                ? InteractiveWindowView
+                : JupyterNotebookView;
         const kernel = new ThirdPartyKernel(
             uri,
             resourceUri,
             options.metadata,
-            this.notebookProvider,
+            this.sessionCreator,
             this.appShell,
             settings,
-            this.startupCodeProviders
+            this.startupCodeProviders.getProviders(notebookType),
+            this.workspaceStorage
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

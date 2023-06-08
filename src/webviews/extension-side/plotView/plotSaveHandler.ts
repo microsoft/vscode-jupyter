@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutput, NotebookDocument, Uri } from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
@@ -56,11 +54,11 @@ export class PlotSaveHandler implements IPlotSaveHandler {
         const filters: Record<string, string[]> = {};
         // If we have an SVG, then we can export to PDF.
         if (output.items.find((item) => item.mime.toLowerCase() === svgMimeType)) {
-            filters[DataScience.pdfFilter()] = ['pdf'];
-            filters[DataScience.svgFilter()] = ['svg'];
+            filters[DataScience.pdfFilter] = ['pdf'];
+            filters[DataScience.svgFilter] = ['svg'];
         }
         if (imageExtension === 'png') {
-            filters[DataScience.pngFilter()] = ['png'];
+            filters[DataScience.pngFilter] = ['png'];
         }
         if (Object.keys(filters).length === 0) {
             filters['Images'] = [imageExtension];
@@ -71,7 +69,7 @@ export class PlotSaveHandler implements IPlotSaveHandler {
         const defaultUri = workspaceUri ? Uri.joinPath(workspaceUri, fileName) : Uri.file(fileName);
         return this.shell.showSaveDialog({
             defaultUri,
-            saveLabel: DataScience.exportPlotTitle(),
+            saveLabel: DataScience.exportPlotTitle,
             filters
         });
     }

@@ -10,6 +10,7 @@ import { IDisposable, Resource } from '../../platform/common/types';
 import { traceDecoratorError } from '../../platform/logging';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Responsible for sending workspace level telemetry and making sure that the list of interpreters is always fetched when opening a workspace.
@@ -67,7 +68,7 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
             return;
         }
         const folder = this.workspaceService.getWorkspaceFolder(doc.uri);
-        this.activateWorkspace(folder ? folder.uri : undefined).ignoreErrors();
+        this.activateWorkspace(folder ? folder.uri : undefined).catch(noop);
     }
 
     protected addHandlers() {

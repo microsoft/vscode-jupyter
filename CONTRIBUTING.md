@@ -51,7 +51,7 @@ Run the `Compile`, `Compile Web Views`, and `Compile Web Extension` build Tasks 
 You can also compile from the command-line. For a full compile you can use:
 
 ```shell
-npx gulp prePublishNonBundleNLS
+npx gulp prePublishNonBundle
 ```
 
 For incremental builds you can use the following commands depending on your needs:
@@ -302,7 +302,7 @@ To create a release _build_, follow the steps outlined in the [release plan](htt
 Steps to build the extension on your machine once you've cloned the repo:
 
 ```bash
-> npm install -g vsce
+> npm install -g @vscode/vsce
 # Perform the next steps in the vscode-jupyter folder.
 > npm ci
 > python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user

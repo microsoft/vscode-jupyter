@@ -10,7 +10,6 @@ import { Deprecated } from './utils/localize';
 import {
     DeprecatedFeatureInfo,
     DeprecatedSettingAndValue,
-    IConfigurationService,
     IFeaturesManager,
     IFeatureSet,
     IPersistentStateFactory
@@ -20,19 +19,19 @@ import { Emitter } from 'vscode-jsonrpc';
 const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
-        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE(),
+        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE,
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/309',
         setting: { setting: 'formatting.formatOnSave', values: ['true', true] }
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
-        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE(),
+        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE,
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
         setting: { setting: 'linting.lintOnTextChange', values: ['true', true] }
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
-        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES(),
+        message: Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES,
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/1704',
         setting: { setting: 'autoComplete.preloadModules' }
     }
@@ -46,16 +45,12 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
 export class FeatureManager implements IFeaturesManager {
     private _onDidChangeFeatures = new Emitter<void>();
     readonly onDidChangeFeatures = this._onDidChangeFeatures.event;
-    private _features: IFeatureSet = { kernelPickerType: 'Stable' };
+    private _features: IFeatureSet = {};
     get features(): IFeatureSet {
         return this._features;
     }
 
     set features(newFeatures: IFeatureSet) {
-        if (newFeatures.kernelPickerType === this._features.kernelPickerType) {
-            return;
-        }
-
         this._features = newFeatures;
         this._onDidChangeFeatures.fire();
     }
@@ -64,17 +59,11 @@ export class FeatureManager implements IFeaturesManager {
     constructor(
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(ICommandManager) private cmdMgr: ICommandManager,
-        @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
         this._updateFeatures();
 
-        this.disposables.push(
-            this.configService.getSettings().onDidChange(() => {
-                this._updateFeatures();
-            })
-        );
         this.disposables.push(
             this.workspace.onDidChangeConfiguration(() => {
                 this._updateFeatures();
@@ -83,11 +72,8 @@ export class FeatureManager implements IFeaturesManager {
     }
 
     private _updateFeatures() {
-        const kernelPickerType =
-            this.workspace.getConfiguration('notebook.kernelPicker').get('type') === 'mru' ? 'Insiders' : 'Stable';
-
         this.features = {
-            kernelPickerType
+            kernelPickerType: 'Insiders'
         };
     }
 

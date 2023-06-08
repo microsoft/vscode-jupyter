@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import {
     IBrowserService,
     IConfigurationService,
@@ -23,6 +23,8 @@ import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { JupyterKernelStartFailureOverrideReservedName } from '../../platform/interpreter/constants';
 import { DataScienceErrorHandler } from './kernelErrorHandler';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 
 /**
  * Common code for handling errors. This one is node specific.
@@ -41,11 +43,12 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
         kernelDependency: IKernelDependencyService | undefined,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
-        @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IsWebExtension) isWebExtension: boolean,
         @inject(IExtensions) extensions: IExtensions,
         @inject(IJupyterUriProviderRegistration) jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
-        @inject(IReservedPythonNamedProvider) private readonly reservedPythonNames: IReservedPythonNamedProvider
+        @inject(IReservedPythonNamedProvider) private readonly reservedPythonNames: IReservedPythonNamedProvider,
+        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IInterpreterService) interpreterService: IInterpreterService
     ) {
         super(
             applicationShell,
@@ -56,9 +59,10 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             workspaceService,
             serverUriStorage,
             jupyterUriProviderRegistration,
-            commandManager,
             isWebExtension,
-            extensions
+            extensions,
+            fs,
+            interpreterService
         );
     }
     protected override async addErrorMessageIfPythonArePossiblyOverridingPythonModules(
@@ -87,13 +91,11 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             if (fileLinks.length === 1) {
                 files = fileLinks[0];
             } else {
-                files = `${fileLinks.slice(0, -1).join(', ')} ${Common.and()} ${fileLinks.slice(-1)}`;
+                files = `${fileLinks.slice(0, -1).join(', ')} ${Common.and} ${fileLinks.slice(-1)}`;
             }
-            messages.push(
-                DataScience.filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting().format(files)
-            );
-            messages.push(DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed().format(files));
-            messages.push(Common.clickHereForMoreInfoWithHtml().format(JupyterKernelStartFailureOverrideReservedName));
+            messages.push(DataScience.filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting(files));
+            messages.push(DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed(files));
+            messages.push(Common.clickHereForMoreInfoWithHtml(JupyterKernelStartFailureOverrideReservedName));
         }
     }
     protected override async getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(

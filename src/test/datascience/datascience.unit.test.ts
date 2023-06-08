@@ -1,16 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CommandManager } from '../../platform/common/application/commandManager';
 import { DocumentManager } from '../../platform/common/application/documentManager';
-import { IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { WorkspaceService } from '../../platform/common/application/workspace.node';
+import { IDocumentManager } from '../../platform/common/application/types';
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
@@ -25,7 +22,6 @@ suite('Tests', () => {
     let cmdManager: CommandManager;
     let configService: IConfigurationService;
     let docManager: IDocumentManager;
-    let workspaceService: IWorkspaceService;
     let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
     let onDidChangeActiveTextEditor: sinon.SinonStub;
@@ -33,7 +29,6 @@ suite('Tests', () => {
     setup(() => {
         cmdManager = mock(CommandManager);
         configService = mock(ConfigurationService);
-        workspaceService = mock(WorkspaceService);
         docManager = mock(DocumentManager);
         settings = mock(JupyterSettings);
         rawNotebookSupported = mock(RawNotebookSupportedService);
@@ -44,7 +39,6 @@ suite('Tests', () => {
             [] as any,
             instance(configService),
             instance(docManager),
-            instance(workspaceService),
             instance(rawNotebookSupported),
             [] as any
         );

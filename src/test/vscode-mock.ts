@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { anything, instance, mock, when } from 'ts-mockito';
 /* eslint-disable no-invalid-this, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any */
 
 import * as vscode from 'vscode';
+import { format } from '../platform/common/helpers';
 import { noop } from '../platform/common/utils/misc';
 import * as vscodeMocks from './mocks/vsc';
 import { vscMockTelemetryReporter } from './mocks/vsc/telemetryReporter';
@@ -90,7 +89,34 @@ export function initialize() {
         return originalLoad.apply(this, arguments);
     };
 }
-
+mockedVSCode.l10n = {
+    bundle: undefined,
+    t: (arg1: string | { message: string; args?: string[] | Record<string, string> }, ...restOfArguments: string[]) => {
+        if (typeof arg1 === 'string') {
+            if (restOfArguments.length === 0) {
+                return arg1;
+            }
+            if (typeof restOfArguments === 'object' && !Array.isArray(restOfArguments)) {
+                throw new Error('Records for l10n.t() are not supported in the mock');
+            }
+            return format(arg1, ...restOfArguments);
+        }
+        if (typeof arg1 === 'object') {
+            const message = arg1.message;
+            const args = arg1.args || [];
+            if (typeof args === 'object' && !Array.isArray(args)) {
+                throw new Error('Records for l10n.t() are not supported in the mock');
+            }
+            if (args.length === 0) {
+                return message;
+            }
+            return format(message, ...args);
+        }
+        return arg1;
+    },
+    uri: undefined
+} as any;
+mockedVSCode.MarkdownString = vscodeMocks.vscMock.MarkdownString;
 mockedVSCode.MarkdownString = vscodeMocks.vscMock.MarkdownString;
 mockedVSCode.Hover = vscodeMocks.vscMock.Hover;
 mockedVSCode.Disposable = vscodeMocks.vscMock.Disposable as any;

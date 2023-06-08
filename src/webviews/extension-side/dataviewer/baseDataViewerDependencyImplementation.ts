@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { IKernel } from '../../../kernels/types';
@@ -12,10 +10,9 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { parseSemVer } from '../../../platform/common/utils';
 import { SemVer } from 'semver';
 import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { ProductNames } from '../../../kernels/installer/productNames';
-import { Product } from '../../../kernels/installer/types';
+import { ProductNames } from '../../../platform/interpreter/installer/productNames';
+import { Product } from '../../../platform/interpreter/installer/types';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { Cancellation } from '../../../platform/common/cancellation';
 import { traceWarning } from '../../../platform/logging';
 
 /**
@@ -34,7 +31,7 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
             const version = await this._getVersion(executer, token);
             return typeof version === 'string' ? parseSemVer(version) : version;
         } catch (e) {
-            traceWarning(DataScience.failedToGetVersionOfPandas(), e.message);
+            traceWarning(DataScience.failedToGetVersionOfPandas, e.message);
             return;
         }
     }
@@ -49,14 +46,14 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
         version?: string
     ): Promise<void> {
         let message = version
-            ? DataScience.pandasTooOldForViewingFormat().format(version, pandasMinimumVersionSupportedByVariableViewer)
-            : DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer);
+            ? DataScience.pandasTooOldForViewingFormat(version, pandasMinimumVersionSupportedByVariableViewer)
+            : DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer);
 
         let selection = this.isCodeSpace
-            ? Common.install()
-            : await this.applicationShell.showErrorMessage(message, { modal: true }, Common.install());
+            ? Common.install
+            : await this.applicationShell.showErrorMessage(message, { modal: true }, Common.install);
 
-        if (selection === Common.install()) {
+        if (selection === Common.install) {
             await this._doInstall(executer, tokenSource);
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
@@ -70,7 +67,7 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
         try {
             const pandasVersion = await this.getVersion(executer, tokenSource.token);
 
-            if (Cancellation.isCanceled(tokenSource.token)) {
+            if (tokenSource.token.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PandasInstallCanceled);
                 return;
             }

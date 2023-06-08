@@ -3,18 +3,19 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
+import { IExtensionSyncActivationService } from '../../activation/types';
 import { IInterpreterStatusbarVisibilityFilter, IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
 import { isJupyterNotebook } from '../../common/utils';
+import { noop } from '../../common/utils/misc';
 
 /**
  * Singleton that listens to active editor changes in order to hide/show the python interpreter
  */
 @injectable()
 export class InterpreterStatusBarVisibility
-    implements IInterpreterStatusbarVisibilityFilter, IExtensionSingleActivationService
+    implements IInterpreterStatusbarVisibilityFilter, IExtensionSyncActivationService
 {
     private _changed = new EventEmitter<void>();
     private _registered = false;
@@ -33,7 +34,7 @@ export class InterpreterStatusBarVisibility
             disposables
         );
     }
-    public async activate(): Promise<void> {
+    public activate() {
         // Tell the python extension about our filter
         if (this.extensionChecker.isPythonExtensionActive) {
             this.registerStatusFilter();
@@ -65,6 +66,6 @@ export class InterpreterStatusBarVisibility
                     this._changed.fire();
                 }
             })
-            .ignoreErrors();
+            .catch(noop);
     }
 }

@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
-import { EventEmitter } from 'vscode';
+import { Disposable, EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -17,12 +14,13 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../internalTypes';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { PYTHON_LANGUAGE, isUnitTestExecution } from '../../../platform/common/constants';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
-import { getKernelRegistrationInfo } from '../../helpers';
+import { getKernelRegistrationInfo, isUserRegisteredKernelSpecConnection } from '../../helpers';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper } from './localPythonAndRelatedNonPythonKernelSpecFinder.wrapper.node';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
+import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -48,7 +46,7 @@ export class ContributedLocalKernelSpecFinder
 
     kind = ContributedKernelFinderKind.LocalKernelSpec;
     id: string = ContributedKernelFinderKind.LocalKernelSpec;
-    displayName: string = DataScience.localKernelSpecs();
+    displayName: string = DataScience.localKernelSpecs;
 
     private _onDidChangeKernels = new EventEmitter<{
         added?: LocalKernelConnectionMetadata[];
@@ -60,9 +58,10 @@ export class ContributedLocalKernelSpecFinder
     private wasPythonInstalledWhenFetchingControllers = false;
 
     private cache: LocalKernelConnectionMetadata[] = [];
+    private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinderWrapper)
+        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -146,7 +145,6 @@ export class ContributedLocalKernelSpecFinder
     }
 
     @traceDecoratorError('List kernels failed')
-    @capturePerfTelemetry(Telemetry.KernelListingPerf, { kind: 'localKernelSpec' })
     private async updateCache() {
         try {
             let kernels: LocalKernelConnectionMetadata[] = [];
@@ -159,12 +157,8 @@ export class ContributedLocalKernelSpecFinder
                 }
                 return true;
             });
-            const kernelSpecsFromPythonKernelFinder = this.pythonKernelFinder.kernels.filter(
-                (item) =>
-                    item.kind === 'startUsingLocalKernelSpec' ||
-                    (item.kind === 'startUsingPythonInterpreter' &&
-                        // Also include kernel Specs that are in a non-global directory.
-                        getKernelRegistrationInfo(item.kernelSpec) === 'registeredByNewVersionOfExtForCustomKernelSpec')
+            const kernelSpecsFromPythonKernelFinder = this.pythonKernelFinder.kernels.filter((item) =>
+                isUserRegisteredKernelSpecConnection(item)
             ) as LocalKernelConnectionMetadata[];
             kernels = kernels.concat(kernelSpecs).concat(kernelSpecsFromPythonKernelFinder);
             await this.writeToCache(kernels);
@@ -235,17 +229,37 @@ export class ContributedLocalKernelSpecFinder
                 this._onDidChangeKernels.fire({ added, updated, removed });
             }
 
-            traceVerbose(
-                `Updating cache with Local kernels ${values
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Added = ${added
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Updated = ${updated
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}\n, Removed = ${removed
-                    .map((k) => `${k.kind}:'${k.id} (interpreter id = ${k.interpreter?.id})'`)
-                    .join(', ')}`
-            );
+            if (values.length) {
+                if (this.cacheLoggingTimeout) {
+                    clearTimeout(this.cacheLoggingTimeout);
+                }
+                // Reduce the logging, as this can get written a lot,
+                this.cacheLoggingTimeout = setTimeout(
+                    () => {
+                        traceVerbose(
+                            `Updating cache with Local kernels ${values
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Added = ${added
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Updated = ${updated
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}, Removed = ${removed
+                                .map(
+                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
+                                )
+                                .join(', ')}`
+                        );
+                    },
+                    isUnitTestExecution() ? 0 : 15_000
+                );
+                this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
+            }
         } catch (ex) {
             traceError('LocalKernelFinder: Failed to write to cache', ex);
         }

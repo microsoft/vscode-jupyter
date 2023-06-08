@@ -7,7 +7,7 @@ import type * as mochaTypes from 'mocha';
 import { env, extensions, UIKind, Uri } from 'vscode';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../constants';
 import { format } from 'util';
-import { registerLogger, traceInfoIfCI } from '../../platform/logging/index';
+import { registerLogger } from '../../platform/logging/index';
 import { Arguments, ILogger } from '../../platform/logging/types';
 import { ClientAPI } from './clientApi';
 const { inherits } = require('mocha/lib/utils');
@@ -99,7 +99,7 @@ function writeReportProgress(message: Message) {
         if (message.event === constants.EVENT_RUN_END) {
             const ext = extensions.getExtension(JVSC_EXTENSION_ID_FOR_TESTS)!.extensionUri;
             const logFile = Uri.joinPath(ext, 'logs', 'testresults.json');
-            traceInfoIfCI(`Writing test results to ${logFile}`);
+            console.log(`Writing test results to ${logFile}`);
             const requireFunc: typeof require =
                 typeof __webpack_require__ === 'function' ? __non_webpack_require__ : require;
             const fs: typeof import('fs-extra') = requireFunc('fs-extra');

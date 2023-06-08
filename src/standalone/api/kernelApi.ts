@@ -26,7 +26,7 @@ import {
     IKernelSocket,
     KernelConnectionMetadata,
     WebSocketData
-} from './extension';
+} from '../../api';
 import { JupyterNotebookView, Telemetry } from '../../platform/common/constants';
 import { KernelConnector } from '../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
@@ -116,6 +116,7 @@ class JupyterKernelService implements IExportedKernelService {
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
+        this._status = this.kernelFinder.status;
         this.kernelFinder.onDidChangeStatus(
             () => {
                 this._status = this.kernelFinder.status;
@@ -172,7 +173,7 @@ class JupyterKernelService implements IExportedKernelService {
             this,
             disposables
         );
-        this.controllerRegistration.onChanged(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
+        this.controllerRegistration.onDidChange(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
@@ -186,7 +187,7 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
         });
-        const kernels: { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] = [];
+        const kernels: { metadata: KernelConnectionMetadata; uri: Uri | undefined; id: string }[] = [];
         const kernelsAlreadyListed = new Set<string>();
         this.kernelProvider.kernels
             .filter(
@@ -203,7 +204,8 @@ class JupyterKernelService implements IExportedKernelService {
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    uri: item.uri
+                    uri: item.uri,
+                    id: item.id
                 });
             });
         this.thirdPartyKernelProvider.kernels
@@ -221,7 +223,8 @@ class JupyterKernelService implements IExportedKernelService {
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    uri: item.uri
+                    uri: item.uri,
+                    id: item.id
                 });
             });
         this.controllerRegistration.registered.forEach((item) => {
@@ -234,7 +237,7 @@ class JupyterKernelService implements IExportedKernelService {
             if (!item.connection.kernelModel.id || kernelsAlreadyListed.has(item.connection.kernelModel.id)) {
                 return;
             }
-            kernels.push({ metadata: item.connection, uri: undefined });
+            kernels.push({ metadata: item.connection as KernelConnectionMetadata, uri: undefined, id: item.id });
         });
         return kernels;
     }

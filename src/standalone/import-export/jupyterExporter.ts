@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 
@@ -14,7 +13,7 @@ import { ICell, IConfigurationService } from '../../platform/common/types';
 import { pruneCell } from '../../platform/common/utils';
 import { DataScience } from '../../platform/common/utils/localize';
 import { defaultNotebookFormat } from '../../platform/common/constants';
-import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
+import { IJupyterServerHelper, INotebookExporter } from '../../kernels/jupyter/types';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { noop } from '../../platform/common/utils/misc';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
@@ -25,7 +24,7 @@ import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 @injectable()
 export class JupyterExporter implements INotebookExporter {
     constructor(
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IJupyterServerHelper) private jupyterServerHelper: IJupyterServerHelper,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
@@ -41,14 +40,14 @@ export class JupyterExporter implements INotebookExporter {
 
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const contents = JSON.stringify(notebook);
+            const contents = JSON.stringify(notebook, undefined, 1);
             await this.fileSystem.writeFile(Uri.file(file), contents);
             if (!showOpenPrompt) {
                 return;
             }
-            const openQuestion1 = DataScience.exportOpenQuestion1();
+            const openQuestion1 = DataScience.exportOpenQuestion1;
             this.applicationShell
-                .showInformationMessage(DataScience.exportDialogComplete().format(file), openQuestion1)
+                .showInformationMessage(DataScience.exportDialogComplete(file), openQuestion1)
                 .then(async (str: string | undefined) => {
                     try {
                         if (str === openQuestion1) {
@@ -64,7 +63,7 @@ export class JupyterExporter implements INotebookExporter {
             this.applicationShell
                 .showInformationMessage(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    DataScience.exportDialogFailed().format(exc as any)
+                    DataScience.exportDialogFailed(exc as any)
                 )
                 .then(noop, noop);
         }
@@ -145,7 +144,7 @@ export class JupyterExporter implements INotebookExporter {
 
     private extractPythonMainVersion = async (): Promise<number> => {
         // Use the active interpreter
-        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+        const usableInterpreter = await this.jupyterServerHelper.getUsableJupyterPython();
         return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
     };
 }

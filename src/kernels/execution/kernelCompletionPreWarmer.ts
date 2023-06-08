@@ -4,8 +4,9 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
 import { isPythonKernelConnection } from '../helpers';
-import { IKernelConnectionSession, IKernelProvider } from '../types';
+import { IKernelSession, IKernelProvider } from '../types';
 
 @injectable()
 export class KernelCompletionsPreWarmer implements IExtensionSyncActivationService {
@@ -30,12 +31,12 @@ export class KernelCompletionsPreWarmer implements IExtensionSyncActivationServi
      * Hence we end up waiting indefinitely.
      * https://github.com/microsoft/vscode-jupyter/issues/9014
      */
-    private requestEmptyCompletions(session: IKernelConnectionSession) {
+    private requestEmptyCompletions(session: IKernelSession) {
         session
             ?.requestComplete({
                 code: '__file__.',
                 cursor_pos: 9
             })
-            .ignoreErrors();
+            .catch(noop);
     }
 }

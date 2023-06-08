@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { CancellationToken, Event } from 'vscode';
-import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
+import { IAsyncDisposable, Resource } from '../../platform/common/types';
 import {
-    IKernelConnectionSession,
-    KernelConnectionMetadata,
+    IRawKernelSession,
+    KernelSessionCreationOptions,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../types';
@@ -56,14 +54,6 @@ export interface IKernelProcess extends IAsyncDisposable {
     interrupt(): Promise<void>;
 }
 
-/**
- * The daemon responsible for the Python Kernel.
- */
-export interface IPythonKernelDaemon extends IDisposable {
-    interrupt(): Promise<void>;
-    kill(): Promise<void>;
-}
-
 // Provides a service to determine if raw notebook is supported or not
 export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
 export interface IRawNotebookSupportedService {
@@ -71,13 +61,7 @@ export interface IRawNotebookSupportedService {
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
-export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
-export interface IRawNotebookProvider extends IAsyncDisposable {
-    isSupported: boolean;
-    createNotebook(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken
-    ): Promise<IKernelConnectionSession>;
+export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');
+export interface IRawKernelSessionFactory extends IAsyncDisposable {
+    create(options: KernelSessionCreationOptions): Promise<IRawKernelSession>;
 }

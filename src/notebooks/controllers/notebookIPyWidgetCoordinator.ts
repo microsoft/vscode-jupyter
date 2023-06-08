@@ -9,7 +9,7 @@ import { traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IWebviewCommunication } from '../../platform/webviews/types';
 import { CommonMessageCoordinator } from './ipywidgets/message/commonMessageCoordinator';
@@ -24,18 +24,24 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
     private pendingMessages: any[] = [];
     private readonly disposables: IDisposable[] = [];
     private controllerMessageHandler?: IDisposable;
-    private controller?: IVSCodeNotebookController;
+    private _controller?: IVSCodeNotebookController;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly _onDidReceiveMessage = new EventEmitter<any>();
+    public get controller() {
+        if (!this._controller) {
+            throw new Error('No controller defined');
+        }
+        return this._controller.controller;
+    }
     constructor(public readonly editor: NotebookEditor, controller: IVSCodeNotebookController) {
         this.changeController(controller);
     }
     public changeController(controller: IVSCodeNotebookController) {
-        if (this.controller?.id === controller.id) {
+        if (this._controller?.id === controller.id) {
             return;
         }
         this.controllerMessageHandler?.dispose();
-        this.controller = controller;
+        this._controller = controller;
         this.controllerMessageHandler = controller.onDidReceiveMessage(
             (e) => {
                 // Handle messages from this only if its still the active controller.
@@ -97,7 +103,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(IControllerSelection) private readonly controllerManager: IControllerSelection
+        @inject(IControllerRegistration) private readonly controllerManager: IControllerRegistration
     ) {}
     public activate(): void {
         this.notebook.onDidChangeVisibleNotebookEditors(
@@ -118,18 +124,15 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
                 .forEach((editor) => {
                     const comms = this.notebookCommunications.get(editor);
                     this.notebookCommunications.delete(editor);
-                    if (comms) {
-                        comms.dispose();
+                    if (comms && comms.controller !== e.controller.controller) {
+                        this.notebookCommunications.delete(editor);
+                        if (comms) {
+                            comms.dispose();
+                        }
                     }
                 });
             previousCoordinators?.dispose();
         }
-        // Swap the controller in the communication objects (if we have any).
-        const editors = this.notebookEditors.get(e.notebook) || [];
-        const notebookComms = editors
-            .filter((editor) => this.notebookCommunications.has(editor))
-            .map((editor) => this.notebookCommunications.get(editor)!);
-        notebookComms.forEach((comm) => comm.changeController(e.controller));
 
         // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
         this.notebook.notebookEditors

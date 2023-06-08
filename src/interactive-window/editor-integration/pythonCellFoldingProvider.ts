@@ -40,13 +40,13 @@ export class PythonCellFoldingProvider implements IExtensionSyncActivationServic
         token: CancellationToken
     ): ProviderResult<FoldingRange[]> {
         if ([NotebookCellScheme, InteractiveInputScheme].includes(document.uri.scheme)) {
-            return [];
+            return undefined;
         }
 
         const codeWatcher = this.dataScienceCodeLensProvider.getCodeWatcher(document);
         if (codeWatcher) {
             const codeLenses = codeWatcher.getCodeLenses();
-            if (token.isCancellationRequested) {
+            if (token.isCancellationRequested || codeLenses.length == 0) {
                 return undefined;
             }
             return codeLenses.map((codeLens) => {

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-explicit-any, jsdoc/check-alignment, jsdoc/check-indentation, jsdoc/newline-after-description, no-restricted-syntax, prefer-const */
 
 const _typeof = {
@@ -64,11 +62,4 @@ export function isNumber(obj: any): obj is number {
     }
 
     return false;
-}
-
-/**
- * @returns whether the provided parameter is a JavaScript Function or not.
- */
-export function isFunction(obj: any): obj is Function {
-    return typeof obj === _typeof.function;
 }

@@ -5,9 +5,12 @@ import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 import ansiToHtml from 'ansi-to-html';
 import escape from 'lodash/escape';
+import { ErrorRendererMessageType, Localizations } from '../../../messageTypes';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { format } from '../../../platform/common/helpers';
 
-let Localizations = {
-    'DataScience.outputSizeExceedLimit':
+const localizations: Localizations = {
+    errorOutputExceedsLinkToOpenFormatString:
         'Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>'
 };
 
@@ -52,16 +55,10 @@ function handleInnerClick(target: HTMLAnchorElement, context: RendererContext<an
     return false;
 }
 
-if (!String.prototype.format) {
-    String.prototype.format = function (this: string) {
-        const args = arguments;
-        return this.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
-    };
-}
-
 function generateViewMoreElement(outputId: string) {
     const container = document.createElement('span');
-    const infoInnerHTML = Localizations['DataScience.outputSizeExceedLimit'].format(
+    const infoInnerHTML = format(
+        localizations.errorOutputExceedsLinkToOpenFormatString,
         `"command:workbench.action.openSettings?["notebook.output.textLineLimit"]"`,
         `"command:workbench.action.openLargeOutput?${outputId}"`
     );
@@ -162,48 +159,26 @@ export function truncatedArrayOfString(
 
 export const activate: ActivationFunction = (context) => {
     const latestContext = context as RendererContext<void> & { readonly settings: { readonly lineLimit: number } };
-    let loadLocalization: Promise<void>;
-    let isReady = false;
+    const loadLocalization = createDeferred();
 
     if (context.postMessage && context.onDidReceiveMessage) {
-        const requestLocalization = () => {
-            context.postMessage!({
-                type: 2 /** MessageType.LoadLoc */
-            });
-        };
-
-        let _loadLocResolveFunc: () => void;
-        loadLocalization = new Promise<void>((resolve) => {
-            _loadLocResolveFunc = resolve;
+        context.postMessage!({
+            type: ErrorRendererMessageType.RequestLoadLoc
         });
+
         context.onDidReceiveMessage((e) => {
-            switch (e.type) {
-                case 1:
-                    if (!isReady) {
-                        // renderer activates before extension
-                        requestLocalization();
-                    }
-                    break;
-                case 2:
-                    // load localization
-                    Localizations = {
-                        ...Localizations,
-                        ...e.data
-                    };
-                    isReady = true;
-                    _loadLocResolveFunc();
-                    break;
+            if (e.type === ErrorRendererMessageType.ResponseLoadLoc) {
+                Object.assign(localizations, e.payload as Localizations);
+                loadLocalization.resolve();
             }
         });
-
-        requestLocalization();
     } else {
-        loadLocalization = Promise.resolve();
+        loadLocalization.resolve();
     }
 
     return {
         renderOutputItem: async (outputItem: OutputItem, element: HTMLElement) => {
-            await loadLocalization;
+            await loadLocalization.promise;
             const lineLimit = latestContext.settings.lineLimit;
             const converter = new ansiToHtml({
                 fg: 'var(--vscode-terminal-foreground)',

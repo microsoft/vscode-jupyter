@@ -275,6 +275,7 @@ class PythonKernelInterrupter:
 
         Return the dupe interrupt handle for the parent process.
         """
+
         # Create a security attributes struct that permits inheritance of the
         # handle by new processes.
         # FIXME: We can clean up this mess by requiring pywin32 for IPython.
@@ -333,7 +334,12 @@ def main():
     def handle_command(command, id, line):
         try:
             if command == "INITIALIZE_INTERRUPT":
-                handle = interrupter.initialize_interrupt()
+                try:
+                    handle = interrupter.initialize_interrupt()
+                except:
+                    # If we fail to initilize the interrupt, then try again.
+                    handle = interrupter.initialize_interrupt()
+
                 print(f"INITIALIZE_INTERRUPT:{id}:{handle}")
             elif command == "INTERRUPT":
                 interrupter.interrupt(int(line.split(":")[2]))

@@ -5,6 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { Telemetry } from '../../platform/common/constants';
+import { splitLines } from '../../platform/common/helpers';
 import { IProcessServiceFactory } from '../../platform/common/process/types.node';
 import { GLOBAL_MEMENTO, IMemento } from '../../platform/common/types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
@@ -46,9 +47,9 @@ export class JupyterDetectionTelemetry implements IExtensionSyncActivationServic
                 throwOnStdErr: false,
                 mergeStdOutErr: true
             });
-            const versionLines = output.stdout
-                .splitLines({ trim: true, removeEmptyEntries: true })
-                .filter((line) => !isNaN(parseInt(line.substring(0, 1), 10)));
+            const versionLines = splitLines(output.stdout, { trim: true, removeEmptyEntries: true }).filter(
+                (line) => !isNaN(parseInt(line.substring(0, 1), 10))
+            );
             const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(versionLines.length ? versionLines[0] : '');
             if (versionMatch && versionMatch.length > 2) {
                 const major = parseInt(versionMatch[1], 10);

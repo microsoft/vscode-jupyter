@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { ContentsManager } from '@jupyterlab/services';
 import { Resource } from '../../../platform/common/types';
 import { KernelConnectionMetadata, IJupyterConnection } from '../../types';

@@ -6,8 +6,9 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, NotebookDocument, Disposable, EventEmitter, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import {
+    IJupyterConnection,
     IKernelFinder,
     LiveKernelModel,
     LiveRemoteKernelConnectionMetadata,
@@ -22,14 +23,15 @@ import { IDisposable } from '../../platform/common/types';
 import { NotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
-import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { uriEquals } from '../../test/datascience/helpers';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { PreferredKernelConnectionService } from './preferredKernelConnectionService';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 
 suite('Preferred Kernel Connection', () => {
     let preferredService: PreferredKernelConnectionService;
     let serviceContainer: ServiceContainer;
+    let jupyterConnection: JupyterConnection;
     let kernelFinder: IKernelFinder;
     let remoteKernelFinder: IContributedKernelFinder<RemoteKernelConnectionMetadata>;
     let localKernelSpecFinder: IContributedKernelFinder<LocalKernelConnectionMetadata>;
@@ -67,9 +69,29 @@ suite('Preferred Kernel Connection', () => {
         kernelModel: instance(mock<LiveKernelModel>()),
         serverId: 'remoteServerId2'
     });
+    const remoteLiveJavaKernelConnection = LiveRemoteKernelConnectionMetadata.create({
+        baseUrl: '',
+        id: 'liveRemoteJava',
+        kernelModel: {
+            lastActivityTime: new Date(),
+            model: {
+                id: 'xyz',
+                kernel: {
+                    name: 'java',
+                    id: 'xyz'
+                },
+                path: 'baz/sample.ipynb',
+                name: 'sample.ipynb',
+                type: 'notebook'
+            },
+            name: 'java',
+            numberOfConnections: 1
+        },
+        serverId: 'remoteServerId2'
+    });
     const remoteJavaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         baseUrl: '',
-        id: 'liveRemote2',
+        id: 'remoteJavaKernelSpec',
         kernelSpec: {
             argv: [],
             display_name: 'Java KernelSpec',
@@ -89,39 +111,11 @@ suite('Preferred Kernel Connection', () => {
             language: 'java'
         }
     });
-    const venvPythonKernel = PythonKernelConnectionMetadata.create({
-        id: 'venvPython',
-        kernelSpec: {
-            argv: [],
-            display_name: 'Venv Python',
-            executable: '',
-            name: 'venvName',
-            language: 'python'
-        },
-        interpreter: {
-            id: 'venv',
-            sysPrefix: '',
-            uri: Uri.file('venv')
-        }
-    });
-    const condaPythonKernel = PythonKernelConnectionMetadata.create({
-        id: 'condaPython',
-        kernelSpec: {
-            argv: [],
-            display_name: 'Conda Python',
-            executable: '',
-            name: 'condaName',
-            language: 'python'
-        },
-        interpreter: {
-            id: 'conda',
-            sysPrefix: '',
-            uri: Uri.file('conda'),
-            envType: EnvironmentType.Conda
-        }
-    });
+    let connection: IJupyterConnection;
     setup(() => {
         serviceContainer = mock<ServiceContainer>();
+        jupyterConnection = mock(JupyterConnection);
+        connection = mock<IJupyterConnection>();
         const iocStub = sinon.stub(ServiceContainer, 'instance').get(() => instance(serviceContainer));
         disposables.push(new Disposable(() => iocStub.restore()));
         cancellation = new CancellationTokenSource();
@@ -181,8 +175,10 @@ suite('Preferred Kernel Connection', () => {
             instance(localKernelSpecFinder),
             instance(localPythonEnvFinder)
         ]);
-
-        preferredService = new PreferredKernelConnectionService();
+        (instance(connection) as any).then = undefined;
+        when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
+        when(jupyterConnection.createConnectionInfo(anything())).thenResolve(instance(connection));
+        preferredService = new PreferredKernelConnectionService(instance(jupyterConnection));
         disposables.push(preferredService);
     });
     teardown(() => disposeAllDisposables(disposables));
@@ -218,6 +214,31 @@ suite('Preferred Kernel Connection', () => {
             );
 
             assert.strictEqual(preferredKernel, remoteJavaKernelSpec);
+        });
+        test('Find existing session if there is an exact match for the notebook', async () => {
+            when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar/');
+            notebook = new TestNotebookDocument(Uri.file('/foo/bar/baz/sample.ipynb'), 'jupyter-notebook', {
+                custom: { metadata: notebookMetadata }
+            });
+
+            when(preferredRemoteKernelProvider.getPreferredRemoteKernelId(uriEquals(notebook.uri))).thenResolve(
+                undefined
+            );
+            when(remoteKernelFinder.status).thenReturn('idle');
+            when(remoteKernelFinder.kernels).thenReturn([
+                remoteLiveKernelConnection1,
+                remoteLiveJavaKernelConnection,
+                remoteJavaKernelSpec
+            ]);
+            notebookMetadata.language_info!.name = remoteJavaKernelSpec.kernelSpec.language!;
+
+            const preferredKernel = await preferredService.findPreferredRemoteKernelConnection(
+                notebook,
+                instance(remoteKernelFinder),
+                cancellation.token
+            );
+
+            assert.strictEqual(preferredKernel, remoteLiveJavaKernelConnection);
         });
     });
     suite('Local Kernel Specs (preferred match)', () => {
@@ -284,19 +305,6 @@ suite('Preferred Kernel Connection', () => {
             );
 
             assert.isUndefined(preferredKernel);
-        });
-        test('Matches active Interpreter for notebook when interpreter hash does not match', async () => {
-            when(localPythonEnvFinder.status).thenReturn('idle');
-            when(localPythonEnvFinder.kernels).thenReturn([venvPythonKernel, condaPythonKernel]);
-            when(interpreterService.getActiveInterpreter(anything())).thenResolve(condaPythonKernel.interpreter);
-
-            const preferredKernel = await preferredService.findPreferredPythonKernelConnection(
-                notebook,
-                instance(localPythonEnvFinder),
-                cancellation.token
-            );
-
-            assert.strictEqual(preferredKernel, condaPythonKernel);
         });
     });
 });

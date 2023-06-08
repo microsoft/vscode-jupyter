@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 let messageLogger: undefined | ((category: 'error' | 'verbose', message: string) => void);
 export function logMessage(message: string) {
     if (messageLogger) {

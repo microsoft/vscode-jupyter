@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
@@ -27,6 +26,7 @@ import { Commands } from '../../../platform/common/constants';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
 import { IKernelProvider } from '../../../kernels/types';
+import { trimQuotes } from '../../../platform/common/helpers';
 
 suite('VariableView @variableViewer', function () {
     let api: IExtensionTestApi;
@@ -80,7 +80,7 @@ suite('VariableView @variableViewer', function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -108,7 +108,7 @@ suite('VariableView @variableViewer', function () {
         const execution = kernelProvider.getKernelExecution(kernel);
         const outputs = await execution.executeHidden('%who_ls');
         // https://github.com/microsoft/vscode-jupyter/issues/10559
-        const varsToIgnore = ['matplotlib_inline', 'matplotlib', 'sys', 'os'];
+        const varsToIgnore = ['matplotlib_inline', 'matplotlib'];
         // Sample output is `["test", "test2", "os", "sys"]`
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const vars = ((outputs[0].data as any)['text/plain'] as string)
@@ -117,7 +117,7 @@ suite('VariableView @variableViewer', function () {
             .slice(0, -1)
             .split(',')
             .map((item) => item.trim())
-            .map((item) => item.trimQuotes())
+            .map((item) => trimQuotes(item))
             .filter((item) => !varsToIgnore.includes(item))
             .sort();
         assert.deepEqual(vars, ['test', 'test2'].sort());
@@ -127,7 +127,7 @@ suite('VariableView @variableViewer', function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -153,7 +153,7 @@ suite('VariableView @variableViewer', function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -200,7 +200,7 @@ suite('VariableView @variableViewer', function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -241,7 +241,7 @@ myClass = MyClass()
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -280,7 +280,7 @@ mySet = {1, 2, 3}
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;

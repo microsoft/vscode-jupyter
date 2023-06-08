@@ -2,11 +2,16 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { traceInfo, traceError, traceVerbose } from '../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import {
+    IKernelSession,
+    KernelConnectionMetadata,
+    NotebookCellRunState,
+    ResumeCellExecutionInformation
+} from '../../kernels/types';
 import { Resource } from '../../platform/common/types';
 
 /**
@@ -39,7 +44,7 @@ export class CellExecutionQueue implements Disposable {
         return this.queueOfCellsToExecute.map((cell) => cell.cell);
     }
     constructor(
-        private readonly session: Promise<IKernelConnectionSession>,
+        private readonly session: Promise<IKernelSession>,
         private readonly executionFactory: CellExecutionFactory,
         readonly metadata: Readonly<KernelConnectionMetadata>,
         readonly resourceUri: Resource
@@ -70,6 +75,25 @@ export class CellExecutionQueue implements Disposable {
         const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
         this.disposables.push(cellExecution);
         cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
+        this.queueOfCellsToExecute.push(cellExecution);
+
+        traceCellMessage(cell, 'User queued cell for execution');
+
+        // Start executing the cells.
+        this.startExecutingCells();
+    }
+
+    /**
+     * Queue the cell for execution & start processing it immediately.
+     */
+    public resumeCell(cell: NotebookCell, info: ResumeCellExecutionInformation): void {
+        const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
+        if (existingCellExecution) {
+            traceCellMessage(cell, 'Use existing cell execution');
+            return;
+        }
+        const cellExecution = this.executionFactory.create(cell, '', this.metadata, info);
+        this.disposables.push(cellExecution);
         this.queueOfCellsToExecute.push(cellExecution);
 
         traceCellMessage(cell, 'User queued cell for execution');
@@ -173,16 +197,27 @@ export class CellExecutionQueue implements Disposable {
                 executionResult === NotebookCellRunState.Error
             ) {
                 this.cancelledOrCompletedWithErrors = true;
-                traceInfo(
-                    `Cancel all remaining cells ${this.cancelledOrCompletedWithErrors} || ${executionResult} || ${notebookClosed}`
-                );
+                const reasons: string[] = [];
+                if (this.cancelledOrCompletedWithErrors) {
+                    reasons.push('cancellation or failure in execution');
+                }
+                if (notebookClosed) {
+                    reasons.push('Notebook being closed');
+                }
+                if (typeof executionResult === 'number' && executionResult === NotebookCellRunState.Error) {
+                    reasons.push('failure in cell execution');
+                }
+                if (reasons.length === 0) {
+                    reasons.push('an unknown reason');
+                }
+                traceWarning(`Cancel all remaining cells due to ${reasons.join(' or ')}`);
                 await this.cancel();
                 break;
             }
             // If the kernel is dead, then no point trying the rest.
             if (kernelConnection.status === 'dead' || kernelConnection.status === 'terminating') {
                 this.cancelledOrCompletedWithErrors = true;
-                traceInfo(`Cancel all remaining cells due to dead kernel`);
+                traceWarning(`Cancel all remaining cells due to dead kernel`);
                 await this.cancel();
                 break;
             }

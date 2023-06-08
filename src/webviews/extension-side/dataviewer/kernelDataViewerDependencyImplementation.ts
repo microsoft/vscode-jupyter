@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { executeSilently } from '../../../kernels/helpers';
-import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
+import { IKernel, IKernelSession } from '../../../kernels/types';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
 
 export const kernelGetPandasVersion =
@@ -21,7 +19,7 @@ function kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
     return isConda ? '%conda' : '%pip';
 }
 
-type IKernelWithSession = IKernel & { session: IKernelConnectionSession };
+type IKernelWithSession = IKernel & { session: IKernelSession };
 
 // TypeScript will narrow the type to PythonEnvironment in any block guarded by a call to isPythonEnvironment
 function kernelHasSession(kernel: IKernel): kernel is IKernelWithSession {
@@ -36,7 +34,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
         const outputs = await executeSilently(kernel.session, command);
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
-            traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
+            traceWarning(DataScience.failedToGetVersionOfPandas, error.message);
         }
         return outputs.map((item) => item.text?.toString());
     }
@@ -54,7 +52,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
             sendTelemetryEvent(Telemetry.UserInstalledPandas);
         } catch (e) {
             sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
-            throw new Error(DataScience.failedToInstallPandas());
+            throw new Error(DataScience.failedToInstallPandas);
         }
     }
 

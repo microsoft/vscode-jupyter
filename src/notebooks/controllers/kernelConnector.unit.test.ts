@@ -11,7 +11,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import {
     IKernel,
-    IKernelConnectionSession,
+    IKernelSession,
     IKernelController,
     IKernelProvider,
     KernelInterpreterDependencyResponse,
@@ -49,7 +49,7 @@ suite('Kernel Connector', () => {
     let controller: IKernelController;
     let kernel: IKernel;
     let errorHandler: IDataScienceErrorHandler;
-    let kernelSession: IKernelConnectionSession;
+    let kernelSession: IKernelSession;
     let appShell: IApplicationShell;
     let commandManager: ICommandManager;
     let pythonKernelSpec = PythonKernelConnectionMetadata.create({
@@ -71,7 +71,7 @@ suite('Kernel Connector', () => {
         kernelProvider = mock<IKernelProvider>();
         trustedKernels = mock<ITrustedKernelPaths>();
         errorHandler = mock<IDataScienceErrorHandler>();
-        kernelSession = mock<IKernelConnectionSession>();
+        kernelSession = mock<IKernelSession>();
         appShell = mock<IApplicationShell>();
         commandManager = mock<ICommandManager>();
         kernel = mock<IKernel>();
@@ -138,7 +138,7 @@ suite('Kernel Connector', () => {
             KernelInterpreterDependencyResponse.failed
         );
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenReturn(
-            Promise.resolve(DataScience.restartKernel())
+            Promise.resolve(DataScience.restartKernel)
         );
         await KernelConnector.connectToNotebookKernel(
             pythonConnection,
@@ -156,9 +156,7 @@ suite('Kernel Connector', () => {
         verify(kernel.restart()).once();
         verify(
             appShell.showErrorMessage(
-                DataScience.cannotRunCellKernelIsDead().format(
-                    getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)
-                ),
+                DataScience.cannotRunCellKernelIsDead(getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)),
                 deepEqual({ modal: true }),
                 anything(),
                 anything()
@@ -189,9 +187,7 @@ suite('Kernel Connector', () => {
         verify(kernel.restart()).never();
         verify(
             appShell.showErrorMessage(
-                DataScience.cannotRunCellKernelIsDead().format(
-                    getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)
-                ),
+                DataScience.cannotRunCellKernelIsDead(getDisplayNameOrNameOfKernelConnection(pythonKernelSpec)),
                 deepEqual({ modal: true }),
                 anything(),
                 anything()

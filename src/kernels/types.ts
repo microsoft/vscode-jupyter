@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { JSONObject } from '@lumino/coreutils';
@@ -17,14 +15,17 @@ import type {
 } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
+import * as path from '../platform/vscode-path/path';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
-import { isWeb } from '../platform/common/utils/misc';
+import { isWeb, noop } from '../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
+import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import { sendTelemetryEvent } from '../telemetry';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -58,25 +59,26 @@ export class BaseKernelConnectionMetadata {
             | ReadWrite<RemoteKernelSpecConnectionMetadata>
             | ReadWrite<PythonKernelConnectionMetadata>
     ) {
-        if (json.interpreter) {
+        const clone = Object.assign(json, {});
+        if (clone.interpreter) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            json.interpreter = deserializePythonEnvironment(json.interpreter as any, '')!;
+            clone.interpreter = deserializePythonEnvironment(clone.interpreter as any, '')!;
         }
         switch (json.kind) {
             case 'startUsingLocalKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LocalKernelSpecConnectionMetadata.create(json as LocalKernelSpecConnectionMetadata);
+                return LocalKernelSpecConnectionMetadata.create(clone as LocalKernelSpecConnectionMetadata);
             case 'connectToLiveRemoteKernel':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LiveRemoteKernelConnectionMetadata.create(json as LiveRemoteKernelConnectionMetadata);
+                return LiveRemoteKernelConnectionMetadata.create(clone as LiveRemoteKernelConnectionMetadata);
             case 'startUsingRemoteKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return RemoteKernelSpecConnectionMetadata.create(json as RemoteKernelSpecConnectionMetadata);
+                return RemoteKernelSpecConnectionMetadata.create(clone as RemoteKernelSpecConnectionMetadata);
             case 'startUsingPythonInterpreter':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return PythonKernelConnectionMetadata.create(json as PythonKernelConnectionMetadata);
+                return PythonKernelConnectionMetadata.create(clone as PythonKernelConnectionMetadata);
             default:
-                throw new Error(`Invalid object to be deserialized into a connection, kind = ${json.kind}`);
+                throw new Error(`Invalid object to be deserialized into a connection, kind = ${clone.kind}`);
         }
     }
 }
@@ -110,6 +112,7 @@ export class LiveRemoteKernelConnectionMetadata {
         this.baseUrl = options.baseUrl;
         this.id = options.id;
         this.serverId = options.serverId;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         kernelModel: LiveKernelModel;
@@ -164,6 +167,7 @@ export class LocalKernelSpecConnectionMetadata {
         this.kernelSpec = options.kernelSpec;
         this.interpreter = options.interpreter;
         this.id = options.id;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         kernelSpec: IJupyterKernelSpec;
@@ -218,6 +222,7 @@ export class RemoteKernelSpecConnectionMetadata {
         this.baseUrl = options.baseUrl;
         this.id = options.id;
         this.serverId = options.serverId;
+        sendKernelTelemetry(this);
     }
     public static create(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
@@ -260,6 +265,7 @@ export class PythonKernelConnectionMetadata {
         this.kernelSpec = options.kernelSpec;
         this.interpreter = options.interpreter;
         this.id = options.id;
+        sendKernelTelemetry(this);
     }
     public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
         return new PythonKernelConnectionMetadata(options);
@@ -274,6 +280,9 @@ export class PythonKernelConnectionMetadata {
             interpreter: serializePythonEnvironment(this.interpreter),
             kind: this.kind
         };
+    }
+    public updateInterpreter(interpreter: PythonEnvironment) {
+        Object.assign(this.interpreter, interpreter);
     }
     public static fromJSON(options: Record<string, unknown> | PythonKernelConnectionMetadata) {
         return BaseKernelConnectionMetadata.fromJSON(options) as PythonKernelConnectionMetadata;
@@ -321,6 +330,9 @@ export type KernelHooks =
     | 'didStart'
     | 'willCancel';
 export interface IBaseKernel extends IAsyncDisposable {
+    readonly ipywidgetsVersion?: 7 | 8;
+    readonly onIPyWidgetVersionResolved: Event<7 | 8 | undefined>;
+    readonly id: string;
     readonly uri: Uri;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
@@ -356,7 +368,7 @@ export interface IBaseKernel extends IAsyncDisposable {
      * Provides access to the underlying kernel.
      * The Jupyter kernel can be directly access via the `session.kernel` property.
      */
-    readonly session?: IKernelConnectionSession;
+    readonly session?: IKernelSession;
     /**
      * We create IKernels early on to ensure they are mapped with the notebook documents.
      * I.e. created even before they are used.
@@ -364,12 +376,12 @@ export interface IBaseKernel extends IAsyncDisposable {
      * This flag will tell us whether a real kernel was or is active.
      */
     readonly startedAtLeastOnce?: boolean;
-    start(options?: IDisplayOptions): Promise<IKernelConnectionSession>;
+    start(options?: IDisplayOptions): Promise<IKernelSession>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     addHook(
         event: 'willRestart',
-        hook: (sessionPromise?: Promise<IKernelConnectionSession>) => Promise<void>,
+        hook: (sessionPromise?: Promise<IKernelSession>) => Promise<void>,
         thisArgs?: unknown,
         disposables?: IDisposable[]
     ): IDisposable;
@@ -393,6 +405,17 @@ export interface IKernel extends IBaseKernel {
     readonly creator: 'jupyterExtension';
 }
 
+export type ResumeCellExecutionInformation = {
+    /**
+     * msg_id from the Kernel.
+     */
+    msg_id: string;
+    /**
+     * Original start time of the cell execution.
+     */
+    startTime: number;
+    executionCount: number;
+};
 export interface INotebookKernelExecution {
     /**
      * Total execution count on this kernel
@@ -409,6 +432,11 @@ export interface INotebookKernelExecution {
      * @param codeOverride Override the code to execute
      */
     executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
+    /**
+     * Given the cell execution message Id and the like , this will resume the execution of a cell from a detached state.
+     * E.g. assume user re-loads VS Code, we need to resume the execution of the cell.
+     */
+    resumeCellExecution(cell: NotebookCell, info: ResumeCellExecutionInformation): Promise<NotebookCellRunState>;
     /**
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */
@@ -468,6 +496,10 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
      */
     get(uriOrNotebook: Uri | NotebookDocument): IKernel | undefined;
     /**
+     * Get hold of the active kernel for a given Kernel Id.
+     */
+    get(id: string): IKernel | undefined;
+    /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
@@ -485,35 +517,39 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
      */
     get(uri: Uri): IThirdPartyKernel | undefined;
     /**
+     * Get hold of the active kernel for a given Kernel Id.
+     */
+    get(id: string): IThirdPartyKernel | undefined;
+    /**
      * Gets or creates a kernel for a given resource uri.
      * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
      */
     getOrCreate(uri: Uri, options: ThirdPartyKernelOptions): IThirdPartyKernel;
 }
 
-export interface IRawConnection {
-    readonly type: 'raw';
-    readonly localLaunch: true;
-    readonly displayName: string;
-}
-
 export interface IJupyterConnection extends Disposable {
-    readonly type: 'jupyter';
+    serverId: string;
     readonly localLaunch: boolean;
     displayName: string;
-    disconnected: Event<number>;
-
-    // Jupyter specific members
     readonly baseUrl: string;
     readonly token: string;
+    readonly providerId: string;
     readonly hostName: string;
-    readonly rootDirectory: Uri; // Directory where the notebook server was started.
-    readonly url: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getAuthHeader?(): any; // Snould be a json object
+    /**
+     * Directory where the notebook server was started.
+     */
+    readonly rootDirectory: Uri;
+    getAuthHeader?(): Record<string, string>;
+    /**
+     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
+     */
+    getWebsocketProtocols?(): string[];
+    /**
+     * Maps to IJupyterServerUri.mappedRemoteNotebookDir
+     * @see IJupyterServerUri
+     */
+    readonly mappedRemoteNotebookDir?: string;
 }
-
-export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
 
 export enum InterruptResult {
     Success = 'success',
@@ -524,15 +560,17 @@ export enum InterruptResult {
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
-export interface IBaseKernelConnectionSession extends IAsyncDisposable {
+export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'> extends IAsyncDisposable {
+    readonly kind: T;
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    isServerSession(): this is IJupyterKernelConnectionSession;
+    isServerSession(): this is IJupyterKernelSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
+    onDidShutdown: Event<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
@@ -561,17 +599,14 @@ export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     shutdown(): Promise<void>;
 }
 
-export interface IJupyterKernelConnectionSession extends IBaseKernelConnectionSession {
-    readonly kind: 'remoteJupyter' | 'localJupyter';
+export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {
     invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
     createTempfile(ext: string): Promise<string>;
     deleteTempfile(file: string): Promise<void>;
     getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel>;
 }
-export interface IRawKernelConnectionSession extends IBaseKernelConnectionSession {
-    readonly kind: 'localRaw';
-}
-export type IKernelConnectionSession = IJupyterKernelConnectionSession | IRawKernelConnectionSession;
+export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
+export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
 export type ISessionWithSocket = Session.ISessionConnection & {
     /**
@@ -657,28 +692,18 @@ export interface IJupyterKernelSpec {
         | 'registeredByNewVersionOfExtForCustomKernelSpec';
 }
 
-export type GetServerOptions =
-    | {
-          ui: IDisplayOptions;
-          localJupyter: true;
-          token: CancellationToken | undefined;
-          resource: Resource;
-          serverId?: undefined;
-      }
-    | {
-          ui: IDisplayOptions;
-          localJupyter: false;
-          token: CancellationToken | undefined;
-          resource: Resource;
-          serverId: string;
-      };
+export type GetServerOptions = {
+    ui: IDisplayOptions;
+    token: CancellationToken | undefined;
+    resource: Resource;
+};
 
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = GetServerOptions;
 /**
  * Options for getting a notebook
  */
-export type NotebookCreationOptions = {
+export type KernelSessionCreationOptions = {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
@@ -686,16 +711,28 @@ export type NotebookCreationOptions = {
     creator: KernelActionSource;
 };
 
-export const INotebookProvider = Symbol('INotebookProvider');
-export interface INotebookProvider {
+export const IJupyterServerConnector = Symbol('IJupyterServerConnector');
+/**
+ * Returns the connection information to connect to a Jupyter Server.
+ * In the case of Local non-raw kernels, we will start the Jupyter Server.
+ * In the case of Remote Jupyter Servers we'll resolve the server info and auth information.
+ */
+export interface IJupyterServerConnector {
+    /**
+     * Prepares for the Jupyter Server Connection (in the case of local non-raw kernels, we start the Jupyter Server).
+     * Once the server is ready, we return the information required to connect to the Jupyter Server.
+     * E.g. in the case of Local non-raw kernels, this will start the Jupyter Server and return the URI and auth/token information to connect to the local server.
+     * In the case of remote, this will resolve the server information along and return the URI and auth/token information to connect to the remote server.
+     */
+    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
+}
+
+export const IKernelSessionFactory = Symbol('IKernelSessionFactory');
+export interface IKernelSessionFactory {
     /**
      * Creates a notebook.
      */
-    create(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
-    /**
-     * Connect to a notebook provider to prepare its connection and to get connection information
-     */
-    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection>;
+    create(options: KernelSessionCreationOptions): Promise<IKernelSession>;
 }
 
 export interface IKernelSocket {
@@ -864,7 +901,18 @@ export const enum StartupCodePriority {
 /**
  * Startup code provider provides code snippets that are run right after the kernel is started but before running any code.
  */
-export const IStartupCodeProvider = Symbol('IStartupCodeProvider');
+export const IStartupCodeProviders = Symbol('IStartupCodeProviders');
+export interface IStartupCodeProviders {
+    getProviders(notebookViewType: typeof JupyterNotebookView | typeof InteractiveWindowView): IStartupCodeProvider[];
+    register(
+        provider: IStartupCodeProvider,
+        notebookViewType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ): void;
+}
+
+/**
+ * Startup code provider provides code snippets that are run right after the kernel is started but before running any code.
+ */
 export interface IStartupCodeProvider {
     priority: StartupCodePriority;
     getCode(kernel: IBaseKernel): Promise<string[]>;
@@ -884,3 +932,55 @@ export type IKernelController = {
     id: string;
     createNotebookCellExecution(cell: NotebookCell): NotebookCellExecution;
 };
+
+const capturedTelemetry = new Set<string>();
+function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
+    if (capturedTelemetry.has(kernel.id)) {
+        return;
+    }
+    capturedTelemetry.add(kernel.id);
+    const kernelSpec = 'kernelSpec' in kernel ? kernel.kernelSpec : undefined;
+    const language =
+        kernelSpec?.language || (kernel.kind === 'startUsingPythonInterpreter' ? PYTHON_LANGUAGE : undefined);
+    let argv0 = '';
+    let argv = '';
+    const interpreter = 'interpreter' in kernel ? kernel.interpreter : undefined;
+    const separator = `<#>`;
+    let isArgv0SameAsInterpreter: undefined | boolean = undefined;
+    if (kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0) {
+        argv0 = kernelSpec.argv[0];
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        isArgv0SameAsInterpreter = argv0.toLowerCase() === interpreter?.uri?.fsPath?.toLowerCase();
+        if (path.basename(argv0) !== argv0) {
+            argv0 = `<P>${path.basename(argv0)}`;
+        }
+        argv = kernelSpec.argv
+            .map((arg) => {
+                if (arg.includes('/') || arg.includes('\\')) {
+                    return `<P>${path.basename(arg)}`;
+                }
+                return arg;
+            })
+            .join(separator);
+    }
+
+    const kernelSpecHashPromise =
+        'kernelSpec' in kernel && kernel.kernelSpec.specFile
+            ? getTelemetrySafeHashedString(kernel.kernelSpec.specFile)
+            : Promise.resolve('');
+    const kernelIdHash = getTelemetrySafeHashedString(kernel.id);
+    Promise.all([kernelSpecHashPromise, kernelIdHash])
+        .then(([kernelSpecHash, kernelId]) =>
+            sendTelemetryEvent(Telemetry.KernelSpec, undefined, {
+                kernelId,
+                kernelSpecHash,
+                kernelConnectionType: kernel.kind,
+                kernelLanguage: language,
+                envType: interpreter?.envType,
+                isArgv0SameAsInterpreter,
+                argv0,
+                argv
+            })
+        )
+        .catch(noop);
+}

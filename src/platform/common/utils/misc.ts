@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { TextDocument, Uri } from 'vscode';
-import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
+import { NotebookCellScheme } from '../constants';
 import { InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
@@ -14,7 +13,7 @@ export function noop() {}
 /**
  * Execute a block of code ignoring any exceptions.
  */
-export function swallowExceptions(cb: Function) {
+export function swallowExceptions(cb: Function): void {
     try {
         const result = cb();
         if (isPromise(result)) {
@@ -134,7 +133,7 @@ export function isUri(resource?: Uri | any): resource is Uri {
 
 export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
     const uri = isUri(documentOrUri) ? documentOrUri : documentOrUri.uri;
-    return uri.scheme.includes(NotebookCellScheme) || uri.scheme.includes(InteractiveInputScheme);
+    return uri.scheme.includes(NotebookCellScheme) || uri.path.endsWith('.interactive');
 }
 
 export function isWeb() {

@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../platform/common/application/types';
-import '../../platform/common/extensions';
 import { traceError } from '../../platform/logging';
 import {
     BannerType,
@@ -24,7 +21,7 @@ import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 
 export const ISurveyBanner = Symbol('ISurveyBanner');
-export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}
+export interface ISurveyBanner extends IExtensionSyncActivationService, IJupyterExtensionBanner {}
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',
@@ -60,7 +57,7 @@ export type ShowBannerWithExpiryTime = {
  * Puts up a survey banner after a certain number of notebook executions. The survey will only show after 10 minutes have passed to prevent it from showing up immediately.
  */
 @injectable()
-export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtensionSingleActivationService {
+export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtensionSyncActivationService {
     public isEnabled(type: BannerType): boolean {
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
@@ -92,8 +89,8 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
 
     private disabledInCurrentSession: boolean = false;
     private bannerLabels: string[] = [
-        localize.DataScienceSurveyBanner.bannerLabelYes(),
-        localize.DataScienceSurveyBanner.bannerLabelNo()
+        localize.DataScienceSurveyBanner.bannerLabelYes,
+        localize.DataScienceSurveyBanner.bannerLabelNo
     ];
     private readonly showBannerState = new Map<BannerType, IPersistentState<ShowBannerWithExpiryTime>>();
     private static surveyDelay = false;
@@ -117,7 +114,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         }, 10 * 60 * 1000);
     }
 
-    public async activate() {
+    public activate() {
         this.vscodeNotebook.onDidChangeNotebookCellExecutionState(
             this.onDidChangeNotebookCellExecutionState,
             this,
@@ -234,7 +231,7 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         switch (type) {
             case BannerType.InsidersNotebookSurvey:
             case BannerType.ExperimentNotebookSurvey:
-                return localize.InsidersNativeNotebooksSurveyBanner.bannerMessage();
+                return localize.InsidersNativeNotebooksSurveyBanner.bannerMessage;
             default:
                 traceError('Invalid Banner type');
                 return '';

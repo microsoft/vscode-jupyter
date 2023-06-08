@@ -15,6 +15,6 @@ import * as localize from '../common/utils/localize';
  */
 export class NotSupportedInWebError extends BaseError {
     constructor() {
-        super('nodeonly', localize.DataScience.webNotSupported());
+        super('nodeonly', localize.DataScience.webNotSupported);
     }
 }

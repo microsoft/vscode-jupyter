@@ -27,7 +27,7 @@ import {
     IIPyWidgetScriptManagerFactory
 } from '../../../notebooks/controllers/ipywidgets/types';
 import { isWeb } from '../../../platform/common/utils/misc';
-import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
+import { createActiveInterpreterController } from '../notebook/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 
@@ -121,7 +121,7 @@ suite('IPyWidget Script Manager @widgets', function () {
             } else {
                 const expectedDir = Uri.joinPath(
                     context.extensionUri,
-                    'tmp',
+                    'temp',
                     'scripts',
                     await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
                     'jupyter'
@@ -141,7 +141,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         }
         const expectedDir = Uri.joinPath(
             context.extensionUri,
-            'tmp',
+            'temp',
             'scripts',
             await getTelemetrySafeHashedString(kernel.kernelConnectionMetadata.id),
             'jupyter'
@@ -179,6 +179,10 @@ suite('IPyWidget Script Manager @widgets', function () {
         );
         await Promise.all(
             Object.keys(moduleMappings!).map(async (moduleName) => {
+                if (moduleName === 'jupyter-widgets-controls') {
+                    // Found that latest version of k3d has a reference to this, event though such a script is not defined
+                    return;
+                }
                 // Verify the Url is valid.
                 const uri = moduleMappings![moduleName];
                 assert.isOk(uri, `Script Uri not defined for widget ${moduleName}`);

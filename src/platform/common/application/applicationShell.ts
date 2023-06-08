@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
 import { injectable } from 'inversify';
@@ -35,6 +33,7 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions
 } from 'vscode';
+import { traceInfoIfCI } from '../../logging';
 import { noop } from '../utils/misc';
 import { IApplicationShell } from './types';
 
@@ -58,6 +57,7 @@ export class ApplicationShell implements IApplicationShell {
         ...items: T[]
     ): Thenable<T>;
     public showInformationMessage(message: string, options?: any, ...items: any[]): Thenable<any> {
+        traceInfoIfCI(`Show Information Message ${message}, ${JSON.stringify(options)}, ${JSON.stringify(items)}`);
         return window.showInformationMessage(message, options, ...items);
     }
 
@@ -70,6 +70,7 @@ export class ApplicationShell implements IApplicationShell {
         ...items: T[]
     ): Thenable<T>;
     public showWarningMessage(message: any, options?: any, ...items: any[]) {
+        traceInfoIfCI(`Show Warning Message ${message}, ${JSON.stringify(options)}, ${JSON.stringify(items)}`);
         return window.showWarningMessage(message, options, ...items);
     }
 
@@ -82,6 +83,7 @@ export class ApplicationShell implements IApplicationShell {
         ...items: T[]
     ): Thenable<T>;
     public showErrorMessage(message: any, options?: any, ...items: any[]) {
+        traceInfoIfCI(`Show Error Message ${message}, ${JSON.stringify(options)}, ${JSON.stringify(items)}`);
         return window.showErrorMessage(message, options, ...items);
     }
 

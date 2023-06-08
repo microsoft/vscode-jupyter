@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IWebviewViewMessageListener } from '../../../platform/common/application/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

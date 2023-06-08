@@ -1,16 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import {
-    Cancellation,
-    createPromiseFromCancellation,
-    isCancellationError
-} from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common/types';
@@ -21,7 +16,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEve
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
-import { IRawKernelConnectionSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
+import { IRawKernelSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
@@ -36,8 +31,7 @@ through ZMQ.
 It's responsible for translating our IJupyterKernelConnectionSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
-export class RawJupyterSession extends BaseJupyterSession implements IRawKernelConnectionSession {
-    public readonly kind = 'localRaw';
+export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements IRawKernelSession {
     private processExitHandler = new WeakMap<RawSession, IDisposable>();
     private terminatingStatus?: KernelMessage.Status;
     public get atleastOneCellExecutedSuccessfully() {
@@ -60,7 +54,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super(resource, kernelConnection, workingDirectory, interruptTimeout);
+        super('localRaw', resource, kernelConnection, workingDirectory, interruptTimeout);
     }
 
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
@@ -80,11 +74,6 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             // Notebook Provider level will handle the thrown error
             newSession = await this.startRawSession({ ...options, purpose: 'start' });
             Cancellation.throwIfCanceled(options.token);
-            traceInfo(
-                `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
-                    newSession.kernelProcess.pid
-                })`
-            );
             this.setSession(newSession);
 
             // Listen for session status changes
@@ -126,6 +115,13 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
     }
 
     protected override setSession(session: RawSession | undefined) {
+        if (session) {
+            traceInfo(
+                `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
+                    session.kernelProcess.pid
+                })`
+            );
+        }
         super.setSession(session);
         if (!session) {
             return;
@@ -216,9 +212,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         this.terminatingStatus = undefined;
         const process = await KernelProgressReporter.wrapAndReportProgress(
             this.resource,
-            DataScience.connectingToKernel().format(
-                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-            ),
+            DataScience.connectingToKernel(getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)),
             () =>
                 this.kernelLauncher.launch(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -231,7 +225,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         );
         return KernelProgressReporter.wrapAndReportProgress(
             this.resource,
-            DataScience.waitingForJupyterSessionToBeIdle(),
+            DataScience.waitingForJupyterSessionToBeIdle,
             () => this.postStartRawSession(options, process)
         );
     }
@@ -245,10 +239,7 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         try {
             // Wait for it to be ready
             traceVerbose('Waiting for Raw Session to be ready in postStartRawSession');
-            await Promise.race([
-                result.waitForReady(),
-                createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
-            ]);
+            await raceCancellationError(options.token, result.waitForReady());
             traceVerbose('Successfully waited for Raw Session to be ready in postStartRawSession');
         } catch (ex) {
             traceError('Failed waiting for Raw Session to be ready', ex);
@@ -280,11 +271,11 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
             result.iopubMessage.connect(iopubHandler);
             try {
                 traceVerbose('Sending request for kernelinfo');
-                await Promise.race([
+                await raceCancellationError(
+                    options.token,
                     Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(this.launchTimeout, 1_500)),
-                    createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
-                ]);
+                    sleep(Math.min(this.launchTimeout, 1_500)).then(noop)
+                );
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
                 await process.dispose();

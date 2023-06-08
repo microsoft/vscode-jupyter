@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import * as React from 'react';
 import { Tool } from 'react-svg-pan-zoom';
 import { Image, ImageName } from '../react-common/image';
@@ -26,7 +25,7 @@ export class Toolbar extends React.Component<IToolbarProps> {
                     baseTheme={this.props.baseTheme}
                     onClick={this.props.prevButtonClicked}
                     disabled={!this.props.prevButtonClicked}
-                    tooltip={getLocString('DataScience.previousPlot', 'Previous')}
+                    tooltip={getLocString('previousPlot', 'Previous')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Prev} />
                 </ImageButton>
@@ -34,28 +33,28 @@ export class Toolbar extends React.Component<IToolbarProps> {
                     baseTheme={this.props.baseTheme}
                     onClick={this.props.nextButtonClicked}
                     disabled={!this.props.nextButtonClicked}
-                    tooltip={getLocString('DataScience.nextPlot', 'Next')}
+                    tooltip={getLocString('nextPlot', 'Next')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Next} />
                 </ImageButton>
                 <ImageButton
                     baseTheme={this.props.baseTheme}
                     onClick={this.pan}
-                    tooltip={getLocString('DataScience.panPlot', 'Pan')}
+                    tooltip={getLocString('panPlot', 'Pan')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Pan} />
                 </ImageButton>
                 <ImageButton
                     baseTheme={this.props.baseTheme}
                     onClick={this.zoomIn}
-                    tooltip={getLocString('DataScience.zoomInPlot', 'Zoom in')}
+                    tooltip={getLocString('zoomInPlot', 'Zoom in')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Zoom} />
                 </ImageButton>
                 <ImageButton
                     baseTheme={this.props.baseTheme}
                     onClick={this.zoomOut}
-                    tooltip={getLocString('DataScience.zoomOutPlot', 'Zoom out')}
+                    tooltip={getLocString('zoomOutPlot', 'Zoom out')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ZoomOut} />
                 </ImageButton>
@@ -66,7 +65,7 @@ export class Toolbar extends React.Component<IToolbarProps> {
                 <ImageButton
                     baseTheme={this.props.baseTheme}
                     onClick={this.props.exportButtonClicked}
-                    tooltip={getLocString('DataScience.exportPlot', 'Export to different formats.')}
+                    tooltip={getLocString('exportPlot', 'Export to different formats.')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
                 </ImageButton>
@@ -74,7 +73,7 @@ export class Toolbar extends React.Component<IToolbarProps> {
                     baseTheme={this.props.baseTheme}
                     onClick={this.props.deleteButtonClicked}
                     disabled={!this.props.deleteButtonClicked}
-                    tooltip={getLocString('DataScience.deletePlot', 'Remove')}
+                    tooltip={getLocString('deletePlot', 'Remove')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Delete} />
                 </ImageButton>

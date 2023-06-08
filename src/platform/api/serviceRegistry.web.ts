@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceManager } from '../ioc/types';

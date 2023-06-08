@@ -1,18 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken } from 'vscode';
-import { traceWarning } from '../../../platform/logging';
-import {
-    IPythonExecutionFactory,
-    SpawnOptions,
-    ObservableExecutionResult
-} from '../../../platform/common/process/types.node';
+import { traceError, traceVerbose, traceWarning } from '../../../platform/logging';
+import { SpawnOptions, ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { IOutputChannel } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -21,7 +15,7 @@ import { IEnvironmentActivationService } from '../../../platform/interpreter/act
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { Product } from '../../installer/types';
+import { Product } from '../../../platform/interpreter/installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
 import {
     getMessageForLibrariesNotInstalled,
@@ -36,6 +30,7 @@ import {
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
+import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.
@@ -83,7 +78,7 @@ export class JupyterInterpreterSubCommandExecutionService
             if (!interpreter) {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
                 // Get user to select something.
-                return DataScience.selectJupyterInterpreter();
+                return DataScience.selectJupyterInterpreter;
             }
         }
         const productsNotInstalled = await this.jupyterDependencyService.getDependenciesNotInstalled(
@@ -95,10 +90,10 @@ export class JupyterInterpreterSubCommandExecutionService
         }
 
         if (productsNotInstalled.length === 1 && productsNotInstalled[0] === Product.kernelspec) {
-            return DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.uri.fsPath);
+            return DataScience.jupyterKernelSpecModuleNotFound(interpreter.uri.fsPath);
         }
 
-        return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter.displayName);
+        return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter);
     }
     public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         return this.jupyterInterpreter.getSelectedInterpreter(token);
@@ -109,10 +104,9 @@ export class JupyterInterpreterSubCommandExecutionService
     ): Promise<ObservableExecutionResult<string>> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(options.token);
         this.jupyterOutputChannel.appendLine(
-            DataScience.startingJupyterLogMessage().format(getDisplayPath(interpreter.uri), notebookArgs.join(' '))
+            DataScience.startingJupyterLogMessage(getDisplayPath(interpreter.uri), notebookArgs.join(' '))
         );
         const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
-            allowEnvironmentFetchExceptions: true,
             interpreter: interpreter
         });
         // We should never set token for long running processes.
@@ -120,7 +114,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const spawnOptions = { ...options };
         spawnOptions.token = undefined;
         const envVars =
-            (await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)) || process.env;
+            (await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter)) || process.env;
         const jupyterDataPaths = (process.env['JUPYTER_PATH'] || envVars['JUPYTER_PATH'] || '')
             .split(path.delimiter)
             .filter((item) => item.trim().length);
@@ -129,14 +123,23 @@ export class JupyterInterpreterSubCommandExecutionService
             ...envVars,
             JUPYTER_PATH: jupyterDataPaths.join(path.delimiter)
         };
-
+        traceVerbose(`Start Jupyter Notebook with JUPYTER_PATH=${jupyterDataPaths.join(path.delimiter)}`);
+        traceVerbose(`Start Jupyter Notebook with PYTHONPATH=${envVars['PYTHONPATH'] || ''}`);
+        const pathVariables = Object.keys(envVars).filter((key) => key.toLowerCase() === 'path');
+        if (pathVariables.length) {
+            const pathValues = pathVariables
+                .map((pathVariable) => `${pathVariable}=${envVars[pathVariable]}`)
+                .join(',');
+            traceVerbose(`Start Jupyter Notebook with PATH variable. ${pathValues}`);
+        } else {
+            traceError(`Start Jupyter Notebook without a PATH variable`);
+        }
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), spawnOptions);
     }
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createActivatedEnvironment({
-            allowEnvironmentFetchExceptions: true,
             interpreter: interpreter
         });
 

@@ -13,7 +13,7 @@ import {
     NotebookEditor
 } from 'vscode';
 import { IKernelProvider } from '../../../kernels/types';
-import { IControllerLoader, IControllerSelection } from '../../../notebooks/controllers/types';
+import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { pythonIWKernelDebugAdapter } from '../../../notebooks/debugger/constants';
 import { DebuggingManagerBase } from '../../../notebooks/debugger/debuggingManagerBase';
 import {
@@ -22,7 +22,7 @@ import {
     KernelDebugMode
 } from '../../../notebooks/debugger/debuggingTypes';
 import { assertIsInteractiveWindowDebugConfig, IpykernelCheckResult } from '../../../notebooks/debugger/helper';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -50,12 +50,11 @@ import { RestartNotSupportedController } from './restartNotSupportedController';
 @injectable()
 export class InteractiveWindowDebuggingManager
     extends DebuggingManagerBase
-    implements IExtensionSingleActivationService, IInteractiveWindowDebuggingManager
+    implements IExtensionSyncActivationService, IInteractiveWindowDebuggingManager
 {
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(IControllerSelection) controllerSelection: IControllerSelection,
-        @inject(IControllerLoader) controllerLoader: IControllerLoader,
+        @inject(IControllerRegistration) controllerRegistration: IControllerRegistration,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
@@ -66,19 +65,11 @@ export class InteractiveWindowDebuggingManager
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super(
-            kernelProvider,
-            controllerLoader,
-            controllerSelection,
-            commandManager,
-            appShell,
-            vscNotebook,
-            serviceContainer
-        );
+        super(kernelProvider, controllerRegistration, commandManager, appShell, vscNotebook, serviceContainer);
     }
 
-    public override async activate(): Promise<void> {
-        await super.activate();
+    public override activate() {
+        super.activate();
         // factory for kernel debug adapters
         this.disposables.push(
             debug.registerDebugAdapterDescriptorFactory(pythonIWKernelDebugAdapter, {
@@ -91,12 +82,12 @@ export class InteractiveWindowDebuggingManager
         return KernelDebugMode.InteractiveWindow;
     }
 
-    public async start(editor: NotebookEditor, cell: NotebookCell) {
+    public async start(notebook: NotebookDocument, cell: NotebookCell) {
         traceInfoIfCI(`Starting debugging IW`);
 
         const ipykernelResult = await this.checkIpykernelAndPrompt(cell);
         if (ipykernelResult === IpykernelCheckResult.Ok) {
-            await this.startDebuggingCell(editor.notebook, cell);
+            await this.startDebuggingCell(notebook, cell);
         }
     }
 
@@ -160,7 +151,7 @@ export class InteractiveWindowDebuggingManager
     ): Promise<DebugAdapterDescriptor | undefined> {
         const kernel = await this.ensureKernelIsRunning(notebook);
         if (!kernel?.session) {
-            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted()).then(noop, noop);
+            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted).then(noop, noop);
             return;
         }
         const adapter = new KernelDebugAdapter(

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 //
 // Constants that pertain to CI processes/tests only. No dependencies on vscode!
 //

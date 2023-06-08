@@ -1,19 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { raceCancellationError } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
-import { traceVerbose, traceError, traceInfo } from '../../../platform/logging';
-import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
+import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
+import { Resource, IOutputChannel, IDisplayOptions, ReadWrite } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { capturePerfTelemetry, Telemetry } from '../../../telemetry';
+import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import {
@@ -22,18 +21,20 @@ import {
     IJupyterConnection,
     ISessionWithSocket,
     KernelActionSource,
-    IJupyterKernelConnectionSession
+    IJupyterKernelSession
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { CancellationError, Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
+import * as path from '../../../platform/vscode-path/resources';
 
 // function is
-export class JupyterSession extends BaseJupyterSession implements IJupyterKernelConnectionSession {
-    public readonly kind: 'remoteJupyter' | 'localJupyter';
-
+export class JupyterSession
+    extends BaseJupyterSession<'localJupyter' | 'remoteJupyter'>
+    implements IJupyterKernelSession
+{
     constructor(
         resource: Resource,
         private connInfo: IJupyterConnection,
@@ -50,11 +51,16 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly sessionCreator: KernelActionSource
     ) {
-        super(resource, kernelConnectionMetadata, workingDirectory, interruptTimeout);
-        this.kind = connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter';
+        super(
+            connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
+            resource,
+            kernelConnectionMetadata,
+            workingDirectory,
+            interruptTimeout
+        );
     }
 
-    public override isServerSession(): this is IJupyterKernelConnectionSession {
+    public override isServerSession(): this is IJupyterKernelSession {
         return true;
     }
 
@@ -74,7 +80,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         this.connected = true;
     }
 
-    public async createNewKernelSession(options: {
+    private async createNewKernelSession(options: {
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
@@ -140,6 +146,14 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
 
         return newSession;
     }
+    protected override setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo?: boolean) {
+        // When we restart a remote session, the socket information is different, hence reset it.
+        const socket = this.requestCreator.getWebsocket(this.kernelConnectionMetadata.id);
+        if (session?.kernelSocketInformation?.socket && forceUpdateKernelSocketInfo && socket) {
+            (session.kernelSocketInformation as ReadWrite<typeof session.kernelSocketInformation>).socket = socket;
+        }
+        return super.setSession(session, forceUpdateKernelSocketInfo);
+    }
     protected async createRestartSession(
         disableUI: boolean,
         session: ISessionWithSocket,
@@ -160,9 +174,9 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
             return result;
         } catch (exc) {
-            traceInfo(`Error waiting for restart session: ${exc}`);
+            traceWarning(`Error waiting for restart session: ${exc}`);
             if (result) {
-                this.shutdownSession(result, undefined, true).ignoreErrors();
+                this.shutdownSession(result, undefined, true).catch(noop);
             }
             result = undefined;
             throw exc;
@@ -211,7 +225,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                 content: JSON.parse(contents),
                 type: 'notebook'
             })
-            .ignoreErrors();
+            .catch(noop);
 
         await handler({
             filePath: backingFile.filePath,
@@ -219,7 +233,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         });
 
         await backingFile.dispose();
-        await this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+        await this.contentsManager.delete(backingFile.filePath).catch(noop);
     }
 
     async createTempfile(ext: string): Promise<string> {
@@ -240,14 +254,51 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
-        // Create our backing file for the notebook
-        const backingFile = await this.backingFileCreator.createBackingFile(
-            this.resource,
-            this.workingDirectory,
-            this.kernelConnectionMetadata,
-            this.connInfo,
-            this.contentsManager
-        );
+        const telemetryInfo = {
+            failedWithoutBackingFile: false,
+            failedWithBackingFile: false,
+            localHost: this.connInfo.localLaunch
+        };
+
+        try {
+            return await this.createSessionImpl({ ...options, createBakingFile: false });
+        } catch (ex) {
+            traceWarning(`Failed to create a session without a backing file, trying again with a backing file`, ex);
+            try {
+                telemetryInfo.failedWithoutBackingFile = true;
+                return await this.createSessionImpl({
+                    ...options,
+                    createBakingFile: true
+                });
+            } catch (ex) {
+                telemetryInfo.failedWithBackingFile = true;
+                throw ex;
+            }
+        } finally {
+            sendTelemetryEvent(Telemetry.StartedRemoteJupyterSessionWithBackingFile, undefined, telemetryInfo);
+        }
+    }
+
+    private async createSessionImpl(options: {
+        token: CancellationToken;
+        ui: IDisplayOptions;
+        createBakingFile: boolean;
+    }): Promise<ISessionWithSocket> {
+        const remoteSessionOptions = getRemoteSessionOptions(this.connInfo, this.resource);
+        let backingFile: IBackupFile | undefined;
+        let sessionPath = remoteSessionOptions?.path;
+
+        if (!sessionPath && options.createBakingFile) {
+            // Create our backing file for the notebook
+            backingFile = await this.backingFileCreator.createBackingFile(
+                this.resource,
+                this.workingDirectory,
+                this.kernelConnectionMetadata,
+                this.connInfo,
+                this.contentsManager
+            );
+            sessionPath = backingFile?.filePath;
+        }
 
         // Make sure the kernel has ipykernel installed if on a local machine.
         if (
@@ -267,7 +318,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
                 if (this.connInfo && backingFile) {
-                    this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+                    this.contentsManager.delete(backingFile.filePath).catch(noop);
                 }
                 throw ex;
             }
@@ -279,68 +330,110 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
         const kernelName =
             getNameOfKernelConnection(this.kernelConnectionMetadata) ?? this.specsManager?.specs?.default ?? '';
 
+        // NOTE: If the path is a constant value such as `remoteFilePath` then Jupyter will alway re-use the same kernel sessions.
+        // I.e. if we select Remote Kernel A for Notebook a.ipynb, then a session S1 will be created.
+        // Next, if we attempt to create a new session for select Remote Kernel A once again for Notebook a.ipynb,
+        // the jupyter server will see that a session already exists for the same kernel, hence will re-use the same session S1.
+        // In such cases, the `name` of the session is not required, jupyter lab too does not set this.
+        // If its empty Jupyter will default to the relative path of the notebook.
+
+        let sessionName: string;
+        if (remoteSessionOptions?.name) {
+            sessionName = remoteSessionOptions.name;
+        } else {
+            // Ensure the session name is user friendly, so we can determine what it maps to.
+            // This way users managing the sessions on remote servers know which session maps to a particular file on the local machine.
+            const fileExtension = this.resource ? path.extname(this.resource) : '';
+            sessionName = `${
+                this.resource ? path.basename(this.resource, fileExtension) : ''
+            }-${uuid()}${fileExtension}`;
+        }
+
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile?.filePath || generateBackingIPyNbFileName(this.resource), // Name has to be unique
+            path: sessionPath || generateBackingIPyNbFileName(this.resource), // Name has to be unique, else Jupyter will re-use the same session.
             kernel: {
                 name: kernelName
             },
-            name: uuid(), // This is crucial to distinguish this session from any other.
-            type: 'notebook'
+            name: sessionName, // Name has to be unique, else Jupyter will re-use the same session.
+            type: (this.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console'
         };
 
         const requestCreator = this.requestCreator;
+        const work = () =>
+            this.sessionManager!.startNew(sessionOptions, {
+                kernelConnectionOptions: {
+                    handleComms: true // This has to be true for ipywidgets to work
+                }
+            })
+                .then(async (session) => {
+                    if (session.kernel) {
+                        this.logRemoteOutput(
+                            DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || '')
+                        );
+                        const sessionWithSocket = session as ISessionWithSocket;
 
-        return Cancellation.race(
-            () =>
-                this.sessionManager!.startNew(sessionOptions, {
-                    kernelConnectionOptions: {
-                        handleComms: true // This has to be true for ipywidgets to work
-                    }
-                })
-                    .then(async (session) => {
-                        if (session.kernel) {
-                            this.logRemoteOutput(
-                                DataScience.createdNewKernel().format(this.connInfo.baseUrl, session?.kernel?.id || '')
-                            );
-                            const sessionWithSocket = session as ISessionWithSocket;
-
-                            // Add on the kernel metadata & sock information
-                            sessionWithSocket.resource = this.resource;
-                            sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
-                            sessionWithSocket.kernelSocketInformation = {
-                                get socket() {
-                                    // When we restart kernels, a new websocket is created and we need to get the new one.
-                                    // & the id in the dictionary is the kernel.id.
-                                    return requestCreator.getWebsocket(session.kernel!.id);
-                                },
-                                options: {
-                                    clientId: session.kernel.clientId,
-                                    id: session.kernel.id,
-                                    model: { ...session.kernel.model },
-                                    userName: session.kernel.username
-                                }
-                            };
-                            if (!isLocalConnection(this.kernelConnectionMetadata)) {
-                                sessionWithSocket.isRemoteSession = true;
+                        // Add on the kernel metadata & sock information
+                        sessionWithSocket.resource = this.resource;
+                        sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
+                        sessionWithSocket.kernelSocketInformation = {
+                            get socket() {
+                                // When we restart kernels, a new websocket is created and we need to get the new one.
+                                // & the id in the dictionary is the kernel.id.
+                                return requestCreator.getWebsocket(session.kernel!.id);
+                            },
+                            options: {
+                                clientId: session.kernel.clientId,
+                                id: session.kernel.id,
+                                model: { ...session.kernel.model },
+                                userName: session.kernel.username
                             }
-                            return sessionWithSocket;
+                        };
+                        if (!isLocalConnection(this.kernelConnectionMetadata)) {
+                            sessionWithSocket.isRemoteSession = true;
                         }
-                        throw new JupyterSessionStartError(new Error(`No kernel created`));
-                    })
-                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
-                    .finally(async () => {
-                        if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.filePath).ignoreErrors();
-                        }
-                    }),
-            options.token
-        );
+                        return sessionWithSocket;
+                    }
+                    throw new JupyterSessionStartError(new Error(`No kernel created`));
+                })
+                .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
+                .finally(async () => {
+                    if (this.connInfo && backingFile) {
+                        this.contentsManager.delete(backingFile.filePath).catch(noop);
+                    }
+                });
+        return raceCancellationError(options.token, work());
     }
 
     private logRemoteOutput(output: string) {
         if (!isLocalConnection(this.kernelConnectionMetadata)) {
             this.outputChannel.appendLine(output);
         }
+    }
+}
+
+export function getRemoteSessionOptions(
+    remoteConnection: IJupyterConnection,
+    resource?: Uri
+): Pick<Session.ISessionOptions, 'path' | 'name'> | undefined | void {
+    if (!resource || resource.scheme === 'untitled' || !remoteConnection.mappedRemoteNotebookDir) {
+        return;
+    }
+    // Get Uris of both, local and remote files.
+    // Convert Uris to strings to Uri again, as its possible the Uris are not always compatible.
+    // E.g. one could be dealing with custom file system providers.
+    const filePath = Uri.file(resource.path);
+    const mappedLocalPath = Uri.file(remoteConnection.mappedRemoteNotebookDir);
+    if (!path.isEqualOrParent(filePath, mappedLocalPath)) {
+        return;
+    }
+    const sessionPath = path.relativePath(mappedLocalPath, filePath);
+    // If we have mapped the local dir to the remote dir, then we need to use the name of the file.
+    const sessionName = path.basename(resource);
+    if (sessionName && sessionPath) {
+        return {
+            path: sessionPath,
+            name: sessionName
+        };
     }
 }

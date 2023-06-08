@@ -215,7 +215,7 @@ export type ActiveEnvironmentPathChangeEvent = EnvironmentPath & {
 /**
  * Uri of a file inside a workspace or workspace folder itself.
  */
-export type Resource = Uri | WorkspaceFolder;
+type Resource = Uri | WorkspaceFolder;
 
 export type EnvironmentPath = {
     /**

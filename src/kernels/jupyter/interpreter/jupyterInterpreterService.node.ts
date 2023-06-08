@@ -1,25 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import '../../../platform/common/extensions';
+import { raceCancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
-import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCacheStateStore.node';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
 import { JupyterInterpreterDependencyResponse } from '../types';
-import { IApplicationShell } from '../../../platform/common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { IDisposableRegistry } from '../../../platform/common/types';
 
 /**
  * Manages picking an interpreter that can run jupyter.
@@ -30,20 +27,32 @@ export class JupyterInterpreterService {
     private _selectedInterpreter?: PythonEnvironment;
     private _onDidChangeInterpreter = new EventEmitter<PythonEnvironment>();
     private getInitialInterpreterPromise: Promise<PythonEnvironment | undefined> | undefined;
+    private getInitialInterpreterPromiseFailed?: boolean;
     public get onDidChangeInterpreter(): Event<PythonEnvironment> {
         return this._onDidChangeInterpreter.event;
     }
 
     constructor(
-        @inject(JupyterInterpreterOldCacheStateStore)
-        private readonly oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore,
         @inject(JupyterInterpreterStateStore) private readonly interpreterSelectionState: JupyterInterpreterStateStore,
         @inject(JupyterInterpreterSelector) private readonly jupyterInterpreterSelector: JupyterInterpreterSelector,
         @inject(JupyterInterpreterDependencyService)
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) {}
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+    ) {
+        this.workspace.onDidGrantWorkspaceTrust(
+            () => {
+                if (this.getInitialInterpreterPromiseFailed) {
+                    this.getInitialInterpreterPromise = undefined;
+                    this.getInitialInterpreterPromiseFailed = false;
+                }
+            },
+            this,
+            disposables
+        );
+    }
     /**
      * Gets the selected interpreter configured to run Jupyter.
      *
@@ -71,6 +80,7 @@ export class JupyterInterpreterService {
                 }
                 return result;
             });
+            this.getInitialInterpreterPromise.catch(() => (this.getInitialInterpreterPromiseFailed = true));
         }
 
         return this.getInitialInterpreterPromise;
@@ -123,9 +133,9 @@ export class JupyterInterpreterService {
                     const selection = await this.appShell.showErrorMessage(
                         err.message,
                         { modal: true },
-                        DataScience.selectDifferentJupyterInterpreter()
+                        DataScience.selectDifferentJupyterInterpreter
                     );
-                    if (selection !== DataScience.selectDifferentJupyterInterpreter()) {
+                    if (selection !== DataScience.selectDifferentJupyterInterpreter) {
                         return JupyterInterpreterDependencyResponse.cancel;
                     }
                 }
@@ -161,24 +171,20 @@ export class JupyterInterpreterService {
         this.changeSelectedInterpreterProperty(interpreter);
     }
 
-    // Check the location that we stored jupyter launch path in the old version
-    // if it's there, return it and clear the location
-    private getInterpreterFromChangeOfOlderVersionOfExtension(): Uri | undefined {
-        const pythonPath = this.oldVersionCacheStateStore.getCachedInterpreterPath();
-        if (!pythonPath) {
-            return;
-        }
-
-        // Clear the cache to not check again
-        this.oldVersionCacheStateStore.clearCache().ignoreErrors();
-        return pythonPath;
-    }
-
     private changeSelectedInterpreterProperty(interpreter: PythonEnvironment) {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
         this.interpreterSelectionState.updateSelectedPythonPath(interpreter.uri);
-        sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'selected' });
+        let envVersion = '';
+        if (interpreter.version) {
+            const { major, minor, patch } = interpreter.version;
+            envVersion = `${major}.${minor}.${patch}`;
+        }
+        sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, {
+            result: 'selected',
+            envType: interpreter.envType,
+            envVersion
+        });
     }
 
     // For a given python path check if it can run jupyter for us
@@ -188,16 +194,11 @@ export class JupyterInterpreterService {
         token?: CancellationToken
     ): Promise<PythonEnvironment | undefined> {
         try {
-            const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
-                cancelAction: 'resolve',
-                defaultValue: undefined,
-                token
-            });
             // First see if we can get interpreter details
-            const interpreter = await Promise.race([
-                this.interpreterService.getInterpreterDetails(pythonPath),
-                resolveToUndefinedWhenCancelled
-            ]);
+            const interpreter = await raceCancellation(
+                token,
+                this.interpreterService.getInterpreterDetails(pythonPath)
+            );
             if (interpreter) {
                 // Then check that dependencies are installed
                 if (await this.interpreterConfiguration.areDependenciesInstalled(interpreter, token)) {
@@ -214,14 +215,8 @@ export class JupyterInterpreterService {
     private async getInitialInterpreterImpl(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
         let interpreter: PythonEnvironment | undefined;
 
-        // Check the old version location first, we will clear it if we find it here
-        const oldVersionPythonPath = this.getInterpreterFromChangeOfOlderVersionOfExtension();
-        if (oldVersionPythonPath) {
-            interpreter = await this.validateInterpreterPath(oldVersionPythonPath, token);
-        }
-
         // Next check the saved global path
-        if (!interpreter && this.interpreterSelectionState.selectedPythonPath) {
+        if (this.interpreterSelectionState.selectedPythonPath) {
             interpreter = await this.validateInterpreterPath(this.interpreterSelectionState.selectedPythonPath, token);
 
             // If we had a global path, but it's not valid, trash it

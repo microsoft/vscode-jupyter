@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import { SaveDialogOptions, Uri } from 'vscode';
@@ -53,7 +51,7 @@ export class ExportDialog implements IExportDialog {
 
             case ExportFormat.ipynb:
                 extension = '.ipynb';
-                const filtersKey = localize.DataScience.exportDialogFilter();
+                const filtersKey = localize.DataScience.exportDialogFilter;
                 fileExtensions[filtersKey] = ['ipynb'];
                 break;
 
@@ -68,7 +66,7 @@ export class ExportDialog implements IExportDialog {
 
         const options: SaveDialogOptions = {
             defaultUri: await this.getDefaultUri(source, targetFileName),
-            saveLabel: localize.DataScience.exportButtonTitle(),
+            saveLabel: localize.DataScience.exportButtonTitle,
             filters: fileExtensions
         };
 

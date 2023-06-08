@@ -13,19 +13,19 @@ import {
     TextDocument,
     workspace
 } from 'vscode';
-import { createPromiseFromCancellation } from '../../platform/common/cancellation';
+import { raceCancellation } from '../../platform/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
-import { waitForPromise } from '../../platform/common/utils/async';
 import { isNotebookCell } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { IKernelConnectionSession, IKernelProvider } from '../../kernels/types';
+import { IKernelSession, IKernelProvider } from '../../kernels/types';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
 import { mapJupyterKind } from './conversion';
 import { isTestExecution, Settings } from '../../platform/common/constants';
 import { INotebookCompletion } from './types';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
+import { raceTimeout } from '../../platform/common/utils/async';
 
 let IntellisenseTimeout = Settings.IntellisenseTimeout;
 export function setIntellisenseTimeout(timeoutMs: number) {
@@ -84,17 +84,17 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
 
         const kernel = this.kernelProvider.get(notebookDocument);
         if (!kernel || !kernel.session) {
-            traceError(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
+            traceVerbose(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
             return [];
         }
         // Allow slower timeouts for CI (testing).
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const [result, pylanceResults] = await Promise.all([
-            waitForPromise(
-                this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token),
-                IntellisenseTimeout
+            raceTimeout(
+                IntellisenseTimeout,
+                this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token)
             ),
-            waitForPromise(this.getPylanceCompletions(document, position, context, token), IntellisenseTimeout)
+            raceTimeout(IntellisenseTimeout, this.getPylanceCompletions(document, position, context, token))
         ]);
         if (!result) {
             traceInfoIfCI(`Notebook completions not found.`);
@@ -156,7 +156,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         );
     }
     public async getJupyterCompletion(
-        session: IKernelConnectionSession,
+        session: IKernelSession,
         cellCode: string,
         offsetInCode: number,
         cancelToken?: CancellationToken
@@ -172,13 +172,13 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
                 metadata: {}
             };
         }
-        const result = await Promise.race([
+        const result = await raceCancellation(
+            cancelToken,
             session.requestComplete({
                 code: cellCode,
                 cursor_pos: offsetInCode
-            }),
-            createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })
-        ]);
+            })
+        );
         traceInfoIfCI(
             `Got jupyter notebook completions. Is cancel? ${cancelToken?.isCancellationRequested}: ${
                 result ? JSON.stringify(result) : 'empty'

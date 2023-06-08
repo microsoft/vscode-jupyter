@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-'use strict';
 import fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 import { InteractiveWindowMessages } from '../../../../messageTypes';
+import { noop } from '../../../../platform/common/utils/misc';
 import { BaseReduxActionPayload } from '../../../types';
 
 import { IMainState } from '../../interactive-common/mainState';
@@ -102,7 +102,7 @@ function createTestMiddleware(transformLoad: () => Promise<void>): Redux.Middlew
             setTimeout(() => {
                 transformPromise
                     .then(() => postActionToExtension({ queueAction: store.dispatch }, message, payload))
-                    .ignoreErrors();
+                    .catch(noop);
             });
         };
 
