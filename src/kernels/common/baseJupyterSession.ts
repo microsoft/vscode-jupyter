@@ -162,8 +162,11 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     public async dispose(): Promise<void> {
         await this.shutdownImplementation(false);
     }
-    // Abstracts for each Session type to implement
-    public abstract waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
+    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
+        if (this.session) {
+            return this.waitForIdleOnSession(this.session, timeout, token);
+        }
+    }
 
     public async shutdown(): Promise<void> {
         await this.shutdownImplementation(true);

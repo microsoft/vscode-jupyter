@@ -56,13 +56,6 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
         super('localRaw', resource, kernelConnection, workingDirectory);
     }
 
-    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
-        // Wait until status says idle.
-        if (this.session) {
-            return this.waitForIdleOnSession(this.session, timeout, token);
-        }
-    }
-
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Save the resource that we connect with

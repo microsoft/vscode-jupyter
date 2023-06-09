@@ -2138,25 +2138,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Sent to measure the time taken to wait for a Jupyter kernel to be idle.
-     */
-    [Telemetry.WaitForIdleJupyter]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * We started up a webview.
-     */
-    [Telemetry.WebviewStartup]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Sent to measure the time taken to register an interpreter as a Jupyter kernel.
      */
     [Telemetry.RegisterInterpreterAsKernel]: TelemetryEventInfo<DurationMeasurement> = {
