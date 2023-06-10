@@ -17,7 +17,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { IKernelController } from '../types';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { instance, mock } from 'ts-mockito';
 import { IDisplayData, IDisplayUpdate } from '@jupyterlab/nbformat';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
@@ -38,6 +38,7 @@ suite(`Cell Execution Message Handler`, () => {
     let controller: IKernelController;
     let context: IExtensionContext;
     let kernel: Kernel.IKernelConnection;
+    let session: Session.ISessionConnection;
     let fakeSocket: IFakeSocket;
     let messageHandlerService: CellExecutionMessageHandlerService;
     let tokenSource: CancellationTokenSource;
@@ -66,7 +67,7 @@ suite(`Cell Execution Message Handler`, () => {
         });
         const producer = createMessageProducers(msgIdProducer).forExecRequest(request);
         const handler = messageHandlerService.registerListenerForResumingExecution(cell, {
-            kernel,
+            session,
             msg_id: request.msg.header.msg_id,
             cellExecution: createKernelController().createNotebookCellExecution(cell)
         });
@@ -846,7 +847,7 @@ suite(`Cell Execution Message Handler`, () => {
 
         function resumeExecution(cell: NotebookCell, msg_id: string) {
             const handler = messageHandlerService.registerListenerForResumingExecution(cell, {
-                kernel,
+                session,
                 msg_id,
                 cellExecution: createKernelController().createNotebookCellExecution(cell)
             });

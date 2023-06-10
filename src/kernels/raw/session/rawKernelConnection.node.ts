@@ -4,25 +4,24 @@
 import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep from 'lodash/cloneDeep';
-import uuid from 'uuid/v4';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { getNameOfKernelConnection, isUserRegisteredKernelSpecConnection } from '../../../kernels/helpers';
+import { isUserRegisteredKernelSpecConnection } from '../../helpers';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
-import { IKernelProcess } from '../types';
-import { RawSocket } from './rawSocket.node';
-import { IKernelSocket } from '../../types';
+import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
 import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
+import { ChainingExecuteRequester } from '../../common/chainingExecuteRequester';
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
 to a raw IPython kernel running on the local machine. RawKernel is in charge of taking
 input request, translating them, sending them to an IPython kernel over ZMQ, then passing back the messages
 */
-export class RawKernel implements Kernel.IKernelConnection {
+export class RawKernelConnection implements Kernel.IKernelConnection {
+    private chainingExecute = new ChainingExecuteRequester();
     public socket: IKernelSocket & IDisposable;
     public readonly statusChanged = new Signal<this, Kernel.Status>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
@@ -65,8 +64,14 @@ export class RawKernel implements Kernel.IKernelConnection {
     }
     constructor(
         private realKernel: Kernel.IKernelConnection,
+        private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata,
         socket: IKernelSocket & IWebSocketLike & IDisposable,
-        private kernelProcess: IKernelProcess
+        private kernelProcess: { dispose: () => Promise<void>; interrupt: () => Promise<void>; canInterrupt: boolean },
+        private readonly restartCallback: () => Promise<{
+            realKernel: Kernel.IKernelConnection;
+            socket: IKernelSocket & IWebSocketLike & IDisposable;
+            kernelProcess: { dispose: () => Promise<void>; interrupt: () => Promise<void>; canInterrupt: boolean };
+        }>
     ) {
         // Save this raw socket as our kernel socket. It will be
         // used to watch and respond to kernel messages.
@@ -82,9 +87,9 @@ export class RawKernel implements Kernel.IKernelConnection {
         return this.realKernel.hasComm(commId);
     }
     public clone(
-        options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>
+        _options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>
     ): Kernel.IKernelConnection {
-        return createRawKernel(this.kernelProcess, options?.clientId || this.clientId);
+        return this;
     }
 
     public async shutdown(): Promise<void> {
@@ -94,8 +99,8 @@ export class RawKernel implements Kernel.IKernelConnection {
         this.stopHandlingKernelMessages();
     }
     public get spec(): Promise<KernelSpec.ISpecModel | undefined> {
-        if (isUserRegisteredKernelSpecConnection(this.kernelProcess.kernelConnectionMetadata)) {
-            const kernelSpec = cloneDeep(this.kernelProcess.kernelConnectionMetadata.kernelSpec) as any;
+        if (isUserRegisteredKernelSpecConnection(this.kernelConnectionMetadata)) {
+            const kernelSpec = cloneDeep(this.kernelConnectionMetadata.kernelSpec) as any;
             const resources = 'resources' in kernelSpec ? kernelSpec.resources : {};
             return {
                 ...kernelSpec,
@@ -135,7 +140,7 @@ export class RawKernel implements Kernel.IKernelConnection {
         // real kernel will send a goofy API request to the websocket.
         if (this.kernelProcess.canInterrupt) {
             return this.kernelProcess.interrupt();
-        } else if (this.kernelProcess.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
+        } else if (this.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
             traceInfo(`Interrupting kernel with a shell message`);
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
             const msg = jupyterLab.KernelMessage.createMessage({
@@ -152,8 +157,13 @@ export class RawKernel implements Kernel.IKernelConnection {
             traceError('Kernel interrupt not supported');
         }
     }
-    public restart(): Promise<void> {
-        throw new Error('This method should not be called. Restart is implemented at a higher level');
+    public async restart(): Promise<void> {
+        const { kernelProcess, realKernel, socket } = await this.restartCallback();
+        this.stopHandlingKernelMessages();
+        this.kernelProcess = kernelProcess;
+        this.socket = socket;
+        this.realKernel = realKernel;
+        this.startHandleKernelMessages();
     }
     public requestKernelInfo() {
         return this.realKernel.requestKernelInfo();
@@ -188,7 +198,7 @@ export class RawKernel implements Kernel.IKernelConnection {
         disposeOnDone?: boolean,
         metadata?: import('@lumino/coreutils').JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-        return this.realKernel.requestExecute(content, disposeOnDone, metadata);
+        return this.chainingExecute.requestExecute(this.realKernel, content, disposeOnDone, metadata);
     }
     public requestDebug(
         // eslint-disable-next-line no-caller,no-eval
@@ -266,49 +276,4 @@ export class RawKernel implements Kernel.IKernelConnection {
     private onDisposed(_connection: Kernel.IKernelConnection) {
         this.disposed.emit();
     }
-}
-
-let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
-
-export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
-    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
-    const jupyterLabSerialize =
-        require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
-
-    // Dummy websocket we give to the underlying real kernel
-    let socketInstance: any;
-    class RawSocketWrapper extends RawSocket {
-        constructor() {
-            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
-            socketInstance = this;
-        }
-    }
-
-    // Remap the server settings for the real kernel to use our dummy websocket
-    const settings = jupyterLab.ServerConnection.makeSettings({
-        WebSocket: RawSocketWrapper as any, // NOSONAR
-        wsUrl: 'RAW'
-    });
-
-    // Then create the real kernel. We will remap its serialize/deserialize functions
-    // to do nothing so that we can control serialization at our socket layer.
-    if (!nonSerializingKernel) {
-        // Note, this is done with a postInstall step (found in build\ci\postInstall.js). In that post install step
-        // we eliminate the serialize import from the default kernel and remap it to do nothing.
-        nonSerializingKernel =
-            require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default'); // NOSONAR
-    }
-    const realKernel = new nonSerializingKernel.KernelConnection({
-        serverSettings: settings,
-        clientId,
-        handleComms: true,
-        username: uuid(),
-        model: {
-            name: getNameOfKernelConnection(kernelProcess.kernelConnectionMetadata) || 'python3',
-            id: uuid()
-        }
-    });
-
-    // Use this real kernel in result.
-    return new RawKernel(realKernel, socketInstance, kernelProcess);
 }

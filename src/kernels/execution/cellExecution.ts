@@ -12,7 +12,7 @@ import {
     EventEmitter
 } from 'vscode';
 
-import { Kernel } from '@jupyterlab/services';
+import { Kernel, Session } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
@@ -152,7 +152,7 @@ export class CellExecution implements IDisposable {
     public async start(session: IKernelSession) {
         this.session = session;
         if (this.resumeExecution?.msg_id) {
-            return this.resume(session, this.resumeExecution);
+            return this.resume(session.session, this.resumeExecution);
         }
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
@@ -191,7 +191,7 @@ export class CellExecution implements IDisposable {
             .catch((e) => this.completedWithErrors(e))
             .catch(noop);
     }
-    private async resume(session: IKernelSession, info: ResumeCellExecutionInformation) {
+    private async resume(session: Session.ISessionConnection, info: ResumeCellExecutionInformation) {
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not resuming as it was cancelled');
             return;
@@ -218,7 +218,7 @@ export class CellExecution implements IDisposable {
         NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Executing);
 
         this.cellExecutionHandler = this.requestListener.registerListenerForResumingExecution(this.cell, {
-            kernel: session.kernel!,
+            session,
             cellExecution: this.execution!,
             msg_id: info.msg_id
         });
@@ -434,7 +434,7 @@ export class CellExecution implements IDisposable {
             return this.completedWithErrors(ex);
         }
         this.cellExecutionHandler = this.requestListener.registerListenerForExecution(this.cell, {
-            kernel: kernelConnection,
+            session: session.session,
             cellExecution: this.execution!,
             request: this.request
         });

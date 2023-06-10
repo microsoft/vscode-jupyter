@@ -99,8 +99,8 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     public get onDidShutdown() {
         return this.didShutdown.event;
     }
-    protected get session(): ISessionWithSocket | undefined {
-        return this._session;
+    public get session(): ISessionWithSocket {
+        return this._session!;
     }
     public get kernelId(): string {
         return this.session?.kernel?.id || '';
@@ -109,10 +109,10 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         if (this._wrappedKernel) {
             return this._wrappedKernel;
         }
-        if (!this._session?.kernel) {
+        if (!this.session?.kernel) {
             return;
         }
-        this._wrappedKernel = new KernelConnectionWrapper(this._session.kernel, this.disposables);
+        this._wrappedKernel = new KernelConnectionWrapper(this.session.kernel, this.disposables);
         return this._wrappedKernel;
     }
 
@@ -180,41 +180,10 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
             this.setSession(this.session, true);
             traceInfo(`Restarted ${this.session?.kernel?.id}`);
             return;
+        } else {
+            await this.session?.kernel?.restart();
         }
-
-        // Save old state for shutdown
-        const oldSession = this.session;
-        const oldStatusHandler = this.statusHandler;
-
-        // TODO? Why aren't we killing this old session here now?
-        // We should, If we're restarting and it fails, how is it ok to
-        // keep the old session (user could be restarting for a number of reasons).
-
-        // Just switch to the other session. It should already be ready
-
-        // Start the restart session now in case it wasn't started
-        const newSession = await this.startRestartSession(false);
-        this.setSession(newSession);
-
-        if (newSession.kernel) {
-            traceVerbose(`New Session after restarting ${newSession.kernel.id}`);
-
-            // Rewire our status changed event.
-            newSession.statusChanged.connect(this.statusHandler);
-            newSession.kernel.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-        }
-        if (oldStatusHandler && oldSession) {
-            oldSession.statusChanged.disconnect(oldStatusHandler);
-            if (oldSession.kernel) {
-                oldSession.kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
-            }
-        }
-        traceInfo(`Shutdown old session ${oldSession?.kernel?.id}`);
-        this.shutdownSession(oldSession, undefined, false).catch(noop);
     }
-
-    // Sub classes need to implement their own restarting specific code
-    protected abstract startRestartSession(disableUI: boolean): Promise<ISessionWithSocket>;
 
     protected async waitForIdleOnSession(
         session: ISessionWithSocket | undefined,
@@ -301,64 +270,51 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
 
     // Changes the current session.
     protected setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo: boolean = false) {
-        const oldSession = this._session;
-        this.previousAnyMessageHandler?.dispose();
-        if (session) {
-            traceInfo(`Started new session ${session?.kernel?.id}`);
-        }
-        if (oldSession) {
-            if (this.unhandledMessageHandler) {
-                oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
-            }
-            if (this.statusHandler) {
-                oldSession.statusChanged.disconnect(this.statusHandler);
-                oldSession.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
-            }
-        }
         this._session = session;
-        if (session) {
-            if (session.kernel && this._wrappedKernel) {
-                this._wrappedKernel.changeKernel(session.kernel);
-            }
+        if (!session) {
+            return;
+        }
+        if (session.kernel && this._wrappedKernel) {
+            this._wrappedKernel.changeKernel(session.kernel);
+        }
 
-            // Listen for session status changes
-            session.statusChanged.connect(this.statusHandler);
-            session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-            if (session.kernelSocketInformation.socket?.onAnyMessage) {
-                // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
-                // As a result, we don't get any notification that messages were sent (on the anymessage signal).
-                // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
-                this.previousAnyMessageHandler = session.kernelSocketInformation.socket?.onAnyMessage((msg) => {
-                    try {
-                        if (this._wrappedKernel) {
-                            const jupyterLabSerialize =
-                                require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
-                            const message =
-                                typeof msg.msg === 'string' || msg.msg instanceof ArrayBuffer
-                                    ? jupyterLabSerialize.deserialize(msg.msg)
-                                    : msg.msg;
-                            this._wrappedKernel.anyMessage.emit({ direction: msg.direction, msg: message });
-                        }
-                    } catch (ex) {
-                        traceWarning(`failed to deserialize message to broadcast anymessage signal`);
+        // Listen for session status changes
+        session.statusChanged.connect(this.statusHandler);
+        session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
+        if (session.kernelSocketInformation.socket?.onAnyMessage) {
+            // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
+            // As a result, we don't get any notification that messages were sent (on the anymessage signal).
+            // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
+            this.previousAnyMessageHandler = session.kernelSocketInformation.socket?.onAnyMessage((msg) => {
+                try {
+                    if (this._wrappedKernel) {
+                        const jupyterLabSerialize =
+                            require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+                        const message =
+                            typeof msg.msg === 'string' || msg.msg instanceof ArrayBuffer
+                                ? jupyterLabSerialize.deserialize(msg.msg)
+                                : msg.msg;
+                        this._wrappedKernel.anyMessage.emit({ direction: msg.direction, msg: message });
                     }
-                });
-            }
-            if (session.unhandledMessage) {
-                session.unhandledMessage.connect(this.unhandledMessageHandler);
-            }
-            // If we have a new session, then emit the new kernel connection information.
-            if ((forceUpdateKernelSocketInfo || oldSession !== session) && session.kernel) {
-                this._kernelSocket.next({
-                    options: {
-                        clientId: session.kernel.clientId,
-                        id: session.kernel.id,
-                        model: { ...session.kernel.model },
-                        userName: session.kernel.username
-                    },
-                    socket: session.kernelSocketInformation.socket
-                });
-            }
+                } catch (ex) {
+                    traceWarning(`failed to deserialize message to broadcast anymessage signal`);
+                }
+            });
+        }
+        if (session.unhandledMessage) {
+            session.unhandledMessage.connect(this.unhandledMessageHandler);
+        }
+        // If we have a new session, then emit the new kernel connection information.
+        if (forceUpdateKernelSocketInfo && session.kernel) {
+            this._kernelSocket.next({
+                options: {
+                    clientId: session.kernel.clientId,
+                    id: session.kernel.id,
+                    model: { ...session.kernel.model },
+                    userName: session.kernel.username
+                },
+                socket: session.kernelSocketInformation.socket
+            });
         }
     }
     protected async shutdownSession(

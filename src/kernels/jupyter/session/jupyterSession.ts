@@ -66,7 +66,6 @@ export class JupyterSession
         });
         this.disposables.push(this.sessionManager);
     }
-
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
         this.setSession(await this.createNewKernelSession(options));

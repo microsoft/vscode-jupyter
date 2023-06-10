@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellExecution, NotebookDocument, workspace } from 'vscode';
 import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { IApplicationShell } from '../../platform/common/application/types';
@@ -45,7 +45,7 @@ export class CellExecutionMessageHandlerService {
     public registerListenerForExecution(
         cell: NotebookCell,
         options: {
-            kernel: Kernel.IKernelConnection;
+            session: Session.ISessionConnection;
             request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
             cellExecution: NotebookCellExecution;
         }
@@ -58,7 +58,7 @@ export class CellExecutionMessageHandlerService {
             this.controller,
             this.context,
             this.formatters,
-            options.kernel,
+            options.session,
             options.request,
             options.cellExecution,
             options.request.msg.header.msg_id
@@ -70,7 +70,7 @@ export class CellExecutionMessageHandlerService {
     public registerListenerForResumingExecution(
         cell: NotebookCell,
         options: {
-            kernel: Kernel.IKernelConnection;
+            session: Session.ISessionConnection;
             msg_id: string;
             cellExecution: NotebookCellExecution;
         }
@@ -83,7 +83,7 @@ export class CellExecutionMessageHandlerService {
             this.controller,
             this.context,
             this.formatters,
-            options.kernel,
+            options.session,
             undefined,
             options.cellExecution,
             options.msg_id

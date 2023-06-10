@@ -23,7 +23,7 @@ import {
     Disposable
 } from 'vscode';
 
-import type { Kernel } from '@jupyterlab/services';
+import type { Kernel, Session } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -183,7 +183,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         private readonly controller: IKernelController,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
-        private readonly kernel: Kernel.IKernelConnection,
+        private readonly session: Session.ISessionConnection,
         private readonly request:
             | Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
             | undefined,
@@ -215,8 +215,8 @@ export class CellExecutionMessageHandler implements IDisposable {
         // We're in all messages.
         // When using the `interact` function in Python, we can get outputs from comm messages even before execution has completed.
         // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information on why we need to monitor anyMessage and iopubMessage signals.
-        this.kernel.anyMessage.connect(this.onKernelAnyMessage, this);
-        this.kernel.iopubMessage.connect(this.onKernelIOPubMessage, this);
+        this.session.anyMessage.connect(this.onKernelAnyMessage, this);
+        this.session.iopubMessage.connect(this.onKernelIOPubMessage, this);
 
         if (request) {
             request.onIOPub = () => {
@@ -265,8 +265,8 @@ export class CellExecutionMessageHandler implements IDisposable {
             this.clearLastUsedStreamOutput();
         }
         this.execution = undefined;
-        this.kernel.anyMessage.disconnect(this.onKernelAnyMessage, this);
-        this.kernel.iopubMessage.disconnect(this.onKernelIOPubMessage, this);
+        this.session.anyMessage.disconnect(this.onKernelAnyMessage, this);
+        this.session.iopubMessage.disconnect(this.onKernelIOPubMessage, this);
         this._onErrorHandlingIOPubMessage.dispose();
     }
     /**
@@ -843,7 +843,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                     cancelToken.token
                 )
                 .then((v) => {
-                    this.kernel.sendInputReply({ value: v || '', status: 'ok' });
+                    this.session.kernel?.sendInputReply({ value: v || '', status: 'ok' });
                 }, noop);
 
             this.prompts.delete(cancelToken);

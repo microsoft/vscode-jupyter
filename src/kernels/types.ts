@@ -581,6 +581,7 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly kind: T;
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
+    readonly session: Session.ISessionConnection;
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;

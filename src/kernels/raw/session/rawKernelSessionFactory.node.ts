@@ -66,7 +66,8 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
                 options.resource,
                 vscode.Uri.file(workingDirectory),
                 options.kernelConnection,
-                launchTimeout
+                launchTimeout,
+                (options.resource?.path || '').toLowerCase().endsWith('.ipynb') ? 'notebook' : 'console'
             );
 
             // Interpreter is optional, but we must have a kernel spec for a raw launch if using a kernelspec
@@ -74,7 +75,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             if (!kernelConnectionProvided) {
                 await trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
             }
-            await rawSession.connect(options);
+            await rawSession.start(options);
             if (options.token.isCancellationRequested) {
                 throw new vscode.CancellationError();
             }
