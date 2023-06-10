@@ -27,7 +27,6 @@ import { KernelConnector } from './kernelConnector';
 
 suite('Kernel Connector', () => {
     const pythonConnection = PythonKernelConnectionMetadata.create({
-        id: 'python',
         interpreter: {
             id: 'id',
             sysPrefix: '',
@@ -53,7 +52,6 @@ suite('Kernel Connector', () => {
     let appShell: IApplicationShell;
     let commandManager: ICommandManager;
     let pythonKernelSpec = PythonKernelConnectionMetadata.create({
-        id: 'python',
         interpreter: {
             id: 'id',
             sysPrefix: '',

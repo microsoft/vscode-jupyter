@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import uuid from 'uuid/v4';
+import * as urlPath from '../../platform/vscode-path/resources';
 import * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { Uri, CancellationToken, NotebookDocument } from 'vscode';
 import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
-import { executeSilently } from '../../kernels/helpers';
-import { IKernel, IKernelProvider } from '../../kernels/types';
+import { executeSilently, jvscIdentifier } from '../../kernels/helpers';
+import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -16,6 +18,12 @@ import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './ty
 import { traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
+import { Contents, ContentsManager } from '@jupyterlab/services';
+import { IBackupFile } from '../../kernels/jupyter/types';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
+import { noop } from '../../platform/common/utils/misc';
+import { Resource } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 
 /**
@@ -27,7 +35,8 @@ export class ExportBase implements INbConvertExport, IExportBase {
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExportDialog) protected readonly filePicker: IExportDialog,
-        @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase
+        @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
+        @inject(JupyterConnection) protected readonly connection: JupyterConnection
     ) {}
 
     public async export(
@@ -53,17 +62,22 @@ export class ExportBase implements INbConvertExport, IExportBase {
             return;
         }
 
-        if (!kernel.session) {
-            await kernel.start(new DisplayOptions(false));
-        }
-
-        if (!kernel.session?.kernel) {
+        if (!kernel.session || !isRemoteConnection(kernel.kernelConnectionMetadata)) {
             return;
         }
 
-        if (kernel.session!.isServerSession()) {
-            const session = kernel.session;
-            const kernelConnection = kernel.session.kernel;
+        if (!kernel.session.kernel) {
+            await kernel.start(new DisplayOptions(false));
+        }
+        const kernelConnection = kernel.session.kernel;
+        if (!kernelConnection) {
+            throw new SessionDisposedError();
+        }
+        const connection = await this.connection.createRemoveConnectionInfo(
+            kernel.kernelConnectionMetadata.serverHandle
+        );
+        const contentManager = new ContentsManager({ serverSettings: connection.serverSettings });
+        try {
             let contents = await this.exportUtil.getContent(sourceDocument);
 
             let fileExt = '';
@@ -80,13 +94,13 @@ export class ExportBase implements INbConvertExport, IExportBase {
                     break;
             }
 
-            await kernel.session!.invokeWithFileSynced(contents, async (file) => {
+            await this.invokeWithFileSynced(contentManager, kernel.resourceUri, contents, async (file) => {
                 const pwd = await this.getCWD(kernel);
                 const filePath = `${pwd}/${file.filePath}`;
-                const tempTarget = await session.createTempfile(fileExt);
+                const tempTarget = await contentManager.newUntitled({ type: 'file', ext: fileExt });
                 const outputs = await executeSilently(
                     kernelConnection,
-                    `!jupyter nbconvert ${filePath} --to ${format} --output ${path.basename(tempTarget)}`
+                    `!jupyter nbconvert ${filePath} --to ${format} --output ${path.basename(tempTarget.path)}`
                 );
 
                 const text = this.parseStreamOutput(outputs);
@@ -98,24 +112,82 @@ export class ExportBase implements INbConvertExport, IExportBase {
                 }
 
                 if (format === ExportFormat.pdf) {
-                    const content = await session.getContents(tempTarget, 'base64');
+                    const content = await contentManager.get(tempTarget.path, {
+                        type: 'file',
+                        format: 'base64',
+                        content: true
+                    });
                     const bytes = this.b64toBlob(content.content, 'application/pdf');
                     const buffer = await bytes.arrayBuffer();
                     await this.fs.writeFile(target!, Buffer.from(buffer));
-                    await session.deleteTempfile(tempTarget);
+                    await contentManager.delete(tempTarget.path);
                 } else {
-                    const content = await session.getContents(tempTarget, 'text');
+                    const content = await contentManager.get(tempTarget.path, {
+                        type: 'file',
+                        format: 'text',
+                        content: true
+                    });
                     await this.fs.writeFile(target!, content.content as string);
-                    await session.deleteTempfile(tempTarget);
+                    await contentManager.delete(tempTarget.path);
                 }
             });
-
-            return;
-        } else {
-            // no op
+        } finally {
+            contentManager.dispose();
         }
     }
 
+    async invokeWithFileSynced(
+        contentsManager: ContentsManager,
+        resource: Resource,
+        contents: string,
+        handler: (file: IBackupFile) => Promise<void>
+    ): Promise<void> {
+        if (!resource) {
+            return;
+        }
+
+        const backingFile = await this.createBackingFile(resource, contentsManager);
+
+        await contentsManager
+            .save(backingFile!.filePath, {
+                content: JSON.parse(contents),
+                type: 'notebook'
+            })
+            .catch(noop);
+
+        await handler({
+            filePath: backingFile.filePath,
+            dispose: backingFile.dispose.bind(backingFile)
+        });
+
+        await backingFile.dispose();
+        await contentsManager.delete(backingFile.filePath).catch(noop);
+    }
+
+    public async createBackingFile(
+        resource: Uri,
+        contentsManager: ContentsManager
+    ): Promise<{ dispose: () => Promise<unknown>; filePath: string }> {
+        // However jupyter does not support relative paths outside of the original root.
+        const backingFileOptions: Contents.ICreateOptions = { type: 'notebook' };
+
+        // Generate a more descriptive name
+        const newName = generateBackingIPyNbFileName(resource);
+
+        // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
+        let backingFile = await contentsManager.newUntitled(backingFileOptions);
+        const backingFileDir = path.dirname(backingFile.path);
+        backingFile = await contentsManager.rename(
+            backingFile.path,
+            backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
+        );
+
+        const filePath = backingFile.path;
+        return {
+            filePath,
+            dispose: () => contentsManager.delete(filePath)
+        };
+    }
     private b64toBlob(b64Data: string, contentType: string | undefined) {
         contentType = contentType || '';
         const sliceSize = 512;
@@ -178,4 +250,15 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
         return output.data['text/plain'];
     }
+}
+function getRemoteIPynbSuffix(): string {
+    return `${jvscIdentifier}${uuid()}`;
+}
+
+function generateBackingIPyNbFileName(resource: Resource) {
+    // Generate a more descriptive name
+    const suffix = `${getRemoteIPynbSuffix()}${uuid()}.ipynb`;
+    return resource
+        ? `${urlPath.basename(resource, '.ipynb')}${suffix}`
+        : `${DataScience.defaultNotebookName}${suffix}`;
 }

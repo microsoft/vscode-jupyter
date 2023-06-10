@@ -119,21 +119,33 @@ suite('ipywidget - Widget Script Source Provider', () => {
     }
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
-            setup(() => {
+            setup(async () => {
                 if (localLaunch) {
                     when(kernel.kernelConnectionMetadata).thenReturn(
                         LocalKernelSpecConnectionMetadata.create({
-                            id: '',
-                            kernelSpec: {} as any
+                            kernelSpec: {
+                                argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                                display_name: 'Python 3',
+                                executable: 'python',
+                                name: 'python3'
+                            }
                         })
                     );
                 } else {
                     when(kernel.kernelConnectionMetadata).thenReturn(
-                        RemoteKernelSpecConnectionMetadata.create({
+                        await RemoteKernelSpecConnectionMetadata.create({
                             baseUrl: '',
-                            id: '',
-                            serverId: '',
-                            kernelSpec: {} as any
+                            serverHandle: {
+                                extensionId: '1',
+                                handle: '1',
+                                id: '1'
+                            },
+                            kernelSpec: {
+                                argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                                display_name: 'Python 3',
+                                executable: 'python',
+                                name: 'python3'
+                            }
                         })
                     );
                 }

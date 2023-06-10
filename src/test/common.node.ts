@@ -16,7 +16,7 @@ import { generateScreenShotFileName, initializeCommonApi } from './common';
 import { IDisposable } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
-import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
+import type { ConfigurationTarget, TextDocument, Uri } from 'vscode';
 
 export { createEventHandler } from './common';
 
@@ -204,6 +204,7 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     }
 }
 
+let remoteUrisCleared = false;
 export function initializeCommonNodeApi() {
     const { commands, Uri } = require('vscode');
     const { initialize } = require('./initialize.node');
@@ -220,9 +221,30 @@ export function initializeCommonNodeApi() {
             }
             return { file: Uri.file(tempFile), dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) };
         },
-        async startJupyterServer(_notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
+        async startJupyterServer(
+            options: {
+                token?: string;
+                port?: number;
+                useCert?: boolean;
+                jupyterLab?: boolean;
+                password?: string;
+                detached?: boolean;
+                standalone?: boolean;
+            } = {}
+        ): Promise<string> {
             if (IS_REMOTE_NATIVE_TEST()) {
-                const uriString = useCert
+                if (options.standalone) {
+                    const url = JupyterServer.instance.startJupyter(options);
+                    // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
+                    // Possible we're trying to connect before the server is ready.
+                    await sleep(5_000);
+                    return url;
+                }
+                if (!remoteUrisCleared) {
+                    await commands.executeCommand('jupyter.clearSavedJupyterUris');
+                    remoteUrisCleared = true;
+                }
+                const uriString = options.useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithToken();
                 console.info(`Jupyter started and listening at ${uriString}`);
@@ -235,8 +257,10 @@ export function initializeCommonNodeApi() {
                 // Possible we're trying to connect before the server is ready.
                 await sleep(5_000);
                 await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(uriString));
+                return uriString;
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default
+                return '';
             }
         },
         async stopJupyterServer() {

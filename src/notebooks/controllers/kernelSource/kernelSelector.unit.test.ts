@@ -68,7 +68,6 @@ suite('Kernel Selector', () => {
     let options: Parameters<CreateAndSelectItemFromQuickPick>[0];
 
     let localPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'localPythonKernelSpec',
         kernelSpec: {
             argv: [],
             display_name: 'Local Python Kernel Spec',
@@ -78,7 +77,6 @@ suite('Kernel Selector', () => {
         }
     });
     let localJavaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'localJavaKernelSpec',
         kernelSpec: {
             argv: [],
             display_name: 'Local Java Kernel Spec',
@@ -88,7 +86,6 @@ suite('Kernel Selector', () => {
         }
     });
     let localJuliaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'localJuliaKernelSpec',
         kernelSpec: {
             argv: [],
             display_name: 'Local Julia Kernel Spec',
@@ -98,7 +95,6 @@ suite('Kernel Selector', () => {
         }
     });
     let venvPythonKernel = PythonKernelConnectionMetadata.create({
-        id: 'venvPythonEnv',
         interpreter: {
             id: 'venvPython',
             sysPrefix: '',
@@ -116,7 +112,6 @@ suite('Kernel Selector', () => {
         }
     });
     let condaKernel = PythonKernelConnectionMetadata.create({
-        id: 'condaEnv',
         interpreter: {
             id: 'condaPython',
             sysPrefix: '',
@@ -133,7 +128,6 @@ suite('Kernel Selector', () => {
         }
     });
     let sysPythonKernel = PythonKernelConnectionMetadata.create({
-        id: 'sysPythonEnv',
         interpreter: {
             id: 'sysPython',
             sysPrefix: '',

@@ -3,14 +3,14 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { Telemetry } from '../../platform/common/constants';
-import { splitLines } from '../../platform/common/helpers';
-import { IProcessServiceFactory } from '../../platform/common/process/types.node';
-import { GLOBAL_MEMENTO, IMemento } from '../../platform/common/types';
-import { swallowExceptions } from '../../platform/common/utils/decorators';
-import { noop } from '../../platform/common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { Telemetry } from '../../../platform/common/constants';
+import { splitLines } from '../../../platform/common/helpers';
+import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
+import { GLOBAL_MEMENTO, IMemento } from '../../../platform/common/types';
+import { swallowExceptions } from '../../../platform/common/utils/decorators';
+import { noop } from '../../../platform/common/utils/misc';
+import { sendTelemetryEvent } from '../../../telemetry';
 
 const JupyterDetectionTelemetrySentMementoKey = 'JupyterDetectionTelemetrySentMementoKey';
 

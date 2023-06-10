@@ -7,7 +7,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { KernelConnection } from '@jupyterlab/services/lib/kernel/default';
 import * as jupyterLabSerialize from '@jupyterlab/services/lib/kernel/serialize';
 import { Event, EventEmitter } from 'vscode';
-import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.node';
+import { JupyterRequestCreator } from '../../kernels/jupyter/connection/jupyterRequestCreator.node';
 import {
     IStreamMsg,
     IExecuteReplyMsg,

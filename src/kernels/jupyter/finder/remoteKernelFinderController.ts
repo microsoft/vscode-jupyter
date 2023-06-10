@@ -5,12 +5,7 @@ import { injectable, inject, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IKernelFinder, IKernelProvider } from '../../types';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
-import {
-    IJupyterSessionManagerFactory,
-    IJupyterServerUriStorage,
-    IJupyterRemoteCachedKernelValidator,
-    IJupyterServerUriEntry
-} from '../types';
+import { IJupyterServerUriStorage, IJupyterRemoteCachedKernelValidator, IJupyterServerUriEntry } from '../types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -20,14 +15,13 @@ import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
+import { jupyterServerHandleToString } from '../jupyterUtils';
 
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
     private serverFinderMapping: Map<string, RemoteKernelFinder> = new Map<string, RemoteKernelFinder>();
 
     constructor(
-        @inject(IJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
@@ -63,12 +57,12 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
             return;
         }
 
-        if (!this.serverFinderMapping.has(serverUri.serverId)) {
+        const serverHandleId = jupyterServerHandleToString(serverUri.serverHandle);
+        if (!this.serverFinderMapping.has(serverHandleId)) {
             const finder = new RemoteKernelFinder(
-                `${ContributedKernelFinderKind.Remote}-${serverUri.serverId}`,
-                serverUri.displayName || serverUri.uri,
-                `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
-                this.jupyterSessionManagerFactory,
+                `${ContributedKernelFinderKind.Remote}-${serverHandleId}`,
+                serverUri.displayName || jupyterServerHandleToString(serverUri.serverHandle),
+                `${RemoteKernelSpecsCacheKey}-${serverHandleId}`,
                 this.extensionChecker,
                 this.globalState,
                 this.env,
@@ -80,8 +74,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
                 this.jupyterConnection
             );
             this.disposables.push(finder);
-
-            this.serverFinderMapping.set(serverUri.serverId, finder);
+            this.serverFinderMapping.set(serverHandleId, finder);
 
             finder.activate().then(noop, noop);
         }
@@ -90,9 +83,10 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     // When a URI is removed, dispose the kernel finder for it
     urisRemoved(uris: IJupyterServerUriEntry[]) {
         uris.forEach((uri) => {
-            const serverFinder = this.serverFinderMapping.get(uri.serverId);
+            const serverHandleId = jupyterServerHandleToString(uri.serverHandle);
+            const serverFinder = this.serverFinderMapping.get(serverHandleId);
             serverFinder && serverFinder.dispose();
-            this.serverFinderMapping.delete(uri.serverId);
+            this.serverFinderMapping.delete(serverHandleId);
         });
     }
 

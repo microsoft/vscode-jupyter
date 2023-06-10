@@ -5,7 +5,7 @@ import { Memento } from 'vscode';
 import { noop } from './utils/misc';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
-import { GLOBAL_MEMENTO, ICryptoUtils, IMemento } from './types';
+import { GLOBAL_MEMENTO, ICryptoUtils, IMemento, WORKSPACE_MEMENTO } from './types';
 import { inject, injectable, named } from 'inversify';
 import { getFilePath } from './platform/fs-paths';
 
@@ -14,17 +14,20 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
     constructor(
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceState: Memento,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
     ) {}
     public activate(): void {
         this.removeOldCachedItems().then(noop, noop);
+        this.removeOldWorkspaceCachedItems().then(noop, noop);
     }
     async removeOldCachedItems(): Promise<void> {
         await Promise.all(
             [
                 await this.getUriAccountKey(),
                 'currentServerHash',
+                'DataScienceAllowInsecureConnections',
                 'connectToLocalKernelsOnly',
                 'JUPYTER_LOCAL_KERNELSPECS',
                 'JUPYTER_LOCAL_KERNELSPECS_V1',
@@ -41,6 +44,12 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
                 .filter((key) => this.globalState.get(key, undefined) !== undefined)
                 .map((key) => this.globalState.update(key, undefined).then(noop, noop))
         );
+    }
+    async removeOldWorkspaceCachedItems(): Promise<void> {
+        const keys = this.workspaceState
+            .keys()
+            .filter((k) => k.startsWith('LAST_EXECUTED_CELL_') && !k.startsWith('LAST_EXECUTED_CELL_V2_'));
+        await Promise.all(keys.map((key) => this.workspaceState.update(key, undefined).then(noop, noop)));
     }
 
     async getUriAccountKey(): Promise<string> {

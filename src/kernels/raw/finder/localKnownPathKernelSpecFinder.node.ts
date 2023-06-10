@@ -3,7 +3,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, env, Memento } from 'vscode';
-import { getKernelId } from '../../../kernels/helpers';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
@@ -80,8 +79,7 @@ export class LocalKnownPathKernelSpecFinder
             const newKernelSpecs = kernelSpecs.map((k) =>
                 LocalKernelSpecConnectionMetadata.create({
                     kernelSpec: k,
-                    interpreter: undefined,
-                    id: getKernelId(k)
+                    interpreter: undefined
                 })
             );
             if (cancelToken.isCancellationRequested) {

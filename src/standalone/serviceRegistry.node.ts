@@ -27,8 +27,10 @@ import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistr
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
-import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
 import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
+import { JupyterServerSelectorForTests } from './userJupyterServer/serverSelectorForTests';
+import { JupyterPasswordConnect } from './userJupyterServer/jupyterPasswordConnect';
+import { IJupyterPasswordConnect } from './userJupyterServer/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -54,7 +56,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        JupyterServerSelectorCommand
+        JupyterServerSelectorForTests
     );
 
     // Import/Export
@@ -94,4 +96,5 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         UserJupyterServerUrlProvider
     );
+    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
 }

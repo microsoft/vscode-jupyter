@@ -50,7 +50,6 @@ suite(`UpdateNotebookMetadata`, () => {
     test('Update Language', async () => {
         const notebookMetadata = { orig_nbformat: 4, language_info: { name: 'JUNK' } };
         const kernelConnection = PythonKernelConnectionMetadata.create({
-            id: 'python36',
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
         });
@@ -68,7 +67,6 @@ suite(`UpdateNotebookMetadata`, () => {
     test('Update Python Version', async () => {
         const notebookMetadata = { orig_nbformat: 4, language_info: { name: 'python', version: '3.6.0' } };
         const kernelConnection = PythonKernelConnectionMetadata.create({
-            id: 'python36',
             interpreter: python37Global,
             kernelSpec: pythonDefaultKernelSpec
         });
@@ -90,7 +88,6 @@ suite(`UpdateNotebookMetadata`, () => {
             language_info: { name: 'python', version: '3.6.0' }
         };
         const kernelConnection = PythonKernelConnectionMetadata.create({
-            id: 'python36',
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
         });
@@ -122,7 +119,6 @@ suite(`UpdateNotebookMetadata`, () => {
             language_info: { name: 'python', version: '3.6.0' }
         };
         const kernelConnection = PythonKernelConnectionMetadata.create({
-            id: 'python36',
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
         });
@@ -170,7 +166,6 @@ suite(`UpdateNotebookMetadata`, () => {
             language_info: { name: 'python', version: '3.6.0' }
         };
         const kernelConnection = PythonKernelConnectionMetadata.create({
-            id: 'python36',
             interpreter: python36Global,
             kernelSpec: pythonDefaultKernelSpec
         });

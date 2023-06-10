@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type {
     CancellationToken,
@@ -16,7 +16,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import * as path from '../platform/vscode-path/path';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
-import { IBackupFile, IJupyterKernel } from './jupyter/types';
+import { IJupyterKernel, JupyterServerProviderHandle } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
@@ -25,6 +25,9 @@ import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
+import { jupyterServerHandleToString } from './jupyter/jupyterUtils';
+import { getKernelId } from './helpers';
+import { computeHash } from '../platform/common/crypto';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -66,16 +69,16 @@ export class BaseKernelConnectionMetadata {
         switch (json.kind) {
             case 'startUsingLocalKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LocalKernelSpecConnectionMetadata.create(clone as LocalKernelSpecConnectionMetadata);
+                return LocalKernelSpecConnectionMetadata.fromJSON(clone as LocalKernelSpecConnectionMetadata);
             case 'connectToLiveRemoteKernel':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LiveRemoteKernelConnectionMetadata.create(clone as LiveRemoteKernelConnectionMetadata);
+                return LiveRemoteKernelConnectionMetadata.fromJSON(clone as LiveRemoteKernelConnectionMetadata);
             case 'startUsingRemoteKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return RemoteKernelSpecConnectionMetadata.create(clone as RemoteKernelSpecConnectionMetadata);
+                return RemoteKernelSpecConnectionMetadata.fromJSON(clone as RemoteKernelSpecConnectionMetadata);
             case 'startUsingPythonInterpreter':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return PythonKernelConnectionMetadata.create(clone as PythonKernelConnectionMetadata);
+                return PythonKernelConnectionMetadata.fromJSON(clone as PythonKernelConnectionMetadata);
             default:
                 throw new Error(`Invalid object to be deserialized into a connection, kind = ${clone.kind}`);
         }
@@ -92,7 +95,7 @@ export class LiveRemoteKernelConnectionMetadata {
      * Python interpreter will be used for intellisense & the like.
      */
     public readonly baseUrl: string;
-    public readonly serverId: string;
+    public readonly serverHandle: JupyterServerProviderHandle;
     public readonly id: string;
     public readonly interpreter?: PythonEnvironment;
 
@@ -103,14 +106,14 @@ export class LiveRemoteKernelConnectionMetadata {
          */
         interpreter?: PythonEnvironment;
         baseUrl: string;
-        serverId: string;
+        serverHandle: JupyterServerProviderHandle;
         id: string;
     }) {
         this.kernelModel = options.kernelModel;
         this.interpreter = options.interpreter;
         this.baseUrl = options.baseUrl;
         this.id = options.id;
-        this.serverId = options.serverId;
+        this.serverHandle = options.serverHandle;
         sendKernelTelemetry(this);
     }
     public static create(options: {
@@ -120,10 +123,10 @@ export class LiveRemoteKernelConnectionMetadata {
          */
         interpreter?: PythonEnvironment;
         baseUrl: string;
-        serverId: string;
-        id: string;
+        serverHandle: JupyterServerProviderHandle;
     }) {
-        return new LiveRemoteKernelConnectionMetadata(options);
+        const id = options.kernelModel.id || '';
+        return new LiveRemoteKernelConnectionMetadata({ ...options, id });
     }
     public getHashId() {
         return getConnectionIdHash(this);
@@ -133,13 +136,19 @@ export class LiveRemoteKernelConnectionMetadata {
             id: this.id,
             kind: this.kind,
             baseUrl: this.baseUrl,
-            serverId: this.serverId,
+            serverHandle: this.serverHandle,
             interpreter: serializePythonEnvironment(this.interpreter),
             kernelModel: this.kernelModel
         };
     }
-    public static fromJSON(json: Record<string, unknown> | LiveRemoteKernelConnectionMetadata) {
-        return BaseKernelConnectionMetadata.fromJSON(json) as LiveRemoteKernelConnectionMetadata;
+    public static fromJSON(json: {
+        kernelModel: LiveKernelModel;
+        interpreter?: PythonEnvironment;
+        baseUrl: string;
+        serverHandle: JupyterServerProviderHandle;
+        id: string;
+    }) {
+        return new LiveRemoteKernelConnectionMetadata(json);
     }
 }
 /**
@@ -176,9 +185,9 @@ export class LocalKernelSpecConnectionMetadata {
          * This interpreter could also be the interpreter associated with the kernel spec that we are supposed to start.
          */
         interpreter?: PythonEnvironment;
-        id: string;
     }) {
-        return new LocalKernelSpecConnectionMetadata(options);
+        const id = getKernelId(options.kernelSpec, options.interpreter);
+        return new LocalKernelSpecConnectionMetadata({ ...options, id });
     }
     public getHashId() {
         return getConnectionIdHash(this);
@@ -191,8 +200,8 @@ export class LocalKernelSpecConnectionMetadata {
             kind: this.kind
         };
     }
-    public static fromJSON(options: Record<string, unknown> | LocalKernelSpecConnectionMetadata) {
-        return BaseKernelConnectionMetadata.fromJSON(options) as LocalKernelSpecConnectionMetadata;
+    public static fromJSON(options: { kernelSpec: IJupyterKernelSpec; interpreter?: PythonEnvironment; id: string }) {
+        return new LocalKernelSpecConnectionMetadata(options);
     }
 }
 
@@ -207,30 +216,32 @@ export class RemoteKernelSpecConnectionMetadata {
     public readonly id: string;
     public readonly kernelSpec: IJupyterKernelSpec;
     public readonly baseUrl: string;
-    public readonly serverId: string;
+    public readonly serverHandle: JupyterServerProviderHandle;
     public readonly interpreter?: PythonEnvironment; // Can be set if URL is localhost
     private constructor(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
         kernelSpec: IJupyterKernelSpec;
         baseUrl: string;
-        serverId: string;
+        serverHandle: JupyterServerProviderHandle;
         id: string;
     }) {
         this.interpreter = options.interpreter;
         this.kernelSpec = options.kernelSpec;
         this.baseUrl = options.baseUrl;
         this.id = options.id;
-        this.serverId = options.serverId;
+        this.serverHandle = options.serverHandle;
         sendKernelTelemetry(this);
     }
-    public static create(options: {
+    public static async create(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
         kernelSpec: IJupyterKernelSpec;
         baseUrl: string;
-        serverId: string;
-        id: string;
+        serverHandle: JupyterServerProviderHandle;
     }) {
-        return new RemoteKernelSpecConnectionMetadata(options);
+        const uri = jupyterServerHandleToString(options.serverHandle);
+        const serverId = await computeHash(uri, 'SHA-256');
+        const id = getKernelId(options.kernelSpec, options.interpreter, serverId);
+        return new RemoteKernelSpecConnectionMetadata({ ...options, id });
     }
     public getHashId() {
         return getConnectionIdHash(this);
@@ -241,12 +252,18 @@ export class RemoteKernelSpecConnectionMetadata {
             kernelSpec: this.kernelSpec,
             interpreter: serializePythonEnvironment(this.interpreter),
             baseUrl: this.baseUrl,
-            serverId: this.serverId,
+            serverHandle: this.serverHandle,
             kind: this.kind
         };
     }
-    public static fromJSON(options: Record<string, unknown> | RemoteKernelSpecConnectionMetadata) {
-        return BaseKernelConnectionMetadata.fromJSON(options) as RemoteKernelSpecConnectionMetadata;
+    public static fromJSON(options: {
+        interpreter?: PythonEnvironment; // Can be set if URL is localhost
+        kernelSpec: IJupyterKernelSpec;
+        baseUrl: string;
+        serverHandle: JupyterServerProviderHandle;
+        id: string;
+    }) {
+        return new RemoteKernelSpecConnectionMetadata(options);
     }
 }
 /**
@@ -266,8 +283,9 @@ export class PythonKernelConnectionMetadata {
         this.id = options.id;
         sendKernelTelemetry(this);
     }
-    public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
-        return new PythonKernelConnectionMetadata(options);
+    public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment }) {
+        const id = getKernelId(options.kernelSpec, options.interpreter);
+        return new PythonKernelConnectionMetadata({ ...options, id });
     }
     public getHashId() {
         return getConnectionIdHash(this);
@@ -283,8 +301,8 @@ export class PythonKernelConnectionMetadata {
     public updateInterpreter(interpreter: PythonEnvironment) {
         Object.assign(this.interpreter, interpreter);
     }
-    public static fromJSON(options: Record<string, unknown> | PythonKernelConnectionMetadata) {
-        return BaseKernelConnectionMetadata.fromJSON(options) as PythonKernelConnectionMetadata;
+    public static fromJSON(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
+        return new PythonKernelConnectionMetadata(options);
     }
 }
 /**
@@ -527,12 +545,11 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
 }
 
 export interface IJupyterConnection extends Disposable {
-    serverId: string;
+    readonly serverHandle: JupyterServerProviderHandle;
     readonly localLaunch: boolean;
     displayName: string;
     readonly baseUrl: string;
     readonly token: string;
-    readonly providerId: string;
     readonly hostName: string;
     /**
      * Directory where the notebook server was started.
@@ -548,6 +565,7 @@ export interface IJupyterConnection extends Disposable {
      * @see IJupyterServerUri
      */
     readonly mappedRemoteNotebookDir?: string;
+    readonly serverSettings: ServerConnection.ISettings;
 }
 
 export enum InterruptResult {
@@ -566,7 +584,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    isServerSession(): this is IJupyterKernelSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
@@ -575,29 +592,15 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     shutdown(): Promise<void>;
 }
 
-export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {
-    invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
-    createTempfile(ext: string): Promise<string>;
-    deleteTempfile(file: string): Promise<void>;
-    getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel>;
-}
+export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
 export type ISessionWithSocket = Session.ISessionConnection & {
     /**
-     * The resource associated with this session.
-     */
-    resource: Resource;
-    /**
-     * Whether this is a remote session that we attached to.
-     */
-    isRemoteSession?: boolean;
-    /**
      * Socket information used for hooking messages to the kernel.
      */
     kernelSocketInformation: KernelSocketInformation;
-    kernelConnectionMetadata: KernelConnectionMetadata;
 };
 
 export interface IJupyterKernelSpec {

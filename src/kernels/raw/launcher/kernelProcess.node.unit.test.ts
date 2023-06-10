@@ -507,7 +507,6 @@ suite('Kernel Process', () => {
     }
     test('Launch from kernelspec (linux)', async function () {
         const metadata = LocalKernelSpecConnectionMetadata.create({
-            id: '1',
             kernelSpec: {
                 argv: [
                     '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java',
@@ -543,7 +542,6 @@ suite('Kernel Process', () => {
     });
     test('Launch from kernelspec (linux with space in file name)', async function () {
         const metadata = LocalKernelSpecConnectionMetadata.create({
-            id: '1',
             kernelSpec: {
                 argv: [
                     '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java',
@@ -579,7 +577,6 @@ suite('Kernel Process', () => {
     });
     test('Launch from kernelspec (linux with space in file name and file name is a separate arg)', async function () {
         const metadata = LocalKernelSpecConnectionMetadata.create({
-            id: '1',
             kernelSpec: {
                 argv: [
                     '/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home/bin/java',
@@ -616,7 +613,6 @@ suite('Kernel Process', () => {
     });
     test('Launch from kernelspec (windows)', async function () {
         const metadata = LocalKernelSpecConnectionMetadata.create({
-            id: '1',
             kernelSpec: {
                 argv: [
                     'C:\\Program Files\\AdoptOpenJDK\\jdk-16.0.1.9-hotspot\\bin\\java.exe',
@@ -650,7 +646,6 @@ suite('Kernel Process', () => {
     });
     test('Launch from kernelspec (windows with space in file name)', async function () {
         const metadata = LocalKernelSpecConnectionMetadata.create({
-            id: '1',
             kernelSpec: {
                 argv: [
                     'C:\\Program Files\\AdoptOpenJDK\\jdk-16.0.1.9-hotspot\\bin\\java.exe',
@@ -684,7 +679,6 @@ suite('Kernel Process', () => {
     });
     test('Launch from kernelspec (windows with space in file name when file name is a separate arg)', async function () {
         const metadata = LocalKernelSpecConnectionMetadata.create({
-            id: '1',
             kernelSpec: {
                 argv: [
                     'C:\\Program Files\\AdoptOpenJDK\\jdk-16.0.1.9-hotspot\\bin\\java.exe',

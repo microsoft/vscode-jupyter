@@ -180,7 +180,9 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernelSpecifications'
         });
-        return this.kernelFinder.kernels.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
+        return Promise.all(
+            this.kernelFinder.kernels.map((item) => this.translateKernelConnectionMetadataToExportedType(item))
+        );
     }
     getActiveKernels(): { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {

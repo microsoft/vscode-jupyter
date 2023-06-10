@@ -4,12 +4,7 @@
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, CancellationTokenSource, env, Uri } from 'vscode';
-import {
-    createInterpreterKernelSpec,
-    getKernelId,
-    getKernelRegistrationInfo,
-    isDefaultKernelSpec
-} from '../../../kernels/helpers';
+import { createInterpreterKernelSpec, getKernelRegistrationInfo, isDefaultKernelSpec } from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
     KernelConnectionMetadata,
@@ -208,13 +203,11 @@ export class InterpreterSpecificKernelSpecsFinder implements IDisposable {
             const kernelSpec = isKernelLaunchedViaLocalPythonIPyKernel(k)
                 ? PythonKernelConnectionMetadata.create({
                       kernelSpec: k,
-                      interpreter: this.interpreter,
-                      id: getKernelId(k, this.interpreter)
+                      interpreter: this.interpreter
                   })
                 : LocalKernelSpecConnectionMetadata.create({
                       kernelSpec: k,
-                      interpreter: this.interpreter,
-                      id: getKernelId(k, this.interpreter)
+                      interpreter: this.interpreter
                   });
 
             // Check if we have already seen this.
@@ -231,8 +224,7 @@ export class InterpreterSpecificKernelSpecsFinder implements IDisposable {
 
         const result = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
-            interpreter: this.interpreter,
-            id: getKernelId(spec, this.interpreter)
+            interpreter: this.interpreter
         });
         if (!distinctKernelMetadata.has(result.id)) {
             distinctKernelMetadata.set(result.id, result);
@@ -553,8 +545,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                     }
                     const kernelSpec = LocalKernelSpecConnectionMetadata.create({
                         kernelSpec: item.kernelSpec,
-                        interpreter: matchingInterpreter,
-                        id: getKernelId(item.kernelSpec, matchingInterpreter)
+                        interpreter: matchingInterpreter
                     });
                     distinctKernelMetadata.set(kernelSpec.id, kernelSpec);
                     if (kernelSpec.kernelSpec.specFile) {
@@ -605,13 +596,11 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                         const result = isKernelLaunchedViaLocalPythonIPyKernel(k)
                             ? PythonKernelConnectionMetadata.create({
                                   kernelSpec: k,
-                                  interpreter: matchingInterpreter,
-                                  id: getKernelId(k, matchingInterpreter)
+                                  interpreter: matchingInterpreter
                               })
                             : LocalKernelSpecConnectionMetadata.create({
                                   kernelSpec: k,
-                                  interpreter: matchingInterpreter,
-                                  id: getKernelId(k, matchingInterpreter)
+                                  interpreter: matchingInterpreter
                               });
 
                         // Check if this is a kernelspec registered by an old version of the extension.
@@ -704,8 +693,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                         }
                         const result = LocalKernelSpecConnectionMetadata.create({
                             kernelSpec: k,
-                            interpreter: kernelInterpreter,
-                            id: getKernelId(k, kernelInterpreter)
+                            interpreter: kernelInterpreter
                         });
                         traceVerbose(`Interpreter for Local kernel ${result.id} is ${kernelInterpreter?.id}`);
 

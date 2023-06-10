@@ -11,7 +11,7 @@ import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 
-suite('Jupyter Execution', async () => {
+suite('Jupyter Execution', () => {
     let kernelProvider: IKernelProvider;
     let restartMonitor: KernelAutoRestartMonitor;
     let onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
@@ -20,7 +20,6 @@ suite('Jupyter Execution', async () => {
     let onDidDisposeKernel = new EventEmitter<IKernel>();
     const disposables: IDisposable[] = [];
     const connectionMetadata = LocalKernelSpecConnectionMetadata.create({
-        id: '123',
         kernelSpec: {
             argv: [],
             display_name: 'Hello',

@@ -19,7 +19,7 @@ const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
-    public getRequestCtor(_cookieString?: string, _allowUnauthorized?: boolean, getAuthHeader?: () => any) {
+    public getRequestCtor(_allowUnauthorized?: boolean, getAuthHeader?: () => Record<string, string>) {
         // Only need the authorizing part. Cookie and rejectUnauthorized are set in the websocket ctor for node.
         class AuthorizingRequest extends nodeFetch.Request {
             constructor(input: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) {
@@ -48,33 +48,23 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     }
 
     public getWebsocketCtor(
-        cookieString?: string,
         allowUnauthorized?: boolean,
         getAuthHeaders?: () => Record<string, string>,
         getWebSocketProtocols?: () => string | string[] | undefined
-    ): ClassType<WebSocket> {
+    ): typeof WebSocket {
         const generateOptions = (): WebSocketIsomorphic.ClientOptions => {
-            let co: WebSocketIsomorphic.ClientOptions = {};
-            let co_headers: { [key: string]: string } | undefined;
+            const clientOptions: WebSocketIsomorphic.ClientOptions = {};
 
             if (allowUnauthorized) {
-                co = { ...co, rejectUnauthorized: false };
-            }
-
-            if (cookieString) {
-                co_headers = { Cookie: cookieString };
+                clientOptions.rejectUnauthorized = false;
             }
 
             // Auth headers have to be refetched every time we create a connection. They may have expired
             // since the last connection.
             if (getAuthHeaders) {
-                const authorizationHeader = getAuthHeaders();
-                co_headers = co_headers ? { ...co_headers, ...authorizationHeader } : authorizationHeader;
+                clientOptions.headers = getAuthHeaders();
             }
-            if (co_headers) {
-                co = { ...co, headers: co_headers };
-            }
-            return co;
+            return clientOptions;
         };
         const getProtocols = (protocols?: string | string[]): string | string[] | undefined => {
             const authProtocols = getWebSocketProtocols ? getWebSocketProtocols() : undefined;
@@ -132,7 +122,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
         return JupyterWebSockets.get(id);
     }
 
-    public getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response> {
+    public getFetchMethod(): typeof fetch {
         return nodeFetch.default as any;
     }
 

@@ -2,19 +2,15 @@
 // Licensed under the MIT License.
 
 import * as path from '../../platform/vscode-path/path';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { noop } from '../../platform/common/utils/misc';
-import { IJupyterConnection } from '../types';
-import { getJupyterConnectionDisplayName } from './helpers';
+import { JupyterServerProviderHandle } from './types';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../../platform/common/constants';
-import { computeHash } from '../../platform/common/crypto';
-import { traceError } from '../../platform/logging';
-import { IJupyterServerUri, JupyterServerUriHandle } from '../../api';
+import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
+import { isBuiltInJupyterServerProvider } from './helpers';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -89,66 +85,48 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export async function createRemoteConnectionInfo(
-    jupyterHandle: { id: string; handle: JupyterServerUriHandle },
-    serverUri: IJupyterServerUri
-): Promise<IJupyterConnection> {
-    const serverId = await computeServerId(generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle));
-    const baseUrl = serverUri.baseUrl;
-    const token = serverUri.token;
-    const hostName = new URL(serverUri.baseUrl).hostname;
-    const webSocketProtocols = (serverUri?.webSocketProtocols || []).length ? serverUri?.webSocketProtocols || [] : [];
-    const authHeader =
-        serverUri.authorizationHeader && Object.keys(serverUri?.authorizationHeader ?? {}).length > 0
-            ? serverUri.authorizationHeader
-            : undefined;
-    return {
-        serverId,
-        baseUrl,
-        providerId: jupyterHandle.id,
-        token,
-        hostName,
-        localLaunch: false,
-        displayName:
-            serverUri && serverUri.displayName
-                ? serverUri.displayName
-                : getJupyterConnectionDisplayName(token, baseUrl),
-        dispose: noop,
-        rootDirectory: Uri.file(''),
-        // Temporarily support workingDirectory as a fallback for old extensions using that (to be removed in the next release).
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mappedRemoteNotebookDir: serverUri?.mappedRemoteNotebookDir || (serverUri as any)?.workingDirectory,
-        // For remote jupyter servers that are managed by us, we can provide the auth header.
-        // Its crucial this is set to undefined, else password retrieval will not be attempted.
-        getAuthHeader: authHeader ? () => authHeader : undefined,
-        getWebsocketProtocols: webSocketProtocols ? () => webSocketProtocols : () => []
-    };
+const OLD_EXTENSION_ID_THAT_DID_NOT_HAVE_EXT_ID_IN_URL = ['ms-toolsai.jupyter', 'ms-toolsai.vscode-ai'];
+const REMOTE_URI = 'https://remote/';
+const REMOTE_URI_ID_PARAM = 'id';
+const REMOTE_URI_HANDLE_PARAM = 'uriHandle';
+const REMOTE_URI_EXTENSION_ID_PARAM = 'extensionId';
+
+export function jupyterServerHandleToString(serverHandle: JupyterServerProviderHandle) {
+    if (OLD_EXTENSION_ID_THAT_DID_NOT_HAVE_EXT_ID_IN_URL.includes(serverHandle.extensionId)) {
+        // Jupyter extension and AzML extension did not have extension id in the generated Id.
+        // Hence lets not store them in the future as well, however
+        // for all other extensions we will (it will only break the MRU for a few set of users using other extensions that contribute Jupyter servers via Jupyter extension).
+        return `${REMOTE_URI}?${REMOTE_URI_ID_PARAM}=${serverHandle.id}&${REMOTE_URI_HANDLE_PARAM}=${encodeURI(
+            serverHandle.handle
+        )}`;
+    }
+    return `${REMOTE_URI}?${REMOTE_URI_ID_PARAM}=${serverHandle.id}&${REMOTE_URI_HANDLE_PARAM}=${encodeURI(
+        serverHandle.handle
+    )}&${REMOTE_URI_EXTENSION_ID_PARAM}=${encodeURI(serverHandle.extensionId)}`;
 }
 
-export async function computeServerId(uri: string) {
-    return computeHash(uri, 'SHA-256');
-}
-
-export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
-    // eslint-disable-next-line
-    return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
-        Identifiers.REMOTE_URI_HANDLE_PARAM
-    }=${encodeURI(result)}`;
-}
-
-export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } {
+export function jupyterServerHandleFromString(serverHandleId: string): JupyterServerProviderHandle {
     try {
-        const url: URL = new URL(uri);
+        const url: URL = new URL(serverHandleId);
 
         // Id has to be there too.
-        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
-        const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-        if (id && uriHandle) {
-            return { handle: uriHandle, id };
+        const id = url.searchParams.get(REMOTE_URI_ID_PARAM) || '';
+        const uriHandle = url.searchParams.get(REMOTE_URI_HANDLE_PARAM);
+        let extensionId = url.searchParams.get(REMOTE_URI_EXTENSION_ID_PARAM);
+        extensionId =
+            extensionId ||
+            // We know the extension ids for some of the providers.
+            // This is for backward compatibility (with data from old versions of the extension).
+            (isBuiltInJupyterServerProvider(id)
+                ? JVSC_EXTENSION_ID
+                : id.startsWith('azureml_compute_instances') || id.startsWith('azureml_connected_compute_instances')
+                ? 'ms-toolsai.vscode-ai'
+                : '');
+        if (id && uriHandle && extensionId) {
+            return { handle: uriHandle, id, extensionId };
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
-        traceError('Failed to parse remote URI', uri, ex);
-        throw new Error(`'Failed to parse remote URI ${uri}`);
+        throw new Error(`'Failed to parse remote URI ${serverHandleId}`);
     }
 }

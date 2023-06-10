@@ -90,11 +90,14 @@ suite('Extension Recommendation', () => {
                 function createController(language: string) {
                     const controller = mock<VSCodeNotebookController>();
                     const kernelSpec: IJupyterKernelSpec = {
+                        argv: [],
+                        display_name: 'Java KernelSpec',
+                        executable: '',
+                        name: 'javaName',
                         language
-                    } as any;
-                    when(controller.connection).thenReturn(
-                        LocalKernelSpecConnectionMetadata.create({ kernelSpec, id: '' })
-                    );
+                    };
+
+                    when(controller.connection).thenReturn(LocalKernelSpecConnectionMetadata.create({ kernelSpec }));
                     return instance(controller);
                 }
                 test('No recommendations for python Notebooks', async () => {

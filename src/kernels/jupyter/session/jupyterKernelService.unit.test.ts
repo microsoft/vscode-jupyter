@@ -47,6 +47,125 @@ suite('JupyterKernelService', () => {
 
     // Set of kernels. Generated this by running the localKernelFinder unit test and stringifying
     // the results returned.
+    const pythonKernelConnection12 = PythonKernelConnectionMetadata.create({
+        kernelSpec: {
+            specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnv/kernel.json',
+            name: 'sampleEnv',
+            argv: [
+                os.platform() === 'win32'
+                    ? '/usr/don/home/envs/sample/bin/python.exe'
+                    : '/usr/don/home/envs/sample/bin/python',
+                '-m',
+                'ipykernel_launcher',
+                '-f',
+                '{connection_file}'
+            ],
+            language: 'python',
+            executable:
+                os.platform() === 'win32'
+                    ? '/usr/don/home/envs/sample/bin/python.exe'
+                    : '/usr/don/home/envs/sample/bin/python',
+            display_name: 'Kernel with custom env Variable',
+            metadata: {
+                interpreter: {
+                    displayName: 'Python 3 Environment',
+                    path:
+                        os.platform() === 'win32'
+                            ? '/usr/don/home/envs/sample/bin/python.exe'
+                            : '/usr/don/home/envs/sample/bin/python',
+                    sysPrefix: 'python',
+                    version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                }
+            },
+            env: {
+                SOME_ENV_VARIABLE: 'Hello World'
+            }
+        },
+        interpreter: {
+            id: '/usr/don/home/envs/sample/bin/python',
+            displayName: 'Python 3 Environment',
+            uri: Uri.file(
+                os.platform() === 'win32'
+                    ? '/usr/don/home/envs/sample/bin/python.exe'
+                    : '/usr/don/home/envs/sample/bin/python'
+            ),
+            sysPrefix: 'python',
+            version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+        }
+    });
+    const localKernelSpec13 = LocalKernelSpecConnectionMetadata.create({
+        kernelSpec: {
+            specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnvJulia/kernel.json',
+            name: 'sampleEnvJulia',
+            argv: ['/usr/don/home/envs/sample/bin/julia'],
+            language: 'julia',
+            executable:
+                os.platform() === 'win32'
+                    ? '/usr/don/home/envs/sample/bin/julia.exe'
+                    : '/usr/don/home/envs/sample/bin/julia',
+            display_name: 'Julia Kernel with custom env Variable',
+            metadata: {
+                interpreter: {
+                    displayName: 'Python 3 Environment',
+                    path:
+                        os.platform() === 'win32'
+                            ? '/usr/don/home/envs/sample/bin/python.exe'
+                            : '/usr/don/home/envs/sample/bin/python',
+                    sysPrefix: 'python',
+                    version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                }
+            },
+            env: {
+                SOME_ENV_VARIABLE: 'Hello World'
+            }
+        },
+        interpreter: {
+            id: '/usr/don/home/envs/sample/bin/python',
+            displayName: 'Python 3 Environment',
+            uri: Uri.file(
+                os.platform() === 'win32'
+                    ? '/usr/don/home/envs/sample/bin/python.exe'
+                    : '/usr/don/home/envs/sample/bin/python'
+            ),
+            sysPrefix: 'python',
+            version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+        }
+    });
+    const localKernelSpec14 = LocalKernelSpecConnectionMetadata.create({
+        kernelSpec: {
+            specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnvJulia/kernel.json',
+            name: 'nameGeneratedByUsWhenRegisteringKernelSpecs',
+            argv: ['/usr/don/home/envs/sample/bin/julia'],
+            language: 'julia',
+            executable: '/usr/don/home/envs/sample/bin/python',
+            display_name: 'Julia Kernel with custom env Variable',
+            metadata: {
+                interpreter: {
+                    displayName: 'Python 3 Environment',
+                    path:
+                        os.platform() === 'win32'
+                            ? '/usr/don/home/envs/sample/bin/python.exe'
+                            : '/usr/don/home/envs/sample/bin/python',
+                    sysPrefix: 'python',
+                    version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+                }
+            },
+            env: {
+                SOME_ENV_VARIABLE: 'Hello World'
+            }
+        },
+        interpreter: {
+            id: '/usr/don/home/envs/sample/bin/python',
+            displayName: 'Python 3 Environment',
+            uri: Uri.file(
+                os.platform() === 'win32'
+                    ? '/usr/don/home/envs/sample/bin/python.exe'
+                    : '/usr/don/home/envs/sample/bin/python'
+            ),
+            sysPrefix: 'python',
+            version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
+        }
+    });
     const kernels: LocalKernelConnectionMetadata[] = [
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -70,8 +189,7 @@ suite('JupyterKernelService', () => {
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-            },
-            id: '0'
+            }
         }),
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -95,8 +213,7 @@ suite('JupyterKernelService', () => {
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/conda/python3.exe' : '/usr/bin/conda/python3'),
                 sysPrefix: 'conda',
                 envType: EnvironmentType.Conda
-            },
-            id: '1'
+            }
         }),
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -127,8 +244,7 @@ suite('JupyterKernelService', () => {
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-            },
-            id: '2'
+            }
         }),
         LocalKernelSpecConnectionMetadata.create({
             kernelSpec: {
@@ -138,8 +254,7 @@ suite('JupyterKernelService', () => {
                 language: 'julia',
                 executable: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
-            },
-            id: '3'
+            }
         }),
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -162,8 +277,7 @@ suite('JupyterKernelService', () => {
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
-            },
-            id: '4'
+            }
         }),
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -194,8 +308,7 @@ suite('JupyterKernelService', () => {
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-            },
-            id: '5'
+            }
         }),
         LocalKernelSpecConnectionMetadata.create({
             kernelSpec: {
@@ -205,8 +318,7 @@ suite('JupyterKernelService', () => {
                 language: 'julia',
                 executable: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
-            },
-            id: '6'
+            }
         }),
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -229,8 +341,7 @@ suite('JupyterKernelService', () => {
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
-            },
-            id: '7'
+            }
         }),
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -261,8 +372,7 @@ suite('JupyterKernelService', () => {
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python3.exe' : '/usr/bin/python3'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-            },
-            id: '8'
+            }
         }),
         LocalKernelSpecConnectionMetadata.create({
             kernelSpec: {
@@ -272,8 +382,7 @@ suite('JupyterKernelService', () => {
                 language: 'julia',
                 executable: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
-            },
-            id: '9'
+            }
         }),
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -296,8 +405,7 @@ suite('JupyterKernelService', () => {
                 uri: Uri.file(os.platform() === 'win32' ? '/usr/bin/python.exe' : '/usr/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', patch: 0 }
-            },
-            id: '10'
+            }
         }),
         PythonKernelConnectionMetadata.create({
             kernelSpec: {
@@ -333,131 +441,11 @@ suite('JupyterKernelService', () => {
                 ),
                 sysPrefix: 'conda',
                 envType: EnvironmentType.Conda
-            },
-            id: '11'
+            }
         }),
-        PythonKernelConnectionMetadata.create({
-            kernelSpec: {
-                specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnv/kernel.json',
-                name: 'sampleEnv',
-                argv: [
-                    os.platform() === 'win32'
-                        ? '/usr/don/home/envs/sample/bin/python.exe'
-                        : '/usr/don/home/envs/sample/bin/python',
-                    '-m',
-                    'ipykernel_launcher',
-                    '-f',
-                    '{connection_file}'
-                ],
-                language: 'python',
-                executable:
-                    os.platform() === 'win32'
-                        ? '/usr/don/home/envs/sample/bin/python.exe'
-                        : '/usr/don/home/envs/sample/bin/python',
-                display_name: 'Kernel with custom env Variable',
-                metadata: {
-                    interpreter: {
-                        displayName: 'Python 3 Environment',
-                        path:
-                            os.platform() === 'win32'
-                                ? '/usr/don/home/envs/sample/bin/python.exe'
-                                : '/usr/don/home/envs/sample/bin/python',
-                        sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-                    }
-                },
-                env: {
-                    SOME_ENV_VARIABLE: 'Hello World'
-                }
-            },
-            interpreter: {
-                id: '/usr/don/home/envs/sample/bin/python',
-                displayName: 'Python 3 Environment',
-                uri: Uri.file(
-                    os.platform() === 'win32'
-                        ? '/usr/don/home/envs/sample/bin/python.exe'
-                        : '/usr/don/home/envs/sample/bin/python'
-                ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-            },
-            id: '12'
-        }),
-        LocalKernelSpecConnectionMetadata.create({
-            kernelSpec: {
-                specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnvJulia/kernel.json',
-                name: 'sampleEnvJulia',
-                argv: ['/usr/don/home/envs/sample/bin/julia'],
-                language: 'julia',
-                executable:
-                    os.platform() === 'win32'
-                        ? '/usr/don/home/envs/sample/bin/julia.exe'
-                        : '/usr/don/home/envs/sample/bin/julia',
-                display_name: 'Julia Kernel with custom env Variable',
-                metadata: {
-                    interpreter: {
-                        displayName: 'Python 3 Environment',
-                        path:
-                            os.platform() === 'win32'
-                                ? '/usr/don/home/envs/sample/bin/python.exe'
-                                : '/usr/don/home/envs/sample/bin/python',
-                        sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-                    }
-                },
-                env: {
-                    SOME_ENV_VARIABLE: 'Hello World'
-                }
-            },
-            interpreter: {
-                id: '/usr/don/home/envs/sample/bin/python',
-                displayName: 'Python 3 Environment',
-                uri: Uri.file(
-                    os.platform() === 'win32'
-                        ? '/usr/don/home/envs/sample/bin/python.exe'
-                        : '/usr/don/home/envs/sample/bin/python'
-                ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-            },
-            id: '13'
-        }),
-        LocalKernelSpecConnectionMetadata.create({
-            kernelSpec: {
-                specFile: '/usr/don/home/envs/sample/share../../kernels/sampleEnvJulia/kernel.json',
-                name: 'nameGeneratedByUsWhenRegisteringKernelSpecs',
-                argv: ['/usr/don/home/envs/sample/bin/julia'],
-                language: 'julia',
-                executable: '/usr/don/home/envs/sample/bin/python',
-                display_name: 'Julia Kernel with custom env Variable',
-                metadata: {
-                    interpreter: {
-                        displayName: 'Python 3 Environment',
-                        path:
-                            os.platform() === 'win32'
-                                ? '/usr/don/home/envs/sample/bin/python.exe'
-                                : '/usr/don/home/envs/sample/bin/python',
-                        sysPrefix: 'python',
-                        version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-                    }
-                },
-                env: {
-                    SOME_ENV_VARIABLE: 'Hello World'
-                }
-            },
-            interpreter: {
-                id: '/usr/don/home/envs/sample/bin/python',
-                displayName: 'Python 3 Environment',
-                uri: Uri.file(
-                    os.platform() === 'win32'
-                        ? '/usr/don/home/envs/sample/bin/python.exe'
-                        : '/usr/don/home/envs/sample/bin/python'
-                ),
-                sysPrefix: 'python',
-                version: { major: 3, minor: 8, raw: '3.8', patch: 0 }
-            },
-            id: '14'
-        })
+        pythonKernelConnection12,
+        localKernelSpec13,
+        localKernelSpec14
     ];
     suiteSetup(function () {
         if (isWeb()) {
@@ -570,7 +558,6 @@ suite('JupyterKernelService', () => {
     });
 
     test('Kernel environment preserves env variables from original Python kernelspec', async () => {
-        const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '12')!;
         when(fs.exists(anything())).thenResolve(true);
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             foo: 'bar',
@@ -582,7 +569,12 @@ suite('JupyterKernelService', () => {
         });
         when(fs.writeFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
-        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
+        await kernelService.ensureKernelIsUsable(
+            undefined,
+            pythonKernelConnection12,
+            new DisplayOptions(true),
+            token.token
+        );
         token.dispose();
         const kernelJson = JSON.parse(capture(fs.writeFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], undefined);
@@ -593,7 +585,6 @@ suite('JupyterKernelService', () => {
         assert.strictEqual(kernelJson.env[pathVariable], `Path1${path.delimiter}Path2`);
     });
     test('Kernel environment preserves env variables from original non-python kernelspec', async () => {
-        const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '13')!;
         when(fs.exists(anything())).thenResolve(true);
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             foo: 'bar',
@@ -605,7 +596,7 @@ suite('JupyterKernelService', () => {
         });
         when(fs.writeFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
-        await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
+        await kernelService.ensureKernelIsUsable(undefined, localKernelSpec13, new DisplayOptions(true), token.token);
         token.dispose();
         const kernelJson = JSON.parse(capture(fs.writeFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], undefined);
@@ -616,7 +607,7 @@ suite('JupyterKernelService', () => {
         assert.strictEqual(kernelJson.env[pathVariable], `Path1${path.delimiter}Path2`);
     });
     test('Verify registration of the kernelspec', async () => {
-        const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
+        const spec = localKernelSpec14;
         const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
         when(fs.exists(anything())).thenCall((f: Uri) => Promise.resolve(filesCreated.has(f.fsPath)));
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
@@ -645,7 +636,7 @@ suite('JupyterKernelService', () => {
         // capture(fs.localFileExists)
     });
     test('Verify registration of the kernelspec and value PYTHONNOUSERSITE should be true', async () => {
-        const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
+        const spec = localKernelSpec14;
         const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
         when(fs.exists(anything())).thenCall((f: Uri) => Promise.resolve(filesCreated.has(f.fsPath)));
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({

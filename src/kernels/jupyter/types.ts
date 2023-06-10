@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Session, ContentsManager } from '@jupyterlab/services';
+import type { Session } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri } from 'vscode';
@@ -15,17 +15,15 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     IJupyterConnection,
-    IJupyterKernelSession,
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
-    KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../api';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../api';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -53,36 +51,8 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
     getJupyterServerError(): Promise<string>;
     refreshCommands(): Promise<void>;
 }
-
-export interface IJupyterPasswordConnectInfo {
-    requestHeaders?: HeadersInit;
-    remappedBaseUrl?: string;
-    remappedToken?: string;
-}
-
-export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
-export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(options: {
-        url: string;
-        isTokenEmpty: boolean;
-    }): Promise<IJupyterPasswordConnectInfo | undefined>;
-}
-
-export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
-export interface IJupyterSessionManagerFactory {
-    create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
-}
-
-export interface IJupyterSessionManager extends IAsyncDisposable {
+export interface IJupyterLabHelper extends IAsyncDisposable {
     readonly isDisposed: boolean;
-    startNew(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        workingDirectory: Uri,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken,
-        creator: KernelActionSource
-    ): Promise<IJupyterKernelSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;
@@ -159,6 +129,18 @@ export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
     readonly extensionId: string;
 }
 
+export type JupyterServerProviderHandle = {
+    extensionId: string;
+    /**
+     * Jupyter Server Provider Id.
+     */
+    id: string;
+    /**
+     * Jupyter Server handle, unique for each server.
+     */
+    handle: string;
+};
+
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 
 export interface IJupyterUriProviderRegistration {
@@ -167,7 +149,13 @@ export interface IJupyterUriProviderRegistration {
     getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>>;
     getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
-    getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    /**
+     * Calling `getJupyterServerUri` just to get the display name could have unnecessary side effects.
+     * E.g. we could end up connecting to a remote server or prompting for username/password, etc.
+     * This will just return the display name if we have one, or if previously cached.
+     */
+    getDisplayName(serverHandle: JupyterServerProviderHandle): Promise<string>;
+    getJupyterServerUri(serverHandle: JupyterServerProviderHandle): Promise<IJupyterServerUri>;
 }
 
 /**
@@ -176,16 +164,10 @@ export interface IJupyterUriProviderRegistration {
 export interface IJupyterServerUriEntry {
     /**
      * Uri of the server to connect to
+     * @deprecated
      */
-    uri: string;
-    provider: {
-        id: string;
-        handle: JupyterServerUriHandle;
-    };
-    /**
-     * Unique ID using a hash of the full uri
-     */
-    serverId: string;
+    uri?: string;
+    serverHandle: JupyterServerProviderHandle;
     /**
      * The most recent time that we connected to this server
      */
@@ -208,28 +190,17 @@ export interface IJupyterServerUriStorage {
     /**
      * Updates MRU list marking this server as the most recently used.
      */
-    update(serverId: string): Promise<void>;
+    update(serverHandle: JupyterServerProviderHandle): Promise<void>;
     getAll(): Promise<IJupyterServerUriEntry[]>;
-    remove(serverId: string): Promise<void>;
+    remove(serverHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
-    get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
-    add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void>;
+    get(serverHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined>;
+    add(serverHandle: JupyterServerProviderHandle): Promise<void>;
 }
 
 export interface IBackupFile {
     dispose: () => Promise<unknown>;
     filePath: string;
-}
-
-export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');
-export interface IJupyterBackingFileCreator {
-    createBackingFile(
-        resource: Resource,
-        workingDirectory: Uri,
-        kernel: KernelConnectionMetadata,
-        connInfo: IJupyterConnection,
-        contentsManager: ContentsManager
-    ): Promise<IBackupFile | undefined>;
 }
 
 export const IJupyterKernelService = Symbol('IJupyterKernelService');
@@ -251,17 +222,14 @@ export interface IJupyterRequestAgentCreator {
 
 export const IJupyterRequestCreator = Symbol('IJupyterRequestCreator');
 export interface IJupyterRequestCreator {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getRequestCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeader?: () => any): ClassType<Request>;
-    getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+    getRequestCtor(allowUnauthorized?: boolean, getAuthHeader?: () => Record<string, string>): ClassType<Request>;
+    getFetchMethod(): typeof fetch;
     getHeadersCtor(): ClassType<Headers>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getWebsocketCtor(
-        cookieString?: string,
         allowUnauthorized?: boolean,
         getAuthHeaders?: () => Record<string, string>,
         getWebSocketProtocols?: () => string | string[] | undefined
-    ): ClassType<WebSocket>;
+    ): typeof WebSocket;
     getWebsocket(id: string): IKernelSocket | undefined;
     getRequestInit(): RequestInit;
 }
@@ -286,11 +254,11 @@ export interface ILiveRemoteKernelConnectionUsageTracker {
     /**
      * Tracks the fact that the provided remote kernel for a given server was used by a notebook defined by the uri.
      */
-    trackKernelIdAsUsed(resource: Uri, serverId: string, kernelId: string): void;
+    trackKernelIdAsUsed(resource: Uri, serverHandle: JupyterServerProviderHandle, kernelId: string): void;
     /**
      * Tracks the fact that the provided remote kernel for a given server is no longer used by a notebook defined by the uri.
      */
-    trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string): void;
+    trackKernelIdAsNotUsed(resource: Uri, serverHandle: JupyterServerProviderHandle, kernelId: string): void;
 }
 
 export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedKernelValidator');

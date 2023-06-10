@@ -94,7 +94,6 @@ export class RawSession implements ISessionWithSocket {
     public get disposed(): ISignal<this, void> {
         return this._disposed;
     }
-    isRemoteSession?: boolean | undefined;
 
     public async dispose() {
         // We want to know who called dispose on us

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, CancellationTokenSource, Disposable, EventEmitter, Memento } from 'vscode';
-import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
@@ -14,12 +13,7 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
 import { IAsyncDisposable, IDisposable, IExtensions } from '../../../platform/common/types';
-import {
-    IJupyterSessionManagerFactory,
-    IJupyterRemoteCachedKernelValidator,
-    IRemoteKernelFinder,
-    IJupyterServerUriEntry
-} from '../types';
+import { IJupyterRemoteCachedKernelValidator, IRemoteKernelFinder, IJupyterServerUriEntry } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
@@ -36,6 +30,7 @@ import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isUnitTestExecution } from '../../../platform/common/constants';
+import { JupyterLabHelper } from '../session/jupyterLabHelper';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -87,7 +82,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         readonly id: string,
         readonly displayName: string,
         readonly cacheKey: string,
-        private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private extensionChecker: IPythonExtensionChecker,
         private readonly globalState: Memento,
         private readonly env: IApplicationEnvironment,
@@ -198,12 +192,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 this.loadCache(true).then(noop, noop);
             } else {
                 try {
-                    const kernelsWithoutCachePromise = (async () => {
-                        const connInfo = await this.getRemoteConnectionInfo(displayProgress);
-                        return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
-                    })();
-
-                    kernels = await kernelsWithoutCachePromise;
+                    kernels = await this.listKernelsFromConnection(await this.getRemoteConnectionInfo(displayProgress));
                     this._lastError = undefined;
                 } catch (ex) {
                     traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
@@ -225,12 +214,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             this._cacheUpdateCancelTokenSource = updateCacheCancellationToken;
 
             try {
-                const kernelsWithoutCachePromise = (async () => {
-                    const connInfo = await this.getRemoteConnectionInfo(false);
-                    return connInfo ? this.listKernelsFromConnection(connInfo) : Promise.resolve([]);
-                })();
-
-                kernels = await kernelsWithoutCachePromise;
+                kernels = await this.listKernelsFromConnection(await this.getRemoteConnectionInfo(false));
             } catch (ex) {
                 traceWarning(`Could not fetch kernels from the ${this.kind} server, falling back to cache: ${ex}`);
                 // Since fetching the remote kernels failed, we fall back to the cache,
@@ -259,13 +243,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         return this.cache;
     }
 
-    private async getRemoteConnectionInfo(displayProgress: boolean = true): Promise<IJupyterConnection | undefined> {
+    private async getRemoteConnectionInfo(displayProgress: boolean = true): Promise<IJupyterConnection> {
         const disposables: IDisposable[] = [];
         if (displayProgress) {
             disposables.push(KernelProgressReporter.createProgressReporter(undefined, DataScience.connectingToJupyter));
         }
         return this.jupyterConnection
-            .createConnectionInfo(this.serverUri.serverId)
+            .createRemoveConnectionInfo(this.serverUri.serverHandle)
             .finally(() => disposeAllDisposables(disposables));
     }
 
@@ -273,7 +257,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         try {
             let results: RemoteKernelConnectionMetadata[] = this.cache;
             const key = this.cacheKey;
-
             // If not in memory, check memento
             if (!results || results.length === 0) {
                 // Check memento too
@@ -308,14 +291,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     }
 
     // Talk to the remote server to determine sessions
-    public async listKernelsFromConnection(connInfo: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
+    public async listKernelsFromConnection(connection: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
         const disposables: IAsyncDisposable[] = [];
         try {
-            const sessionManager = await this.jupyterSessionManagerFactory.create(connInfo);
+            const sessionManager = new JupyterLabHelper(connection);
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
-            const serverId = connInfo.serverId;
             const [running, specs, sessions] = await Promise.all([
                 sessionManager.getRunningKernels(),
                 sessionManager.getKernelSpecs(),
@@ -326,13 +308,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             const mappedSpecs = await Promise.all(
                 specs.map(async (s) => {
                     await sendKernelSpecTelemetry(s, 'remote');
-                    const kernel = RemoteKernelSpecConnectionMetadata.create({
+                    return RemoteKernelSpecConnectionMetadata.create({
                         kernelSpec: s,
-                        id: getKernelId(s, undefined, serverId),
-                        baseUrl: connInfo.baseUrl,
-                        serverId: serverId
+                        baseUrl: connection.baseUrl,
+                        serverHandle: connection.serverHandle
                     });
-                    return kernel;
                 })
             );
             const mappedLive = sessions.map((s) => {
@@ -348,7 +328,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 const matchingSpec: Partial<IJupyterKernelSpec> =
                     specs.find((spec) => spec.name === s.kernel?.name) || {};
 
-                const kernel = LiveRemoteKernelConnectionMetadata.create({
+                return LiveRemoteKernelConnectionMetadata.create({
                     kernelModel: {
                         ...s.kernel,
                         ...matchingSpec,
@@ -358,18 +338,16 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                         numberOfConnections,
                         model: s
                     },
-                    baseUrl: connInfo.baseUrl,
-                    id: s.kernel?.id || '',
-                    serverId
+                    baseUrl: connection.baseUrl,
+                    serverHandle: connection.serverHandle
                 });
-                return kernel;
             });
 
             // Filter out excluded ids
             const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
             return [...filtered, ...mappedSpecs];
         } catch (ex) {
-            traceError(`Error fetching kernels from ${connInfo.baseUrl} (${connInfo.displayName}):`, ex);
+            traceError(`Error fetching kernels from ${connection.baseUrl} (${connection.displayName}):`, ex);
             throw ex;
         } finally {
             await Promise.all(disposables.map((d) => d.dispose().catch(noop)));

@@ -9,6 +9,7 @@ import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { IConnectionDisplayData } from './types';
+import { jupyterServerHandleToString } from '../../kernels/jupyter/jupyterUtils';
 
 export class ConnectionDisplayData implements IDisposable, IConnectionDisplayData {
     private readonly _onDidChange = new EventEmitter<ConnectionDisplayData>();
@@ -35,10 +36,14 @@ export async function getRemoteServerDisplayName(
     kernelConnection: RemoteKernelConnectionMetadata,
     serverUriStorage: IJupyterServerUriStorage
 ): Promise<string> {
-    const targetConnection = await serverUriStorage.get(kernelConnection.serverId);
+    const targetConnection = await serverUriStorage.get(kernelConnection.serverHandle);
 
     // We only show this if we have a display name and the name is not the same as the URI (this prevents showing the long token for user entered URIs).
-    if (targetConnection && targetConnection.displayName && targetConnection.uri !== targetConnection.displayName) {
+    if (
+        targetConnection &&
+        targetConnection.displayName &&
+        jupyterServerHandleToString(targetConnection.serverHandle) !== targetConnection.displayName
+    ) {
         return targetConnection.displayName;
     }
 

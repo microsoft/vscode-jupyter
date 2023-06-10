@@ -28,25 +28,25 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         if (!this.liveKernelConnectionTracker.wasKernelUsed(kernel)) {
             return false;
         }
-        const item = await this.uriStorage.get(kernel.serverId);
+        const item = await this.uriStorage.get(kernel.serverHandle);
         if (!item) {
             // Server has been removed and we have some old cached data.
             return false;
         }
-        const provider = await this.providerRegistration.getProvider(item.provider.id);
+        const provider = await this.providerRegistration.getProvider(item.serverHandle.id);
         if (!provider) {
             traceWarning(
-                `Extension may have been uninstalled for provider ${item.provider.id}, handle ${item.provider.handle}`
+                `Extension may have been uninstalled for provider ${item.serverHandle.id}, handle ${item.serverHandle.handle}`
             );
             return false;
         }
         if (provider.getHandles) {
             const handles = await provider.getHandles();
-            if (handles.includes(item.provider.handle)) {
+            if (handles.includes(item.serverHandle.handle)) {
                 return true;
             } else {
                 traceWarning(
-                    `Hiding remote kernel ${kernel.id} for ${provider.id} as the remote Jupyter Server ${item.serverId} is no longer available`
+                    `Hiding remote kernel ${kernel.id} for ${provider.id} as the remote Jupyter Server ${item.serverHandle.handle} is no longer available`
                 );
                 // 3rd party extensions own these kernels, if these are no longer
                 // available, then just don't display them.

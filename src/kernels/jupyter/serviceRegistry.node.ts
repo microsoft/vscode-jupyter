@@ -19,12 +19,11 @@ import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupy
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
 import { JupyterConnection } from './connection/jupyterConnection';
-import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
+import { JupyterDetectionTelemetry } from './launcher/jupyterDetectionTelemetry.node';
 import { JupyterKernelService } from './session/jupyterKernelService.node';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector.node';
-import { JupyterPasswordConnect } from './connection/jupyterPasswordConnect';
 import { JupyterServerHelper } from './launcher/jupyterServerHelper.node';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector.node';
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.node';
@@ -32,20 +31,15 @@ import { JupyterServerStarter } from './launcher/jupyterServerStarter.node';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
 import { JupyterServerSelector } from './connection/serverSelector';
-import { BackingFileCreator } from './session/backingFileCreator.node';
-import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
-import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
-import { RequestAgentCreator } from './session/requestAgentCreator.node';
+import { JupyterRequestCreator } from './connection/jupyterRequestCreator.node';
+import { RequestAgentCreator } from './connection/requestAgentCreator.node';
 import {
-    IJupyterPasswordConnect,
-    IJupyterSessionManagerFactory,
     INbConvertInterpreterDependencyChecker,
     INbConvertExportToPythonService,
     IJupyterServerProvider,
     IJupyterInterpreterDependencyManager,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
-    IJupyterBackingFileCreator,
     IJupyterKernelService,
     INotebookStarter,
     IJupyterRequestCreator,
@@ -70,11 +64,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         MigrateJupyterInterpreterStateService
     );
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
-    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
-    serviceManager.addSingleton<IJupyterSessionManagerFactory>(
-        IJupyterSessionManagerFactory,
-        JupyterSessionManagerFactory
-    );
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<JupyterInterpreterDependencyService>(
         JupyterInterpreterDependencyService,
@@ -114,7 +103,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);
     serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
     serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);
-    serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);

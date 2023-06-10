@@ -20,27 +20,31 @@ import { INbExtensionsPathProvider } from '../types';
 import { NbExtensionsPathProvider } from './nbExtensionsPathProvider.node';
 import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExtensionsPathProvider.web';
 
-[false, true].forEach((isWeb) => {
+[false, true].forEach(async (isWeb) => {
     const localNonPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: '',
         kernelSpec: mock<IJupyterKernelSpec>()
     });
     const localPythonKernelSpec = PythonKernelConnectionMetadata.create({
-        id: '',
         kernelSpec: mock<IJupyterKernelSpec>(),
         interpreter: {
             sysPrefix: __dirname
         } as any
     });
-    const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
-        id: '',
-        serverId: '',
+    const remoteKernelSpec = await RemoteKernelSpecConnectionMetadata.create({
+        serverHandle: {
+            extensionId: '1',
+            handle: '1',
+            id: '1'
+        },
         baseUrl: 'http://bogus.com',
         kernelSpec: instance(mock<IJupyterKernelSpec>())
     });
     const remoteLiveKernel = LiveRemoteKernelConnectionMetadata.create({
-        id: '',
-        serverId: '',
+        serverHandle: {
+            extensionId: '1',
+            handle: '1',
+            id: '1'
+        },
         baseUrl: 'http://bogus.com',
         kernelModel: instance(mock<LiveKernelModel>())
     });

@@ -18,36 +18,36 @@ export class EncryptedStorage implements IEncryptedStorage {
 
     private readonly testingState = new Map<string, string>();
 
-    public async store(service: string, key: string, value: string | undefined): Promise<void> {
+    public async store(key: string, value: string | undefined): Promise<void> {
         // On CI we don't need to use keytar for testing (else it hangs).
         if (isCI && this.extensionContext.extensionMode !== ExtensionMode.Production) {
-            this.testingState.set(`${service}#${key}`, value || '');
+            this.testingState.set(key, value || '');
             return;
         }
 
         if (!value) {
             try {
-                await this.extensionContext.secrets.delete(`${service}.${key}`);
+                await this.extensionContext.secrets.delete(key);
             } catch (e) {
                 traceError(e);
             }
         } else {
-            await this.extensionContext.secrets.store(`${service}.${key}`, value);
+            await this.extensionContext.secrets.store(key, value);
         }
     }
-    public async retrieve(service: string, key: string): Promise<string | undefined> {
+    public async retrieve(key: string): Promise<string | undefined> {
         // On CI we don't need to use keytar for testing (else it hangs).
         if (isCI && this.extensionContext.extensionMode !== ExtensionMode.Production) {
-            return this.testingState.get(`${service}#${key}`);
+            return this.testingState.get(key);
         }
         try {
             // eslint-disable-next-line
-            const val = await this.extensionContext.secrets.get(`${service}.${key}`);
+            const val = await this.extensionContext.secrets.get(key);
             return val;
         } catch (e) {
             // If we get an error trying to get a secret, it might be corrupted. So we delete it.
             try {
-                await this.extensionContext.secrets.delete(`${service}.${key}`);
+                await this.extensionContext.secrets.delete(key);
                 return;
             } catch (e) {
                 traceError(e);

@@ -14,7 +14,7 @@ import {
     ThemeIcon
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { computeServerId, generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
+import { jupyterServerHandleToString } from '../../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUriStorage,
@@ -181,26 +181,23 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
     ): Promise<InputStep<MultiStepResult> | void> {
-        const servers = this.kernelFinder.registered.filter(
-            (info) => info.kind === 'remote' && (info as IRemoteKernelFinder).serverUri.uri
-        ) as IRemoteKernelFinder[];
+        const servers = this.kernelFinder.registered.filter((info) => info.kind === 'remote') as IRemoteKernelFinder[];
         const items: (ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem)[] = [];
 
         for (const server of servers) {
             // remote server
-            const savedURI = await this.serverUriStorage.get(server.serverUri.serverId);
+            const savedURI = await this.serverUriStorage.get(server.serverUri.serverHandle);
             if (token.isCancellationRequested) {
                 return;
             }
 
-            const idAndHandle = savedURI?.provider;
+            const idAndHandle = savedURI?.serverHandle;
             if (idAndHandle && idAndHandle.id === provider.id) {
                 // local server
                 const uriDate = new Date(savedURI.time);
                 items.push({
                     type: KernelFinderEntityQuickPickType.KernelFinder,
                     kernelFinderInfo: server,
-                    serverUri: savedURI.uri,
                     idAndHandle,
                     label: server.displayName,
                     detail: DataScience.jupyterSelectURIMRUDetail(uriDate),
@@ -225,7 +222,7 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 (i) => {
                     return {
                         ...i,
-                        provider: provider,
+                        provider,
                         type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
                         description: undefined,
                         originalItem: i
@@ -326,18 +323,29 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
         }
 
         const finderPromise = (async () => {
-            const serverId = await computeServerId(generateUriFromRemoteProvider(selectedSource.provider.id, handle));
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
-            await this.serverSelector.addJupyterServer({ id: selectedSource.provider.id, handle });
+            await this.serverSelector.addJupyterServer({
+                extensionId: selectedSource.provider.extensionId,
+                id: selectedSource.provider.id,
+                handle
+            });
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
             // Wait for the remote provider to be registered.
             return new Promise<IContributedKernelFinder>((resolve) => {
+                const serverHandleId = jupyterServerHandleToString({
+                    extensionId: selectedSource.provider.extensionId,
+                    id: selectedSource.provider.id,
+                    handle
+                });
                 const found = this.kernelFinder.registered.find(
-                    (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.serverId === serverId
+                    (f) =>
+                        f.kind === 'remote' &&
+                        jupyterServerHandleToString((f as IRemoteKernelFinder).serverUri.serverHandle) ===
+                            serverHandleId
                 );
                 if (found) {
                     return resolve(found);
@@ -345,7 +353,10 @@ export class NotebookKernelSourceSelector implements INotebookKernelSourceSelect
                 this.kernelFinder.onDidChangeRegistrations(
                     (e) => {
                         const found = e.added.find(
-                            (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.serverId === serverId
+                            (f) =>
+                                f.kind === 'remote' &&
+                                jupyterServerHandleToString((f as IRemoteKernelFinder).serverUri.serverHandle) ===
+                                    serverHandleId
                         );
                         if (found) {
                             return resolve(found);

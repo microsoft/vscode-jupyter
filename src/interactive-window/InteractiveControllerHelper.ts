@@ -14,7 +14,7 @@ import { IInterpreterService } from '../platform/interpreter/contracts';
 import { IServiceContainer } from '../platform/ioc/types';
 import { traceInfoIfCI, traceWarning } from '../platform/logging';
 import { IInteractiveControllerHelper } from './types';
-import { createInterpreterKernelSpec, getKernelId } from '../kernels/helpers';
+import { createInterpreterKernelSpec } from '../kernels/helpers';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
 const MostRecentKernelSelectedKey = 'LastInteractiveKernelSelected';
@@ -139,8 +139,7 @@ async function createActiveInterpreterController(
         const spec = await createInterpreterKernelSpec(pythonInterpreter);
         const metadata = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
-            interpreter: pythonInterpreter,
-            id: getKernelId(spec, pythonInterpreter)
+            interpreter: pythonInterpreter
         });
         const controllers = registration.addOrUpdate(metadata, [viewType]);
         const controller = controllers[0]; // Should only create one because only one view type

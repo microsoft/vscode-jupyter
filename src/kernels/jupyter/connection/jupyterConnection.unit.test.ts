@@ -9,14 +9,18 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { JupyterConnection } from './jupyterConnection';
 import {
+    IJupyterRequestCreator,
     IJupyterServerUriStorage,
-    IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
     JupyterServerInfo
 } from '../types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IConfigurationService, IDisposable, IJupyterSettings } from '../../../platform/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IJupyterSettings,
+    IWatchableJupyterSettings
+} from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import events from 'events';
 import { Subject } from 'rxjs/Subject';
@@ -32,15 +36,19 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from '../launcher/jupyterConnectionWaiter.node';
 import { noop } from '../../../test/core';
 import { IJupyterServerUri } from '../../../api';
+import { IDataScienceErrorHandler } from '../../errors/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
     let registrationPicker: IJupyterUriProviderRegistration;
-    let sessionManagerFactory: IJupyterSessionManagerFactory;
-    let sessionManager: IJupyterSessionManager;
     let serverUriStorage: IJupyterServerUriStorage;
+    let errorHandler: IDataScienceErrorHandler;
+    let applicationShell: IApplicationShell;
+    let configService: IConfigurationService;
     const disposables: IDisposable[] = [];
     const provider = {
+        extensionId: 'ext',
         id: 'someProvider',
         handle: 'someHandle'
     };
@@ -49,19 +57,27 @@ suite('Jupyter Connection', async () => {
         displayName: 'someDisplayName',
         token: '1234'
     };
+    let requestCreator: IJupyterRequestCreator;
+
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
-        sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
-        sessionManager = mock<IJupyterSessionManager>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
+        errorHandler = mock<IDataScienceErrorHandler>();
+        applicationShell = mock<IApplicationShell>();
+        configService = mock<IConfigurationService>();
+        const settings = mock<IWatchableJupyterSettings>();
+        when(configService.getSettings(anything())).thenReturn(instance(settings));
+        requestCreator = mock<IJupyterRequestCreator>();
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
-            instance(sessionManagerFactory),
-            instance(serverUriStorage)
+            instance(serverUriStorage),
+            instance(errorHandler),
+            instance(applicationShell),
+            instance(configService),
+            instance(requestCreator),
+            undefined
         );
 
-        (instance(sessionManager) as any).then = undefined;
-        when(sessionManagerFactory.create(anything(), anything())).thenResolve(instance(sessionManager));
         const serverConnectionChangeEvent = new EventEmitter<void>();
         disposables.push(serverConnectionChangeEvent);
 
@@ -72,64 +88,29 @@ suite('Jupyter Connection', async () => {
     });
 
     test('Validation will result in fetching kernels and kernelSpecs (Uri info provided)', async () => {
-        when(sessionManager.dispose()).thenResolve();
-        when(sessionManager.getKernelSpecs()).thenResolve([]);
-        when(sessionManager.getRunningKernels()).thenResolve([]);
+        await jupyterConnection.validateJupyterServer(provider, server);
 
-        await jupyterConnection.validateRemoteUri(provider, server);
-
-        verify(sessionManager.getKernelSpecs()).once();
-        verify(sessionManager.getRunningKernels()).once();
-        verify(sessionManager.dispose()).once();
-        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).never();
+        verify(registrationPicker.getJupyterServerUri(provider)).never();
     });
     test('Validation will result in fetching kernels and kernelSpecs (Uri info fetched from provider)', async () => {
-        when(sessionManager.dispose()).thenResolve();
-        when(sessionManager.getKernelSpecs()).thenResolve([]);
-        when(sessionManager.getRunningKernels()).thenResolve([]);
-        when(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).thenResolve(server);
+        when(registrationPicker.getJupyterServerUri(provider)).thenResolve(server);
 
-        await jupyterConnection.validateRemoteUri(provider);
+        await jupyterConnection.validateJupyterServer(provider);
 
-        verify(sessionManager.getKernelSpecs()).once();
-        verify(sessionManager.getRunningKernels()).once();
-        verify(sessionManager.dispose()).once();
-        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).atLeast(1);
+        verify(registrationPicker.getJupyterServerUri(provider)).atLeast(1);
     });
     test('Validation will fail if info could not be fetched from provider', async () => {
-        when(sessionManager.dispose()).thenResolve();
-        when(sessionManager.getKernelSpecs()).thenResolve([]);
-        when(sessionManager.getRunningKernels()).thenResolve([]);
-        when(registrationPicker.getJupyterServerUri(anything(), anything())).thenReject(new Error('kaboom'));
+        when(registrationPicker.getJupyterServerUri(anything())).thenReject(new Error('kaboom'));
 
-        await assert.isRejected(jupyterConnection.validateRemoteUri(provider));
+        await assert.isRejected(jupyterConnection.validateJupyterServer(provider));
 
-        verify(sessionManager.getKernelSpecs()).never();
-        verify(sessionManager.getRunningKernels()).never();
-        verify(sessionManager.dispose()).never();
-        verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).atLeast(1);
+        verify(registrationPicker.getJupyterServerUri(provider)).atLeast(1);
     });
     test('Validation will fail if fetching kernels fail', async () => {
-        when(sessionManager.dispose()).thenResolve();
-        when(sessionManager.getKernelSpecs()).thenResolve([]);
-        when(sessionManager.getRunningKernels()).thenReject(new Error('Kaboom kernels failure'));
-
-        await assert.isRejected(jupyterConnection.validateRemoteUri(provider, server), 'Kaboom kernels failure');
-
-        verify(sessionManager.getKernelSpecs()).once();
-        verify(sessionManager.getRunningKernels()).once();
-        verify(sessionManager.dispose()).once();
+        await assert.isRejected(jupyterConnection.validateJupyterServer(provider, server), 'Kaboom kernels failure');
     });
     test('Validation will fail if fetching kernelspecs fail', async () => {
-        when(sessionManager.dispose()).thenResolve();
-        when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
-        when(sessionManager.getRunningKernels()).thenResolve([]);
-
-        await assert.isRejected(jupyterConnection.validateRemoteUri(provider, server), 'Kaboom kernelspec failure');
-
-        verify(sessionManager.getKernelSpecs()).once();
-        verify(sessionManager.getRunningKernels()).once();
-        verify(sessionManager.dispose()).once();
+        await assert.isRejected(jupyterConnection.validateJupyterServer(provider, server), 'Kaboom kernelspec failure');
     });
 });
 
@@ -139,6 +120,7 @@ suite('JupyterConnection', () => {
     let launchResult: ObservableExecutionResult<string>;
     let getServerInfoStub: sinon.SinonStub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>;
     let configService: IConfigurationService;
+    let jupyterConnection: JupyterConnection;
     let fs: IFileSystemNode;
     let serviceContainer: IServiceContainer;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -193,6 +175,7 @@ suite('JupyterConnection', () => {
         getServerInfoStub = sinon.stub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>();
         serviceContainer = mock(ServiceContainer);
         fs = mock<IFileSystemNode>();
+        jupyterConnection = mock<JupyterConnection>();
         configService = mock(ConfigurationService);
         const settings = mock(JupyterSettings);
         getServerInfoStub.resolves(dummyServerInfos);
@@ -209,7 +192,8 @@ suite('JupyterConnection', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             getServerInfoStub as any,
             instance(serviceContainer),
-            undefined
+            undefined,
+            instance(jupyterConnection)
         );
     }
     test('Successfully gets connection info', async () => {

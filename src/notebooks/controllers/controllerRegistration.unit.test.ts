@@ -42,7 +42,6 @@ suite('Controller Registration', () => {
         uri: Uri.file('activePythonEnv')
     };
     const activePythonConnection = PythonKernelConnectionMetadata.create({
-        id: 'activePython',
         kernelSpec: {
             argv: [],
             display_name: 'activePython',
@@ -58,7 +57,6 @@ suite('Controller Registration', () => {
         envType: EnvironmentType.Conda
     };
     const condaPythonConnection = PythonKernelConnectionMetadata.create({
-        id: 'condaKernel',
         kernelSpec: {
             argv: [],
             display_name: 'conda kernel',
@@ -76,7 +74,6 @@ suite('Controller Registration', () => {
         executable: ''
     };
     const javaKernelConnection = LocalKernelSpecConnectionMetadata.create({
-        id: 'java',
         kernelSpec: javaKernelSpec
     });
     let clock: fakeTimers.InstalledClock;

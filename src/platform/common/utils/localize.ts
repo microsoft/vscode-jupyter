@@ -704,7 +704,6 @@ export namespace DataScience {
     export const localPythonEnvironments = l10n.t('Python Environments...');
     export const UserJupyterServerUrlProviderDisplayName = l10n.t('Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = l10n.t('Connect to an existing Jupyter Server');
-    export const UserJupyterServerUrlAlreadyExistError = l10n.t('A Jupyter Server with this URL already exists');
     export const kernelPickerSelectKernelTitle = l10n.t('Select Kernel');
     export const kernelPickerSelectLocalKernelSpecTitle = l10n.t('Select a Jupyter Kernel');
     export const kernelPickerSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');

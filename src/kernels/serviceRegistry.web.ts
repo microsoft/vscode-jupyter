@@ -36,7 +36,7 @@ import { RemoteJupyterServerMruUpdate } from './jupyter/connection/remoteJupyter
 import { KernelDependencyService } from './kernelDependencyService.web';
 import { KernelStartupCodeProviders } from './kernelStartupCodeProviders.web';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
-import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
+import { ClearJupyterServersCommand } from './jupyter/connection/clearJupyterServersCommand';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {

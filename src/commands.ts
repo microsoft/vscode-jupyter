@@ -33,6 +33,7 @@ export type ContextKeyValue =
  */
 export interface ICommandNameArgumentTypeMapping {
     ['workbench.action.showCommands']: [];
+    ['dataScience.ClearUserProviderJupyterServerCache']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
     ['workbench.action.debug.restart']: [];

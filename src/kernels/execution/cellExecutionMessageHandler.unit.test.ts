@@ -29,7 +29,7 @@ import {
     createKernelConnection,
     createMessageProducers
 } from '../../test/datascience/fakeKernelConnection.node';
-import { JupyterRequestCreator } from '../jupyter/session/jupyterRequestCreator.node';
+import { JupyterRequestCreator } from '../jupyter/connection/jupyterRequestCreator.node';
 import { waitForCondition } from '../../test/common';
 
 suite(`Cell Execution Message Handler`, () => {

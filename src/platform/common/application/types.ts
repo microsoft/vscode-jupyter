@@ -1250,6 +1250,6 @@ export interface IVSCodeNotebook {
 
 export const IEncryptedStorage = Symbol('IEncryptedStorage');
 export interface IEncryptedStorage {
-    store(service: string, key: string, value: string | undefined): Promise<void>;
-    retrieve(service: string, key: string): Promise<string | undefined>;
+    store(key: string, value: string | undefined): Promise<void>;
+    retrieve(key: string): Promise<string | undefined>;
 }

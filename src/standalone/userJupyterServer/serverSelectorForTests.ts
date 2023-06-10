@@ -17,13 +17,13 @@ import { IJupyterServerUri } from '../../api';
  * Registers commands to allow the user to set the remote server URI.
  */
 @injectable()
-export class JupyterServerSelectorCommand
+export class JupyterServerSelectorForTests
     extends Disposables
     implements IExtensionSyncActivationService, IInternalJupyterUriProvider
 {
+    public readonly extensionId = JVSC_EXTENSION_ID;
     private handleMappings = new Map<string, { uri: Uri; server: IJupyterServerUri }>();
     private _onDidChangeHandles = new EventEmitter<void>();
-    public readonly extensionId: string = JVSC_EXTENSION_ID;
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
@@ -52,6 +52,10 @@ export class JupyterServerSelectorCommand
     }
     private async selectJupyterUri(source: Uri): Promise<void> {
         traceInfo(`Setting Jupyter Server URI to remote: ${source}`);
+        if (Array.from(this.handleMappings.values()).some((item) => item.uri.toString() === source.toString())) {
+            this._onDidChangeHandles.fire();
+            return;
+        }
         const uri = source.toString(true);
         const url = new URL(uri);
         const baseUrl = `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
@@ -63,8 +67,7 @@ export class JupyterServerSelectorCommand
             token
         };
         this.handleMappings.set(handle, { uri: source, server: serverUri });
-        // Set the uri directly
-        await this.serverSelector.addJupyterServer({ id: this.id, handle });
+        await this.serverSelector.addJupyterServer({ extensionId: JVSC_EXTENSION_ID, id: this.id, handle });
         this._onDidChangeHandles.fire();
     }
 }

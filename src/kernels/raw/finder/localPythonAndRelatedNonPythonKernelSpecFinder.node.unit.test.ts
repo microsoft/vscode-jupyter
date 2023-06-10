@@ -22,7 +22,7 @@ import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
-import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
+import { createInterpreterKernelSpec } from '../../helpers';
 import { ResourceMap } from '../../../platform/vscode-path/map';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { uriEquals } from '../../../test/datascience/helpers';
@@ -30,7 +30,7 @@ import { traceInfo } from '../../../platform/logging';
 import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 
-suite(`Local Python and related kernels`, async () => {
+suite(`Local Python and related kernels`, () => {
     let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
     let interpreterService: IInterpreterService;
     let fs: IFileSystemNode;
@@ -51,7 +51,6 @@ suite(`Local Python and related kernels`, async () => {
     let loadKernelSpecReturnValue = new ResourceMap<IJupyterKernelSpec>();
     const globalKernelRootPath = Uri.file('root');
     const pythonKernelSpec = PythonKernelConnectionMetadata.create({
-        id: 'python',
         interpreter: {
             id: 'python',
             sysPrefix: 'home/python',
@@ -77,7 +76,6 @@ suite(`Local Python and related kernels`, async () => {
     let condaKernel: PythonKernelConnectionMetadata;
 
     const globalPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'pythonGlobal',
         // This kernelspec belongs to the conda env.
         kernelSpec: {
             argv: [globalInterpreter.uri.fsPath, '-m', 'powershell_custom'],
@@ -89,7 +87,6 @@ suite(`Local Python and related kernels`, async () => {
         }
     });
     const globalPythonKernelSpecUnknownExecutable = LocalKernelSpecConnectionMetadata.create({
-        id: 'pythonGlobalUnknown',
         // This kernelspec belongs to the conda env.
         kernelSpec: {
             argv: [Uri.joinPath(Uri.file('unknown'), 'bin', 'python').fsPath, '-m', 'powershell_custom'],
@@ -101,7 +98,6 @@ suite(`Local Python and related kernels`, async () => {
         }
     });
     const globalJuliaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'juliaGlobal',
         // This kernelspec belongs to the conda env.
         kernelSpec: {
             argv: ['julia'],
@@ -113,7 +109,6 @@ suite(`Local Python and related kernels`, async () => {
         }
     });
     const javaKernelSpec = LocalKernelSpecConnectionMetadata.create({
-        id: 'java',
         // This kernelspec belongs to the conda env.
         interpreter: condaInterpreter,
         kernelSpec: {
@@ -179,18 +174,15 @@ suite(`Local Python and related kernels`, async () => {
         // Initialize the kernel specs (test data).
         let kernelSpec = await createInterpreterKernelSpec(venvInterpreter, tempDirForKernelSpecs);
         venvPythonKernel = PythonKernelConnectionMetadata.create({
-            id: getKernelId(kernelSpec, venvInterpreter),
             interpreter: venvInterpreter,
             kernelSpec
         });
         cachedVenvPythonKernel = PythonKernelConnectionMetadata.create({
-            id: getKernelId(kernelSpec, cachedVenvInterpreterWithOlderVersionOfPython),
             interpreter: cachedVenvInterpreterWithOlderVersionOfPython,
             kernelSpec
         });
         kernelSpec = await createInterpreterKernelSpec(condaInterpreter, tempDirForKernelSpecs);
         condaKernel = PythonKernelConnectionMetadata.create({
-            id: getKernelId(kernelSpec, condaInterpreter),
             interpreter: condaInterpreter,
             kernelSpec
         });
@@ -233,9 +225,9 @@ suite(`Local Python and related kernels`, async () => {
         disposables.push(new Disposable(() => loadKernelSpecStub.restore()));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
-    teardown(async function () {
+    teardown(function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
-        await disposeAllDisposables(disposables);
+        disposeAllDisposables(disposables);
     });
 
     test('Nothing found in cache', async () => {
@@ -351,12 +343,10 @@ suite(`Local Python and related kernels`, async () => {
 
         const spec = await createInterpreterKernelSpec(globalInterpreter, tempDirForKernelSpecs);
         const expectedGlobalKernelSpec = LocalKernelSpecConnectionMetadata.create({
-            id: getKernelId(globalPythonKernelSpec.kernelSpec, globalInterpreter),
             kernelSpec: globalPythonKernelSpec.kernelSpec,
             interpreter: globalInterpreter
         });
         const expectedGlobalKernel = PythonKernelConnectionMetadata.create({
-            id: getKernelId(spec, globalInterpreter),
             interpreter: globalInterpreter,
             kernelSpec: spec
         });
@@ -381,12 +371,10 @@ suite(`Local Python and related kernels`, async () => {
         when(interpreterService.resolvedEnvironments).thenReturn([globalInterpreter, condaKernel.interpreter]);
         const spec = await createInterpreterKernelSpec(globalInterpreter, tempDirForKernelSpecs);
         const expectedGlobalKernelSpec = LocalKernelSpecConnectionMetadata.create({
-            id: getKernelId(globalPythonKernelSpec.kernelSpec, globalInterpreter),
             kernelSpec: globalPythonKernelSpec.kernelSpec,
             interpreter: globalInterpreter
         });
         const expectedGlobalKernel = PythonKernelConnectionMetadata.create({
-            id: getKernelId(spec, globalInterpreter),
             interpreter: globalInterpreter,
             kernelSpec: spec
         });
@@ -592,8 +580,7 @@ suite(`Local Python and related kernels`, async () => {
         // But is a local kernelSpec.
         const expectedJavaKernelSpec = LocalKernelSpecConnectionMetadata.create({
             kernelSpec: javaKernelSpec.kernelSpec,
-            interpreter: condaInterpreter,
-            id: getKernelId(javaKernelSpec.kernelSpec, condaInterpreter)
+            interpreter: condaInterpreter
         });
 
         finder.onDidChangeKernels(() => clock.runAllAsync().catch(noop));

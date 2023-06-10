@@ -4,14 +4,13 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
-import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { jupyterServerHandleToString } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
     IInternalJupyterUriProvider,
     IJupyterUriProviderRegistration
 } from '../../kernels/jupyter/types';
 import {
-    IJupyterKernelSpec,
     LiveKernelModel,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
@@ -22,7 +21,6 @@ import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { waitForCondition } from '../../test/common';
-import { JupyterServerUriHandle } from '../../api';
 
 suite('RemoteKernelControllerWatcher', () => {
     let watcher: RemoteKernelControllerWatcher;
@@ -52,9 +50,12 @@ suite('RemoteKernelControllerWatcher', () => {
 
     test('Dispose controllers associated with an old handle', async () => {
         const provider1Id = 'provider1';
-        const provider1Handle1: JupyterServerUriHandle = 'provider1Handle1';
-        const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
-        const serverId = await computeServerId(remoteUriForProvider1);
+        const provider1Handle1 = 'provider1Handle1';
+        const remoteServerHandleIdForProvider1 = jupyterServerHandleToString({
+            extensionId: 'ext',
+            id: provider1Id,
+            handle: provider1Handle1
+        });
 
         let onDidChangeHandles: undefined | (() => Promise<void>);
         const provider1 = mock<IInternalJupyterUriProvider>();
@@ -87,28 +88,40 @@ suite('RemoteKernelControllerWatcher', () => {
         when(localKernel.dispose()).thenReturn();
         when(localKernel.connection).thenReturn(
             LocalKernelSpecConnectionMetadata.create({
-                id: 'local1',
-                kernelSpec: mock<IJupyterKernelSpec>()
+                kernelSpec: {
+                    argv: [],
+                    display_name: 'Java KernelSpec',
+                    executable: '',
+                    name: 'javaName',
+                    language: 'java'
+                }
             })
         );
         const remoteKernelSpec = mock<IVSCodeNotebookController>();
         when(remoteKernelSpec.dispose()).thenReturn();
         when(remoteKernelSpec.connection).thenReturn(
-            RemoteKernelSpecConnectionMetadata.create({
-                id: 'remote1',
-                baseUrl: remoteUriForProvider1,
-                kernelSpec: mock<IJupyterKernelSpec>(),
-                serverId
+            await RemoteKernelSpecConnectionMetadata.create({
+                baseUrl: remoteServerHandleIdForProvider1,
+                kernelSpec: {
+                    argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                    display_name: 'Python 3',
+                    executable: 'python',
+                    name: 'python3'
+                },
+                serverHandle: {
+                    extensionId: 'ext',
+                    handle: provider1Handle1,
+                    id: provider1Id
+                }
             })
         );
         const remoteLiveKernel = mock<IVSCodeNotebookController>();
         when(remoteLiveKernel.dispose()).thenReturn();
         when(remoteLiveKernel.connection).thenReturn(
             LiveRemoteKernelConnectionMetadata.create({
-                id: 'live1',
-                baseUrl: remoteUriForProvider1,
+                baseUrl: remoteServerHandleIdForProvider1,
                 kernelModel: mock<LiveKernelModel>(),
-                serverId
+                serverHandle: { extensionId: 'ext', handle: provider1Handle1, id: provider1Id }
             })
         );
         when(controllers.registered).thenReturn([
@@ -120,21 +133,19 @@ suite('RemoteKernelControllerWatcher', () => {
         when(uriStorage.getAll()).thenResolve([
             {
                 time: 1,
-                serverId,
-                uri: remoteUriForProvider1,
                 displayName: 'Something',
-                provider: {
+                serverHandle: {
+                    extensionId: 'ext',
                     handle: provider1Handle1,
                     id: provider1Id
                 }
             }
         ]);
-        when(uriStorage.get(serverId)).thenResolve({
+        when(uriStorage.get(anything())).thenResolve({
             time: 1,
-            serverId,
-            uri: remoteUriForProvider1,
             displayName: 'Something',
-            provider: {
+            serverHandle: {
+                extensionId: 'ext',
                 handle: provider1Handle1,
                 id: provider1Id
             }
@@ -182,7 +193,7 @@ suite('RemoteKernelControllerWatcher', () => {
         await onDidChangeHandles!();
 
         assert.isOk(onDidChangeHandles, 'onDidChangeHandles should be defined');
-        verify(uriStorage.remove(serverId)).once();
+        verify(uriStorage.remove(anything())).once();
         verify(localKernel.dispose()).never();
         verify(remoteKernelSpec.dispose()).once();
         verify(remoteLiveKernel.dispose()).once();

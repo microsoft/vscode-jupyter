@@ -18,6 +18,7 @@ import {
     INotebookKernelExecution
 } from './types';
 import { IJupyterServerUriEntry } from './jupyter/types';
+import { jupyterServerHandleToString } from './jupyter/jupyterUtils';
 
 /**
  * Provides kernels to the system. Generally backed by a URI or a notebook object.
@@ -159,7 +160,8 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 const metadata = kernel.options.metadata;
 
                 if (metadata.kind === 'connectToLiveRemoteKernel' || metadata.kind === 'startUsingRemoteKernelSpec') {
-                    const matchingRemovedUri = uris.find((uri) => uri.serverId === metadata.serverId);
+                    const id = jupyterServerHandleToString(metadata.serverHandle);
+                    const matchingRemovedUri = uris.find((uri) => jupyterServerHandleToString(uri.serverHandle) === id);
                     if (matchingRemovedUri) {
                         // it should be removed
                         this.kernelsByNotebook.delete(document);

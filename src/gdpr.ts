@@ -970,16 +970,6 @@
      ]
    }
  */
-//Telemetry.SetJupyterURIToUserSpecified
-/* __GDPR__
-   "DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED" : {
-     "azure": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the URI set to an Azure uri.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ShowDataViewer
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER" : {
@@ -1135,15 +1125,6 @@
 //Telemetry.ConnectRemoteFailedJupyter
 /* __GDPR__
    "DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.ConnectRemoteJupyterViaLocalHost
-/* __GDPR__
-   "DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST" : {
      "${include}": [
        "${F1}"
 
@@ -1434,18 +1415,6 @@
 //Telemetry.JupyterServerZMQStreamError
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_SERVER_ZMQ_STREAM_ERROR" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.StartedRemoteJupyterSessionWithBackingFile
-/* __GDPR__
-   "DS_INTERNAL.JUPYTER_STARTED_SESSION_WITH_BACKING_FILE" : {
-     "failedWithoutBackingFile": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Failed to start the session without the backing file.","owner":"donjayamanne"},
-     "failedWithBackingFile": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Failed to start the session without the backing file.","owner":"donjayamanne"},
-     "localHost": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this is a local host connection or remote.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
