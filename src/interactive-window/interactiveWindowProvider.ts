@@ -21,8 +21,6 @@ import { IFileSystem } from '../platform/common/platform/types';
 
 import {
     GLOBAL_MEMENTO,
-    IAsyncDisposable,
-    IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
     IMemento,
@@ -61,9 +59,7 @@ export const InteractiveWindowCacheKey = 'ds_interactive_window_cache';
  * Factory for InteractiveWindow
  */
 @injectable()
-export class InteractiveWindowProvider
-    implements IInteractiveWindowProvider, IEmbedNotebookEditorProvider, IAsyncDisposable
-{
+export class InteractiveWindowProvider implements IInteractiveWindowProvider, IEmbedNotebookEditorProvider {
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
@@ -81,7 +77,6 @@ export class InteractiveWindowProvider
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
@@ -92,8 +87,6 @@ export class InteractiveWindowProvider
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveControllerHelper) private readonly controllerHelper: IInteractiveControllerHelper
     ) {
-        asyncRegistry.push(this);
-
         this.notebookEditorProvider.registerEmbedNotebookProvider(this);
         this.restoreWindows();
     }
@@ -184,10 +177,6 @@ export class InteractiveWindowProvider
     public get(owner: Uri): IInteractiveWindow | undefined {
         const mode = this.configService.getSettings(owner).interactiveWindowMode;
         return this.getExisting(owner, mode);
-    }
-
-    public async dispose(): Promise<void> {
-        return noop();
     }
 
     private async create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {

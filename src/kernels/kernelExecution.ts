@@ -25,6 +25,7 @@ import {
     NotebookCellRunState,
     ResumeCellExecutionInformation
 } from './types';
+import { SessionDisposedError } from '../platform/errors/sessionDisposedError';
 
 /**
  * Everything in this classes gets disposed via the `onWillCancel` hook.
@@ -142,7 +143,9 @@ export class NotebookKernelExecution implements INotebookKernelExecution {
     }
     executeHidden(code: string): Promise<IOutput[]> {
         const sessionPromise = this.kernel.start();
-        return sessionPromise.then((session) => executeSilently(session, code));
+        return sessionPromise.then((session) =>
+            session.kernel ? executeSilently(session.kernel, code) : Promise.reject(new SessionDisposedError())
+        );
     }
     private async onWillInterrupt() {
         const executionQueue = this.documentExecutions.get(this.notebook);

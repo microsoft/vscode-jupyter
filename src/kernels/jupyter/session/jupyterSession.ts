@@ -12,7 +12,7 @@ import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import {
@@ -46,7 +46,6 @@ export class JupyterSession
         override readonly workingDirectory: Uri,
         private readonly idleTimeout: number,
         private readonly kernelService: IJupyterKernelService | undefined,
-        interruptTimeout: number,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly sessionCreator: KernelActionSource
@@ -55,8 +54,7 @@ export class JupyterSession
             connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
             resource,
             kernelConnectionMetadata,
-            workingDirectory,
-            interruptTimeout
+            workingDirectory
         );
     }
 
@@ -64,11 +62,6 @@ export class JupyterSession
         return true;
     }
 
-    @capturePerfTelemetry(Telemetry.WaitForIdleJupyter)
-    public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
-        // Wait for idle on this session
-        return this.waitForIdleOnSession(this.session, timeout, token);
-    }
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
         this.setSession(await this.createNewKernelSession(options));

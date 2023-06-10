@@ -1951,24 +1951,6 @@
      ]
    }
  */
-//Telemetry.WaitForIdleJupyter
-/* __GDPR__
-   "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.WebviewStartup
-/* __GDPR__
-   "DS_INTERNAL.WEBVIEW_STARTUP" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //EventName.ENVFILE_VARIABLE_SUBSTITUTION
 /* __GDPR__
    "ENVFILE_VARIABLE_SUBSTITUTION" : {

@@ -50,18 +50,10 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
         workingDirectory: Uri,
-        interruptTimeout: number,
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super('localRaw', resource, kernelConnection, workingDirectory, interruptTimeout);
-    }
-
-    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
-        // Wait until status says idle.
-        if (this.session) {
-            return this.waitForIdleOnSession(this.session, timeout, token);
-        }
+        super('localRaw', resource, kernelConnection, workingDirectory);
     }
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
