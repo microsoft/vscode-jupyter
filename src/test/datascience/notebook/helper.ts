@@ -338,7 +338,7 @@ async function shutdownRemoteKernels() {
     const cancelToken = new CancellationTokenSource();
     let labHelper: JupyterLabHelper | undefined;
     try {
-        const connection = await jupyterConnection.createRemoveConnectionInfo(
+        const connection = await jupyterConnection.createRemoteConnectionInfo(
             (
                 await serverUriStorage.getAll()
             )[0].serverHandle

@@ -249,7 +249,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(KernelProgressReporter.createProgressReporter(undefined, DataScience.connectingToJupyter));
         }
         return this.jupyterConnection
-            .createRemoveConnectionInfo(this.serverUri.serverHandle)
+            .createRemoteConnectionInfo(this.serverUri.serverHandle)
             .finally(() => disposeAllDisposables(disposables));
     }
 

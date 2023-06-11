@@ -73,7 +73,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         if (!kernelConnection) {
             throw new SessionDisposedError();
         }
-        const connection = await this.connection.createRemoveConnectionInfo(
+        const connection = await this.connection.createRemoteConnectionInfo(
             kernel.kernelConnectionMetadata.serverHandle
         );
         const contentManager = new ContentsManager({ serverSettings: connection.serverSettings });

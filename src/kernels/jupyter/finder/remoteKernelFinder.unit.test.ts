@@ -148,7 +148,7 @@ suite(`Remote Kernel Finder`, () => {
         kernelsChanged = createEventHandler(kernelFinder, 'onDidChangeKernels');
         disposables.push(kernelsChanged);
         jupyterConnection = mock<JupyterConnection>();
-        when(jupyterConnection.createRemoveConnectionInfo(anything())).thenResolve(connInfo);
+        when(jupyterConnection.createRemoteConnectionInfo(anything())).thenResolve(connInfo);
         remoteKernelFinder = new RemoteKernelFinder(
             'currentremote',
             'Remove Kernels',

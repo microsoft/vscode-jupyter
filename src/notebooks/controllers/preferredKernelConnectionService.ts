@@ -107,7 +107,7 @@ export class PreferredKernelConnectionService {
             kernelFinder.kernels.find((item) => isRemoteConnection(item)) as RemoteKernelConnectionMetadata | undefined
         )?.serverHandle;
         if (provider) {
-            const connection = await this.jupyterConnection.createRemoveConnectionInfo(provider);
+            const connection = await this.jupyterConnection.createRemoteConnectionInfo(provider);
             const sessionOptions = getRemoteSessionOptions(connection, notebook.uri);
             const matchingSession =
                 sessionOptions &&

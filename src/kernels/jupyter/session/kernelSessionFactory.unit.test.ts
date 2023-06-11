@@ -15,7 +15,6 @@ import { JupyterConnection } from '../connection/jupyterConnection';
 import { JupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
 import { IJupyterKernelService, IJupyterRequestCreator, IJupyterServerProvider } from '../types';
 import { IJupyterKernelSession, KernelConnectionMetadata } from '../../types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { JupyterLabHelper } from './jupyterLabHelper';
 
 function Uri(filename: string): vscode.Uri {
@@ -50,7 +49,7 @@ suite('NotebookProvider', () => {
         instance(jupyterSessionManager as any).then = undefined;
         when(jupyterSessionManager.isDisposed).thenReturn(false);
         const jupyterConnection = mock<JupyterConnection>();
-        when(jupyterConnection.createRemoveConnectionInfo(anything())).thenResolve({
+        when(jupyterConnection.createRemoteConnectionInfo(anything())).thenResolve({
             localLaunch: true,
             baseUrl: 'http://localhost:8888'
         } as any);
@@ -59,16 +58,12 @@ suite('NotebookProvider', () => {
             baseUrl: 'http://localhost:8888'
         } as any);
         asyncDisposables = new AsyncDisposableRegistry();
-        const workspace = mock<IWorkspaceService>();
-        when(workspace.computeWorkingDirectory(anything())).thenResolve('');
         configService = mock<IConfigurationService>();
         kernelService = mock<IJupyterKernelService>();
         requestCreator = mock<IJupyterRequestCreator>();
         jupyterKernelSessionFactory = new JupyterKernelSessionFactory(
             instance(jupyterNotebookProvider),
             instance(jupyterConnection),
-            asyncDisposables,
-            instance(workspace),
             instance(configService),
             instance(kernelService),
             instance(requestCreator)

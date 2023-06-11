@@ -17,7 +17,7 @@ import { IJupyterServerUri } from '../../../api';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { IJupyterConnection } from '../../types';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../../platform/common/constants';
 import { getJupyterConnectionDisplayName } from '../helpers';
@@ -27,6 +27,8 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
+import { raceCancellation } from '../../../platform/common/cancellation';
+import { traceError } from '../../../platform/logging';
 
 /**
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.
@@ -56,14 +58,29 @@ export class JupyterConnection {
         private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined
     ) {}
 
-    public async createRemoveConnectionInfo(serverHandle: JupyterServerProviderHandle) {
+    public async createRemoteConnectionInfo(serverHandle: JupyterServerProviderHandle, token?: CancellationToken) {
         const server = await this.serverUriStorage.get(serverHandle);
         if (!server) {
             throw new Error('Server Not found');
         }
         const serverUri = await this.getJupyterServerUri(serverHandle);
         const partialConnection = createRemoteConnectionInfo(serverHandle, serverUri);
-        return { ...partialConnection, serverSettings: this.toServerConnectionSettings(partialConnection) };
+        const connection = { ...partialConnection, serverSettings: this.toServerConnectionSettings(partialConnection) };
+        const labHelper = new JupyterLabHelper(connection);
+        try {
+            await raceCancellation(token, Promise.all([labHelper.getRunningKernels(), labHelper.getKernelSpecs()]));
+        } catch (ex) {
+            if (token?.isCancellationRequested) {
+                traceError(
+                    'Failed to fetch running kernels from remote server, connection may be outdated or remote server may be unreachable',
+                    ex
+                );
+            }
+            throw ex;
+        } finally {
+            labHelper.dispose().catch(noop);
+        }
+        return connection;
     }
 
     public async createLocalConnectionInfo({

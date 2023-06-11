@@ -192,7 +192,7 @@ suite('Preferred Kernel Connection', () => {
         ]);
         (instance(connection) as any).then = undefined;
         when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
-        when(jupyterConnection.createRemoveConnectionInfo(anything())).thenResolve(instance(connection));
+        when(jupyterConnection.createRemoteConnectionInfo(anything())).thenResolve(instance(connection));
         preferredService = new PreferredKernelConnectionService(instance(jupyterConnection));
         disposables.push(preferredService);
     });
