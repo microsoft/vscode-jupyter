@@ -29,6 +29,8 @@ extends:
       - name: Linux
         vsceTarget: ''
       - name: Linux
+        vsceTarget: 'web'
+      - name: Linux
         packageArch: arm64
         vsceTarget: linux-arm64
       - name: Linux
