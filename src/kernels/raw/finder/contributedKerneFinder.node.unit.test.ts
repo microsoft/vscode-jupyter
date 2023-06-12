@@ -42,7 +42,7 @@ import {
 import { JupyterPaths } from './jupyterPaths.node';
 import { loadKernelSpec } from './localKernelSpecFinderBase.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../kernelFinder';
@@ -256,7 +256,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             const serviceContainer = mock<ServiceContainer>();
             const iocStub = sinon.stub(ServiceContainer, 'instance').get(() => instance(serviceContainer));
             disposables.push(new Disposable(() => iocStub.restore()));
-            const pythonKernelFinderWrapper = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+            const pythonKernelFinderWrapper = new OldLocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
                 instance(fs),
                 instance(workspaceService),

@@ -11,7 +11,7 @@ import { IDisposable } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { ITrustedKernelPaths } from './types';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -31,7 +31,7 @@ import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 
 suite(`Local Python and related kernels`, async () => {
-    let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
+    let finder: OldLocalPythonAndRelatedNonPythonKernelSpecFinder;
     let interpreterService: IInterpreterService;
     let fs: IFileSystemNode;
     let workspaceService: IWorkspaceService;
@@ -199,7 +199,7 @@ suite(`Local Python and related kernels`, async () => {
 
         disposables.push(new Disposable(() => clock.uninstall()));
 
-        finder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+        finder = new OldLocalPythonAndRelatedNonPythonKernelSpecFinder(
             instance(interpreterService),
             instance(fs),
             instance(workspaceService),

@@ -17,7 +17,7 @@ import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { isUnitTestExecution } from '../../../platform/common/constants';
 
@@ -58,7 +58,7 @@ export class ContributedLocalPythonEnvFinder
     private cache: PythonKernelConnectionMetadata[] = [];
     private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
+        @inject(OldLocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,

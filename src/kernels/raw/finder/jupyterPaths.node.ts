@@ -240,16 +240,10 @@ export class JupyterPaths {
         }
         return this.platformService.homeDir ? Uri.joinPath(this.platformService.homeDir, '.jupyter') : undefined;
     }
-    private getSystemJupyterPaths(interpreter?: PythonEnvironment) {
+    private getSystemJupyterPaths() {
         if (this.platformService.isWindows) {
             const programData = process.env['PROGRAMDATA'] ? path.normalize(process.env['PROGRAMDATA']) : undefined;
-            if (programData) {
-                return [Uri.joinPath(Uri.file(programData), 'jupyter')];
-            }
-            if (interpreter) {
-                return [Uri.joinPath(Uri.file(interpreter.sysPrefix), 'share', 'jupyter')];
-            }
-            return [];
+            return programData ? [Uri.joinPath(Uri.file(programData), 'jupyter')] : [];
         } else {
             return [Uri.file('/usr/local/share/jupyter'), Uri.file('/usr/share/jupyter')];
         }
