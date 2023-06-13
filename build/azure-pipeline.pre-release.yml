@@ -7,7 +7,6 @@ name: $(Date:yyyyMMdd)_$(Hours)_$(Minutes)_$(Rev:r)
 schedules:
   - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
     displayName: Nightly Release Schedule
-    always: true
     branches:
       include:
         - main
