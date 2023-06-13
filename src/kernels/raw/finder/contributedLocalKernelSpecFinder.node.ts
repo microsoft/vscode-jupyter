@@ -203,65 +203,53 @@ export class ContributedLocalKernelSpecFinder
     }
 
     private async writeToCache(values: LocalKernelConnectionMetadata[]) {
-        try {
-            const uniqueIds = new Set<string>();
-            values = this.filterKernels(
-                values.filter((item) => {
-                    if (uniqueIds.has(item.id)) {
-                        return false;
-                    }
-                    uniqueIds.add(item.id);
-                    return true;
-                })
-            );
-
-            const oldValues = this.cache;
-            const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
-            const kernels = new Map(values.map((item) => [item.id, item]));
-            const added = values.filter((k) => !oldKernels.has(k.id));
-            const updated = values.filter(
-                (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
-            );
-            const removed = oldValues.filter((k) => !kernels.has(k.id));
-
-            this.cache = values;
-            if (added.length || updated.length || removed.length) {
-                this._onDidChangeKernels.fire({ added, updated, removed });
-            }
-
-            if (values.length) {
-                if (this.cacheLoggingTimeout) {
-                    clearTimeout(this.cacheLoggingTimeout);
+        const uniqueIds = new Set<string>();
+        values = this.filterKernels(
+            values.filter((item) => {
+                if (uniqueIds.has(item.id)) {
+                    return false;
                 }
-                // Reduce the logging, as this can get written a lot,
-                this.cacheLoggingTimeout = setTimeout(
-                    () => {
-                        traceVerbose(
-                            `Updating cache with Local kernels ${values
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Added = ${added
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Updated = ${updated
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Removed = ${removed
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}`
-                        );
-                    },
-                    isUnitTestExecution() ? 0 : 15_000
-                );
-                this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
+                uniqueIds.add(item.id);
+                return true;
+            })
+        );
+
+        const oldValues = this.cache;
+        const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
+        const kernels = new Map(values.map((item) => [item.id, item]));
+        const added = values.filter((k) => !oldKernels.has(k.id));
+        const updated = values.filter(
+            (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
+        );
+        const removed = oldValues.filter((k) => !kernels.has(k.id));
+
+        this.cache = values;
+        if (added.length || updated.length || removed.length) {
+            this._onDidChangeKernels.fire({ added, updated, removed });
+        }
+
+        if (values.length) {
+            if (this.cacheLoggingTimeout) {
+                clearTimeout(this.cacheLoggingTimeout);
             }
-        } catch (ex) {
-            traceError('LocalKernelFinder: Failed to write to cache', ex);
+            // Reduce the logging, as this can get written a lot,
+            this.cacheLoggingTimeout = setTimeout(
+                () => {
+                    traceVerbose(
+                        `Updating cache with Local kernels ${values
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Added = ${added
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Updated = ${updated
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Removed = ${removed
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}`
+                    );
+                },
+                isUnitTestExecution() ? 0 : 15_000
+            );
+            this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
         }
     }
 }
