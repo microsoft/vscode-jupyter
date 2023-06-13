@@ -86,7 +86,8 @@ export class LocalKernelSelector extends BaseKernelSelector implements IDisposab
 
         if (
             !this.extensionChecker.isPythonExtensionInstalled &&
-            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
+            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment &&
+            !this.installPythonExtItems.includes(this.installPythonExtension)
         ) {
             this.installPythonExtItems.push(this.installPythonExtension);
         }
@@ -99,7 +100,7 @@ export class LocalKernelSelector extends BaseKernelSelector implements IDisposab
             this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
         ) {
             if (this.provider.kernels.length === 0 && this.provider.status === 'idle') {
-                if (this.workspace.isTrusted) {
+                if (this.workspace.isTrusted && !this.installPythonItems.includes(this.installPythonItem)) {
                     // Python extension cannot create envs if there are no python environments.
                     this.installPythonItems.push(this.installPythonItem);
                 }
@@ -111,7 +112,9 @@ export class LocalKernelSelector extends BaseKernelSelector implements IDisposab
                         this.provider.status === 'idle'
                     ) {
                         if (this.workspace.isTrusted) {
-                            this.installPythonItems.push(this.installPythonItem);
+                            if (!this.installPythonItems.includes(this.installPythonItem)) {
+                                this.installPythonItems.push(this.installPythonItem);
+                            }
                             if (quickPickToBeUpdated.quickPick) {
                                 this.updateQuickPickItems(quickPickToBeUpdated.quickPick);
                             }
@@ -127,12 +130,18 @@ export class LocalKernelSelector extends BaseKernelSelector implements IDisposab
                 this.provider.onDidChange(updatePythonItems, this, this.disposables);
             }
             if (this.provider.kernels.length > 0) {
-                // Python extension cannot create envs if there are no python environments.
-                this.createPythonItems.push(this.createPythonEnvQuickPickItem);
+                if (!this.createPythonItems.includes(this.createPythonEnvQuickPickItem)) {
+                    // Python extension cannot create envs if there are no python environments.
+                    this.createPythonItems.push(this.createPythonEnvQuickPickItem);
+                }
             } else {
                 this.provider.onDidChange(
                     () => {
-                        if (this.provider.kernels.length > 0 && this.createPythonItems.length === 0) {
+                        if (
+                            this.provider.kernels.length > 0 &&
+                            this.createPythonItems.length === 0 &&
+                            !this.createPythonItems.includes(this.createPythonEnvQuickPickItem)
+                        ) {
                             this.createPythonItems.push(this.createPythonEnvQuickPickItem);
                         }
                     },
