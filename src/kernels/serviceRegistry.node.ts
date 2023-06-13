@@ -25,7 +25,7 @@ import { KernelStartupTelemetry } from './kernelStartupTelemetry.node';
 import { KernelStatusProvider } from './kernelStatusProvider';
 import { PortAttributesProviders } from './portAttributeProvider.node';
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
-import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
+import { OldContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.old.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
 import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
@@ -80,7 +80,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
-        ContributedLocalPythonEnvFinder
+        OldContributedLocalPythonEnvFinder
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
