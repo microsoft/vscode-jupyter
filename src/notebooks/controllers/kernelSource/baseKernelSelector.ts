@@ -245,7 +245,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
                 if (ex instanceof SomeOtherActionError) {
                     return { selection: 'userPerformedSomeOtherAction' };
                 } else if (ex === InputFlowAction.back) {
-                    return this.selectKernelImpl(quickPickFactory, quickPickToBeUpdated);
+                    return this.selectKernelImplInternal(quickPickFactory, quickPickToBeUpdated);
                 }
                 throw ex;
             }
