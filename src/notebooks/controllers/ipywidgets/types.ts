@@ -98,7 +98,7 @@ export interface ILocalResourceUriConverter {
 
 export const INbExtensionsPathProvider = Symbol('INbExtensionsPathProvider');
 export interface INbExtensionsPathProvider {
-    getNbExtensionsParentPath(kernel: IKernel): Uri | undefined;
+    getNbExtensionsParentPath(kernel: IKernel): Promise<Uri | undefined>;
 }
 
 export const IIPyWidgetScriptManagerFactory = Symbol('IIPyWidgetScriptManagerFactory');

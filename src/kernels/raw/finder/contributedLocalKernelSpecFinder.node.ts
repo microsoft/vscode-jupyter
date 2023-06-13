@@ -19,7 +19,7 @@ import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo, isUserRegisteredKernelSpecConnection } from '../../helpers';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 // This class searches for local kernels.
@@ -61,7 +61,7 @@ export class ContributedLocalKernelSpecFinder
     private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
+        @inject(OldLocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,

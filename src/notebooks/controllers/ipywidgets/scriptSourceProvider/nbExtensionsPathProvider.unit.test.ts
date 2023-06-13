@@ -19,6 +19,8 @@ import {
 import { INbExtensionsPathProvider } from '../types';
 import { NbExtensionsPathProvider } from './nbExtensionsPathProvider.node';
 import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExtensionsPathProvider.web';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
+import { IPythonExtensionChecker } from '../../../../platform/api/types';
 
 [false, true].forEach((isWeb) => {
     const localNonPythonKernelSpec = LocalKernelSpecConnectionMetadata.create({
@@ -49,7 +51,11 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExt
         let kernel: IKernel;
         setup(() => {
             kernel = mock<IKernel>();
-            provider = isWeb ? new WebNbExtensionsPathProvider() : new NbExtensionsPathProvider();
+            const interpreterService = mock<IInterpreterService>();
+            const extensionChecker = mock<IPythonExtensionChecker>();
+            provider = isWeb
+                ? new WebNbExtensionsPathProvider()
+                : new NbExtensionsPathProvider(instance(interpreterService), instance(extensionChecker));
         });
         test('Returns base url for local non-python kernelspec', async () => {
             when(kernel.kernelConnectionMetadata).thenReturn(localNonPythonKernelSpec);
@@ -63,7 +69,7 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExt
             } else {
                 assert.strictEqual(
                     baseUrl?.toString(),
-                    Uri.file(path.join(localPythonKernelSpec.interpreter.sysPrefix, 'share', 'jupyter')).toString()
+                    Uri.file(path.join(localPythonKernelSpec.interpreter.sysPrefix!, 'share', 'jupyter')).toString()
                 );
             }
         });

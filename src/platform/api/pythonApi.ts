@@ -20,7 +20,7 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
+import { Environment, KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
@@ -107,7 +107,6 @@ export function pythonEnvToJupyterEnv(
         id,
         sysPrefix: sysPrefix || '',
         envPath: env.environment?.folderUri,
-        displayPath: env.environment?.folderUri || Uri.file(env.path),
         envName: env.environment?.name || '',
         uri,
         displayName: env.environment?.name || '',
@@ -124,14 +123,81 @@ export function pythonEnvToJupyterEnv(
     };
 }
 
+export function pythonUnResolvedEnvToJupyterEnv(env: Environment): PythonEnvironment | undefined {
+    const envTools = env.tools as KnownEnvironmentTools[];
+    // Map the Python env tool to a Jupyter environment type.
+    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
+        ['Conda', EnvironmentType.Conda],
+        ['Pyenv', EnvironmentType.Pyenv],
+        ['Pipenv', EnvironmentType.Pipenv],
+        ['Poetry', EnvironmentType.Poetry],
+        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
+        ['VirtualEnv', EnvironmentType.VirtualEnv],
+        ['Venv', EnvironmentType.Venv]
+    ];
+    let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
+    if (env.environment?.type === 'Conda') {
+        envType = EnvironmentType.Conda;
+    } else {
+        for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
+            if (envTools.includes(pythonEnvTool)) {
+                envType = JupyterEnv;
+                break;
+            }
+        }
+        if (envType === EnvironmentType.Unknown && env.environment?.type === 'VirtualEnvironment') {
+            envType = EnvironmentType.VirtualEnv;
+        }
+    }
+    let isCondaEnvWithoutPython = false;
+    let uri: Uri;
+    let id = env.id;
+    let sysPrefix = env.executable.sysPrefix;
+    if (!env.executable.uri) {
+        if (envType === EnvironmentType.Conda) {
+            isCondaEnvWithoutPython = true;
+            // sysprefix is the same as the env path.
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
+            uri =
+                getOSType() === OSType.Windows
+                    ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
+                    : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
+        } else {
+            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
+            return;
+        }
+    } else {
+        uri = env.executable.uri;
+    }
+
+    return {
+        id,
+        sysPrefix: sysPrefix || '',
+        envPath: env.environment?.folderUri,
+        envName: env.environment?.name || '',
+        uri,
+        displayName: env.environment?.name || '',
+        envType,
+        isCondaEnvWithoutPython,
+        version: env.version.major
+            ? {
+                  major: env.version.major,
+                  minor: env.version.minor || 0,
+                  patch: env.version.micro || 0,
+                  raw: env.version.sysVersion || ''
+              }
+            : undefined
+    };
+}
+
 export function serializePythonEnvironment(
     jupyterVersion: PythonEnvironment | undefined
 ): PythonEnvironment_PythonApi | undefined {
     if (jupyterVersion) {
         const result = Object.assign({}, jupyterVersion, {
             path: getFilePath(jupyterVersion.uri),
-            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined,
-            displayPath: jupyterVersion.displayPath ? getFilePath(jupyterVersion.displayPath) : undefined
+            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined
         });
         // Cleanup stuff that shouldn't be there.
         delete (result as any).uri;
@@ -529,6 +595,7 @@ export class InterpreterService implements IInterpreterService {
             const envPath = api.environments.getActiveEnvironmentPath(resource);
             traceInfoIfCI(`Active Environment Path for ${getDisplayPath(resource)} is ${JSON.stringify(envPath)}`);
             const env = await api.environments.resolveEnvironment(envPath);
+            await sleep(1_000);
             traceInfoIfCI(`Resolved Active Environment for ${getDisplayPath(resource)} is ${JSON.stringify(env)}`);
             return this.trackResolvedEnvironment(env, false);
         });
@@ -788,12 +855,14 @@ export class InterpreterService implements IInterpreterService {
                         )
                         .join(', ')}`
                 );
+                await sleep(10_000);
                 await Promise.all(
                     api.environments.known.map(async (item) => {
                         try {
                             const env = await api.environments.resolveEnvironment(item);
+                            await sleep(1_000);
                             const resolved = this.trackResolvedEnvironment(env, true);
-                            traceInfoIfCI(
+                            traceVerbose(
                                 `Python environment for ${item.id} is ${
                                     env?.id
                                 } from Python Extension API is ${JSON.stringify(

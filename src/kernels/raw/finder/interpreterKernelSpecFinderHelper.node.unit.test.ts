@@ -71,7 +71,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
     test('No kernel specs in venv', async () => {
         const cancelToken = new CancellationTokenSource();
         disposables.push(cancelToken);
-        const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix, baseKernelPath));
+        const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix!, baseKernelPath));
 
         when(kernelSpecFinder.findKernelSpecsInPaths(uriEquals(searchPath), anything())).thenResolve([]);
         const kernelSpecs = await findKernelSpecsInInterpreter(
@@ -86,7 +86,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
     test('Finds a kernel spec in venv', async () => {
         const cancelToken = new CancellationTokenSource();
         disposables.push(cancelToken);
-        const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix, baseKernelPath));
+        const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix!, baseKernelPath));
         const kernelSpecUri = Uri.file('.venvKernelSpec.json');
         const kernelSpec: IJupyterKernelSpec = {
             argv: ['python', '-m', 'venvKernelSpec'],
@@ -112,7 +112,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
     test('Finds kernel specs in venv', async () => {
         const cancelToken = new CancellationTokenSource();
         disposables.push(cancelToken);
-        const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix, baseKernelPath));
+        const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix!, baseKernelPath));
         const kernelSpecUri1 = Uri.file('.venvKernelSpec1.json');
         const kernelSpecUri2 = Uri.file('.venvKernelSpec2.json');
         const kernelSpec1: IJupyterKernelSpec = {
@@ -155,7 +155,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         disposables.push(cancelToken);
         const cancelToken2 = new CancellationTokenSource();
         disposables.push(cancelToken2);
-        const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix, baseKernelPath));
+        const searchPath = Uri.file(path.join(venvInterpreter.sysPrefix!, baseKernelPath));
         const kernelSpecUri = Uri.file('.venvKernelSpec.json');
         const kernelSpec: IJupyterKernelSpec = {
             argv: ['python', '-m', 'venvKernelSpec'],

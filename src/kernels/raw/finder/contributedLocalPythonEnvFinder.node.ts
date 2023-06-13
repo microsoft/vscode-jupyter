@@ -2,46 +2,32 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, EventEmitter } from 'vscode';
-import { IKernelFinder, LocalKernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
-import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
-import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
+import { CancellationTokenSource, EventEmitter, Uri } from 'vscode';
+import { IKernelFinder, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
 import { KernelFinder } from '../../kernelFinder';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import * as localize from '../../../platform/common/utils/localize';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { IPythonApiProvider } from '../../../platform/api/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../internalTypes';
-import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { createInterpreterKernelSpec, getKernelId } from '../../helpers';
+import { JupyterPaths } from './jupyterPaths.node';
+import { Disposables } from '../../../platform/common/utils';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { pythonUnResolvedEnvToJupyterEnv } from '../../../platform/api/pythonApi';
+import { Environment } from '../../../platform/api/pythonApiTypes';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
-import { getKernelRegistrationInfo } from '../../helpers';
-import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { isUnitTestExecution } from '../../../platform/common/constants';
+import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
 export class ContributedLocalPythonEnvFinder
+    extends Disposables
     implements IContributedKernelFinder<PythonKernelConnectionMetadata>, IExtensionSyncActivationService
 {
-    private _status: 'discovering' | 'idle' = 'idle';
-    public get status() {
-        return this._status;
-    }
-    private set status(value: typeof this._status) {
-        if (this._status === value) {
-            return;
-        }
-        this._status = value;
-        this._onDidChangeStatus.fire();
-    }
-    private readonly _onDidChangeStatus = new EventEmitter<void>();
-    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
-    private readonly promiseMonitor = new PromiseMonitor();
     kind = ContributedKernelFinderKind.LocalPythonEnvironment;
     id: string = ContributedKernelFinderKind.LocalPythonEnvironment;
     displayName: string = localize.DataScience.localPythonEnvironments;
@@ -52,159 +38,122 @@ export class ContributedLocalPythonEnvFinder
         removed?: PythonKernelConnectionMetadata[];
     }>();
     onDidChangeKernels = this._onDidChangeKernels.event;
+    private _kernels = new Map<string, PythonKernelConnectionMetadata>();
+    private readonly _onDidChangeStatus = new EventEmitter<void>();
+    private _status: 'idle' | 'discovering' = 'idle';
+    public get status() {
+        return this._status;
+    }
+    private set status(value: typeof this._status) {
+        this._status = value;
+        this._onDidChangeStatus.fire();
+    }
+    private readonly promiseMonitor = new PromiseMonitor();
+    public readonly onDidChangeStatus = this._onDidChangeStatus.event;
+    public get kernels(): PythonKernelConnectionMetadata[] {
+        return Array.from(this._kernels.values());
+    }
+    private previousCancellationTokens: CancellationTokenSource[] = [];
+    private tempDirForKernelSpecs?: Promise<Uri>;
 
-    private wasPythonInstalledWhenFetchingControllers = false;
-
-    private cache: PythonKernelConnectionMetadata[] = [];
-    private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
-        private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
-        @inject(IExtensions) private readonly extensions: IExtensions
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
+        @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter
     ) {
+        super();
         kernelFinder.registerKernelFinder(this);
-        this.disposables.push(this.promiseMonitor);
+        disposables.push(this);
     }
 
-    activate() {
-        this.promiseMonitor.onStateChange(() => {
-            this.status =
-                this.promiseMonitor.isComplete &&
-                this.interpreters.status === 'idle' &&
-                this.pythonKernelFinder.status === 'idle'
-                    ? 'idle'
-                    : 'discovering';
+    private async buildEnvironment(e: Environment) {
+        if (!e.executable.sysPrefix || !e.executable.uri) {
+            return;
+        }
+        const interpreter = pythonUnResolvedEnvToJupyterEnv(e);
+        if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
+            return;
+        }
+        const spec = await createInterpreterKernelSpec(interpreter, this.context.globalStorageUri);
+        const result = PythonKernelConnectionMetadata.create({
+            kernelSpec: spec,
+            interpreter: interpreter,
+            id: getKernelId(spec, interpreter)
         });
-        this.loadData().then(noop, noop);
-        let combinedProgress: Deferred<void> | undefined = undefined;
-        const updateCombinedStatus = () => {
-            const latestStatus: typeof this.pythonKernelFinder.status[] = [
-                this.pythonKernelFinder.status,
-                this.interpreters.status === 'refreshing' ? 'discovering' : 'idle'
-            ];
-            if (latestStatus.includes('discovering')) {
-                if (!combinedProgress) {
-                    combinedProgress = createDeferred<void>();
-                    this.promiseMonitor.push(combinedProgress.promise);
-                }
-            } else {
-                combinedProgress?.resolve();
-                combinedProgress = undefined;
-            }
-        };
-        updateCombinedStatus();
-        this.pythonKernelFinder.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
-        this.interpreters.onDidChangeStatus(updateCombinedStatus, this, this.disposables);
-        this.extensions.onDidChange(
-            () => {
-                // If we just installed the Python extension and we fetched the controllers, then fetch it again.
-                if (
-                    !this.wasPythonInstalledWhenFetchingControllers &&
-                    this.extensionChecker.isPythonExtensionInstalled
-                ) {
-                    this.loadData().then(noop, noop);
-                }
-            },
+
+        const existingInterpreterInfo = this._kernels.get(result.id);
+        if (existingInterpreterInfo) {
+            this._kernels.set(result.id, Object.assign(existingInterpreterInfo, result));
+            this._onDidChangeKernels.fire({ updated: [result] });
+        } else {
+            this._kernels.set(result.id, result);
+            this._onDidChangeKernels.fire({ added: [result] });
+        }
+    }
+    activate() {
+        this.promiseMonitor.onStateChange(
+            () => (this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering'),
             this,
             this.disposables
         );
-        this.pythonKernelFinder.onDidChangeKernels(() => this.loadData().then(noop, noop), this, this.disposables);
-        this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-    }
-
-    public refresh() {
-        const promise = (async () => {
-            await this.pythonKernelFinder.refresh();
-            await this.updateCache();
-        })();
-        this.promiseMonitor.push(promise);
-        return promise;
-    }
-
-    private loadData() {
-        const promise = this.updateCache();
-        this.promiseMonitor.push(promise);
-        return promise;
-    }
-
-    @traceDecoratorError('List kernels failed')
-    private async updateCache() {
-        try {
-            const pythonKernels = this.pythonKernelFinder.kernels.filter(
-                (item) =>
-                    item.kind === 'startUsingPythonInterpreter' &&
-                    // Exclude kernel Specs that are in a non-global directory
-                    getKernelRegistrationInfo(item.kernelSpec) !== 'registeredByNewVersionOfExtForCustomKernelSpec'
-            ) as PythonKernelConnectionMetadata[];
-            await this.writeToCache(pythonKernels);
-        } catch (ex) {
-            traceError('Exception Saving loaded kernels', ex);
-        }
-    }
-    public get kernels(): PythonKernelConnectionMetadata[] {
-        return this.cache;
-    }
-    private async writeToCache(values: PythonKernelConnectionMetadata[]) {
-        try {
-            const uniqueIds = new Set<string>();
-            values = values.filter((item) => {
-                if (uniqueIds.has(item.id)) {
-                    return false;
+        this.getKernelSpecTempRegistrationFolder().catch(noop);
+        this.disposables.push(this._onDidChangeKernels);
+        this.disposables.push(this._onDidChangeStatus);
+        this.pythonApi
+            .getNewApi()
+            .then((api) => {
+                if (!api) {
+                    return;
                 }
-                uniqueIds.add(item.id);
-                return true;
-            });
-
-            const oldValues = this.cache;
-            const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
-            const newKernelIds = new Set(values.map((item) => item.id));
-            const added = values.filter((k) => !oldKernels.has(k.id));
-            const updated = values.filter(
-                (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
-            );
-            const removed = oldValues.filter((k) => !newKernelIds.has(k.id));
-
-            this.cache = values;
-            if (added.length || updated.length || removed.length) {
-                this._onDidChangeKernels.fire({ added, updated, removed });
-            }
-            if (values.length) {
-                if (this.cacheLoggingTimeout) {
-                    clearTimeout(this.cacheLoggingTimeout);
-                }
-                // Reduce the logging, as this can get written a lot,
-                this.cacheLoggingTimeout = setTimeout(
-                    () => {
-                        traceVerbose(
-                            `Updating cache with Python kernels ${values
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Added = ${added
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Updated = ${updated
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Removed = ${removed
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}`
-                        );
+                this.promiseMonitor.push(api.environments.refreshEnvironments().catch(noop));
+                api.environments.known.map((e) => this.buildEnvironment(e).catch(noop));
+                api.environments.onDidChangeEnvironments(
+                    async (e) => {
+                        if (e.type === 'remove') {
+                            const kernels = Array.from(this._kernels.values()).filter(
+                                (k) => k.interpreter.id === e.env.id
+                            );
+                            kernels.forEach((k) => {
+                                this._kernels.delete(k.id);
+                                this._onDidChangeKernels.fire({ removed: [k] });
+                            });
+                        } else if (e.env.executable.sysPrefix && e.env.executable.uri) {
+                            await this.buildEnvironment(e.env);
+                        }
                     },
-                    isUnitTestExecution() ? 0 : 15_000
+                    this,
+                    this.disposables
                 );
-                this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
-            }
-        } catch (ex) {
-            traceError('LocalKernelFinder: Failed to write to cache', ex);
-        }
+            })
+            .catch(noop);
+    }
+
+    public override dispose(): void {
+        super.dispose();
+        disposeAllDisposables(this.previousCancellationTokens);
+    }
+    public async refresh() {
+        this.previousCancellationTokens.forEach((t) => t.cancel());
+        disposeAllDisposables(this.previousCancellationTokens);
+        this.previousCancellationTokens = [];
+        this._kernels.clear();
+        this.pythonApi
+            .getNewApi()
+            .then((api) => {
+                if (!api) {
+                    return;
+                }
+                this.promiseMonitor.push(api.environments.refreshEnvironments({ forceRefresh: true }).catch(noop));
+                api.environments.known.forEach((e) => this.buildEnvironment(e));
+            })
+            .catch(noop);
+    }
+    private async getKernelSpecTempRegistrationFolder() {
+        this.tempDirForKernelSpecs =
+            this.tempDirForKernelSpecs || this.jupyterPaths.getKernelSpecTempRegistrationFolder();
+        return this.tempDirForKernelSpecs;
     }
 }

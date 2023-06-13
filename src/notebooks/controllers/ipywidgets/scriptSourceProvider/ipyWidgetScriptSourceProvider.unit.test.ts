@@ -35,6 +35,8 @@ import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvid
 import { NbExtensionsPathProvider } from './nbExtensionsPathProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { ScriptSourceProviderFactory } from './scriptSourceProviderFactory.node';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
+import { IPythonExtensionChecker } from '../../../../platform/api/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
@@ -91,8 +93,10 @@ suite('ipywidget - Widget Script Source Provider', () => {
         const resourceConverter = mock<ILocalResourceUriConverter>();
         const fs = mock<IFileSystemNode>();
         jupyterPaths = mock<JupyterPaths>();
+        const interpreterService = mock<IInterpreterService>();
+        const extensionChecker = mock<IPythonExtensionChecker>();
         const scriptManagerFactory = new IPyWidgetScriptManagerFactory(
-            new NbExtensionsPathProvider(),
+            new NbExtensionsPathProvider(instance(interpreterService), instance(extensionChecker)),
             instance(fs),
             instance(context),
             instance(httpClient),

@@ -53,7 +53,7 @@ export type InterpreterInformation_PythonApi = {
     path: string;
     version?: PythonVersion;
     sysVersion?: string;
-    sysPrefix: string;
+    sysPrefix?: string;
 };
 
 export type PythonEnvironment_PythonApi = InterpreterInformation_PythonApi & {

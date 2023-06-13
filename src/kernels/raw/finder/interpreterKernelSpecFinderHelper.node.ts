@@ -48,6 +48,9 @@ export async function findKernelSpecsInInterpreter(
     jupyterPaths: JupyterPaths,
     kernelSpecFinder: LocalKernelSpecFinder
 ): Promise<IJupyterKernelSpec[]> {
+    if (!interpreter.sysPrefix) {
+        return [];
+    }
     // Find all the possible places to look for this resource
     const kernelSearchPath = Uri.file(path.join(interpreter.sysPrefix, baseKernelPath));
     const rootSpecPaths = await jupyterPaths.getKernelSpecRootPaths(cancelToken);

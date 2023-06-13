@@ -11,7 +11,7 @@ import { IDisposable } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { ITrustedKernelPaths } from './types';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -31,7 +31,7 @@ import { sleep } from '../../../test/core';
 import { localPythonKernelsCacheKey } from './interpreterKernelSpecFinderHelper.node';
 
 suite(`Local Python and related kernels`, async () => {
-    let finder: LocalPythonAndRelatedNonPythonKernelSpecFinder;
+    let finder: OldLocalPythonAndRelatedNonPythonKernelSpecFinder;
     let interpreterService: IInterpreterService;
     let fs: IFileSystemNode;
     let workspaceService: IWorkspaceService;
@@ -199,7 +199,7 @@ suite(`Local Python and related kernels`, async () => {
 
         disposables.push(new Disposable(() => clock.uninstall()));
 
-        finder = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+        finder = new OldLocalPythonAndRelatedNonPythonKernelSpecFinder(
             instance(interpreterService),
             instance(fs),
             instance(workspaceService),
@@ -495,10 +495,8 @@ suite(`Local Python and related kernels`, async () => {
 
         // Force some internal state change ('formatted' property will get updated)
         venvPythonKernel.interpreter.uri.toString();
-        venvPythonKernel.interpreter.displayPath = venvPythonKernel.interpreter.displayPath || undefined;
         // Force some internal state change ('formatted' property will get updated)
         condaKernel.interpreter.uri.toString();
-        condaKernel.interpreter.displayPath = condaKernel.interpreter.displayPath || undefined;
         // The cached kernel should be listed as Python extension has not yet completed refreshing of interpreters.
         assert.deepEqual(
             finder.kernels.map((k) => {
@@ -506,7 +504,6 @@ suite(`Local Python and related kernels`, async () => {
                     // Force some internal state change ('formatted' property will get updated)
                     k.interpreter.uri.toString();
                     // k.interpreter.displayPath
-                    (k as any).interpreter.displayPath = k.interpreter?.displayPath || undefined;
                 }
                 return Object.assign({}, k, {
                     kernelSpec: { ...k.kernelSpec, interrupt_mode: k.kernelSpec.interrupt_mode || undefined }
