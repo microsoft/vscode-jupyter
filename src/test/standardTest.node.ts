@@ -37,7 +37,7 @@ function requiresPythonExtensionToBeInstalled() {
 // const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
 //     ? 'insiders'
 //     : 'stable';
-const channel = 'insiders';
+const channel = 'stable';
 
 function computePlatform() {
     switch (process.platform) {
