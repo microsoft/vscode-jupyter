@@ -3,10 +3,7 @@
 
 import {
     CancellationToken,
-    CancellationTokenSource,
-    commands,
     Disposable,
-    NotebookDocument,
     QuickInputButton,
     QuickPick,
     QuickPickItem,
@@ -15,16 +12,11 @@ import {
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata } from '../../../kernels/types';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
-import { Commands } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
 import {
     CommandQuickPickItem,
     ConnectionQuickPickItem,
@@ -33,7 +25,8 @@ import {
     IQuickPickKernelItemProvider
 } from './types';
 import { IConnectionDisplayData, IConnectionDisplayDataProvider } from '../types';
-type CompoundQuickPickItem =
+import { Disposables } from '../../../platform/common/utils';
+export type CompoundQuickPickItem =
     | CommandQuickPickItem
     | ConnectionQuickPickItem
     | KernelListErrorQuickPickItem
@@ -85,65 +78,32 @@ export type CreateAndSelectItemFromQuickPick = (options: {
  */
 class SomeOtherActionError extends Error {}
 
-export class KernelSelector implements IDisposable {
-    private disposables: IDisposable[] = [];
-    private readonly displayDataProvider: IConnectionDisplayDataProvider;
-    private readonly extensionChecker: IPythonExtensionChecker;
-    private readonly recommendedItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
-    private readonly createPythonItems: CompoundQuickPickItem[] = [];
-    private readonly installPythonExtItems: CompoundQuickPickItem[] = [];
-    private readonly installPythonItems: CompoundQuickPickItem[] = [];
-    private readonly categories = new Map<QuickPickItem, Set<ConnectionQuickPickItem>>();
-    private quickPickItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
-    private readonly installPythonExtension: CommandQuickPickItem;
-    private readonly installPythonItem: CommandQuickPickItem;
-    private readonly createPythonEnvQuickPickItem: CommandQuickPickItem;
+export abstract class BaseKernelSelector extends Disposables implements IDisposable {
+    protected readonly displayDataProvider: IConnectionDisplayDataProvider;
+    protected readonly recommendedItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
+    protected readonly categories = new Map<QuickPickItem, Set<ConnectionQuickPickItem>>();
+    protected quickPickItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
     constructor(
-        private readonly workspace: IWorkspaceService,
-        private readonly notebook: NotebookDocument,
-        private readonly provider: IQuickPickKernelItemProvider,
-        private readonly token: CancellationToken
+        protected readonly provider: IQuickPickKernelItemProvider,
+        protected readonly token: CancellationToken
     ) {
+        super();
         this.displayDataProvider =
             ServiceContainer.instance.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider);
-        this.extensionChecker = ServiceContainer.instance.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-        this.createPythonEnvQuickPickItem = {
-            label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`,
-            tooltip: DataScience.createPythonEnvironmentInQuickPickTooltip,
-            command: this.onCreatePythonEnvironment.bind(this)
-        };
-        this.installPythonItem = {
-            label: DataScience.installPythonQuickPickTitle,
-            tooltip: DataScience.installPythonQuickPickToolTip,
-            detail: DataScience.pleaseReloadVSCodeOncePythonHasBeenInstalled,
-            command: async () => {
-                // Timeout as we want the quick pick to close before we start this process.
-                setTimeout(() => commands.executeCommand(Commands.InstallPythonViaKernelPicker).then(noop, noop));
-                throw new SomeOtherActionError();
-            }
-        };
-        this.installPythonExtension = {
-            label: DataScience.installPythonExtensionViaKernelPickerTitle,
-            tooltip: DataScience.installPythonExtensionViaKernelPickerToolTip,
-            command: async () => {
-                // TODO: Once user installs Python wait here and refresh this UI so we display the Python Envs.
-                const installed = await commands.executeCommand(Commands.InstallPythonExtensionViaKernelPicker);
-                if (installed === true) {
-                    // refresh the view and wait here
-                    this.provider.refresh().catch(noop);
-                    // TODO: Re-display the quick pick so user can pick a kernel.
-                    return undefined;
-                } else {
-                    throw new SomeOtherActionError();
-                }
-            }
-        };
-    }
-    public dispose() {
-        disposeAllDisposables(this.disposables);
     }
     public async selectKernel(
         quickPickFactory: CreateAndSelectItemFromQuickPick
+    ): Promise<
+        | { selection: 'controller'; finder: IContributedKernelFinder; connection: KernelConnectionMetadata }
+        | { selection: 'userPerformedSomeOtherAction' }
+        | undefined
+    > {
+        return this.selectKernelImpl(quickPickFactory, { quickPick: undefined });
+    }
+
+    public async selectKernelImpl(
+        quickPickFactory: CreateAndSelectItemFromQuickPick,
+        quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined }
     ): Promise<
         | { selection: 'controller'; finder: IContributedKernelFinder; connection: KernelConnectionMetadata }
         | { selection: 'userPerformedSomeOtherAction' }
@@ -207,66 +167,12 @@ export class KernelSelector implements IDisposable {
             this.categories.set(item, new Set(items));
         });
 
-        if (
-            !this.extensionChecker.isPythonExtensionInstalled &&
-            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
-        ) {
-            this.installPythonExtItems.push(this.installPythonExtension);
-        }
-
-        const quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined } = {
-            quickPick: undefined
-        };
-        if (
-            this.extensionChecker.isPythonExtensionInstalled &&
-            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
-        ) {
-            if (this.provider.kernels.length === 0 && this.provider.status === 'idle') {
-                if (this.workspace.isTrusted) {
-                    // Python extension cannot create envs if there are no python environments.
-                    this.installPythonItems.push(this.installPythonItem);
-                }
-            } else {
-                const updatePythonItems = () => {
-                    if (
-                        this.provider.kernels.length === 0 &&
-                        this.installPythonItems.length === 0 &&
-                        this.provider.status === 'idle'
-                    ) {
-                        if (this.workspace.isTrusted) {
-                            this.installPythonItems.push(this.installPythonItem);
-                            if (quickPickToBeUpdated.quickPick) {
-                                this.updateQuickPickItems(quickPickToBeUpdated.quickPick);
-                            }
-                        }
-                    } else if (this.provider.kernels.length) {
-                        this.installPythonItems.length = 0;
-                        if (quickPickToBeUpdated.quickPick) {
-                            this.updateQuickPickItems(quickPickToBeUpdated.quickPick);
-                        }
-                    }
-                };
-                this.provider.onDidChangeStatus(updatePythonItems, this, this.disposables);
-                this.provider.onDidChange(updatePythonItems, this, this.disposables);
-            }
-            if (this.provider.kernels.length > 0) {
-                // Python extension cannot create envs if there are no python environments.
-                this.createPythonItems.push(this.createPythonEnvQuickPickItem);
-            } else {
-                this.provider.onDidChange(
-                    () => {
-                        if (this.provider.kernels.length > 0 && this.createPythonItems.length === 0) {
-                            this.createPythonItems.push(this.createPythonEnvQuickPickItem);
-                        }
-                    },
-                    this,
-                    this.disposables
-                );
-            }
-        }
-        return this.selectKernelImpl(quickPickFactory, quickPickToBeUpdated);
+        return this.selectKernelImplInternal(quickPickFactory, quickPickToBeUpdated);
     }
-    public async selectKernelImpl(
+    protected getAdditionalQuickPickItems(): CompoundQuickPickItem[] {
+        return [];
+    }
+    public async selectKernelImplInternal(
         quickPickFactory: CreateAndSelectItemFromQuickPick,
         quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined }
     ): Promise<
@@ -281,10 +187,7 @@ export class KernelSelector implements IDisposable {
         };
         const { quickPick, selection } = quickPickFactory({
             title: this.provider.title,
-            items: this.installPythonItems
-                .concat(this.installPythonExtItems)
-                .concat(this.createPythonItems)
-                .concat(this.quickPickItems),
+            items: this.getAdditionalQuickPickItems().concat(this.quickPickItems),
             buttons: [refreshButton],
             onDidTriggerButton: async (e) => {
                 if (e === refreshButton) {
@@ -353,23 +256,7 @@ export class KernelSelector implements IDisposable {
             throw InputFlowAction.back;
         }
     }
-    private async onCreatePythonEnvironment() {
-        const cancellationToken = new CancellationTokenSource();
-        this.disposables.push(new Disposable(() => cancellationToken.cancel()));
-        this.disposables.push(cancellationToken);
-
-        const creator = new PythonEnvKernelConnectionCreator(this.notebook, cancellationToken.token);
-        this.disposables.push(creator);
-        const result = await creator.createPythonEnvFromKernelPicker();
-        if ('action' in result) {
-            if (result.action === 'Cancel') {
-                throw InputFlowAction.cancel;
-            }
-            throw InputFlowAction.back;
-        }
-        return result.kernelConnection;
-    }
-    private updateQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>) {
+    protected updateQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>) {
         quickPick.title = this.provider.title;
         const currentConnections = new Set(
             quickPick.items
@@ -381,18 +268,6 @@ export class KernelSelector implements IDisposable {
             .filter((kernel) => !currentConnections.has(kernel.id))
             .map((item) => this.connectionToQuickPick(item));
 
-        if (
-            this.extensionChecker.isPythonExtensionInstalled &&
-            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment
-        ) {
-            this.installPythonExtItems.length = 0;
-        }
-        if (
-            this.provider.kind === ContributedKernelFinderKind.LocalPythonEnvironment &&
-            this.provider.kernels.some((k) => k.kind === 'startUsingPythonInterpreter')
-        ) {
-            this.installPythonItems.length = 0;
-        }
         this.updateQuickPickWithLatestConnection(quickPick);
         this.removeMissingKernels(quickPick);
         this.updateRecommended(quickPick);
@@ -487,12 +362,7 @@ export class KernelSelector implements IDisposable {
         const errorItems = this.buildErrorQuickPickItem(error);
         updateKernelQuickPickWithNewItems(
             quickPick,
-            this.installPythonItems
-                .concat(this.installPythonExtItems)
-                .concat(this.createPythonItems)
-                .concat(this.recommendedItems)
-                .concat(connections)
-                .concat(errorItems),
+            this.getAdditionalQuickPickItems().concat(this.recommendedItems).concat(connections).concat(errorItems),
             recommendedItem
         );
     }

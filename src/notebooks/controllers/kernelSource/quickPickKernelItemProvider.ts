@@ -42,7 +42,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         private readonly notebook: NotebookDocument,
         kind: ContributedKernelFinderKind,
         finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>,
-        private readonly pythonEnvFilter: PythonEnvironmentFilter,
+        private readonly pythonEnvFilter: PythonEnvironmentFilter | undefined,
         private readonly connection: JupyterConnection
     ) {
         this.refresh = async () => {
@@ -130,10 +130,12 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         }
     }
     private filteredKernels(kernels: KernelConnectionMetadata[]) {
+        const filter = this.pythonEnvFilter;
+        if (!filter) {
+            return kernels;
+        }
         return kernels.filter(
-            (k) =>
-                k.kind !== 'startUsingPythonInterpreter' ||
-                !this.pythonEnvFilter.isPythonEnvironmentExcluded(k.interpreter)
+            (k) => k.kind !== 'startUsingPythonInterpreter' || !filter!.isPythonEnvironmentExcluded(k.interpreter)
         );
     }
     private computePreferredRemoteKernel(
