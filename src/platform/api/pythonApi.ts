@@ -530,7 +530,7 @@ export class InterpreterService implements IInterpreterService {
             traceInfoIfCI(`Active Environment Path for ${getDisplayPath(resource)} is ${JSON.stringify(envPath)}`);
             const env = await api.environments.resolveEnvironment(envPath);
             traceInfoIfCI(`Resolved Active Environment for ${getDisplayPath(resource)} is ${JSON.stringify(env)}`);
-            return this.trackResolvedEnvironment(env, false);
+            return this.trackResolvedEnvironment(env);
         });
 
         // If there was a problem in getting the details, remove the cached info.
@@ -604,7 +604,7 @@ export class InterpreterService implements IInterpreterService {
                     : getDisplayPath(Uri.file(pythonPath.path));
                 if (matchedPythonEnv) {
                     const env = await api.environments.resolveEnvironment(matchedPythonEnv);
-                    const resolved = this.trackResolvedEnvironment(env, false);
+                    const resolved = this.trackResolvedEnvironment(env);
                     traceInfoIfCI(
                         `Interpreter details for ${pythonPathForLogging} from Python is ${JSON.stringify(
                             env
@@ -627,7 +627,7 @@ export class InterpreterService implements IInterpreterService {
                     // eslint-disable-next-line local-rules/dont-use-fspath
                     isUri(pythonPath) ? pythonPath.fsPath : typeof pythonPath == 'string' ? pythonPath : pythonPath.path
                 );
-                return this.trackResolvedEnvironment(env, false);
+                return this.trackResolvedEnvironment(env);
             });
         } catch (ex) {
             traceWarning(
@@ -642,19 +642,7 @@ export class InterpreterService implements IInterpreterService {
             return undefined;
         }
     }
-    /**
-     * The Python Extension triggers changes to the Python environments.
-     * However internally we need to track changes to the environments as we wrap the Python extension API and the Python extension API only returns partial information.
-     * Some times what happens is
-     * - When we call get active interpreter we get some information from Python extension
-     * - We then come into this method and see the information has changed and we internally trigger a change event so other parts are aware of this
-     * - Next we call the Python extension API again, and the information is different yet again
-     * - We then trigger another change event
-     * - This goes on and on, basically the Python extension API returns different information for the same env.
-     *
-     * The argument `triggerChangeEvent` is more of a fail safe to ensure we don't end up in such infinite loops.
-     */
-    private trackResolvedEnvironment(env: ResolvedEnvironment | undefined, triggerChangeEvent: boolean) {
+    private trackResolvedEnvironment(env: ResolvedEnvironment | undefined) {
         if (env) {
             const displayEmptyCondaEnv =
                 this.apiProvider.pythonExtensionVersion &&
@@ -679,9 +667,7 @@ export class InterpreterService implements IInterpreterService {
                     Object.assign(info.resolved, resolved);
                 }
                 this._interpreters.set(env.id, { resolved });
-                if (triggerChangeEvent) {
-                    this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
-                }
+                this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
             }
             return resolved;
         }
@@ -792,7 +778,7 @@ export class InterpreterService implements IInterpreterService {
                     api.environments.known.map(async (item) => {
                         try {
                             const env = await api.environments.resolveEnvironment(item);
-                            const resolved = this.trackResolvedEnvironment(env, true);
+                            const resolved = this.trackResolvedEnvironment(env);
                             traceInfoIfCI(
                                 `Python environment for ${item.id} is ${
                                     env?.id
