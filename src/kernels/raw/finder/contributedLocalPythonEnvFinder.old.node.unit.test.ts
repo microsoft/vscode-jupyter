@@ -17,11 +17,11 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../types';
-import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.node';
+import { OldContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.old.node';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 
 suite('Contributed Python Kernel Finder', () => {
-    let finder: ContributedLocalPythonEnvFinder;
+    let finder: OldContributedLocalPythonEnvFinder;
     const disposables: IDisposable[] = [];
     let pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>;
     let kernelFinder: KernelFinder;
@@ -95,7 +95,7 @@ suite('Contributed Python Kernel Finder', () => {
         when(pythonKernelFinder.status).thenReturn('idle');
         when(pythonKernelFinder.onDidChangeKernels).thenReturn(onDidChangePythonKernels.event);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        finder = new ContributedLocalPythonEnvFinder(
+        finder = new OldContributedLocalPythonEnvFinder(
             instance(pythonKernelFinder),
             instance(kernelFinder),
             disposables,

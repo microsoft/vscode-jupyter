@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, EventEmitter } from 'vscode';
-import { IKernelFinder, LocalKernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import { IKernelFinder, LocalKernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
 import { traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -17,7 +17,7 @@ import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getKernelRegistrationInfo } from '../../helpers';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { isUnitTestExecution } from '../../../platform/common/constants';
 
@@ -25,7 +25,7 @@ import { isUnitTestExecution } from '../../../platform/common/constants';
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()
-export class ContributedLocalPythonEnvFinder
+export class OldContributedLocalPythonEnvFinder
     implements IContributedKernelFinder<PythonKernelConnectionMetadata>, IExtensionSyncActivationService
 {
     private _status: 'discovering' | 'idle' = 'idle';
@@ -58,7 +58,7 @@ export class ContributedLocalPythonEnvFinder
     private cache: PythonKernelConnectionMetadata[] = [];
     private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
-        @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
+        @inject(OldLocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
         @inject(IKernelFinder) kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,

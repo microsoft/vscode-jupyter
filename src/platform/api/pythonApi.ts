@@ -141,7 +141,7 @@ export function serializePythonEnvironment(
 
 /* eslint-disable max-classes-per-file */
 @injectable()
-export class PythonApiProvider implements IPythonApiProvider {
+export class OldPythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
     private readonly didActivatePython = new EventEmitter<void>();
     private readonly _pythonExtensionHooked = createDeferred<void>();
