@@ -39,7 +39,12 @@ import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { traceError, traceWarning } from '../../../platform/logging';
 import { INotebookEditorProvider } from '../../types';
-import { IControllerRegistration, INotebookKernelSourceSelector, IVSCodeNotebookController } from '../types';
+import {
+    IControllerRegistration,
+    ILocalNotebookKernelSourceSelector,
+    IRemoteNotebookKernelSourceSelector,
+    IVSCodeNotebookController
+} from '../types';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -223,7 +228,9 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         if (!notebook) {
             return;
         }
-        const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
+        const selector = ServiceContainer.instance.get<ILocalNotebookKernelSourceSelector>(
+            ILocalNotebookKernelSourceSelector
+        );
         const kernel = await selector.selectLocalKernel(notebook, kind);
         return this.getSelectedController(notebook, kernel);
     }
@@ -236,7 +243,9 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         if (!notebook) {
             return;
         }
-        const selector = ServiceContainer.instance.get<INotebookKernelSourceSelector>(INotebookKernelSourceSelector);
+        const selector = ServiceContainer.instance.get<IRemoteNotebookKernelSourceSelector>(
+            IRemoteNotebookKernelSourceSelector
+        );
         const kernel = await selector.selectRemoteKernel(notebook, providerId);
         return this.getSelectedController(notebook, kernel);
     }

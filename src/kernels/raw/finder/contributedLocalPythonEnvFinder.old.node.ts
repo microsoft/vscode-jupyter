@@ -149,62 +149,50 @@ export class OldContributedLocalPythonEnvFinder
         return this.cache;
     }
     private async writeToCache(values: PythonKernelConnectionMetadata[]) {
-        try {
-            const uniqueIds = new Set<string>();
-            values = values.filter((item) => {
-                if (uniqueIds.has(item.id)) {
-                    return false;
-                }
-                uniqueIds.add(item.id);
-                return true;
-            });
+        const uniqueIds = new Set<string>();
+        values = values.filter((item) => {
+            if (uniqueIds.has(item.id)) {
+                return false;
+            }
+            uniqueIds.add(item.id);
+            return true;
+        });
 
-            const oldValues = this.cache;
-            const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
-            const newKernelIds = new Set(values.map((item) => item.id));
-            const added = values.filter((k) => !oldKernels.has(k.id));
-            const updated = values.filter(
-                (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
+        const oldValues = this.cache;
+        const oldKernels = new Map(oldValues.map((item) => [item.id, item]));
+        const newKernelIds = new Set(values.map((item) => item.id));
+        const added = values.filter((k) => !oldKernels.has(k.id));
+        const updated = values.filter(
+            (k) => oldKernels.has(k.id) && !areObjectsWithUrisTheSame(k, oldKernels.get(k.id))
+        );
+        const removed = oldValues.filter((k) => !newKernelIds.has(k.id));
+
+        this.cache = values;
+        if (added.length || updated.length || removed.length) {
+            this._onDidChangeKernels.fire({ added, updated, removed });
+        }
+        if (values.length) {
+            if (this.cacheLoggingTimeout) {
+                clearTimeout(this.cacheLoggingTimeout);
+            }
+            // Reduce the logging, as this can get written a lot,
+            this.cacheLoggingTimeout = setTimeout(
+                () => {
+                    traceVerbose(
+                        `List of Python kernels ${values
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Added = ${added
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Updated = ${updated
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}, Removed = ${removed
+                            .map((k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`)
+                            .join(', ')}`
+                    );
+                },
+                isUnitTestExecution() ? 0 : 15_000
             );
-            const removed = oldValues.filter((k) => !newKernelIds.has(k.id));
-
-            this.cache = values;
-            if (added.length || updated.length || removed.length) {
-                this._onDidChangeKernels.fire({ added, updated, removed });
-            }
-            if (values.length) {
-                if (this.cacheLoggingTimeout) {
-                    clearTimeout(this.cacheLoggingTimeout);
-                }
-                // Reduce the logging, as this can get written a lot,
-                this.cacheLoggingTimeout = setTimeout(
-                    () => {
-                        traceVerbose(
-                            `Updating cache with Python kernels ${values
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Added = ${added
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Updated = ${updated
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}, Removed = ${removed
-                                .map(
-                                    (k) => `${k.kind}:'${k.id} (interpreter id = ${getDisplayPath(k.interpreter?.id)})'`
-                                )
-                                .join(', ')}`
-                        );
-                    },
-                    isUnitTestExecution() ? 0 : 15_000
-                );
-                this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
-            }
-        } catch (ex) {
-            traceError('LocalKernelFinder: Failed to write to cache', ex);
+            this.disposables.push(new Disposable(() => clearTimeout(this.cacheLoggingTimeout)));
         }
     }
 }

@@ -36,12 +36,13 @@ import { ServiceContainer } from '../../../platform/ioc/container';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../test/core';
 import { getKernelConnectionCategorySync } from '../connectionDisplayData';
-import { CreateAndSelectItemFromQuickPick, isKernelPickItem, KernelSelector } from './kernelSelector';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
 import { IConnectionDisplayData, IConnectionDisplayDataProvider } from '../types';
+import { CreateAndSelectItemFromQuickPick, isKernelPickItem } from './baseKernelSelector';
+import { LocalKernelSelector } from './localKernelSelector.node';
 
-suite('Kernel Selector', () => {
-    let kernelSelector: KernelSelector;
+suite('Local Kernel Selector', () => {
+    let kernelSelector: LocalKernelSelector;
     let clock: fakeTimers.InstalledClock;
     let onDidChangeProvider: EventEmitter<void>;
     let onDidChangeProviderStatus: EventEmitter<void>;
@@ -248,7 +249,7 @@ suite('Kernel Selector', () => {
             };
         };
 
-        kernelSelector = new KernelSelector(
+        kernelSelector = new LocalKernelSelector(
             instance(workspaceService),
             instance(notebook),
             provider,

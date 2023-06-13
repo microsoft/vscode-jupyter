@@ -108,17 +108,19 @@ export enum PreferredKernelExactMatchReason {
     IsNonPythonKernelLanguageMatch = 1 << 3
 }
 
-// Provides the UI to select a kernel source for a notebook document
-export const INotebookKernelSourceSelector = Symbol('INotebookKernelSourceSelector');
-export interface INotebookKernelSourceSelector {
-    selectLocalKernel(
-        notebook: vscode.NotebookDocument,
-        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
-    ): Promise<LocalKernelConnectionMetadata | undefined>;
+export const IRemoteNotebookKernelSourceSelector = Symbol('IRemoteNotebookKernelSourceSelector');
+export interface IRemoteNotebookKernelSourceSelector {
     selectRemoteKernel(
         notebook: vscode.NotebookDocument,
         providerId: string
     ): Promise<RemoteKernelConnectionMetadata | undefined>;
+}
+export const ILocalNotebookKernelSourceSelector = Symbol('ILocalNotebookKernelSourceSelector');
+export interface ILocalNotebookKernelSourceSelector {
+    selectLocalKernel(
+        notebook: vscode.NotebookDocument,
+        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
+    ): Promise<LocalKernelConnectionMetadata | undefined>;
 }
 
 export interface IConnectionDisplayData extends IDisposable {
