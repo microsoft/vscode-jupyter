@@ -248,8 +248,8 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                         { id: this.id, handle },
                         jupyterServerUri
                     );
-
                     if (message) {
+                        traceError('Error in validating server URI', message);
                         if (inputWasHidden) {
                             input.show();
                         }

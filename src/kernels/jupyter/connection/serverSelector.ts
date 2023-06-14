@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { traceWarning } from '../../../platform/logging';
+import { traceError, traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
@@ -45,7 +45,7 @@ export async function validateSelectJupyterURI(
     try {
         await jupyterConnection.validateRemoteUri(provider, serverUri);
     } catch (err) {
-        traceWarning('Uri verification error', err);
+        traceError('Uri verification error', err);
         if (JupyterSelfCertsError.isSelfCertsError(err)) {
             sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
             const handled = await handleSelfCertsError(applicationShell, configService, err.message);

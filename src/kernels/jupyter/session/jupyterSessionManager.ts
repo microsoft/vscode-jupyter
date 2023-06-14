@@ -127,6 +127,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public async initialize(connInfo: IJupyterConnection): Promise<void> {
         this.connInfo = connInfo;
         this.serverSettings = await this.getServerConnectSettings(connInfo);
+        traceError('Connecting to jupyter server', JSON.stringify(this.serverSettings));
         this.specsManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
         this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
         this.sessionManager = new this.jupyterlab.SessionManager({
@@ -339,6 +340,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     private async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
+        traceError('getServerConnectSettings', JSON.stringify(connInfo));
         let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
             appUrl: '',
@@ -357,6 +359,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // If no token is specified prompt for a password
         const isTokenEmpty = connInfo.token === '' || connInfo.token === 'null';
         if (isTokenEmpty && !connInfo.getAuthHeader) {
+            traceError('isTokenEmpty', isTokenEmpty);
             if (this.failOnPassword) {
                 throw new Error('Password request not allowed.');
             }
@@ -366,6 +369,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 isTokenEmpty
             });
             if (pwSettings && pwSettings.requestHeaders) {
+                traceError('pwSettings & pwSettings.requestHeaders', pwSettings);
                 requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
                 cookieString = (pwSettings.requestHeaders as any).Cookie || '';
 
@@ -378,12 +382,14 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     (serverSettings as any).token = pwSettings.remappedToken;
                 }
             } else if (pwSettings) {
+                traceError('pwSettings', pwSettings);
                 serverSettings = { ...serverSettings, token: '' };
             } else {
                 throw new JupyterInvalidPasswordError();
             }
         } else {
             serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
+            traceError('serverSettings', JSON.stringify(serverSettings));
         }
 
         const allowUnauthorized = this.configService.getSettings(undefined).allowUnauthorizedRemoteConnection;
@@ -392,6 +398,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         if (connInfo.baseUrl.startsWith('https') && allowUnauthorized && this.requestAgentCreator) {
             const requestAgent = this.requestAgentCreator.createHttpRequestAgent();
             requestInit = { ...requestInit, agent: requestAgent };
+            traceError('allowUnauthorized', JSON.stringify(requestInit));
         }
 
         // This replaces the WebSocket constructor in jupyter lab services with our own implementation
@@ -411,8 +418,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             Request: this.requestCreator.getRequestCtor(cookieString, allowUnauthorized, connInfo.getAuthHeader),
             Headers: this.requestCreator.getHeadersCtor()
         };
-
-        return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
+        traceError('serverSettings', JSON.stringify(serverSettings));
+        const settings = this.jupyterlab.ServerConnection.makeSettings(serverSettings);
+        traceError('settings', JSON.stringify(settings));
+        return settings;
     }
 
     // If connecting on HTTP without a token prompt the user that this connection may not be secure
