@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { traceError, traceWarning } from '../../../platform/logging';
+import { traceError } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
