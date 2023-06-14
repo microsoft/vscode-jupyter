@@ -11,7 +11,8 @@ import {
     QuickPick,
     QuickPickItem,
     QuickPickItemKind,
-    ThemeIcon
+    ThemeIcon,
+    notebooks
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { computeServerId, generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
@@ -233,6 +234,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 case KernelFinderEntityQuickPickType.KernelFinder:
                     return this.selectKernelFromKernelFinder.bind(this, selectedSource.kernelFinderInfo, token);
                 case KernelFinderEntityQuickPickType.UriProviderQuickPick:
+                    const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
                     try {
                         if (lazyQuickPick) {
                             lazyQuickPick.busy = true;
@@ -248,6 +250,8 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         } else {
                             throw ex;
                         }
+                    } finally {
+                        taskNb.dispose();
                     }
                 default:
                     break;
