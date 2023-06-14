@@ -1406,7 +1406,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": []
+                        "enum": ["FastKernelPicker"]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
                     "scope": "application"
@@ -1415,7 +1415,7 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": []
+                        "enum": ["FastKernelPicker"]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"

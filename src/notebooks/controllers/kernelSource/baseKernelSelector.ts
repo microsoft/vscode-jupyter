@@ -43,7 +43,7 @@ function updateKernelQuickPickWithNewItems<T extends CompoundQuickPickItem>(
     items: T[],
     activeItem?: T
 ) {
-    const activeItems = quickPick.activeItems.length ? [quickPick.activeItems[0]] : activeItem ? [activeItem] : [];
+    const activeItems = activeItem ? [activeItem] : quickPick.activeItems.length ? [quickPick.activeItems[0]] : [];
     if (activeItems.length && !items.includes(activeItems[0])) {
         const oldActiveItem = activeItems[0];
         const newActiveKernelQuickPickItem =
@@ -351,7 +351,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         return [];
     }
     private rebuildQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>, error?: Error) {
-        const recommendedItem = this.recommendedItems.find((item) => isKernelPickItem(item));
+        let recommendedItem = this.recommendedItems.find((item) => isKernelPickItem(item));
         const recommendedConnections = new Set(
             this.recommendedItems.filter(isKernelPickItem).map((item) => item.connection.id)
         );
@@ -360,6 +360,19 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
             (item) => !isKernelPickItem(item) || !recommendedConnections.has(item.connection.id)
         );
         const errorItems = this.buildErrorQuickPickItem(error);
+        const currentActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
+        if (recommendedItem && isKernelPickItem(recommendedItem) && currentActiveItem) {
+            if (!isKernelPickItem(currentActiveItem)) {
+                // If user has selected a non-kernel item, then we need to ensure the recommended item is not selected.
+                // Else always select the recommended item
+                recommendedItem = undefined;
+            } else if (currentActiveItem.connection.id !== recommendedItem.connection.id) {
+                // If user has selected a different kernel, then do not change the selection, leave it as is.
+                // Except when the selection is the recommended item (as thats the default).
+                recommendedItem = undefined;
+            }
+        }
+
         updateKernelQuickPickWithNewItems(
             quickPick,
             this.getAdditionalQuickPickItems().concat(this.recommendedItems).concat(connections).concat(errorItems),
@@ -411,6 +424,8 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         } else {
             this.recommendedItems.push(recommendedItem);
         }
+        // if (this.previousRecommendedItem && this.provider.recommended.id ! this.previousRecommendedItem?.connection?.id) {
+        // }
         this.rebuildQuickPickItems(quickPick);
     }
     /**

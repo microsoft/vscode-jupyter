@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import * as fakeTimers from '@sinonjs/fake-timers';
-import { instance, mock, reset, verify, when } from 'ts-mockito';
+import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookControllerDetectionTask } from 'vscode';
 import { disposeAllDisposables } from '../platform/common/helpers';
-import { IDisposable } from '../platform/common/types';
+import { IDisposable, IExperimentService } from '../platform/common/types';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { IKernelFinder } from './types';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
@@ -44,11 +44,14 @@ suite('Kernel Refresh Indicator (node)', () => {
         when(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)).thenReturn(
             instance(taskIW)
         );
+        const experiments = mock<IExperimentService>();
+        when(experiments.inExperiment(anything())).thenReturn(false);
         indicator = new KernelRefreshIndicator(
             disposables,
             instance(extensionChecker),
             instance(interpreterService),
-            instance(kernelFinder)
+            instance(kernelFinder),
+            instance(experiments)
         );
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));

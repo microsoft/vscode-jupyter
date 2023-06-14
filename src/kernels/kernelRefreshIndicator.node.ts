@@ -7,7 +7,7 @@ import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
-import { IDisposable, IDisposableRegistry } from '../platform/common/types';
+import { Experiments, IDisposable, IDisposableRegistry, IExperimentService } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { traceInfo } from '../platform/logging';
 import { IKernelFinder } from './types';
@@ -23,7 +23,8 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
+        @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {
         disposables.push(this);
     }
@@ -103,6 +104,27 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         this.disposables.push(taskNb);
         this.disposables.push(taskIW);
 
+        if (this.experiments.inExperiment(Experiments.FastKernelPicker)) {
+            if (this.kernelFinder.status === 'idle') {
+                traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
+                taskNb.dispose();
+                taskIW.dispose();
+                return;
+            }
+            this.kernelFinder.onDidChangeStatus(
+                () => {
+                    if (this.kernelFinder.status === 'idle') {
+                        traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
+                        taskNb.dispose();
+                        taskIW.dispose();
+                    }
+                },
+                this,
+                this.disposables
+            );
+
+            return;
+        }
         this.interpreterService.refreshInterpreters().finally(() => {
             if (this.kernelFinder.status === 'idle') {
                 traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);

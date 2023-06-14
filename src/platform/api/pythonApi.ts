@@ -10,7 +10,14 @@ import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
+import {
+    IExtensions,
+    IDisposableRegistry,
+    Resource,
+    IExtensionContext,
+    IExperimentService,
+    Experiments
+} from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
@@ -20,7 +27,7 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
+import { Environment, KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
@@ -52,7 +59,7 @@ export function deserializePythonEnvironment(
         return result;
     }
 }
-export function pythonEnvToJupyterEnv(
+export function resolvedPythonEnvToJupyterEnv(
     env: ResolvedEnvironment,
     supportsEmptyCondaEnv: boolean
 ): PythonEnvironment | undefined {
@@ -119,6 +126,74 @@ export function pythonEnvToJupyterEnv(
                   minor: env.version.minor,
                   patch: env.version.micro,
                   raw: env.version.sysVersion
+              }
+            : undefined
+    };
+}
+export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: boolean): PythonEnvironment | undefined {
+    const envTools = env.tools as KnownEnvironmentTools[];
+    // Map the Python env tool to a Jupyter environment type.
+    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
+        ['Conda', EnvironmentType.Conda],
+        ['Pyenv', EnvironmentType.Pyenv],
+        ['Pipenv', EnvironmentType.Pipenv],
+        ['Poetry', EnvironmentType.Poetry],
+        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
+        ['VirtualEnv', EnvironmentType.VirtualEnv],
+        ['Venv', EnvironmentType.Venv]
+    ];
+    let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
+    if (env.environment?.type === 'Conda') {
+        envType = EnvironmentType.Conda;
+    } else {
+        for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
+            if (envTools.includes(pythonEnvTool)) {
+                envType = JupyterEnv;
+                break;
+            }
+        }
+        if (envType === EnvironmentType.Unknown && env.environment?.type === 'VirtualEnvironment') {
+            envType = EnvironmentType.VirtualEnv;
+        }
+    }
+    let isCondaEnvWithoutPython = false;
+    let uri: Uri;
+    let id = env.id;
+    let sysPrefix = env.executable.sysPrefix;
+    if (!env.executable.uri) {
+        if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
+            isCondaEnvWithoutPython = true;
+            // sysprefix is the same as the env path.
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
+            uri =
+                getOSType() === OSType.Windows
+                    ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
+                    : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
+        } else {
+            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
+            return;
+        }
+    } else {
+        uri = env.executable.uri;
+    }
+
+    return {
+        id,
+        sysPrefix: sysPrefix || '',
+        envPath: env.environment?.folderUri,
+        displayPath: env.environment?.folderUri || Uri.file(env.path),
+        envName: env.environment?.name || '',
+        uri,
+        displayName: env.environment?.name || '',
+        envType,
+        isCondaEnvWithoutPython,
+        version: env.version
+            ? {
+                  major: env.version.major || 0,
+                  minor: env.version.minor || 0,
+                  patch: env.version.micro || 0,
+                  raw: env.version.sysVersion || ''
               }
             : undefined
     };
@@ -400,7 +475,8 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -647,6 +723,36 @@ export class InterpreterService implements IInterpreterService {
             const displayEmptyCondaEnv =
                 this.apiProvider.pythonExtensionVersion &&
                 this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
+            const resolved = resolvedPythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
+            if (!resolved) {
+                return;
+            }
+            getInterpreterHash(resolved)
+                .then((hash) => {
+                    this.pythonEnvHashes.set(resolved.id, hash);
+                })
+                .catch(noop);
+
+            if (
+                !this._interpreters.get(env.id) ||
+                !areObjectsWithUrisTheSame(resolved, this._interpreters.get(env.id)?.resolved)
+            ) {
+                // Also update the interpreter details in place, so that old references get the latest details
+                const info = this._interpreters.get(env.id);
+                if (info?.resolved) {
+                    Object.assign(info.resolved, resolved);
+                }
+                this._interpreters.set(env.id, { resolved });
+                this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
+            }
+            return resolved;
+        }
+    }
+    private trackEnvironment(env: Environment) {
+        if (env) {
+            const displayEmptyCondaEnv =
+                this.apiProvider.pythonExtensionVersion &&
+                this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
             const resolved = pythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
             if (!resolved) {
                 return;
@@ -667,6 +773,7 @@ export class InterpreterService implements IInterpreterService {
                     Object.assign(info.resolved, resolved);
                 }
                 this._interpreters.set(env.id, { resolved });
+                this.triggerEventIfAllowed('interpreterChangeEvent', resolved);
                 this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
             }
             return resolved;
@@ -756,24 +863,54 @@ export class InterpreterService implements IInterpreterService {
             }
             let previousListOfInterpreters = api.environments.known.length;
             try {
-                const apiResolveTime = stopWatch.elapsedTime;
-                await api.environments.refreshEnvironments();
-                if (cancelToken.isCancellationRequested) {
-                    return;
+                if (!this.experiments.inExperiment(Experiments.FastKernelPicker)) {
+                    const apiResolveTime = stopWatch.elapsedTime;
+                    await api.environments.refreshEnvironments();
+                    if (cancelToken.isCancellationRequested) {
+                        return;
+                    }
+                    const totalTime = stopWatch.elapsedTime;
+                    traceVerbose(
+                        `Full interpreter list after refreshing (total ${totalTime}ms, resolve ${apiResolveTime}ms, refresh ${
+                            totalTime - apiResolveTime
+                        }ms) is length: ${api.environments.known.length}, ${api.environments.known
+                            .map(
+                                (item) =>
+                                    `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
+                                        item.executable.uri
+                                    )}:${item.path}`
+                            )
+                            .join(', ')}`
+                    );
                 }
-                const totalTime = stopWatch.elapsedTime;
-                traceVerbose(
-                    `Full interpreter list after refreshing (total ${totalTime}ms, resolve ${apiResolveTime}ms, refresh ${
-                        totalTime - apiResolveTime
-                    }ms) is length: ${api.environments.known.length}, ${api.environments.known
-                        .map(
-                            (item) =>
-                                `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
-                                    item.executable.uri
-                                )}:${item.path}`
-                        )
-                        .join(', ')}`
-                );
+                // if (this.experiments.inExperiment(Experiments.FastKernelPicker)) {
+                //     api.environments.known.forEach((env) => {
+                //         try {
+                //             const resolved = this.trackEnvironment(env);
+                //             traceInfoIfCI(
+                //                 `Python environment for ${env.id} is ${
+                //                     env?.id
+                //                 } from Python Extension API is ${JSON.stringify(
+                //                     env
+                //                 )} and original env is ${JSON.stringify(env)} and translated is ${JSON.stringify(
+                //                     resolved
+                //                 )}`
+                //             );
+                //             if (resolved) {
+                //                 allInterpreters.push(resolved);
+                //             } else {
+                //                 // Ignore cases where we do not have Uri and its a conda env, as those as conda envs without Python.
+                //                 traceError(
+                //                     `Failed to get env details from Python API for ${getDisplayPath(
+                //                         env.id
+                //                     )} without an error`
+                //                 );
+                //             }
+                //         } catch (ex) {
+                //             traceError(`Failed to get env details from Python API for ${getDisplayPath(env.id)}`, ex);
+                //         }
+                //     });
+                // } else {
                 await Promise.all(
                     api.environments.known.map(async (item) => {
                         try {
@@ -803,6 +940,7 @@ export class InterpreterService implements IInterpreterService {
                         }
                     })
                 );
+                // }
                 // We have updated the list of environments, trigger a change
                 // Possible one of the environments was resolve even before this method started.
                 // E.g. we got active interpreter details, and then we came here.
@@ -890,6 +1028,33 @@ export class InterpreterService implements IInterpreterService {
                             // Remove items that are no longer valid.
                             if (e.type === 'remove') {
                                 this._interpreters.delete(e.env.id);
+                                // } else if (this.experiments.inExperiment(Experiments.FastKernelPicker)) {
+                                //     const env = e.env;
+                                //     try {
+                                //         const resolved = this.trackEnvironment(env);
+                                //         traceInfoIfCI(
+                                //             `Python environment for ${env.id} is ${
+                                //                 env?.id
+                                //             } from Python Extension API is ${JSON.stringify(
+                                //                 env
+                                //             )} and original env is ${JSON.stringify(
+                                //                 env
+                                //             )} and translated is ${JSON.stringify(resolved)}`
+                                //         );
+                                //         if (!resolved) {
+                                //             // Ignore cases where we do not have Uri and its a conda env, as those as conda envs without Python.
+                                //             traceError(
+                                //                 `Failed to get env details from Python API for ${getDisplayPath(
+                                //                     env.id
+                                //                 )} without an error`
+                                //             );
+                                //         }
+                                //     } catch (ex) {
+                                //         traceError(
+                                //             `Failed to get env details from Python API for ${getDisplayPath(env.id)}`,
+                                //             ex
+                                //         );
+                                //     }
                             }
                             // If this is a conda env that was previously resolved,
                             // & subsequently updated as having python then trigger changes.
