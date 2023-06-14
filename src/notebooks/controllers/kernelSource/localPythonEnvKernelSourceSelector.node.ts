@@ -34,7 +34,7 @@ import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { Disposables } from '../../../platform/common/utils';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { IPythonApiProvider } from '../../../platform/api/types';
-import { pythonEnvToJupyterEnv, resolvedPythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
+import { pythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,
     createInterpreterKernelSpecWithName,
@@ -43,6 +43,7 @@ import {
 import { Environment } from '../../../platform/api/pythonApiTypes';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
@@ -93,7 +94,8 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IExperimentService) private readonly experiments: IExperimentService
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         super();
         disposables.push(this);
@@ -270,46 +272,24 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         const result = await selector.selectKernel(quickPickFactory);
         if (result?.selection === 'controller') {
             // Resolve the Python environment.
-            const interpreterId = result.connection?.interpreter?.id;
-            if (!interpreterId) {
+            const interpreterUri = result.connection?.interpreter?.uri;
+            if (!interpreterUri) {
                 return;
             }
-            const connection = await this.getKernelConnectionFromSelection(interpreterId);
-            if (!connection) {
+            const interpreter = await this.interpreterService.getInterpreterDetails(interpreterUri);
+            if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
                 return;
             }
+            const spec = await createInterpreterKernelSpec(interpreter, await this.getKernelSpecsDir());
+            const connection = PythonKernelConnectionMetadata.create({
+                kernelSpec: spec,
+                interpreter: interpreter,
+                id: getKernelId(spec, interpreter)
+            });
             state.source = result.finder;
             state.selection = { type: 'connection', connection };
         } else if (result?.selection === 'userPerformedSomeOtherAction') {
             state.selection = { type: 'userPerformedSomeOtherAction' };
         }
-    }
-    private async getKernelConnectionFromSelection(pythonEnvId: string) {
-        const api = await this.pythonApi.getNewApi();
-        if (!api) {
-            return;
-        }
-        const env = api.environments.known.find((e) => e.id === pythonEnvId);
-        if (!env) {
-            return;
-        }
-        const resolveEnv = await api.environments.resolveEnvironment(env);
-        if (!resolveEnv) {
-            return;
-        }
-        const displayEmptyCondaEnv =
-            this.pythonApi.pythonExtensionVersion &&
-            this.pythonApi.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
-
-        const interpreter = resolvedPythonEnvToJupyterEnv(resolveEnv, displayEmptyCondaEnv === true);
-        if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
-            return;
-        }
-        const spec = await createInterpreterKernelSpec(interpreter, await this.getKernelSpecsDir());
-        return PythonKernelConnectionMetadata.create({
-            kernelSpec: spec,
-            interpreter: interpreter,
-            id: getKernelId(spec, interpreter)
-        });
     }
 }
