@@ -113,35 +113,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         this.disposables.push(taskNb);
         this.disposables.push(taskIW);
 
-        // Refresh the list of interpreters only if not in the experiment (old behavior)
-        // Or if a notebook is currently opened, as we need to ensure we always(regardless of the experiment) display the refresh indicator in kernel picker.
-        if (
-            !this.experiments.inExperiment(Experiments.FastKernelPicker) ||
-            (window.activeNotebookEditor?.notebook && isJupyterNotebook(window.activeNotebookEditor.notebook))
-        ) {
-            console.error('Ok1');
-            this.interpreterService.refreshInterpreters().finally(() => {
-                if (this.kernelFinder.status === 'idle') {
-                    traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
-                    taskNb.dispose();
-                    taskIW.dispose();
-                    return;
-                }
-                this.kernelFinder.onDidChangeStatus(
-                    () => {
-                        if (this.kernelFinder.status === 'idle') {
-                            traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
-                            taskNb.dispose();
-                            taskIW.dispose();
-                        }
-                    },
-                    this,
-                    this.disposables
-                );
-            });
-        }
-
-        if (this.experiments.inExperiment(Experiments.FastKernelPicker)) {
+        this.interpreterService.refreshInterpreters().finally(() => {
             if (this.kernelFinder.status === 'idle') {
                 traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
                 taskNb.dispose();
@@ -159,7 +131,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
                 this,
                 this.disposables
             );
-        }
+        });
     }
     private startRefreshWithPythonWithExperiment() {
         if (this.refreshedOnceBefore) {
