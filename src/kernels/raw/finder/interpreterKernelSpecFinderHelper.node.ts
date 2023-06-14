@@ -150,6 +150,13 @@ export class InterpreterSpecificKernelSpecsFinder implements IDisposable {
         this.cancelToken.cancel();
         this.cancelToken = new CancellationTokenSource();
         this.kernelSpecPromise = this.listKernelSpecsImpl();
+        this.kernelSpecPromise
+            .then((kernels) => {
+                traceVerbose(
+                    `Kernels for interpreter ${this.interpreter.id} are ${kernels.map((k) => k.id).join(', ')}`
+                );
+            })
+            .catch(noop);
         return this.kernelSpecPromise;
     }
 

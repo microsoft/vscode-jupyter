@@ -296,7 +296,6 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
                     this.interpreterKernelSpecs.set(interpreter.id, finder);
                 }
                 const kernels = await raceCancellation(cancelToken, [], finder.listKernelSpecs(forceRefresh));
-                traceVerbose(`Kernels for interpreter ${interpreter.id} are ${kernels.map((k) => k.id).join(', ')}`);
                 await this.appendNewKernels(kernels);
             })
         );
