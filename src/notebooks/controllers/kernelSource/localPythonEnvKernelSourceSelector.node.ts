@@ -210,9 +210,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         );
     }
     private buildDummyEnvironment(e: Environment) {
-        if (!e.executable.sysPrefix || !e.executable.uri) {
-            return;
-        }
         const displayEmptyCondaEnv =
             this.pythonApi.pythonExtensionVersion &&
             this.pythonApi.pythonExtensionVersion.compare('2023.3.10341119') >= 0;

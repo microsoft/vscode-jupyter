@@ -101,7 +101,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         return this.selectKernelImpl(quickPickFactory, { quickPick: undefined });
     }
 
-    public async selectKernelImpl(
+    protected async selectKernelImpl(
         quickPickFactory: CreateAndSelectItemFromQuickPick,
         quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined }
     ): Promise<
@@ -172,7 +172,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
     protected getAdditionalQuickPickItems(): CompoundQuickPickItem[] {
         return [];
     }
-    public async selectKernelImplInternal(
+    private async selectKernelImplInternal(
         quickPickFactory: CreateAndSelectItemFromQuickPick,
         quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined }
     ): Promise<
