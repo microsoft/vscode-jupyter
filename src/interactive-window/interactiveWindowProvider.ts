@@ -117,7 +117,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
 
             const result = new InteractiveWindow(
                 this.serviceContainer,
-                iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
+                iw.owner,
                 new InteractiveControllerFactory(this.controllerHelper, mode),
                 tab,
                 Uri.parse(iw.inputBoxUriString)
