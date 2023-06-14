@@ -23,7 +23,7 @@ const API_ACCESS_GLOBAL_KEY = 'JUPYTER_API_ACCESS_INFORMATION';
 export const TrustedExtensionPublishers = new Set([JVSC_EXTENSION_ID.split('.')[0], 'rchiodo', 'donjayamanne']);
 // We dont want to expose this API to everyone, else we'll keep track of who has access to this.
 // However, the user will still be prompted to grant these extensions access to the kernels..
-export const PublishersAllowedWithPrompts = new Set([JVSC_EXTENSION_ID.split('.')[0], 'rchiodo']);
+export const PublishersAllowedWithPrompts = new Set(['rchiodo']);
 
 /**
  * Responisble for controlling what extensions can access the IExtensionApi
@@ -46,8 +46,8 @@ export class ApiAccessService {
         const publisherId =
             !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
         if (this.context.extensionMode === ExtensionMode.Test || !publisherId || this.env.channel === 'insiders') {
-            traceError(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
+                traceError(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
                 const displayName = this.extensions.getExtension(info.extensionId)?.packageJSON?.displayName || '';
                 const extensionDisplay =
                     displayName && info.extensionId
