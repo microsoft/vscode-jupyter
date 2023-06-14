@@ -968,33 +968,6 @@ export class InterpreterService implements IInterpreterService {
                             // Remove items that are no longer valid.
                             if (e.type === 'remove') {
                                 this._interpreters.delete(e.env.id);
-                                // } else if (this.experiments.inExperiment(Experiments.FastKernelPicker)) {
-                                //     const env = e.env;
-                                //     try {
-                                //         const resolved = this.trackEnvironment(env);
-                                //         traceInfoIfCI(
-                                //             `Python environment for ${env.id} is ${
-                                //                 env?.id
-                                //             } from Python Extension API is ${JSON.stringify(
-                                //                 env
-                                //             )} and original env is ${JSON.stringify(
-                                //                 env
-                                //             )} and translated is ${JSON.stringify(resolved)}`
-                                //         );
-                                //         if (!resolved) {
-                                //             // Ignore cases where we do not have Uri and its a conda env, as those as conda envs without Python.
-                                //             traceError(
-                                //                 `Failed to get env details from Python API for ${getDisplayPath(
-                                //                     env.id
-                                //                 )} without an error`
-                                //             );
-                                //         }
-                                //     } catch (ex) {
-                                //         traceError(
-                                //             `Failed to get env details from Python API for ${getDisplayPath(env.id)}`,
-                                //             ex
-                                //         );
-                                //     }
                             }
                             // If this is a conda env that was previously resolved,
                             // & subsequently updated as having python then trigger changes.
