@@ -19,10 +19,10 @@ export interface CommandQuickPickItem extends QuickPickItem {
     command: () => Promise<PythonKernelConnectionMetadata | undefined>;
 }
 
-export type MultiStepResult = {
+export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
     notebook: NotebookDocument;
     source?: IContributedKernelFinder;
-    selection?: { type: 'connection'; connection: KernelConnectionMetadata } | { type: 'userPerformedSomeOtherAction' };
+    selection?: { type: 'connection'; connection: T } | { type: 'userPerformedSomeOtherAction' };
     disposables: IDisposable[];
 };
 export interface IQuickPickKernelItemProvider {

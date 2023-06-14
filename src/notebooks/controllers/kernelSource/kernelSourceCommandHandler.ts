@@ -33,7 +33,13 @@ import {
     TestingKernelPickerProviderId
 } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import {
+    Experiments,
+    IDisposable,
+    IDisposableRegistry,
+    IExperimentService,
+    IsWebExtension
+} from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
@@ -42,6 +48,7 @@ import { INotebookEditorProvider } from '../../types';
 import {
     IControllerRegistration,
     ILocalNotebookKernelSourceSelector,
+    ILocalPythonNotebookKernelSourceSelector,
     IRemoteNotebookKernelSourceSelector,
     IVSCodeNotebookController
 } from '../types';
@@ -57,7 +64,8 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {
         disposables.push(this);
     }
@@ -228,11 +236,22 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         if (!notebook) {
             return;
         }
-        const selector = ServiceContainer.instance.get<ILocalNotebookKernelSourceSelector>(
-            ILocalNotebookKernelSourceSelector
-        );
-        const kernel = await selector.selectLocalKernel(notebook, kind);
-        return this.getSelectedController(notebook, kernel);
+        if (
+            this.experiments.inExperiment(Experiments.FastKernelPicker) &&
+            kind === ContributedKernelFinderKind.LocalPythonEnvironment
+        ) {
+            const selector = ServiceContainer.instance.get<ILocalPythonNotebookKernelSourceSelector>(
+                ILocalPythonNotebookKernelSourceSelector
+            );
+            const kernel = await selector.selectLocalKernel(notebook);
+            return this.getSelectedController(notebook, kernel);
+        } else {
+            const selector = ServiceContainer.instance.get<ILocalNotebookKernelSourceSelector>(
+                ILocalNotebookKernelSourceSelector
+            );
+            const kernel = await selector.selectLocalKernel(notebook, kind);
+            return this.getSelectedController(notebook, kernel);
+        }
     }
     private async onSelectRemoteKernel(providerId: string, notebook?: NotebookDocument) {
         notebook = notebook || window.activeNotebookEditor?.notebook;

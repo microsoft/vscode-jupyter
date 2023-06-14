@@ -8,11 +8,13 @@ import { ControllerRegistration } from './controllerRegistration';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
 import { LocalNotebookKernelSourceSelector } from './kernelSource/localNotebookKernelSourceSelector.node';
+import { LocalPythonEnvNotebookKernelSourceSelector } from './kernelSource/localPythonEnvKernelSourceSelector.node';
 import { RemoteNotebookKernelSourceSelector } from './kernelSource/remoteNotebookKernelSourceSelector';
 import {
     IConnectionDisplayDataProvider,
     IControllerRegistration,
     ILocalNotebookKernelSourceSelector,
+    ILocalPythonNotebookKernelSourceSelector,
     IRemoteNotebookKernelSourceSelector
 } from './types';
 
@@ -31,6 +33,11 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         ILocalNotebookKernelSourceSelector,
         LocalNotebookKernelSourceSelector
     );
+    serviceManager.addSingleton<ILocalPythonNotebookKernelSourceSelector>(
+        ILocalPythonNotebookKernelSourceSelector,
+        LocalPythonEnvNotebookKernelSourceSelector
+    );
+    serviceManager.addBinding(ILocalPythonNotebookKernelSourceSelector, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelSourceCommandHandler

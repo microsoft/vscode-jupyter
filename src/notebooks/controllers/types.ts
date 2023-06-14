@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import {
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
+    PythonKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
@@ -121,6 +122,10 @@ export interface ILocalNotebookKernelSourceSelector {
         notebook: vscode.NotebookDocument,
         kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
     ): Promise<LocalKernelConnectionMetadata | undefined>;
+}
+export const ILocalPythonNotebookKernelSourceSelector = Symbol('ILocalPythonNotebookKernelSourceSelector');
+export interface ILocalPythonNotebookKernelSourceSelector {
+    selectLocalKernel(notebook: vscode.NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined>;
 }
 
 export interface IConnectionDisplayData extends IDisposable {

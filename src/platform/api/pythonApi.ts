@@ -748,37 +748,6 @@ export class InterpreterService implements IInterpreterService {
             return resolved;
         }
     }
-    private trackEnvironment(env: Environment) {
-        if (env) {
-            const displayEmptyCondaEnv =
-                this.apiProvider.pythonExtensionVersion &&
-                this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
-            const resolved = pythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
-            if (!resolved) {
-                return;
-            }
-            getInterpreterHash(resolved)
-                .then((hash) => {
-                    this.pythonEnvHashes.set(resolved.id, hash);
-                })
-                .catch(noop);
-
-            if (
-                !this._interpreters.get(env.id) ||
-                !areObjectsWithUrisTheSame(resolved, this._interpreters.get(env.id)?.resolved)
-            ) {
-                // Also update the interpreter details in place, so that old references get the latest details
-                const info = this._interpreters.get(env.id);
-                if (info?.resolved) {
-                    Object.assign(info.resolved, resolved);
-                }
-                this._interpreters.set(env.id, { resolved });
-                this.triggerEventIfAllowed('interpreterChangeEvent', resolved);
-                this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
-            }
-            return resolved;
-        }
-    }
     private pendingInterpreterChangeEventTriggers = new Map<InterpreterId, PythonEnvironment | undefined>();
     private pendingInterpretersChangeEventTriggers = new Map<InterpreterId, PythonEnvironment | undefined>();
     private triggerEventIfAllowed(
@@ -883,34 +852,6 @@ export class InterpreterService implements IInterpreterService {
                             .join(', ')}`
                     );
                 }
-                // if (this.experiments.inExperiment(Experiments.FastKernelPicker)) {
-                //     api.environments.known.forEach((env) => {
-                //         try {
-                //             const resolved = this.trackEnvironment(env);
-                //             traceInfoIfCI(
-                //                 `Python environment for ${env.id} is ${
-                //                     env?.id
-                //                 } from Python Extension API is ${JSON.stringify(
-                //                     env
-                //                 )} and original env is ${JSON.stringify(env)} and translated is ${JSON.stringify(
-                //                     resolved
-                //                 )}`
-                //             );
-                //             if (resolved) {
-                //                 allInterpreters.push(resolved);
-                //             } else {
-                //                 // Ignore cases where we do not have Uri and its a conda env, as those as conda envs without Python.
-                //                 traceError(
-                //                     `Failed to get env details from Python API for ${getDisplayPath(
-                //                         env.id
-                //                     )} without an error`
-                //                 );
-                //             }
-                //         } catch (ex) {
-                //             traceError(`Failed to get env details from Python API for ${getDisplayPath(env.id)}`, ex);
-                //         }
-                //     });
-                // } else {
                 await Promise.all(
                     api.environments.known.map(async (item) => {
                         try {
@@ -940,7 +881,6 @@ export class InterpreterService implements IInterpreterService {
                         }
                     })
                 );
-                // }
                 // We have updated the list of environments, trigger a change
                 // Possible one of the environments was resolve even before this method started.
                 // E.g. we got active interpreter details, and then we came here.
