@@ -35,7 +35,11 @@ import { Disposables } from '../../../platform/common/utils';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { IPythonApiProvider } from '../../../platform/api/types';
 import { pythonEnvToJupyterEnv, resolvedPythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
-import { createInterpreterKernelSpec, getKernelId } from '../../../kernels/helpers';
+import {
+    createInterpreterKernelSpec,
+    createInterpreterKernelSpecWithName,
+    getKernelId
+} from '../../../kernels/helpers';
 import { Environment } from '../../../platform/api/pythonApiTypes';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -186,7 +190,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         if (!api) {
             return;
         }
-        api.environments.known.map((e) => this.buildDummyEnvironment(e).catch(noop));
+        api.environments.known.map((e) => this.buildDummyEnvironment(e));
         api.environments.onDidChangeEnvironments(
             (e) => {
                 if (e.type === 'remove') {
@@ -196,14 +200,14 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                         this._onDidChangeKernels.fire({ removed: [kernel] });
                     }
                 } else {
-                    this.buildDummyEnvironment(e.env).catch(noop);
+                    this.buildDummyEnvironment(e.env);
                 }
             },
             this,
             this.disposables
         );
     }
-    private async buildDummyEnvironment(e: Environment) {
+    private buildDummyEnvironment(e: Environment) {
         if (!e.executable.sysPrefix || !e.executable.uri) {
             return;
         }
@@ -214,7 +218,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
             return;
         }
-        const spec = await createInterpreterKernelSpec(interpreter, await this.getKernelSpecsDir());
+        const spec = createInterpreterKernelSpecWithName('python3', interpreter);
         const result = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
             interpreter: interpreter,
