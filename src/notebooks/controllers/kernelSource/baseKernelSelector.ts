@@ -424,8 +424,6 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         } else {
             this.recommendedItems.push(recommendedItem);
         }
-        // if (this.previousRecommendedItem && this.provider.recommended.id ! this.previousRecommendedItem?.connection?.id) {
-        // }
         this.rebuildQuickPickItems(quickPick);
     }
     /**
