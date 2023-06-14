@@ -9,7 +9,7 @@ import { GLOBAL_MEMENTO, IExtensionContext, IExtensions, IMemento } from '../../
 import { PromiseChain } from '../../platform/common/utils/async';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { traceError } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 
 type ApiExtensionInfo = {
@@ -47,7 +47,7 @@ export class ApiAccessService {
             !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
         if (this.context.extensionMode === ExtensionMode.Test || !publisherId || this.env.channel === 'insiders') {
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
-                traceError(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
+                traceWarning(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
                 const displayName = this.extensions.getExtension(info.extensionId)?.packageJSON?.displayName || '';
                 const extensionDisplay =
                     displayName && info.extensionId
