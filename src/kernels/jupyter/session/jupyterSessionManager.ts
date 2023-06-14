@@ -354,8 +354,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let cookieString;
 
         // If no token is specified prompt for a password
+        traceError('connInfo.token', `"${connInfo.token}"`);
         if ((connInfo.token === '' || connInfo.token === 'null') && !connInfo.getAuthHeader) {
-            traceError('isTokenEmpty', connInfo.token);
             if (this.failOnPassword) {
                 throw new Error('Password request not allowed.');
             }
@@ -377,6 +377,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             } else if (pwSettings) {
                 serverSettings = { ...serverSettings, token: connInfo.token };
                 traceError('pwSettings', JSON.stringify(pwSettings));
+                traceError('serverSettings', JSON.stringify(serverSettings));
             } else {
                 throw new JupyterInvalidPasswordError();
             }
