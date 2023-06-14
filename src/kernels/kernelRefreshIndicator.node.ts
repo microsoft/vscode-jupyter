@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { notebooks } from 'vscode';
+import { notebooks, window, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
@@ -11,6 +11,7 @@ import { Experiments, IDisposable, IDisposableRegistry, IExperimentService } fro
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { traceInfo } from '../platform/logging';
 import { IKernelFinder } from './types';
+import { isJupyterNotebook } from '../platform/common/utils';
 
 /**
  * Ensures we refresh the list of Python environments upon opening a Notebook.
@@ -39,6 +40,26 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             this.extensionChecker.onPythonExtensionInstallationStatusChanged(
                 () => {
                     if (this.extensionChecker.isPythonExtensionInstalled) {
+                        this.startRefreshWithPython();
+                    }
+                },
+                this,
+                this.disposables
+            );
+        }
+        if (this.experiments.inExperiment(Experiments.FastKernelPicker)) {
+            window.onDidChangeActiveNotebookEditor(
+                (e) => {
+                    if (this.extensionChecker.isPythonExtensionInstalled && e && isJupyterNotebook(e.notebook)) {
+                        this.startRefreshWithPython();
+                    }
+                },
+                this,
+                this.disposables
+            );
+            workspace.onDidOpenNotebookDocument(
+                (e) => {
+                    if (this.extensionChecker.isPythonExtensionInstalled && isJupyterNotebook(e)) {
                         this.startRefreshWithPython();
                     }
                 },
@@ -122,27 +143,32 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
                 this,
                 this.disposables
             );
-
-            return;
         }
-        this.interpreterService.refreshInterpreters().finally(() => {
-            if (this.kernelFinder.status === 'idle') {
-                traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
-                taskNb.dispose();
-                taskIW.dispose();
-                return;
-            }
-            this.kernelFinder.onDidChangeStatus(
-                () => {
-                    if (this.kernelFinder.status === 'idle') {
-                        traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
-                        taskNb.dispose();
-                        taskIW.dispose();
-                    }
-                },
-                this,
-                this.disposables
-            );
-        });
+        // Refresh the list of interpreters only if not in the experiment (old behavior)
+        // Or if a notebook is currently opened, as we need to ensure we always(regardless of the experiment) display the refresh indicator in kernel picker.
+        if (
+            !this.experiments.inExperiment(Experiments.FastKernelPicker) ||
+            (window.activeNotebookEditor?.notebook && isJupyterNotebook(window.activeNotebookEditor.notebook))
+        ) {
+            this.interpreterService.refreshInterpreters().finally(() => {
+                if (this.kernelFinder.status === 'idle') {
+                    traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
+                    taskNb.dispose();
+                    taskIW.dispose();
+                    return;
+                }
+                this.kernelFinder.onDidChangeStatus(
+                    () => {
+                        if (this.kernelFinder.status === 'idle') {
+                            traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
+                            taskNb.dispose();
+                            taskIW.dispose();
+                        }
+                    },
+                    this,
+                    this.disposables
+                );
+            });
+        }
     }
 }
