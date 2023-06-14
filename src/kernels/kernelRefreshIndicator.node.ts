@@ -106,7 +106,6 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             return;
         }
         this.refreshedOnceBefore = true;
-        console.error('Ok');
         const id = Date.now().toString();
         traceInfo(`Start refreshing Interpreter Kernel Picker (${id})`);
         const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
