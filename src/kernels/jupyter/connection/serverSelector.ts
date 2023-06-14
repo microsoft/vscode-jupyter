@@ -85,7 +85,7 @@ export async function validateSelectJupyterURI(
     try {
         await jupyterConnection.validateRemoteUri(inputText);
     } catch (err) {
-        traceWarning('Uri verification error', err);
+        traceError('Uri verification error', err);
         if (JupyterSelfCertsError.isSelfCertsError(err)) {
             sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
             const handled = await handleSelfCertsError(applicationShell, configService, err.message);
