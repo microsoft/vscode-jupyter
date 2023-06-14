@@ -2413,8 +2413,7 @@ export namespace vscMockExtHostedTypes {
          * @param port the port number
          * @param autoForwardAction the action to take when this port is detected
          */
-        constructor(port: number, autoForwardAction: PortAutoForwardAction) {
-            this.port = port;
+        constructor(autoForwardAction: PortAutoForwardAction) {
             this.autoForwardAction = autoForwardAction;
         }
     }
