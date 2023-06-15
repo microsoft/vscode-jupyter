@@ -81,6 +81,7 @@ export class JupyterServer {
         }
         return JupyterServer._instance;
     }
+    private static StartPort = 9_000;
     private static _instance: JupyterServer;
     private _disposables: IDisposable[] = [];
     private _jupyterServerWithToken?: Promise<string>;
@@ -88,8 +89,10 @@ export class JupyterServer {
     private _jupyterServerWithCert?: Promise<string>;
     private availablePort?: number;
     private availableSecondPort?: number;
-    private availableThirdPort?: number;
     private decoder = new BufferDecoder();
+    private get nextPort(): number {
+        return JupyterServer.StartPort++;
+    }
     public async dispose() {
         this._jupyterServerWithToken = undefined;
         this._secondJupyterServerWithToken = undefined;
@@ -108,7 +111,7 @@ export class JupyterServer {
         if (!this._jupyterServerWithCert) {
             this._jupyterServerWithCert = new Promise<string>(async (resolve, reject) => {
                 const token = this.generateToken();
-                const port = await this.getThirdFreePort();
+                const port = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
                 await tcpPortUsed.waitUntilFree(port, 200, 10_000);
@@ -136,17 +139,18 @@ export class JupyterServer {
         useCert?: boolean;
         jupyterLab?: boolean;
         password?: string;
-    }): Promise<string> {
-        const port = await this.getThirdFreePort();
+    }): Promise<{ url: string } & IDisposable> {
+        const port = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
         // Possible previous instance of jupyter has not completely shutdown.
         // Wait for it to shutdown fully so that we can re-use the same port.
         await tcpPortUsed.waitUntilFree(port, 200, 10_000);
         const token = typeof options.token === 'string' ? options.token : this.generateToken();
-        await this.startJupyterServer({ ...options, port, token });
+        const disposable = await this.startJupyterServer({ ...options, port, token });
         await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
 
         // Anything with a cert is https, not http
-        return `http${options.useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
+        const url = `http${options.useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
+        return { url, dispose: () => disposable.dispose() };
     }
 
     public async startJupyterWithToken({ detached }: { detached?: boolean } = {}): Promise<string> {
@@ -205,7 +209,7 @@ export class JupyterServer {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
         // The remote uri is cached in a few places (known issue).
         if (!this.availablePort) {
-            this.availablePort = await getFreePort({ host: 'localhost' }).then((p) => p);
+            this.availablePort = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
         }
         return this.availablePort!;
     }
@@ -213,18 +217,9 @@ export class JupyterServer {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
         // The remote uri is cached in a few places (known issue).
         if (!this.availableSecondPort) {
-            this.availableSecondPort = await getFreePort({ host: 'localhost' }).then((p) => p);
+            this.availableSecondPort = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
         }
         return this.availableSecondPort!;
-    }
-
-    private async getThirdFreePort() {
-        // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
-        // The remote uri is cached in a few places (known issue).
-        if (!this.availableThirdPort) {
-            this.availableThirdPort = await getFreePort({ host: 'localhost' }).then((p) => p);
-        }
-        return this.availableThirdPort!;
     }
 
     private startJupyterServer({
@@ -241,8 +236,8 @@ export class JupyterServer {
         jupyterLab?: boolean;
         password?: string;
         detached?: boolean;
-    }): Promise<void> {
-        return new Promise<void>(async (resolve, reject) => {
+    }): Promise<IDisposable> {
+        return new Promise<IDisposable>(async (resolve, reject) => {
             try {
                 const args = [
                     '-m',
@@ -314,7 +309,7 @@ export class JupyterServer {
                     console.info(output.out);
                     traceInfoIfCI(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
-                        resolve();
+                        resolve(procDisposable);
                     }
                 });
                 this._disposables.push(procDisposable);

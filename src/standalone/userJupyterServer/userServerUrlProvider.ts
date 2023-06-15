@@ -11,8 +11,7 @@ import {
     Memento,
     QuickInputButtons,
     QuickPickItem,
-    Uri,
-    window
+    Uri
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
@@ -240,7 +239,7 @@ export class UserJupyterServerUrlProvider
         const disposables: Disposable[] = [];
 
         // Ask the user to enter a URI to connect to.
-        const input = window.createInputBox();
+        const input = this.applicationShell.createInputBox();
         input.title = DataScience.jupyterSelectURIPrompt;
         input.value = initialValue;
         input.ignoreFocusOut = true;
@@ -347,7 +346,7 @@ export class UserJupyterServerUrlProvider
         const disposables: Disposable[] = [];
 
         // Ask the user to enter a URI to connect to.
-        const input = window.createInputBox();
+        const input = this.applicationShell.createInputBox();
         input.title = DataScience.jupyterSelectURIPrompt;
         input.value = initialValue;
         input.ignoreFocusOut = true;

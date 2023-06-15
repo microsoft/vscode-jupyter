@@ -231,36 +231,32 @@ export function initializeCommonNodeApi() {
                 detached?: boolean;
                 standalone?: boolean;
             } = {}
-        ): Promise<string> {
+        ): Promise<{ url: string } & IDisposable> {
             if (IS_REMOTE_NATIVE_TEST()) {
                 if (options.standalone) {
-                    const url = JupyterServer.instance.startJupyter(options);
-                    // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
-                    // Possible we're trying to connect before the server is ready.
-                    await sleep(5_000);
-                    return url;
+                    return JupyterServer.instance.startJupyter(options);
                 }
                 if (!remoteUrisCleared) {
                     await commands.executeCommand('jupyter.clearSavedJupyterUris');
                     remoteUrisCleared = true;
                 }
-                const uriString = options.useCert
+                const url = options.useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithToken();
-                console.info(`Jupyter started and listening at ${uriString}`);
+                console.info(`Jupyter started and listening at ${url}`);
                 try {
-                    await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(uriString));
+                    await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(url));
                 } catch (ex) {
                     console.error('Failed to select jupyter server, retry in 1s', ex);
                 }
                 // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
                 // Possible we're trying to connect before the server is ready.
                 await sleep(5_000);
-                await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(uriString));
-                return uriString;
+                await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(url));
+                return { url, dispose: noop };
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default
-                return '';
+                return { url: '', dispose: noop };
             }
         },
         async stopJupyterServer() {

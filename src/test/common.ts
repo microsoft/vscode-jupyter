@@ -232,7 +232,7 @@ export type CommonApi = {
         password?: string;
         detached?: boolean;
         standalone?: boolean;
-    }): Promise<string>;
+    }): Promise<{ url: string } & IDisposable>;
     stopJupyterServer?(): Promise<void>;
     captureScreenShot?(contextOrFileName: string | Mocha.Context): Promise<void>;
     initialize(): Promise<IExtensionTestApi>;
@@ -259,7 +259,7 @@ export async function startJupyterServer(options?: {
     password?: string;
     detached?: boolean;
     standalone?: boolean;
-}): Promise<string> {
+}): Promise<{ url: string } & IDisposable> {
     return API.startJupyterServer(options);
 }
 
