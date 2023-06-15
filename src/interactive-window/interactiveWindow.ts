@@ -213,7 +213,7 @@ export class InteractiveWindow implements IInteractiveWindow {
             });
         });
 
-        const notebook = this.notebookDocument || this.openNotebookDocument();
+        const notebook = this.notebookDocument || (await this.openNotebookDocument());
         const editor = await window.showNotebookDocument(notebook, {
             preserveFocus: true,
             viewColumn: currentTab?.group.viewColumn
