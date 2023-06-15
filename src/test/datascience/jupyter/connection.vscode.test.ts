@@ -39,58 +39,57 @@ import { IJupyterServerUri } from '../../../api';
 import { IMultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 
 suite('Connect to Remote Jupyter Servers', function () {
+    // On conda these take longer for some reason.
+    this.timeout(120_000);
+    let jupyterNotebookWithHelloPassword = '';
+    let jupyterLabWithHelloPasswordAndWorldToken = '';
+    let jupyterNotebookWithHelloToken = '';
+    let jupyterNotebookWithEmptyPasswordToken = '';
+    let jupyterLabWithHelloPasswordAndEmptyToken = '';
+    suiteSetup(async function () {
+        if (!IS_REMOTE_NATIVE_TEST()) {
+            return;
+        }
+        await initialize();
+        [
+            jupyterNotebookWithHelloPassword,
+            jupyterLabWithHelloPasswordAndWorldToken,
+            jupyterNotebookWithHelloToken,
+            jupyterNotebookWithEmptyPasswordToken,
+            jupyterLabWithHelloPasswordAndEmptyToken
+        ] = await Promise.all([
+            startJupyterServer({
+                jupyterLab: false,
+                password: 'Hello',
+                standalone: true
+            }),
+            startJupyterServer({
+                jupyterLab: true,
+                password: 'Hello',
+                token: 'World',
+                standalone: true
+            }),
+            startJupyterServer({
+                jupyterLab: false,
+                token: 'Hello',
+                standalone: true
+            }),
+            startJupyterServer({
+                jupyterLab: false,
+                password: '',
+                token: '',
+                standalone: true
+            }),
+            startJupyterServer({
+                jupyterLab: false,
+                password: 'Hello',
+                token: '',
+                standalone: true
+            })
+        ]);
+    });
     ['Old Password Manager', 'New Password Manager'].forEach((passwordManager) => {
         suite(passwordManager, () => {
-            // On conda these take longer for some reason.
-            this.timeout(120_000);
-            let jupyterNotebookWithHelloPassword = '';
-            let jupyterLabWithHelloPasswordAndWorldToken = '';
-            let jupyterNotebookWithHelloToken = '';
-            let jupyterNotebookWithEmptyPasswordToken = '';
-            let jupyterLabWithHelloPasswordAndEmptyToken = '';
-            suiteSetup(async function () {
-                if (!IS_REMOTE_NATIVE_TEST()) {
-                    return;
-                }
-                await initialize();
-                [
-                    jupyterNotebookWithHelloPassword,
-                    jupyterLabWithHelloPasswordAndWorldToken,
-                    jupyterNotebookWithHelloToken,
-                    jupyterNotebookWithEmptyPasswordToken,
-                    jupyterLabWithHelloPasswordAndEmptyToken
-                ] = await Promise.all([
-                    startJupyterServer({
-                        jupyterLab: false,
-                        password: 'Hello',
-                        standalone: true
-                    }),
-                    startJupyterServer({
-                        jupyterLab: true,
-                        password: 'Hello',
-                        token: 'World',
-                        standalone: true
-                    }),
-                    startJupyterServer({
-                        jupyterLab: false,
-                        token: 'Hello',
-                        standalone: true
-                    }),
-                    startJupyterServer({
-                        jupyterLab: false,
-                        password: '',
-                        token: '',
-                        standalone: true
-                    }),
-                    startJupyterServer({
-                        jupyterLab: false,
-                        password: 'Hello',
-                        token: '',
-                        standalone: true
-                    })
-                ]);
-            });
-
             let clipboard: IClipboard;
             let uriProviderRegistration: IJupyterUriProviderRegistration;
             let appShell: IApplicationShell;
