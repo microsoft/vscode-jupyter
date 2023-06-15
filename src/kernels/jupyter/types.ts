@@ -158,6 +158,17 @@ export interface IJupyterServerProvider {
 export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
     readonly extensionId: string;
 }
+export type JupyterServerProviderHandle = {
+    extensionId: string;
+    /**
+     * Jupyter Server Provider Id.
+     */
+    id: string;
+    /**
+     * Jupyter Server handle, unique for each server.
+     */
+    handle: string;
+};
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 

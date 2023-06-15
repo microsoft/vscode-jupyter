@@ -8,6 +8,7 @@ import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
+    IExperimentService,
     IOutputChannel,
     IPersistentStateFactory
 } from '../../../platform/common/types';
@@ -36,7 +37,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         @optional()
         private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined,
         @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator,
-        @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry
+        @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry,
+        @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {}
 
     /**
@@ -56,7 +58,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.kernelService,
             this.backingFileCreator,
             this.requestAgentCreator,
-            this.requestCreator
+            this.requestCreator,
+            this.experiments
         );
         this.asyncDisposables.push(result);
         await result.initialize(connInfo);

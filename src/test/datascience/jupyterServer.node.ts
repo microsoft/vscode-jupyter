@@ -6,6 +6,7 @@
 
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
+import * as crypto from 'crypto';
 import getFreePort from 'get-port';
 import * as tcpPortUsed from 'tcp-port-used';
 import uuid from 'uuid/v4';
@@ -129,6 +130,24 @@ export class JupyterServer {
         }
         return this._jupyterServerWithCert;
     }
+    public async startJupyter(options: {
+        token?: string;
+        port?: number;
+        useCert?: boolean;
+        jupyterLab?: boolean;
+        password?: string;
+    }): Promise<string> {
+        const port = await this.getThirdFreePort();
+        // Possible previous instance of jupyter has not completely shutdown.
+        // Wait for it to shutdown fully so that we can re-use the same port.
+        await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+        const token = typeof options.token === 'string' ? options.token : this.generateToken();
+        await this.startJupyterServer({ ...options, port, token });
+        await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
+
+        // Anything with a cert is https, not http
+        return `http${options.useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
+    }
 
     public async startJupyterWithToken({ detached }: { detached?: boolean } = {}): Promise<string> {
         const token = this.generateToken();
@@ -212,11 +231,15 @@ export class JupyterServer {
         token,
         port,
         useCert,
+        jupyterLab,
+        password,
         detached
     }: {
         token: string;
         port: number;
         useCert?: boolean;
+        jupyterLab?: boolean;
+        password?: string;
         detached?: boolean;
     }): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
@@ -224,12 +247,19 @@ export class JupyterServer {
                 const args = [
                     '-m',
                     'jupyter',
-                    'notebook',
+                    jupyterLab ? 'lab' : 'notebook',
                     '--no-browser',
                     `--NotebookApp.port=${port}`,
                     `--NotebookApp.token=${token}`,
                     `--NotebookApp.allow_origin=*`
                 ];
+                if (typeof password === 'string') {
+                    if (password.length === 0) {
+                        args.push(`--NotebookApp.password=`);
+                    } else {
+                        args.push(`--NotebookApp.password=${generateHashedPassword(password)}`);
+                    }
+                }
                 if (useCert) {
                     const pemFile = path.join(
                         EXTENSION_ROOT_DIR,
@@ -371,4 +401,24 @@ export class JupyterServer {
             // Ignore.
         }
     }
+}
+
+function generateHashedPassword(password: string) {
+    const hash = crypto.createHash('sha1');
+    const salt = genRandomString(16);
+    hash.update(password);
+    hash.update(salt);
+    return `sha1:${salt}:${hash.digest('hex').toString()}`;
+}
+
+/**
+ * generates random string of characters i.e salt
+ * @function
+ * @param {number} length - Length of the random string.
+ */
+function genRandomString(length = 16) {
+    return crypto
+        .randomBytes(Math.ceil(length / 2))
+        .toString('hex') /** convert to hexadecimal format */
+        .slice(0, length); /** return required number of characters */
 }

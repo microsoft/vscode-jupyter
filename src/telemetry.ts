@@ -1771,25 +1771,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Jupyter URI was valid and set to a remote setting.
-     */
-    [Telemetry.SetJupyterURIToUserSpecified]: TelemetryEventInfo<{
-        /**
-         * Was the URI set to an Azure uri.
-         */
-        azure: boolean;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['KernelPicker'],
-        source: 'N/A',
-        properties: {
-            azure: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.
      */
     [Telemetry.ShiftEnterBannerShown]: TelemetryEventInfo<never | undefined> = {
