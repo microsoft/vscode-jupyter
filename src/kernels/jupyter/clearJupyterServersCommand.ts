@@ -40,6 +40,9 @@ export class ClearJupyterServersCommand implements IExtensionSyncActivationServi
                             }
                         })
                     ).catch(noop);
+                    await this.commandManager
+                        .executeCommand('dataScience.ClearUserProviderJupyterServerCache')
+                        .then(noop, noop);
                 },
                 this
             )
