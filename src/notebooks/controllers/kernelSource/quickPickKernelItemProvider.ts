@@ -161,9 +161,6 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             if (this.recommended && !this.kernels.find((k) => k.id === this.recommended?.id)) {
                 this.recommended = undefined;
             }
-            if (this.recommended) {
-                return;
-            }
             const preferredMethod =
                 finder.kind === ContributedKernelFinderKind.LocalKernelSpec
                     ? preferred.findPreferredLocalKernelSpecConnection.bind(preferred)
@@ -171,7 +168,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
 
             preferredMethod(this.notebook, finder, cancelToken)
                 .then((kernel) => {
-                    if (this.recommended) {
+                    if (this.recommended?.id === kernel?.id) {
                         return;
                     }
                     this.recommended = kernel;

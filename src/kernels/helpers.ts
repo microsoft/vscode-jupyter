@@ -54,6 +54,21 @@ export async function createInterpreterKernelSpec(
     interpreter?: PythonEnvironment,
     rootKernelFilePath?: Uri
 ): Promise<IJupyterKernelSpec> {
+    return createInterpreterKernelSpecWithName(
+        await getInterpreterKernelSpecName(interpreter),
+        interpreter,
+        rootKernelFilePath
+    );
+}
+
+/**
+ * Create a default kernelspec with the given display name.
+ */
+export function createInterpreterKernelSpecWithName(
+    name: string,
+    interpreter?: PythonEnvironment,
+    rootKernelFilePath?: Uri
+): IJupyterKernelSpec {
     const interpreterMetadata = interpreter
         ? {
               path: getFilePath(interpreter.uri)
@@ -62,7 +77,7 @@ export async function createInterpreterKernelSpec(
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: KernelSpec.ISpecModel = {
-        name: await getInterpreterKernelSpecName(interpreter),
+        name,
         language: 'python',
         display_name: interpreter?.displayName || 'Python 3',
         metadata: {
