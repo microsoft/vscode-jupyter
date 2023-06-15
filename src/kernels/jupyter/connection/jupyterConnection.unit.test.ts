@@ -93,7 +93,7 @@ suite('Jupyter Connection', async () => {
     ['Old Password Manager', 'New Password Manager'].forEach((passwordStorage) => {
         suite(passwordStorage, () => {
             setup(() => {
-                when(experiments.inExperimentSync(anything())).thenReturn(passwordStorage === 'New Password Manager');
+                when(experiments.inExperiment(anything())).thenReturn(passwordStorage === 'New Password Manager');
             });
             test('Validation will result in fetching kernels and kernelSpecs (Uri info provided)', async () => {
                 when(sessionManager.dispose()).thenResolve();

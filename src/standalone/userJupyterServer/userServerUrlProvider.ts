@@ -215,7 +215,7 @@ export class UserJupyterServerUrlProvider
     }
 
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
-        if (this.experiments.inExperimentSync(Experiments.PasswordManager)) {
+        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
             return this.handleQuickPickNew(item, backEnabled);
         } else {
             return this.handleQuickPickOld(item, backEnabled);
@@ -517,7 +517,7 @@ export class UserJupyterServerUrlProvider
         if (!server) {
             throw new Error('Server not found');
         }
-        if (!this.experiments.inExperimentSync(Experiments.PasswordManager)) {
+        if (!this.experiments.inExperiment(Experiments.PasswordManager)) {
             return server.serverInfo;
         }
 

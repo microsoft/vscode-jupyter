@@ -99,7 +99,7 @@ export class JupyterServerSelector {
     ) {}
 
     public async addJupyterServer(provider: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
-        if (this.experiments.inExperimentSync(Experiments.PasswordManager)) {
+        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
             return this.addJupyterServerNew(provider);
         } else {
             return this.addJupyterServerOld(provider);

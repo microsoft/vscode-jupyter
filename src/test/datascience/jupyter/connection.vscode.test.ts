@@ -155,7 +155,7 @@ suite('Connect to Remote Jupyter Servers', function () {
                 disposables.push(onDidRemoveUriStorage);
                 when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveUriStorage.event);
                 experiments = mock<IExperimentService>();
-                when(experiments.inExperimentSync(anything())).thenReturn(passwordManager === 'New Password Manager');
+                when(experiments.inExperiment(anything())).thenReturn(passwordManager === 'New Password Manager');
                 userUriProvider = new UserJupyterServerUrlProvider(
                     instance(clipboard),
                     instance(uriProviderRegistration),

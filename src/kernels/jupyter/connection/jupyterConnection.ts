@@ -62,7 +62,7 @@ export class JupyterConnection {
         serverUri?: IJupyterServerUri,
         doNotDisplayUnActionableMessages?: boolean
     ): Promise<void> {
-        if (this.experiments.inExperimentSync(Experiments.PasswordManager)) {
+        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
             return this.validateRemoteUriNew(provider, serverUri, doNotDisplayUnActionableMessages);
         } else {
             return this.validateRemoteUriOld(provider, serverUri);

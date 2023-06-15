@@ -341,7 +341,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     private async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
-        if (this.experiments.inExperimentSync(Experiments.PasswordManager)) {
+        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
             return this.getServerConnectSettingsNew(connInfo);
         } else {
             return this.getServerConnectSettingsOld(connInfo);
