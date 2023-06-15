@@ -67,7 +67,7 @@ export async function validateSelectJupyterURI(
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             const errorMessage = (err.message || err.toString()).replace(urlRegex, (url: string) => `[${url}](${url})`);
             return (
-                isWebExtension || true
+                isWebExtension
                     ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
                     : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
             )(errorMessage);
