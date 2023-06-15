@@ -566,8 +566,8 @@ ${actualCode}
         await runFilePromise;
         await waitForLastCellToComplete(interactiveWindow, 5, false);
 
-        const cells = interactiveWindow.notebookDocument
-            .getCells()
+        const cells = interactiveWindow
+            .notebookDocument!.getCells()
             .filter((c) => c.kind === vscode.NotebookCellKind.Code);
         const printCell = cells[cells.length - 2];
 
