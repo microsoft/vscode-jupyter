@@ -148,7 +148,22 @@ export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterS
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
-        traceError('Failed to parse remote URI', uri, ex);
-        throw new Error(`'Failed to parse remote URI ${uri}`);
+        const urlSafeForLogging = getSafeUrlForLogging(uri);
+        traceError('Failed to parse remote URI', urlSafeForLogging, ex);
+        throw new Error(`'Failed to parse remote URI ${urlSafeForLogging}`);
+    }
+}
+
+function getSafeUrlForLogging(uri: string) {
+    if ((uri || '').trim().toLowerCase().startsWith(Identifiers.REMOTE_URI.toLowerCase())) {
+        return uri;
+    } else {
+        try {
+            const url: URL = new URL(uri);
+            const isLocalHost = url.hostname.toLocaleLowerCase() === 'localhost' || url.hostname === '127.0.0.1';
+            return `${url.protocol}://${isLocalHost ? url.hostname : '<REMOTE SERVER>'}:${url.port}`;
+        } catch {
+            return uri;
+        }
     }
 }
