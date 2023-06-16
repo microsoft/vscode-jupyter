@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, startJupyterServer, waitForCondition } from '../../common';
+import { captureScreenShot, startJupyterServer, suiteMandatory, testMandatory, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -28,7 +28,7 @@ import {
 } from '../notebook/helper';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
-suite('Remote Tests', function () {
+suiteMandatory('Remote Tests', function () {
     const disposables: IDisposable[] = [];
     this.timeout(120_000);
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
@@ -67,7 +67,7 @@ suite('Remote Tests', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell and print Hello World', async function () {
+    testMandatory('Execute cell and print Hello World', async function () {
         const nbEdit = NotebookEdit.replaceCells(new NotebookRange(0, editor.notebook.cellCount), [
             new NotebookCellData(NotebookCellKind.Code, 'print("Hello World")', 'python')
         ]);
