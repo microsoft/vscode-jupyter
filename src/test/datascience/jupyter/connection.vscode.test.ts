@@ -48,7 +48,7 @@ suite('Connect to Remote Jupyter Servers', function () {
     let jupyterLabWithHelloPasswordAndEmptyToken = { url: '', dispose: noop };
     suiteSetup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
-            return;
+            return this.skip();
         }
         this.timeout(120_000);
         await initialize();
@@ -99,7 +99,7 @@ suite('Connect to Remote Jupyter Servers', function () {
         ]);
     });
     ['Old Password Manager', 'New Password Manager'].forEach((passwordManager) => {
-        suite(passwordManager, () => {
+        suite(passwordManager, function () {
             let clipboard: IClipboard;
             let uriProviderRegistration: IJupyterUriProviderRegistration;
             let appShell: IApplicationShell;
@@ -112,6 +112,9 @@ suite('Connect to Remote Jupyter Servers', function () {
             let experiments: IExperimentService;
 
             setup(async function () {
+                if (!IS_REMOTE_NATIVE_TEST()) {
+                    return this.skip();
+                }
                 traceInfo(`Start Test ${this.currentTest?.title}`);
                 const api = await initialize();
                 inputBox = {
