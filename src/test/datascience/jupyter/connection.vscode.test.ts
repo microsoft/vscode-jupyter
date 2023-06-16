@@ -289,7 +289,7 @@ suite('Connect to Remote Jupyter Servers', function () {
                     password: 'Bogus',
                     failWithInvalidPassword: true
                 }));
-            test('Connect to server with Password & Token in URL', () =>
+            test('Connect to Lab server with Password & Token in URL', () =>
                 testConnection({ userUri: jupyterLabWithHelloPasswordAndWorldToken.url, password: 'Hello' }));
             test('Connect to server with empty Password & empty Token in URL', () =>
                 testConnection({ userUri: jupyterNotebookWithEmptyPasswordToken.url, password: '' }));
@@ -298,12 +298,12 @@ suite('Connect to Remote Jupyter Servers', function () {
                     userUri: `http://localhost:${new URL(jupyterNotebookWithEmptyPasswordToken.url).port}/`,
                     password: ''
                 }));
-            test('Connect to server with Hello Password & empty Token (not even in URL)', () =>
+            test('Connect to Lab server with Hello Password & empty Token (not even in URL)', () =>
                 testConnection({
                     userUri: `http://localhost:${new URL(jupyterLabWithHelloPasswordAndEmptyToken.url).port}/`,
                     password: 'Hello'
                 }));
-            test('Connect to server with bogus Password & empty Token (not even in URL)', () =>
+            test('Connect to Lab server with bogus Password & empty Token (not even in URL)', () =>
                 testConnection({
                     userUri: `http://localhost:${new URL(jupyterLabWithHelloPasswordAndEmptyToken.url).port}/`,
                     password: 'Bogus',
