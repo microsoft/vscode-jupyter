@@ -132,7 +132,7 @@ export class JupyterServer {
         await tcpPortUsed.waitUntilFree(port, 200, 10_000);
         const token = typeof options.token === 'string' ? options.token : this.generateToken();
         const disposable = await this.startJupyterServer({ ...options, port, token });
-        await sleep(10_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
+        await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
 
         // Anything with a cert is https, not http
         const url = `http${options.useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
