@@ -10,7 +10,12 @@ import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InvalidRemoteJupyterServerUriHandleError } from '../../errors/invalidRemoteJupyterServerUriHandleError';
 import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
-import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../types';
+import {
+    IInternalJupyterUriProvider,
+    IJupyterServerUriEntry,
+    IJupyterServerUriStorage,
+    IJupyterUriProviderRegistration
+} from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../../api';
@@ -35,10 +40,12 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IJupyterServerUriStorage) serverStorage: IJupyterServerUriStorage
     ) {
         disposables.push(this._onProvidersChanged);
         disposables.push(new Disposable(() => this._providers.forEach((p) => p.dispose())));
+        disposables.push(serverStorage.onDidRemove(this.onDidRemoveServer, this));
     }
 
     public async getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>> {
@@ -96,6 +103,17 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         return provider.getServerUri(handle);
     }
 
+    private onDidRemoveServer(e: IJupyterServerUriEntry[]) {
+        Promise.all(
+            e.map(async (s) => {
+                const provider = await this.getProvider(s.provider.id).catch(noop);
+                if (!provider || !provider.removeHandle) {
+                    return;
+                }
+                await provider.removeHandle(s.provider.handle).catch(noop);
+            })
+        ).catch(noop);
+    }
     private loadOtherExtensions(): Promise<void> {
         if (!this.loadedOtherExtensionsPromise) {
             this.loadedOtherExtensionsPromise = this.loadOtherExtensionsImpl();

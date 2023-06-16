@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { Extensions } from '../../../platform/common/application/extensions.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
-import { IInternalJupyterUriProvider } from '../types';
+import { IInternalJupyterUriProvider, IJupyterServerUriEntry, IJupyterServerUriStorage } from '../types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
@@ -67,7 +67,16 @@ suite('URI Picker', () => {
         const memento = mock<vscode.Memento>();
         when(memento.get<string[]>(anything())).thenReturn([]);
         when(memento.get<string[]>(anything(), anything())).thenReturn([]);
-        registration = new JupyterUriProviderRegistration(extensions, disposables, instance(memento));
+        const uriStorage = mock<IJupyterServerUriStorage>();
+        const onDidRemove = new vscode.EventEmitter<IJupyterServerUriEntry[]>();
+        disposables.push(onDidRemove);
+        when(uriStorage.onDidRemove).thenReturn(onDidRemove.event);
+        registration = new JupyterUriProviderRegistration(
+            extensions,
+            disposables,
+            instance(memento),
+            instance(uriStorage)
+        );
         providerIds.map(async (id) => {
             const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
             const packageJson = TypeMoq.Mock.ofType<any>();
