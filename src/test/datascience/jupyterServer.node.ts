@@ -6,6 +6,7 @@
 
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
+import * as crypto from 'crypto';
 import getFreePort from 'get-port';
 import * as tcpPortUsed from 'tcp-port-used';
 import uuid from 'uuid/v4';
@@ -17,8 +18,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
-const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
-
 import { sleep } from '../core';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { noop } from '../../platform/common/utils/misc';
@@ -58,17 +57,6 @@ type ObservableExecutionResult<T extends string | Buffer> = {
     dispose(): void;
 };
 
-// Tracing can't be used either
-function traceInfo(message: string) {
-    console.log(message);
-}
-
-function traceInfoIfCI(message: string) {
-    if (isCI) {
-        traceInfo(message);
-    }
-}
-
 export class JupyterServer {
     /**
      * Used in vscode debugger launcher `preDebugWebTest.js` to kill the Jupyter Server by pid.
@@ -80,6 +68,7 @@ export class JupyterServer {
         }
         return JupyterServer._instance;
     }
+    private static StartPort = 9_000;
     private static _instance: JupyterServer;
     private _disposables: IDisposable[] = [];
     private _jupyterServerWithToken?: Promise<string>;
@@ -87,14 +76,15 @@ export class JupyterServer {
     private _jupyterServerWithCert?: Promise<string>;
     private availablePort?: number;
     private availableSecondPort?: number;
-    private availableThirdPort?: number;
     private decoder = new BufferDecoder();
+    private get nextPort(): number {
+        return JupyterServer.StartPort++;
+    }
     public async dispose() {
         this._jupyterServerWithToken = undefined;
         this._secondJupyterServerWithToken = undefined;
         console.log(`Disposing jupyter server instance`);
         disposeAllDisposables(this._disposables);
-        traceInfo('Shutting Jupyter server used for remote tests');
         if (this.availablePort) {
             await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
         }
@@ -107,7 +97,7 @@ export class JupyterServer {
         if (!this._jupyterServerWithCert) {
             this._jupyterServerWithCert = new Promise<string>(async (resolve, reject) => {
                 const token = this.generateToken();
-                const port = await this.getThirdFreePort();
+                const port = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
                 await tcpPortUsed.waitUntilFree(port, 200, 10_000);
@@ -128,6 +118,25 @@ export class JupyterServer {
             });
         }
         return this._jupyterServerWithCert;
+    }
+    public async startJupyter(options: {
+        token?: string;
+        port?: number;
+        useCert?: boolean;
+        jupyterLab?: boolean;
+        password?: string;
+    }): Promise<{ url: string } & IDisposable> {
+        const port = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
+        // Possible previous instance of jupyter has not completely shutdown.
+        // Wait for it to shutdown fully so that we can re-use the same port.
+        await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+        const token = typeof options.token === 'string' ? options.token : this.generateToken();
+        const disposable = await this.startJupyterServer({ ...options, port, token });
+        await sleep(10_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
+
+        // Anything with a cert is https, not http
+        const url = `http${options.useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
+        return { url, dispose: () => disposable.dispose() };
     }
 
     public async startJupyterWithToken({ detached }: { detached?: boolean } = {}): Promise<string> {
@@ -186,7 +195,7 @@ export class JupyterServer {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
         // The remote uri is cached in a few places (known issue).
         if (!this.availablePort) {
-            this.availablePort = await getFreePort({ host: 'localhost' }).then((p) => p);
+            this.availablePort = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
         }
         return this.availablePort!;
     }
@@ -194,42 +203,44 @@ export class JupyterServer {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
         // The remote uri is cached in a few places (known issue).
         if (!this.availableSecondPort) {
-            this.availableSecondPort = await getFreePort({ host: 'localhost' }).then((p) => p);
+            this.availableSecondPort = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
         }
         return this.availableSecondPort!;
-    }
-
-    private async getThirdFreePort() {
-        // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
-        // The remote uri is cached in a few places (known issue).
-        if (!this.availableThirdPort) {
-            this.availableThirdPort = await getFreePort({ host: 'localhost' }).then((p) => p);
-        }
-        return this.availableThirdPort!;
     }
 
     private startJupyterServer({
         token,
         port,
         useCert,
+        jupyterLab,
+        password,
         detached
     }: {
         token: string;
         port: number;
         useCert?: boolean;
+        jupyterLab?: boolean;
+        password?: string;
         detached?: boolean;
-    }): Promise<void> {
-        return new Promise<void>(async (resolve, reject) => {
+    }): Promise<IDisposable> {
+        return new Promise<IDisposable>(async (resolve, reject) => {
             try {
                 const args = [
                     '-m',
                     'jupyter',
-                    'notebook',
+                    jupyterLab ? 'lab' : 'notebook',
                     '--no-browser',
                     `--NotebookApp.port=${port}`,
                     `--NotebookApp.token=${token}`,
                     `--NotebookApp.allow_origin=*`
                 ];
+                if (typeof password === 'string') {
+                    if (password.length === 0) {
+                        args.push(`--NotebookApp.password=`);
+                    } else {
+                        args.push(`--NotebookApp.password=${generateHashedPassword(password)}`);
+                    }
+                }
                 if (useCert) {
                     const pemFile = path.join(
                         EXTENSION_ROOT_DIR,
@@ -250,7 +261,6 @@ export class JupyterServer {
                     args.push(`--certfile=${pemFile}`);
                     args.push(`--keyfile=${keyFile}`);
                 }
-                traceInfoIfCI(`Starting Jupyter on CI with args ${args.join(' ')}`);
                 const result = this.execObservable(getPythonPath(), args, {
                     cwd: testFolder,
                     detached
@@ -261,11 +271,11 @@ export class JupyterServer {
                 if (result.proc.pid) {
                     this.pid = result.proc.pid;
                 }
-                result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'));
-                result.proc.once('disconnect', () =>
-                    traceInfo('Shutting Jupyter server used for remote tests (disconnected)')
-                );
-                result.proc.once('exit', () => traceInfo('Shutting Jupyter server used for remote tests (exited)'));
+                // result.proc.once('close', () => traceVerbose('Shutting Jupyter server used for remote tests (closed)'));
+                // result.proc.once('disconnect', () =>
+                //     traceVerbose('Shutting Jupyter server used for remote tests (disconnected)')
+                // );
+                // result.proc.once('exit', () => traceVerbose('Shutting Jupyter server used for remote tests (exited)'));
                 const procDisposable = {
                     dispose: () => {
                         if (!result.proc) {
@@ -281,16 +291,14 @@ export class JupyterServer {
                 const subscription = result.out.subscribe((output) => {
                     // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
                     // This way we can click the link in the output panel easily.
-                    console.info(output.out);
-                    traceInfoIfCI(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
-                        resolve();
+                        resolve(procDisposable);
                     }
                 });
                 this._disposables.push(procDisposable);
                 this._disposables.push({ dispose: () => subscription.unsubscribe() });
             } catch (ex) {
-                traceInfo(`Starting remote jupyter server failed ${ex}`);
+                console.error(`Starting remote jupyter server failed`, ex);
                 reject(ex);
             }
         });
@@ -303,7 +311,6 @@ export class JupyterServer {
     ): ObservableExecutionResult<string> {
         const proc = child_process.spawn(file, args, options);
         let procExited = false;
-        traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
         const disposable: IDisposable = {
             // eslint-disable-next-line
             dispose: function () {
@@ -371,4 +378,24 @@ export class JupyterServer {
             // Ignore.
         }
     }
+}
+
+function generateHashedPassword(password: string) {
+    const hash = crypto.createHash('sha1');
+    const salt = genRandomString(16);
+    hash.update(password);
+    hash.update(salt);
+    return `sha1:${salt}:${hash.digest('hex').toString()}`;
+}
+
+/**
+ * generates random string of characters i.e salt
+ * @function
+ * @param {number} length - Length of the random string.
+ */
+function genRandomString(length = 16) {
+    return crypto
+        .randomBytes(Math.ceil(length / 2))
+        .toString('hex') /** convert to hexadecimal format */
+        .slice(0, length); /** return required number of characters */
 }

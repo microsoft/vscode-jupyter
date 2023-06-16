@@ -20,7 +20,9 @@ import {
     IPersistentStateFactory,
     Resource,
     IDisplayOptions,
-    IDisposable
+    IDisposable,
+    IExperimentService,
+    Experiments
 } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
@@ -81,7 +83,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private readonly kernelService: IJupyterKernelService | undefined,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined,
-        private readonly requestCreator: IJupyterRequestCreator
+        private readonly requestCreator: IJupyterRequestCreator,
+        private readonly experiments: IExperimentService
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -338,6 +341,58 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     private async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
+        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
+            return this.getServerConnectSettingsNew(connInfo);
+        } else {
+            return this.getServerConnectSettingsOld(connInfo);
+        }
+    }
+    private async getServerConnectSettingsNew(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
+        let serverSettings: Partial<ServerConnection.ISettings> = {
+            baseUrl: connInfo.baseUrl,
+            appUrl: '',
+            // A web socket is required to allow token authentication
+            wsUrl: connInfo.baseUrl.replace('http', 'ws')
+        };
+
+        // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let requestInit: any = this.requestCreator.getRequestInit();
+
+        const isTokenEmpty = connInfo.token === '' || connInfo.token === 'null';
+        if (!isTokenEmpty || connInfo.getAuthHeader) {
+            serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
+        }
+
+        const allowUnauthorized = this.configService.getSettings(undefined).allowUnauthorizedRemoteConnection;
+        // If this is an https connection and we want to allow unauthorized connections set that option on our agent
+        // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
+        if (connInfo.baseUrl.startsWith('https') && allowUnauthorized && this.requestAgentCreator) {
+            const requestAgent = this.requestAgentCreator.createHttpRequestAgent();
+            requestInit = { ...requestInit, agent: requestAgent };
+        }
+
+        // This replaces the WebSocket constructor in jupyter lab services with our own implementation
+        // See _createSocket here:
+        // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
+        serverSettings = {
+            ...serverSettings,
+            init: requestInit,
+            WebSocket: this.requestCreator.getWebsocketCtor(
+                undefined,
+                allowUnauthorized,
+                connInfo.getAuthHeader,
+                connInfo.getWebsocketProtocols?.bind(connInfo)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ) as any,
+            fetch: this.requestCreator.getFetchMethod(),
+            Request: this.requestCreator.getRequestCtor(undefined, allowUnauthorized, connInfo.getAuthHeader),
+            Headers: this.requestCreator.getHeadersCtor()
+        };
+
+        return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
+    }
+    private async getServerConnectSettingsOld(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
             appUrl: '',

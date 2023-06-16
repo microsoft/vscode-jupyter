@@ -172,7 +172,7 @@ suite('Remote Kernel Execution', function () {
             { contains: 'certificate' },
             { result: DataScience.jupyterSelfCertEnable, clickImmediately: true }
         );
-        await startJupyterServer(undefined, true);
+        await startJupyterServer({ useCert: true });
 
         await waitForCondition(
             async () => {

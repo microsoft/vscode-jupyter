@@ -1406,7 +1406,10 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": ["FastKernelPicker"]
+                        "enum": [
+                            "FastKernelPicker",
+                            "PasswordManager"
+                        ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
                     "scope": "application"
@@ -1415,7 +1418,10 @@
                     "type": "array",
                     "default": [],
                     "items": {
-                        "enum": ["FastKernelPicker"]
+                        "enum": [
+                            "FastKernelPicker",
+                            "PasswordManager"
+                        ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"

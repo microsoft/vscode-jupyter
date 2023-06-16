@@ -1279,7 +1279,7 @@ export async function runAllCellsInActiveNotebook(
 }
 
 export type WindowPromptStub = {
-    dispose: Function;
+    dispose: () => void;
     displayed: Promise<boolean>;
     /**
      * Gets the messages that were displayed. Access this once the promise `displayed` has resolved to get latest stuff.
@@ -1299,7 +1299,7 @@ export type WindowPromptStubButtonClickOptions = {
  * We can confirm prompt was displayed & invoke a button click.
  */
 export async function hijackPrompt(
-    promptType: 'showErrorMessage' | 'showInformationMessage',
+    promptType: 'showErrorMessage' | 'showInformationMessage' | 'showWarningMessage',
     message: { exactMatch: string } | { endsWith: string } | { contains: string },
     buttonToClick?: WindowPromptStubButtonClickOptions,
     disposables: IDisposable[] = []

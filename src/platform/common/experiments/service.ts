@@ -115,6 +115,13 @@ export class ExperimentService implements IExperimentService {
             this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment as unknown as string);
             return true;
         }
+        // In insiders some of the experiments are enabled by default.
+        if (
+            this.appEnvironment.channel === 'insiders' &&
+            [ExperimentGroups.FastKernelPicker, ExperimentGroups.PasswordManager].includes(experiment)
+        ) {
+            return true;
+        }
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
 
@@ -201,6 +208,15 @@ export class ExperimentService implements IExperimentService {
                     traceInfo(Experiments.inGroup(exp));
                 }
             });
+            // In insiders some of the experiments are enabled by default.
+            if (this.appEnvironment.channel === 'insiders') {
+                if (this.inExperiment(ExperimentGroups.FastKernelPicker)) {
+                    traceInfo(Experiments.inGroup(ExperimentGroups.FastKernelPicker));
+                }
+                if (this.inExperiment(ExperimentGroups.PasswordManager)) {
+                    traceInfo(Experiments.inGroup(ExperimentGroups.PasswordManager));
+                }
+            }
         }
     }
 }

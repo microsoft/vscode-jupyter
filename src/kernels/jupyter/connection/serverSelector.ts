@@ -5,13 +5,18 @@
 
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { traceWarning } from '../../../platform/logging';
+import { traceError, traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
 import { IJupyterServerUriStorage } from '../types';
 import { IDataScienceErrorHandler } from '../../errors/types';
-import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
+import {
+    Experiments,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService
+} from '../../../platform/common/types';
 import {
     handleExpiredCertsError,
     handleSelfCertsError,
@@ -88,10 +93,19 @@ export class JupyterServerSelector {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry,
+        @inject(IExperimentService)
+        private readonly experiments: IExperimentService
     ) {}
 
     public async addJupyterServer(provider: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
+        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
+            return this.addJupyterServerNew(provider);
+        } else {
+            return this.addJupyterServerOld(provider);
+        }
+    }
+    public async addJupyterServerOld(provider: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
         const userURI = generateUriFromRemoteProvider(provider.id, provider.handle);
         const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
@@ -120,10 +134,17 @@ export class JupyterServerSelector {
         }
 
         await this.serverUriStorage.add(provider);
+    }
 
-        // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
-        sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
-            azure: userURI.toLowerCase().includes('azure')
-        });
+    public async addJupyterServerNew(provider: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
+        // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
+        try {
+            await this.jupyterConnection.validateRemoteUri(provider);
+        } catch (err) {
+            traceError(`Error in validating the Remote Uri ${provider.id}.${provider.handle}`, err);
+            return;
+        }
+
+        await this.serverUriStorage.add(provider);
     }
 }

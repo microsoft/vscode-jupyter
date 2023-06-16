@@ -295,7 +295,8 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 }
 
 export enum Experiments {
-    FastKernelPicker = 'FastKernelPicker'
+    FastKernelPicker = 'FastKernelPicker',
+    PasswordManager = 'PasswordManager'
 }
 
 /**

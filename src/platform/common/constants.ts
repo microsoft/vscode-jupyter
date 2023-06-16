@@ -330,7 +330,6 @@ export enum Telemetry {
     EnterJupyterURI = 'DATASCIENCE.ENTER_JUPYTER_URI',
     SelectLocalJupyterKernel = 'DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL',
     SelectRemoteJupyterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
-    SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     SetJupyterURIUIDisplayed = 'DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
     /**

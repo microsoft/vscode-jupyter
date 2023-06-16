@@ -1,43 +1,44 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, optional } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../../../platform/common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
-import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
-import { traceWarning } from '../../../platform/logging';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { CancellationError, ConfigurationTarget } from 'vscode';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { IMultiStepInputFactory, IMultiStepInput } from '../../platform/common/utils/multiStepInput';
+import { traceWarning } from '../../platform/logging';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import {
-    IJupyterPasswordConnect,
-    IJupyterPasswordConnectInfo,
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
     IJupyterServerUriEntry,
     IJupyterServerUriStorage
-} from '../types';
-import { Deferred, createDeferred } from '../../../platform/common/utils/async';
+} from '../../kernels/jupyter/types';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
+
+export interface IJupyterPasswordConnectInfo {
+    requiresPassword: boolean;
+    requestHeaders?: Record<string, string>;
+    remappedBaseUrl?: string;
+    remappedToken?: string;
+}
 
 /**
  * Responsible for intercepting connections to a remote server and asking for a password if necessary
  */
-@injectable()
-export class JupyterPasswordConnect implements IJupyterPasswordConnect {
-    // Public for testing purposes, to be cleared.
-    public savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo | undefined>>();
+export class JupyterPasswordConnect {
+    private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo>>();
     constructor(
-        @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IJupyterRequestAgentCreator)
-        @optional()
+        private appShell: IApplicationShell,
+
+        private readonly multiStepFactory: IMultiStepInputFactory,
+        private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
+        private readonly configService: IConfigurationService,
         private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
-        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        private readonly requestCreator: IJupyterRequestCreator,
+        private readonly serverUriStorage: IJupyterServerUriStorage,
+        private readonly disposables: IDisposableRegistry
     ) {
         // Sign up to see if servers are removed from our uri storage list
         this.serverUriStorage.onDidRemove(this.onDidRemoveUris, this, this.disposables);
@@ -48,14 +49,16 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
     public getPasswordConnectionInfo({
         url,
-        isTokenEmpty
+        isTokenEmpty,
+        displayName
     }: {
         url: string;
         isTokenEmpty: boolean;
-    }): Promise<IJupyterPasswordConnectInfo | undefined> {
+        displayName?: string;
+    }): Promise<IJupyterPasswordConnectInfo> {
         JupyterPasswordConnect._prompt = undefined;
         if (!url || url.length < 1) {
-            return Promise.resolve(undefined);
+            throw new Error('Invalid URL');
         }
 
         // Add on a trailing slash to our URL if it's not there already
@@ -65,15 +68,17 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         let result = this.savedConnectInfo.get(newUrl);
         if (!result) {
             const deferred = (JupyterPasswordConnect._prompt = createDeferred());
-            result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty }).then((value) => {
-                // If we fail to get a valid password connect info, don't save the value
-                traceWarning(`Password for ${newUrl} was invalid.`);
-                if (!value) {
-                    this.savedConnectInfo.delete(newUrl);
-                }
+            result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty, displayName }).then(
+                (value) => {
+                    // If we fail to get a valid password connect info, don't save the value
+                    traceWarning(`Password for ${newUrl} was invalid.`);
+                    if (!value) {
+                        this.savedConnectInfo.delete(newUrl);
+                    }
 
-                return value;
-            });
+                    return value;
+                }
+            );
             result.finally(() => {
                 deferred.resolve();
                 if (JupyterPasswordConnect._prompt === deferred) {
@@ -89,7 +94,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private async getNonCachedPasswordConnectionInfo(options: {
         url: string;
         isTokenEmpty: boolean;
-    }): Promise<IJupyterPasswordConnectInfo | undefined> {
+        displayName?: string;
+    }): Promise<IJupyterPasswordConnectInfo> {
         // If jupyter hub, go down a special path of asking jupyter hub for a token
         if (await this.isJupyterHub(options.url)) {
             return this.getJupyterHubConnectionInfo(options.url);
@@ -98,7 +104,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
     }
 
-    private async getJupyterHubConnectionInfo(uri: string): Promise<IJupyterPasswordConnectInfo | undefined> {
+    private async getJupyterHubConnectionInfo(uri: string): Promise<IJupyterPasswordConnectInfo> {
         try {
             // First ask for the user name and password
             const userNameAndPassword = await this.getUserNameAndPassword();
@@ -142,6 +148,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 failed: false,
                 info: 'passwordNotRequired'
             });
+            return {
+                requiresPassword: false
+            };
         } catch (ex) {
             sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, { failed: true, info: 'failure' });
             throw ex;
@@ -224,7 +233,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                     return {
                         requestHeaders: {},
                         remappedBaseUrl: `${baseUrl}/user/${username}`,
-                        remappedToken: body.token
+                        remappedToken: body.token,
+                        requiresPassword: true
                     };
                 }
             }
@@ -235,7 +245,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         uri: string,
         username: string,
         password: string
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
+    ): Promise<IJupyterPasswordConnectInfo> {
         // We're using jupyter hub. Get the base url
         const url = new URL(uri);
         const baseUrl = `${url.protocol}//${url.host}`;
@@ -260,28 +270,51 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 return {
                     requestHeaders: {},
                     remappedBaseUrl: `${baseUrl}${body.user.server}`,
-                    remappedToken: body.token
+                    remappedToken: body.token,
+                    requiresPassword: true
                 };
             }
         }
+        return {
+            requiresPassword: false
+        };
     }
 
     private async getJupyterConnectionInfo({
         url,
-        isTokenEmpty
+        isTokenEmpty,
+        displayName
     }: {
         url: string;
         isTokenEmpty: boolean;
-    }): Promise<IJupyterPasswordConnectInfo | undefined> {
+        displayName?: string;
+    }): Promise<IJupyterPasswordConnectInfo> {
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
 
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
-        const needsPassword = await this.needPassword(url);
-        if (needsPassword || isTokenEmpty) {
+        const requiresPassword = await this.needPassword(url);
+
+        if (requiresPassword || isTokenEmpty) {
             // Get password first
-            let userPassword = needsPassword ? await this.getUserPassword(url) : '';
+            let friendlyUrl = url;
+            const uri = new URL(url);
+            friendlyUrl = `${uri.protocol}//${uri.hostname}`;
+            friendlyUrl = displayName ? `${displayName} (${friendlyUrl})` : friendlyUrl;
+            const userPassword = requiresPassword
+                ? await this.appShell.showInputBox({
+                      title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
+                      prompt: DataScience.jupyterSelectPasswordPrompt,
+                      ignoreFocusOut: true,
+                      password: true
+                  })
+                : undefined;
+
+            if (typeof userPassword === undefined && !userPassword && isTokenEmpty) {
+                // User exited out of the processes, same as hitting ESC.
+                throw new CancellationError();
+            }
 
             // If we do not have a password, but token is empty, then generate an xsrf token with session cookie
             if (userPassword || isTokenEmpty) {
@@ -303,12 +336,11 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             } else {
                 // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
                 // like a standard connection. Might be the case where there is no token and no password
-                return {};
+                return { requiresPassword };
             }
-            userPassword = undefined;
         } else {
             // If no password needed, act like empty password and no cookie
-            return {};
+            return { requiresPassword };
         }
 
         // If we found everything return it all back if not, undefined as partial is useless
@@ -317,10 +349,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
-            return { requestHeaders };
+            return { requestHeaders, requiresPassword };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
-            return undefined;
+            return { requiresPassword };
         }
     }
 
@@ -372,23 +404,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             prompt: DataScience.jupyterSelectPasswordPrompt,
             validate: this.validateUserNameOrPassword,
             value: '',
-            password: true
-        });
-    }
-
-    private async getUserPassword(url: string): Promise<string | undefined> {
-        let friendlyUrl = url;
-        try {
-            const uri = new URL(url);
-            friendlyUrl = `${uri.protocol}//${uri.hostname}`;
-        } catch {
-            //
-        }
-
-        return this.appShell.showInputBox({
-            title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
-            prompt: DataScience.jupyterSelectPasswordPrompt,
-            ignoreFocusOut: true,
             password: true
         });
     }

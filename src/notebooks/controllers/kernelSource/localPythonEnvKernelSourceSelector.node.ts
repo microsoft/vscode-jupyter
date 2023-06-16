@@ -33,7 +33,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { Disposables } from '../../../platform/common/utils';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
-import { IPythonApiProvider } from '../../../platform/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { pythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,
@@ -95,7 +95,8 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IPythonExtensionChecker) private readonly checker: IPythonExtensionChecker
     ) {
         super();
         disposables.push(this);
@@ -111,8 +112,21 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             this,
             this.disposables
         );
-        this.getKernelSpecsDir().catch(noop);
-        this.hookupPythonApi().catch(noop);
+        if (this.checker.isPythonExtensionInstalled) {
+            this.getKernelSpecsDir().catch(noop);
+            this.hookupPythonApi().catch(noop);
+        } else {
+            this.checker.onPythonExtensionInstallationStatusChanged(
+                () => {
+                    if (this.checker.isPythonExtensionInstalled) {
+                        this.getKernelSpecsDir().catch(noop);
+                        this.hookupPythonApi().catch(noop);
+                    }
+                },
+                this,
+                this.disposables
+            );
+        }
     }
     public async refresh() {
         this.previousCancellationTokens.forEach((t) => t.cancel());
