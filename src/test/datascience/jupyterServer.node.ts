@@ -18,8 +18,6 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
-const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
-
 import { sleep } from '../core';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { noop } from '../../platform/common/utils/misc';
@@ -59,17 +57,6 @@ type ObservableExecutionResult<T extends string | Buffer> = {
     dispose(): void;
 };
 
-// Tracing can't be used either
-function traceInfo(message: string) {
-    console.log(message);
-}
-
-function traceInfoIfCI(message: string) {
-    if (isCI) {
-        traceInfo(message);
-    }
-}
-
 export class JupyterServer {
     /**
      * Used in vscode debugger launcher `preDebugWebTest.js` to kill the Jupyter Server by pid.
@@ -98,7 +85,6 @@ export class JupyterServer {
         this._secondJupyterServerWithToken = undefined;
         console.log(`Disposing jupyter server instance`);
         disposeAllDisposables(this._disposables);
-        traceInfo('Shutting Jupyter server used for remote tests');
         if (this.availablePort) {
             await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
         }
@@ -146,7 +132,7 @@ export class JupyterServer {
         await tcpPortUsed.waitUntilFree(port, 200, 10_000);
         const token = typeof options.token === 'string' ? options.token : this.generateToken();
         const disposable = await this.startJupyterServer({ ...options, port, token });
-        await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
+        await sleep(10_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
 
         // Anything with a cert is https, not http
         const url = `http${options.useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
@@ -275,7 +261,6 @@ export class JupyterServer {
                     args.push(`--certfile=${pemFile}`);
                     args.push(`--keyfile=${keyFile}`);
                 }
-                traceInfoIfCI(`Starting Jupyter on CI with args ${args.join(' ')}`);
                 const result = this.execObservable(getPythonPath(), args, {
                     cwd: testFolder,
                     detached
@@ -286,11 +271,11 @@ export class JupyterServer {
                 if (result.proc.pid) {
                     this.pid = result.proc.pid;
                 }
-                result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'));
-                result.proc.once('disconnect', () =>
-                    traceInfo('Shutting Jupyter server used for remote tests (disconnected)')
-                );
-                result.proc.once('exit', () => traceInfo('Shutting Jupyter server used for remote tests (exited)'));
+                // result.proc.once('close', () => traceVerbose('Shutting Jupyter server used for remote tests (closed)'));
+                // result.proc.once('disconnect', () =>
+                //     traceVerbose('Shutting Jupyter server used for remote tests (disconnected)')
+                // );
+                // result.proc.once('exit', () => traceVerbose('Shutting Jupyter server used for remote tests (exited)'));
                 const procDisposable = {
                     dispose: () => {
                         if (!result.proc) {
@@ -306,8 +291,6 @@ export class JupyterServer {
                 const subscription = result.out.subscribe((output) => {
                     // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
                     // This way we can click the link in the output panel easily.
-                    console.info(output.out);
-                    traceInfoIfCI(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
                         resolve(procDisposable);
                     }
@@ -315,7 +298,7 @@ export class JupyterServer {
                 this._disposables.push(procDisposable);
                 this._disposables.push({ dispose: () => subscription.unsubscribe() });
             } catch (ex) {
-                traceInfo(`Starting remote jupyter server failed ${ex}`);
+                console.error(`Starting remote jupyter server failed`, ex);
                 reject(ex);
             }
         });
@@ -328,7 +311,6 @@ export class JupyterServer {
     ): ObservableExecutionResult<string> {
         const proc = child_process.spawn(file, args, options);
         let procExited = false;
-        traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
         const disposable: IDisposable = {
             // eslint-disable-next-line
             dispose: function () {

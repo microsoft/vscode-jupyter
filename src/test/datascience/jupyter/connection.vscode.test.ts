@@ -9,6 +9,7 @@ import {
 } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import {
+    Experiments,
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposable,
@@ -109,7 +110,6 @@ suite('Connect to Remote Jupyter Servers', function () {
             let userUriProvider: UserJupyterServerUrlProvider;
             let commands: ICommandManager;
             let inputBox: InputBox;
-            let experiments: IExperimentService;
 
             setup(async function () {
                 if (!IS_REMOTE_NATIVE_TEST()) {
@@ -165,8 +165,14 @@ suite('Connect to Remote Jupyter Servers', function () {
                 const onDidRemoveUriStorage = new EventEmitter<IJupyterServerUriEntry[]>();
                 disposables.push(onDidRemoveUriStorage);
                 when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveUriStorage.event);
-                experiments = mock<IExperimentService>();
-                when(experiments.inExperiment(anything())).thenReturn(passwordManager === 'New Password Manager');
+                const experiments = api.serviceContainer.get<IExperimentService>(IExperimentService);
+                sinon
+                    .stub(experiments, 'inExperiment')
+                    .callsFake((experiment) =>
+                        experiment === Experiments.PasswordManager ? passwordManager === 'New Password Manager' : true
+                    );
+                const mockExperiments = mock<IExperimentService>();
+                when(mockExperiments.inExperiment(anything())).thenReturn(passwordManager === 'New Password Manager');
 
                 const prompt = await hijackPrompt(
                     'showWarningMessage',
@@ -192,7 +198,7 @@ suite('Connect to Remote Jupyter Servers', function () {
                     instance(commands),
                     api.serviceContainer.get<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator),
                     api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator),
-                    instance(experiments)
+                    instance(mockExperiments)
                 );
                 userUriProvider.activate();
 
@@ -238,6 +244,7 @@ suite('Connect to Remote Jupyter Servers', function () {
                     assert.strictEqual(errorMessageDisplayed.value, DataScience.passwordFailure);
                     assert.ok(!handlePromise.completed);
                 } else {
+                    assert.equal(errorMessageDisplayed.value || '', '', 'Should not have displayed an error message');
                     assert.ok(handlePromise.completed, 'Did not complete');
                     assert.ok(handlePromise.value, 'Invalid Handle');
 
@@ -285,11 +292,11 @@ suite('Connect to Remote Jupyter Servers', function () {
             test('Connect to server with Password & Token in URL', () =>
                 testConnection({ userUri: jupyterLabWithHelloPasswordAndWorldToken.url, password: 'Hello' }));
             test('Connect to server with empty Password & empty Token in URL', () =>
-                testConnection({ userUri: jupyterNotebookWithEmptyPasswordToken.url, password: undefined }));
+                testConnection({ userUri: jupyterNotebookWithEmptyPasswordToken.url, password: '' }));
             test('Connect to server with empty Password & empty Token (nothing in URL)', () =>
                 testConnection({
                     userUri: `http://localhost:${new URL(jupyterNotebookWithEmptyPasswordToken.url).port}/`,
-                    password: undefined
+                    password: ''
                 }));
             test('Connect to server with Hello Password & empty Token (not even in URL)', () =>
                 testConnection({

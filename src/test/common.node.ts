@@ -111,8 +111,6 @@ async function setPythonPathInWorkspace(
         if (config === vscode.ConfigurationTarget.Global) {
             await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         }
-    } else {
-        console.log(`No need to update Interpreter path, as it is ${value[prop]} in workspace`);
     }
 }
 /**
