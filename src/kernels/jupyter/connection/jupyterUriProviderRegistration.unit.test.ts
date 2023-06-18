@@ -13,6 +13,7 @@ import { IInternalJupyterUriProvider, IJupyterServerUriEntry, IJupyterServerUriS
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 class MockProvider implements IInternalJupyterUriProvider {
     public get id() {
@@ -71,11 +72,13 @@ suite('URI Picker', () => {
         const onDidRemove = new vscode.EventEmitter<IJupyterServerUriEntry[]>();
         disposables.push(onDidRemove);
         when(uriStorage.onDidRemove).thenReturn(onDidRemove.event);
+        const serviceContainer = mock<IServiceContainer>();
+        when(serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage)).thenReturn(instance(uriStorage));
         registration = new JupyterUriProviderRegistration(
             extensions,
             disposables,
             instance(memento),
-            instance(uriStorage)
+            instance(serviceContainer)
         );
         providerIds.map(async (id) => {
             const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();

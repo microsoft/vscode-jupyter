@@ -20,6 +20,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 
@@ -41,10 +42,11 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IJupyterServerUriStorage) serverStorage: IJupyterServerUriStorage
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         disposables.push(this._onProvidersChanged);
         disposables.push(new Disposable(() => this._providers.forEach((p) => p.dispose())));
+        const serverStorage = serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
         disposables.push(serverStorage.onDidRemove(this.onDidRemoveServer, this));
     }
 
