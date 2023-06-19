@@ -117,7 +117,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
 
             const result = new InteractiveWindow(
                 this.serviceContainer,
-                iw.owner,
+                Uri.parse(iw.owner),
                 new InteractiveControllerFactory(this.controllerHelper, mode),
                 tab,
                 Uri.parse(iw.inputBoxUriString)
@@ -319,7 +319,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
         const windowCache = this._windows.map(
             (iw) =>
                 ({
-                    owner: iw.owner,
+                    owner: iw.owner?.toString(),
                     uriString: iw.notebookUri.toString(),
                     inputBoxUriString: iw.inputUri.toString()
                 } as IInteractiveWindowCache)
