@@ -108,7 +108,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
 }
 
 export interface IInteractiveWindowCache {
-    owner: Resource;
+    owner: string;
     mode: InteractiveWindowMode;
     uriString: string;
     inputBoxUriString: string;
