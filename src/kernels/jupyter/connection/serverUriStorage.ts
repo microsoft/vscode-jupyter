@@ -117,7 +117,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         displayName = uriList.find((entry) => entry.serverId === serverId)?.displayName || displayName || uri;
 
         // Remove this uri if already found (going to add again with a new time)
-        const editedList = uriList.filter((f, i) => f.uri !== uri && i < Settings.JupyterServerUriListMax - 1);
+        const editedList = uriList
+            .sort((a, b) => b.time - a.time) // First sort by time
+            .filter((f, i) => f.uri !== uri && i < Settings.JupyterServerUriListMax - 1);
 
         // Add this entry into the last.
         const idAndHandle = extractJupyterServerHandleAndId(uri);

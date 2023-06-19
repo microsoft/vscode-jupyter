@@ -174,11 +174,10 @@ export class UserJupyterServerUrlProvider
 
         this._cachedServerInfoInitialized = new Promise<void>(async (resolve) => {
             if (this.experiments.inExperiment(Experiments.NewRemoteUriStorage)) {
-                this._servers = await this.oldStorage.getServers();
-            } else {
-                await this.migrateOldServers().catch(noop);
-                await this.newStorage.migrationDone;
+                await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
                 this._servers = await this.newStorage.getServers();
+            } else {
+                this._servers = await this.oldStorage.getServers();
             }
             resolve();
         });
