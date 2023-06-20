@@ -140,6 +140,7 @@ suite('RemoteKernelControllerWatcher', () => {
             }
         });
         when(uriStorage.add(anything())).thenResolve();
+        when(uriStorage.add(anything(), anything())).thenResolve();
 
         watcher.activate();
 

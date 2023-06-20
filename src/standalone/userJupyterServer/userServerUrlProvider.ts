@@ -51,7 +51,6 @@ import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsErr
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
 import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import { setGracefulCleanup } from 'tmp';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-v2';
@@ -83,7 +82,7 @@ export class UserJupyterServerUrlProvider
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
-        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IMultiStepInputFactory) multiStepFactory: IMultiStepInputFactory,
@@ -129,6 +128,13 @@ export class UserJupyterServerUrlProvider
                 .getServers()
                 .then(async (servers) => {
                     await this.newStorage.migrate(servers);
+                    // List is in the global memento, URIs are in encrypted storage
+                    const indexes = this.globalMemento.get<{ index: number; time: number }[]>(
+                        Settings.JupyterServerUriList
+                    );
+                    if (!Array.isArray(indexes) || indexes.length === 0) {
+                        return;
+                    }
 
                     // Pull out the \r separated URI list (\r is an invalid URI character)
                     const blob = await this.encryptedStorage.retrieve(
@@ -140,11 +146,14 @@ export class UserJupyterServerUrlProvider
                     }
                     // Make sure same length
                     const migratedServers: {
+                        time: number;
                         handle: string;
                         uri: string;
                         serverInfo: IJupyterServerUri;
                     }[] = [];
-                    blob.split(Settings.JupyterServerRemoteLaunchUriSeparator).forEach((item) => {
+
+                    const split = blob.split(Settings.JupyterServerRemoteLaunchUriSeparator);
+                    split.slice(0, Math.min(split.length, indexes.length)).forEach((item, index) => {
                         try {
                             const uriAndDisplayName = item.split(Settings.JupyterServerRemoteLaunchNameSeparator);
                             const uri = uriAndDisplayName[0];
@@ -156,10 +165,11 @@ export class UserJupyterServerUrlProvider
                                 return;
                             }
                             const serverInfo = parseUri(uri, uriAndDisplayName[1] || uri);
-                            if (serverInfo && !servers.some((s) => s.uri === uri)) {
+                            if (serverInfo && servers.every((s) => s.uri !== uri)) {
                                 // We have a saved Url.
                                 const handle = uuid();
                                 migratedServers.push({
+                                    time: indexes[index].time,
                                     handle,
                                     uri,
                                     serverInfo
@@ -172,7 +182,19 @@ export class UserJupyterServerUrlProvider
 
                     if (migratedServers.length > 0) {
                         // Ensure we update the storage with the new items and new format.
-                        await Promise.all(migratedServers.map((server) => this.addNewServer(server).catch(noop)));
+                        await Promise.all(
+                            migratedServers.map(async (server) => {
+                                try {
+                                    await this.addNewServer(server);
+                                    await this.serverUriStorage.add(
+                                        { id: this.id, handle: server.handle },
+                                        { time: server.time, displayName: server.serverInfo.displayName }
+                                    );
+                                } catch {
+                                    //
+                                }
+                            })
+                        );
                     }
                 })
                 .catch(noop);
@@ -288,7 +310,6 @@ export class UserJupyterServerUrlProvider
                         }
                         input.validationMessage = message;
                     } else {
-                        console.error('Hello');
                         promptingForServerName = true;
                         // Offer the user a chance to pick a display name for the server
                         // Leaving it blank will use the URI as the display name

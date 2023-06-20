@@ -114,23 +114,30 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         const savedList = await this.getAll();
         return savedList.find((item) => item.serverId === id);
     }
-    public async add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
+    public async add(
+        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+        options?: { time: number; displayName: string }
+    ): Promise<void> {
         this.hookupStorageEvents();
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
         const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
-        const [server, serverId] = await Promise.all([
-            this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle.id, jupyterHandle.handle),
-            computeServerId(uri)
-        ]);
-
+        const serverId = await computeServerId(uri);
         const entry: IJupyterServerUriEntry = {
             uri,
-            time: Date.now(),
+            time: options?.time ?? Date.now(),
             serverId,
-            displayName: server.displayName,
+            displayName: options?.displayName,
             isValidated: true,
             provider: jupyterHandle
         };
+
+        if (!options) {
+            const server = await this.jupyterPickerRegistration.getJupyterServerUri(
+                jupyterHandle.id,
+                jupyterHandle.handle
+            );
+            entry.displayName = server.displayName;
+        }
         await Promise.all([this.newStorage.add(entry), this.oldStorage.add(entry)]);
     }
     public async update(serverId: string) {
