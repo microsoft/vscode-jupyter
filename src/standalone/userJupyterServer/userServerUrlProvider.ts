@@ -154,6 +154,9 @@ export class UserJupyterServerUrlProvider
                             if (uri === Settings.JupyterServerLocalLaunch) {
                                 return;
                             }
+                            if (uri.startsWith(Identifiers.REMOTE_URI)) {
+                                return;
+                            }
                             const serverInfo = parseUri(uri, uriAndDisplayName[1] || uri);
                             if (serverInfo && !servers.some((s) => s.uri === uri)) {
                                 // We have a saved Url.
@@ -192,9 +195,9 @@ export class UserJupyterServerUrlProvider
         this._cachedServerInfoInitialized = new Promise<void>(async (resolve) => {
             if (this.experiments.inExperiment(Experiments.NewRemoteUriStorage)) {
                 await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
-                this._servers = await this.newStorage.getServers();
+                this._servers = this._servers.concat(await this.newStorage.getServers());
             } else {
-                this._servers = await this.oldStorage.getServers();
+                this._servers = this._servers.concat(await this.oldStorage.getServers());
             }
             resolve();
         });
@@ -570,7 +573,7 @@ function parseUri(uri: string, displayName?: string): IJupyterServerUri | undefi
     }
 }
 
-class OldStorage {
+export class OldStorage {
     private _cachedServerInfoInitialized:
         | Promise<{ handle: string; uri: string; serverInfo: IJupyterServerUri }[]>
         | undefined;
@@ -652,12 +655,13 @@ class OldStorage {
     }
 }
 
-class NewStorage {
+export class NewStorage {
     private readonly _migrationDone: Deferred<void>;
-    public readonly migrationDone: Promise<void>;
+    public get migrationDone(): Promise<void> {
+        return this._migrationDone.promise;
+    }
     constructor(@inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage) {
         this._migrationDone = createDeferred<void>();
-        this.migrationDone = this._migrationDone.promise;
     }
 
     public async migrate(

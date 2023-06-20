@@ -13,7 +13,6 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
-import { traceError } from '../../platform/logging';
 import { IJupyterServerUri, JupyterServerUriHandle } from '../../api';
 
 export function expandWorkingDir(
