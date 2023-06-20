@@ -186,12 +186,7 @@ export class InteractiveWindow implements IInteractiveWindow {
             const onNotebookOpen = workspace.onDidOpenNotebookDocument((notebook) => {
                 if (notebook.uri.toString() === this.notebookUri.toString()) {
                     this._notebookDocument = notebook;
-                    this.controller = this.controllerFactory.create(
-                        notebook,
-                        this.errorHandler,
-                        this.kernelProvider,
-                        this._owner
-                    );
+                    this.controller = this.initController(notebook);
                     this.internalDisposables.push(this.controller.listenForControllerSelection());
                     this.controller.setInfoMessageCell(DataScience.noKernelConnected);
                     onNotebookOpen.dispose();
@@ -199,16 +194,16 @@ export class InteractiveWindow implements IInteractiveWindow {
             });
         } else {
             if (!this.controller) {
-                this.controller = this.controllerFactory.create(
-                    this.notebookDocument,
-                    this.errorHandler,
-                    this.kernelProvider,
-                    this._owner
-                );
-                this.internalDisposables.push(this.controller.listenForControllerSelection());
+                this.controller = this.initController(this.notebookDocument);
             }
             this.controller.setInfoMessageCell(DataScience.noKernelConnected);
         }
+    }
+
+    private initController(notebook: NotebookDocument) {
+        const controller = this.controllerFactory.create(notebook, this.errorHandler, this.kernelProvider, this._owner);
+        this.internalDisposables.push(controller.listenForControllerSelection());
+        return controller;
     }
 
     public async ensureInitialized() {
@@ -226,13 +221,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         if (!this.controller) {
-            this.controller = this.controllerFactory.create(
-                this.notebookDocument,
-                this.errorHandler,
-                this.kernelProvider,
-                this._owner
-            );
-            this.internalDisposables.push(this.controller.listenForControllerSelection());
+            this.controller = this.initController(this.notebookDocument);
         }
 
         if (this.controller.controller) {
