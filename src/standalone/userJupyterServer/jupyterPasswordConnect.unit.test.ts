@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import assert from 'assert';
+import { assert } from 'chai';
 import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -49,7 +49,7 @@ suite('JupyterPasswordConnect', () => {
         );
     });
 
-    function createMockSetup(secure: boolean, ok: boolean, xsrfReponseStatusCode: 200 | 302 = 302) {
+    function createMockSetup(secure: boolean, ok: boolean, xsrfReponseStatusCode: 200 | 302 | 401 = 302) {
         const dsSettings = {
             allowUnauthorizedRemoteConnection: secure
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -218,6 +218,66 @@ suite('JupyterPasswordConnect', () => {
         if (result) {
             // eslint-disable-next-line
             assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
+        }
+
+        // Verfiy calls
+        mockXsrfHeaders.verifyAll();
+        mockSessionHeaders.verifyAll();
+        mockXsrfResponse.verifyAll();
+        mockSessionResponse.verifyAll();
+        fetchMock.verifyAll();
+    });
+    test('Password required and non-empty token', async () => {
+        when(appShell.showInputBox(anything())).thenReject(new Error('Should not be called'));
+        const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true, 401);
+
+        // Mock our second call to get session cookie
+        const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
+        const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
+        mockSessionHeaders
+            .setup((mh) => mh.raw())
+            .returns(() => {
+                return {
+                    'set-cookie': [`${sessionName}=${sessionValue}`]
+                };
+            });
+        mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
+        mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
+
+        const postParams = new URLSearchParams();
+        postParams.append('_xsrf', '12341234');
+        postParams.append('password', '');
+
+        // typemoq doesn't love this comparison, so generalize it a bit
+        fetchMock
+            .setup((fm) =>
+                fm(
+                    'http://TESTNAME:8888/login?',
+                    typemoq.It.isObjectWith({
+                        method: 'post',
+                        headers: {
+                            Cookie: `_xsrf=${xsrfValue}`,
+                            Connection: 'keep-alive',
+                            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                        },
+                        body: postParams.toString()
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(mockSessionResponse.object));
+        when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
+
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            url: 'http://TESTNAME:8888/',
+            isTokenEmpty: false
+        });
+        assert(result, 'Failed to get password');
+        if (result) {
+            // eslint-disable-next-line
+            assert.isUndefined(result.requestHeaders);
+            assert.isUndefined(result.remappedToken);
+            assert.isUndefined(result.requestHeaders);
+            assert.isTrue(result.requiresPassword);
         }
 
         // Verfiy calls
