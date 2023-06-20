@@ -81,6 +81,12 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
 
         this.migrateOldUserEnteredUrlsToProviderUri()
             .then(async () => {
+                const indexes = this.globalMemento.get<{ index: number; time: number }[]>(
+                    Settings.JupyterServerUriList
+                );
+                if (!Array.isArray(indexes) || indexes.length === 0) {
+                    return;
+                }
                 // Pull out the \r separated URI list (\r is an invalid URI character)
                 const blob = await this.encryptedStorage.retrieve(
                     Settings.JupyterServerRemoteLaunchService,
@@ -91,11 +97,13 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                 }
                 // Make sure same length
                 const migratedServers: {
+                    time: number;
                     handle: string;
                     uri: string;
                     serverInfo: IJupyterServerUri;
                 }[] = [];
-                blob.split(Settings.JupyterServerRemoteLaunchUriSeparator).forEach((item) => {
+                const split = blob.split(Settings.JupyterServerRemoteLaunchUriSeparator);
+                split.slice(0, Math.min(split.length, indexes.length)).forEach((item) => {
                     try {
                         const uriAndDisplayName = item.split(Settings.JupyterServerRemoteLaunchNameSeparator);
                         const uri = uriAndDisplayName[0];
@@ -108,6 +116,7 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
                             // We have a saved Url.
                             const handle = uuid();
                             migratedServers.push({
+                                time: indexes[0].time,
                                 handle,
                                 uri,
                                 serverInfo

@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { Settings } from '../../../platform/common/constants';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { traceInfoIfCI, traceVerbose } from '../../../platform/logging';
+import { traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
 import { computeServerId, extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../jupyterUtils';
 import {
     IJupyterServerUriEntry,
@@ -49,7 +49,11 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
         await this.addToUriList(existingEntry.provider, existingEntry.displayName || '');
     }
-    private async addToUriList(jupyterHandle: { id: string; handle: JupyterServerUriHandle }, displayName: string) {
+    private async addToUriList(
+        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+        displayName: string,
+        time = Date.now()
+    ) {
         const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
         const [uriList, serverId] = await Promise.all([this.getAll(), computeServerId(uri)]);
 
@@ -63,7 +67,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         const idAndHandle = extractJupyterServerHandleAndId(uri);
         const entry: IJupyterServerUriEntry = {
             uri,
-            time: Date.now(),
+            time,
             serverId,
             displayName,
             isValidated: true,
@@ -140,8 +144,18 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                         split.slice(0, Math.min(split.length, indexes.length)).map(async (item, index) => {
                             const uriAndDisplayName = item.split(Settings.JupyterServerRemoteLaunchNameSeparator);
                             const uri = uriAndDisplayName[0];
+                            // Old code (we may have stored a bogus url in the past).
+                            if (uri === Settings.JupyterServerLocalLaunch) {
+                                return;
+                            }
+                            let idAndHandle: { id: string; handle: JupyterServerUriHandle };
+                            try {
+                                idAndHandle = extractJupyterServerHandleAndId(uri);
+                            } catch {
+                                traceWarning(`Failed to parse Uri in storage`, uri);
+                                return;
+                            }
                             const serverId = await computeServerId(uri);
-                            const idAndHandle = extractJupyterServerHandleAndId(uri);
                             // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
                             const displayName =
                                 uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
@@ -156,11 +170,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                                 isValidated: true,
                                 provider: idAndHandle
                             };
-
-                            // Old code (we may have stored a bogus url in the past).
-                            if (uri === Settings.JupyterServerLocalLaunch) {
-                                return;
-                            }
                             try {
                                 await this.jupyterPickerRegistration.getJupyterServerUri(
                                     idAndHandle.id,
@@ -202,11 +211,17 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         const savedList = await this.getAll();
         return savedList.find((item) => item.serverId === id);
     }
-    public async add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
+    public async add(
+        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+        options?: { time: number; displayName: string }
+    ): Promise<void> {
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
-        const server = await this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle.id, jupyterHandle.handle);
+        const displayName =
+            options?.displayName ||
+            (await this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle.id, jupyterHandle.handle))
+                .displayName;
 
         // display name is wrong here
-        await this.addToUriList(jupyterHandle, server.displayName);
+        await this.addToUriList(jupyterHandle, displayName, options?.time);
     }
 }
