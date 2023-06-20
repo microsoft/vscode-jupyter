@@ -40,7 +40,7 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
-suite.only('User Uri Provider', () => {
+suite('User Uri Provider', () => {
     ['Old Password Manager', 'New Password Manager'].forEach((passwordManager) => {
         ['Old Storage Format', 'New Storage Format'].forEach((storageFormat) => {
             suite(storageFormat, () => {
