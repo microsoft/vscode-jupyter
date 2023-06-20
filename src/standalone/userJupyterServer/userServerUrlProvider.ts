@@ -416,7 +416,7 @@ export class UserJupyterServerUrlProvider
                     if (
                         !passwordResult.requiresPassword &&
                         jupyterServerUri.token.length === 0 &&
-                        new URL(jupyterServerUri.baseUrl).protocol.toLowerCase() === 'http'
+                        new URL(jupyterServerUri.baseUrl).protocol.toLowerCase() === 'http:'
                     ) {
                         const proceed = await this.secureConnectionCheck();
                         if (!proceed) {
