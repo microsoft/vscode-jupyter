@@ -302,14 +302,15 @@ export class JupyterPasswordConnect {
             const uri = new URL(url);
             friendlyUrl = `${uri.protocol}//${uri.hostname}`;
             friendlyUrl = displayName ? `${displayName} (${friendlyUrl})` : friendlyUrl;
-            const userPassword = requiresPassword
-                ? await this.appShell.showInputBox({
-                      title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
-                      prompt: DataScience.jupyterSelectPasswordPrompt,
-                      ignoreFocusOut: true,
-                      password: true
-                  })
-                : undefined;
+            const userPassword =
+                requiresPassword && isTokenEmpty
+                    ? await this.appShell.showInputBox({
+                          title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
+                          prompt: DataScience.jupyterSelectPasswordPrompt,
+                          ignoreFocusOut: true,
+                          password: true
+                      })
+                    : undefined;
 
             if (typeof userPassword === undefined && !userPassword && isTokenEmpty) {
                 // User exited out of the processes, same as hitting ESC.
