@@ -1408,7 +1408,8 @@
                     "items": {
                         "enum": [
                             "FastKernelPicker",
-                            "PasswordManager"
+                            "PasswordManager",
+                            "NewRemoteUriStorage"
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
@@ -1420,7 +1421,8 @@
                     "items": {
                         "enum": [
                             "FastKernelPicker",
-                            "PasswordManager"
+                            "PasswordManager",
+                            "NewRemoteUriStorage"
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",

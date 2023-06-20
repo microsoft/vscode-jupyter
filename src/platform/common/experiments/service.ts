@@ -118,7 +118,11 @@ export class ExperimentService implements IExperimentService {
         // In insiders some of the experiments are enabled by default.
         if (
             this.appEnvironment.channel === 'insiders' &&
-            [ExperimentGroups.FastKernelPicker, ExperimentGroups.PasswordManager].includes(experiment)
+            [
+                ExperimentGroups.FastKernelPicker,
+                ExperimentGroups.PasswordManager,
+                ExperimentGroups.NewRemoteUriStorage
+            ].includes(experiment)
         ) {
             return true;
         }
@@ -215,6 +219,9 @@ export class ExperimentService implements IExperimentService {
                 }
                 if (this.inExperiment(ExperimentGroups.PasswordManager)) {
                     traceInfo(Experiments.inGroup(ExperimentGroups.PasswordManager));
+                }
+                if (this.inExperiment(ExperimentGroups.NewRemoteUriStorage)) {
+                    traceInfo(Experiments.inGroup(ExperimentGroups.NewRemoteUriStorage));
                 }
             }
         }

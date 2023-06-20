@@ -159,7 +159,6 @@ export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
     readonly extensionId: string;
 }
 export type JupyterServerProviderHandle = {
-    extensionId: string;
     /**
      * Jupyter Server Provider Id.
      */
@@ -224,7 +223,10 @@ export interface IJupyterServerUriStorage {
     remove(serverId: string): Promise<void>;
     clear(): Promise<void>;
     get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
-    add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void>;
+    add(
+        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+        options?: { time: number; displayName: string }
+    ): Promise<void>;
 }
 
 export interface IBackupFile {
