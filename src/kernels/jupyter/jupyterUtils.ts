@@ -13,7 +13,6 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
-import { traceError } from '../../platform/logging';
 import { IJupyterServerUri, JupyterServerUriHandle } from '../../api';
 
 export function expandWorkingDir(
@@ -129,11 +128,11 @@ export async function computeServerId(uri: string) {
     return computeHash(uri, 'SHA-256');
 }
 
-export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
+export function generateUriFromRemoteProvider(id: string, handle: JupyterServerUriHandle) {
     // eslint-disable-next-line
     return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
         Identifiers.REMOTE_URI_HANDLE_PARAM
-    }=${encodeURI(result)}`;
+    }=${encodeURI(handle)}`;
 }
 
 export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } {
@@ -148,9 +147,7 @@ export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterS
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
-        const urlSafeForLogging = getSafeUrlForLogging(uri);
-        traceError('Failed to parse remote URI', urlSafeForLogging, ex);
-        throw new Error(`'Failed to parse remote URI ${urlSafeForLogging}`);
+        throw new Error(`'Failed to parse remote URI ${getSafeUrlForLogging(uri)}`);
     }
 }
 

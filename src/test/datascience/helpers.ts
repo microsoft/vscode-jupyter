@@ -29,6 +29,7 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { IWorkspaceService } from '../../platform/common/application/types';
+import { instance } from 'ts-mockito';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
     traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
@@ -338,4 +339,11 @@ export function uriEquals(expected: string | vscode.Uri) {
         }
     }
     return new UriMatcher(typeof expected === 'string' ? vscode.Uri.file(expected) : expected) as unknown as vscode.Uri;
+}
+
+export function resolvableInstance<T>(mockedValue: T): T {
+    const instanceValue = instance<T>(mockedValue);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (instanceValue as any).then = undefined;
+    return instanceValue;
 }
