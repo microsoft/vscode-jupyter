@@ -25,10 +25,10 @@ import { traceError, traceInfo } from '../../../platform/logging';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../platform/telemetry/constants';
-import { PythonEnvironment } from '../../../standalone/api/extension';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { DataViewerChecker } from './dataViewerChecker';
 import { IDataViewerDependencyService, IDataViewerFactory, IJupyterVariableDataProviderFactory } from './types';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 @injectable()
 export class DataViewerCommandRegistry implements IExtensionSyncActivationService {

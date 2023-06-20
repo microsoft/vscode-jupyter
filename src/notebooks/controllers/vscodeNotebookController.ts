@@ -28,14 +28,7 @@ import {
 } from '../../platform/common/application/types';
 import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import {
-    traceInfoIfCI,
-    traceInfo,
-    traceVerbose,
-    traceWarning,
-    traceDecoratorVerbose,
-    traceError
-} from '../../platform/logging';
+import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IBrowserService,
@@ -70,9 +63,9 @@ import {
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
-import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
+import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
-import { IVSCodeNotebookController } from './types';
+import { IConnectionDisplayData, IConnectionDisplayDataProvider, IVSCodeNotebookController } from './types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreator';
 import {
@@ -86,7 +79,6 @@ import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
-import { ConnectionDisplayDataProvider, IConnectionDisplayData } from './connectionDisplayData';
 import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
 import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecutionTracker';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
@@ -167,7 +159,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         browser: IBrowserService,
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
-        displayDataProvider: ConnectionDisplayDataProvider
+        displayDataProvider: IConnectionDisplayDataProvider
     ): IVSCodeNotebookController {
         return new VSCodeNotebookController(
             kernelConnection,
@@ -206,7 +198,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: ConnectionDisplayDataProvider
+        private readonly displayDataProvider: IConnectionDisplayDataProvider
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -372,8 +364,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 : this.displayData.serverDisplayName;
         }
     }
-    // Handle the execution of notebook cell
-    @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
             return;
@@ -400,6 +390,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         if (!this.workspace.isTrusted) {
             return;
         }
+        traceInfo(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);
         await initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         // Notebook is trusted. Continue to execute cells
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
@@ -541,7 +532,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         notebook.getCells().forEach((cell) => traceCellMessage(cell, 'Cell cancellation requested'));
         this.commandManager
             .executeCommand(Commands.InterruptKernel, { notebookEditor: { notebookUri: notebook.uri } })
-            .then(noop, (ex) => console.error(ex));
+            .then(noop, (ex) => traceError('Failed to interrupt', ex));
     }
 
     private createCellExecutionIfNecessary(cell: NotebookCell, controller: IKernelController) {
@@ -563,7 +554,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     public async executeCell(doc: NotebookDocument, cell: NotebookCell, codeOverride?: string) {
-        traceVerbose(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
         let exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
 

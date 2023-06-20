@@ -970,16 +970,6 @@
      ]
    }
  */
-//Telemetry.SetJupyterURIToUserSpecified
-/* __GDPR__
-   "DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED" : {
-     "azure": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the URI set to an Azure uri.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ShowDataViewer
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER" : {
@@ -1380,6 +1370,16 @@
 //Telemetry.JupyterCommandLineNonDefault
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE" : {
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.CheckPasswordJupyterHub
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_HUB_PASSWORD" : {
+     "info": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1832,16 +1832,6 @@
      ]
    }
  */
-//Telemetry.DataScienceSettings
-/* __GDPR__
-   "DS_INTERNAL.SETTINGS" : {
-     "settingsJson": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"A json representation of settings that the user has set. The values for string based settings are transalted to 'default' | 'non-default' unless white-listed.","owner":"amunger"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ShiftEnterBannerShown
 /* __GDPR__
    "DS_INTERNAL.SHIFTENTER_BANNER_SHOWN" : {
@@ -1945,24 +1935,6 @@
 /* __GDPR__
    "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED" : {
      "outputType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Type of the output received from the Jupyter kernel. This is required to identify output types that we're not mapping correctly.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.WaitForIdleJupyter
-/* __GDPR__
-   "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.WebviewStartup
-/* __GDPR__
-   "DS_INTERNAL.WEBVIEW_STARTUP" : {
      "${include}": [
        "${F1}"
 

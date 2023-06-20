@@ -3,24 +3,41 @@
 
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
 import { ControllerRegistration } from './controllerRegistration';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
-import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
-import { IControllerRegistration, INotebookKernelSourceSelector } from './types';
+import { LocalNotebookKernelSourceSelector } from './kernelSource/localNotebookKernelSourceSelector.node';
+import { LocalPythonEnvNotebookKernelSourceSelector } from './kernelSource/localPythonEnvKernelSourceSelector.node';
+import { RemoteNotebookKernelSourceSelector } from './kernelSource/remoteNotebookKernelSourceSelector';
+import {
+    IConnectionDisplayDataProvider,
+    IControllerRegistration,
+    ILocalNotebookKernelSourceSelector,
+    ILocalPythonNotebookKernelSourceSelector,
+    IRemoteNotebookKernelSourceSelector
+} from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addBinding(IControllerRegistration, IExtensionSyncActivationService);
-    serviceManager.addSingleton<ConnectionDisplayDataProvider>(
-        ConnectionDisplayDataProvider,
+    serviceManager.addSingleton<IConnectionDisplayDataProvider>(
+        IConnectionDisplayDataProvider,
         ConnectionDisplayDataProvider
     );
-    serviceManager.addSingleton<INotebookKernelSourceSelector>(
-        INotebookKernelSourceSelector,
-        NotebookKernelSourceSelector
+    serviceManager.addSingleton<IRemoteNotebookKernelSourceSelector>(
+        IRemoteNotebookKernelSourceSelector,
+        RemoteNotebookKernelSourceSelector
     );
+    serviceManager.addSingleton<ILocalNotebookKernelSourceSelector>(
+        ILocalNotebookKernelSourceSelector,
+        LocalNotebookKernelSourceSelector
+    );
+    serviceManager.addSingleton<ILocalPythonNotebookKernelSourceSelector>(
+        ILocalPythonNotebookKernelSourceSelector,
+        LocalPythonEnvNotebookKernelSourceSelector
+    );
+    serviceManager.addBinding(ILocalPythonNotebookKernelSourceSelector, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelSourceCommandHandler

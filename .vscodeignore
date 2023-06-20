@@ -112,6 +112,7 @@ pythonFiles/tests/**
 scripts/**
 src/**
 test/**
+temp/**
 tmp/**
 typings/**
 types/**

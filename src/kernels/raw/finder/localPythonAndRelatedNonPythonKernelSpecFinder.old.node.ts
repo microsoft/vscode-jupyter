@@ -3,12 +3,8 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
-import { getKernelRegistrationInfo } from '../../../kernels/helpers';
-import {
-    isLocalConnection,
-    LocalKernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata
-} from '../../../kernels/types';
+import { getKernelRegistrationInfo } from '../../helpers';
+import { isLocalConnection, LocalKernelConnectionMetadata, LocalKernelSpecConnectionMetadata } from '../../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
@@ -28,7 +24,7 @@ import {
     localPythonKernelsCacheKey
 } from './interpreterKernelSpecFinderHelper.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { raceCancellation } from '../../../platform/common/cancellation';
 
 type InterpreterId = string;
 
@@ -41,7 +37,7 @@ type InterpreterId = string;
  *     - This will return any non-python kernels that are registered in Python environments (e.g. Java kernels within a conda environment)
  */
 @injectable()
-export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelSpecFinderBase<LocalKernelConnectionMetadata> {
+export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelSpecFinderBase<LocalKernelConnectionMetadata> {
     /**
      * List of all kernels.
      * When opening a new instance of VS Code we load the cache from previous session,
@@ -86,7 +82,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         this.disposables.push(this._onDidChangeKernels);
         interpreterService.onDidChangeInterpreters(
             () => {
-                traceVerbose(`refreshData after detecting changes to interpreters`);
                 this.refreshCancellation?.cancel();
                 this.refreshData().catch(noop);
             },
@@ -300,30 +295,16 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     this.disposables.push(finder);
                     this.interpreterKernelSpecs.set(interpreter.id, finder);
                 }
-                const kernels = await Promise.race([
-                    finder.listKernelSpecs(forceRefresh),
-                    createPromiseFromCancellation<LocalKernelConnectionMetadata[]>({
-                        cancelAction: 'resolve',
-                        defaultValue: [],
-                        token: cancelToken
-                    })
-                ]);
-                if (cancelToken.isCancellationRequested) {
-                    return [];
-                }
-                traceVerbose(`Kernels for interpreter ${interpreter.id} are ${kernels.map((k) => k.id).join(', ')}`);
+                const kernels = await raceCancellation(cancelToken, [], finder.listKernelSpecs(forceRefresh));
                 await this.appendNewKernels(kernels);
             })
         );
 
-        const globalPythonKernelSpecsPromise = Promise.race([
-            this.globalPythonKernelSpecFinder.listKernelSpecs(forceRefresh),
-            createPromiseFromCancellation<LocalKernelConnectionMetadata[]>({
-                token: cancelToken,
-                defaultValue: [],
-                cancelAction: 'resolve'
-            })
-        ]).then((kernels) => this.appendNewKernels(kernels));
+        const globalPythonKernelSpecsPromise = raceCancellation(
+            cancelToken,
+            [],
+            this.globalPythonKernelSpecFinder.listKernelSpecs(forceRefresh)
+        ).then((kernels) => this.appendNewKernels(kernels));
 
         await Promise.all([interpreterPromise, globalPythonKernelSpecsPromise]);
     }

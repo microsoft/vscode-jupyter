@@ -28,7 +28,7 @@ import { disposeAllDisposables, splitLines } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
-import { createDeferred, waitForPromise } from '../platform/common/utils/async';
+import { createDeferred, raceTimeout, raceTimeoutError } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -63,6 +63,7 @@ import { SilentExecutionErrorOptions } from './helpers';
 import dedent from 'dedent';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getKernelInfo } from './kernelInfo';
+import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -485,33 +486,29 @@ abstract class BaseKernel implements IBaseKernel {
         };
         const restartHandlerToken = session.onSessionStatusChanged(restartHandler);
 
-        // Start our interrupt. If it fails, indicate a restart
-        session.interrupt().catch((exc) => {
-            traceWarning(`Error during interrupt: ${exc}`);
-            restarted.resolve(true);
-        });
+        if (session && session.kernel) {
+            traceInfo(`Interrupting kernel: ${session.kernel.name}`);
+
+            // Start our interrupt. If it fails, indicate a restart
+            await raceTimeoutError(
+                this.kernelSettings.interruptTimeout,
+                new KernelInterruptTimeoutError(this.kernelConnectionMetadata),
+                session.kernel.interrupt()
+            ).catch((exc) => {
+                traceWarning(`Error during interrupt: ${exc}`);
+                restarted.resolve(true);
+            });
+        }
 
         const promise = (async () => {
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
-                const result = await waitForPromise(
-                    Promise.race([pendingExecutions, restarted.promise]),
-                    this.kernelSettings.interruptTimeout
+                return await raceTimeout(
+                    this.kernelSettings.interruptTimeout,
+                    InterruptResult.TimedOut,
+                    pendingExecutions.then(() => InterruptResult.Success),
+                    restarted.promise.then(() => InterruptResult.Restarted)
                 );
-
-                // See if we restarted or not
-                if (restarted.completed) {
-                    return InterruptResult.Restarted;
-                }
-
-                if (result === null) {
-                    // We timed out. You might think we should stop our pending list, but that's not
-                    // up to us. The cells are still executing. The user has to request a restart or try again
-                    return InterruptResult.TimedOut;
-                }
-
-                // Indicate the interrupt worked.
-                return InterruptResult.Success;
             } catch (exc) {
                 // Something failed. See if we restarted or not.
                 if (restarted.completed) {
@@ -707,7 +704,7 @@ abstract class BaseKernel implements IBaseKernel {
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
-        session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+        session.kernel?.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
         if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
             // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
@@ -931,11 +928,11 @@ abstract class BaseKernel implements IBaseKernel {
         if (code.join('').trim().length === 0) {
             return;
         }
-        if (!session) {
+        if (!session.kernel) {
             traceVerbose(`Not executing startup as there is no session, code: ${code}`);
             return;
         }
-        return executeSilently(session, code.join('\n'), errorOptions);
+        return executeSilently(session.kernel, code.join('\n'), errorOptions);
     }
 }
 

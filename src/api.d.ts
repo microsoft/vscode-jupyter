@@ -3,21 +3,16 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { CancellationToken, Event, NotebookDocument, QuickPickItem, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, NotebookDocument, QuickPickItem, Uri } from 'vscode';
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
 import type { Session } from '@jupyterlab/services';
-
-/**
- * Data represents the message payload received over the WebSocket.
- */
-export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
 export interface JupyterAPI {
     /**
      * Registers a remote server provider component that's used to pick remote jupyter server URIs
      * @param serverProvider object called back when picking jupyter server URI
      */
-    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
+    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): Disposable;
     /**
      * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
      * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
@@ -38,7 +33,7 @@ export interface JupyterAPI {
      */
     openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
 }
-
+//#region Jupyter Server Providers
 export interface IJupyterServerUri {
     baseUrl: string;
     /**
@@ -48,7 +43,7 @@ export interface IJupyterServerUri {
     /**
      * Authorization header to be used when connecting to the server.
      */
-    authorizationHeader: Record<string, string>;
+    authorizationHeader?: Record<string, string>;
     displayName: string;
     /**
      * The local directory that maps to the remote directory of the Jupyter Server.
@@ -113,7 +108,9 @@ export interface IJupyterUriProvider {
      */
     removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
 }
+//#endregion
 
+//#region Python Env Information (soon to be deprecated in favour of Python Extensions new Environments API)
 /**
  * The supported Python environment types.
  */
@@ -150,7 +147,9 @@ export type PythonEnvironment = {
     envName?: string;
     envPath?: Uri;
 };
+//#endregion
 
+//#region Kernel Information (Kernel Specs, connections)
 /**
  * Details of the kernel spec.
  * See https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
@@ -280,6 +279,14 @@ export type KernelConnectionMetadata =
     | PythonKernelConnectionMetadata
     | LiveRemoteKernelConnectionMetadata;
 export type ActiveKernel = LiveRemoteKernelConnectionMetadata;
+//#endregion
+
+//#region Kernel API
+
+/**
+ * Data represents the message payload received over the WebSocket.
+ */
+export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
 export interface IKernelSocket {
     /**
@@ -376,3 +383,4 @@ export interface IExportedKernelService {
      */
     connect(metadata: LiveRemoteKernelConnectionMetadata, uri: Uri): Promise<IKernelConnectionInfo>;
 }
+//#endregion

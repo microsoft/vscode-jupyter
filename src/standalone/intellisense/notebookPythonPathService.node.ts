@@ -7,11 +7,11 @@ import { INotebookEditorProvider } from '../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { PylanceExtension } from '../../platform/common/constants';
-import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { traceInfo, traceVerbose } from '../../platform/logging';
+import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
+import { traceInfo, traceWarning } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isInteractiveInputTab } from '../../interactive-window/helpers';
+import { isRemoteConnection } from '../../kernels/types';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -28,8 +28,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration
     ) {
         if (!this._isPylanceExtensionInstalled()) {
             this.extensionChangeHandler = extensions.onDidChange(this.extensionsChangeHandler.bind(this));
@@ -101,25 +100,23 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     private async _jupyterPythonPathFunction(uri: Uri): Promise<string | undefined> {
         const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
         if (!notebook) {
-            traceVerbose(`_jupyterPythonPathFunction: "${uri}" is not a notebook`);
             return undefined;
         }
 
         const controller = this.controllerRegistration.getSelected(notebook);
-        const interpreter = controller
-            ? controller.connection.interpreter
-            : await this.interpreterService.getActiveInterpreter(uri);
-
-        if (!interpreter) {
-            traceVerbose(`_jupyterPythonPathFunction: Couldn't find interpreter for "${uri}"`);
-            return undefined;
+        if (controller && isRemoteConnection(controller.connection)) {
+            // Empty string is special, means do not use any interpreter at all.
+            return '';
         }
 
-        const pythonPath = getFilePath(interpreter.uri);
+        const interpreter = controller?.connection?.interpreter;
 
-        traceVerbose(`_jupyterPythonPathFunction: Giving Pylance "${pythonPath}" as python path for "${uri}"`);
-
-        return pythonPath;
+        if (!interpreter) {
+            // Empty string is special, means do not use any interpreter at all.
+            traceWarning(`No interpreter for Pylance for Notebook URI "${getDisplayPath(notebook.uri)}"`);
+            return '';
+        }
+        return getFilePath(interpreter.uri);
     }
 
     private _getNotebookUriForTextDocumentUri(textDocumentUri: Uri): Uri | undefined {

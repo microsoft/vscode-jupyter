@@ -210,7 +210,10 @@ suite('kernel Process', () => {
         verify(pythonExecFactory.createActivatedEnvironment(anything())).never();
         verify(pythonProcess.execObservable(anything(), anything())).never();
         assert.strictEqual(capture(processService.execObservable).first()[0], 'dotnet');
-        assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', tempFile]);
+        assert.deepStrictEqual(capture(processService.execObservable).first()[1], [
+            'csharp',
+            Uri.file(tempFile).fsPath
+        ]);
     });
     test('Ensure connection file is created in jupyter runtime directory (.net kernel)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -267,7 +270,10 @@ suite('kernel Process', () => {
         await kernelProcess.launch('', 0, token.token);
 
         assert.strictEqual(capture(processService.execObservable).first()[0], 'dotnet');
-        assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', tempFile]);
+        assert.deepStrictEqual(capture(processService.execObservable).first()[1], [
+            'csharp',
+            Uri.file(tempFile).fsPath
+        ]);
 
         // Verify it gets deleted.
         await kernelProcess.dispose();
@@ -359,7 +365,7 @@ suite('kernel Process', () => {
             `--shell=${connection.shell_port}`,
             `--transport="${connection.transport}"`,
             `--iopub=${connection.iopub_port}`,
-            `--f="${tempFile}"`,
+            `--f="${Uri.file(tempFile).fsPath}"`,
             `--debug`
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
@@ -400,7 +406,7 @@ suite('kernel Process', () => {
             `--shell=${connection.shell_port}`,
             `--transport="${connection.transport}"`,
             `--iopub=${connection.iopub_port}`,
-            `--f=connection.json`,
+            `--f=${Uri.file('connection.json').fsPath}`,
             `--debug`
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
@@ -531,7 +537,7 @@ suite('Kernel Process', () => {
             args[1],
             metadata.kernelSpec.argv
                 .slice(1, metadata.kernelSpec.argv.length - 1)
-                .concat('--connection-file=wow/connection_config.json')
+                .concat(`--connection-file=${Uri.file('wow/connection_config.json').fsPath}`)
         );
         await kernelProcess.dispose();
     });
@@ -567,7 +573,7 @@ suite('Kernel Process', () => {
             args[1],
             metadata.kernelSpec.argv
                 .slice(1, metadata.kernelSpec.argv.length - 1)
-                .concat('--connection-file="wow/connection config.json"')
+                .concat(`--connection-file="${Uri.file('wow/connection config.json').fsPath}"`)
         );
         await kernelProcess.dispose();
     });
@@ -602,7 +608,9 @@ suite('Kernel Process', () => {
         assert.strictEqual(args[0], metadata.kernelSpec.argv[0]);
         assert.deepStrictEqual(
             args[1],
-            metadata.kernelSpec.argv.slice(1, metadata.kernelSpec.argv.length - 1).concat('wow/connection config.json')
+            metadata.kernelSpec.argv
+                .slice(1, metadata.kernelSpec.argv.length - 1)
+                .concat(Uri.file('wow/connection config.json').fsPath)
         );
         await kernelProcess.dispose();
     });
@@ -636,7 +644,7 @@ suite('Kernel Process', () => {
             args[1],
             metadata.kernelSpec.argv
                 .slice(1, metadata.kernelSpec.argv.length - 1)
-                .concat('--connection-file=connection_config.json')
+                .concat(`--connection-file=${Uri.file('connection_config.json').fsPath}`)
         );
         await kernelProcess.dispose();
     });
@@ -670,7 +678,7 @@ suite('Kernel Process', () => {
             args[1],
             metadata.kernelSpec.argv
                 .slice(1, metadata.kernelSpec.argv.length - 1)
-                .concat('--connection-file="D:\\hello\\connection config.json"')
+                .concat(`--connection-file="${Uri.file('D:\\hello\\connection config.json').fsPath}"`)
         );
         await kernelProcess.dispose();
     });
@@ -705,7 +713,7 @@ suite('Kernel Process', () => {
             args[1],
             metadata.kernelSpec.argv
                 .slice(1, metadata.kernelSpec.argv.length - 1)
-                .concat('D:\\hello\\connection config.json')
+                .concat(Uri.file('D:\\hello\\connection config.json').fsPath)
         );
         await kernelProcess.dispose();
     });

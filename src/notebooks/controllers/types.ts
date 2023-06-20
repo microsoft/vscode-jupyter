@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import {
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
+    PythonKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
@@ -108,15 +109,36 @@ export enum PreferredKernelExactMatchReason {
     IsNonPythonKernelLanguageMatch = 1 << 3
 }
 
-// Provides the UI to select a kernel source for a notebook document
-export const INotebookKernelSourceSelector = Symbol('INotebookKernelSourceSelector');
-export interface INotebookKernelSourceSelector {
-    selectLocalKernel(
-        notebook: vscode.NotebookDocument,
-        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
-    ): Promise<LocalKernelConnectionMetadata | undefined>;
+export const IRemoteNotebookKernelSourceSelector = Symbol('IRemoteNotebookKernelSourceSelector');
+export interface IRemoteNotebookKernelSourceSelector {
     selectRemoteKernel(
         notebook: vscode.NotebookDocument,
         providerId: string
     ): Promise<RemoteKernelConnectionMetadata | undefined>;
+}
+export const ILocalNotebookKernelSourceSelector = Symbol('ILocalNotebookKernelSourceSelector');
+export interface ILocalNotebookKernelSourceSelector {
+    selectLocalKernel(
+        notebook: vscode.NotebookDocument,
+        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
+    ): Promise<LocalKernelConnectionMetadata | undefined>;
+}
+export const ILocalPythonNotebookKernelSourceSelector = Symbol('ILocalPythonNotebookKernelSourceSelector');
+export interface ILocalPythonNotebookKernelSourceSelector {
+    selectLocalKernel(notebook: vscode.NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined>;
+}
+
+export interface IConnectionDisplayData extends IDisposable {
+    readonly onDidChange: vscode.Event<IConnectionDisplayData>;
+    readonly connectionId: string;
+    readonly label: string;
+    readonly description: string | undefined;
+    readonly detail: string;
+    readonly category: string;
+    readonly serverDisplayName?: string;
+}
+
+export const IConnectionDisplayDataProvider = Symbol('IConnectionDisplayData');
+export interface IConnectionDisplayDataProvider {
+    getDisplayData(connection: KernelConnectionMetadata): IConnectionDisplayData;
 }

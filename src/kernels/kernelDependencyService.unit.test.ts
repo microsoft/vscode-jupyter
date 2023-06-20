@@ -119,7 +119,12 @@ suite('Kernel Dependency Service', () => {
             });
             test('Prompt if if ipykernel is not installed', async () => {
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showInformationMessage(anything(), anything())).thenResolve(Common.install as any);
+                when(appShell.showInformationMessage(anything(), anything(), anything())).thenResolve(
+                    Common.install as any
+                );
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve(Common.install as any);
 
                 const result = await dependencyService.installMissingDependencies({
                     resource: Uri.file('one.ipynb'),
@@ -142,6 +147,9 @@ suite('Kernel Dependency Service', () => {
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
                     Common.install as any
                 );
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve(Common.install as any);
 
                 await dependencyService.installMissingDependencies({
                     resource,
@@ -225,6 +233,9 @@ suite('Kernel Dependency Service', () => {
                 when(memento.get(anything(), anything())).thenReturn(false);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve();
 
                 const result = await dependencyService.installMissingDependencies({
                     resource,

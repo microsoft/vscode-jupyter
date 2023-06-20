@@ -4,7 +4,7 @@
 import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-import { Cancellation } from '../../../platform/common/cancellation';
+import { raceCancellationError } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
 import { Resource, IOutputChannel, IDisplayOptions, ReadWrite } from '../../../platform/common/types';
@@ -12,7 +12,7 @@ import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
-import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import {
@@ -46,7 +46,6 @@ export class JupyterSession
         override readonly workingDirectory: Uri,
         private readonly idleTimeout: number,
         private readonly kernelService: IJupyterKernelService | undefined,
-        interruptTimeout: number,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly sessionCreator: KernelActionSource
@@ -55,8 +54,7 @@ export class JupyterSession
             connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
             resource,
             kernelConnectionMetadata,
-            workingDirectory,
-            interruptTimeout
+            workingDirectory
         );
     }
 
@@ -64,11 +62,6 @@ export class JupyterSession
         return true;
     }
 
-    @capturePerfTelemetry(Telemetry.WaitForIdleJupyter)
-    public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
-        // Wait for idle on this session
-        return this.waitForIdleOnSession(this.session, timeout, token);
-    }
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
         this.setSession(await this.createNewKernelSession(options));
@@ -360,52 +353,49 @@ export class JupyterSession
         };
 
         const requestCreator = this.requestCreator;
+        const work = () =>
+            this.sessionManager!.startNew(sessionOptions, {
+                kernelConnectionOptions: {
+                    handleComms: true // This has to be true for ipywidgets to work
+                }
+            })
+                .then(async (session) => {
+                    if (session.kernel) {
+                        this.logRemoteOutput(
+                            DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || '')
+                        );
+                        const sessionWithSocket = session as ISessionWithSocket;
 
-        return Cancellation.race(
-            () =>
-                this.sessionManager!.startNew(sessionOptions, {
-                    kernelConnectionOptions: {
-                        handleComms: true // This has to be true for ipywidgets to work
-                    }
-                })
-                    .then(async (session) => {
-                        if (session.kernel) {
-                            this.logRemoteOutput(
-                                DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || '')
-                            );
-                            const sessionWithSocket = session as ISessionWithSocket;
-
-                            // Add on the kernel metadata & sock information
-                            sessionWithSocket.resource = this.resource;
-                            sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
-                            sessionWithSocket.kernelSocketInformation = {
-                                get socket() {
-                                    // When we restart kernels, a new websocket is created and we need to get the new one.
-                                    // & the id in the dictionary is the kernel.id.
-                                    return requestCreator.getWebsocket(session.kernel!.id);
-                                },
-                                options: {
-                                    clientId: session.kernel.clientId,
-                                    id: session.kernel.id,
-                                    model: { ...session.kernel.model },
-                                    userName: session.kernel.username
-                                }
-                            };
-                            if (!isLocalConnection(this.kernelConnectionMetadata)) {
-                                sessionWithSocket.isRemoteSession = true;
+                        // Add on the kernel metadata & sock information
+                        sessionWithSocket.resource = this.resource;
+                        sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
+                        sessionWithSocket.kernelSocketInformation = {
+                            get socket() {
+                                // When we restart kernels, a new websocket is created and we need to get the new one.
+                                // & the id in the dictionary is the kernel.id.
+                                return requestCreator.getWebsocket(session.kernel!.id);
+                            },
+                            options: {
+                                clientId: session.kernel.clientId,
+                                id: session.kernel.id,
+                                model: { ...session.kernel.model },
+                                userName: session.kernel.username
                             }
-                            return sessionWithSocket;
+                        };
+                        if (!isLocalConnection(this.kernelConnectionMetadata)) {
+                            sessionWithSocket.isRemoteSession = true;
                         }
-                        throw new JupyterSessionStartError(new Error(`No kernel created`));
-                    })
-                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
-                    .finally(async () => {
-                        if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.filePath).catch(noop);
-                        }
-                    }),
-            options.token
-        );
+                        return sessionWithSocket;
+                    }
+                    throw new JupyterSessionStartError(new Error(`No kernel created`));
+                })
+                .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
+                .finally(async () => {
+                    if (this.connInfo && backingFile) {
+                        this.contentsManager.delete(backingFile.filePath).catch(noop);
+                    }
+                });
+        return raceCancellationError(options.token, work());
     }
 
     private logRemoteOutput(output: string) {

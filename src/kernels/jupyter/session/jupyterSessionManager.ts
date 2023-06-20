@@ -20,7 +20,9 @@ import {
     IPersistentStateFactory,
     Resource,
     IDisplayOptions,
-    IDisposable
+    IDisposable,
+    IExperimentService,
+    Experiments
 } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
@@ -28,7 +30,7 @@ import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import {
     IJupyterSessionManager,
     IJupyterPasswordConnect,
@@ -81,7 +83,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private readonly kernelService: IJupyterKernelService | undefined,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined,
-        private readonly requestCreator: IJupyterRequestCreator
+        private readonly requestCreator: IJupyterRequestCreator,
+        private readonly experiments: IExperimentService
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -104,7 +107,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             if (this.sessionManager && !this.sessionManager.isDisposed) {
                 traceVerbose('ShutdownSessionAndConnection - dispose session manager');
                 // Make sure it finishes startup.
-                await Promise.race([sleep(10_000), this.sessionManager.ready]);
+                await raceTimeout(10_000, this.sessionManager.ready);
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
@@ -209,7 +212,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             workingDirectory,
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
-            this.configService.getSettings(resource).jupyterInterruptTimeout,
             this.backingFileCreator,
             this.requestCreator,
             creator
@@ -262,11 +264,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             const oldKernelSpecs = getKernelSpecs();
 
             // Wait for the session to be ready
-            await Promise.race([sleep(10_000), this.sessionManager.ready]);
+            await raceTimeout(10_000, this.sessionManager.ready);
             telemetryProperties.sessionManagerReady = this.sessionManager.isReady;
             // Ask the session manager to refresh its list of kernel specs. This might never
             // come back so only wait for ten seconds.
-            await Promise.race([sleep(10_000), specsManager.refreshSpecs()]);
+            await raceTimeout(10_000, specsManager.refreshSpecs());
             telemetryProperties.specsManagerReady = specsManager.isReady;
 
             let telemetrySent = false;
@@ -283,7 +285,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     specsManager.refreshSpecs(),
                     this.sessionManager.ready
                 ]);
-                await Promise.race([sleep(10_000), allPromises]);
+                await raceTimeout(10_000, allPromises);
                 telemetryProperties.waitedForChangeEvent = true;
                 if (!promise.completed) {
                     telemetrySent = true;
@@ -339,6 +341,58 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     private async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
+        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
+            return this.getServerConnectSettingsNew(connInfo);
+        } else {
+            return this.getServerConnectSettingsOld(connInfo);
+        }
+    }
+    private async getServerConnectSettingsNew(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
+        let serverSettings: Partial<ServerConnection.ISettings> = {
+            baseUrl: connInfo.baseUrl,
+            appUrl: '',
+            // A web socket is required to allow token authentication
+            wsUrl: connInfo.baseUrl.replace('http', 'ws')
+        };
+
+        // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let requestInit: any = this.requestCreator.getRequestInit();
+
+        const isTokenEmpty = connInfo.token === '' || connInfo.token === 'null';
+        if (!isTokenEmpty || connInfo.getAuthHeader) {
+            serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
+        }
+
+        const allowUnauthorized = this.configService.getSettings(undefined).allowUnauthorizedRemoteConnection;
+        // If this is an https connection and we want to allow unauthorized connections set that option on our agent
+        // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
+        if (connInfo.baseUrl.startsWith('https') && allowUnauthorized && this.requestAgentCreator) {
+            const requestAgent = this.requestAgentCreator.createHttpRequestAgent();
+            requestInit = { ...requestInit, agent: requestAgent };
+        }
+
+        // This replaces the WebSocket constructor in jupyter lab services with our own implementation
+        // See _createSocket here:
+        // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
+        serverSettings = {
+            ...serverSettings,
+            init: requestInit,
+            WebSocket: this.requestCreator.getWebsocketCtor(
+                undefined,
+                allowUnauthorized,
+                connInfo.getAuthHeader,
+                connInfo.getWebsocketProtocols?.bind(connInfo)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ) as any,
+            fetch: this.requestCreator.getFetchMethod(),
+            Request: this.requestCreator.getRequestCtor(undefined, allowUnauthorized, connInfo.getAuthHeader),
+            Headers: this.requestCreator.getHeadersCtor()
+        };
+
+        return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
+    }
+    private async getServerConnectSettingsOld(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
             appUrl: '',

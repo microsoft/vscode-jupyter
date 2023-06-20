@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import {
     IJupyterServerUriStorage,
-    IJupyterUriProvider,
+    IInternalJupyterUriProvider,
     IJupyterUriProviderRegistration
 } from '../../kernels/jupyter/types';
 import { isLocalConnection } from '../../kernels/types';
@@ -20,7 +20,7 @@ import { IControllerRegistration } from './types';
  */
 @injectable()
 export class RemoteKernelControllerWatcher implements IExtensionSyncActivationService {
-    private readonly handledProviders = new WeakSet<IJupyterUriProvider>();
+    private readonly handledProviders = new WeakSet<IInternalJupyterUriProvider>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistry: IJupyterUriProviderRegistration,
@@ -29,20 +29,22 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
     ) {}
     activate(): void {
         this.providerRegistry.onDidChangeProviders(this.addProviderHandlers, this, this.disposables);
-        this.addProviderHandlers().catch(noop);
+        this.addProviderHandlers();
     }
-    private async addProviderHandlers() {
-        const providers = await this.providerRegistry.getProviders();
-        providers.forEach((provider) => {
+    private addProviderHandlers() {
+        this.providerRegistry.providers.forEach((provider) => {
+            if (this.handledProviders.has(provider)) {
+                return;
+            }
+            this.handledProviders.add(provider);
             // clear out any old handlers
             this.onProviderHandlesChanged(provider).catch(noop);
-
-            if (provider.onDidChangeHandles && !this.handledProviders.has(provider)) {
-                provider.onDidChangeHandles(this.onProviderHandlesChanged.bind(this, provider), this, this.disposables);
+            if (provider.onDidChangeHandles) {
+                provider.onDidChangeHandles(() => this.onProviderHandlesChanged(provider), this, this.disposables);
             }
         });
     }
-    private async onProviderHandlesChanged(provider: IJupyterUriProvider) {
+    private async onProviderHandlesChanged(provider: IInternalJupyterUriProvider) {
         if (!provider.getHandles) {
             return;
         }

@@ -411,13 +411,14 @@ export class CellExecution implements IDisposable {
             ...(this.cell.metadata?.custom?.metadata || {}) // Send the Cell Metadata
         };
 
+        const kernelConnection = session.kernel!;
         try {
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
-
+            traceVerbose(`Execution Request Sent to Kernel for cell ${this.cell.index}`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-            this.request = session.requestExecute(
+            this.request = kernelConnection.requestExecute(
                 {
                     code,
                     silent: false,
@@ -433,7 +434,7 @@ export class CellExecution implements IDisposable {
             return this.completedWithErrors(ex);
         }
         this.cellExecutionHandler = this.requestListener.registerListenerForExecution(this.cell, {
-            kernel: session.kernel!,
+            kernel: kernelConnection,
             cellExecution: this.execution!,
             request: this.request
         });
@@ -464,7 +465,6 @@ export class CellExecution implements IDisposable {
             } catch {
                 //
             }
-            console.error(reply);
             traceCellMessage(this.cell, 'Jupyter execution completed');
             this.completedSuccessfully(completedTime);
             traceCellMessage(this.cell, 'Executed successfully in executeCell');

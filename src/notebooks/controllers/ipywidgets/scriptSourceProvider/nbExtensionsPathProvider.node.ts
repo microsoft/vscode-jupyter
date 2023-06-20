@@ -11,7 +11,7 @@ import { INbExtensionsPathProvider } from '../types';
  */
 @injectable()
 export class NbExtensionsPathProvider implements INbExtensionsPathProvider {
-    getNbExtensionsParentPath(kernel: IKernel): Uri | undefined {
+    async getNbExtensionsParentPath(kernel: IKernel): Promise<Uri | undefined> {
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec': {

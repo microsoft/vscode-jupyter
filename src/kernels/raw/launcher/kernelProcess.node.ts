@@ -20,11 +20,7 @@ import {
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import {
-    Cancellation,
-    createPromiseFromCancellation,
-    isCancellationError
-} from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
@@ -42,7 +38,7 @@ import {
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../errors/kernelDiedError';
@@ -98,7 +94,7 @@ export class KernelProcess implements IKernelProcess {
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private launchedOnce?: boolean;
     private disposed?: boolean;
-    private connectionFile?: string;
+    private connectionFile?: Uri;
     private _launchKernelSpec?: IJupyterKernelSpec;
     private interrupter?: Interrupter;
     private readonly _kernelConnectionMetadata: Readonly<
@@ -276,14 +272,7 @@ export class KernelProcess implements IKernelProcess {
                 // Throw an error we recognize.
                 return Promise.reject(new KernelPortNotUsedTimeoutError(this.kernelConnectionMetadata));
             });
-            await Promise.race([
-                portsUsed,
-                deferred.promise,
-                createPromiseFromCancellation({
-                    token: cancelToken,
-                    cancelAction: 'reject'
-                })
-            ]);
+            await raceCancellationError(cancelToken, portsUsed, deferred.promise);
         } catch (e) {
             const stdErrToLog = (stderrProc || stderr || '').trim();
             if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {
@@ -330,10 +319,10 @@ export class KernelProcess implements IKernelProcess {
         const pid = this._process?.pid;
         traceInfo(`Dispose Kernel process ${pid}.`);
         this._disposingPromise = (async () => {
-            await Promise.race([
-                sleep(1_000), // Wait for a max of 1s, we don't want to delay killing the kernel process.
+            await raceTimeout(
+                1_000, // Wait for a max of 1s, we don't want to delay killing the kernel process.
                 this.killChildProcesses(this._process?.pid).catch(noop)
-            ]);
+            );
             try {
                 this.interrupter?.dispose().catch(noop);
                 this._process?.kill(); // NOSONAR
@@ -344,7 +333,7 @@ export class KernelProcess implements IKernelProcess {
             swallowExceptions(async () => {
                 if (this.connectionFile) {
                     await this.fileSystem
-                        .delete(Uri.file(this.connectionFile))
+                        .delete(this.connectionFile)
                         .catch((ex) =>
                             traceWarning(`Failed to delete connection file ${this.connectionFile} for pid ${pid}`, ex)
                         );
@@ -441,17 +430,18 @@ export class KernelProcess implements IKernelProcess {
             this.launchKernelSpec.argv.splice(indexOfConnectionFile - 1, 2);
 
             // Add in our connection command line args
-            this.launchKernelSpec.argv.push(...this.addPythonConnectionArgs());
+            this.launchKernelSpec.argv.push(...this.addPythonConnectionArgs(this.connectionFile));
+            await this.fileSystem.writeFile(this.connectionFile, JSON.stringify(this._connection));
         } else {
-            await this.fileSystem.writeFile(Uri.file(this.connectionFile), JSON.stringify(this._connection));
+            await this.fileSystem.writeFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Replace the connection file argument with this file
             // Remember, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
             // See https://github.com/microsoft/vscode-jupyter/issues/7203
-            const quotedConnectionFile = this.connectionFile.includes(' ')
-                ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
-                : this.connectionFile;
+            const quotedConnectionFile = this.connectionFile.fsPath.includes(' ')
+                ? `"${this.connectionFile.fsPath}"` // Quoted for spaces in file paths.
+                : this.connectionFile.fsPath;
             if (this.launchKernelSpec.argv[indexOfConnectionFile].includes('--connection-file')) {
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
@@ -468,7 +458,7 @@ export class KernelProcess implements IKernelProcess {
                 // E.g. in Python the name of the argument is `-f` instead of `--connection-file`.
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
-                ].replace(connectionFilePlaceholder, this.connectionFile);
+                ].replace(connectionFilePlaceholder, this.connectionFile.fsPath);
             }
         }
     }
@@ -486,10 +476,10 @@ export class KernelProcess implements IKernelProcess {
             : tempFile.filePath;
         // Ensure we dispose this, and don't maintain a handle on this file.
         await tempFile.dispose(); // Do not remove this line.
-        return connectionFile;
+        return Uri.file(connectionFile);
     }
     // Add the command line arguments
-    private addPythonConnectionArgs(): string[] {
+    private addPythonConnectionArgs(connectionFile: Uri): string[] {
         const newConnectionArgs: string[] = [];
 
         newConnectionArgs.push(`--ip=${this._connection.ip}`);
@@ -511,10 +501,10 @@ export class KernelProcess implements IKernelProcess {
 
         // We still put in the tmp name to make sure the kernel picks a valid connection file name. It won't read it as
         // we passed in the arguments, but it will use it as the file name so it doesn't clash with other kernels.
-        const connectionFile = this.connectionFile!.includes(' ')
-            ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
-            : this.connectionFile;
-        newConnectionArgs.push(`--f=${connectionFile}`);
+        const connectionFileValue = connectionFile.fsPath.includes(' ')
+            ? `"${connectionFile.fsPath}"` // Quoted for spaces in file paths.
+            : connectionFile.fsPath;
+        newConnectionArgs.push(`--f=${connectionFileValue}`);
 
         return newConnectionArgs;
     }

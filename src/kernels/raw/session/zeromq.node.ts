@@ -39,6 +39,10 @@ export function getZeroMQ(): typeof import('zeromq') {
 async function getLocalZmqBinaries() {
     try {
         const zmqFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules', 'zeromq', 'prebuilds');
+        if (!(await fs.pathExists(path.join(EXTENSION_ROOT_DIR, 'out', 'node_modules')))) {
+            // We're in dev mode.
+            return;
+        }
         const filesPromises = await fs.readdir(zmqFolder).then((folders) =>
             folders.map(async (folder) => {
                 const folderPath = path.join(zmqFolder, folder);
@@ -61,12 +65,17 @@ async function getLocalZmqBinaries() {
         return ['Failed to determine local zmq binaries.'];
     }
 }
+let telemetrySentOnce = false;
 async function sendZMQTelemetry(
     failed: boolean,
     fallbackTried: boolean = false,
     errorMessage = '',
     fallbackErrorMessage = ''
 ) {
+    if (telemetrySentOnce) {
+        return;
+    }
+    telemetrySentOnce = true;
     const [distro, zmqBinaries] = await Promise.all([
         getDistroInfo().catch(() => <DistroInfo>{ id: '', version_id: '' }),
         getLocalZmqBinaries()

@@ -28,3 +28,5 @@ export const Exiting = {
      */
     isExiting: false
 };
+
+export const TestingKernelPickerProviderId = '_builtin.JupyterServerSelectorForTesting';

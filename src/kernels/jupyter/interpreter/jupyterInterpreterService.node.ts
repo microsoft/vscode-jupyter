@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import { raceCancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -194,16 +194,11 @@ export class JupyterInterpreterService {
         token?: CancellationToken
     ): Promise<PythonEnvironment | undefined> {
         try {
-            const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
-                cancelAction: 'resolve',
-                defaultValue: undefined,
-                token
-            });
             // First see if we can get interpreter details
-            const interpreter = await Promise.race([
-                this.interpreterService.getInterpreterDetails(pythonPath),
-                resolveToUndefinedWhenCancelled
-            ]);
+            const interpreter = await raceCancellation(
+                token,
+                this.interpreterService.getInterpreterDetails(pythonPath)
+            );
             if (interpreter) {
                 // Then check that dependencies are installed
                 if (await this.interpreterConfiguration.areDependenciesInstalled(interpreter, token)) {

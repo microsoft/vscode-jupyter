@@ -61,12 +61,10 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(options.resource);
             Cancellation.throwIfCanceled(options.token);
             const launchTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
-            const interruptTimeout = this.configService.getSettings(options.resource).jupyterInterruptTimeout;
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 options.resource,
                 vscode.Uri.file(workingDirectory),
-                interruptTimeout,
                 options.kernelConnection,
                 launchTimeout
             );

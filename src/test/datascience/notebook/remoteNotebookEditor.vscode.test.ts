@@ -172,7 +172,7 @@ suite('Remote Kernel Execution', function () {
             { contains: 'certificate' },
             { result: DataScience.jupyterSelfCertEnable, clickImmediately: true }
         );
-        await startJupyterServer(undefined, true);
+        await startJupyterServer({ useCert: true });
 
         await waitForCondition(
             async () => {
@@ -185,7 +185,7 @@ suite('Remote Kernel Execution', function () {
 
         const { editor } = await openNotebook(ipynbFile);
         await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
-        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`

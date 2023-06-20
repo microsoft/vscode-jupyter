@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
-import { traceInfo, traceVerbose } from '../../platform/logging';
+import { traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
@@ -15,6 +15,7 @@ import { IControllerRegistration } from './types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 /**
  * This class listens tracks notebook controller selection. When a notebook runs
@@ -88,7 +89,7 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
     }
 
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
-        traceVerbose(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
+        traceVerbose(`Using notebook.selectKernel to force remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
         // Do this in a loop as it may fail
         await this.commandManager.executeCommand('notebook.selectKernel', {
             id: kernel.id,
@@ -108,6 +109,10 @@ export class LiveKernelSwitcher implements IExtensionSyncActivationService {
             2000,
             100
         );
-        traceInfo(`Results of switching remote kernel: ${success}`);
+        if (success) {
+            traceVerbose(`Successfully switched remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
+        } else {
+            traceWarning(`Failed to switch remote kernel for ${getDisplayPath(n.uri)} to ${kernel.id}`);
+        }
     }
 }

@@ -23,7 +23,7 @@ import { serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
 import { CancellationToken } from 'vscode';
-import { createPromiseFromCancellation } from '../common/cancellation';
+import { raceCancellation } from '../common/cancellation';
 
 const ENV_VAR_CACHE_TIMEOUT = 60_000;
 
@@ -85,14 +85,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (token) {
             return promise;
         }
-        return Promise.race([
-            promise,
-            createPromiseFromCancellation({
-                cancelAction: 'resolve',
-                defaultValue: undefined,
-                token
-            })
-        ]);
+        return raceCancellation(token, promise);
     }
     @traceDecoratorVerbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async getActivatedEnvironmentVariablesImpl(
@@ -109,11 +102,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 if (token?.isCancellationRequested) {
                     return;
                 }
-                traceVerbose(
-                    `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms with ${
-                        Object.keys(env || {}).length
-                    } variables`
-                );
                 return env;
             })
             .catch((ex) => {
@@ -148,17 +136,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.cachedEnvVariables.set(key, { promise, lastRequestedTime: new StopWatch() });
         }
 
-        const promise = this.cachedEnvVariables.get(key)!.promise;
-        if (!token) {
-            return promise;
-        }
-
-        const cancelationPromise = createPromiseFromCancellation({
-            token,
-            cancelAction: 'resolve',
-            defaultValue: undefined
-        });
-        return Promise.race([promise, cancelationPromise]);
+        return raceCancellation(token, this.cachedEnvVariables.get(key)!.promise);
     }
     private async getActivatedEnvironmentVariablesFromPythonImpl(
         resource: Resource,

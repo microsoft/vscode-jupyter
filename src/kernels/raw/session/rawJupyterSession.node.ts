@@ -5,11 +5,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import {
-    Cancellation,
-    createPromiseFromCancellation,
-    isCancellationError
-} from '../../../platform/common/cancellation';
+import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common/types';
@@ -54,18 +50,10 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
         workingDirectory: Uri,
-        interruptTimeout: number,
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super('localRaw', resource, kernelConnection, workingDirectory, interruptTimeout);
-    }
-
-    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
-        // Wait until status says idle.
-        if (this.session) {
-            return this.waitForIdleOnSession(this.session, timeout, token);
-        }
+        super('localRaw', resource, kernelConnection, workingDirectory);
     }
 
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
@@ -243,10 +231,7 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
         try {
             // Wait for it to be ready
             traceVerbose('Waiting for Raw Session to be ready in postStartRawSession');
-            await Promise.race([
-                result.waitForReady(),
-                createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
-            ]);
+            await raceCancellationError(options.token, result.waitForReady());
             traceVerbose('Successfully waited for Raw Session to be ready in postStartRawSession');
         } catch (ex) {
             traceError('Failed waiting for Raw Session to be ready', ex);
@@ -278,11 +263,11 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
             result.iopubMessage.connect(iopubHandler);
             try {
                 traceVerbose('Sending request for kernelinfo');
-                await Promise.race([
+                await raceCancellationError(
+                    options.token,
                     Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(this.launchTimeout, 1_500)),
-                    createPromiseFromCancellation({ cancelAction: 'reject', token: options.token })
-                ]);
+                    sleep(Math.min(this.launchTimeout, 1_500)).then(noop)
+                );
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
                 await process.dispose();

@@ -4,24 +4,18 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
-import { IApplicationEnvironment } from '../application/types';
-import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceVerbose } from '../../logging';
-import {
-    GLOBAL_MEMENTO,
-    IConfigurationService,
-    IExperimentService,
-    IJupyterSettings,
-    IMemento,
-    IOutputChannel
-} from '../types';
+import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
+import { JVSC_EXTENSION_ID } from '../constants';
+import { traceInfo, traceVerbose } from '../../logging';
+import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IJupyterSettings, IMemento } from '../types';
 import { Experiments } from '../utils/localize';
-import { Experiments as ExperimentGroups } from './groups';
+import { Experiments as ExperimentGroups } from '../types';
 import { ExperimentationTelemetry } from './telemetry.node';
 
 // This is a hacky way to determine what experiments have been loaded by the Experiments service.
 // There's no public API yet, hence we access the global storage that is updated by the experiments package.
 const EXP_MEMENTO_KEY = 'VSCode.ABExp.FeatureData';
+const EXP_CONFIG_ID = 'vscode';
 
 /**
  * Exposes an api to determine what experiments are in use. Experiments are generally feature flags that can be used to try out different features for a subset of users.
@@ -40,16 +34,15 @@ export class ExperimentService implements IExperimentService {
 
     private readonly experimentationService?: IExperimentationService;
     private readonly settings: IJupyterSettings;
-    private logged?: boolean;
 
     private get enabled() {
-        return this.settings.experiments.enabled;
+        return this.settings.experiments.enabled && !this.settings.experiments.optOutFrom.includes('All');
     }
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
+        @inject(IWorkspaceService) readonly workspace: IWorkspaceService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento
     ) {
         this.settings = configurationService.getSettings(undefined);
 
@@ -81,79 +74,149 @@ export class ExperimentService implements IExperimentService {
             telemetryReporter,
             this.globalState
         );
-
-        traceVerbose(`Experimentation service retrieved: ${this.experimentationService}`);
-
-        this.logExperiments();
     }
 
     public async activate() {
-        if (this.experimentationService) {
+        if (this.experimentationService && this.enabled) {
+            traceVerbose(`Experimentation service retrieved: ${this.experimentationService}`);
             await this.experimentationService.initializePromise;
+            if (this.getFeatures().length === 0) {
+                // Only await on this if we don't have anything in cache.
+                // This means that we start the session with partial experiment info.
+                // We accept this as a compromise to avoid delaying startup.
+
+                // In the case where we don't wait on this promise. If the experiment info changes,
+                // those changes will be applied in the next session. This is controlled internally
+                // in the tas-client via `overrideInMemoryFeatures` value that is passed to
+                // `getFeaturesAsync`. At the time of writing this comment the value of
+                // `overrideInMemoryFeatures` was always passed in as `false`. So, the experiment
+                // states did not change mid way.
+                await this.experimentationService.initialFetch;
+            }
+
+            this.logExperiments();
         }
     }
-    public async inExperiment(experiment: ExperimentGroups): Promise<boolean> {
-        if (!this.experimentationService) {
+    public inExperiment(experiment: ExperimentGroups): boolean {
+        if (!this.experimentationService || !this.enabled) {
             return false;
         }
 
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
-        switch (this.getOptInOptOutStatus(experiment)) {
-            case 'optOut': {
-                return false;
-            }
-            case 'optIn': {
-                await this.experimentationService.isCachedFlightEnabled(experiment.toString());
-                return true;
-            }
-
-            default:
-                return this.experimentationService.isCachedFlightEnabled(experiment.toString());
-        }
-    }
-
-    public async getExperimentValue<T extends boolean | number | string>(experiment: string): Promise<T | undefined> {
-        if (!this.experimentationService || this._optOutFrom.includes(experiment)) {
-            return;
-        }
-
-        return this.experimentationService.getTreatmentVariableAsync('vscode', experiment);
-    }
-    public logExperiments() {
-        if (!this.experimentationService || this.logged) {
-            return;
-        }
-        this.logged = true;
-        const experiments = this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] });
-        experiments.features.forEach((exp) => {
-            // Filter out experiments groups that are not from the Python extension.
-            if (exp.toLowerCase().startsWith('jupyter')) {
-                this.output.appendLine(Experiments.inGroup(exp));
-            }
-        });
-        this.getExperimentsUserHasManuallyOptedInto().forEach((exp) => {
-            this.output.appendLine(Experiments.inGroup(exp.toString()));
-        });
-    }
-    private getOptInOptOutStatus(experiment: ExperimentGroups): 'optOut' | 'optIn' | undefined {
-        if (!this.experimentationService) {
-            return;
-        }
-
-        // Currently the service doesn't support opting in and out of experiments,
-        // so we need to perform these checks and send the corresponding telemetry manually.
         if (this._optOutFrom.includes(experiment.toString())) {
-            return 'optOut';
+            return false;
         }
 
-        if (this._optInto.includes(experiment.toString())) {
-            return 'optIn';
+        if (this._optInto.includes(experiment.toString()) || this._optInto.includes('All')) {
+            // Check if the user was already in the experiment server-side. We need to do
+            // this to ensure the experiment service is ready and internal states are fully
+            // synced with the experiment server.
+            this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment as unknown as string);
+            return true;
         }
+        // In insiders some of the experiments are enabled by default.
+        if (
+            this.appEnvironment.channel === 'insiders' &&
+            [ExperimentGroups.FastKernelPicker, ExperimentGroups.PasswordManager].includes(experiment)
+        ) {
+            return true;
+        }
+        // If getTreatmentVariable returns undefined,
+        // it means that the value for this experiment was not found on the server.
+
+        const treatmentVariable = this.experimentationService.getTreatmentVariable(
+            EXP_CONFIG_ID,
+            experiment as unknown as string
+        );
+        return treatmentVariable === true;
     }
-    private getExperimentsUserHasManuallyOptedInto(): ExperimentGroups[] {
-        return Object.values(ExperimentGroups).filter(
-            (experiment) => this.getOptInOptOutStatus(experiment as unknown as ExperimentGroups) === 'optIn'
-        ) as unknown as ExperimentGroups[];
+
+    public async getExperimentValue<T extends boolean | number | string>(
+        experiment: ExperimentGroups
+    ): Promise<T | undefined> {
+        if (
+            !this.experimentationService ||
+            !this.enabled ||
+            this._optOutFrom.includes(experiment as unknown as string)
+        ) {
+            return;
+        }
+
+        return this.experimentationService.getTreatmentVariable<T>(EXP_CONFIG_ID, experiment as unknown as string);
+    }
+    private getFeatures() {
+        return this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] }).features;
+    }
+    private logExperiments() {
+        const telemetrySettings = this.workspace.getConfiguration('telemetry');
+        let experimentsDisabled = false;
+        if (telemetrySettings && telemetrySettings.get<boolean>('enableTelemetry') === false) {
+            traceInfo('Telemetry is disabled');
+            experimentsDisabled = true;
+        }
+
+        if (telemetrySettings && telemetrySettings.get<string>('telemetryLevel') === 'off') {
+            traceInfo('Telemetry level is off');
+            experimentsDisabled = true;
+        }
+
+        if (experimentsDisabled) {
+            traceInfo('Experiments are disabled, only manually opted experiments are active.');
+        }
+
+        if (this._optOutFrom.includes('All')) {
+            // We prioritize opt out first
+            // Since we are in the Opt Out all case, this means when checking for experiment we
+            // short circuit and return. So, printing out additional experiment info might cause
+            // confusion. So skip printing out any specific experiment details to the log.
+            return;
+        }
+        if (this._optInto.includes('All')) {
+            // Only if 'All' is not in optOut then check if it is in Opt In.
+            traceInfo(Experiments.inGroup('All'));
+
+            // Similar to the opt out case. If user is opting into to all experiments we short
+            // circuit the experiment checks. So, skip printing any additional details to the logs.
+            return;
+        }
+
+        // Log experiments that users manually opt out, these are experiments which are added using the exp framework.
+        this._optOutFrom
+            .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
+            .forEach((exp) => {
+                traceInfo(Experiments.notInGroup(exp));
+            });
+
+        // Log experiments that users manually opt into, these are experiments which are added using the exp framework.
+        this._optInto
+            .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
+            .forEach((exp) => {
+                traceInfo(Experiments.inGroup(exp));
+            });
+
+        if (!experimentsDisabled) {
+            // Log experiments that users are added to by the exp framework
+            this.getFeatures().forEach((exp) => {
+                // Filter out experiment groups that are not from the Python extension.
+                // Filter out experiment groups that are not already opted out or opted into.
+                if (
+                    exp.toLowerCase().startsWith('jupyter') &&
+                    !this._optOutFrom.includes(exp) &&
+                    !this._optInto.includes(exp)
+                ) {
+                    traceInfo(Experiments.inGroup(exp));
+                }
+            });
+            // In insiders some of the experiments are enabled by default.
+            if (this.appEnvironment.channel === 'insiders') {
+                if (this.inExperiment(ExperimentGroups.FastKernelPicker)) {
+                    traceInfo(Experiments.inGroup(ExperimentGroups.FastKernelPicker));
+                }
+                if (this.inExperiment(ExperimentGroups.PasswordManager)) {
+                    traceInfo(Experiments.inGroup(ExperimentGroups.PasswordManager));
+                }
+            }
+        }
     }
 }

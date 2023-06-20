@@ -9,16 +9,18 @@ import * as vscode from 'vscode';
 import { Extensions } from '../../../platform/common/application/extensions.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
-import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '../types';
+import { IInternalJupyterUriProvider } from '../types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
 
-class MockProvider implements IJupyterUriProvider {
+class MockProvider implements IInternalJupyterUriProvider {
     public get id() {
         return this._id;
     }
     private currentBearer = 1;
     private result: string = '1';
+    public readonly extensionId: string = 'foo.bar';
     constructor(private readonly _id: string) {
         // Id should be readonly
     }
@@ -66,30 +68,28 @@ suite('URI Picker', () => {
         when(memento.get<string[]>(anything())).thenReturn([]);
         when(memento.get<string[]>(anything(), anything())).thenReturn([]);
         registration = new JupyterUriProviderRegistration(extensions, disposables, instance(memento));
-        await Promise.all(
-            providerIds.map(async (id) => {
-                const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
-                const packageJson = TypeMoq.Mock.ofType<any>();
-                const contributes = TypeMoq.Mock.ofType<any>();
-                extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
-                packageJson.setup((p) => p.contributes).returns(() => contributes.object);
-                contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
-                extension
-                    .setup((e) => e.activate())
-                    .returns(() => {
-                        return Promise.resolve();
-                    });
-                extension.setup((e) => e.isActive).returns(() => false);
-                extensionList.push(extension.object);
-                await registration?.registerProvider(new MockProvider(id));
-            })
-        );
+        providerIds.map(async (id) => {
+            const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
+            const packageJson = TypeMoq.Mock.ofType<any>();
+            const contributes = TypeMoq.Mock.ofType<any>();
+            extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
+            packageJson.setup((p) => p.contributes).returns(() => contributes.object);
+            contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
+            extension
+                .setup((e) => e.activate())
+                .returns(() => {
+                    return Promise.resolve();
+                });
+            extension.setup((e) => e.isActive).returns(() => false);
+            extensionList.push(extension.object);
+            registration?.registerProvider(new MockProvider(id), '1');
+        });
         return registration;
     }
 
     test('Simple', async () => {
         const registration = await createRegistration(['1']);
-        const pickers = await registration.getProviders();
+        const pickers = registration.providers;
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
@@ -102,7 +102,7 @@ suite('URI Picker', () => {
     });
     test('Back', async () => {
         const registration = await createRegistration(['1']);
-        const pickers = await registration.getProviders();
+        const pickers = registration.providers;
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
@@ -111,7 +111,7 @@ suite('URI Picker', () => {
     });
     test('Error', async () => {
         const registration = await createRegistration(['1']);
-        const pickers = await registration.getProviders();
+        const pickers = registration.providers;
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = await pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');

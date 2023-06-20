@@ -27,7 +27,7 @@ import {
     IIPyWidgetScriptManagerFactory
 } from '../../../notebooks/controllers/ipywidgets/types';
 import { isWeb } from '../../../platform/common/utils/misc';
-import { createActiveInterpreterController } from '../../../notebooks/controllers/helpers';
+import { createActiveInterpreterController } from '../notebook/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 
