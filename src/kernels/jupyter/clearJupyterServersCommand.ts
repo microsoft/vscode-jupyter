@@ -7,6 +7,7 @@ import { Commands } from '../../platform/common/constants';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
@@ -24,21 +25,24 @@ export class ClearJupyterServersCommand implements IExtensionSyncActivationServi
             this.commandManager.registerCommand(
                 Commands.ClearSavedJupyterUris,
                 async () => {
-                    await this.serverUriStorage.clear();
-                    const builtInProviders = (await this.registrations.getProviders()).filter((p) =>
+                    await this.serverUriStorage.clear().catch(noop);
+                    const builtInProviders = (await this.registrations.getProviders().catch(() => [])).filter((p) =>
                         p.id.startsWith('_builtin')
                     );
 
                     await Promise.all(
                         builtInProviders.map(async (provider) => {
                             if (provider.getHandles && provider.removeHandle) {
-                                const handles = await provider.getHandles();
+                                const handles = await provider.getHandles().catch(() => []);
                                 for (const handle of handles) {
-                                    await provider.removeHandle(handle);
+                                    await provider.removeHandle(handle).catch(noop);
                                 }
                             }
                         })
-                    );
+                    ).catch(noop);
+                    await this.commandManager
+                        .executeCommand('dataScience.ClearUserProviderJupyterServerCache')
+                        .then(noop, noop);
                 },
                 this
             )
