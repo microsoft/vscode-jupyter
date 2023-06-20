@@ -90,8 +90,14 @@ export class InteractiveWindow implements IInteractiveWindow {
     public get submitters(): Uri[] {
         return this._submitters;
     }
+    private _notebookDocument: NotebookDocument | undefined;
     public get notebookDocument(): NotebookDocument | undefined {
-        return workspace.notebookDocuments.find((nb) => nb.uri.toString() === this.notebookUri.toString())!;
+        if (!this._notebookDocument) {
+            this._notebookDocument = workspace.notebookDocuments.find(
+                (nb) => nb.uri.toString() === this.notebookUri.toString()
+            );
+        }
+        return this._notebookDocument;
     }
     public get kernelConnectionMetadata(): KernelConnectionMetadata | undefined {
         return this.controller?.metadata;
@@ -169,30 +175,53 @@ export class InteractiveWindow implements IInteractiveWindow {
         }
 
         this.cellMatcher = new CellMatcher(this.configuration.getSettings(this.owningResource));
+
         if (this.notebookDocument) {
             this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
     }
 
+    public notifyConnectionReset() {
+        if (!this.notebookDocument) {
+            const onNotebookOpen = workspace.onDidOpenNotebookDocument((notebook) => {
+                if (notebook.uri.toString() === this.notebookUri.toString()) {
+                    this._notebookDocument = notebook;
+                    this.controller = this.initController(notebook);
+                    this.internalDisposables.push(this.controller.listenForControllerSelection());
+                    this.controller.setInfoMessageCell(DataScience.noKernelConnected);
+                    onNotebookOpen.dispose();
+                }
+            });
+        } else {
+            if (!this.controller) {
+                this.controller = this.initController(this.notebookDocument);
+            }
+            this.controller.setInfoMessageCell(DataScience.noKernelConnected);
+        }
+    }
+
+    private initController(notebook: NotebookDocument) {
+        const controller = this.controllerFactory.create(notebook, this.errorHandler, this.kernelProvider, this._owner);
+        this.internalDisposables.push(controller.listenForControllerSelection());
+        return controller;
+    }
+
     public async ensureInitialized() {
-        let notebook = this.notebookDocument;
-        if (!notebook) {
+        if (!this.notebookDocument) {
             traceVerbose(`Showing Interactive editor to initialize codeGenerator from notebook document`);
-            notebook = (await this.showInteractiveEditor()).notebook;
+            await this.showInteractiveEditor();
+
+            if (!this.notebookDocument) {
+                throw new Error('Could not open notebook document for Interactive Window');
+            }
         }
 
-        if (!this.codeGeneratorFactory.get(notebook)) {
-            this.codeGeneratorFactory.getOrCreate(notebook);
+        if (!this.codeGeneratorFactory.get(this.notebookDocument)) {
+            this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
         }
 
         if (!this.controller) {
-            this.controller = this.controllerFactory.create(
-                notebook,
-                this.errorHandler,
-                this.kernelProvider,
-                this._owner
-            );
-            this.internalDisposables.push(this.controller.listenForControllerSelection());
+            this.controller = this.initController(this.notebookDocument);
         }
 
         if (this.controller.controller) {
