@@ -82,8 +82,8 @@ export class UserJupyterServerUrlProvider
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
-        @inject(IEncryptedStorage) encryptedStorage: IEncryptedStorage,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
+        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IMultiStepInputFactory) multiStepFactory: IMultiStepInputFactory,
@@ -131,26 +131,43 @@ export class UserJupyterServerUrlProvider
                 .getServers()
                 .then(async (servers) => {
                     await this.newStorage.migrate(servers);
-                    // once cache is initialized, check if we should do migration
-                    const existingServers = await this.serverUriStorage.getAll();
-                    const migratedServers = [];
-                    for (const server of existingServers) {
-                        if (server.provider.id !== this.id) {
-                            continue;
-                        }
-                        if (servers.find((s) => s.uri === server.uri)) {
-                            // already exist
-                            continue;
-                        }
-                        const serverInfo = parseUri(server.uri);
-                        if (serverInfo) {
-                            migratedServers.push({
-                                handle: uuid(),
-                                uri: server.uri,
-                                serverInfo: serverInfo
-                            });
-                        }
+
+                    // Pull out the \r separated URI list (\r is an invalid URI character)
+                    const blob = await this.encryptedStorage.retrieve(
+                        Settings.JupyterServerRemoteLaunchService,
+                        Settings.JupyterServerRemoteLaunchUriListKey
+                    );
+                    if (!blob) {
+                        return;
                     }
+                    // Make sure same length
+                    const migratedServers: {
+                        handle: string;
+                        uri: string;
+                        serverInfo: IJupyterServerUri;
+                    }[] = [];
+                    blob.split(Settings.JupyterServerRemoteLaunchUriSeparator).forEach((item) => {
+                        try {
+                            const uriAndDisplayName = item.split(Settings.JupyterServerRemoteLaunchNameSeparator);
+                            const uri = uriAndDisplayName[0];
+                            // Old code (we may have stored a bogus url in the past).
+                            if (uri === Settings.JupyterServerLocalLaunch) {
+                                return;
+                            }
+                            const serverInfo = parseUri(uri, uriAndDisplayName[1] || uri);
+                            if (serverInfo) {
+                                // We have a saved Url.
+                                const handle = uuid();
+                                servers.push({
+                                    handle,
+                                    uri,
+                                    serverInfo
+                                });
+                            }
+                        } catch {
+                            // Ignore errors.
+                        }
+                    });
 
                     if (migratedServers.length > 0) {
                         // Ensure we update the storage with the new items and new format.
