@@ -207,14 +207,13 @@ class OldStorage {
 
         // Check if we have already found a display name for this server
         displayName = uriList.find((entry) => entry.serverId === serverId)?.displayName || displayName || uri;
-        const idAndHandle = extractJupyterServerHandleAndId(uri);
         const entry: IJupyterServerUriEntry = {
             uri,
             time: Date.now(),
             serverId,
             displayName,
             isValidated: true,
-            provider: idAndHandle
+            provider: jupyterHandle
         };
 
         // Remove this uri if already found (going to add again with a new time)

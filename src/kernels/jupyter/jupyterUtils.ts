@@ -148,9 +148,7 @@ export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterS
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
-        const urlSafeForLogging = getSafeUrlForLogging(uri);
-        traceError('Failed to parse remote URI', urlSafeForLogging, ex);
-        throw new Error(`'Failed to parse remote URI ${urlSafeForLogging}`);
+        throw new Error(`'Failed to parse remote URI ${getSafeUrlForLogging(uri)}`);
     }
 }
 
