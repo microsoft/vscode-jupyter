@@ -4,7 +4,7 @@
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { inject, injectable, named } from 'inversify';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
-import { Settings } from '../../../platform/common/constants';
+import { Identifiers, Settings } from '../../../platform/common/constants';
 import {
     IMemento,
     GLOBAL_MEMENTO,
@@ -351,7 +351,9 @@ class OldStorage {
                         provider: idAndHandle
                     });
                 } catch (ex) {
-                    traceError(`Failed to parse stored Uri information`, ex);
+                    if (uri.startsWith(Identifiers.REMOTE_URI)) {
+                        traceError(`Failed to parse stored Uri information`, ex);
+                    }
                 }
             })
         );
