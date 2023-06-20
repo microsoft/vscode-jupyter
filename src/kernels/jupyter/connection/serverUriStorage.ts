@@ -179,7 +179,7 @@ class OldStorage {
 
     public async add(item: IJupyterServerUriEntry) {
         traceInfoIfCI(`setUri: ${item.provider.id}.${item.provider.handle}`);
-        await this.addToUriList(item.provider, item.serverId, item.displayName || '');
+        await this.addToUriList(item.provider, item.serverId, item.displayName || '', item.time);
     }
     public async update(serverId: string) {
         const uriList = await this.getAll();
@@ -189,7 +189,12 @@ class OldStorage {
             throw new Error(`Uri not found for Server Id ${serverId}`);
         }
 
-        await this.addToUriList(existingEntry.provider, existingEntry.serverId, existingEntry.displayName || '');
+        await this.addToUriList(
+            existingEntry.provider,
+            existingEntry.serverId,
+            existingEntry.displayName || '',
+            Date.now()
+        );
     }
     public async remove(serverId: string) {
         const uriList = await this.getAll();
@@ -207,7 +212,8 @@ class OldStorage {
     private async addToUriList(
         jupyterHandle: { id: string; handle: JupyterServerUriHandle },
         serverId: string,
-        displayName: string
+        displayName: string,
+        time: number
     ) {
         const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
         const uriList = await this.getAll();
@@ -216,7 +222,7 @@ class OldStorage {
         displayName = uriList.find((entry) => entry.serverId === serverId)?.displayName || displayName || uri;
         const entry: IJupyterServerUriEntry = {
             uri,
-            time: Date.now(),
+            time,
             serverId,
             displayName,
             isValidated: true,

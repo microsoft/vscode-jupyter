@@ -250,6 +250,27 @@ suite('Server Uri Storage', async () => {
                 assert.equal(onDidAddEvent.count, 1, 'Event should be fired once');
                 assert.equal(onDidChangeEvent.count, 1, 'Event should be fired once');
             });
+            test('Add new entry with time and display name', async () => {
+                generateDummyData(2, true);
+                when(fs.exists(anything())).thenResolve(true);
+                when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
+                when(jupyterPickerRegistration.getJupyterServerUri('NewId1', 'NewHandle1')).thenResolve(<
+                    IJupyterServerUri
+                >{
+                    baseUrl: 'http://localhost:9090',
+                    displayName: 'NewDisplayName1',
+                    token: 'NewToken1'
+                });
+
+                await serverUriStorage.add(
+                    { handle: 'NewHandle1', id: 'NewId1' },
+                    { time: 1234, displayName: 'Sample Name' }
+                );
+                const all = await serverUriStorage.getAll();
+
+                verify(fs.writeFile(anything(), anything())).once();
+                assert.strictEqual(all.find((a) => a.displayName === 'Sample Name')?.time, 1234, 'Incorrect time');
+            });
             test('Add three new entries', async () => {
                 const itemsInNewStorage = generateDummyData(2, true);
                 when(fs.exists(anything())).thenResolve(true);
