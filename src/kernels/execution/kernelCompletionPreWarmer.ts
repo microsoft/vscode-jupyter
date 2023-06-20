@@ -6,7 +6,8 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { isPythonKernelConnection } from '../helpers';
-import { IKernelSession, IKernelProvider } from '../types';
+import { IKernelProvider } from '../types';
+import type { Kernel } from '@jupyterlab/services';
 
 @injectable()
 export class KernelCompletionsPreWarmer implements IExtensionSyncActivationService {
@@ -17,8 +18,8 @@ export class KernelCompletionsPreWarmer implements IExtensionSyncActivationServi
     activate(): void {
         this.kernelProvider.onDidStartKernel(
             (kernel) => {
-                if (kernel.session && isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
-                    this.requestEmptyCompletions(kernel.session);
+                if (kernel.session?.kernel && isPythonKernelConnection(kernel.kernelConnectionMetadata)) {
+                    this.requestEmptyCompletions(kernel.session.kernel);
                 }
             },
             this,
@@ -31,8 +32,8 @@ export class KernelCompletionsPreWarmer implements IExtensionSyncActivationServi
      * Hence we end up waiting indefinitely.
      * https://github.com/microsoft/vscode-jupyter/issues/9014
      */
-    private requestEmptyCompletions(session: IKernelSession) {
-        session
+    private requestEmptyCompletions(kernel: Kernel.IKernelConnection) {
+        kernel
             ?.requestComplete({
                 code: '__file__.',
                 cursor_pos: 9

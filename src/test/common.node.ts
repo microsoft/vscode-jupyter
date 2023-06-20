@@ -16,7 +16,7 @@ import { generateScreenShotFileName, initializeCommonApi } from './common';
 import { IDisposable } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
-import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
+import type { ConfigurationTarget, TextDocument, Uri } from 'vscode';
 
 export { createEventHandler } from './common';
 
@@ -111,8 +111,6 @@ async function setPythonPathInWorkspace(
         if (config === vscode.ConfigurationTarget.Global) {
             await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         }
-    } else {
-        console.log(`No need to update Interpreter path, as it is ${value[prop]} in workspace`);
     }
 }
 /**
@@ -204,6 +202,7 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     }
 }
 
+let remoteUrisCleared = false;
 export function initializeCommonNodeApi() {
     const { commands, Uri } = require('vscode');
     const { initialize } = require('./initialize.node');
@@ -220,23 +219,42 @@ export function initializeCommonNodeApi() {
             }
             return { file: Uri.file(tempFile), dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) };
         },
-        async startJupyterServer(_notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
+        async startJupyterServer(
+            options: {
+                token?: string;
+                port?: number;
+                useCert?: boolean;
+                jupyterLab?: boolean;
+                password?: string;
+                detached?: boolean;
+                standalone?: boolean;
+            } = {}
+        ): Promise<{ url: string } & IDisposable> {
             if (IS_REMOTE_NATIVE_TEST()) {
-                const uriString = useCert
+                if (options.standalone) {
+                    return JupyterServer.instance.startJupyter(options);
+                }
+                if (!remoteUrisCleared) {
+                    await commands.executeCommand('jupyter.clearSavedJupyterUris');
+                    remoteUrisCleared = true;
+                }
+                const url = options.useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithToken();
-                console.info(`Jupyter started and listening at ${uriString}`);
+                console.info(`Jupyter started and listening at ${url}`);
                 try {
-                    await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(uriString));
+                    await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(url));
                 } catch (ex) {
                     console.error('Failed to select jupyter server, retry in 1s', ex);
                 }
                 // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
                 // Possible we're trying to connect before the server is ready.
                 await sleep(5_000);
-                await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(uriString));
+                await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(url));
+                return { url, dispose: noop };
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default
+                return { url: '', dispose: noop };
             }
         },
         async stopJupyterServer() {

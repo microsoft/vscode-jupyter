@@ -15,13 +15,12 @@ import {
     KernelInterpreterDependencyResponse
 } from './kernels/types';
 // eslint-disable-next-line
-import { IExportedKernelService } from './standalone/api/extension';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
 import { IExtensionApi } from './standalone/api/api';
-import { IJupyterServerUri } from './kernels/jupyter/types';
+import { IExportedKernelService, IJupyterServerUri } from './api';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -1772,25 +1771,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Jupyter URI was valid and set to a remote setting.
-     */
-    [Telemetry.SetJupyterURIToUserSpecified]: TelemetryEventInfo<{
-        /**
-         * Was the URI set to an Azure uri.
-         */
-        azure: boolean;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['KernelPicker'],
-        source: 'N/A',
-        properties: {
-            azure: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.
      */
     [Telemetry.ShiftEnterBannerShown]: TelemetryEventInfo<never | undefined> = {
@@ -2137,25 +2117,6 @@ export class IEventNamePropertyMapping {
                 isMeasurement: true
             }
         }
-    };
-    /**
-     * Sent to measure the time taken to wait for a Jupyter kernel to be idle.
-     */
-    [Telemetry.WaitForIdleJupyter]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * We started up a webview.
-     */
-    [Telemetry.WebviewStartup]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
     };
     /**
      * Sent to measure the time taken to register an interpreter as a Jupyter kernel.

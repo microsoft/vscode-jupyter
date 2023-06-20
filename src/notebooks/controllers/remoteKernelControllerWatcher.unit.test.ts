@@ -7,9 +7,8 @@ import { EventEmitter } from 'vscode';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
-    IJupyterUriProvider,
-    IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
+    IInternalJupyterUriProvider,
+    IJupyterUriProviderRegistration
 } from '../../kernels/jupyter/types';
 import {
     IJupyterKernelSpec,
@@ -23,6 +22,7 @@ import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { waitForCondition } from '../../test/common';
+import { JupyterServerUriHandle } from '../../api';
 
 suite('RemoteKernelControllerWatcher', () => {
     let watcher: RemoteKernelControllerWatcher;
@@ -57,19 +57,19 @@ suite('RemoteKernelControllerWatcher', () => {
         const serverId = await computeServerId(remoteUriForProvider1);
 
         let onDidChangeHandles: undefined | (() => Promise<void>);
-        const provider1 = mock<IJupyterUriProvider>();
+        const provider1 = mock<IInternalJupyterUriProvider>();
         when(provider1.id).thenReturn(provider1Id);
         when(provider1.getHandles!()).thenResolve([provider1Handle1]);
         when(provider1.onDidChangeHandles).thenReturn(
             (cb: Function, ctx: Object) => (onDidChangeHandles = cb.bind(ctx))
         );
 
-        const provider2 = mock<IJupyterUriProvider>();
+        const provider2 = mock<IInternalJupyterUriProvider>();
         when(provider2.id).thenReturn('provider2');
         when(provider2.getHandles).thenReturn(undefined);
         when(provider2.onDidChangeHandles).thenReturn(undefined);
 
-        const provider3 = mock<IJupyterUriProvider>();
+        const provider3 = mock<IInternalJupyterUriProvider>();
         let onDidChangeHandles3: undefined | (() => Promise<void>);
         when(provider3.id).thenReturn('provider3');
         when(provider3.getHandles!()).thenResolve(['provider3Handle1']);
@@ -77,7 +77,7 @@ suite('RemoteKernelControllerWatcher', () => {
             (cb: Function, ctx: Object) => (onDidChangeHandles3 = cb.bind(ctx))
         );
 
-        when(uriProviderRegistration.getProviders()).thenResolve([
+        when(uriProviderRegistration.providers).thenReturn([
             instance(provider1),
             instance(provider2),
             instance(provider3)

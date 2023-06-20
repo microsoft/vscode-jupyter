@@ -970,16 +970,6 @@
      ]
    }
  */
-//Telemetry.SetJupyterURIToUserSpecified
-/* __GDPR__
-   "DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED" : {
-     "azure": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the URI set to an Azure uri.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.ShowDataViewer
 /* __GDPR__
    "DATASCIENCE.SHOW_DATA_EXPLORER" : {
@@ -1945,24 +1935,6 @@
 /* __GDPR__
    "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED" : {
      "outputType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Type of the output received from the Jupyter kernel. This is required to identify output types that we're not mapping correctly.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.WaitForIdleJupyter
-/* __GDPR__
-   "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.WebviewStartup
-/* __GDPR__
-   "DS_INTERNAL.WEBVIEW_STARTUP" : {
      "${include}": [
        "${F1}"
 

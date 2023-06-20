@@ -35,9 +35,10 @@ import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { KernelConnector } from './kernelConnector';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { IConnectionDisplayDataProvider } from './types';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
 
 suite(`Notebook Controller`, function () {
     let controller: NotebookController;
@@ -67,7 +68,7 @@ suite(`Notebook Controller`, function () {
     let clock: fakeTimers.InstalledClock;
     let jupyterSettings: IWatchableJupyterSettings;
     let trustedPaths: ITrustedKernelPaths;
-    let displayDataProvider: ConnectionDisplayDataProvider;
+    let displayDataProvider: IConnectionDisplayDataProvider;
     let interpreterService: IInterpreterService;
     setup(async function () {
         kernelConnection = mock<KernelConnectionMetadata>();

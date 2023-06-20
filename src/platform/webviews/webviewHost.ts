@@ -11,15 +11,13 @@ import {
     WorkspaceConfiguration
 } from 'vscode';
 import { IWebview, IWorkspaceService } from '../common/application/types';
-import { DefaultTheme, PythonExtension, Telemetry } from '../common/constants';
+import { DefaultTheme, PythonExtension } from '../common/constants';
 import { traceInfo } from '../logging';
 import { Resource, IConfigurationService, IDisposable } from '../common/types';
 import { Deferred, createDeferred } from '../common/utils/async';
 import { testOnlyMethod } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
-import { StopWatch } from '../common/utils/stopWatch';
 import { InteractiveWindowMessages, LocalizedMessages, SharedMessages } from '../../messageTypes';
-import { sendTelemetryEvent } from '../../telemetry';
 import { IJupyterExtraSettings } from './types';
 import { getOSType, OSType } from '../common/utils/platform';
 import { noop } from '../common/utils/misc';
@@ -39,7 +37,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     protected webviewInit: Deferred<void> | undefined = createDeferred<void>();
 
     protected readonly _disposables: IDisposable[] = [];
-    private startupStopwatch = new StopWatch();
 
     // For testing, holds the current request for webview HTML
     private activeHTMLRequest?: Deferred<string>;
@@ -288,9 +285,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
-            // Send telemetry for startup
-            sendTelemetryEvent(Telemetry.WebviewStartup, { duration: this.startupStopwatch.elapsedTime });
-
             // Resolve our started promise. This means the webpanel is ready to go.
             this.webviewInit.resolve();
 

@@ -6,21 +6,26 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
-import { IKernel } from '../../../kernels/types';
+import { IKernel, IKernelSession } from '../../../kernels/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as helpers from '../../../kernels/helpers';
 import * as sinon from 'sinon';
 import { kernelGetPandasVersion } from './kernelDataViewerDependencyImplementation';
 import { pandasMinimumVersionSupportedByVariableViewer } from './constants';
+import { Kernel } from '@jupyterlab/services';
 
 suite('DataViewerDependencyService (IKernel, Web)', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
     let kernel: IKernel;
+    let session: IKernelSession;
 
     setup(async () => {
         appShell = mock(ApplicationShell);
-        kernel = instance(mock<IKernel>());
+        session = mock<IKernelSession>();
+        when(session.kernel).thenReturn(instance(mock<Kernel.IKernelConnection>()));
+        kernel = mock<IKernel>();
+        when(kernel.session).thenReturn(instance(session));
         dependencyService = new DataViewerDependencyService(instance(appShell), false);
     });
 
@@ -29,10 +34,9 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
     });
 
     test('What if there are no kernel sessions?', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernel.session as any) = undefined;
+        when(kernel.session).thenReturn(undefined);
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
 
         await assert.isRejected(
             resultPromise,
@@ -43,11 +47,10 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
 
     test('All ok, if pandas is installed and version is > 1.20', async () => {
         const version = '3.3.3';
-
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
 
-        const result = await dependencyService.checkAndInstallMissingDependencies(kernel);
+        const result = await dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         assert.equal(result, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
@@ -61,7 +64,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
 
-        const result = await dependencyService.checkAndInstallMissingDependencies(kernel);
+        const result = await dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         assert.equal(result, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
@@ -75,7 +78,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         await assert.isRejected(
             resultPromise,
             DataScience.pandasTooOldForViewingFormat('0.20.', pandasMinimumVersionSupportedByVariableViewer),
@@ -93,7 +96,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         await assert.isRejected(
             resultPromise,
             DataScience.pandasTooOldForViewingFormat('0.10.', pandasMinimumVersionSupportedByVariableViewer),
@@ -112,7 +115,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install as any);
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         assert.equal(await resultPromise, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
@@ -126,7 +129,7 @@ suite('DataViewerDependencyService (IKernel, Web)', () => {
 
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(instance(kernel));
         await assert.isRejected(
             resultPromise,
             DataScience.pandasRequiredForViewing(pandasMinimumVersionSupportedByVariableViewer)

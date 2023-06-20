@@ -10,7 +10,14 @@ import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
+import {
+    IExtensions,
+    IDisposableRegistry,
+    Resource,
+    IExtensionContext,
+    IExperimentService,
+    Experiments
+} from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
@@ -20,7 +27,7 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import { KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
+import { Environment, KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
@@ -52,7 +59,7 @@ export function deserializePythonEnvironment(
         return result;
     }
 }
-export function pythonEnvToJupyterEnv(
+export function resolvedPythonEnvToJupyterEnv(
     env: ResolvedEnvironment,
     supportsEmptyCondaEnv: boolean
 ): PythonEnvironment | undefined {
@@ -123,6 +130,74 @@ export function pythonEnvToJupyterEnv(
             : undefined
     };
 }
+export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: boolean): PythonEnvironment | undefined {
+    const envTools = env.tools as KnownEnvironmentTools[];
+    // Map the Python env tool to a Jupyter environment type.
+    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
+        ['Conda', EnvironmentType.Conda],
+        ['Pyenv', EnvironmentType.Pyenv],
+        ['Pipenv', EnvironmentType.Pipenv],
+        ['Poetry', EnvironmentType.Poetry],
+        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
+        ['VirtualEnv', EnvironmentType.VirtualEnv],
+        ['Venv', EnvironmentType.Venv]
+    ];
+    let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
+    if (env.environment?.type === 'Conda') {
+        envType = EnvironmentType.Conda;
+    } else {
+        for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
+            if (envTools.includes(pythonEnvTool)) {
+                envType = JupyterEnv;
+                break;
+            }
+        }
+        if (envType === EnvironmentType.Unknown && env.environment?.type === 'VirtualEnvironment') {
+            envType = EnvironmentType.VirtualEnv;
+        }
+    }
+    let isCondaEnvWithoutPython = false;
+    let uri: Uri;
+    let id = env.id;
+    let sysPrefix = env.executable.sysPrefix;
+    if (!env.executable.uri) {
+        if (envType === EnvironmentType.Conda && supportsEmptyCondaEnv) {
+            isCondaEnvWithoutPython = true;
+            // sysprefix is the same as the env path.
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            sysPrefix = sysPrefix || env.environment?.folderUri?.fsPath || '';
+            uri =
+                getOSType() === OSType.Windows
+                    ? Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'python.exe')
+                    : Uri.joinPath(env.environment?.folderUri || Uri.file(env.path), 'bin', 'python');
+        } else {
+            traceWarning(`Python environment ${getDisplayPath(env.id)} excluded as Uri is undefined`);
+            return;
+        }
+    } else {
+        uri = env.executable.uri;
+    }
+
+    return {
+        id,
+        sysPrefix: sysPrefix || '',
+        envPath: env.environment?.folderUri,
+        displayPath: env.environment?.folderUri || Uri.file(env.path),
+        envName: env.environment?.name || '',
+        uri,
+        displayName: env.environment?.name || '',
+        envType,
+        isCondaEnvWithoutPython,
+        version: env.version
+            ? {
+                  major: env.version.major || 0,
+                  minor: env.version.minor || 0,
+                  patch: env.version.micro || 0,
+                  raw: env.version.sysVersion || ''
+              }
+            : undefined
+    };
+}
 
 export function serializePythonEnvironment(
     jupyterVersion: PythonEnvironment | undefined
@@ -141,7 +216,7 @@ export function serializePythonEnvironment(
 
 /* eslint-disable max-classes-per-file */
 @injectable()
-export class PythonApiProvider implements IPythonApiProvider {
+export class OldPythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
     private readonly didActivatePython = new EventEmitter<void>();
     private readonly _pythonExtensionHooked = createDeferred<void>();
@@ -400,7 +475,8 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -530,7 +606,7 @@ export class InterpreterService implements IInterpreterService {
             traceInfoIfCI(`Active Environment Path for ${getDisplayPath(resource)} is ${JSON.stringify(envPath)}`);
             const env = await api.environments.resolveEnvironment(envPath);
             traceInfoIfCI(`Resolved Active Environment for ${getDisplayPath(resource)} is ${JSON.stringify(env)}`);
-            return this.trackResolvedEnvironment(env, false);
+            return this.trackResolvedEnvironment(env);
         });
 
         // If there was a problem in getting the details, remove the cached info.
@@ -604,7 +680,7 @@ export class InterpreterService implements IInterpreterService {
                     : getDisplayPath(Uri.file(pythonPath.path));
                 if (matchedPythonEnv) {
                     const env = await api.environments.resolveEnvironment(matchedPythonEnv);
-                    const resolved = this.trackResolvedEnvironment(env, false);
+                    const resolved = this.trackResolvedEnvironment(env);
                     traceInfoIfCI(
                         `Interpreter details for ${pythonPathForLogging} from Python is ${JSON.stringify(
                             env
@@ -627,7 +703,7 @@ export class InterpreterService implements IInterpreterService {
                     // eslint-disable-next-line local-rules/dont-use-fspath
                     isUri(pythonPath) ? pythonPath.fsPath : typeof pythonPath == 'string' ? pythonPath : pythonPath.path
                 );
-                return this.trackResolvedEnvironment(env, false);
+                return this.trackResolvedEnvironment(env);
             });
         } catch (ex) {
             traceWarning(
@@ -642,24 +718,12 @@ export class InterpreterService implements IInterpreterService {
             return undefined;
         }
     }
-    /**
-     * The Python Extension triggers changes to the Python environments.
-     * However internally we need to track changes to the environments as we wrap the Python extension API and the Python extension API only returns partial information.
-     * Some times what happens is
-     * - When we call get active interpreter we get some information from Python extension
-     * - We then come into this method and see the information has changed and we internally trigger a change event so other parts are aware of this
-     * - Next we call the Python extension API again, and the information is different yet again
-     * - We then trigger another change event
-     * - This goes on and on, basically the Python extension API returns different information for the same env.
-     *
-     * The argument `triggerChangeEvent` is more of a fail safe to ensure we don't end up in such infinite loops.
-     */
-    private trackResolvedEnvironment(env: ResolvedEnvironment | undefined, triggerChangeEvent: boolean) {
+    private trackResolvedEnvironment(env: ResolvedEnvironment | undefined) {
         if (env) {
             const displayEmptyCondaEnv =
                 this.apiProvider.pythonExtensionVersion &&
                 this.apiProvider.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
-            const resolved = pythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
+            const resolved = resolvedPythonEnvToJupyterEnv(env, displayEmptyCondaEnv ? true : false);
             if (!resolved) {
                 return;
             }
@@ -679,9 +743,7 @@ export class InterpreterService implements IInterpreterService {
                     Object.assign(info.resolved, resolved);
                 }
                 this._interpreters.set(env.id, { resolved });
-                if (triggerChangeEvent) {
-                    this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
-                }
+                this.triggerEventIfAllowed('interpretersChangeEvent', resolved);
             }
             return resolved;
         }
@@ -770,29 +832,31 @@ export class InterpreterService implements IInterpreterService {
             }
             let previousListOfInterpreters = api.environments.known.length;
             try {
-                const apiResolveTime = stopWatch.elapsedTime;
-                await api.environments.refreshEnvironments();
-                if (cancelToken.isCancellationRequested) {
-                    return;
+                if (!this.experiments.inExperiment(Experiments.FastKernelPicker)) {
+                    const apiResolveTime = stopWatch.elapsedTime;
+                    await api.environments.refreshEnvironments();
+                    if (cancelToken.isCancellationRequested) {
+                        return;
+                    }
+                    const totalTime = stopWatch.elapsedTime;
+                    traceVerbose(
+                        `Full interpreter list after refreshing (total ${totalTime}ms, resolve ${apiResolveTime}ms, refresh ${
+                            totalTime - apiResolveTime
+                        }ms) is length: ${api.environments.known.length}, ${api.environments.known
+                            .map(
+                                (item) =>
+                                    `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
+                                        item.executable.uri
+                                    )}:${item.path}`
+                            )
+                            .join(', ')}`
+                    );
                 }
-                const totalTime = stopWatch.elapsedTime;
-                traceVerbose(
-                    `Full interpreter list after refreshing (total ${totalTime}ms, resolve ${apiResolveTime}ms, refresh ${
-                        totalTime - apiResolveTime
-                    }ms) is length: ${api.environments.known.length}, ${api.environments.known
-                        .map(
-                            (item) =>
-                                `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
-                                    item.executable.uri
-                                )}:${item.path}`
-                        )
-                        .join(', ')}`
-                );
                 await Promise.all(
                     api.environments.known.map(async (item) => {
                         try {
                             const env = await api.environments.resolveEnvironment(item);
-                            const resolved = this.trackResolvedEnvironment(env, true);
+                            const resolved = this.trackResolvedEnvironment(env);
                             traceInfoIfCI(
                                 `Python environment for ${item.id} is ${
                                     env?.id

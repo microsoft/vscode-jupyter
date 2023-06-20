@@ -6,7 +6,6 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
-import { IJupyterServerUri, JupyterServerUriHandle } from './types';
 import { getJupyterConnectionDisplayName } from './helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
@@ -15,6 +14,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
 import { traceError } from '../../platform/logging';
+import { IJupyterServerUri, JupyterServerUriHandle } from '../../api';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -148,7 +148,22 @@ export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterS
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
-        traceError('Failed to parse remote URI', uri, ex);
-        throw new Error(`'Failed to parse remote URI ${uri}`);
+        const urlSafeForLogging = getSafeUrlForLogging(uri);
+        traceError('Failed to parse remote URI', urlSafeForLogging, ex);
+        throw new Error(`'Failed to parse remote URI ${urlSafeForLogging}`);
+    }
+}
+
+function getSafeUrlForLogging(uri: string) {
+    if ((uri || '').trim().toLowerCase().startsWith(Identifiers.REMOTE_URI.toLowerCase())) {
+        return uri;
+    } else {
+        try {
+            const url: URL = new URL(uri);
+            const isLocalHost = url.hostname.toLocaleLowerCase() === 'localhost' || url.hostname === '127.0.0.1';
+            return `${url.protocol}://${isLocalHost ? url.hostname : '<REMOTE SERVER>'}:${url.port}`;
+        } catch {
+            return uri;
+        }
     }
 }

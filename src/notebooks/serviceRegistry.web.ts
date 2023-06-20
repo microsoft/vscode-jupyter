@@ -40,7 +40,6 @@ import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { CellOutputMimeTypeTracker } from './outputs/jupyterCellOutputMimeTypeTracker';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
-import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 import { INotebookEditorProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
@@ -62,10 +61,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         RemoteKernelConnectionHandler
     );
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        InterpreterPackageTracker
-    );
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
     serviceManager.addBinding(NotebookCellLanguageService, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

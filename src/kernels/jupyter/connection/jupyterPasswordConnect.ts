@@ -25,7 +25,8 @@ import { Deferred, createDeferred } from '../../../platform/common/utils/async';
  */
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
-    private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo | undefined>>();
+    // Public for testing purposes, to be cleared.
+    public savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo | undefined>>();
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,

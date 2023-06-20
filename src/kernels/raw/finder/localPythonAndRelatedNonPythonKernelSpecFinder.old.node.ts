@@ -3,12 +3,8 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
-import { getKernelRegistrationInfo } from '../../../kernels/helpers';
-import {
-    isLocalConnection,
-    LocalKernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata
-} from '../../../kernels/types';
+import { getKernelRegistrationInfo } from '../../helpers';
+import { isLocalConnection, LocalKernelConnectionMetadata, LocalKernelSpecConnectionMetadata } from '../../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
@@ -41,7 +37,7 @@ type InterpreterId = string;
  *     - This will return any non-python kernels that are registered in Python environments (e.g. Java kernels within a conda environment)
  */
 @injectable()
-export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelSpecFinderBase<LocalKernelConnectionMetadata> {
+export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelSpecFinderBase<LocalKernelConnectionMetadata> {
     /**
      * List of all kernels.
      * When opening a new instance of VS Code we load the cache from previous session,
@@ -300,7 +296,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     this.interpreterKernelSpecs.set(interpreter.id, finder);
                 }
                 const kernels = await raceCancellation(cancelToken, [], finder.listKernelSpecs(forceRefresh));
-                traceVerbose(`Kernels for interpreter ${interpreter.id} are ${kernels.map((k) => k.id).join(', ')}`);
                 await this.appendNewKernels(kernels);
             })
         );

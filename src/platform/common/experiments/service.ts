@@ -80,13 +80,24 @@ export class ExperimentService implements IExperimentService {
         if (this.experimentationService && this.enabled) {
             traceVerbose(`Experimentation service retrieved: ${this.experimentationService}`);
             await this.experimentationService.initializePromise;
+            if (this.getFeatures().length === 0) {
+                // Only await on this if we don't have anything in cache.
+                // This means that we start the session with partial experiment info.
+                // We accept this as a compromise to avoid delaying startup.
+
+                // In the case where we don't wait on this promise. If the experiment info changes,
+                // those changes will be applied in the next session. This is controlled internally
+                // in the tas-client via `overrideInMemoryFeatures` value that is passed to
+                // `getFeaturesAsync`. At the time of writing this comment the value of
+                // `overrideInMemoryFeatures` was always passed in as `false`. So, the experiment
+                // states did not change mid way.
+                await this.experimentationService.initialFetch;
+            }
+
             this.logExperiments();
         }
     }
-    public async inExperiment(experiment: ExperimentGroups): Promise<boolean> {
-        return this.inExperimentSync(experiment);
-    }
-    public inExperimentSync(experiment: ExperimentGroups): boolean {
+    public inExperiment(experiment: ExperimentGroups): boolean {
         if (!this.experimentationService || !this.enabled) {
             return false;
         }
@@ -102,6 +113,13 @@ export class ExperimentService implements IExperimentService {
             // this to ensure the experiment service is ready and internal states are fully
             // synced with the experiment server.
             this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment as unknown as string);
+            return true;
+        }
+        // In insiders some of the experiments are enabled by default.
+        if (
+            this.appEnvironment.channel === 'insiders' &&
+            [ExperimentGroups.FastKernelPicker, ExperimentGroups.PasswordManager].includes(experiment)
+        ) {
             return true;
         }
         // If getTreatmentVariable returns undefined,
@@ -126,6 +144,9 @@ export class ExperimentService implements IExperimentService {
         }
 
         return this.experimentationService.getTreatmentVariable<T>(EXP_CONFIG_ID, experiment as unknown as string);
+    }
+    private getFeatures() {
+        return this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] }).features;
     }
     private logExperiments() {
         const telemetrySettings = this.workspace.getConfiguration('telemetry');
@@ -176,7 +197,7 @@ export class ExperimentService implements IExperimentService {
 
         if (!experimentsDisabled) {
             // Log experiments that users are added to by the exp framework
-            this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] }).features.forEach((exp) => {
+            this.getFeatures().forEach((exp) => {
                 // Filter out experiment groups that are not from the Python extension.
                 // Filter out experiment groups that are not already opted out or opted into.
                 if (
@@ -187,6 +208,15 @@ export class ExperimentService implements IExperimentService {
                     traceInfo(Experiments.inGroup(exp));
                 }
             });
+            // In insiders some of the experiments are enabled by default.
+            if (this.appEnvironment.channel === 'insiders') {
+                if (this.inExperiment(ExperimentGroups.FastKernelPicker)) {
+                    traceInfo(Experiments.inGroup(ExperimentGroups.FastKernelPicker));
+                }
+                if (this.inExperiment(ExperimentGroups.PasswordManager)) {
+                    traceInfo(Experiments.inGroup(ExperimentGroups.PasswordManager));
+                }
+            }
         }
     }
 }

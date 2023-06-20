@@ -7,7 +7,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import type { Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
-import { Uri, QuickPickItem } from 'vscode';
+import { Uri } from 'vscode';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 import { IAsyncDisposable, ICell, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
@@ -25,6 +25,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../api';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -154,86 +155,29 @@ export interface IJupyterServerProvider {
     getOrStartServer(options: GetServerOptions): Promise<IJupyterConnection>;
 }
 
-export interface IJupyterServerUri {
-    baseUrl: string;
-    /**
-     * Jupyter auth Token
-     */
-    token: string;
-    /**
-     * Authorization header to be used when connecting to the server.
-     */
-    authorizationHeader?: Record<string, string>;
-    displayName: string;
-    /**
-     * The local directory that maps to the remote directory of the Jupyter Server.
-     * E.g. assume you start Jupyter Notebook with --notebook-dir=/foo/bar,
-     * and you have a file named /foo/bar/sample.ipynb, /foo/bar/sample2.ipynb and the like.
-     * Then assume the mapped local directory will be /users/xyz/remoteServer and the files sample.ipynb and sample2.ipynb
-     * are in the above local directory.
-     *
-     * Using this setting one can map the local directory to the remote directory.
-     * In this case the value of this property would be /users/xyz/remoteServer.
-     *
-     * Note: A side effect of providing this value is the fact that Session names are generated the way they are in Jupyter Notebook/Lab.
-     * I.e. the session names map to the relative path of the notebook file.
-     * As a result when attempting to create a new session for a notebook/file, Jupyter will
-     * first check if a session already exists for the same file and same kernel, and if so, will re-use that session.
-     */
-    mappedRemoteNotebookDir?: string;
-    /**
-     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
-     */
-    webSocketProtocols?: string[];
+export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
+    readonly extensionId: string;
 }
-
-export type JupyterServerUriHandle = string;
-
-export interface IJupyterUriProvider {
+export type JupyterServerProviderHandle = {
+    extensionId: string;
     /**
-     * Should be a unique string (like a guid)
+     * Jupyter Server Provider Id.
      */
-    readonly id: string;
-    readonly displayName?: string;
-    readonly detail?: string;
-    onDidChangeHandles?: Event<void>;
-    getQuickPickEntryItems?():
-        | Promise<
-              (QuickPickItem & {
-                  /**
-                   * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
-                   */
-                  default?: boolean;
-              })[]
-          >
-        | (QuickPickItem & {
-              /**
-               * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
-               */
-              default?: boolean;
-          })[];
-    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    id: string;
     /**
-     * Given the handle, returns the Jupyter Server information.
+     * Jupyter Server handle, unique for each server.
      */
-    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
-    /**
-     * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
-     */
-    getHandles?(): Promise<JupyterServerUriHandle[]>;
-    /**
-     * Users request to remove a handle.
-     */
-    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
-}
+    handle: string;
+};
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
-    getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
-    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
-    registerProvider(picker: IJupyterUriProvider): IDisposable;
+    readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
+    getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>>;
+    getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
+    registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 

@@ -35,16 +35,14 @@ import {
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../test/core';
-import {
-    IConnectionDisplayData,
-    ConnectionDisplayDataProvider,
-    getKernelConnectionCategorySync
-} from '../connectionDisplayData';
-import { CreateAndSelectItemFromQuickPick, isKernelPickItem, KernelSelector } from './kernelSelector';
+import { getKernelConnectionCategorySync } from '../connectionDisplayData';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider } from './types';
+import { IConnectionDisplayData, IConnectionDisplayDataProvider } from '../types';
+import { CreateAndSelectItemFromQuickPick, isKernelPickItem } from './baseKernelSelector';
+import { LocalKernelSelector } from './localKernelSelector.node';
 
-suite('Kernel Selector', () => {
-    let kernelSelector: KernelSelector;
+suite('Local Kernel Selector', () => {
+    let kernelSelector: LocalKernelSelector;
     let clock: fakeTimers.InstalledClock;
     let onDidChangeProvider: EventEmitter<void>;
     let onDidChangeProviderStatus: EventEmitter<void>;
@@ -54,7 +52,7 @@ suite('Kernel Selector', () => {
     let cancellation: CancellationTokenSource;
     let notebook: NotebookDocument;
     let workspaceService: IWorkspaceService;
-    let displayDataProvider: ConnectionDisplayDataProvider;
+    let displayDataProvider: IConnectionDisplayDataProvider;
     let pythonChecker: IPythonExtensionChecker;
     let provider: ReadWrite<IQuickPickKernelItemProvider>;
     let kernelFinder: IContributedKernelFinder<KernelConnectionMetadata>;
@@ -170,7 +168,7 @@ suite('Kernel Selector', () => {
         notebook = mock<NotebookDocument>();
         pythonChecker = mock<IPythonExtensionChecker>();
         kernelFinder = mock<IContributedKernelFinder<KernelConnectionMetadata>>();
-        displayDataProvider = mock<ConnectionDisplayDataProvider>();
+        displayDataProvider = mock<IConnectionDisplayDataProvider>();
         workspaceService = mock<IWorkspaceService>();
         onDidChangeProvider = new EventEmitter<void>();
         onDidChangeProviderStatus = new EventEmitter<void>();
@@ -219,7 +217,7 @@ suite('Kernel Selector', () => {
             recommended: undefined
         };
         when(workspaceService.isTrusted).thenReturn(true);
-        when(serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)).thenReturn(
+        when(serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)).thenReturn(
             instance(displayDataProvider)
         );
         when(serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker)).thenReturn(
@@ -251,7 +249,7 @@ suite('Kernel Selector', () => {
             };
         };
 
-        kernelSelector = new KernelSelector(
+        kernelSelector = new LocalKernelSelector(
             instance(workspaceService),
             instance(notebook),
             provider,

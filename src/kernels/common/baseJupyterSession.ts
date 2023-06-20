@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
-import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
@@ -19,14 +18,12 @@ import { WrappedError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { createDeferred, raceTimeout, raceTimeoutError } from '../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
-import { KernelInterruptTimeoutError } from '../errors/kernelInterruptTimeoutError';
-import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import {
     IJupyterKernelSession,
     ISessionWithSocket,
@@ -34,7 +31,6 @@ import {
     KernelSocketInformation,
     IBaseKernelSession
 } from '../types';
-import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { isTestExecution } from '../../platform/common/constants';
@@ -147,15 +143,13 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     private _session: ISessionWithSocket | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private unhandledMessageHandler: Slot<ISessionWithSocket, KernelMessage.IMessage>;
-    private chainingExecute = new ChainingExecuteRequester();
     private previousAnyMessageHandler?: IDisposable;
 
     constructor(
         public readonly kind: T,
         protected resource: Resource,
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
-        public workingDirectory: Uri,
-        private readonly interruptTimeout: number
+        public workingDirectory: Uri
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.unhandledMessageHandler = (_s, m) => {
@@ -168,42 +162,16 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     public async dispose(): Promise<void> {
         await this.shutdownImplementation(false);
     }
-    // Abstracts for each Session type to implement
-    public abstract waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
+    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
+        if (this.session) {
+            return this.waitForIdleOnSession(this.session, timeout, token);
+        }
+    }
 
     public async shutdown(): Promise<void> {
         await this.shutdownImplementation(true);
     }
-    public async interrupt(): Promise<void> {
-        if (this.session && this.session.kernel) {
-            traceInfo(`Interrupting kernel: ${this.session.kernel.name}`);
 
-            await raceTimeoutError(
-                this.interruptTimeout,
-                new KernelInterruptTimeoutError(this.kernelConnectionMetadata),
-                this.session.kernel.interrupt()
-            );
-        }
-    }
-    public async requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined> {
-        if (!this.session) {
-            throw new Error('Cannot request KernelInfo, Session not initialized.');
-        }
-        if (this.session.kernel?.info) {
-            const content = await this.session.kernel.info;
-            const infoMsg: KernelMessage.IInfoReplyMsg = {
-                content,
-                channel: 'shell',
-                metadata: {},
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                parent_header: {} as any,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                header: {} as any
-            };
-            return Promise.resolve(infoMsg);
-        }
-        return this.session.kernel?.requestKernelInfo();
-    }
     public async restart(): Promise<void> {
         if (this.session?.isRemoteSession && this.session.kernel) {
             await this.session.kernel.restart();
@@ -241,85 +209,6 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         }
         traceInfo(`Shutdown old session ${oldSession?.kernel?.id}`);
         this.shutdownSession(oldSession, undefined, false).catch(noop);
-    }
-
-    public requestExecute(
-        content: KernelMessage.IExecuteRequestMsg['content'],
-        disposeOnDone?: boolean,
-        metadata?: JSONObject
-    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-        if (!this.session?.kernel) {
-            throw new SessionDisposedError();
-        }
-        // Make sure to chain the executes
-        return this.chainingExecute.requestExecute(this.session.kernel, content, disposeOnDone, metadata);
-    }
-
-    public requestDebug(
-        content: KernelMessage.IDebugRequestMsg['content'],
-        disposeOnDone?: boolean
-    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
-        if (!this.session?.kernel) {
-            throw new SessionDisposedError();
-        }
-        return this.session.kernel.requestDebug(content, disposeOnDone);
-    }
-
-    public requestInspect(
-        content: KernelMessage.IInspectRequestMsg['content']
-    ): Promise<KernelMessage.IInspectReplyMsg> {
-        if (!this.session?.kernel) {
-            throw new SessionDisposedError();
-        }
-        return this.session.kernel.requestInspect(content);
-    }
-
-    public requestComplete(
-        content: KernelMessage.ICompleteRequestMsg['content']
-    ): Promise<KernelMessage.ICompleteReplyMsg> {
-        if (!this.session?.kernel) {
-            throw new SessionDisposedError();
-        }
-        return this.session.kernel.requestComplete(content);
-    }
-
-    public sendInputReply(content: KernelMessage.IInputReply) {
-        if (this.session && this.session.kernel) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            this.session.kernel.sendInputReply(content);
-        }
-    }
-
-    public registerCommTarget(
-        targetName: string,
-        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
-    ) {
-        if (this.session && this.session.kernel) {
-            this.session.kernel.registerCommTarget(targetName, callback);
-        } else {
-            throw new SessionDisposedError();
-        }
-    }
-
-    public registerMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): void {
-        if (this.session?.kernel) {
-            return this.session.kernel.registerMessageHook(msgId, hook);
-        } else {
-            throw new SessionDisposedError();
-        }
-    }
-    public removeMessageHook(
-        msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): void {
-        if (this.session?.kernel) {
-            return this.session.kernel.removeMessageHook(msgId, hook);
-        } else {
-            throw new SessionDisposedError();
-        }
     }
 
     // Sub classes need to implement their own restarting specific code

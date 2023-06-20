@@ -16,6 +16,7 @@ import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './ty
 import { traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
+import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 
 /**
  * Base class for exporting on web. Uses the kernel to perform the export and then translates the blob sent back to a file.
@@ -56,12 +57,13 @@ export class ExportBase implements INbConvertExport, IExportBase {
             await kernel.start(new DisplayOptions(false));
         }
 
-        if (!kernel.session) {
+        if (!kernel.session?.kernel) {
             return;
         }
 
         if (kernel.session!.isServerSession()) {
-            const session = kernel.session!;
+            const session = kernel.session;
+            const kernelConnection = kernel.session.kernel;
             let contents = await this.exportUtil.getContent(sourceDocument);
 
             let fileExt = '';
@@ -83,7 +85,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
                 const filePath = `${pwd}/${file.filePath}`;
                 const tempTarget = await session.createTempfile(fileExt);
                 const outputs = await executeSilently(
-                    session,
+                    kernelConnection,
                     `!jupyter nbconvert ${filePath} --to ${format} --output ${path.basename(tempTarget)}`
                 );
 
@@ -161,7 +163,10 @@ export class ExportBase implements INbConvertExport, IExportBase {
     }
 
     private async getCWD(kernel: IKernel) {
-        const outputs = await executeSilently(kernel.session!, `import os;os.getcwd();`);
+        if (!kernel.session?.kernel) {
+            throw new SessionDisposedError();
+        }
+        const outputs = await executeSilently(kernel.session.kernel, `import os;os.getcwd();`);
         if (outputs.length === 0) {
             return;
         }

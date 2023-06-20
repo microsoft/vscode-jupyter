@@ -414,9 +414,20 @@ export function parseSemVer(versionString: string): SemVer | undefined {
     }
 }
 
-export abstract class Disposables implements IDisposable {
-    protected readonly disposables: IDisposable[] = [];
+export class Disposables implements IDisposable {
+    public readonly disposables: IDisposable[] = [];
+    private _isDisposed: boolean = false;
+    public get isDisposed(): boolean {
+        return this._isDisposed;
+    }
+    constructor(...disposables: IDisposable[]) {
+        this.disposables.push(...disposables);
+    }
     public dispose(): void {
+        if (this._isDisposed) {
+            return;
+        }
+        this._isDisposed = true;
         disposeAllDisposables(this.disposables);
     }
 }

@@ -1,12 +1,16 @@
-trigger: none
-#   branches:
-#     include:
-#       - release/*
-#   tags:
-#     include: ['*']
+trigger:
+  branches:
+    include:
+      - main
 pr: none
 # Do not change this name, it is used by gulp file to generate the build number.
 name: $(Date:yyyyMMdd)_$(Hours)_$(Minutes)_$(Rev:r)
+
+parameters:
+  - name: publishExtension
+    displayName: 🚀 Publish Extension
+    type: boolean
+    default: false
 
 resources:
   repositories:
@@ -19,11 +23,13 @@ resources:
 extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
-    publishExtension: true
+    publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src
     buildPlatforms:
       - name: Linux
         vsceTarget: ''
+      - name: Linux
+        vsceTarget: 'web'
       - name: Linux
         packageArch: arm64
         vsceTarget: linux-arm64
