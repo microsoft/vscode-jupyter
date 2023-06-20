@@ -155,7 +155,7 @@ export class UserJupyterServerUrlProvider
                                 return;
                             }
                             const serverInfo = parseUri(uri, uriAndDisplayName[1] || uri);
-                            if (serverInfo) {
+                            if (serverInfo && !servers.some((s) => s.uri === uri)) {
                                 // We have a saved Url.
                                 const handle = uuid();
                                 migratedServers.push({
