@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { type Uri, type Event, Disposable } from 'vscode';
+import type { Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
@@ -74,13 +74,13 @@ export async function waitForCondition<T>(
                 // Start up a timer again, but don't do it until after
                 // the condition is false.
                 timer = setTimeout(timerFunc, intervalTimeoutMs);
-                disposables.push(new Disposable(() => clearTimeout(timer)));
+                disposables.push({ dispose: () => clearTimeout(timer) });
             } else {
                 disposeAllDisposables(disposables);
                 resolve(success as NonNullable<T>);
             }
         };
-        disposables.push(new Disposable(() => clearTimeout(timer)));
+        disposables.push({ dispose: () => clearTimeout(timer) });
         timer = setTimeout(timerFunc, 0);
         if (cancelToken) {
             cancelToken.onCancellationRequested(
@@ -101,7 +101,7 @@ export async function waitForCondition<T>(
             }
             reject(new Error(errorMessage));
         }, timeoutMs);
-        disposables.push(new Disposable(() => clearTimeout(timeout)));
+        disposables.push({ dispose: () => clearTimeout(timeout) });
 
         pendingTimers.push(timer);
         pendingTimers.push(timeout);
