@@ -302,14 +302,15 @@ export class JupyterPasswordConnect {
             const uri = new URL(url);
             friendlyUrl = `${uri.protocol}//${uri.hostname}`;
             friendlyUrl = displayName ? `${displayName} (${friendlyUrl})` : friendlyUrl;
-            const userPassword = requiresPassword
-                ? await this.appShell.showInputBox({
-                      title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
-                      prompt: DataScience.jupyterSelectPasswordPrompt,
-                      ignoreFocusOut: true,
-                      password: true
-                  })
-                : undefined;
+            const userPassword =
+                requiresPassword && isTokenEmpty
+                    ? await this.appShell.showInputBox({
+                          title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
+                          prompt: DataScience.jupyterSelectPasswordPrompt,
+                          ignoreFocusOut: true,
+                          password: true
+                      })
+                    : undefined;
 
             if (typeof userPassword === undefined && !userPassword && isTokenEmpty) {
                 // User exited out of the processes, same as hitting ESC.
@@ -340,7 +341,7 @@ export class JupyterPasswordConnect {
             }
         } else {
             // If no password needed, act like empty password and no cookie
-            return { requiresPassword };
+            return { requiresPassword: requiresPassword && isTokenEmpty };
         }
 
         // If we found everything return it all back if not, undefined as partial is useless
