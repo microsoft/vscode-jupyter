@@ -16,7 +16,12 @@ import {
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
-import { IJupyterServerUri, IJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import {
+    IJupyterServerUri,
+    IJupyterServerUriStorage,
+    IJupyterUriProvider,
+    IJupyterUriProviderRegistration
+} from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IApplicationShell, IClipboard, IEncryptedStorage } from '../../platform/common/application/types';
 import { Identifiers, Settings } from '../../platform/common/constants';
@@ -57,7 +62,8 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         this.disposables.push(this);
     }
@@ -129,6 +135,19 @@ export class UserJupyterServerUrlProvider implements IExtensionSyncActivationSer
 
                 if (migratedServers.length > 0) {
                     this._servers.push(...migratedServers);
+                    await Promise.all(
+                        migratedServers.map(async (server) =>
+                            this.serverUriStorage
+                                .add(
+                                    { id: this.id, handle: server.handle },
+                                    {
+                                        displayName: server.serverInfo.displayName,
+                                        time: server.time
+                                    }
+                                )
+                                .catch(noop)
+                        )
+                    );
                     this._onDidChangeHandles.fire();
                 }
             })

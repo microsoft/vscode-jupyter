@@ -4,7 +4,7 @@
 import { EventEmitter, Memento } from 'vscode';
 import { inject, injectable, named } from 'inversify';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
-import { Settings } from '../../../platform/common/constants';
+import { Identifiers, Settings } from '../../../platform/common/constants';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { traceInfoIfCI, traceVerbose, traceWarning } from '../../../platform/logging';
 import { computeServerId, extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../jupyterUtils';
@@ -152,7 +152,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                             try {
                                 idAndHandle = extractJupyterServerHandleAndId(uri);
                             } catch {
-                                traceWarning(`Failed to parse Uri in storage`, uri);
+                                if (uri.startsWith(Identifiers.REMOTE_URI)) {
+                                    traceWarning(`Failed to parse Uri in storage`, uri);
+                                }
                                 return;
                             }
                             const serverId = await computeServerId(uri);
