@@ -341,7 +341,7 @@ export class JupyterPasswordConnect {
             }
         } else {
             // If no password needed, act like empty password and no cookie
-            return { requiresPassword: requiresPassword && isTokenEmpty };
+            return { requiresPassword };
         }
 
         // If we found everything return it all back if not, undefined as partial is useless
