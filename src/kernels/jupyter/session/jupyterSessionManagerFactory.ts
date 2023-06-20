@@ -14,6 +14,7 @@ import {
     IJupyterRequestCreator
 } from '../types';
 import { JupyterConnection } from '../connection/jupyterConnection';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
@@ -24,7 +25,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator,
         @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry,
-        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {}
 
     /**
@@ -40,7 +41,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.kernelService,
             this.backingFileCreator,
             this.requestCreator,
-            this.jupyterConnection
+            this.serviceContainer.get<JupyterConnection>(JupyterConnection)
         );
         this.asyncDisposables.push(result);
         await result.initialize(connInfo);
