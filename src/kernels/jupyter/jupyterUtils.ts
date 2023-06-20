@@ -129,11 +129,11 @@ export async function computeServerId(uri: string) {
     return computeHash(uri, 'SHA-256');
 }
 
-export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
+export function generateUriFromRemoteProvider(id: string, handle: JupyterServerUriHandle) {
     // eslint-disable-next-line
     return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
         Identifiers.REMOTE_URI_HANDLE_PARAM
-    }=${encodeURI(result)}`;
+    }=${encodeURI(handle)}`;
 }
 
 export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } {

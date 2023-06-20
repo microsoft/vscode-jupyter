@@ -159,7 +159,6 @@ export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
     readonly extensionId: string;
 }
 export type JupyterServerProviderHandle = {
-    extensionId: string;
     /**
      * Jupyter Server Provider Id.
      */

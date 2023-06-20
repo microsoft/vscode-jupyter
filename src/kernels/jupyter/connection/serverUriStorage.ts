@@ -24,8 +24,10 @@ import {
 import { JupyterServerUriHandle } from '../../../api';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import * as path from '../../../platform/vscode-path/resources';
+import { noop } from '../../../platform/common/utils/misc';
+import { Disposables } from '../../../platform/common/utils';
 
-type StorageMRUItem = {
+export type StorageMRUItem = {
     displayName: string;
     time: number;
     serverHandle: JupyterServerProviderHandle;
@@ -35,7 +37,7 @@ type StorageMRUItem = {
  * Class for storing Jupyter Server URI values, also manages the MRU list of the servers/urls.
  */
 @injectable()
-export class JupyterServerUriStorage implements IJupyterServerUriStorage {
+export class JupyterServerUriStorage extends Disposables implements IJupyterServerUriStorage {
     private _onDidChangeUri = new EventEmitter<void>();
     public get onDidChange() {
         return this._onDidChangeUri.event;
@@ -50,6 +52,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     }
     private readonly oldStorage: OldStorage;
     private readonly newStorage: NewStorage;
+    private storageEventsHooked?: boolean;
     constructor(
         @inject(IEncryptedStorage) encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
@@ -57,23 +60,43 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         @inject(IExperimentService)
         private readonly experiments: IExperimentService,
-        @inject(IExperimentService)
+        @inject(IFileSystem)
         fs: IFileSystem,
         @inject(IExtensionContext)
         private readonly context: IExtensionContext,
         @inject(IDisposableRegistry)
         disposables: IDisposableRegistry
     ) {
+        super();
+        disposables.push(this);
         const storageFile = Uri.joinPath(this.context.globalStorageUri, 'remoteServersMRUList.json');
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.oldStorage = new OldStorage(encryptedStorage, globalMemento, jupyterPickerRegistration);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.newStorage = new NewStorage(jupyterPickerRegistration, fs, storageFile, this.oldStorage);
-        disposables.push(this._onDidAddUri);
-        disposables.push(this._onDidChangeUri);
-        disposables.push(this._onDidRemoveUris);
+        this.disposables.push(this._onDidAddUri);
+        this.disposables.push(this._onDidChangeUri);
+        this.disposables.push(this._onDidRemoveUris);
+        this.disposables.push(this.oldStorage);
+        this.disposables.push(this.newStorage);
+    }
+    private hookupStorageEvents() {
+        if (this.storageEventsHooked) {
+            return;
+        }
+        this.storageEventsHooked = true;
+        if (this.experiments.inExperiment(Experiments.NewRemoteUriStorage)) {
+            this.newStorage.onDidAdd((e) => this._onDidAddUri.fire(e), this, this.disposables);
+            this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
+            this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
+        } else {
+            this.oldStorage.onDidAdd((e) => this._onDidAddUri.fire(e), this, this.disposables);
+            this.oldStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
+            this.oldStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
+        }
     }
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
+        this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         if (this.experiments.inExperiment(Experiments.NewRemoteUriStorage)) {
             return this.newStorage.getAll();
@@ -82,22 +105,74 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         }
     }
     public async clear(): Promise<void> {
+        this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        const uriList = await this.getAll();
         await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
-        // Notify out that we've removed the list to clean up controller entries, passwords, ect
-        this._onDidRemoveUris.fire(uriList);
     }
     public async get(id: string): Promise<IJupyterServerUriEntry | undefined> {
+        this.hookupStorageEvents();
         const savedList = await this.getAll();
         return savedList.find((item) => item.serverId === id);
     }
     public async add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
+        this.hookupStorageEvents();
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
-        const server = await this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle.id, jupyterHandle.handle);
+        const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
+        const [server, serverId] = await Promise.all([
+            this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle.id, jupyterHandle.handle),
+            computeServerId(uri)
+        ]);
 
-        // display name is wrong here
-        await this.addToUriList(jupyterHandle, server.displayName);
+        const entry: IJupyterServerUriEntry = {
+            uri,
+            time: Date.now(),
+            serverId,
+            displayName: server.displayName,
+            isValidated: true,
+            provider: jupyterHandle
+        };
+        await Promise.all([this.newStorage.add(entry), this.oldStorage.add(entry)]);
+    }
+    public async update(serverId: string) {
+        this.hookupStorageEvents();
+        await Promise.all([this.newStorage.update(serverId), this.oldStorage.update(serverId)]);
+    }
+    public async remove(serverId: string) {
+        this.hookupStorageEvents();
+        await Promise.all([this.newStorage.remove(serverId), this.oldStorage.remove(serverId)]);
+    }
+}
+
+class OldStorage {
+    private _onDidChangeUri = new EventEmitter<void>();
+    public get onDidChange() {
+        return this._onDidChangeUri.event;
+    }
+    private _onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
+    public get onDidRemove() {
+        return this._onDidRemoveUris.event;
+    }
+    private _onDidAddUri = new EventEmitter<IJupyterServerUriEntry>();
+    public get onDidAdd() {
+        return this._onDidAddUri.event;
+    }
+
+    private lastSavedList?: Promise<IJupyterServerUriEntry[]>;
+    constructor(
+        @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IJupyterUriProviderRegistration)
+        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
+    ) {}
+    dispose() {
+        this._onDidAddUri.dispose();
+        this._onDidChangeUri.dispose();
+        this._onDidRemoveUris.dispose();
+    }
+
+    public async add(item: IJupyterServerUriEntry) {
+        traceInfoIfCI(`setUri: ${item.provider.id}.${item.provider.handle}`);
+        await this.addToUriList(item.provider, item.serverId, item.displayName || '');
     }
     public async update(serverId: string) {
         const uriList = await this.getAll();
@@ -107,21 +182,31 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             throw new Error(`Uri not found for Server Id ${serverId}`);
         }
 
-        await this.addToUriList(existingEntry.provider, existingEntry.displayName || '');
+        await this.addToUriList(existingEntry.provider, existingEntry.serverId, existingEntry.displayName || '');
     }
-    private async addToUriList(jupyterHandle: { id: string; handle: JupyterServerUriHandle }, displayName: string) {
+    public async remove(serverId: string) {
+        const uriList = await this.getAll();
+        const editedList = uriList.filter((f) => f.serverId !== serverId);
+        if (editedList.length === 0) {
+            await this.clear();
+        } else {
+            await this.updateMemento(uriList.filter((f) => f.serverId !== serverId));
+            const removedItem = uriList.find((f) => f.serverId === serverId);
+            if (removedItem) {
+                this._onDidRemoveUris.fire([removedItem]);
+            }
+        }
+    }
+    private async addToUriList(
+        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+        serverId: string,
+        displayName: string
+    ) {
         const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
-        const [uriList, serverId] = await Promise.all([this.getAll(), computeServerId(uri)]);
+        const uriList = await this.getAll();
 
         // Check if we have already found a display name for this server
         displayName = uriList.find((entry) => entry.serverId === serverId)?.displayName || displayName || uri;
-
-        // Remove this uri if already found (going to add again with a new time)
-        const editedList = uriList
-            .sort((a, b) => b.time - a.time) // First sort by time
-            .filter((f, i) => f.uri !== uri && i < Settings.JupyterServerUriListMax - 1);
-
-        // Add this entry into the last.
         const idAndHandle = extractJupyterServerHandleAndId(uri);
         const entry: IJupyterServerUriEntry = {
             uri,
@@ -131,41 +216,25 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             isValidated: true,
             provider: idAndHandle
         };
-        editedList.push(entry);
+
+        // Remove this uri if already found (going to add again with a new time)
+        const editedList = [entry].concat(
+            uriList
+                .sort((a, b) => b.time - a.time) // First sort by time
+                .filter((f) => f.uri !== uri)
+        );
+        const removedItems = editedList.splice(Settings.JupyterServerUriListMax);
 
         // Signal that we added in the entry
         this._onDidAddUri.fire(entry);
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
-        return this.updateMemento(editedList);
-    }
-    public async remove(serverId: string) {
-        const uriList = await this.getAll();
-        const editedList = uriList.filter((f) => f.serverId !== serverId);
-        if (editedList.length === 0) {
-            await this.clear();
-        } else {
-            await this.updateMemento(uriList.filter((f) => f.serverId !== serverId));
-            const removedItem = uriList.find((f) => f.uri === serverId);
-            if (removedItem) {
-                this._onDidRemoveUris.fire([removedItem]);
-            }
+        await this.updateMemento(editedList);
+        if (removedItems.length) {
+            this._onDidRemoveUris.fire(removedItems);
         }
     }
-    private async updateMemento(editedList: IJupyterServerUriEntry[]) {
-        await this.newStorage.migrateMRU();
-        await Promise.all([this.oldStorage.updateMemento(editedList), this.newStorage.updateMemento(editedList)]);
-    }
-}
 
-class OldStorage {
-    private lastSavedList?: Promise<IJupyterServerUriEntry[]>;
-    constructor(
-        @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
-    ) {}
-    public async updateMemento(editedList: IJupyterServerUriEntry[]) {
+    private async updateMemento(editedList: IJupyterServerUriEntry[]) {
         // Sort based on time. Newest time first
         const sorted = editedList.sort((a, b) => b.time - a.time);
 
@@ -278,8 +347,8 @@ class OldStorage {
         traceVerbose(`Found ${servers.length} saved URIs, ${JSON.stringify(servers)}`);
         return servers;
     }
-
     public async clear(): Promise<void> {
+        const oldList = this.lastSavedList ? (await this.lastSavedList).slice() : [];
         this.lastSavedList = Promise.resolve([]);
         // Clear out memento and encrypted storage
         await this.globalMemento.update(Settings.JupyterServerUriList, []);
@@ -288,11 +357,27 @@ class OldStorage {
             Settings.JupyterServerRemoteLaunchUriListKey,
             undefined
         );
+
+        this._onDidRemoveUris.fire(oldList);
     }
 }
 
 class NewStorage {
+    private _onDidChangeUri = new EventEmitter<void>();
+    public get onDidChange() {
+        return this._onDidChangeUri.event;
+    }
+    private _onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
+    public get onDidRemove() {
+        return this._onDidRemoveUris.event;
+    }
+    private _onDidAddUri = new EventEmitter<IJupyterServerUriEntry>();
+    public get onDidAdd() {
+        return this._onDidAddUri.event;
+    }
+
     private migration: Promise<void> | undefined;
+    private updatePromise = Promise.resolve();
     constructor(
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
@@ -300,6 +385,11 @@ class NewStorage {
         private readonly storageFile: Uri,
         private readonly oldStorage: OldStorage
     ) {}
+    dispose() {
+        this._onDidAddUri.dispose();
+        this._onDidChangeUri.dispose();
+        this._onDidRemoveUris.dispose();
+    }
     async migrateMRU() {
         if (!this.migration) {
             this.migration = (async () => {
@@ -313,36 +403,134 @@ class NewStorage {
                 if (!(await this.fs.exists(dir))) {
                     await this.fs.createDirectory(dir);
                 }
-                const storageItems = items.map(
-                    (item) =>
-                        <StorageMRUItem>{
-                            serverHandle: item.provider,
-                            displayName: item.displayName || '',
-                            time: item.time
-                        }
-                );
+                const storageItems = items.map((item) => {
+                    return <StorageMRUItem>{
+                        serverHandle: item.provider,
+                        displayName: item.displayName || '',
+                        time: item.time
+                    };
+                });
                 await this.fs.writeFile(this.storageFile, JSON.stringify(storageItems));
             })();
         }
         return this.migration;
     }
-    public async updateMemento(editedList: IJupyterServerUriEntry[]) {
-        // Sort based on time. Newest time first
-        const storageItems = editedList
-            .sort((a, b) => b.time - a.time)
-            .map((v) => {
-                return <StorageMRUItem>{
-                    displayName: v.displayName || '',
-                    serverHandle: v.provider,
-                    time: v.time
-                };
-            });
+    public async add(item: IJupyterServerUriEntry) {
+        return (this.updatePromise = this.updatePromise
+            .then(async () => {
+                const all = await this.getAllRaw();
+                const existingEntry = all.find(
+                    (entry) =>
+                        `${entry.serverHandle.id}#${entry.serverHandle.handle}` ===
+                        `${item.provider.id}#${item.provider.handle}`
+                );
+                // Check if we have already found a display name for this server
+                item.displayName = item.displayName || existingEntry?.displayName || item.uri;
 
-        await this.fs.writeFile(this.storageFile, JSON.stringify(storageItems));
+                const newItem: StorageMRUItem = {
+                    displayName: item.displayName || '',
+                    serverHandle: item.provider,
+                    time: item.time
+                };
+                // Remove this uri if already found (going to add again with a new time)
+                const newList = [newItem].concat(
+                    all
+                        .sort((a, b) => b.time - a.time) // Also sort by time
+                        .filter(
+                            (entry) =>
+                                `${entry.serverHandle.id}#${entry.serverHandle.handle}` !==
+                                `${item.provider.id}#${item.provider.handle}`
+                        )
+                );
+                const removedItems = newList.splice(Settings.JupyterServerUriListMax);
+
+                await this.fs.writeFile(this.storageFile, JSON.stringify(newList));
+
+                if (!existingEntry) {
+                    this._onDidAddUri.fire(item);
+                }
+                if (removedItems.length) {
+                    const removeJupyterUris = await Promise.all(
+                        removedItems.map(async (removedItem) => {
+                            return <IJupyterServerUriEntry>{
+                                provider: removedItem.serverHandle,
+                                serverId: await computeServerId(
+                                    generateUriFromRemoteProvider(
+                                        removedItem.serverHandle.id,
+                                        removedItem.serverHandle.handle
+                                    )
+                                ),
+                                time: removedItem.time,
+                                uri: generateUriFromRemoteProvider(
+                                    removedItem.serverHandle.id,
+                                    removedItem.serverHandle.handle
+                                ),
+                                displayName: removedItem.displayName || '',
+                                isValidated: false
+                            };
+                        })
+                    );
+                    this._onDidRemoveUris.fire(removeJupyterUris);
+                }
+                this._onDidChangeUri.fire();
+            })
+            .catch(noop));
+    }
+    public async update(serverId: string) {
+        const uriList = await this.getAllImpl(false);
+
+        const existingEntry = uriList.find((entry) => entry.serverId === serverId);
+        if (!existingEntry) {
+            throw new Error(`Uri not found for Server Id ${serverId}`);
+        }
+        const entry: IJupyterServerUriEntry = {
+            provider: existingEntry.provider,
+            serverId: existingEntry.serverId,
+            time: Date.now(),
+            uri: generateUriFromRemoteProvider(existingEntry.provider.id, existingEntry.provider.handle),
+            displayName: existingEntry.displayName || '',
+            isValidated: true
+        };
+        await this.add(entry);
+    }
+    public async remove(serverId: string) {
+        await (this.updatePromise = this.updatePromise
+            .then(async () => {
+                const all = await this.getAllImpl(false);
+                if (all.length === 0) {
+                    return;
+                }
+                const editedList = all.filter((f) => f.serverId !== serverId);
+                const removedItems = all.filter((f) => f.serverId === serverId);
+
+                if (editedList.length === 0) {
+                    await this.clear();
+                } else if (removedItems.length) {
+                    const items = editedList.map((item) => {
+                        return <StorageMRUItem>{
+                            displayName: item.displayName,
+                            serverHandle: item.provider,
+                            time: item.time
+                        };
+                    });
+                    await this.fs.writeFile(this.storageFile, JSON.stringify(items));
+                    this._onDidRemoveUris.fire(removedItems);
+                }
+            })
+            .catch(noop));
     }
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
-        const json = await this.fs.readFile(this.storageFile);
-        const data = JSON.parse(json) as StorageMRUItem[];
+        return this.getAllImpl(true);
+    }
+    public async clear(): Promise<void> {
+        const all = await this.getAllImpl(false);
+        await this.fs.writeFile(this.storageFile, JSON.stringify([]));
+        if (all.length) {
+            this._onDidRemoveUris.fire(all);
+        }
+    }
+    private async getAllImpl(validate = true): Promise<IJupyterServerUriEntry[]> {
+        const data = await this.getAllRaw();
         const entries: IJupyterServerUriEntry[] = [];
 
         await Promise.all(
@@ -354,25 +542,28 @@ class NewStorage {
                     serverId,
                     displayName: item.displayName || uri,
                     uri,
-                    isValidated: true,
+                    isValidated: false,
                     provider: item.serverHandle
                 };
+                entries.push(server);
+                if (!validate) {
+                    return;
+                }
                 try {
                     await this.jupyterPickerRegistration.getJupyterServerUri(
                         item.serverHandle.id,
                         item.serverHandle.handle
                     );
-                    return server;
+                    server.isValidated = true;
                 } catch (ex) {
                     server.isValidated = false;
-                    return server;
                 }
             })
         );
         return entries;
     }
-
-    public async clear(): Promise<void> {
-        await this.fs.writeFile(this.storageFile, JSON.stringify([]));
+    private async getAllRaw(): Promise<StorageMRUItem[]> {
+        const json = await this.fs.readFile(this.storageFile);
+        return JSON.parse(json) as StorageMRUItem[];
     }
 }
