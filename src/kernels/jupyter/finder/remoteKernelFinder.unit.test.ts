@@ -136,7 +136,6 @@ suite(`Remote Kernel Finder`, () => {
             serverId: connInfo.baseUrl,
             isValidated: true,
             provider: {
-                extensionId: '',
                 id: '1',
                 handle: '2'
             }
