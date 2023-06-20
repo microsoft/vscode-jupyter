@@ -9,6 +9,9 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { JupyterConnection } from './jupyterConnection';
 import {
+    IJupyterPasswordConnect,
+    IJupyterRequestAgentCreator,
+    IJupyterRequestCreator,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
@@ -20,7 +23,8 @@ import {
     IConfigurationService,
     IDisposable,
     IExperimentService,
-    IJupyterSettings
+    IJupyterSettings,
+    IPersistentStateFactory
 } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import events from 'events';
@@ -51,6 +55,11 @@ suite('Jupyter Connection', async () => {
     let configService: IConfigurationService;
     let errorHandler: IDataScienceErrorHandler;
     const disposables: IDisposable[] = [];
+    let stateFactory: IPersistentStateFactory;
+    let jupyterPasswordConnect: IJupyterPasswordConnect;
+    let requestAgentCreator: IJupyterRequestAgentCreator;
+    let requestCreator: IJupyterRequestCreator;
+
     const provider = {
         id: 'someProvider',
         handle: 'someHandle'
@@ -69,6 +78,10 @@ suite('Jupyter Connection', async () => {
         configService = mock<IConfigurationService>();
         errorHandler = mock<IDataScienceErrorHandler>();
         experiments = mock<IExperimentService>();
+        stateFactory = mock<IPersistentStateFactory>();
+        jupyterPasswordConnect = mock<IJupyterPasswordConnect>();
+        requestAgentCreator = mock<IJupyterRequestAgentCreator>();
+        requestCreator = mock<IJupyterRequestCreator>();
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
             instance(sessionManagerFactory),
@@ -76,11 +89,14 @@ suite('Jupyter Connection', async () => {
             instance(appShell),
             instance(configService),
             instance(errorHandler),
-            instance(experiments)
+            instance(experiments),
+            instance(stateFactory),
+            instance(jupyterPasswordConnect),
+            instance(requestAgentCreator),
+            instance(requestCreator)
         );
 
         (instance(sessionManager) as any).then = undefined;
-        when(sessionManagerFactory.create(anything(), anything())).thenResolve(instance(sessionManager));
         when(sessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
         const serverConnectionChangeEvent = new EventEmitter<void>();
         disposables.push(serverConnectionChangeEvent);
