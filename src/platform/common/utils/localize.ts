@@ -345,10 +345,12 @@ export namespace DataScience {
     export const restartKernel = l10n.t('Restart Kernel');
     export const reloadRequired = l10n.t('Please reload the window for new settings to take effect.');
     export const restartedKernelHeader = (kernelName: string) => l10n.t('Restarted {0}', kernelName);
+    export const connectedKernelHeader = (kernelName: string) => l10n.t('Connected to {0}', kernelName);
     export const restartingKernelCustomHeader = (kernelName: string) => l10n.t('_Restarting {0}..._', kernelName);
     export const restartingKernelHeader = l10n.t('_Restarting kernel..._');
     export const startingNewKernelHeader = l10n.t('_Connecting to kernel..._');
     export const startingNewKernelCustomHeader = (kernelName: string) => l10n.t('_Connecting to {0}..._', kernelName);
+    export const noKernelConnected = l10n.t('No kernel connected');
     export const jupyterSelectURIPrompt = l10n.t('Enter the URL of the running Jupyter server');
     export const jupyterSelectURIMRUDetail = (date: Date) => l10n.t('Last Connection: {0}', date.toLocaleString());
     export const jupyterSelectURINewDetail = l10n.t('Specify the URL of an existing server');

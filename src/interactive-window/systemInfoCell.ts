@@ -17,15 +17,24 @@ import { SysInfoReason } from '../messageTypes';
 import { DataScience } from '../platform/common/utils/localize';
 import { KernelConnectionMetadata } from '../kernels/types';
 
-export function getSysInfoMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
+export function getStartConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
     const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
-    return reason === SysInfoReason.Restart
-        ? displayName
+    if (displayName) {
+        return reason == SysInfoReason.Restart
             ? DataScience.restartingKernelCustomHeader(displayName)
-            : DataScience.restartingKernelHeader
-        : displayName
-        ? DataScience.startingNewKernelCustomHeader(displayName)
-        : DataScience.startingNewKernelHeader;
+            : DataScience.startingNewKernelCustomHeader(displayName);
+    } else {
+        return reason == SysInfoReason.Restart
+            ? DataScience.restartingKernelHeader
+            : DataScience.startingNewKernelHeader;
+    }
+}
+
+export function getFinishConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
+    const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
+    return reason == SysInfoReason.Restart
+        ? DataScience.restartedKernelHeader(displayName || '')
+        : DataScience.connectedKernelHeader(displayName || '');
 }
 
 export class SystemInfoCell {
