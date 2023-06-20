@@ -158,7 +158,7 @@ export class UserJupyterServerUrlProvider
                             if (serverInfo) {
                                 // We have a saved Url.
                                 const handle = uuid();
-                                servers.push({
+                                migratedServers.push({
                                     handle,
                                     uri,
                                     serverInfo
