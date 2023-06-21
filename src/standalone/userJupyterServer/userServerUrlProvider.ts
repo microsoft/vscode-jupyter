@@ -286,6 +286,13 @@ export class UserJupyterServerUrlProvider
                         input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
                         return;
                     }
+                    if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
+                        input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
+                        return;
+                    }
                     const jupyterServerUri = parseUri(uri, '');
                     if (!jupyterServerUri) {
                         if (inputWasHidden) {
@@ -391,6 +398,13 @@ export class UserJupyterServerUrlProvider
                         input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
                         return;
                     }
+                    if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
+                        input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
+                        return;
+                    }
 
                     let passwordResult: IJupyterPasswordConnectInfo;
 
@@ -400,11 +414,27 @@ export class UserJupyterServerUrlProvider
                             isTokenEmpty: jupyterServerUri.token.length === 0
                         });
                     } catch (err) {
-                        if (!(err && err instanceof CancellationError)) {
+                        if (err && err instanceof CancellationError) {
+                            input.hide();
+                            resolve(undefined);
+                        } else {
                             traceError(`Failed to get the password for ${jupyterServerUri.baseUrl}`, err);
+                            if (inputWasHidden) {
+                                input.show();
+                            }
+                            // Return the general connection error to show in the validation box
+                            // Replace any Urls in the error message with markdown link.
+                            const urlRegex = /(https?:\/\/[^\s]+)/g;
+                            const errorMessage = (err.message || err.toString()).replace(
+                                urlRegex,
+                                (url: string) => `[${url}](${url})`
+                            );
+                            input.validationMessage = (
+                                this.isWebExtension
+                                    ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
+                                    : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
+                            )(errorMessage);
                         }
-                        input.hide();
-                        resolve(undefined);
                         return;
                     }
                     if (passwordResult.requestHeaders) {
