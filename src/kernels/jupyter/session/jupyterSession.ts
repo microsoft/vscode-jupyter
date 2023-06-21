@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
+import type { ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { raceCancellationError } from '../../../platform/common/cancellation';
@@ -56,10 +56,6 @@ export class JupyterSession
             kernelConnectionMetadata,
             workingDirectory
         );
-    }
-
-    public override isServerSession(): this is IJupyterKernelSession {
-        return true;
     }
 
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
@@ -194,53 +190,6 @@ export class JupyterSession
             })
             .catch(noop);
         return promise;
-    }
-
-    async invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void> {
-        if (!this.resource) {
-            return;
-        }
-
-        const backingFile = await this.backingFileCreator.createBackingFile(
-            this.resource,
-            this.workingDirectory,
-            this.kernelConnectionMetadata,
-            this.connInfo,
-            this.contentsManager
-        );
-
-        if (!backingFile) {
-            return;
-        }
-
-        await this.contentsManager
-            .save(backingFile!.filePath, {
-                content: JSON.parse(contents),
-                type: 'notebook'
-            })
-            .catch(noop);
-
-        await handler({
-            filePath: backingFile.filePath,
-            dispose: backingFile.dispose.bind(backingFile)
-        });
-
-        await backingFile.dispose();
-        await this.contentsManager.delete(backingFile.filePath).catch(noop);
-    }
-
-    async createTempfile(ext: string): Promise<string> {
-        const tempFile = await this.contentsManager.newUntitled({ type: 'file', ext });
-        return tempFile.path;
-    }
-
-    async deleteTempfile(file: string): Promise<void> {
-        await this.contentsManager.delete(file);
-    }
-
-    async getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel> {
-        const data = await this.contentsManager.get(file, { type: 'file', format: format, content: true });
-        return data;
     }
 
     private async createSession(options: {

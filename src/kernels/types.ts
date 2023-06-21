@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type {
     CancellationToken,
@@ -16,7 +16,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import * as path from '../platform/vscode-path/path';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
-import { IBackupFile, IJupyterKernel } from './jupyter/types';
+import { IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
@@ -566,7 +566,6 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    isServerSession(): this is IJupyterKernelSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
@@ -575,12 +574,7 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     shutdown(): Promise<void>;
 }
 
-export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {
-    invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
-    createTempfile(ext: string): Promise<string>;
-    deleteTempfile(file: string): Promise<void>;
-    getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel>;
-}
+export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter' | 'localJupyter'> {}
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
