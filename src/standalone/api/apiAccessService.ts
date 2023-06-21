@@ -20,7 +20,13 @@ type ApiExtensionInfo = {
 const API_ACCESS_GLOBAL_KEY = 'JUPYTER_API_ACCESS_INFORMATION';
 
 // Some publishers like our own `ms-tolsai` will always be allowed to access the API.
-export const TrustedExtensionPublishers = new Set([JVSC_EXTENSION_ID.split('.')[0], 'rchiodo', 'donjayamanne']);
+export const TrustedExtensionPublishers = new Set([
+    JVSC_EXTENSION_ID.split('.')[0],
+    'rchiodo',
+    'donjayamanne',
+    'SynapseVSCode'
+]);
+
 // We dont want to expose this API to everyone, else we'll keep track of who has access to this.
 // However, the user will still be prompted to grant these extensions access to the kernels..
 export const PublishersAllowedWithPrompts = new Set(['rchiodo']);
