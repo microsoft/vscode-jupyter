@@ -353,6 +353,9 @@ export namespace DataScience {
     export const jupyterSelectURIMRUDetail = (date: Date) => l10n.t('Last Connection: {0}', date.toLocaleString());
     export const jupyterSelectURINewDetail = l10n.t('Specify the URL of an existing server');
     export const jupyterSelectURIInvalidURI = l10n.t('Invalid URL specified');
+    export const jupyterSelectURIMustBeHttpOrHttps = l10n.t(
+        'Invalid protocol in URL specified, only HTTP or HTTPS are supported.'
+    );
     export const jupyterSelectURIRunningDetailFormat = (time: Date, numberOfConnections: number) =>
         l10n.t('Last connection {0}. {1} existing connections.', time.toLocaleString(), numberOfConnections.toString());
     export const jupyterSelectUserAndPasswordTitle = l10n.t(

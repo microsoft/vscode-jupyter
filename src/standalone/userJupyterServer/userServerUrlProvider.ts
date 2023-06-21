@@ -286,6 +286,13 @@ export class UserJupyterServerUrlProvider
                         input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
                         return;
                     }
+                    if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
+                        input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
+                        return;
+                    }
                     const jupyterServerUri = parseUri(uri, '');
                     if (!jupyterServerUri) {
                         if (inputWasHidden) {
@@ -389,6 +396,13 @@ export class UserJupyterServerUrlProvider
                             input.show();
                         }
                         input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+                        return;
+                    }
+                    if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
+                        if (inputWasHidden) {
+                            input.show();
+                        }
+                        input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
                         return;
                     }
 
