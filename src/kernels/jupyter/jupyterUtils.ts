@@ -158,7 +158,7 @@ function getSafeUrlForLogging(uri: string) {
         try {
             const url: URL = new URL(uri);
             const isLocalHost = url.hostname.toLocaleLowerCase() === 'localhost' || url.hostname === '127.0.0.1';
-            return `${url.protocol}://${isLocalHost ? url.hostname : '<REMOTE SERVER>'}:${url.port}`;
+            return `${url.protocol}//${isLocalHost ? url.hostname : '<REMOTE SERVER>'}:${url.port}`;
         } catch {
             return uri;
         }
