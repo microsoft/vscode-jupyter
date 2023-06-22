@@ -280,7 +280,7 @@ class OldStorage {
     }
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
         if (this.lastSavedList) {
-            return this.lastSavedList;
+            return this.lastSavedList.then((items) => items.sort((a, b) => b.time - a.time));
         }
         const promise = async () => {
             // List is in the global memento, URIs are in encrypted storage
@@ -305,7 +305,7 @@ class OldStorage {
             return result.filter((item) => !!item) as IJupyterServerUriEntry[];
         };
         this.lastSavedList = promise();
-        return this.lastSavedList;
+        return this.lastSavedList.then((items) => items.sort((a, b) => b.time - a.time));
     }
     public async getAllRaw(): Promise<IJupyterServerUriEntry[]> {
         // List is in the global memento, URIs are in encrypted storage
@@ -534,7 +534,7 @@ class NewStorage {
             .catch(noop));
     }
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
-        return this.getAllImpl(true);
+        return this.getAllImpl(true).then((items) => items.sort((a, b) => b.time - a.time));
     }
     public async clear(): Promise<void> {
         const all = await this.getAllImpl(false);

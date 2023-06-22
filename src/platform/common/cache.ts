@@ -36,7 +36,8 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
                 'JUPYTER_REMOTE_KERNELSPECS_V3',
                 'JUPYTER_LOCAL_KERNELSPECS_V4',
                 'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10',
-                'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10'
+                'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10',
+                'user-jupyter-server-uri-list-v2'
             ]
                 .filter((key) => this.globalState.get(key, undefined) !== undefined)
                 .map((key) => this.globalState.update(key, undefined).then(noop, noop))
