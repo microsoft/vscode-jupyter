@@ -70,9 +70,9 @@ export class JupyterPasswordConnect {
             const deferred = (JupyterPasswordConnect._prompt = createDeferred());
             result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty, displayName }).then(
                 (value) => {
-                    // If we fail to get a valid password connect info, don't save the value
-                    traceWarning(`Password for ${newUrl} was invalid.`);
                     if (!value) {
+                        // If we fail to get a valid password connect info, don't save the value
+                        traceWarning(`Password for ${newUrl} was invalid.`);
                         this.savedConnectInfo.delete(newUrl);
                     }
 
