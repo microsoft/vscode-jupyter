@@ -699,7 +699,6 @@ export class OldStorage {
 type StorageItem = {
     handle: string;
     uri: string;
-    displayName: string;
 };
 function serverToStorageFormat(
     servers: {
@@ -708,7 +707,7 @@ function serverToStorageFormat(
         serverInfo: IJupyterServerUri;
     }[]
 ): StorageItem[] {
-    return servers.map((s) => ({ handle: s.handle, uri: s.uri, displayName: s.serverInfo.displayName }));
+    return servers.map((s) => ({ handle: s.handle, uri: s.uri }));
 }
 function storageFormatToServers(items: StorageItem[]) {
     const servers: {
