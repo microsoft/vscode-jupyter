@@ -774,7 +774,7 @@ export class NewStorage {
                 await this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
                     UserJupyterServerUriListKeyV2,
-                    JSON.stringify([])
+                    undefined
                 );
             })
             .catch(noop));
