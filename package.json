@@ -1354,8 +1354,7 @@
                 },
                 {
                     "command": "jupyter.clearSavedJupyterUris",
-                    "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
-                    "when": "config.notebook.kernelPicker.type != mru"
+                    "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%"
                 }
             ],
             "debug/variables/context": [
