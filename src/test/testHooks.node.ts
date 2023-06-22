@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Context } from 'mocha';
-import { AppinsightsKey, Telemetry } from '../platform/common/constants';
+import { AppinsightsKey, JVSC_EXTENSION_ID, Telemetry } from '../platform/common/constants';
 import TelemetryReporter from '@vscode/extension-telemetry';
 import { IS_CI_SERVER } from './ciConstants.node';
 import { sleep } from '../platform/common/utils/async';
@@ -19,7 +19,7 @@ export const rootHooks: Mocha.RootHookObject = {
 
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-        telemetryReporter = new reporter(AppinsightsKey);
+        telemetryReporter = new reporter(JVSC_EXTENSION_ID, 'test', AppinsightsKey);
     },
     afterEach(this: Context) {
         traceInfoIfCI('Root afterEach');
