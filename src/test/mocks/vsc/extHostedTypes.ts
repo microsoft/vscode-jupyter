@@ -2389,12 +2389,26 @@ export namespace vscMockExtHostedTypes {
     // https://github.com/microsoft/vscode/issues/115616 @alexr00
 
     export enum PortAutoForwardAction {
+        /**
+         * Notify the user that the port is being forwarded. This is the default action.
+         */
         Notify = 1,
+        /**
+         * Once the port is forwarded, open the user's web browser to the forwarded port.
+         */
         OpenBrowser = 2,
+        /**
+         * Once the port is forwarded, open the preview browser to the forwarded port.
+         */
         OpenPreview = 3,
+        /**
+         * Forward the port silently.
+         */
         Silent = 4,
-        Ignore = 5,
-        OpenBrowserOnce = 6
+        /**
+         * Do not forward the port.
+         */
+        Ignore = 5
     }
 
     export class PortAttributes {

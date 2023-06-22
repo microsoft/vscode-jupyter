@@ -538,7 +538,7 @@ class NewStorage {
     }
     public async clear(): Promise<void> {
         const all = await this.getAllImpl(false);
-        await this.fs.writeFile(this.storageFile, JSON.stringify([]));
+        await this.fs.delete(this.storageFile);
         if (all.length) {
             this._onDidRemoveUris.fire(all);
         }

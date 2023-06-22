@@ -1,13 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as nbformat from '@jupyterlab/nbformat';
+import type * as nbformat from '@jupyterlab/nbformat';
+import type { Contents, ContentsManager } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Uri, CancellationToken, NotebookDocument } from 'vscode';
 import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { executeSilently } from '../../kernels/helpers';
-import { IKernel, IKernelProvider } from '../../kernels/types';
+import {
+    IJupyterConnection,
+    IKernel,
+    IKernelProvider,
+    RemoteKernelConnectionMetadata,
+    isRemoteConnection
+} from '../../kernels/types';
 import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -17,6 +24,10 @@ import { traceLog } from '../../platform/logging';
 import { reportAction } from '../../platform/progress/decorator';
 import { ReportableAction } from '../../platform/progress/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
+import { IBackupFile, IJupyterBackingFileCreator } from '../../kernels/jupyter/types';
+import { Resource } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
+import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 
 /**
  * Base class for exporting on web. Uses the kernel to perform the export and then translates the blob sent back to a file.
@@ -27,7 +38,9 @@ export class ExportBase implements INbConvertExport, IExportBase {
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExportDialog) protected readonly filePicker: IExportDialog,
-        @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase
+        @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
+        @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator,
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
     ) {}
 
     public async export(
@@ -52,68 +65,154 @@ export class ExportBase implements INbConvertExport, IExportBase {
             // trace error
             return;
         }
-
         if (!kernel.session) {
             await kernel.start(new DisplayOptions(false));
         }
-
         if (!kernel.session?.kernel) {
             return;
         }
 
-        if (kernel.session!.isServerSession()) {
-            const session = kernel.session;
-            const kernelConnection = kernel.session.kernel;
-            let contents = await this.exportUtil.getContent(sourceDocument);
+        const kernelConnectionMetadata = kernel.kernelConnectionMetadata;
+        const resource = kernel.resourceUri;
+        if (!isRemoteConnection(kernelConnectionMetadata)) {
+            return;
+        }
+        if (resource) {
+            return;
+        }
+        const kernelConnection = kernel.session.kernel;
+        const connection = await this.jupyterConnection.createConnectionInfo(kernelConnectionMetadata.serverId);
+        const serverSettings = await this.jupyterConnection.getServerConnectSettings(connection);
+        const jupyter = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        const contentsManager = new jupyter.ContentsManager({ serverSettings });
 
-            let fileExt = '';
+        let contents = await this.exportUtil.getContent(sourceDocument);
 
-            switch (format) {
-                case ExportFormat.html:
-                    fileExt = '.html';
-                    break;
-                case ExportFormat.pdf:
-                    fileExt = '.pdf';
-                    break;
-                case ExportFormat.python:
-                    fileExt = '.py';
-                    break;
+        let fileExt = '';
+
+        switch (format) {
+            case ExportFormat.html:
+                fileExt = '.html';
+                break;
+            case ExportFormat.pdf:
+                fileExt = '.pdf';
+                break;
+            case ExportFormat.python:
+                fileExt = '.py';
+                break;
+        }
+
+        const backingFile = await this.backingFileCreator.createBackingFile(
+            resource,
+            Uri.file(''),
+            kernelConnectionMetadata,
+            connection,
+            contentsManager
+        );
+
+        if (!backingFile) {
+            return;
+        }
+        await contentsManager
+            .save(backingFile!.filePath, {
+                content: JSON.parse(contents),
+                type: 'notebook'
+            })
+            .catch(noop);
+
+        let tempTarget: string | undefined;
+        try {
+            const pwd = await this.getCWD(kernel);
+            const tempFile = await contentsManager.newUntitled({ type: 'file', ext: fileExt });
+            tempTarget = tempFile.path;
+            const filePath = `${pwd}/${backingFile.filePath}`;
+
+            const outputs = await executeSilently(
+                kernelConnection,
+                `!jupyter nbconvert ${filePath} --to ${format} --output ${path.basename(tempTarget)}`
+            );
+
+            const text = this.parseStreamOutput(outputs);
+            if (this.isExportFailed(text)) {
+                throw new Error(text || `Failed to export to ${format}`);
+            } else if (text) {
+                // trace the output in case we didn't identify all errors
+                traceLog(text);
             }
 
-            await kernel.session!.invokeWithFileSynced(contents, async (file) => {
-                const pwd = await this.getCWD(kernel);
-                const filePath = `${pwd}/${file.filePath}`;
-                const tempTarget = await session.createTempfile(fileExt);
-                const outputs = await executeSilently(
-                    kernelConnection,
-                    `!jupyter nbconvert ${filePath} --to ${format} --output ${path.basename(tempTarget)}`
-                );
-
-                const text = this.parseStreamOutput(outputs);
-                if (this.isExportFailed(text)) {
-                    throw new Error(text || `Failed to export to ${format}`);
-                } else if (text) {
-                    // trace the output in case we didn't identify all errors
-                    traceLog(text);
-                }
-
-                if (format === ExportFormat.pdf) {
-                    const content = await session.getContents(tempTarget, 'base64');
-                    const bytes = this.b64toBlob(content.content, 'application/pdf');
-                    const buffer = await bytes.arrayBuffer();
-                    await this.fs.writeFile(target!, Buffer.from(buffer));
-                    await session.deleteTempfile(tempTarget);
-                } else {
-                    const content = await session.getContents(tempTarget, 'text');
-                    await this.fs.writeFile(target!, content.content as string);
-                    await session.deleteTempfile(tempTarget);
-                }
-            });
-
-            return;
-        } else {
-            // no op
+            if (format === ExportFormat.pdf) {
+                const content = await contentsManager.get(tempTarget, {
+                    type: 'file',
+                    format: 'base64',
+                    content: true
+                });
+                const bytes = this.b64toBlob(content.content, 'application/pdf');
+                const buffer = await bytes.arrayBuffer();
+                await this.fs.writeFile(target!, Buffer.from(buffer));
+            } else {
+                const content = await contentsManager.get(tempTarget, {
+                    type: 'file',
+                    format: 'text',
+                    content: true
+                });
+                await this.fs.writeFile(target!, content.content as string);
+            }
+        } finally {
+            if (tempTarget) {
+                await contentsManager.delete(tempTarget);
+            }
+            await backingFile.dispose();
+            await contentsManager.delete(backingFile.filePath).catch(noop);
+            contentsManager.dispose();
         }
+    }
+    async invokeWithFileSynced(
+        resource: Resource,
+        contents: string,
+        kernelConnectionMetadata: RemoteKernelConnectionMetadata,
+        connInfo: IJupyterConnection,
+        contentsManager: ContentsManager,
+        handler: (file: IBackupFile) => Promise<void>
+    ): Promise<void> {
+        if (!resource) {
+            return;
+        }
+
+        const backingFile = await this.backingFileCreator.createBackingFile(
+            resource,
+            Uri.file(''),
+            kernelConnectionMetadata,
+            connInfo,
+            contentsManager
+        );
+
+        if (!backingFile) {
+            return;
+        }
+
+        await contentsManager
+            .save(backingFile!.filePath, {
+                content: JSON.parse(contents),
+                type: 'notebook'
+            })
+            .catch(noop);
+
+        await handler({
+            filePath: backingFile.filePath,
+            dispose: backingFile.dispose.bind(backingFile)
+        });
+
+        await backingFile.dispose();
+        await contentsManager.delete(backingFile.filePath).catch(noop);
+    }
+
+    async getContents(
+        file: string,
+        format: Contents.FileFormat,
+        contentsManager: ContentsManager
+    ): Promise<Contents.IModel> {
+        const data = await contentsManager.get(file, { type: 'file', format: format, content: true });
+        return data;
     }
 
     private b64toBlob(b64Data: string, contentType: string | undefined) {

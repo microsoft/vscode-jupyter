@@ -24,13 +24,7 @@ import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
-import {
-    IJupyterKernelSession,
-    ISessionWithSocket,
-    KernelConnectionMetadata,
-    KernelSocketInformation,
-    IBaseKernelSession
-} from '../types';
+import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation, IBaseKernelSession } from '../types';
 import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { isTestExecution } from '../../platform/common/constants';
@@ -155,9 +149,6 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         this.unhandledMessageHandler = (_s, m) => {
             traceWarning(`Unhandled message found: ${m.header.msg_type}`);
         };
-    }
-    public isServerSession(): this is IJupyterKernelSession {
-        return false;
     }
     public async dispose(): Promise<void> {
         await this.shutdownImplementation(false);

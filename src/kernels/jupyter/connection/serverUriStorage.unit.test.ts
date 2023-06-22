@@ -51,6 +51,7 @@ suite('Server Uri Storage', async () => {
                 context = mock<IExtensionContext>();
                 onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
                 disposables.push(onDidRemoveUris);
+                when(fs.delete(anything())).thenResolve();
                 when(context.globalStorageUri).thenReturn(globalStorageUri);
                 when(experiments.inExperiment(Experiments.NewRemoteUriStorage)).thenReturn(isNewStorageFormat);
                 when(jupyterPickerRegistration.getJupyterServerUri(anything(), anything())).thenResolve(
@@ -139,7 +140,7 @@ suite('Server Uri Storage', async () => {
                         undefined
                     )
                 ).once();
-                verify(fs.writeFile(anything(), JSON.stringify([]))).once();
+                verify(fs.delete(anything())).once();
 
                 // Event should be triggered indicating items have been removed
                 await onDidRemoveEvent.assertFired(1);
@@ -891,10 +892,18 @@ suite('Server Uri Storage', async () => {
                 if (generateNewDataAsWell) {
                     when(fs.readFile(anything())).thenResolve(JSON.stringify(itemsInNewStorage));
                 }
-
+                when(fs.delete(anything())).thenCall(() => {
+                    itemsInNewStorage.splice(0, itemsInNewStorage.length);
+                    return Promise.resolve();
+                });
                 when(fs.writeFile(anything(), anything())).thenCall((_, data) => {
                     const itemsWrittenIntoStorage = JSON.parse(data.toString());
                     when(fs.readFile(anything())).thenCall(() => JSON.stringify(itemsWrittenIntoStorage));
+                    when(fs.delete(anything())).thenCall(() => {
+                        itemsInNewStorage.splice(0, itemsInNewStorage.length);
+                        itemsWrittenIntoStorage.splice(0, itemsWrittenIntoStorage.length);
+                        return Promise.resolve();
+                    });
                     return Promise.resolve();
                 });
 
