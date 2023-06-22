@@ -871,7 +871,7 @@
             "notebook/toolbar": [
                 {
                     "command": "jupyter.restartkernel",
-                    "group": "navigation/execute@1",
+                    "group": "navigation/execute@5",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.kernel.isjupyter"
                 },
                 {
