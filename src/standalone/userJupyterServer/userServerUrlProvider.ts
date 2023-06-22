@@ -44,7 +44,6 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
-import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUri } from '../../api';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
@@ -586,13 +585,6 @@ function parseUri(uri: string, displayName?: string): IJupyterServerUri | undefi
         return;
     }
     try {
-        extractJupyterServerHandleAndId(uri);
-        // This is a url that we crafted. It's not a valid Jupyter Server Url.
-        return;
-    } catch (ex) {
-        // This is a valid Jupyter Server Url.
-    }
-    try {
         const url = new URL(uri);
 
         // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
@@ -782,7 +774,7 @@ export class NewStorage {
                 await this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
                     UserJupyterServerUriListKeyV2,
-                    JSON.stringify([])
+                    undefined
                 );
             })
             .catch(noop));
