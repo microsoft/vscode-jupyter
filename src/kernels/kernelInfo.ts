@@ -39,7 +39,10 @@ export async function getKernelInfo(
         return;
     }
     if (session.kernel?.info) {
-        return session.kernel.info;
+        promises.push(session.kernel.info);
+        session.kernel.info
+            .then((content) => cacheKernelInfo(workspaceMemento, kernelConnectionMetadata, content))
+            .catch(noop);
     }
     // KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInfoReply | undefined
 
