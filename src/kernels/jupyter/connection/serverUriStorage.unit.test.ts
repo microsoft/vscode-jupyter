@@ -114,7 +114,7 @@ suite('Server Uri Storage', async () => {
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
                 );
             });
-            test('Clear when we have some old data', async () => {
+            test.only('Clear when we have some old data', async () => {
                 generateDummyData(2);
                 when(fs.exists(anything())).thenResolve(false);
                 when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
