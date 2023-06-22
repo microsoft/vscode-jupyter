@@ -52,7 +52,7 @@ import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serve
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
-export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-v2';
+export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
 export const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
 
@@ -696,6 +696,39 @@ export class OldStorage {
     }
 }
 
+type StorageItem = {
+    handle: string;
+    uri: string;
+};
+function serverToStorageFormat(
+    servers: {
+        handle: string;
+        uri: string;
+        serverInfo: IJupyterServerUri;
+    }[]
+): StorageItem[] {
+    return servers.map((s) => ({ handle: s.handle, uri: s.uri }));
+}
+function storageFormatToServers(items: StorageItem[]) {
+    const servers: {
+        handle: string;
+        uri: string;
+        serverInfo: IJupyterServerUri;
+    }[] = [];
+    items.forEach((s) => {
+        const server = parseUri(s.uri);
+        if (!server) {
+            return;
+        }
+        servers.push({
+            handle: s.handle,
+            uri: s.uri,
+            serverInfo: server
+        });
+    });
+    return servers;
+}
+
 export class NewStorage {
     private readonly _migrationDone: Deferred<void>;
     private updatePromise = Promise.resolve();
@@ -721,7 +754,13 @@ export class NewStorage {
             // Already migrated once before.
             return this._migrationDone.resolve();
         }
-
+        this.encryptedStorage
+            .store(
+                Settings.JupyterServerRemoteLaunchService,
+                'user-jupyter-server-uri-list-v2', // Removed as this storage data is not in the best format.
+                undefined
+            )
+            .catch(noop);
         await this.encryptedStorage.store(
             Settings.JupyterServerRemoteLaunchService,
             UserJupyterServerUriListKeyV2,
@@ -738,7 +777,7 @@ export class NewStorage {
             return [];
         }
         try {
-            return JSON.parse(data);
+            return storageFormatToServers(JSON.parse(data));
         } catch {
             return [];
         }
@@ -751,7 +790,7 @@ export class NewStorage {
                 await this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
                     UserJupyterServerUriListKeyV2,
-                    JSON.stringify(servers)
+                    JSON.stringify(serverToStorageFormat(servers))
                 );
             })
             .catch(noop));
@@ -763,7 +802,7 @@ export class NewStorage {
                 return this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
                     UserJupyterServerUriListKeyV2,
-                    JSON.stringify(servers)
+                    JSON.stringify(serverToStorageFormat(servers))
                 );
             })
             .catch(noop));

@@ -43,7 +43,7 @@ import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPa
 suite('User Uri Provider', () => {
     ['Old Password Manager', 'New Password Manager'].forEach((passwordManager) => {
         ['Old Storage Format', 'New Storage Format'].forEach((storageFormat) => {
-            suite(storageFormat, () => {
+            suite(`${passwordManager} - ${storageFormat}`, () => {
                 const isNewPasswordManager = passwordManager === 'New Password Manager';
                 const isNewStorageFormat = storageFormat === 'New Storage Format';
                 let provider: UserJupyterServerUrlProvider;
@@ -159,6 +159,13 @@ suite('User Uri Provider', () => {
                         return Promise.resolve();
                     });
 
+                    when(
+                        encryptedStorage.store(
+                            Settings.JupyterServerRemoteLaunchService,
+                            'user-jupyter-server-uri-list-v2',
+                            anything()
+                        )
+                    ).thenResolve();
                     when(
                         encryptedStorage.retrieve(
                             Settings.JupyterServerRemoteLaunchService,
