@@ -109,6 +109,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IJupyterUriProviderRegistration,
         JupyterUriProviderRegistration
     );
+    serviceManager.addBinding(IJupyterUriProviderRegistration, IExtensionSyncActivationService);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, JupyterServerStarter);
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);

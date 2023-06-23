@@ -21,14 +21,18 @@ import { traceError } from '../../../platform/logging';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 
-const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
+export const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 
 /**
  * Handles registration of 3rd party URI providers.
  */
 @injectable()
-export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
+export class JupyterUriProviderRegistration
+    extends Disposables
+    implements IJupyterUriProviderRegistration, IExtensionSyncActivationService
+{
     private readonly _onProvidersChanged = new EventEmitter<void>();
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
     private _providers = new Map<string, JupyterUriProviderWrapper>();
@@ -42,21 +46,18 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
-        disposables.push(this._onProvidersChanged);
-        disposables.push(new Disposable(() => this._providers.forEach((p) => p.dispose())));
-        const serverStorage = serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
-        disposables.push(serverStorage.onDidRemove(this.onDidRemoveServer, this));
+        super();
+        disposables.push(this);
+        this.disposables.push(this._onProvidersChanged);
+        this.disposables.push(new Disposable(() => this._providers.forEach((p) => p.dispose())));
     }
 
-    public async getProviders(): Promise<ReadonlyArray<IInternalJupyterUriProvider>> {
-        await this.loadOtherExtensions();
-
-        // Other extensions should have registered in their activate callback
-        return Array.from(this.providers.values());
+    public activate(): void {
+        const serverStorage = this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
+        this.disposables.push(serverStorage.onDidRemove(this.onDidRemoveServer, this));
     }
-
     public async getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined> {
         await this.loadOtherExtensions();
         if (!this._providers.has(id)) {
@@ -78,17 +79,18 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         }
         this._onProvidersChanged.fire();
 
-        return {
+        const disposable = {
             dispose: () => {
                 this._providers.get(provider.id)?.dispose();
                 this._providers.delete(provider.id);
                 this._onProvidersChanged.fire();
             }
         };
+        this.disposables.push(disposable);
+        return disposable;
     }
     public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
         await this.loadOtherExtensions();
-
         const provider = this._providers.get(id);
         if (!provider) {
             traceError(`${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${handle}`);
