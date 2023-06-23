@@ -28,6 +28,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
     private chainedPromises = Promise.resolve();
     private readonly storageFile: Uri;
     private ensureStorageExistsPromise?: Promise<Uri>;
+    private staleState?: Record<string, StorageExecutionInfo>;
 
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -53,12 +54,16 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         if (!isRemoteConnection(kernel.kernelConnectionMetadata) || !kernel.session?.id) {
             return;
         }
+        if (this.staleState && this.staleState[notebook.uri.toString()]) {
+            return this.staleState[notebook.uri.toString()];
+        }
 
         const file = await this.getStorageFile();
         let store: Record<string, StorageExecutionInfo> = {};
         try {
             const data = await this.fs.readFile(file);
             store = JSON.parse(data.toString()) as Record<string, StorageExecutionInfo>;
+            this.staleState = store;
         } catch {
             // Ignore, as this indicates the file does not exist.
             return;
@@ -147,10 +152,9 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         }
 
         this.chainedPromises = this.chainedPromises.finally(async () => {
-            const file = await this.getStorageFile();
             let store: Record<string, StorageExecutionInfo> = {};
             try {
-                const data = await this.fs.readFile(file);
+                const data = await this.getStorageFile().then(() => this.fs.readFile(this.storageFile));
                 store = JSON.parse(data.toString()) as Record<string, StorageExecutionInfo>;
             } catch {
                 // Ignore, as this indicates the file does not exist.
@@ -159,7 +163,8 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             const notebookId = cell.notebook.uri.toString();
             if (store[notebookId].cellIndex === cell.index) {
                 delete store[notebookId];
-                await this.fs.writeFile(file, JSON.stringify(store));
+                this.staleState = store;
+                await this.fs.writeFile(this.storageFile, JSON.stringify(store));
             }
         });
     }
@@ -189,10 +194,9 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             startTime: info.startTime
         };
         this.chainedPromises = this.chainedPromises.finally(async () => {
-            const file = await this.getStorageFile();
             let store: Record<string, StorageExecutionInfo> = {};
             try {
-                const data = await this.fs.readFile(file);
+                const data = await this.getStorageFile().then(() => this.fs.readFile(this.storageFile));
                 store = JSON.parse(data.toString()) as Record<string, StorageExecutionInfo>;
             } catch {
                 // Ignore, as this indicates the file does not exist.
@@ -200,7 +204,8 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             const notebookId = cell.notebook.uri.toString();
             store[notebookId] = storageInfo;
             this.removeOldItems(store);
-            await this.fs.writeFile(file, JSON.stringify(store));
+            this.staleState = store;
+            await this.fs.writeFile(this.storageFile, JSON.stringify(store));
         });
     }
     private onDidRemoveServerUris(removedServers: IJupyterServerUriEntry[]) {
@@ -231,6 +236,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
 
             if (removed) {
                 this.removeOldItems(store);
+                this.staleState = store;
                 await this.fs.writeFile(this.storageFile, JSON.stringify(store));
             }
         });
