@@ -84,6 +84,7 @@ suite('Server Uri Storage', async () => {
                 const itemsInNewStorage: StorageMRUItem[] = [];
                 when(fs.writeFile(anything(), anything())).thenCall((_, data) => {
                     itemsInNewStorage.push(...JSON.parse(data.toString()));
+                    when(fs.exists(anything())).thenResolve(true);
                     return Promise.resolve();
                 });
                 when(fs.readFile(anything())).thenCall(() => JSON.stringify(itemsInNewStorage));
@@ -122,6 +123,7 @@ suite('Server Uri Storage', async () => {
                 const itemsInNewStorage: StorageMRUItem[] = [];
                 when(fs.writeFile(anything(), anything())).thenCall((_, data) => {
                     itemsInNewStorage.push(...JSON.parse(data.toString()));
+                    when(fs.exists(anything())).thenResolve(true);
                     return Promise.resolve();
                 });
                 when(fs.readFile(anything())).thenCall(() => JSON.stringify(itemsInNewStorage));
