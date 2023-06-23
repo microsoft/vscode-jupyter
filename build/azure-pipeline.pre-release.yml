@@ -28,6 +28,7 @@ parameters:
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
+    ghCreateTag: false
     l10nSourcePaths: ./src
     buildPlatforms:
       - name: Linux
