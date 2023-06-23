@@ -25,9 +25,9 @@ export function addClearCacheCommand(context: IExtensionContext, isDevMode: bool
         await Promise.all(promises).catch(noop);
         // Delete the files after clearing the cache.
         await Promise.all([
+            workspace.fs.delete(Uri.joinPath(context.globalStorageUri, 'lastExecutedRemoteCell.json')).then(noop, noop),
             workspace.fs.delete(Uri.joinPath(context.globalStorageUri, 'remoteServersMRUList.json')).then(noop, noop)
         ]);
-
         traceInfo('Cache cleared');
     });
 }

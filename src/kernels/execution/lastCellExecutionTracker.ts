@@ -1,20 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectable, inject, named } from 'inversify';
-import { IDisposable, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
+import { injectable, inject } from 'inversify';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
 import { Disposables } from '../../platform/common/utils';
 import { IKernel, ResumeCellExecutionInformation, isRemoteConnection } from '../types';
 import type { KernelMessage } from '@jupyterlab/services';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { Disposable, Memento, NotebookCell, NotebookDocument } from 'vscode';
-import { noop, swallowExceptions } from '../../platform/common/utils/misc';
+import { Disposable, NotebookCell, NotebookDocument, Uri } from 'vscode';
+import { swallowExceptions } from '../../platform/common/utils/misc';
 import { getParentHeaderMsgId } from './cellExecutionMessageHandler';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IFileSystem } from '../../platform/common/platform/types';
 
+const MAX_TRACKING_TIME = 1_000 * 60 * 60 * 24 * 2; // 2 days
 type CellExecutionInfo = Omit<ResumeCellExecutionInformation, 'token'> & { kernelId: string; cellIndex: number };
+type StorageExecutionInfo = CellExecutionInfo & { serverId: string; sessionId: string };
+
 /**
  * Keeps track of the last cell that was executed for a notebook along with the time and execution count.
  */
@@ -22,32 +26,44 @@ type CellExecutionInfo = Omit<ResumeCellExecutionInformation, 'token'> & { kerne
 export class LastCellExecutionTracker extends Disposables implements IExtensionSyncActivationService {
     private readonly executedCells = new WeakMap<NotebookCell, Partial<CellExecutionInfo>>();
     private chainedPromises = Promise.resolve();
+    private readonly storageFile: Uri;
+    private ensureStorageExistsPromise?: Promise<Uri>;
+
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @named(WORKSPACE_MEMENTO) @inject(IMemento) private readonly workspaceMemento: Memento,
-        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
         super();
+        context.globalStorageUri;
         disposables.push(this);
+        this.storageFile = Uri.joinPath(this.context.globalStorageUri, 'lastExecutedRemoteCell.json');
     }
     public activate(): void {
         this.serverStorage.onDidRemove(this.onDidRemoveServerUris, this, this.disposables);
     }
-    private getStateKey(serverId: string) {
-        return `LAST_EXECUTED_CELL_${serverId}`;
-    }
-    public getLastTrackedCellExecution(notebook: NotebookDocument, kernel: IKernel): CellExecutionInfo | undefined {
+    public async getLastTrackedCellExecution(
+        notebook: NotebookDocument,
+        kernel: IKernel
+    ): Promise<CellExecutionInfo | undefined> {
         if (notebook.isUntitled) {
             return;
         }
-        if (!isRemoteConnection(kernel.kernelConnectionMetadata)) {
+        if (!isRemoteConnection(kernel.kernelConnectionMetadata) || !kernel.session?.id) {
             return;
         }
-        const data = this.workspaceMemento.get<{ [key: string]: CellExecutionInfo }>(
-            this.getStateKey(kernel.kernelConnectionMetadata.serverId),
-            {}
-        );
-        return data[notebook.uri.toString()];
+
+        const file = await this.getStorageFile();
+        let store: Record<string, StorageExecutionInfo> = {};
+        try {
+            const data = await this.fs.readFile(file);
+            store = JSON.parse(data.toString()) as Record<string, StorageExecutionInfo>;
+        } catch {
+            // Ignore, as this indicates the file does not exist.
+            return;
+        }
+        return store[notebook.uri.toString()];
     }
     public trackCellExecution(cell: NotebookCell, kernel: IKernel) {
         // For now we are only interested in remote kernel connections.
@@ -126,43 +142,105 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         if (cell.notebook.isUntitled) {
             return;
         }
-        if (!isRemoteConnection(kernel.kernelConnectionMetadata)) {
+        if (!isRemoteConnection(kernel.kernelConnectionMetadata) || !kernel.session?.id) {
             return;
         }
 
-        const id = this.getStateKey(kernel.kernelConnectionMetadata.serverId);
-        this.chainedPromises = this.chainedPromises.finally(() => {
+        this.chainedPromises = this.chainedPromises.finally(async () => {
+            const file = await this.getStorageFile();
+            let store: Record<string, StorageExecutionInfo> = {};
+            try {
+                const data = await this.fs.readFile(file);
+                store = JSON.parse(data.toString()) as Record<string, StorageExecutionInfo>;
+            } catch {
+                // Ignore, as this indicates the file does not exist.
+                return;
+            }
             const notebookId = cell.notebook.uri.toString();
-            const currentState = this.workspaceMemento.get<{ [key: string]: Partial<CellExecutionInfo> }>(id, {});
-            if (currentState[notebookId].cellIndex === cell.index) {
-                delete currentState[notebookId];
-                return this.workspaceMemento.update(id, currentState).then(noop, noop);
+            if (store[notebookId].cellIndex === cell.index) {
+                delete store[notebookId];
+                await this.fs.writeFile(file, JSON.stringify(store));
             }
         });
     }
+    private getStorageFile() {
+        this.ensureStorageExistsPromise =
+            this.ensureStorageExistsPromise ||
+            (async () => {
+                await this.fs.createDirectory(this.context.globalStorageUri);
+                return this.storageFile;
+            })();
+        return this.ensureStorageExistsPromise;
+    }
     private trackLastExecution(cell: NotebookCell, kernel: IKernel, info: Partial<CellExecutionInfo>) {
-        if (!info.executionCount && !info.msg_id && !info.startTime) {
+        if (!info.executionCount || !info.msg_id || !info.startTime) {
             return;
         }
-        if (!isRemoteConnection(kernel.kernelConnectionMetadata)) {
+        if (!isRemoteConnection(kernel.kernelConnectionMetadata) || !kernel.session?.id) {
             return;
         }
-
-        const id = this.getStateKey(kernel.kernelConnectionMetadata.serverId);
-        this.chainedPromises = this.chainedPromises.finally(() => {
+        const storageInfo: StorageExecutionInfo = {
+            cellIndex: cell.index,
+            executionCount: info.executionCount,
+            kernelId: kernel.session?.kernel?.id || '',
+            msg_id: info.msg_id,
+            serverId: kernel.kernelConnectionMetadata.serverId,
+            sessionId: kernel.session?.id,
+            startTime: info.startTime
+        };
+        this.chainedPromises = this.chainedPromises.finally(async () => {
+            const file = await this.getStorageFile();
+            let store: Record<string, StorageExecutionInfo> = {};
+            try {
+                const data = await this.fs.readFile(file);
+                store = JSON.parse(data.toString()) as Record<string, StorageExecutionInfo>;
+            } catch {
+                // Ignore, as this indicates the file does not exist.
+            }
             const notebookId = cell.notebook.uri.toString();
-            const currentState = this.workspaceMemento.get<{ [key: string]: Partial<CellExecutionInfo> }>(id, {});
-            currentState[notebookId] = info;
-            return this.workspaceMemento.update(id, currentState).then(noop, noop);
+            store[notebookId] = storageInfo;
+            this.removeOldItems(store);
+            await this.fs.writeFile(file, JSON.stringify(store));
         });
     }
     private onDidRemoveServerUris(removedServers: IJupyterServerUriEntry[]) {
-        this.chainedPromises = this.chainedPromises.finally(() =>
-            Promise.all(
-                removedServers
-                    .map((item) => this.getStateKey(item.serverId))
-                    .map((id) => this.workspaceMemento.update(id, undefined).then(noop, noop))
-            )
-        );
+        if (removedServers.length === 0) {
+            return;
+        }
+        this.chainedPromises = this.chainedPromises.finally(async () => {
+            await this.getStorageFile();
+            let store: Record<string, StorageExecutionInfo> = {};
+            try {
+                const data = await this.fs.readFile(this.storageFile);
+                store = JSON.parse(data.toString()) as Record<string, StorageExecutionInfo>;
+            } catch {
+                // Ignore, as this indicates the file does not exist.
+            }
+            let removed = false;
+            const removedServerIds = new Set(removedServers.map((s) => s.serverId));
+            Object.keys(store).forEach((key) => {
+                const data = store[key];
+                if (
+                    removedServerIds.has(data.serverId) || // No longer a valid server
+                    Date.now() - data.startTime > MAX_TRACKING_TIME // If its too old, then remove it.
+                ) {
+                    delete store[key];
+                    removed = true;
+                }
+            });
+
+            if (removed) {
+                this.removeOldItems(store);
+                await this.fs.writeFile(this.storageFile, JSON.stringify(store));
+            }
+        });
+    }
+    private removeOldItems(store: Record<string, StorageExecutionInfo>) {
+        Object.keys(store).forEach((key) => {
+            const data = store[key];
+            if (data && Date.now() - data.startTime > MAX_TRACKING_TIME) {
+                delete store[key];
+            }
+        });
     }
 }
