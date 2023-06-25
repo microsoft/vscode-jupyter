@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
@@ -22,7 +22,6 @@ import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { waitForCondition } from '../../test/common';
-import { JupyterServerUriHandle } from '../../api';
 
 suite('RemoteKernelControllerWatcher', () => {
     let watcher: RemoteKernelControllerWatcher;
@@ -52,7 +51,7 @@ suite('RemoteKernelControllerWatcher', () => {
 
     test('Dispose controllers associated with an old handle', async () => {
         const provider1Id = 'provider1';
-        const provider1Handle1: JupyterServerUriHandle = 'provider1Handle1';
+        const provider1Handle1 = 'provider1Handle1';
         const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
         const serverId = await computeServerId(remoteUriForProvider1);
 
@@ -129,7 +128,7 @@ suite('RemoteKernelControllerWatcher', () => {
                 }
             }
         ]);
-        when(uriStorage.get(serverId)).thenResolve({
+        when(uriStorage.get(deepEqual({ serverId }))).thenResolve({
             time: 1,
             serverId,
             uri: remoteUriForProvider1,
@@ -183,7 +182,7 @@ suite('RemoteKernelControllerWatcher', () => {
         await onDidChangeHandles!();
 
         assert.isOk(onDidChangeHandles, 'onDidChangeHandles should be defined');
-        verify(uriStorage.remove(serverId)).once();
+        verify(uriStorage.remove(deepEqual({ id: provider1Id, handle: provider1Handle1 }))).once();
         verify(localKernel.dispose()).never();
         verify(remoteKernelSpec.dispose()).once();
         verify(remoteLiveKernel.dispose()).once();

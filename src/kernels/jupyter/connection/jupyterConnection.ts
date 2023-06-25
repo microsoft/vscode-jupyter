@@ -20,7 +20,8 @@ import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    JupyterServerProviderHandle
 } from '../types';
 import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
@@ -88,8 +89,8 @@ export class JupyterConnection {
         );
     }
 
-    public async createConnectionInfo(serverId: string) {
-        const server = await this.serverUriStorage.get(serverId);
+    public async createConnectionInfo(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
+        const server = await this.serverUriStorage.get(providerHandle);
         if (!server) {
             throw new Error('Server Not found');
         }
@@ -115,7 +116,7 @@ export class JupyterConnection {
     ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
         serverUri = serverUri || (await this.getJupyterServerUri(provider));
-        const connection = await createRemoteConnectionInfo(provider, serverUri);
+        const connection = createRemoteConnectionInfo(provider, serverUri);
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
@@ -136,7 +137,7 @@ export class JupyterConnection {
     ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
         serverUri = serverUri || (await this.getJupyterServerUri(provider));
-        const connection = await createRemoteConnectionInfo(provider, serverUri);
+        const connection = createRemoteConnectionInfo(provider, serverUri);
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
@@ -181,8 +182,7 @@ export class JupyterConnection {
             if (ex instanceof BaseError) {
                 throw ex;
             }
-            const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
-            throw new RemoteJupyterServerUriProviderError(provider.id, provider.handle, ex, serverId);
+            throw new RemoteJupyterServerUriProviderError(provider.id, provider.handle, ex);
         }
     }
 
@@ -363,7 +363,7 @@ export class JupyterConnection {
         let serverSecurePromise = JupyterConnection.secureServers.get(connInfo.baseUrl);
 
         if (serverSecurePromise === undefined) {
-            if (!connInfo.providerId.startsWith('_builtin') || connInfo.localLaunch) {
+            if (!connInfo.providerHandle.id.startsWith('_builtin') || connInfo.localLaunch) {
                 // If a Jupyter URI provider is providing this URI, then we trust it.
                 serverSecurePromise = Promise.resolve(true);
                 JupyterConnection.secureServers.set(connInfo.baseUrl, serverSecurePromise);

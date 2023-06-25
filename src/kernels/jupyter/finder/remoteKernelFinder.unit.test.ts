@@ -33,7 +33,6 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -46,12 +45,11 @@ suite(`Remote Kernel Finder`, () => {
     let kernelsChanged: TestEventHandler<void>;
     let jupyterConnection: JupyterConnection;
     const connInfo: IJupyterConnection = {
-        serverId: 'a',
         localLaunch: false,
         baseUrl: 'http://foobar',
         displayName: 'foobar connection',
         token: '',
-        providerId: 'a',
+        providerHandle: { id: 'a', handle: '1' },
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
         dispose: noop
@@ -105,9 +103,6 @@ suite(`Remote Kernel Finder`, () => {
                 model: {}
             }
         };
-    });
-    suiteSetup(async () => {
-        connInfo.serverId = await computeServerId(generateUriFromRemoteProvider('a', 'b'));
     });
     setup(() => {
         memento = mock<Memento>();

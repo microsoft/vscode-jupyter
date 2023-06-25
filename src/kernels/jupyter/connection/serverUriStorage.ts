@@ -109,11 +109,19 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         await this.newStorage.migrateMRU();
         await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
     }
-    public async get(id: string): Promise<IJupyterServerUriEntry | undefined> {
+    public async get(
+        searchCriteria: JupyterServerProviderHandle | { serverId: string }
+    ): Promise<IJupyterServerUriEntry | undefined> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         const savedList = await this.getAll();
-        return savedList.find((item) => item.serverId === id);
+        if ('handle' in searchCriteria) {
+            return savedList.find(
+                (item) => item.provider.id === searchCriteria.id && item.provider.handle === searchCriteria.handle
+            );
+        } else {
+            return savedList.find((item) => item.provider.id === searchCriteria.serverId);
+        }
     }
     public async add(
         jupyterHandle: { id: string; handle: JupyterServerUriHandle },
@@ -147,10 +155,10 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         await this.newStorage.migrateMRU();
         await Promise.all([this.newStorage.update(serverId), this.oldStorage.update(serverId)]);
     }
-    public async remove(serverId: string) {
+    public async remove(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        await Promise.all([this.newStorage.remove(serverId), this.oldStorage.remove(serverId)]);
+        await Promise.all([this.newStorage.remove(providerHandle), this.oldStorage.remove(providerHandle)]);
     }
 }
 
@@ -200,14 +208,30 @@ class OldStorage {
             Date.now()
         );
     }
-    public async remove(serverId: string) {
+    public async remove(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
         const uriList = await this.getAll();
-        const editedList = uriList.filter((f) => f.serverId !== serverId);
+        const editedList =
+            'id' in providerHandle
+                ? uriList.filter(
+                      (f) => f.provider.id !== providerHandle.id && f.provider.handle === providerHandle.handle
+                  )
+                : uriList.filter((f) => f.serverId !== providerHandle.serverId);
         if (editedList.length === 0) {
             await this.clear();
         } else {
-            await this.updateMemento(uriList.filter((f) => f.serverId !== serverId));
-            const removedItem = uriList.find((f) => f.serverId === serverId);
+            await this.updateMemento(
+                'id' in providerHandle
+                    ? uriList.filter(
+                          (f) => f.provider.id !== providerHandle.id && f.provider.handle === providerHandle.handle
+                      )
+                    : uriList.filter((f) => f.serverId !== providerHandle.serverId)
+            );
+            const removedItem =
+                'id' in providerHandle
+                    ? uriList.find(
+                          (f) => f.provider.id !== providerHandle.id && f.provider.handle === providerHandle.handle
+                      )
+                    : uriList.find((f) => f.serverId !== providerHandle.serverId);
             if (removedItem) {
                 this._onDidRemoveUris.fire([removedItem]);
             }
@@ -511,15 +535,25 @@ class NewStorage {
         };
         await this.add(entry);
     }
-    public async remove(serverId: string) {
+    public async remove(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
         await (this.updatePromise = this.updatePromise
             .then(async () => {
                 const all = await this.getAllImpl(false);
                 if (all.length === 0) {
                     return;
                 }
-                const editedList = all.filter((f) => f.serverId !== serverId);
-                const removedItems = all.filter((f) => f.serverId === serverId);
+                const editedList =
+                    'id' in providerHandle
+                        ? all.filter(
+                              (f) => f.provider.id !== providerHandle.id && f.provider.handle !== providerHandle.handle
+                          )
+                        : all.filter((f) => f.serverId !== providerHandle.serverId);
+                const removedItems =
+                    'id' in providerHandle
+                        ? all.filter(
+                              (f) => f.provider.id !== providerHandle.id && f.provider.handle !== providerHandle.handle
+                          )
+                        : all.filter((f) => f.serverId !== providerHandle.serverId);
 
                 if (editedList.length === 0) {
                     await this.clear();

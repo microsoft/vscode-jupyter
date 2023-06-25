@@ -52,7 +52,12 @@ import {
     IJupyterUriProviderRegistration,
     JupyterInterpreterDependencyResponse
 } from '../jupyter/types';
-import { handleExpiredCertsError, handleSelfCertsError } from '../jupyter/jupyterUtils';
+import {
+    computeServerId,
+    generateUriFromRemoteProvider,
+    handleExpiredCertsError,
+    handleSelfCertsError
+} from '../jupyter/jupyterUtils';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterExpiredCertsError } from '../../platform/errors/jupyterExpiredCertsError';
@@ -234,7 +239,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         error: RemoteJupyterServerUriProviderError,
         errorContext?: KernelAction
     ) {
-        const server = await this.serverUriStorage.get(error.serverId);
+        const server = await this.serverUriStorage.get({ id: error.providerId, handle: error.handle });
         const message = error.originalError?.message || error.message;
         const displayName = server?.displayName;
         const idAndHandle = `${error.providerId}:${error.handle}`;
@@ -249,7 +254,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         error: RemoteJupyterServerConnectionError,
         errorContext?: KernelAction
     ) {
-        const info = await this.serverUriStorage.get(error.serverId);
+        const info = await this.serverUriStorage.get({ serverId: error.serverId });
         const message = error.originalError.message || '';
 
         if (info?.provider) {
@@ -279,7 +284,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             const handles = await provider.getHandles();
 
             if (!handles.includes(info.provider.handle)) {
-                await this.serverUriStorage.remove(info.serverId);
+                await this.serverUriStorage.remove(info.provider);
             }
             return true;
         } catch (_ex) {
@@ -346,8 +351,11 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     : err instanceof RemoteJupyterServerConnectionError
                     ? err.originalError.message || ''
                     : err.originalError?.message || err.message;
-            const serverId = err instanceof RemoteJupyterServerConnectionError ? err.serverId : err.serverId;
-            const server = await this.serverUriStorage.get(serverId);
+            const serverId =
+                err instanceof RemoteJupyterServerConnectionError
+                    ? err.serverId
+                    : await computeServerId(generateUriFromRemoteProvider(err.providerId, err.handle));
+            const server = await this.serverUriStorage.get({ serverId });
             const displayName = server?.displayName;
             const baseUrl = err instanceof RemoteJupyterServerConnectionError ? err.baseUrl : '';
             const idAndHandle =
@@ -375,9 +383,9 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             switch (selection) {
                 case DataScience.removeRemoteJupyterConnectionButtonText: {
                     // Remove this uri if already found (going to add again with a new time)
-                    const item = await this.serverUriStorage.get(serverId);
+                    const item = await this.serverUriStorage.get({ serverId });
                     if (item) {
-                        await this.serverUriStorage.remove(item.serverId);
+                        await this.serverUriStorage.remove(item.provider);
                     }
                     // Wait until all of the remote controllers associated with this server have been removed.
                     return KernelInterpreterDependencyResponse.cancel;

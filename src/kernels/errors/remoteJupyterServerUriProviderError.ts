@@ -20,8 +20,7 @@ export class RemoteJupyterServerUriProviderError extends BaseError {
     constructor(
         public readonly providerId: string,
         public readonly handle: string,
-        public readonly originalError: Error,
-        public serverId: string
+        public readonly originalError: Error
     ) {
         super('remotejupyterserveruriprovider', originalError.message || originalError.toString());
     }

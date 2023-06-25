@@ -16,7 +16,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import * as path from '../platform/vscode-path/path';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
-import { IJupyterKernel } from './jupyter/types';
+import { IJupyterKernel, JupyterServerProviderHandle } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
@@ -527,12 +527,11 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
 }
 
 export interface IJupyterConnection extends Disposable {
-    serverId: string;
     readonly localLaunch: boolean;
     displayName: string;
     readonly baseUrl: string;
     readonly token: string;
-    readonly providerId: string;
+    readonly providerHandle: JupyterServerProviderHandle;
     readonly hostName: string;
     /**
      * Directory where the notebook server was started.

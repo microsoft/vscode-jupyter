@@ -88,11 +88,10 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export async function createRemoteConnectionInfo(
+export function createRemoteConnectionInfo(
     jupyterHandle: { id: string; handle: JupyterServerUriHandle },
     serverUri: IJupyterServerUri
-): Promise<IJupyterConnection> {
-    const serverId = await computeServerId(generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle));
+): IJupyterConnection {
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
     const hostName = new URL(serverUri.baseUrl).hostname;
@@ -102,9 +101,8 @@ export async function createRemoteConnectionInfo(
             ? serverUri.authorizationHeader
             : undefined;
     return {
-        serverId,
         baseUrl,
-        providerId: jupyterHandle.id,
+        providerHandle: jupyterHandle,
         token,
         hostName,
         localLaunch: false,

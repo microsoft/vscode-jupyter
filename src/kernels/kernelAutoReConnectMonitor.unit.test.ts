@@ -14,7 +14,7 @@ import {
     INotebookKernelExecution,
     RemoteKernelSpecConnectionMetadata
 } from './types';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import {
     Disposable,
     EventEmitter,
@@ -331,7 +331,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
             }
         };
         when(jupyterServerUriStorage.getAll()).thenResolve([server]);
-        when(jupyterServerUriStorage.get(server.serverId)).thenResolve(server);
+        when(jupyterServerUriStorage.get(deepEqual({ serverId: server.serverId }))).thenResolve(server);
         when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
             id: 'remoteUriProvider',
             extensionId: 'ms-python.python',

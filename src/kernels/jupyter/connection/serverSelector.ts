@@ -107,7 +107,6 @@ export class JupyterServerSelector {
     }
     public async addJupyterServerOld(provider: { id: string; handle: JupyterServerUriHandle }): Promise<void> {
         const userURI = generateUriFromRemoteProvider(provider.id, provider.handle);
-        const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
             await this.jupyterConnection.validateRemoteUri(provider);
@@ -127,6 +126,7 @@ export class JupyterServerSelector {
             } else if (err && err instanceof JupyterInvalidPasswordError) {
                 return;
             } else {
+                const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
                 await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
                 // Can't set the URI in this case.
                 return;

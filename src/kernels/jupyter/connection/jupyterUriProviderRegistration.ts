@@ -9,7 +9,6 @@ import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InvalidRemoteJupyterServerUriHandleError } from '../../errors/invalidRemoteJupyterServerUriHandleError';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
 import {
     IInternalJupyterUriProvider,
     IJupyterServerUriEntry,
@@ -100,8 +99,7 @@ export class JupyterUriProviderRegistration
             const handles = await provider.getHandles();
             if (!handles.includes(handle)) {
                 const extensionId = this.providerExtensionMapping.get(id)!;
-                const serverId = await computeServerId(generateUriFromRemoteProvider(id, handle));
-                throw new InvalidRemoteJupyterServerUriHandleError(id, handle, extensionId, serverId);
+                throw new InvalidRemoteJupyterServerUriHandleError(id, handle, extensionId);
             }
         }
         return provider.getServerUri(handle);

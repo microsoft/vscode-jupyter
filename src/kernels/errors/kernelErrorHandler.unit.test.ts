@@ -818,10 +818,10 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     DataScience.selectDifferentKernel
                 )
             ).once();
-            verify(uriStorage.remove(serverId)).never();
+            verify(uriStorage.remove(deepEqual({ serverId }))).never();
         });
         test('Display error when connection to remote jupyter server fails due to 3rd party extension', async () => {
-            const error = new RemoteJupyterServerUriProviderError('1', 'a', new Error('invalid handle'), serverId);
+            const error = new RemoteJupyterServerUriProviderError('1', 'a', new Error('invalid handle'));
             const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
@@ -833,7 +833,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 },
                 serverId
             });
-            when(uriStorage.get(serverId)).thenResolve({
+            when(uriStorage.get(deepEqual({ serverId }))).thenResolve({
                 time: 1,
                 uri,
                 serverId,
@@ -861,8 +861,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     DataScience.selectDifferentKernel
                 )
             ).once();
-            verify(uriStorage.remove(serverId)).never();
-            verify(uriStorage.get(serverId)).atLeast(1);
+            verify(uriStorage.remove(deepEqual({ serverId }))).never();
+            verify(uriStorage.get(deepEqual({ serverId }))).atLeast(1);
         });
         test('Remove remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
@@ -881,7 +881,18 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText as any);
             when(uriStorage.remove(anything())).thenResolve();
-            when(uriStorage.get(serverId)).thenResolve({ uri, serverId, time: 2, provider: { id: '1', handle: 'a' } });
+            when(uriStorage.get(deepEqual({ serverId }))).thenResolve({
+                uri,
+                serverId,
+                time: 2,
+                provider: { id: '1', handle: 'a' }
+            });
+            when(uriStorage.get(deepEqual({ id: '1', handle: 'a' }))).thenResolve({
+                uri,
+                serverId,
+                time: 2,
+                provider: { id: '1', handle: 'a' }
+            });
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -890,8 +901,9 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
-            verify(uriStorage.remove(serverId)).once();
-            verify(uriStorage.get(serverId)).atLeast(1);
+            verify(uriStorage.remove(anything())).once();
+            verify(uriStorage.remove(deepEqual({ id: '1', handle: 'a' }))).once();
+            verify(uriStorage.get(deepEqual({ serverId }))).atLeast(1);
         });
         test('Change remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
@@ -918,7 +930,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
-            verify(uriStorage.remove(serverId)).never();
+            verify(uriStorage.remove(deepEqual({ serverId }))).never();
         });
         test('Select different kernel user choses to do so, when connection to remote jupyter server fails', async () => {
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
@@ -944,7 +956,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.selectDifferentKernel);
-            verify(uriStorage.remove(serverId)).never();
+            verify(uriStorage.remove(deepEqual({ serverId }))).never();
         });
         function verifyErrorMessage(message: string, linkInfo?: string) {
             message = message.includes('command:jupyter.viewOutput')

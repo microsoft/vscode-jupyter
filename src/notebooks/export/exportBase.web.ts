@@ -81,7 +81,9 @@ export class ExportBase implements INbConvertExport, IExportBase {
             return;
         }
         const kernelConnection = kernel.session.kernel;
-        const connection = await this.jupyterConnection.createConnectionInfo(kernelConnectionMetadata.serverId);
+        const connection = await this.jupyterConnection.createConnectionInfo({
+            serverId: kernelConnectionMetadata.serverId
+        });
         const serverSettings = await this.jupyterConnection.getServerConnectSettings(connection);
         const jupyter = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         const contentsManager = new jupyter.ContentsManager({ serverSettings });

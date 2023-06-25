@@ -17,8 +17,7 @@ export class InvalidRemoteJupyterServerUriHandleError extends BaseError {
     constructor(
         public readonly providerId: string,
         public readonly handle: string,
-        public readonly extensionId: string,
-        public readonly serverId: string
+        public readonly extensionId: string
     ) {
         super('invalidremotejupyterserverurihandle', 'Server handle not in list of known handles');
     }

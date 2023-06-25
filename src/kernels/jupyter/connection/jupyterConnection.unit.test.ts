@@ -5,7 +5,7 @@
 
 import { assert, use } from 'chai';
 
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { JupyterConnection } from './jupyterConnection';
 import {
@@ -192,12 +192,12 @@ suite('Jupyter Connection', async () => {
                         token: '1234'
                     }
                 };
-                when(serverUriStorage.get(serverId)).thenResolve(server);
+                when(serverUriStorage.get(deepEqual({ serverId }))).thenResolve(server);
                 when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
                 when(sessionManager.getRunningKernels()).thenResolve([]);
 
-                const connection = await jupyterConnection.createConnectionInfo(serverId);
+                const connection = await jupyterConnection.createConnectionInfo({ id, handle });
 
                 assert.ok(connection, 'Connection not returned');
                 assert.strictEqual(connection.baseUrl, uriInfo.baseUrl, 'Base url is incorrect');
@@ -229,12 +229,13 @@ suite('Jupyter Connection', async () => {
                     displayName: 'someDisplayName',
                     token: '1234'
                 };
-                when(serverUriStorage.get(serverId)).thenResolve(server);
+                when(serverUriStorage.get(deepEqual({ serverId }))).thenResolve(server);
+                when(serverUriStorage.get(deepEqual({ id, handle }))).thenResolve(server);
                 when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
                 when(sessionManager.getRunningKernels()).thenResolve([]);
 
-                const connection = await jupyterConnection.createConnectionInfo(serverId);
+                const connection = await jupyterConnection.createConnectionInfo({ id, handle });
 
                 assert.ok(connection, 'Connection not returned');
                 assert.strictEqual(connection.baseUrl, uriInfo.baseUrl, 'Base url is incorrect');

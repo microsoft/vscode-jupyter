@@ -219,9 +219,11 @@ export interface IJupyterServerUriStorage {
      */
     update(serverId: string): Promise<void>;
     getAll(): Promise<IJupyterServerUriEntry[]>;
-    remove(serverId: string): Promise<void>;
+    remove(providerHandle: JupyterServerProviderHandle | { serverId: string }): Promise<void>;
     clear(): Promise<void>;
-    get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
+    get(
+        providerHandle: JupyterServerProviderHandle | { serverId: string }
+    ): Promise<IJupyterServerUriEntry | undefined>;
     add(
         jupyterHandle: { id: string; handle: JupyterServerUriHandle },
         options?: { time: number; displayName: string }

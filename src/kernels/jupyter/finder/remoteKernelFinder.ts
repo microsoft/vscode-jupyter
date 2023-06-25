@@ -36,6 +36,7 @@ import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isUnitTestExecution } from '../../../platform/common/constants';
+import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -265,7 +266,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(KernelProgressReporter.createProgressReporter(undefined, DataScience.connectingToJupyter));
         }
         return this.jupyterConnection
-            .createConnectionInfo(this.serverUri.serverId)
+            .createConnectionInfo(this.serverUri.provider)
             .finally(() => disposeAllDisposables(disposables));
     }
 
@@ -315,17 +316,19 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
-            const serverId = connInfo.serverId;
-            const [running, specs, sessions] = await Promise.all([
+            const [running, specs, sessions, serverId] = await Promise.all([
                 sessionManager.getRunningKernels(),
                 sessionManager.getKernelSpecs(),
-                sessionManager.getRunningSessions()
+                sessionManager.getRunningSessions(),
+                computeServerId(
+                    generateUriFromRemoteProvider(connInfo.providerHandle.id, connInfo.providerHandle.handle)
+                )
             ]);
 
             // Turn them both into a combined list
             const mappedSpecs = await Promise.all(
                 specs.map(async (s) => {
-                    await sendKernelSpecTelemetry(s, 'remote');
+                    sendKernelSpecTelemetry(s, 'remote');
                     const kernel = RemoteKernelSpecConnectionMetadata.create({
                         kernelSpec: s,
                         id: getKernelId(s, undefined, serverId),
