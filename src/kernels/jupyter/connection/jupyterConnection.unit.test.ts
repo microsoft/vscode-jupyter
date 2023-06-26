@@ -193,6 +193,7 @@ suite('Jupyter Connection', async () => {
                     }
                 };
                 when(serverUriStorage.get(deepEqual({ serverId }))).thenResolve(server);
+                when(serverUriStorage.get(deepEqual({ id, handle }))).thenResolve(server);
                 when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
                 when(sessionManager.getRunningKernels()).thenResolve([]);

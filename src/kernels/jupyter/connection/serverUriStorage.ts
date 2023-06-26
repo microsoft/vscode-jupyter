@@ -213,7 +213,7 @@ class OldStorage {
         const editedList =
             'id' in providerHandle
                 ? uriList.filter(
-                      (f) => f.provider.id !== providerHandle.id && f.provider.handle === providerHandle.handle
+                      (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
                   )
                 : uriList.filter((f) => f.serverId !== providerHandle.serverId);
         if (editedList.length === 0) {
@@ -222,19 +222,21 @@ class OldStorage {
             await this.updateMemento(
                 'id' in providerHandle
                     ? uriList.filter(
-                          (f) => f.provider.id !== providerHandle.id && f.provider.handle === providerHandle.handle
+                          (f) =>
+                              `${f.provider.id}#${f.provider.handle}` !==
+                              `${providerHandle.id}#${providerHandle.handle}`
                       )
                     : uriList.filter((f) => f.serverId !== providerHandle.serverId)
             );
-            const removedItem =
-                'id' in providerHandle
-                    ? uriList.find(
-                          (f) => f.provider.id !== providerHandle.id && f.provider.handle === providerHandle.handle
-                      )
-                    : uriList.find((f) => f.serverId !== providerHandle.serverId);
-            if (removedItem) {
-                this._onDidRemoveUris.fire([removedItem]);
-            }
+        }
+        const removedItem =
+            'id' in providerHandle
+                ? uriList.find(
+                      (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
+                  )
+                : uriList.find((f) => f.serverId !== providerHandle.serverId);
+        if (removedItem) {
+            this._onDidRemoveUris.fire([removedItem]);
         }
     }
     private async addToUriList(
@@ -545,16 +547,19 @@ class NewStorage {
                 const editedList =
                     'id' in providerHandle
                         ? all.filter(
-                              (f) => f.provider.id !== providerHandle.id && f.provider.handle !== providerHandle.handle
+                              (f) =>
+                                  `${f.provider.id}#${f.provider.handle}` !==
+                                  `${providerHandle.id}#${providerHandle.handle}`
                           )
                         : all.filter((f) => f.serverId !== providerHandle.serverId);
                 const removedItems =
                     'id' in providerHandle
                         ? all.filter(
-                              (f) => f.provider.id !== providerHandle.id && f.provider.handle !== providerHandle.handle
+                              (f) =>
+                                  `${f.provider.id}#${f.provider.handle}` !==
+                                  `${providerHandle.id}#${providerHandle.handle}`
                           )
                         : all.filter((f) => f.serverId !== providerHandle.serverId);
-
                 if (editedList.length === 0) {
                     await this.clear();
                 } else if (removedItems.length) {
@@ -566,6 +571,8 @@ class NewStorage {
                         };
                     });
                     await this.fs.writeFile(this.storageFile, JSON.stringify(items));
+                }
+                if (removedItems.length) {
                     this._onDidRemoveUris.fire(removedItems);
                 }
             })
