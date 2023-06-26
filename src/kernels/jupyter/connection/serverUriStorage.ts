@@ -571,8 +571,6 @@ class NewStorage {
                         };
                     });
                     await this.fs.writeFile(this.storageFile, JSON.stringify(items));
-                }
-                if (removedItems.length) {
                     this._onDidRemoveUris.fire(removedItems);
                 }
             })
