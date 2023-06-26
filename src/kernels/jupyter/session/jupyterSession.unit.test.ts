@@ -259,7 +259,7 @@ suite('JupyterSession', () => {
                         id: '',
                         kernelModel: {} as any,
                         baseUrl: '',
-                        serverId: ''
+                        providerHandle: { id: '', handle: '' }
                     })
                 );
                 when(session.shutdown()).thenResolve();
@@ -309,7 +309,7 @@ suite('JupyterSession', () => {
                         id: '',
                         kernelModel: {} as any,
                         baseUrl: '',
-                        serverId: ''
+                        providerHandle: { id: '', handle: '' }
                     })
                 );
                 when(session.shutdown()).thenResolve();
@@ -531,7 +531,7 @@ suite('JupyterSession', () => {
                         language: 'python',
                         executable: ''
                     },
-                    serverId: '1'
+                    providerHandle: { id: '', handle: '' }
                 });
                 createJupyterSession(resource, remoteKernelSpec);
 

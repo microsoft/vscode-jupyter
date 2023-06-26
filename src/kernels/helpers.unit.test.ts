@@ -26,7 +26,7 @@ suite('Kernel Connection Helpers', () => {
                     numberOfConnections: 1
                 },
                 baseUrl: '',
-                serverId: ''
+                providerHandle: { id: '', handle: '' }
             })
         );
 

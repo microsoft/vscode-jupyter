@@ -11,7 +11,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { Disposable, Memento, NotebookCell, NotebookDocument } from 'vscode';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 import { getParentHeaderMsgId } from './cellExecutionMessageHandler';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../jupyter/types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
 type CellExecutionInfo = Omit<ResumeCellExecutionInformation, 'token'> & { kernelId: string; cellIndex: number };
@@ -33,8 +33,8 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
     public activate(): void {
         this.serverStorage.onDidRemove(this.onDidRemoveServerUris, this, this.disposables);
     }
-    private getStateKey(serverId: string) {
-        return `LAST_EXECUTED_CELL_${serverId}`;
+    private getStateKey(providerHandle: JupyterServerProviderHandle) {
+        return `LAST_EXECUTED_CELL_${providerHandle.id}${providerHandle.handle}`;
     }
     public getLastTrackedCellExecution(notebook: NotebookDocument, kernel: IKernel): CellExecutionInfo | undefined {
         if (notebook.isUntitled) {
@@ -44,7 +44,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             return;
         }
         const data = this.workspaceMemento.get<{ [key: string]: CellExecutionInfo }>(
-            this.getStateKey(kernel.kernelConnectionMetadata.serverId),
+            this.getStateKey(kernel.kernelConnectionMetadata.providerHandle),
             {}
         );
         return data[notebook.uri.toString()];
@@ -130,7 +130,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             return;
         }
 
-        const id = this.getStateKey(kernel.kernelConnectionMetadata.serverId);
+        const id = this.getStateKey(kernel.kernelConnectionMetadata.providerHandle);
         this.chainedPromises = this.chainedPromises.finally(() => {
             const notebookId = cell.notebook.uri.toString();
             const currentState = this.workspaceMemento.get<{ [key: string]: Partial<CellExecutionInfo> }>(id, {});
@@ -148,7 +148,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             return;
         }
 
-        const id = this.getStateKey(kernel.kernelConnectionMetadata.serverId);
+        const id = this.getStateKey(kernel.kernelConnectionMetadata.providerHandle);
         this.chainedPromises = this.chainedPromises.finally(() => {
             const notebookId = cell.notebook.uri.toString();
             const currentState = this.workspaceMemento.get<{ [key: string]: Partial<CellExecutionInfo> }>(id, {});
@@ -160,7 +160,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         this.chainedPromises = this.chainedPromises.finally(() =>
             Promise.all(
                 removedServers
-                    .map((item) => this.getStateKey(item.serverId))
+                    .map((item) => this.getStateKey(item.provider))
                     .map((id) => this.workspaceMemento.update(id, undefined).then(noop, noop))
             )
         );

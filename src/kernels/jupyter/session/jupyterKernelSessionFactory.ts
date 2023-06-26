@@ -69,7 +69,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
         const disposablesWhenThereAreFailures: IDisposable[] = [];
         try {
             connection = isRemoteConnection(options.kernelConnection)
-                ? await this.jupyterConnection.createConnectionInfo({ serverId: options.kernelConnection.serverId })
+                ? await this.jupyterConnection.createConnectionInfo(options.kernelConnection.providerHandle)
                 : await this.jupyterNotebookProvider.getOrStartServer({
                       resource: options.resource,
                       token: options.token,
@@ -109,7 +109,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 } else {
                     throw new RemoteJupyterServerConnectionError(
                         connection.baseUrl,
-                        options.kernelConnection.serverId,
+                        options.kernelConnection.providerHandle,
                         ex
                     );
                 }
@@ -142,7 +142,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 );
                 throw new RemoteJupyterServerConnectionError(
                     options.kernelConnection.baseUrl,
-                    options.kernelConnection.serverId,
+                    options.kernelConnection.providerHandle,
                     ex
                 );
             }

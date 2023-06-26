@@ -47,13 +47,13 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
             if (selected) {
                 this.liveKernelTracker.trackKernelIdAsUsed(
                     notebook.uri,
-                    controller.connection.serverId,
+                    controller.connection.providerHandle,
                     controller.connection.kernelModel.id
                 );
             } else {
                 this.liveKernelTracker.trackKernelIdAsNotUsed(
                     notebook.uri,
-                    controller.connection.serverId,
+                    controller.connection.providerHandle,
                     controller.connection.kernelModel.id
                 );
             }
@@ -68,13 +68,13 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
         }
         const resource = kernel.resourceUri;
         if (kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec') {
-            const serverId = kernel.kernelConnectionMetadata.serverId;
+            const providerHandle = kernel.kernelConnectionMetadata.providerHandle;
             const subscription = kernel.kernelSocket.subscribe((info) => {
                 const kernelId = info?.options.id;
                 if (!kernel.disposed && !kernel.disposing && kernelId) {
                     traceVerbose(`Updating preferred kernel for remote notebook ${kernelId}`);
                     this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(resource, kernelId).catch(noop);
-                    this.liveKernelTracker.trackKernelIdAsUsed(resource, serverId, kernelId);
+                    this.liveKernelTracker.trackKernelIdAsUsed(resource, providerHandle, kernelId);
                 }
             });
             this.disposables.push(new Disposable(() => subscription.unsubscribe()));

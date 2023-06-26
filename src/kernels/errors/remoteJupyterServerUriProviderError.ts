@@ -17,11 +17,7 @@ import { BaseError } from '../../platform/errors/types';
  * The URI entry box when picking a server. It should put up a dialog or input validation problem. If the error occurs later (like on timeout), it will be swallowed.
  */
 export class RemoteJupyterServerUriProviderError extends BaseError {
-    constructor(
-        public readonly providerId: string,
-        public readonly handle: string,
-        public readonly originalError: Error
-    ) {
+    constructor(public readonly providerHandle: { id: string; handle: string }, public readonly originalError: Error) {
         super('remotejupyterserveruriprovider', originalError.message || originalError.toString());
     }
 }

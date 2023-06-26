@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { ExtensionMode, NotebookController, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
-import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
-import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterUriProviderRegistration, JupyterServerProviderHandle } from '../../kernels/jupyter/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService, IJupyterUriProvider, JupyterServerUriHandle } from '../../api';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
@@ -76,13 +75,17 @@ export interface IExtensionApi {
 }
 
 function waitForNotebookControllersCreationForServer(
-    serverId: string,
+    providerHandle: JupyterServerProviderHandle,
     controllerRegistration: IControllerRegistration
 ) {
     return new Promise<void>((resolve) => {
         controllerRegistration.onDidChange((e) => {
             for (let controller of e.added) {
-                if (isRemoteConnection(controller.connection) && controller.connection.serverId === serverId) {
+                if (
+                    isRemoteConnection(controller.connection) &&
+                    controller.connection.providerHandle.id === providerHandle.id &&
+                    controller.connection.providerHandle.handle === providerHandle.handle
+                ) {
                     resolve();
                 }
             }
@@ -171,12 +174,10 @@ export function buildApi(
             sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
             await new Promise<void>(async (resolve) => {
                 const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-                const uri = generateUriFromRemoteProvider(providerId, handle);
-                const serverId = await computeServerId(uri);
 
                 const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
                 const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
-                    serverId,
+                    { id: providerId, handle },
                     controllerRegistration
                 );
 

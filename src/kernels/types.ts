@@ -20,9 +20,8 @@ import { IJupyterKernel, JupyterServerProviderHandle } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
-import { isWeb, noop } from '../platform/common/utils/misc';
+import { noop } from '../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
-import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
 
@@ -37,18 +36,6 @@ export enum NotebookCellRunState {
     Error = 'Error'
 }
 
-async function getConnectionIdHash(connection: KernelConnectionMetadata) {
-    if (!isWeb() && connection.interpreter?.uri) {
-        // eslint-disable-next-line local-rules/dont-use-fspath
-        const interpreterPath = connection.interpreter.uri.fsPath;
-        // eslint-disable-next-line local-rules/dont-use-fspath
-        const normalizedPath = getNormalizedInterpreterPath(connection.interpreter.uri).fsPath;
-        // Connection ids can contain Python paths in them.
-        const normalizedId = connection.id.replace(interpreterPath, normalizedPath);
-        return getTelemetrySafeHashedString(normalizedId);
-    }
-    return getTelemetrySafeHashedString(connection.id);
-}
 export class BaseKernelConnectionMetadata {
     public static fromJSON(
         json:
@@ -69,10 +56,10 @@ export class BaseKernelConnectionMetadata {
                 return LocalKernelSpecConnectionMetadata.create(clone as LocalKernelSpecConnectionMetadata);
             case 'connectToLiveRemoteKernel':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return LiveRemoteKernelConnectionMetadata.create(clone as LiveRemoteKernelConnectionMetadata);
+                return LiveRemoteKernelConnectionMetadata.fromJSON(clone as LiveRemoteKernelConnectionMetadata);
             case 'startUsingRemoteKernelSpec':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                return RemoteKernelSpecConnectionMetadata.create(clone as RemoteKernelSpecConnectionMetadata);
+                return RemoteKernelSpecConnectionMetadata.fromJSON(clone as RemoteKernelSpecConnectionMetadata);
             case 'startUsingPythonInterpreter':
                 // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 return PythonKernelConnectionMetadata.create(clone as PythonKernelConnectionMetadata);
@@ -92,7 +79,7 @@ export class LiveRemoteKernelConnectionMetadata {
      * Python interpreter will be used for intellisense & the like.
      */
     public readonly baseUrl: string;
-    public readonly serverId: string;
+    public readonly providerHandle: JupyterServerProviderHandle;
     public readonly id: string;
     public readonly interpreter?: PythonEnvironment;
 
@@ -103,14 +90,14 @@ export class LiveRemoteKernelConnectionMetadata {
          */
         interpreter?: PythonEnvironment;
         baseUrl: string;
-        serverId: string;
+        providerHandle: JupyterServerProviderHandle;
         id: string;
     }) {
         this.kernelModel = options.kernelModel;
         this.interpreter = options.interpreter;
         this.baseUrl = options.baseUrl;
         this.id = options.id;
-        this.serverId = options.serverId;
+        this.providerHandle = options.providerHandle;
         sendKernelTelemetry(this);
     }
     public static create(options: {
@@ -120,26 +107,29 @@ export class LiveRemoteKernelConnectionMetadata {
          */
         interpreter?: PythonEnvironment;
         baseUrl: string;
-        serverId: string;
+        providerHandle: JupyterServerProviderHandle;
         id: string;
     }) {
         return new LiveRemoteKernelConnectionMetadata(options);
-    }
-    public getHashId() {
-        return getConnectionIdHash(this);
     }
     public toJSON() {
         return {
             id: this.id,
             kind: this.kind,
             baseUrl: this.baseUrl,
-            serverId: this.serverId,
+            providerHandle: this.providerHandle,
             interpreter: serializePythonEnvironment(this.interpreter),
             kernelModel: this.kernelModel
         };
     }
-    public static fromJSON(json: Record<string, unknown> | LiveRemoteKernelConnectionMetadata) {
-        return BaseKernelConnectionMetadata.fromJSON(json) as LiveRemoteKernelConnectionMetadata;
+    public static fromJSON(json: {
+        kernelModel: LiveKernelModel;
+        interpreter?: PythonEnvironment;
+        baseUrl: string;
+        providerHandle: JupyterServerProviderHandle;
+        id: string;
+    }) {
+        return new LiveRemoteKernelConnectionMetadata(json);
     }
 }
 /**
@@ -180,9 +170,6 @@ export class LocalKernelSpecConnectionMetadata {
     }) {
         return new LocalKernelSpecConnectionMetadata(options);
     }
-    public getHashId() {
-        return getConnectionIdHash(this);
-    }
     public toJSON() {
         return {
             id: this.id,
@@ -207,33 +194,30 @@ export class RemoteKernelSpecConnectionMetadata {
     public readonly id: string;
     public readonly kernelSpec: IJupyterKernelSpec;
     public readonly baseUrl: string;
-    public readonly serverId: string;
+    public readonly providerHandle: JupyterServerProviderHandle;
     public readonly interpreter?: PythonEnvironment; // Can be set if URL is localhost
     private constructor(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
         kernelSpec: IJupyterKernelSpec;
         baseUrl: string;
-        serverId: string;
+        providerHandle: JupyterServerProviderHandle;
         id: string;
     }) {
         this.interpreter = options.interpreter;
         this.kernelSpec = options.kernelSpec;
         this.baseUrl = options.baseUrl;
         this.id = options.id;
-        this.serverId = options.serverId;
+        this.providerHandle = options.providerHandle;
         sendKernelTelemetry(this);
     }
     public static create(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
         kernelSpec: IJupyterKernelSpec;
         baseUrl: string;
-        serverId: string;
+        providerHandle: JupyterServerProviderHandle;
         id: string;
     }) {
         return new RemoteKernelSpecConnectionMetadata(options);
-    }
-    public getHashId() {
-        return getConnectionIdHash(this);
     }
     public toJSON() {
         return {
@@ -241,12 +225,18 @@ export class RemoteKernelSpecConnectionMetadata {
             kernelSpec: this.kernelSpec,
             interpreter: serializePythonEnvironment(this.interpreter),
             baseUrl: this.baseUrl,
-            serverId: this.serverId,
+            providerHandle: this.providerHandle,
             kind: this.kind
         };
     }
-    public static fromJSON(options: Record<string, unknown> | RemoteKernelSpecConnectionMetadata) {
-        return BaseKernelConnectionMetadata.fromJSON(options) as RemoteKernelSpecConnectionMetadata;
+    public static fromJSON(options: {
+        interpreter?: PythonEnvironment; // Can be set if URL is localhost
+        kernelSpec: IJupyterKernelSpec;
+        baseUrl: string;
+        providerHandle: JupyterServerProviderHandle;
+        id: string;
+    }) {
+        return new RemoteKernelSpecConnectionMetadata(options);
     }
 }
 /**
@@ -268,9 +258,6 @@ export class PythonKernelConnectionMetadata {
     }
     public static create(options: { kernelSpec: IJupyterKernelSpec; interpreter: PythonEnvironment; id: string }) {
         return new PythonKernelConnectionMetadata(options);
-    }
-    public getHashId() {
-        return getConnectionIdHash(this);
     }
     public toJSON() {
         return {

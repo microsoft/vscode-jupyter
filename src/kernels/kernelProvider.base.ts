@@ -159,7 +159,11 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
                 const metadata = kernel.options.metadata;
 
                 if (metadata.kind === 'connectToLiveRemoteKernel' || metadata.kind === 'startUsingRemoteKernelSpec') {
-                    const matchingRemovedUri = uris.find((uri) => uri.serverId === metadata.serverId);
+                    const matchingRemovedUri = uris.find(
+                        (uri) =>
+                            uri.provider.id === metadata.providerHandle.id &&
+                            uri.provider.handle === metadata.providerHandle.handle
+                    );
                     if (matchingRemovedUri) {
                         // it should be removed
                         this.kernelsByNotebook.delete(document);

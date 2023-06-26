@@ -45,7 +45,7 @@ export class RemoteJupyterServerMruUpdate implements IExtensionSyncActivationSer
                 if (kernel.status === 'idle' && !kernel.disposed && !kernel.disposing) {
                     const timeout = setTimeout(() => {
                         // Log this remote URI into our MRU list
-                        this.serverStorage.update(connection.serverId).catch(noop);
+                        this.serverStorage.update(connection.providerHandle).catch(noop);
                     }, INTERVAL_IN_SECONDS_TO_UPDATE_MRU);
                     this.monitoredKernels.set(kernel, timeout);
                     this.disposables.push(new Disposable(() => clearTimeout(timeout)));
@@ -56,6 +56,6 @@ export class RemoteJupyterServerMruUpdate implements IExtensionSyncActivationSer
         );
 
         // Log this remote URI into our MRU list
-        this.serverStorage.update(connection.serverId).catch(noop);
+        this.serverStorage.update(connection.providerHandle).catch(noop);
     }
 }

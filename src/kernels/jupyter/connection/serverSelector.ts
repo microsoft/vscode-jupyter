@@ -17,12 +17,7 @@ import {
     IDisposableRegistry,
     IExperimentService
 } from '../../../platform/common/types';
-import {
-    handleExpiredCertsError,
-    handleSelfCertsError,
-    computeServerId,
-    generateUriFromRemoteProvider
-} from '../jupyterUtils';
+import { handleExpiredCertsError, handleSelfCertsError, generateUriFromRemoteProvider } from '../jupyterUtils';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
@@ -126,8 +121,7 @@ export class JupyterServerSelector {
             } else if (err && err instanceof JupyterInvalidPasswordError) {
                 return;
             } else {
-                const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
-                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
+                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, provider, err));
                 // Can't set the URI in this case.
                 return;
             }

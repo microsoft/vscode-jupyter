@@ -7,8 +7,12 @@ import { IExtensionSyncActivationService } from '../../../platform/activation/ty
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { LiveRemoteKernelConnectionMetadata } from '../../types';
-import { computeServerId } from '../jupyterUtils';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage, ILiveRemoteKernelConnectionUsageTracker } from '../types';
+import {
+    IJupyterServerUriEntry,
+    IJupyterServerUriStorage,
+    ILiveRemoteKernelConnectionUsageTracker,
+    JupyterServerProviderHandle
+} from '../types';
 
 export const mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources = 'removeKernelUrisAndSessionsUsedByResources';
 
@@ -41,13 +45,15 @@ export class LiveRemoteKernelConnectionUsageTracker
     }
 
     public wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata) {
+        const serverId = this.computeId(connection.providerHandle);
         return (
-            connection.serverId in this.usedRemoteKernelServerIdsAndSessions &&
+            serverId in this.usedRemoteKernelServerIdsAndSessions &&
             typeof connection.kernelModel.id === 'string' &&
-            connection.kernelModel.id in this.usedRemoteKernelServerIdsAndSessions[connection.serverId]
+            connection.kernelModel.id in this.usedRemoteKernelServerIdsAndSessions[serverId]
         );
     }
-    public trackKernelIdAsUsed(resource: Uri, serverId: string, kernelId: string) {
+    public trackKernelIdAsUsed(resource: Uri, providerHandle: JupyterServerProviderHandle, kernelId: string) {
+        const serverId = this.computeId(providerHandle);
         this.usedRemoteKernelServerIdsAndSessions[serverId] = this.usedRemoteKernelServerIdsAndSessions[serverId] || {};
         this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] =
             this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] || [];
@@ -63,7 +69,8 @@ export class LiveRemoteKernelConnectionUsageTracker
             )
             .then(noop, noop);
     }
-    public trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string) {
+    public trackKernelIdAsNotUsed(resource: Uri, providerHandle: JupyterServerProviderHandle, kernelId: string) {
+        const serverId = this.computeId(providerHandle);
         if (!(serverId in this.usedRemoteKernelServerIdsAndSessions)) {
             return;
         }
@@ -91,17 +98,17 @@ export class LiveRemoteKernelConnectionUsageTracker
     }
     private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         uriEntries.forEach((uriEntry) => {
-            computeServerId(uriEntry.uri)
-                .then((serverId) => {
-                    delete this.usedRemoteKernelServerIdsAndSessions[serverId];
-                    this.memento
-                        .update(
-                            mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
-                            this.usedRemoteKernelServerIdsAndSessions
-                        )
-                        .then(noop, noop);
-                })
-                .catch(noop);
+            const serverId = this.computeId(uriEntry.provider);
+            delete this.usedRemoteKernelServerIdsAndSessions[serverId];
+            this.memento
+                .update(
+                    mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
+                    this.usedRemoteKernelServerIdsAndSessions
+                )
+                .then(noop, noop);
         });
+    }
+    private computeId(providerHandle: JupyterServerProviderHandle) {
+        return `${providerHandle.id}#${providerHandle.handle}`;
     }
 }

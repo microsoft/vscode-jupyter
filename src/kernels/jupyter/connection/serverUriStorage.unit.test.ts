@@ -19,7 +19,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { IJupyterServerUri } from '../../../api';
 import { Settings } from '../../../platform/common/constants';
 import { TestEventHandler, createEventHandler } from '../../../test/common';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateUriFromRemoteProvider } from '../jupyterUtils';
 import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { sleep } from '../../../test/core';
 
@@ -670,9 +670,7 @@ suite('Server Uri Storage', async () => {
                 )!;
                 assert.ok(timeOfNewHandle2BeforeUpdate);
                 await sleep(10);
-                await serverUriStorage.update(
-                    await computeServerId(generateUriFromRemoteProvider('NewId2', 'NewHandle2'))
-                );
+                await serverUriStorage.update({ id: 'NewId2', handle: 'NewHandle2' });
                 const afterUpdate = await serverUriStorage.getAll();
                 const timeOfNewHandle2AfterUpdate = afterUpdate.find((item) => item.provider.handle === 'NewHandle2')!;
                 assert.ok(timeOfNewHandle2BeforeUpdate);
@@ -772,9 +770,7 @@ suite('Server Uri Storage', async () => {
                 onDidAddEvent.reset();
                 onDidRemoveEvent.reset();
                 await serverUriStorage.add({ handle: 'NewHandle11', id: 'NewId11' });
-                await serverUriStorage.update(
-                    await computeServerId(generateUriFromRemoteProvider('NewId11', 'NewHandle11'))
-                );
+                await serverUriStorage.update({ id: 'NewId11', handle: 'NewHandle11' });
 
                 all = await serverUriStorage.getAll();
                 assert.strictEqual(all.length, 10);

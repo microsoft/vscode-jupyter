@@ -150,10 +150,10 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         }
         await Promise.all([this.newStorage.add(entry), this.oldStorage.add(entry)]);
     }
-    public async update(serverId: string) {
+    public async update(providerHandle: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        await Promise.all([this.newStorage.update(serverId), this.oldStorage.update(serverId)]);
+        await Promise.all([this.newStorage.update(providerHandle), this.oldStorage.update(providerHandle)]);
     }
     public async remove(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
         this.hookupStorageEvents();
@@ -193,12 +193,14 @@ class OldStorage {
         traceInfoIfCI(`setUri: ${item.provider.id}.${item.provider.handle}`);
         await this.addToUriList(item.provider, item.serverId, item.displayName || '', item.time);
     }
-    public async update(serverId: string) {
+    public async update(providerHandle: JupyterServerProviderHandle) {
         const uriList = await this.getAll();
 
-        const existingEntry = uriList.find((entry) => entry.serverId === serverId);
+        const existingEntry = uriList.find(
+            (entry) => entry.provider.id === providerHandle.id && entry.provider.handle === providerHandle.handle
+        );
         if (!existingEntry) {
-            throw new Error(`Uri not found for Server Id ${serverId}`);
+            throw new Error(`Uri not found for Server Id ${providerHandle.id}#${providerHandle.handle}`);
         }
 
         await this.addToUriList(
@@ -520,12 +522,14 @@ class NewStorage {
             })
             .catch(noop));
     }
-    public async update(serverId: string) {
+    public async update(providerHandle: JupyterServerProviderHandle) {
         const uriList = await this.getAllImpl(false);
 
-        const existingEntry = uriList.find((entry) => entry.serverId === serverId);
+        const existingEntry = uriList.find(
+            (entry) => entry.provider.id === providerHandle.id && entry.provider.handle === providerHandle.handle
+        );
         if (!existingEntry) {
-            throw new Error(`Uri not found for Server Id ${serverId}`);
+            throw new Error(`Uri not found for Server Id ${providerHandle.id}#${providerHandle.handle}`);
         }
         const entry: IJupyterServerUriEntry = {
             provider: existingEntry.provider,

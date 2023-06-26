@@ -223,7 +223,7 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            serverId: 'serverId1'
+            providerHandle: { id: '1', handle: '2' }
         });
         const cachedKernels = [
             RemoteKernelSpecConnectionMetadata.create({
@@ -235,7 +235,7 @@ suite(`Remote Kernel Finder`, () => {
                     name: '',
                     executable: ''
                 },
-                serverId: 'serverId1'
+                providerHandle: { id: '1', handle: '2' }
             }).toJSON(),
             liveRemoteKernel.toJSON()
         ] as KernelConnectionMetadata[];
@@ -273,7 +273,7 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            serverId: 'serverId1'
+            providerHandle: { id: '1', handle: '2' }
         });
         const cachedKernels = [
             RemoteKernelSpecConnectionMetadata.create({
@@ -285,7 +285,7 @@ suite(`Remote Kernel Finder`, () => {
                     name: '',
                     executable: ''
                 },
-                serverId: 'serverId1'
+                providerHandle: { id: '1', handle: '2' }
             }).toJSON(),
             liveRemoteKernel.toJSON()
         ] as KernelConnectionMetadata[];

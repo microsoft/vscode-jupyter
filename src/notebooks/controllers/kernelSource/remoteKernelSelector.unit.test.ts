@@ -58,7 +58,7 @@ suite('Remote Kernel Selector', () => {
             language: 'python'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId'
+        providerHandle: { id: '1', handle: 'a' }
     });
     let remoteJavaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: 'localJavaKernelSpec',
@@ -70,7 +70,7 @@ suite('Remote Kernel Selector', () => {
             language: 'java'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId'
+        providerHandle: { id: '1', handle: 'a' }
     });
     let remoteJuliaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: 'localJuliaKernelSpec',
@@ -82,7 +82,7 @@ suite('Remote Kernel Selector', () => {
             language: 'julia'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId'
+        providerHandle: { id: '1', handle: 'a' }
     });
     setup(() => {
         selectionPromise =

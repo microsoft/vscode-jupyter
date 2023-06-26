@@ -116,7 +116,6 @@ export class ControllerPreferredService {
     @traceDecoratorVerbose('Compute Preferred Controller')
     public async computePreferred(
         @logValue<NotebookDocument>('uri') document: NotebookDocument,
-        serverId?: string | undefined,
         cancelToken?: CancellationToken
     ): Promise<{
         preferredConnection?: KernelConnectionMetadata | undefined;
@@ -177,17 +176,15 @@ export class ControllerPreferredService {
             }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
                 const preferredInterpreter =
-                    !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                    isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
                 traceInfoIfCI(
                     `Fetching TargetController document  ${getDisplayPath(document.uri)}  with preferred Interpreter ${
                         preferredInterpreter ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
                     } for condition ${
-                        !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
-                    } (${serverId} && ${isPythonNbOrInteractiveWindow} && ${
-                        this.extensionChecker.isPythonExtensionInstalled
-                    }).`
+                        isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                    } (${isPythonNbOrInteractiveWindow} && ${this.extensionChecker.isPythonExtensionInstalled}).`
                 );
 
                 if (preferredSearchToken.token.isCancellationRequested) {
@@ -200,8 +197,7 @@ export class ControllerPreferredService {
                     document,
                     notebookMetadata,
                     preferredSearchToken.token,
-                    preferredInterpreter,
-                    serverId
+                    preferredInterpreter
                 );
                 if (preferredConnection) {
                     traceInfoIfCI(
@@ -221,8 +217,7 @@ export class ControllerPreferredService {
                         document,
                         notebookMetadata,
                         preferredSearchToken.token,
-                        preferredInterpreter,
-                        serverId
+                        preferredInterpreter
                     );
                     if (preferredConnection) {
                         traceInfoIfCI(
@@ -434,7 +429,7 @@ export class ControllerPreferredService {
                 cancellationToken.dispose();
             })
         );
-        this.computePreferred(document, undefined, cancellationToken.token).catch(noop);
+        this.computePreferred(document, cancellationToken.token).catch(noop);
     }
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match
@@ -442,8 +437,7 @@ export class ControllerPreferredService {
         notebook: NotebookDocument,
         notebookMetadata: INotebookMetadata | undefined,
         cancelToken: CancellationToken,
-        preferredInterpreter: PythonEnvironment | undefined,
-        serverId: string | undefined
+        preferredInterpreter: PythonEnvironment | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
         const uri = notebook.uri;
         let preferredConnection: KernelConnectionMetadata | undefined;
@@ -452,8 +446,7 @@ export class ControllerPreferredService {
             this.registration.all,
             notebookMetadata,
             preferredInterpreter,
-            cancelToken,
-            serverId
+            cancelToken
         );
         if (cancelToken.isCancellationRequested) {
             return;

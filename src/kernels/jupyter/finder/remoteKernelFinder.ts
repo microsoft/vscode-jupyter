@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, CancellationTokenSource, Disposable, EventEmitter, Memento } from 'vscode';
-import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
     IJupyterKernelSpec,
@@ -37,6 +36,7 @@ import { KernelProgressReporter } from '../../../platform/progress/kernelProgres
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isUnitTestExecution } from '../../../platform/common/constants';
 import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { getKernelId } from '../../helpers';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -333,7 +333,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                         kernelSpec: s,
                         id: getKernelId(s, undefined, serverId),
                         baseUrl: connInfo.baseUrl,
-                        serverId: serverId
+                        providerHandle: connInfo.providerHandle
                     });
                     return kernel;
                 })
@@ -363,7 +363,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     },
                     baseUrl: connInfo.baseUrl,
                     id: s.kernel?.id || '',
-                    serverId
+                    providerHandle: connInfo.providerHandle
                 });
                 return kernel;
             });

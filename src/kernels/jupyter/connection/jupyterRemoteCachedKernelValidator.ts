@@ -28,7 +28,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         if (!this.liveKernelConnectionTracker.wasKernelUsed(kernel)) {
             return false;
         }
-        const item = await this.uriStorage.get({ serverId: kernel.serverId });
+        const item = await this.uriStorage.get(kernel.providerHandle);
         if (!item) {
             // Server has been removed and we have some old cached data.
             return false;

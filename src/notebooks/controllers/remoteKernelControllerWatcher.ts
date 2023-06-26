@@ -13,6 +13,7 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IControllerRegistration } from './types';
+import { generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 
 /**
  * Tracks 3rd party IJupyterUriProviders and requests URIs from their handles. We store URI information in our
@@ -57,7 +58,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 if (item.provider.id !== provider.id) {
                     return;
                 }
-                serverJupyterProviderMap.set(item.serverId, {
+                serverJupyterProviderMap.set(generateUriFromRemoteProvider(item.provider.id, item.provider.handle), {
                     uri: item.uri,
                     providerId: item.provider.id,
                     handle: item.provider.handle
@@ -96,7 +97,9 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             if (isLocalConnection(connection)) {
                 return;
             }
-            const info = serverJupyterProviderMap.get(connection.serverId);
+            const info = serverJupyterProviderMap.get(
+                generateUriFromRemoteProvider(connection.providerHandle.id, connection.providerHandle.handle)
+            );
             if (info && !handles.includes(info.handle)) {
                 // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                 traceWarning(

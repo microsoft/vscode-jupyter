@@ -91,7 +91,7 @@ suite('Kernel ReConnect Progress Message', () => {
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverId: '1234'
+            providerHandle: { id: '', handle: '' }
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.session).thenReturn(instance(session));
@@ -195,7 +195,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         monitor.activate();
     });
     teardown(() => disposeAllDisposables(disposables));
-    function createKernel() {
+    function createKernel(providerHandle = { id: '1', handle: '2' }) {
         const kernel = mock<IKernel>();
         const onPreExecute = new EventEmitter<NotebookCell>();
         const onRestarted = new EventEmitter<void>();
@@ -210,7 +210,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverId: '1234'
+            providerHandle
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.disposed).thenReturn(false);
@@ -320,18 +320,17 @@ suite('Kernel ReConnect Failed Monitor', () => {
     });
 
     test('Handle contributed server disconnect (server contributed by uri provider)', async () => {
-        const kernel = createKernel();
+        const providerHandle = { id: 'ProviderId', handle: 'ProviderHandle' };
+        const kernel = createKernel(providerHandle);
         const server: IJupyterServerUriEntry = {
             uri: 'https://remote?id=remoteUriProvider&uriHandle=1',
             serverId: '1234',
             time: 1234,
-            provider: {
-                handle: '1',
-                id: '1'
-            }
+            provider: providerHandle
         };
         when(jupyterServerUriStorage.getAll()).thenResolve([server]);
         when(jupyterServerUriStorage.get(deepEqual({ serverId: server.serverId }))).thenResolve(server);
+        when(jupyterServerUriStorage.get(deepEqual(providerHandle))).thenResolve(server);
         when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
             id: 'remoteUriProvider',
             extensionId: 'ms-python.python',

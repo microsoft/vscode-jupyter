@@ -213,7 +213,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
         kernel: IKernel,
         metadata: RemoteKernelConnectionMetadata
     ): Promise<boolean> {
-        const uriItem = await this.serverUriStorage.get({ serverId: metadata.serverId });
+        const uriItem = await this.serverUriStorage.get(metadata.providerHandle);
 
         const provider = uriItem && (await this.jupyterUriProviderRegistration.getProvider(uriItem.provider.id));
         if (!provider || !provider.getHandles) {

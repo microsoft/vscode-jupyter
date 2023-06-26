@@ -61,13 +61,13 @@ suite('Preferred Kernel Connection', () => {
         baseUrl: '',
         id: 'liveRemote1',
         kernelModel: instance(mock<LiveKernelModel>()),
-        serverId: 'remoteServerId1'
+        providerHandle: { id: '1', handle: 'a' }
     });
     const remoteLiveKernelConnection2 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: '',
         id: 'liveRemote2',
         kernelModel: instance(mock<LiveKernelModel>()),
-        serverId: 'remoteServerId2'
+        providerHandle: { id: '2', handle: 'b' }
     });
     const remoteLiveJavaKernelConnection = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: '',
@@ -87,7 +87,7 @@ suite('Preferred Kernel Connection', () => {
             name: 'java',
             numberOfConnections: 1
         },
-        serverId: 'remoteServerId2'
+        providerHandle: { id: '2', handle: 'b' }
     });
     const remoteJavaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         baseUrl: '',
@@ -99,7 +99,7 @@ suite('Preferred Kernel Connection', () => {
             name: 'javaName',
             language: 'java'
         },
-        serverId: 'remoteServerId2'
+        providerHandle: { id: '2', handle: 'b' }
     });
     const localJavaKernelSpec = LocalKernelSpecConnectionMetadata.create({
         id: 'localJava',

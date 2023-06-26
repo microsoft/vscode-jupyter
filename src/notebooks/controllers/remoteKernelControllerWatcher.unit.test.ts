@@ -52,6 +52,7 @@ suite('RemoteKernelControllerWatcher', () => {
     test('Dispose controllers associated with an old handle', async () => {
         const provider1Id = 'provider1';
         const provider1Handle1 = 'provider1Handle1';
+        const providerHandle = { id: provider1Id, handle: provider1Handle1 };
         const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
         const serverId = await computeServerId(remoteUriForProvider1);
 
@@ -97,7 +98,7 @@ suite('RemoteKernelControllerWatcher', () => {
                 id: 'remote1',
                 baseUrl: remoteUriForProvider1,
                 kernelSpec: mock<IJupyterKernelSpec>(),
-                serverId
+                providerHandle
             })
         );
         const remoteLiveKernel = mock<IVSCodeNotebookController>();
@@ -107,7 +108,7 @@ suite('RemoteKernelControllerWatcher', () => {
                 id: 'live1',
                 baseUrl: remoteUriForProvider1,
                 kernelModel: mock<LiveKernelModel>(),
-                serverId
+                providerHandle
             })
         );
         when(controllers.registered).thenReturn([
@@ -128,6 +129,16 @@ suite('RemoteKernelControllerWatcher', () => {
                 }
             }
         ]);
+        when(uriStorage.get(deepEqual(providerHandle))).thenResolve({
+            time: 1,
+            serverId,
+            uri: remoteUriForProvider1,
+            displayName: 'Something',
+            provider: {
+                handle: provider1Handle1,
+                id: provider1Id
+            }
+        });
         when(uriStorage.get(deepEqual({ serverId }))).thenResolve({
             time: 1,
             serverId,
