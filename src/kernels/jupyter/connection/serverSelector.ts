@@ -9,7 +9,7 @@ import { traceError, traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
-import { IJupyterServerUriStorage } from '../types';
+import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from '../types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import {
     Experiments,
@@ -17,13 +17,15 @@ import {
     IDisposableRegistry,
     IExperimentService
 } from '../../../platform/common/types';
-import { handleExpiredCertsError, handleSelfCertsError, generateIdFromRemoteProvider } from '../jupyterUtils';
+import { handleExpiredCertsError, handleSelfCertsError } from '../jupyterUtils';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
 import { IJupyterServerUri } from '../../../api';
+import { BaseError } from '../../../platform/errors/types';
+import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 
 export type SelectJupyterUriCommandSource =
     | 'nonUser'
@@ -90,7 +92,9 @@ export class JupyterServerSelector {
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry,
         @inject(IExperimentService)
-        private readonly experiments: IExperimentService
+        private readonly experiments: IExperimentService,
+        @inject(IJupyterUriProviderRegistration)
+        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
     ) {}
 
     public async addJupyterServer(provider: { id: string; handle: string }): Promise<void> {
@@ -101,7 +105,6 @@ export class JupyterServerSelector {
         }
     }
     public async addJupyterServerOld(provider: { id: string; handle: string }): Promise<void> {
-        const userURI = generateIdFromRemoteProvider(provider);
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
             await this.jupyterConnection.validateRemoteUri(provider);
@@ -121,7 +124,10 @@ export class JupyterServerSelector {
             } else if (err && err instanceof JupyterInvalidPasswordError) {
                 return;
             } else {
-                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, provider, err));
+                const jupyterUri = await this.getJupyterServerUri(provider);
+                await this.errorHandler.handleError(
+                    new RemoteJupyterServerConnectionError(jupyterUri.baseUrl, provider, err)
+                );
                 // Can't set the URI in this case.
                 return;
             }
@@ -140,5 +146,15 @@ export class JupyterServerSelector {
         }
 
         await this.serverUriStorage.add(provider);
+    }
+    private async getJupyterServerUri(provider: { id: string; handle: string }) {
+        try {
+            return await this.jupyterPickerRegistration.getJupyterServerUri(provider.id, provider.handle);
+        } catch (ex) {
+            if (ex instanceof BaseError) {
+                throw ex;
+            }
+            throw new RemoteJupyterServerUriProviderError(provider, ex);
+        }
     }
 }
