@@ -72,6 +72,7 @@ export class UserJupyterServerUrlProvider
     public readonly oldStorage: OldStorage;
     public readonly newStorage: NewStorage;
     private migratedOldServers?: Promise<unknown>;
+    private jupyterServerUriBeingValidated?: IJupyterServerUri & { handle: string };
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IJupyterUriProviderRegistration)
@@ -456,6 +457,7 @@ export class UserJupyterServerUrlProvider
                     }
 
                     const handle = uuid();
+                    this.jupyterServerUriBeingValidated = Object.assign({}, jupyterServerUri, { handle });
                     let message = '';
                     try {
                         await this.jupyterConnection.validateRemoteUri({ id: this.id, handle }, jupyterServerUri, true);
@@ -532,6 +534,10 @@ export class UserJupyterServerUrlProvider
             : await this.oldStorage.getServers();
         const server = servers.find((s) => s.handle === handle);
         if (!server) {
+            // Possible we have a temporary Uri thats being validated.
+            if (this.jupyterServerUriBeingValidated && this.jupyterServerUriBeingValidated.handle === handle) {
+                return this.jupyterServerUriBeingValidated;
+            }
             throw new Error('Server not found');
         }
         if (!this.experiments.inExperiment(Experiments.PasswordManager)) {
