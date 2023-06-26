@@ -70,23 +70,23 @@ export class LiveRemoteKernelConnectionUsageTracker
             .then(noop, noop);
     }
     public trackKernelIdAsNotUsed(resource: Uri, providerHandle: JupyterServerProviderHandle, kernelId: string) {
-        const id = this.computeId(providerHandle);
-        if (!(id in this.usedRemoteKernelServerIdsAndSessions)) {
+        const serverId = this.computeId(providerHandle);
+        if (!(serverId in this.usedRemoteKernelServerIdsAndSessions)) {
             return;
         }
-        if (!(kernelId in this.usedRemoteKernelServerIdsAndSessions[id])) {
+        if (!(kernelId in this.usedRemoteKernelServerIdsAndSessions[serverId])) {
             return;
         }
-        const uris = this.usedRemoteKernelServerIdsAndSessions[id][kernelId];
+        const uris = this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
         if (!Array.isArray(uris) || !uris.includes(resource.toString())) {
             return;
         }
         uris.splice(uris.indexOf(resource.toString()), 1);
         if (uris.length === 0) {
-            delete this.usedRemoteKernelServerIdsAndSessions[id][kernelId];
+            delete this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
         }
-        if (Object.keys(this.usedRemoteKernelServerIdsAndSessions[id]).length === 0) {
-            delete this.usedRemoteKernelServerIdsAndSessions[id];
+        if (Object.keys(this.usedRemoteKernelServerIdsAndSessions[serverId]).length === 0) {
+            delete this.usedRemoteKernelServerIdsAndSessions[serverId];
         }
 
         this.memento
@@ -98,8 +98,8 @@ export class LiveRemoteKernelConnectionUsageTracker
     }
     private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         uriEntries.forEach((uriEntry) => {
-            const id = this.computeId(uriEntry.provider);
-            delete this.usedRemoteKernelServerIdsAndSessions[id];
+            const serverId = this.computeId(uriEntry.provider);
+            delete this.usedRemoteKernelServerIdsAndSessions[serverId];
             this.memento
                 .update(
                     mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
