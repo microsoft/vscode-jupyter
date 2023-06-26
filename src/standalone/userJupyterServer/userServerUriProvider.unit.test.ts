@@ -75,6 +75,7 @@ suite('User Uri Provider', () => {
                     [
                         {
                             url: string;
+                            
                             isTokenEmpty: boolean;
                             displayName?: string | undefined;
                         }

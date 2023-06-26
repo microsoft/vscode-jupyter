@@ -58,9 +58,8 @@ export class JupyterUriProviderRegistration
         this.disposables.push(serverStorage.onDidRemove(this.onDidRemoveServer, this));
     }
     public async getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined> {
-        await this.loadOtherExtensions();
         if (!this._providers.has(id)) {
-            debugger;
+            await this.loadOtherExtensions();
         }
         return this._providers.get(id);
     }
@@ -89,7 +88,9 @@ export class JupyterUriProviderRegistration
         return disposable;
     }
     public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
-        await this.loadOtherExtensions();
+        if (!this._providers.has(id)) {
+            await this.loadOtherExtensions();
+        }
         const provider = this._providers.get(id);
         if (!provider) {
             traceError(`${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${handle}`);
