@@ -4,16 +4,16 @@
 import { inject, injectable, optional } from 'inversify';
 import * as path from '../../vscode-path/path';
 import { CancellationToken, Disposable, Event, EventEmitter, RelativePattern, Uri } from 'vscode';
-import { TraceOptions } from '../../logging/types';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import { IWorkspaceService } from '../application/types';
 import { IDisposableRegistry, Resource } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
-import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '../../logging';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../logging';
 import { disposeAllDisposables } from '../helpers';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { noop } from '../utils/misc';
+import { getDisplayPath } from '../platform/fs-paths';
 
 const CACHE_DURATION = 60 * 1000;
 /**
@@ -45,7 +45,6 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         disposeAllDisposables(this.disposables);
     }
 
-    @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getEnvironmentVariables(
         resource: Resource,
         purpose: 'RunPythonCode' | 'RunNonPythonCode',
@@ -179,9 +178,21 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             customEnvVars = {};
         }
         const mergedVars: EnvironmentVariables = {};
+        traceVerbose(
+            `Step1: Get Environment Variables for ${getDisplayPath(resource)} is ${JSON.stringify(mergedVars)}`
+        );
         this.envVarsService.mergeVariables(process.env, mergedVars); // Copy current proc vars into new obj.
+        traceVerbose(
+            `Step2: Get Environment Variables for ${getDisplayPath(resource)} is ${JSON.stringify(mergedVars)}`
+        );
         this.envVarsService.mergeVariables(customEnvVars!, mergedVars); // Copy custom vars over into obj.
+        traceVerbose(
+            `Step3: Get Environment Variables for ${getDisplayPath(resource)} is ${JSON.stringify(mergedVars)}`
+        );
         this.envVarsService.mergePaths(process.env, mergedVars);
+        traceVerbose(
+            `Step4: Get Environment Variables for ${getDisplayPath(resource)} is ${JSON.stringify(mergedVars)}`
+        );
         if (process.env.PYTHONPATH) {
             mergedVars.PYTHONPATH = process.env.PYTHONPATH;
         }
@@ -192,6 +203,9 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         if (customEnvVars!.PYTHONPATH) {
             this.envVarsService.appendPythonPath(mergedVars!, customEnvVars!.PYTHONPATH);
         }
+        traceVerbose(
+            `Step5: Get Environment Variables for ${getDisplayPath(resource)} is ${JSON.stringify(mergedVars)}`
+        );
         return mergedVars;
     }
     private getWorkspaceFolderUri(resource?: Uri): Uri | undefined {

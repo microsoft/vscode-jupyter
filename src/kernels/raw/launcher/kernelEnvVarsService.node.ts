@@ -102,10 +102,19 @@ export class KernelEnvironmentVariablesService {
         kernelEnv = kernelEnv || {};
         customEnvVars = customEnvVars || {};
 
+        traceVerbose(
+            `Step1 of Kernel EnvVars for ${kernelSpec.specFile || kernelSpec.name}, is ${JSON.stringify(mergedVars)}`
+        );
+
         if (isPythonKernel || interpreter) {
             // Merge the env variables with that of the kernel env.
             interpreterEnv = interpreterEnv || customEnvVars;
 
+            traceVerbose(
+                `Step2 of Kernel EnvVars for ${kernelSpec.specFile || kernelSpec.name}, is ${JSON.stringify(
+                    mergedVars
+                )}`
+            );
             if (this.configService.getSettings(resource).useOldKernelResolve) {
                 this.envVarsService.mergeVariables(interpreterEnv, mergedVars); // interpreter vars win over proc.
                 this.envVarsService.mergeVariables(kernelEnv, mergedVars); // kernels vars win over interpreter.
@@ -144,10 +153,27 @@ export class KernelEnvironmentVariablesService {
                 if (interpreter) {
                     this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.uri.fsPath));
                 }
+
+                traceVerbose(
+                    `Step3 of Kernel EnvVars for ${kernelSpec.specFile || kernelSpec.name}, is ${JSON.stringify(
+                        mergedVars
+                    )}`
+                );
             } else {
                 Object.assign(mergedVars, interpreterEnv, kernelEnv); // kernels vars win over interpreter.
+
+                traceVerbose(
+                    `Step4 of Kernel EnvVars for ${kernelSpec.specFile || kernelSpec.name}, is ${JSON.stringify(
+                        mergedVars
+                    )}`
+                );
             }
 
+            traceVerbose(
+                `Step5 of Kernel EnvVars for ${kernelSpec.specFile || kernelSpec.name}, is ${JSON.stringify(
+                    mergedVars
+                )}`
+            );
             // If user asks us to, set PYTHONNOUSERSITE
             // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
             // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
@@ -163,10 +189,18 @@ export class KernelEnvironmentVariablesService {
             // We can support this, however since this has not been requested, lets not do it.'
             this.envVarsService.mergeVariables(kernelEnv, mergedVars); // kernels vars win over interpreter.
             this.envVarsService.mergeVariables(customEnvVars, mergedVars); // custom vars win over all.
+
+            traceVerbose(
+                `Step6 of Kernel EnvVars for ${kernelSpec.specFile || kernelSpec.name}, is ${JSON.stringify(
+                    mergedVars
+                )}`
+            );
         }
 
         traceVerbose(
-            `Kernel Env Variables for ${kernelSpec.specFile || kernelSpec.name}, PATH value is ${mergedVars.PATH}`
+            `Kernel Env Variables for ${kernelSpec.specFile || kernelSpec.name}, PATH value is ${
+                mergedVars.PATH
+            } and variables are ${JSON.stringify(mergedVars)}`
         );
 
         return mergedVars;

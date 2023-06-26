@@ -54,6 +54,7 @@ import pidtree from 'pidtree';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
 import { splitLines } from '../../../platform/common/helpers';
 import { IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 
 const kernelOutputWithConnectionFile = 'To connect another client to this kernel, use:';
 const kernelOutputToNotLog =
@@ -565,6 +566,12 @@ export class KernelProcess implements IKernelProcess {
                 cwd: wdExists ? workingDirectory : process.cwd(),
                 env
             });
+
+            traceVerbose(
+                `Spawn Kernel for interpreter ${getDisplayPath(
+                    this._kernelConnectionMetadata.interpreter.uri
+                )} with env ${JSON.stringify(env)}`
+            );
             Cancellation.throwIfCanceled(cancelToken);
         } else {
             // If we are not python just use the ProcessExecutionFactory

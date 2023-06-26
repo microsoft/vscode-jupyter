@@ -4,7 +4,7 @@
 import { exec, execSync, spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationError, Disposable } from 'vscode';
-import { ignoreLogging, traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
+import { ignoreLogging, traceDecoratorVerbose, traceInfoIfCI, traceVerbose } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 
 import { IDisposable } from '../types';
@@ -80,6 +80,7 @@ export class ProcessService implements IProcessService {
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const spawnOptions = this.getDefaultOptions(options);
+        traceVerbose(`Exec observable ${file}, ${args.join(' ')} with env ${JSON.stringify(spawnOptions.env)}`);
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);

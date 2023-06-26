@@ -191,11 +191,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             failureEx
         );
 
+        traceVerbose(
+            `Got env vars from python for ${getDisplayPath(interpreter?.uri)} and env is ${JSON.stringify(env)}`
+        );
         if (env) {
             traceVerbose(
                 `Got env vars with python ${getDisplayPath(interpreter?.uri)}, with env var count ${
                     Object.keys(env || {}).length
-                } in ${stopWatch.elapsedTime}ms. \n    PATH value is ${env.PATH} and \n    Path value is ${env.Path}`
+                } in ${stopWatch.elapsedTime}ms.
+                Values are ${JSON.stringify(env)} \n    PATH value is ${env.PATH} and \n    Path value is ${env.Path}`
             );
         } else if (envType === EnvironmentType.Conda) {
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
@@ -287,6 +291,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 env.PATH
             } and \n    Path value is ${env.Path}`
         );
+        traceVerbose(`Env Variables for ${getDisplayPath(interpreter.id)} returned is ${JSON.stringify(env)}`);
         return env;
     }
 }
