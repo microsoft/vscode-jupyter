@@ -25,7 +25,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../api';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../api';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -176,7 +176,7 @@ export interface IJupyterUriProviderRegistration {
     readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
     getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
-    getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    getJupyterServerUri(id: string, handle: string): Promise<IJupyterServerUri>;
 }
 
 /**
@@ -185,7 +185,7 @@ export interface IJupyterUriProviderRegistration {
 export interface IJupyterServerUriEntry {
     provider: {
         id: string;
-        handle: JupyterServerUriHandle;
+        handle: string;
     };
     /**
      * The most recent time that we connected to this server
@@ -214,10 +214,7 @@ export interface IJupyterServerUriStorage {
     remove(providerHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
     get(providerHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined>;
-    add(
-        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
-        options?: { time: number; displayName: string }
-    ): Promise<void>;
+    add(jupyterHandle: { id: string; handle: string }, options?: { time: number; displayName: string }): Promise<void>;
 }
 
 export interface IBackupFile {

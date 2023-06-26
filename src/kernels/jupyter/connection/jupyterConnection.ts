@@ -16,7 +16,7 @@ import {
     IJupyterUriProviderRegistration,
     JupyterServerProviderHandle
 } from '../types';
-import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
+import { IJupyterServerUri } from '../../../api';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
@@ -93,7 +93,7 @@ export class JupyterConnection {
     }
 
     public async validateRemoteUri(
-        provider: { id: string; handle: JupyterServerUriHandle },
+        provider: { id: string; handle: string },
         serverUri?: IJupyterServerUri,
         doNotDisplayUnActionableMessages?: boolean
     ): Promise<void> {
@@ -104,7 +104,7 @@ export class JupyterConnection {
         }
     }
     private async validateRemoteUriOld(
-        provider: { id: string; handle: JupyterServerUriHandle },
+        provider: { id: string; handle: string },
         serverUri?: IJupyterServerUri
     ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
@@ -124,7 +124,7 @@ export class JupyterConnection {
         }
     }
     public async validateRemoteUriNew(
-        provider: { id: string; handle: JupyterServerUriHandle },
+        provider: { id: string; handle: string },
         serverUri?: IJupyterServerUri,
         doNotDisplayUnActionableMessages?: boolean
     ): Promise<void> {
@@ -167,7 +167,7 @@ export class JupyterConnection {
         }
     }
 
-    private async getJupyterServerUri(provider: { id: string; handle: JupyterServerUriHandle }) {
+    private async getJupyterServerUri(provider: { id: string; handle: string }) {
         try {
             return await this.jupyterPickerRegistration.getJupyterServerUri(provider.id, provider.handle);
         } catch (ex) {

@@ -35,7 +35,7 @@ import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isUnitTestExecution } from '../../../platform/common/constants';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { computeServerId, generateIdFromRemoteProvider } from '../jupyterUtils';
 import { getKernelId } from '../../helpers';
 
 // Even after shutting down a kernel, the server API still returns the old information.
@@ -320,9 +320,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 sessionManager.getRunningKernels(),
                 sessionManager.getKernelSpecs(),
                 sessionManager.getRunningSessions(),
-                computeServerId(
-                    generateUriFromRemoteProvider(connInfo.providerHandle.id, connInfo.providerHandle.handle)
-                )
+                computeServerId(generateIdFromRemoteProvider(connInfo.providerHandle))
             ]);
 
             // Turn them both into a combined list

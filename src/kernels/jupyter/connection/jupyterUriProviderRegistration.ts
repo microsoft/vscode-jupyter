@@ -17,7 +17,7 @@ import {
 } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../../api';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -87,7 +87,7 @@ export class JupyterUriProviderRegistration
         this.disposables.push(disposable);
         return disposable;
     }
-    public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+    public async getJupyterServerUri(id: string, handle: string): Promise<IJupyterServerUri> {
         if (!this._providers.has(id)) {
             await this.loadOtherExtensions();
         }
@@ -188,8 +188,8 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
     public readonly detail: string | undefined;
 
     public readonly onDidChangeHandles?: Event<void>;
-    public readonly getHandles?: () => Promise<JupyterServerUriHandle[]>;
-    public readonly removeHandle?: (handle: JupyterServerUriHandle) => Promise<void>;
+    public readonly getHandles?: () => Promise<string[]>;
+    public readonly removeHandle?: (handle: string) => Promise<void>;
 
     constructor(private readonly provider: IJupyterUriProvider, public extensionId: string) {
         super();
@@ -210,7 +210,7 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         }
 
         if (provider.removeHandle) {
-            this.removeHandle = (handle: JupyterServerUriHandle) => provider.removeHandle!(handle);
+            this.removeHandle = (handle: string) => provider.removeHandle!(handle);
         }
     }
     public async getQuickPickEntryItems(): Promise<QuickPickItem[]> {
@@ -226,10 +226,7 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
             };
         });
     }
-    public async handleQuickPick(
-        item: QuickPickItem,
-        back: boolean
-    ): Promise<JupyterServerUriHandle | 'back' | undefined> {
+    public async handleQuickPick(item: QuickPickItem, back: boolean): Promise<string | 'back' | undefined> {
         if (!this.provider.handleQuickPick) {
             return;
         }
@@ -241,7 +238,7 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         return this.provider.handleQuickPick(item, back);
     }
 
-    public async getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+    public async getServerUri(handle: string): Promise<IJupyterServerUri> {
         const server = await this.provider.getServerUri(handle);
         if (!this.id.startsWith('_builtin') && !handlesForWhichWeHaveSentTelemetry.has(handle)) {
             handlesForWhichWeHaveSentTelemetry.add(handle);

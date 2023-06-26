@@ -19,7 +19,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { IJupyterServerUri } from '../../../api';
 import { Settings } from '../../../platform/common/constants';
 import { TestEventHandler, createEventHandler } from '../../../test/common';
-import { generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { sleep } from '../../../test/core';
 
@@ -99,7 +99,7 @@ suite('Server Uri Storage', async () => {
                             return {
                                 time: a.time,
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.provider.id, a.provider.handle)
+                                uri: generateIdFromRemoteProvider(a.provider)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
@@ -108,7 +108,7 @@ suite('Server Uri Storage', async () => {
                             return {
                                 time: a.time,
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.serverHandle.id, a.serverHandle.handle)
+                                uri: generateIdFromRemoteProvider(a.serverHandle)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
@@ -192,7 +192,7 @@ suite('Server Uri Storage', async () => {
                             return {
                                 time: a.time,
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.provider.id, a.provider.handle)
+                                uri: generateIdFromRemoteProvider(a.provider)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
@@ -201,7 +201,7 @@ suite('Server Uri Storage', async () => {
                             return {
                                 time: a.time,
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.serverHandle.id, a.serverHandle.handle)
+                                uri: generateIdFromRemoteProvider(a.serverHandle)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
@@ -230,7 +230,7 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.provider.id, a.provider.handle)
+                                uri: generateIdFromRemoteProvider(a.provider)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
@@ -239,12 +239,12 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.serverHandle.id, a.serverHandle.handle)
+                                uri: generateIdFromRemoteProvider(a.serverHandle)
                             };
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateUriFromRemoteProvider('NewId1', 'NewHandle1')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
                 );
@@ -310,7 +310,7 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.provider.id, a.provider.handle)
+                                uri: generateIdFromRemoteProvider(a.provider)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
@@ -318,20 +318,20 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.serverHandle.id, a.serverHandle.handle)
+                                uri: generateIdFromRemoteProvider(a.serverHandle)
                             };
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateUriFromRemoteProvider('NewId1', 'NewHandle1')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
                         })
                         .concat({
                             displayName: 'NewDisplayName2',
-                            uri: generateUriFromRemoteProvider('NewId2', 'NewHandle2')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId2', handle: 'NewHandle2' })
                         })
                         .concat({
                             displayName: 'NewDisplayName3',
-                            uri: generateUriFromRemoteProvider('NewId3', 'NewHandle3')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3' })
                         })
                         .sort((a, b) => a.displayName.localeCompare(b.displayName))
                 );
@@ -381,7 +381,7 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.provider.id, a.provider.handle)
+                                uri: generateIdFromRemoteProvider(a.provider)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
@@ -389,20 +389,20 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.serverHandle.id, a.serverHandle.handle)
+                                uri: generateIdFromRemoteProvider(a.serverHandle)
                             };
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateUriFromRemoteProvider('NewId1', 'NewHandle1')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
                         })
                         .concat({
                             displayName: 'NewDisplayName2',
-                            uri: generateUriFromRemoteProvider('NewId2', 'NewHandle2')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId2', handle: 'NewHandle2' })
                         })
                         .concat({
                             displayName: 'NewDisplayName3',
-                            uri: generateUriFromRemoteProvider('NewId3', 'NewHandle3')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId2', handle: 'NewHandle3' })
                         })
                         .sort((a, b) => a.displayName.localeCompare(b.displayName))
                 );
@@ -453,7 +453,7 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.provider.id, a.provider.handle)
+                                uri: generateIdFromRemoteProvider(a.provider)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
@@ -461,16 +461,16 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.serverHandle.id, a.serverHandle.handle)
+                                uri: generateIdFromRemoteProvider(a.serverHandle)
                             };
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateUriFromRemoteProvider('NewId1', 'NewHandle1')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
                         })
                         .concat({
                             displayName: 'NewDisplayName3',
-                            uri: generateUriFromRemoteProvider('NewId3', 'NewHandle3')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3' })
                         })
                         .sort((a, b) => a.displayName.localeCompare(b.displayName))
                 );
@@ -519,7 +519,7 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.provider.id, a.provider.handle)
+                                uri: generateIdFromRemoteProvider(a.provider)
                             };
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
@@ -527,16 +527,16 @@ suite('Server Uri Storage', async () => {
                         .map((a) => {
                             return {
                                 displayName: a.displayName,
-                                uri: generateUriFromRemoteProvider(a.serverHandle.id, a.serverHandle.handle)
+                                uri: generateIdFromRemoteProvider(a.serverHandle)
                             };
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateUriFromRemoteProvider('NewId1', 'NewHandle1')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
                         })
                         .concat({
                             displayName: 'NewDisplayName3',
-                            uri: generateUriFromRemoteProvider('NewId3', 'NewHandle3')
+                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3' })
                         })
                         .sort((a, b) => a.displayName.localeCompare(b.displayName))
                 );
@@ -835,7 +835,7 @@ suite('Server Uri Storage', async () => {
                 const uris: string[] = [];
                 const itemsInNewStorage: StorageMRUItem[] = [];
                 for (let index = 0; index < numberOfEntries; index += 1) {
-                    const uri = generateUriFromRemoteProvider('1', `handle${index + 1}`);
+                    const uri = generateIdFromRemoteProvider({ id: '1', handle: `handle${index + 1}` });
                     const displayName = `displayName${index}`;
                     uris.push(`${uri}${Settings.JupyterServerRemoteLaunchNameSeparator}${displayName}`);
                     data.push({

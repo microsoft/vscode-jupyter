@@ -21,7 +21,7 @@ import { RemoteKernelFinder } from './remoteKernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
-import { generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateIdFromRemoteProvider } from '../jupyterUtils';
 
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
@@ -68,8 +68,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         if (!this.serverFinderMapping.has(generateIdFromProvider(serverUri.provider))) {
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${id}`,
-                serverUri.displayName ||
-                    generateUriFromRemoteProvider(serverUri.provider.id, serverUri.provider.handle),
+                serverUri.displayName || generateIdFromRemoteProvider(serverUri.provider),
                 `${RemoteKernelSpecsCacheKey}-${id}`,
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,
