@@ -124,9 +124,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
-        const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
         const entry: IJupyterServerUriEntry = {
-            uri,
             time: options?.time ?? Date.now(),
             displayName: options?.displayName,
             isValidated: true,
@@ -234,7 +232,6 @@ class OldStorage {
             displayName ||
             uri;
         const entry: IJupyterServerUriEntry = {
-            uri,
             time,
             displayName,
             isValidated: true,
@@ -242,10 +239,11 @@ class OldStorage {
         };
 
         // Remove this uri if already found (going to add again with a new time)
+        const id = `${jupyterHandle.id}#${jupyterHandle.handle}`;
         const editedList = [entry].concat(
             uriList
                 .sort((a, b) => b.time - a.time) // First sort by time
-                .filter((f) => f.uri !== uri)
+                .filter((f) => `${f.provider.id}#${f.provider.handle}` !== id)
         );
         const removedItems = editedList.splice(Settings.JupyterServerUriListMax);
 
@@ -277,8 +275,11 @@ class OldStorage {
         const blob = sorted
             .map(
                 (e) =>
-                    `${e.uri}${Settings.JupyterServerRemoteLaunchNameSeparator}${
-                        !e.displayName || e.displayName === e.uri
+                    `${generateUriFromRemoteProvider(e.provider.id, e.provider.handle)}${
+                        Settings.JupyterServerRemoteLaunchNameSeparator
+                    }${
+                        !e.displayName ||
+                        e.displayName === generateUriFromRemoteProvider(e.provider.id, e.provider.handle)
                             ? Settings.JupyterServerRemoteLaunchUriEqualsDisplayName
                             : e.displayName
                     }`
@@ -356,7 +357,6 @@ class OldStorage {
                     servers.push({
                         time: indexes[index].time,
                         displayName,
-                        uri,
                         isValidated: false,
                         provider: idAndHandle
                     });
@@ -449,7 +449,10 @@ class NewStorage {
                         `${item.provider.id}#${item.provider.handle}`
                 );
                 // Check if we have already found a display name for this server
-                item.displayName = item.displayName || existingEntry?.displayName || item.uri;
+                item.displayName =
+                    item.displayName ||
+                    existingEntry?.displayName ||
+                    generateUriFromRemoteProvider(item.provider.id, item.provider.handle);
 
                 const newItem: StorageMRUItem = {
                     displayName: item.displayName || '',
@@ -478,10 +481,6 @@ class NewStorage {
                         return <IJupyterServerUriEntry>{
                             provider: removedItem.serverHandle,
                             time: removedItem.time,
-                            uri: generateUriFromRemoteProvider(
-                                removedItem.serverHandle.id,
-                                removedItem.serverHandle.handle
-                            ),
                             displayName: removedItem.displayName || '',
                             isValidated: false
                         };
@@ -504,7 +503,6 @@ class NewStorage {
         const entry: IJupyterServerUriEntry = {
             provider: existingEntry.provider,
             time: Date.now(),
-            uri: generateUriFromRemoteProvider(existingEntry.provider.id, existingEntry.provider.handle),
             displayName: existingEntry.displayName || '',
             isValidated: true
         };
@@ -559,7 +557,6 @@ class NewStorage {
                 const server: IJupyterServerUriEntry = {
                     time: item.time,
                     displayName: item.displayName || uri,
-                    uri,
                     isValidated: false,
                     provider: item.serverHandle
                 };

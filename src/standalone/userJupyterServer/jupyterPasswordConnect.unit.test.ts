@@ -154,6 +154,7 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            handle: '1',
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true
         });
@@ -211,6 +212,7 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            handle: '1',
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true
         });
@@ -268,6 +270,7 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            handle: '1',
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: false
         });
@@ -323,6 +326,7 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            handle: '1',
             url: 'https://TESTNAME:8888/',
             isTokenEmpty: true
         });
@@ -345,6 +349,7 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            handle: '1',
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true
         });
@@ -400,6 +405,7 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         let result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            handle: '1',
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true
         });
@@ -448,6 +454,7 @@ suite('JupyterPasswordConnect', () => {
 
         // Retry the password
         result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            handle: '1',
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true
         });
@@ -521,6 +528,7 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetch as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+            handle: '1',
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true
         });

@@ -183,10 +183,6 @@ export interface IJupyterUriProviderRegistration {
  * Entry into our list of saved servers
  */
 export interface IJupyterServerUriEntry {
-    /**
-     * Uri of the server to connect to
-     */
-    uri: string;
     provider: {
         id: string;
         handle: JupyterServerUriHandle;

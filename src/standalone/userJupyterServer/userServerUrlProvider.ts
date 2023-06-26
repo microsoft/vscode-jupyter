@@ -407,9 +407,12 @@ export class UserJupyterServerUrlProvider
                     }
 
                     let passwordResult: IJupyterPasswordConnectInfo;
+                    const handle = uuid();
+                    this.jupyterServerUriBeingValidated = Object.assign({}, jupyterServerUri, { handle });
 
                     try {
                         passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
+                            handle,
                             url: jupyterServerUri.baseUrl,
                             isTokenEmpty: jupyterServerUri.token.length === 0
                         });
@@ -456,8 +459,6 @@ export class UserJupyterServerUrlProvider
                         }
                     }
 
-                    const handle = uuid();
-                    this.jupyterServerUriBeingValidated = Object.assign({}, jupyterServerUri, { handle });
                     let message = '';
                     try {
                         await this.jupyterConnection.validateRemoteUri({ id: this.id, handle }, jupyterServerUri, true);
@@ -546,6 +547,7 @@ export class UserJupyterServerUrlProvider
         }
 
         const passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
+            handle,
             url: server.serverInfo.baseUrl,
             isTokenEmpty: server.serverInfo.token.length === 0,
             displayName: server.serverInfo.displayName

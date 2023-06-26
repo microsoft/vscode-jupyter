@@ -74,6 +74,7 @@ suite('User Uri Provider', () => {
                 let getPasswordConnectionInfoStub: sinon.SinonStub<
                     [
                         {
+                            handle: string;
                             url: string;
 
                             isTokenEmpty: boolean;

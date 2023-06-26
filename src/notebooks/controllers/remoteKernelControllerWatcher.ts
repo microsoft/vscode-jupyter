@@ -50,7 +50,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             return;
         }
         const [handles, uris] = await Promise.all([provider.getHandles(), this.uriStorage.getAll()]);
-        const serverJupyterProviderMap = new Map<string, { uri: string; providerId: string; handle: string }>();
+        const serverJupyterProviderMap = new Map<string, { providerId: string; handle: string }>();
         const registeredHandles: string[] = [];
         await Promise.all(
             uris.map(async (item) => {
@@ -59,7 +59,6 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                     return;
                 }
                 serverJupyterProviderMap.set(generateUriFromRemoteProvider(item.provider.id, item.provider.handle), {
-                    uri: item.uri,
                     providerId: item.provider.id,
                     handle: item.provider.handle
                 });

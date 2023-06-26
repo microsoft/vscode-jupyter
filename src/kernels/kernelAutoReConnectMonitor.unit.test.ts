@@ -323,7 +323,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
         const providerHandle = { id: 'ProviderId', handle: 'ProviderHandle' };
         const kernel = createKernel(providerHandle);
         const server: IJupyterServerUriEntry = {
-            uri: 'https://remote?id=remoteUriProvider&uriHandle=1',
             time: 1234,
             provider: providerHandle
         };

@@ -47,9 +47,11 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return JupyterPasswordConnect._prompt?.promise;
     }
     public getPasswordConnectionInfo({
+        handle,
         url,
         isTokenEmpty
     }: {
+        handle: string;
         url: string;
         isTokenEmpty: boolean;
     }): Promise<IJupyterPasswordConnectInfo | undefined> {
@@ -62,14 +64,14 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         const newUrl = addTrailingSlash(url);
 
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
-        let result = this.savedConnectInfo.get(newUrl);
+        let result = this.savedConnectInfo.get(handle);
         if (!result) {
             const deferred = (JupyterPasswordConnect._prompt = createDeferred());
             result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty }).then((value) => {
                 if (!value) {
                     // If we fail to get a valid password connect info, don't save the value
                     traceWarning(`Password for ${newUrl} was invalid.`);
-                    this.savedConnectInfo.delete(newUrl);
+                    this.savedConnectInfo.delete(handle);
                 }
 
                 return value;
@@ -80,7 +82,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                     JupyterPasswordConnect._prompt = undefined;
                 }
             });
-            this.savedConnectInfo.set(newUrl, result);
+            this.savedConnectInfo.set(handle, result);
         }
 
         return result;
@@ -560,10 +562,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
      * When URIs are removed from the server list also remove them from
      */
     private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
-        uriEntries.forEach((uriEntry) => {
-            const newUrl = addTrailingSlash(uriEntry.uri);
-            this.savedConnectInfo.delete(newUrl);
-        });
+        uriEntries.forEach((uriEntry) => this.savedConnectInfo.delete(uriEntry.provider.handle));
     }
 }
 

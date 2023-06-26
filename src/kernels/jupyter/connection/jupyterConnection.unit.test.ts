@@ -30,7 +30,6 @@ import chaiAsPromised from 'chai-as-promised';
 import { IJupyterServerUri } from '../../../api';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IDataScienceErrorHandler } from '../../errors/types';
-import { generateUriFromRemoteProvider } from '../jupyterUtils';
 use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
@@ -173,11 +172,9 @@ suite('Jupyter Connection', async () => {
                 when(sessionManager.dispose()).thenResolve();
                 const id = '1';
                 const handle = 'handle1';
-                const uri = generateUriFromRemoteProvider(id, handle);
                 const server: IJupyterServerUriEntry = {
                     provider: { id, handle },
                     time: Date.now(),
-                    uri,
                     displayName: 'someDisplayName',
                     isValidated: true
                 };
@@ -212,11 +209,9 @@ suite('Jupyter Connection', async () => {
                 when(sessionManager.dispose()).thenResolve();
                 const id = '1';
                 const handle = 'handle1';
-                const uri = generateUriFromRemoteProvider(id, handle);
                 const server: IJupyterServerUriEntry = {
                     provider: { id, handle },
                     time: Date.now(),
-                    uri,
                     displayName: 'someDisplayName',
                     isValidated: true
                 };

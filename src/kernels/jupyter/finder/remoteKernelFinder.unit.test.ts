@@ -131,7 +131,6 @@ suite(`Remote Kernel Finder`, () => {
         when(fs.delete(anything())).thenResolve();
         when(fs.exists(anything())).thenResolve(true);
         const serverEntry: IJupyterServerUriEntry = {
-            uri: connInfo.baseUrl,
             time: Date.now(),
             isValidated: true,
             provider: {

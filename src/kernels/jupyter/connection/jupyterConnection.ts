@@ -5,12 +5,7 @@ import { inject, injectable, optional } from 'inversify';
 import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
-import {
-    createRemoteConnectionInfo,
-    extractJupyterServerHandleAndId,
-    handleExpiredCertsError,
-    handleSelfCertsError
-} from '../jupyterUtils';
+import { createRemoteConnectionInfo, handleExpiredCertsError, handleSelfCertsError } from '../jupyterUtils';
 import {
     IJupyterPasswordConnect,
     IJupyterRequestAgentCreator,
@@ -93,9 +88,8 @@ export class JupyterConnection {
             console.error(Error(`Server Not found for ${JSON.stringify(providerHandle)}`));
             throw new Error(`Server Not found for ${JSON.stringify(providerHandle)}`);
         }
-        const provider = extractJupyterServerHandleAndId(server.uri);
-        const serverUri = await this.getJupyterServerUri(provider);
-        return createRemoteConnectionInfo(provider, serverUri);
+        const serverUri = await this.getJupyterServerUri(providerHandle);
+        return createRemoteConnectionInfo(providerHandle, serverUri);
     }
 
     public async validateRemoteUri(
