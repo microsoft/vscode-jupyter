@@ -34,7 +34,7 @@ import {
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyter/jupyterUtils';
+import { generateUriFromRemoteProvider } from '../jupyter/jupyterUtils';
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from './kernelErrorHandler.node';
@@ -153,10 +153,6 @@ suite('Error Handler Unit Tests', () => {
         let kernelConnection: KernelConnectionMetadata;
         const providerHandle = { id: '1', handle: 'a' };
         const uri = generateUriFromRemoteProvider('1', 'a');
-        let serverId: string;
-        suiteSetup(async () => {
-            serverId = await computeServerId(uri);
-        });
         setup(() => {
             when(applicationShell.showErrorMessage(anything(), Common.learnMore)).thenResolve(Common.learnMore as any);
             kernelConnection = PythonKernelConnectionMetadata.create({
@@ -819,7 +815,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     DataScience.selectDifferentKernel
                 )
             ).once();
-            verify(uriStorage.remove(deepEqual({ serverId }))).never();
+            verify(uriStorage.remove(deepEqual(providerHandle))).never();
         });
         test('Display error when connection to remote jupyter server fails due to 3rd party extension', async () => {
             const error = new RemoteJupyterServerUriProviderError(providerHandle, new Error('invalid handle'));
@@ -834,17 +830,9 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 },
                 providerHandle
             });
-            when(uriStorage.get(deepEqual({ serverId }))).thenResolve({
-                time: 1,
-                uri,
-                serverId,
-                displayName: 'Hello Server',
-                provider: providerHandle
-            });
             when(uriStorage.get(deepEqual(providerHandle))).thenResolve({
                 time: 1,
                 uri,
-                serverId,
                 displayName: 'Hello Server',
                 provider: providerHandle
             });
@@ -869,7 +857,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     DataScience.selectDifferentKernel
                 )
             ).once();
-            verify(uriStorage.remove(deepEqual({ serverId }))).never();
             verify(uriStorage.remove(deepEqual(providerHandle))).never();
             verify(uriStorage.get(deepEqual(providerHandle))).atLeast(1);
         });
@@ -890,15 +877,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText as any);
             when(uriStorage.remove(anything())).thenResolve();
-            when(uriStorage.get(deepEqual({ serverId }))).thenResolve({
-                uri,
-                serverId,
-                time: 2,
-                provider: providerHandle
-            });
             when(uriStorage.get(deepEqual(providerHandle))).thenResolve({
                 uri,
-                serverId,
                 time: 2,
                 provider: providerHandle
             });
@@ -939,7 +919,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
-            verify(uriStorage.remove(deepEqual({ serverId }))).never();
             verify(uriStorage.remove(deepEqual(providerHandle))).never();
         });
         test('Select different kernel user choses to do so, when connection to remote jupyter server fails', async () => {
@@ -966,7 +945,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.selectDifferentKernel);
-            verify(uriStorage.remove(deepEqual({ serverId }))).never();
             verify(uriStorage.remove(deepEqual(providerHandle))).never();
         });
         function verifyErrorMessage(message: string, linkInfo?: string) {

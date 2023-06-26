@@ -270,7 +270,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         );
     }
     private async handleJupyterServerProviderConnectionError(info: IJupyterServerUriEntry) {
-        const provider = await this.jupyterUriProviderRegistration.getProvider(info.serverId);
+        const provider = await this.jupyterUriProviderRegistration.getProvider(info.provider.id);
         if (!provider || !provider.getHandles) {
             return false;
         }

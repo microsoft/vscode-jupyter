@@ -20,7 +20,6 @@ import {
     mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources
 } from '../../../kernels/jupyter/connection/liveRemoteKernelConnectionTracker';
 import { LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
-import { computeServerId } from '../../../kernels/jupyter/jupyterUtils';
 import { waitForCondition } from '../../../test/common';
 
 use(chaiAsPromised);
@@ -31,7 +30,6 @@ suite('Live kernel Connection Tracker', async () => {
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
     const disposables: IDisposable[] = [];
     const server2Uri = 'http://one:1234/hello?token=1234';
-    let server2Id: string;
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'connectionId',
@@ -99,7 +97,6 @@ suite('Live kernel Connection Tracker', async () => {
         return `${providerHandle.id}#${providerHandle.handle}`;
     }
     setup(async () => {
-        server2Id = await computeServerId(server2Uri);
         serverUriStorage = mock<IJupyterServerUriStorage>();
         memento = mock<Memento>();
         onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
@@ -241,7 +238,7 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Forget the Uri connection all together.
-        onDidRemoveUris.fire([{ uri: server2Uri, serverId: server2Id, time: 0, provider: { id: '1', handle: '2' } }]);
+        onDidRemoveUris.fire([{ uri: server2Uri, time: 0, provider: { id: '1', handle: '2' } }]);
 
         await waitForCondition(
             () => {

@@ -30,7 +30,7 @@ import chaiAsPromised from 'chai-as-promised';
 import { IJupyterServerUri } from '../../../api';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IDataScienceErrorHandler } from '../../errors/types';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateUriFromRemoteProvider } from '../jupyterUtils';
 use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
@@ -174,10 +174,8 @@ suite('Jupyter Connection', async () => {
                 const id = '1';
                 const handle = 'handle1';
                 const uri = generateUriFromRemoteProvider(id, handle);
-                const serverId = await computeServerId(uri);
                 const server: IJupyterServerUriEntry = {
                     provider: { id, handle },
-                    serverId,
                     time: Date.now(),
                     uri,
                     displayName: 'someDisplayName',
@@ -192,7 +190,6 @@ suite('Jupyter Connection', async () => {
                         token: '1234'
                     }
                 };
-                when(serverUriStorage.get(deepEqual({ serverId }))).thenResolve(server);
                 when(serverUriStorage.get(deepEqual({ id, handle }))).thenResolve(server);
                 when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
@@ -216,10 +213,8 @@ suite('Jupyter Connection', async () => {
                 const id = '1';
                 const handle = 'handle1';
                 const uri = generateUriFromRemoteProvider(id, handle);
-                const serverId = await computeServerId(uri);
                 const server: IJupyterServerUriEntry = {
                     provider: { id, handle },
-                    serverId,
                     time: Date.now(),
                     uri,
                     displayName: 'someDisplayName',
@@ -230,7 +225,6 @@ suite('Jupyter Connection', async () => {
                     displayName: 'someDisplayName',
                     token: '1234'
                 };
-                when(serverUriStorage.get(deepEqual({ serverId }))).thenResolve(server);
                 when(serverUriStorage.get(deepEqual({ id, handle }))).thenResolve(server);
                 when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));

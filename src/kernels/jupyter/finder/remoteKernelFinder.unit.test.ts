@@ -21,7 +21,12 @@ import {
 import { JupyterSessionManager } from '../session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
 import { ActiveKernelIdList } from '../connection/preferredRemoteKernelIdProvider';
-import { IJupyterKernel, IJupyterRemoteCachedKernelValidator, IJupyterSessionManager } from '../types';
+import {
+    IJupyterKernel,
+    IJupyterRemoteCachedKernelValidator,
+    IJupyterServerUriEntry,
+    IJupyterSessionManager
+} from '../types';
 import { KernelFinder } from '../../kernelFinder';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
@@ -125,10 +130,9 @@ suite(`Remote Kernel Finder`, () => {
         fs = mock(FileSystem);
         when(fs.delete(anything())).thenResolve();
         when(fs.exists(anything())).thenResolve(true);
-        const serverEntry = {
+        const serverEntry: IJupyterServerUriEntry = {
             uri: connInfo.baseUrl,
             time: Date.now(),
-            serverId: connInfo.baseUrl,
             isValidated: true,
             provider: {
                 id: '1',

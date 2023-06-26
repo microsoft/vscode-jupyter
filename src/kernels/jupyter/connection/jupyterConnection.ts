@@ -87,7 +87,7 @@ export class JupyterConnection {
         );
     }
 
-    public async createConnectionInfo(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
+    public async createConnectionInfo(providerHandle: JupyterServerProviderHandle) {
         const server = await this.serverUriStorage.get(providerHandle);
         if (!server) {
             console.error(Error(`Server Not found for ${JSON.stringify(providerHandle)}`));

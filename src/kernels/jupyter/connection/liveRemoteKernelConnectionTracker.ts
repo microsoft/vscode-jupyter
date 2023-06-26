@@ -45,19 +45,19 @@ export class LiveRemoteKernelConnectionUsageTracker
     }
 
     public wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata) {
-        const serverId = this.computeId(connection.providerHandle);
+        const id = this.computeId(connection.providerHandle);
         return (
-            serverId in this.usedRemoteKernelServerIdsAndSessions &&
+            id in this.usedRemoteKernelServerIdsAndSessions &&
             typeof connection.kernelModel.id === 'string' &&
-            connection.kernelModel.id in this.usedRemoteKernelServerIdsAndSessions[serverId]
+            connection.kernelModel.id in this.usedRemoteKernelServerIdsAndSessions[id]
         );
     }
     public trackKernelIdAsUsed(resource: Uri, providerHandle: JupyterServerProviderHandle, kernelId: string) {
-        const serverId = this.computeId(providerHandle);
-        this.usedRemoteKernelServerIdsAndSessions[serverId] = this.usedRemoteKernelServerIdsAndSessions[serverId] || {};
-        this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] =
-            this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] || [];
-        const uris = this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
+        const id = this.computeId(providerHandle);
+        this.usedRemoteKernelServerIdsAndSessions[id] = this.usedRemoteKernelServerIdsAndSessions[id] || {};
+        this.usedRemoteKernelServerIdsAndSessions[id][kernelId] =
+            this.usedRemoteKernelServerIdsAndSessions[id][kernelId] || [];
+        const uris = this.usedRemoteKernelServerIdsAndSessions[id][kernelId];
         if (uris.includes(resource.toString())) {
             return;
         }
@@ -70,23 +70,23 @@ export class LiveRemoteKernelConnectionUsageTracker
             .then(noop, noop);
     }
     public trackKernelIdAsNotUsed(resource: Uri, providerHandle: JupyterServerProviderHandle, kernelId: string) {
-        const serverId = this.computeId(providerHandle);
-        if (!(serverId in this.usedRemoteKernelServerIdsAndSessions)) {
+        const id = this.computeId(providerHandle);
+        if (!(id in this.usedRemoteKernelServerIdsAndSessions)) {
             return;
         }
-        if (!(kernelId in this.usedRemoteKernelServerIdsAndSessions[serverId])) {
+        if (!(kernelId in this.usedRemoteKernelServerIdsAndSessions[id])) {
             return;
         }
-        const uris = this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
+        const uris = this.usedRemoteKernelServerIdsAndSessions[id][kernelId];
         if (!Array.isArray(uris) || !uris.includes(resource.toString())) {
             return;
         }
         uris.splice(uris.indexOf(resource.toString()), 1);
         if (uris.length === 0) {
-            delete this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
+            delete this.usedRemoteKernelServerIdsAndSessions[id][kernelId];
         }
-        if (Object.keys(this.usedRemoteKernelServerIdsAndSessions[serverId]).length === 0) {
-            delete this.usedRemoteKernelServerIdsAndSessions[serverId];
+        if (Object.keys(this.usedRemoteKernelServerIdsAndSessions[id]).length === 0) {
+            delete this.usedRemoteKernelServerIdsAndSessions[id];
         }
 
         this.memento
@@ -98,8 +98,8 @@ export class LiveRemoteKernelConnectionUsageTracker
     }
     private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         uriEntries.forEach((uriEntry) => {
-            const serverId = this.computeId(uriEntry.provider);
-            delete this.usedRemoteKernelServerIdsAndSessions[serverId];
+            const id = this.computeId(uriEntry.provider);
+            delete this.usedRemoteKernelServerIdsAndSessions[id];
             this.memento
                 .update(
                     mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,

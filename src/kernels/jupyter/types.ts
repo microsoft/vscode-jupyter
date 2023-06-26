@@ -192,10 +192,6 @@ export interface IJupyterServerUriEntry {
         handle: JupyterServerUriHandle;
     };
     /**
-     * Unique ID using a hash of the full uri
-     */
-    serverId: string;
-    /**
      * The most recent time that we connected to this server
      */
     time: number;
@@ -219,11 +215,9 @@ export interface IJupyterServerUriStorage {
      */
     update(providerHandle: JupyterServerProviderHandle): Promise<void>;
     getAll(): Promise<IJupyterServerUriEntry[]>;
-    remove(providerHandle: JupyterServerProviderHandle | { serverId: string }): Promise<void>;
+    remove(providerHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
-    get(
-        providerHandle: JupyterServerProviderHandle | { serverId: string }
-    ): Promise<IJupyterServerUriEntry | undefined>;
+    get(providerHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined>;
     add(
         jupyterHandle: { id: string; handle: JupyterServerUriHandle },
         options?: { time: number; displayName: string }

@@ -4,7 +4,6 @@
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
-import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
     IInternalJupyterUriProvider,
@@ -53,8 +52,7 @@ suite('RemoteKernelControllerWatcher', () => {
         const provider1Id = 'provider1';
         const provider1Handle1 = 'provider1Handle1';
         const providerHandle = { id: provider1Id, handle: provider1Handle1 };
-        const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
-        const serverId = await computeServerId(remoteUriForProvider1);
+        const remoteUriForProvider1 = 'http://localhost:1234/?token=1234';
 
         let onDidChangeHandles: undefined | (() => Promise<void>);
         const provider1 = mock<IInternalJupyterUriProvider>();
@@ -120,7 +118,6 @@ suite('RemoteKernelControllerWatcher', () => {
         when(uriStorage.getAll()).thenResolve([
             {
                 time: 1,
-                serverId,
                 uri: remoteUriForProvider1,
                 displayName: 'Something',
                 provider: {
@@ -131,17 +128,6 @@ suite('RemoteKernelControllerWatcher', () => {
         ]);
         when(uriStorage.get(deepEqual(providerHandle))).thenResolve({
             time: 1,
-            serverId,
-            uri: remoteUriForProvider1,
-            displayName: 'Something',
-            provider: {
-                handle: provider1Handle1,
-                id: provider1Id
-            }
-        });
-        when(uriStorage.get(deepEqual({ serverId }))).thenResolve({
-            time: 1,
-            serverId,
             uri: remoteUriForProvider1,
             displayName: 'Something',
             provider: {

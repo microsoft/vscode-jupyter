@@ -9,7 +9,8 @@ import {
     IJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
     IJupyterRemoteCachedKernelValidator,
-    IJupyterServerUriEntry
+    IJupyterServerUriEntry,
+    JupyterServerProviderHandle
 } from '../types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { noop } from '../../../platform/common/utils/misc';
@@ -62,12 +63,12 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
             // when server uri is validated, an `onDidAddUri` event will be fired.
             return;
         }
-
-        if (!this.serverFinderMapping.has(serverUri.serverId)) {
+        const id = generateIdFromProvider(serverUri.provider);
+        if (!this.serverFinderMapping.has(generateIdFromProvider(serverUri.provider))) {
             const finder = new RemoteKernelFinder(
-                `${ContributedKernelFinderKind.Remote}-${serverUri.serverId}`,
+                `${ContributedKernelFinderKind.Remote}-${id}`,
                 serverUri.displayName || serverUri.uri,
-                `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
+                `${RemoteKernelSpecsCacheKey}-${id}`,
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,
                 this.globalState,
@@ -81,7 +82,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
             );
             this.disposables.push(finder);
 
-            this.serverFinderMapping.set(serverUri.serverId, finder);
+            this.serverFinderMapping.set(id, finder);
 
             finder.activate().then(noop, noop);
         }
@@ -90,13 +91,17 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     // When a URI is removed, dispose the kernel finder for it
     urisRemoved(uris: IJupyterServerUriEntry[]) {
         uris.forEach((uri) => {
-            const serverFinder = this.serverFinderMapping.get(uri.serverId);
+            const id = generateIdFromProvider(uri.provider);
+            const serverFinder = this.serverFinderMapping.get(id);
             serverFinder && serverFinder.dispose();
-            this.serverFinderMapping.delete(uri.serverId);
+            this.serverFinderMapping.delete(id);
         });
     }
 
     dispose() {
         this.serverFinderMapping.forEach((finder) => finder.dispose());
     }
+}
+function generateIdFromProvider(provider: JupyterServerProviderHandle) {
+    return `${provider.id}-${provider.handle}`;
 }

@@ -14,7 +14,7 @@ import {
     IDisposableRegistry
 } from '../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
-import { computeServerId, extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../jupyterUtils';
 import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage,
@@ -109,19 +109,13 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         await this.newStorage.migrateMRU();
         await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
     }
-    public async get(
-        searchCriteria: JupyterServerProviderHandle | { serverId: string }
-    ): Promise<IJupyterServerUriEntry | undefined> {
+    public async get(searchCriteria: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         const savedList = await this.getAll();
-        if ('handle' in searchCriteria) {
-            return savedList.find(
-                (item) => item.provider.id === searchCriteria.id && item.provider.handle === searchCriteria.handle
-            );
-        } else {
-            return savedList.find((item) => item.serverId === searchCriteria.serverId);
-        }
+        return savedList.find(
+            (item) => item.provider.id === searchCriteria.id && item.provider.handle === searchCriteria.handle
+        );
     }
     public async add(
         jupyterHandle: { id: string; handle: JupyterServerUriHandle },
@@ -131,11 +125,9 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         await this.newStorage.migrateMRU();
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
         const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
-        const serverId = await computeServerId(uri);
         const entry: IJupyterServerUriEntry = {
             uri,
             time: options?.time ?? Date.now(),
-            serverId,
             displayName: options?.displayName,
             isValidated: true,
             provider: jupyterHandle
@@ -155,7 +147,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         await this.newStorage.migrateMRU();
         await Promise.all([this.newStorage.update(providerHandle), this.oldStorage.update(providerHandle)]);
     }
-    public async remove(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
+    public async remove(providerHandle: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         await Promise.all([this.newStorage.remove(providerHandle), this.oldStorage.remove(providerHandle)]);
@@ -191,7 +183,7 @@ class OldStorage {
 
     public async add(item: IJupyterServerUriEntry) {
         traceInfoIfCI(`setUri: ${item.provider.id}.${item.provider.handle}`);
-        await this.addToUriList(item.provider, item.serverId, item.displayName || '', item.time);
+        await this.addToUriList(item.provider, item.displayName || '', item.time);
     }
     public async update(providerHandle: JupyterServerProviderHandle) {
         const uriList = await this.getAll();
@@ -203,47 +195,31 @@ class OldStorage {
             throw new Error(`Uri not found for Server Id ${providerHandle.id}#${providerHandle.handle}`);
         }
 
-        await this.addToUriList(
-            existingEntry.provider,
-            existingEntry.serverId,
-            existingEntry.displayName || '',
-            Date.now()
-        );
+        await this.addToUriList(existingEntry.provider, existingEntry.displayName || '', Date.now());
     }
-    public async remove(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
+    public async remove(providerHandle: JupyterServerProviderHandle) {
         const uriList = await this.getAll();
-        const editedList =
-            'id' in providerHandle
-                ? uriList.filter(
-                      (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
-                  )
-                : uriList.filter((f) => f.serverId !== providerHandle.serverId);
+        const editedList = uriList.filter(
+            (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
+        );
         if (editedList.length === 0) {
             await this.clear();
         } else {
             await this.updateMemento(
-                'id' in providerHandle
-                    ? uriList.filter(
-                          (f) =>
-                              `${f.provider.id}#${f.provider.handle}` !==
-                              `${providerHandle.id}#${providerHandle.handle}`
-                      )
-                    : uriList.filter((f) => f.serverId !== providerHandle.serverId)
+                uriList.filter(
+                    (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
+                )
             );
         }
-        const removedItem =
-            'id' in providerHandle
-                ? uriList.find(
-                      (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
-                  )
-                : uriList.find((f) => f.serverId !== providerHandle.serverId);
+        const removedItem = uriList.find(
+            (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
+        );
         if (removedItem) {
             this._onDidRemoveUris.fire([removedItem]);
         }
     }
     private async addToUriList(
         jupyterHandle: { id: string; handle: JupyterServerUriHandle },
-        serverId: string,
         displayName: string,
         time: number
     ) {
@@ -251,11 +227,15 @@ class OldStorage {
         const uriList = await this.getAll();
 
         // Check if we have already found a display name for this server
-        displayName = uriList.find((entry) => entry.serverId === serverId)?.displayName || displayName || uri;
+        displayName =
+            uriList.find(
+                (entry) => entry.provider.id === jupyterHandle.id && entry.provider.handle === jupyterHandle.handle
+            )?.displayName ||
+            displayName ||
+            uri;
         const entry: IJupyterServerUriEntry = {
             uri,
             time,
-            serverId,
             displayName,
             isValidated: true,
             provider: jupyterHandle
@@ -367,7 +347,6 @@ class OldStorage {
                 }
                 try {
                     const idAndHandle = extractJupyterServerHandleAndId(uri);
-                    const serverId = await computeServerId(uri);
                     // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
                     const displayName =
                         uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
@@ -376,7 +355,6 @@ class OldStorage {
                             : uriAndDisplayName[1];
                     servers.push({
                         time: indexes[index].time,
-                        serverId,
                         displayName,
                         uri,
                         isValidated: false,
@@ -496,26 +474,18 @@ class NewStorage {
                     this._onDidAddUri.fire(item);
                 }
                 if (removedItems.length) {
-                    const removeJupyterUris = await Promise.all(
-                        removedItems.map(async (removedItem) => {
-                            return <IJupyterServerUriEntry>{
-                                provider: removedItem.serverHandle,
-                                serverId: await computeServerId(
-                                    generateUriFromRemoteProvider(
-                                        removedItem.serverHandle.id,
-                                        removedItem.serverHandle.handle
-                                    )
-                                ),
-                                time: removedItem.time,
-                                uri: generateUriFromRemoteProvider(
-                                    removedItem.serverHandle.id,
-                                    removedItem.serverHandle.handle
-                                ),
-                                displayName: removedItem.displayName || '',
-                                isValidated: false
-                            };
-                        })
-                    );
+                    const removeJupyterUris = removedItems.map((removedItem) => {
+                        return <IJupyterServerUriEntry>{
+                            provider: removedItem.serverHandle,
+                            time: removedItem.time,
+                            uri: generateUriFromRemoteProvider(
+                                removedItem.serverHandle.id,
+                                removedItem.serverHandle.handle
+                            ),
+                            displayName: removedItem.displayName || '',
+                            isValidated: false
+                        };
+                    });
                     this._onDidRemoveUris.fire(removeJupyterUris);
                 }
                 this._onDidChangeUri.fire();
@@ -533,7 +503,6 @@ class NewStorage {
         }
         const entry: IJupyterServerUriEntry = {
             provider: existingEntry.provider,
-            serverId: existingEntry.serverId,
             time: Date.now(),
             uri: generateUriFromRemoteProvider(existingEntry.provider.id, existingEntry.provider.handle),
             displayName: existingEntry.displayName || '',
@@ -541,29 +510,19 @@ class NewStorage {
         };
         await this.add(entry);
     }
-    public async remove(providerHandle: JupyterServerProviderHandle | { serverId: string }) {
+    public async remove(providerHandle: JupyterServerProviderHandle) {
         await (this.updatePromise = this.updatePromise
             .then(async () => {
                 const all = await this.getAllImpl(false);
                 if (all.length === 0) {
                     return;
                 }
-                const editedList =
-                    'id' in providerHandle
-                        ? all.filter(
-                              (f) =>
-                                  `${f.provider.id}#${f.provider.handle}` !==
-                                  `${providerHandle.id}#${providerHandle.handle}`
-                          )
-                        : all.filter((f) => f.serverId !== providerHandle.serverId);
-                const removedItems =
-                    'id' in providerHandle
-                        ? all.filter(
-                              (f) =>
-                                  `${f.provider.id}#${f.provider.handle}` !==
-                                  `${providerHandle.id}#${providerHandle.handle}`
-                          )
-                        : all.filter((f) => f.serverId !== providerHandle.serverId);
+                const editedList = all.filter(
+                    (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
+                );
+                const removedItems = all.filter(
+                    (f) => `${f.provider.id}#${f.provider.handle}` !== `${providerHandle.id}#${providerHandle.handle}`
+                );
                 if (editedList.length === 0) {
                     await this.clear();
                 } else if (removedItems.length) {
@@ -597,10 +556,8 @@ class NewStorage {
         await Promise.all(
             data.map(async (item) => {
                 const uri = generateUriFromRemoteProvider(item.serverHandle.id, item.serverHandle.handle);
-                const serverId = await computeServerId(uri);
                 const server: IJupyterServerUriEntry = {
                     time: item.time,
-                    serverId,
                     displayName: item.displayName || uri,
                     uri,
                     isValidated: false,
