@@ -120,7 +120,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
                 (item) => item.provider.id === searchCriteria.id && item.provider.handle === searchCriteria.handle
             );
         } else {
-            return savedList.find((item) => item.provider.id === searchCriteria.serverId);
+            return savedList.find((item) => item.serverId === searchCriteria.serverId);
         }
     }
     public async add(
