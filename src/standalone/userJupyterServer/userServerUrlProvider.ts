@@ -538,7 +538,7 @@ export class UserJupyterServerUrlProvider
             if (this.jupyterServerUriBeingValidated && this.jupyterServerUriBeingValidated.handle === handle) {
                 return this.jupyterServerUriBeingValidated;
             }
-            throw new Error('Server not found');
+            throw new Error(`Server not found for handle = ${handle}`);
         }
         if (!this.experiments.inExperiment(Experiments.PasswordManager)) {
             return server.serverInfo;
