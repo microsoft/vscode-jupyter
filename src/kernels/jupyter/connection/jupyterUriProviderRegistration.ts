@@ -60,9 +60,6 @@ export class JupyterUriProviderRegistration
     }
     public async getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined> {
         await this.loadOtherExtensions();
-        if (!this._providers.has(id)) {
-            debugger;
-        }
         return this._providers.get(id);
     }
 
