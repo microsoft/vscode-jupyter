@@ -2894,6 +2894,43 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
+     * Telemetry sent when user Kernel startup fails due to a missing python env.
+     */
+    [Telemetry.KernelStartFailureDueToMissingEnv]: TelemetryEventInfo<
+        ResourceTypeTelemetryProperty &
+            TelemetryErrorProperties & {
+                envMissingReason: 'Unknown' | 'EmptyEnvDetailsFromPython' | 'FailedToGetEnvDetailsFromPython';
+                isEmptyCondaEnv: boolean;
+                pythonEnvType: string;
+                fileExists: boolean;
+            }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'User Action',
+        properties: {
+            ...commonClassificationForResourceType(),
+            ...commonClassificationForErrorProperties(),
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            envMissingReason: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            isEmptyCondaEnv: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            pythonEnvType: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            fileExists: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
+    /**
      * Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.
      * This is useful to see what the user does with this error message.
      */

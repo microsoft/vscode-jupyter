@@ -419,6 +419,37 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             kernelConnection.kind === 'startUsingPythonInterpreter' &&
             !(await this.fs.exists(kernelConnection.interpreter.uri))
         ) {
+            // Try to figure out why this happens, is it because the user deleted the env?
+            this.interpreterService
+                .getInterpreterDetails(kernelConnection.interpreter.id)
+                .then(async (details) => {
+                    const fileExists = await this.fs.exists(kernelConnection.interpreter.uri);
+                    if (details) {
+                        sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
+                            envMissingReason: 'Unknown',
+                            isEmptyCondaEnv: details.isCondaEnvWithoutPython,
+                            pythonEnvType: details.envType,
+                            fileExists
+                        });
+                    } else {
+                        sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
+                            envMissingReason: 'EmptyEnvDetailsFromPython',
+                            isEmptyCondaEnv: kernelConnection.interpreter.isCondaEnvWithoutPython,
+                            pythonEnvType: kernelConnection.interpreter.envType,
+                            fileExists
+                        });
+                    }
+                })
+                .catch(async () => {
+                    const fileExists = await this.fs.exists(kernelConnection.interpreter.uri);
+                    sendKernelTelemetryEvent(resource, Telemetry.KernelStartFailureDueToMissingEnv, undefined, {
+                        envMissingReason: 'FailedToGetEnvDetailsFromPython',
+                        isEmptyCondaEnv: kernelConnection.interpreter.isCondaEnvWithoutPython,
+                        pythonEnvType: kernelConnection.interpreter.envType,
+                        fileExists
+                    });
+                })
+                .catch(noop);
             this.sendKernelTelemetry(err, errorContext, resource, KernelFailureReason.pythonEnvironmentMissing);
             this.applicationShell
                 .showErrorMessage(
