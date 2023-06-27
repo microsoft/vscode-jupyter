@@ -85,6 +85,8 @@ export class KernelEnvironmentVariablesService {
             capturedEnvVars: Object.keys(interpreterEnv || {}).length > 0
         });
 
+        traceVerbose(`Step1.0 Interpreter Env Vars, is ${JSON.stringify(interpreterEnv)}`);
+        traceVerbose(`Step1.0 Custom Env Vars, is ${JSON.stringify(customEnvVars)}`);
         if (!interpreterEnv && Object.keys(customEnvVars || {}).length === 0) {
             traceVerbose('No custom variables nor do we have a conda environment');
         }
