@@ -35,11 +35,7 @@ import { Disposables } from '../../../platform/common/utils';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { pythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
-import {
-    createInterpreterKernelSpec,
-    createInterpreterKernelSpecWithName,
-    getKernelId
-} from '../../../kernels/helpers';
+import { createInterpreterKernelSpec, getKernelId } from '../../../kernels/helpers';
 import { Environment } from '../../../platform/api/pythonApiTypes';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -140,7 +136,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                     return;
                 }
                 this.promiseMonitor.push(api.environments.refreshEnvironments({ forceRefresh: true }).catch(noop));
-                api.environments.known.forEach((e) => this.buildDummyEnvironment(e));
+                api.environments.known.forEach((e) => this.buildDummyEnvironment(e).catch(noop));
             })
             .catch(noop);
     }
@@ -206,7 +202,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         if (!api) {
             return;
         }
-        api.environments.known.map((e) => this.buildDummyEnvironment(e));
+        api.environments.known.map((e) => this.buildDummyEnvironment(e).catch(noop));
         api.environments.onDidChangeEnvironments(
             (e) => {
                 if (e.type === 'remove') {
@@ -216,14 +212,14 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                         this._onDidChangeKernels.fire({ removed: [kernel] });
                     }
                 } else {
-                    this.buildDummyEnvironment(e.env);
+                    this.buildDummyEnvironment(e.env).catch(noop);
                 }
             },
             this,
             this.disposables
         );
     }
-    private buildDummyEnvironment(e: Environment) {
+    private async buildDummyEnvironment(e: Environment) {
         const displayEmptyCondaEnv =
             this.pythonApi.pythonExtensionVersion &&
             this.pythonApi.pythonExtensionVersion.compare('2023.3.10341119') >= 0;
@@ -231,7 +227,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
             return;
         }
-        const spec = createInterpreterKernelSpecWithName('python3', interpreter);
+        const spec = await createInterpreterKernelSpec(interpreter, await this.getKernelSpecsDir());
         const result = PythonKernelConnectionMetadata.create({
             kernelSpec: spec,
             interpreter: interpreter,
