@@ -44,6 +44,7 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
+import { JupyterPasswordConnect as OldJupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
 import { IJupyterServerUri } from '../../api';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
@@ -72,6 +73,7 @@ export class UserJupyterServerUrlProvider
     public readonly oldStorage: OldStorage;
     public readonly newStorage: NewStorage;
     private migratedOldServers?: Promise<unknown>;
+    private displayNamesOfHandles = new Map<string, string>();
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IJupyterUriProviderRegistration)
@@ -323,6 +325,7 @@ export class UserJupyterServerUrlProvider
                             (await this.applicationShell.showInputBox({
                                 title: DataScience.jupyterRenameServer
                             })) || jupyterServerUri.displayName;
+                        this.displayNamesOfHandles.set(handle, jupyterServerUri.displayName);
                         await this.initializeServers();
                         await this.addNewServer({
                             handle: handle,
@@ -334,7 +337,11 @@ export class UserJupyterServerUrlProvider
                 }),
                 input.onDidHide(() => {
                     inputWasHidden = true;
-                    if (!JupyterPasswordConnect.prompt && !promptingForServerName) {
+                    if (
+                        !JupyterPasswordConnect.prompt &&
+                        !OldJupyterPasswordConnect.prompt &&
+                        !promptingForServerName
+                    ) {
                         resolve(undefined);
                     }
                 })
@@ -498,7 +505,7 @@ export class UserJupyterServerUrlProvider
                         (await this.applicationShell.showInputBox({
                             title: DataScience.jupyterRenameServer
                         })) || new URL(jupyterServerUri.baseUrl).hostname;
-
+                    this.displayNamesOfHandles.set(handle, jupyterServerUri.displayName);
                     await this.initializeServers();
                     await this.addNewServer({
                         handle: handle,
@@ -509,7 +516,11 @@ export class UserJupyterServerUrlProvider
                 }),
                 input.onDidHide(() => {
                     inputWasHidden = true;
-                    if (!JupyterPasswordConnect.prompt && !promptingForServerName) {
+                    if (
+                        !JupyterPasswordConnect.prompt &&
+                        !OldJupyterPasswordConnect.prompt &&
+                        !promptingForServerName
+                    ) {
                         resolve(undefined);
                     }
                 })
@@ -533,6 +544,13 @@ export class UserJupyterServerUrlProvider
         const server = servers.find((s) => s.handle === handle);
         if (!server) {
             throw new Error('Server not found');
+        }
+
+        // Hacky due to the way display names are stored in uri storage.
+        // Should be cleaned up later.
+        const displayName = this.displayNamesOfHandles.get(handle);
+        if (displayName) {
+            server.serverInfo.displayName = displayName;
         }
         if (!this.experiments.inExperiment(Experiments.PasswordManager)) {
             return server.serverInfo;
