@@ -217,6 +217,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // Temporary work around until https://github.com/microsoft/vscode-python/issues/20663
             // However we might still need a work around for failure to activate conda envs without Python.
             const customEnvVars = await customEnvVarsPromise;
+            traceVerbose(
+                `Step x.1 Custom env vars for ${getDisplayPath(interpreter?.uri)} is ${JSON.stringify(customEnvVars)}`
+            );
             env = {};
 
             // Patch for conda envs.
@@ -225,8 +228,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
 
             this.envVarsService.mergeVariables(process.env, env); // Copy current proc vars into new obj.
+            traceVerbose(`Step x.2 Custom env vars for ${getDisplayPath(interpreter?.uri)} is ${JSON.stringify(env)}`);
             this.envVarsService.mergeVariables(customEnvVars!, env); // Copy custom vars over into obj.
+            traceVerbose(`Step x.3 Custom env vars for ${getDisplayPath(interpreter?.uri)} is ${JSON.stringify(env)}`);
             this.envVarsService.mergePaths(process.env, env);
+            traceVerbose(`Step x.4 Custom env vars for ${getDisplayPath(interpreter?.uri)} is ${JSON.stringify(env)}`);
             if (process.env.PYTHONPATH) {
                 env.PYTHONPATH = process.env.PYTHONPATH;
             }
@@ -271,6 +277,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (!env.PATH && env.Path) {
                 env.PATH = env.Path;
             }
+            traceVerbose(`Step x.5 Custom env vars for ${getDisplayPath(interpreter?.uri)} is ${JSON.stringify(env)}`);
         }
 
         // Ensure the first path in PATH variable points to the directory of python executable.

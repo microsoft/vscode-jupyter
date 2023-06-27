@@ -110,11 +110,10 @@ export class KernelEnvironmentVariablesService {
             // Merge the env variables with that of the kernel env.
             interpreterEnv = interpreterEnv || customEnvVars;
 
-            traceVerbose(
-                `Step2 of Kernel EnvVars for ${kernelSpec.specFile || kernelSpec.name}, is ${JSON.stringify(
-                    mergedVars
-                )}`
-            );
+            traceVerbose(`Step2 of Kernel EnvVars is ${JSON.stringify(mergedVars)}`);
+            traceVerbose(`Step2.1 Custom Env Vars, is ${JSON.stringify(customEnvVars)}`);
+            traceVerbose(`Step2.2 Kernel Env Vars, is ${JSON.stringify(kernelEnv)}`);
+            traceVerbose(`Step2.3 Interpreter Env Vars, is ${JSON.stringify(interpreterEnv)}`);
             if (this.configService.getSettings(resource).useOldKernelResolve) {
                 this.envVarsService.mergeVariables(interpreterEnv, mergedVars); // interpreter vars win over proc.
                 this.envVarsService.mergeVariables(kernelEnv, mergedVars); // kernels vars win over interpreter.

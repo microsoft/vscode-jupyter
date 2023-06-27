@@ -14,6 +14,7 @@ import { disposeAllDisposables } from '../helpers';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { noop } from '../utils/misc';
 import { getDisplayPath } from '../platform/fs-paths';
+import { IFileSystem } from '../platform/types';
 
 const CACHE_DURATION = 60 * 1000;
 /**
@@ -35,6 +36,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject('number') @optional() private cacheDuration: number = CACHE_DURATION
     ) {
         disposableRegistry.push(this);
@@ -95,6 +97,13 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             return;
         }
 
+        const envFile = this.getEnvFile(workspaceFolderUri);
+        if (await this.fs.exists(Uri.file(envFile))) {
+            traceVerbose(`Custom env .env file exists & is , ${getDisplayPath(envFile) || '<No .env file>'}`);
+        } else {
+            traceVerbose(`Custom env .env file does not exist & is , ${getDisplayPath(envFile) || '<No .env file>'}`);
+        }
+
         if (purpose === 'RunPythonCode' && this.extensionChecker.isPythonExtensionInstalled) {
             const api = await this.pythonApi.getNewApi();
             if (api && !token?.isCancellationRequested) {
@@ -106,7 +115,9 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
                         this.disposables
                     );
                 }
-                return api.environments.getEnvironmentVariables(workspaceFolderUri);
+                const result = api.environments.getEnvironmentVariables(workspaceFolderUri);
+                traceVerbose(`Custom env .env variables from Python is${JSON.stringify(result)}`);
+                return result;
             }
         }
         // Cache resource specific interpreter data
@@ -128,12 +139,12 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         }
         this.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath || '');
 
-        const envFile = this.getEnvFile(workspaceFolderUri);
         this.createFileWatcher(envFile, workspaceFolderUri);
 
         const promise = this.envVarsService.parseFile(envFile, process.env);
         promise
             .then((result) => {
+                traceVerbose(`Custom env .env file output is${JSON.stringify(result)}`);
                 if (!token?.isCancellationRequested) {
                     cacheStoreIndexedByWorkspaceFolder.data = result;
                 }
