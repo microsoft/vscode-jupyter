@@ -21,6 +21,7 @@ import * as sinon from 'sinon';
 import { ProposedExtensionAPI } from '../../api/pythonApiTypes';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../test/constants.node';
 import { createEventHandler } from '../../../test/common';
+import { IFileSystem } from '../platform/types';
 
 suite('Custom Environment Variables Provider', () => {
     let customEnvVarsProvider: CustomEnvironmentVariablesProvider;
@@ -92,6 +93,7 @@ suite('Custom Environment Variables Provider', () => {
             instance(workspace),
             pythonExtChecker,
             instance(pythonApiProvider),
+            instance(mock<IFileSystem>()),
             cacheDuration
         );
     }
