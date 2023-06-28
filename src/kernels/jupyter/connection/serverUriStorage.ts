@@ -136,7 +136,8 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         if (!options) {
             const server = await this.jupyterPickerRegistration.getJupyterServerUri(
                 jupyterHandle.id,
-                jupyterHandle.handle
+                jupyterHandle.handle,
+                true
             );
             entry.displayName = server.displayName;
         }
@@ -294,7 +295,8 @@ class OldStorage {
                     try {
                         await this.jupyterPickerRegistration.getJupyterServerUri(
                             server.provider.id,
-                            server.provider.handle
+                            server.provider.handle,
+                            true
                         );
                         server.isValidated = true;
                         return server;
@@ -570,7 +572,8 @@ class NewStorage {
                 try {
                     await this.jupyterPickerRegistration.getJupyterServerUri(
                         item.serverHandle.id,
-                        item.serverHandle.handle
+                        item.serverHandle.handle,
+                        true
                     );
                     server.isValidated = true;
                 } catch (ex) {

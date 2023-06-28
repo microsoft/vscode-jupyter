@@ -86,7 +86,11 @@ export class JupyterUriProviderRegistration
         this.disposables.push(disposable);
         return disposable;
     }
-    public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+    public async getJupyterServerUri(
+        id: string,
+        handle: JupyterServerUriHandle,
+        doNotPromptForAuthInfo?: boolean
+    ): Promise<IJupyterServerUri> {
         await this.loadOtherExtensions();
         const provider = this._providers.get(id);
         if (!provider) {
@@ -101,7 +105,7 @@ export class JupyterUriProviderRegistration
                 throw new InvalidRemoteJupyterServerUriHandleError(id, handle, extensionId, serverId);
             }
         }
-        return provider.getServerUri(handle);
+        return provider.getServerUri(handle, doNotPromptForAuthInfo);
     }
 
     private onDidRemoveServer(e: IJupyterServerUriEntry[]) {
@@ -239,7 +243,14 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         return this.provider.handleQuickPick(item, back);
     }
 
-    public async getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+    public async getServerUri(
+        handle: JupyterServerUriHandle,
+        doNotPromptForAuthInfo?: boolean
+    ): Promise<IJupyterServerUri> {
+        const provider = this.provider as IInternalJupyterUriProvider;
+        if (doNotPromptForAuthInfo && this.id.startsWith('_builtin') && provider.getServerUriWithoutAuthInfo) {
+            return provider.getServerUriWithoutAuthInfo(handle);
+        }
         const server = await this.provider.getServerUri(handle);
         if (!this.id.startsWith('_builtin') && !handlesForWhichWeHaveSentTelemetry.has(handle)) {
             handlesForWhichWeHaveSentTelemetry.add(handle);
