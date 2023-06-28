@@ -467,6 +467,7 @@ export enum Telemetry {
     NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
     NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE',
     NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
+    KernelStartFailureDueToMissingEnv = 'DATASCIENCE.KERNEL_START_FAILURE_MISSING_ENV',
     NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
