@@ -176,14 +176,14 @@ export class ExperimentService implements IExperimentService {
 
         // Log experiments that users manually opt out, these are experiments which are added using the exp framework.
         this._optOutFrom
-            .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
+            .filter((exp) => exp !== 'All')
             .forEach((exp) => {
                 traceInfo(Experiments.notInGroup(exp));
             });
 
         // Log experiments that users manually opt into, these are experiments which are added using the exp framework.
         this._optInto
-            .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
+            .filter((exp) => exp !== 'All')
             .forEach((exp) => {
                 traceInfo(Experiments.inGroup(exp));
             });
