@@ -502,6 +502,36 @@
      ]
    }
  */
+//Telemetry.KernelStartFailureDueToMissingEnv
+/* __GDPR__
+   "DATASCIENCE.KERNEL_START_FAILURE_MISSING_ENV" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "envMissingReason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "isEmptyCondaEnv": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvType": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "fileExists": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.OpenNotebookAll
 /* __GDPR__
    "DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL" : {
