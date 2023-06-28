@@ -536,6 +536,24 @@ export class UserJupyterServerUrlProvider
         await Promise.all([this.oldStorage.add(server), this.newStorage.add(server)]);
         this._onDidChangeHandles.fire();
     }
+    async getServerUriWithoutAuthInfo(handle: string): Promise<IJupyterServerUri> {
+        await this.initializeServers();
+        const servers = this.experiments.inExperiment(Experiments.NewRemoteUriStorage)
+            ? await this.newStorage.getServers()
+            : await this.oldStorage.getServers();
+        const server = servers.find((s) => s.handle === handle);
+        if (!server) {
+            throw new Error('Server not found');
+        }
+
+        // Hacky due to the way display names are stored in uri storage.
+        // Should be cleaned up later.
+        const displayName = this.displayNamesOfHandles.get(handle);
+        if (displayName) {
+            server.serverInfo.displayName = displayName;
+        }
+        return server.serverInfo;
+    }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         await this.initializeServers();
         const servers = this.experiments.inExperiment(Experiments.NewRemoteUriStorage)

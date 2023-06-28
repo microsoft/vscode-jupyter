@@ -157,6 +157,7 @@ export interface IJupyterServerProvider {
 
 export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
     readonly extensionId: string;
+    getServerUriWithoutAuthInfo?(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 export type JupyterServerProviderHandle = {
     /**
@@ -176,7 +177,11 @@ export interface IJupyterUriProviderRegistration {
     readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
     getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
-    getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    getJupyterServerUri(
+        id: string,
+        handle: JupyterServerUriHandle,
+        doNotPromptForAuthInfo?: boolean
+    ): Promise<IJupyterServerUri>;
 }
 
 /**
