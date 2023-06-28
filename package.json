@@ -37,7 +37,8 @@
         "notebook",
         "notebookKernelJupyterNotebook",
         "multi-root ready",
-        "python"
+        "python",
+        "interactive"
     ],
     "categories": [
         "Extension Packs",
