@@ -79,6 +79,7 @@ export class JupyterPasswordConnect {
                     return value;
                 }
             );
+            result.catch(() => this.savedConnectInfo.delete(newUrl));
             result.finally(() => {
                 deferred.resolve();
                 if (JupyterPasswordConnect._prompt === deferred) {
