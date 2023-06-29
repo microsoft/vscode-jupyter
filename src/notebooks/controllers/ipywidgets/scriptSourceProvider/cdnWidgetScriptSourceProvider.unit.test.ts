@@ -292,8 +292,6 @@ suite('ipywidget - CDN', () => {
                         updateCDNSettings(cdn);
                         let downloadCount = 0;
                         nock(baseUrl)
-                            .log(console.log)
-
                             .get(/.*/)
                             .reply(200, () => {
                                 downloadCount += 1;
@@ -320,7 +318,7 @@ suite('ipywidget - CDN', () => {
                     });
                     test('No script source if package does not exist on CDN', async () => {
                         updateCDNSettings(cdn);
-                        nock(baseUrl).log(console.log).get(/.*/).replyWithError('404');
+                        nock(baseUrl).get(/.*/).replyWithError('404');
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -360,9 +358,8 @@ suite('ipywidget - CDN', () => {
                         let retryCount = 0;
                         updateCDNSettings(cdn);
                         // when(httpClient.exists(anything())).thenResolve(true);
-                        nock(baseUrl).log(console.log).get(/.*/).twice().replyWithError('Not found');
+                        nock(baseUrl).get(/.*/).twice().replyWithError('Not found');
                         nock(baseUrl)
-                            .log(console.log)
                             .get(/.*/)
                             .thrice()
                             .reply(200, () => {
