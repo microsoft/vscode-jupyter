@@ -7,7 +7,6 @@
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
 import * as crypto from 'crypto';
-import getPort from 'get-port';
 import * as tcpPortUsed from 'tcp-port-used';
 import uuid from 'uuid/v4';
 import * as path from 'path';
@@ -57,6 +56,9 @@ type ObservableExecutionResult<T extends string | Buffer> = {
     dispose(): void;
 };
 
+async function getPort(options: import('get-port').Options) {
+    return import('get-port').then((gp) => gp.default(options));
+}
 export class JupyterServer {
     /**
      * Used in vscode debugger launcher `preDebugWebTest.js` to kill the Jupyter Server by pid.
