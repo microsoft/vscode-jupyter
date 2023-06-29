@@ -110,7 +110,7 @@ suite('Contributed Python Kernel Finder', () => {
     teardown(() => disposeAllDisposables(disposables));
     test('No change event if there are no kernels', async () => {
         when(pythonKernelFinder.kernels).thenReturn([]);
-        const statuses: typeof finder.status[] = [];
+        const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
         const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
@@ -125,7 +125,7 @@ suite('Contributed Python Kernel Finder', () => {
     test('Status is discovering until Python extension finishes refreshing interpreters', async () => {
         when(pythonKernelFinder.kernels).thenReturn([]);
         when(interpreterService.status).thenReturn('refreshing');
-        const statuses: typeof finder.status[] = [];
+        const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
         const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
@@ -147,7 +147,7 @@ suite('Contributed Python Kernel Finder', () => {
     });
     test('Status is discovering if Python extension starts refreshing interpreters', async () => {
         when(pythonKernelFinder.kernels).thenReturn([]);
-        const statuses: typeof finder.status[] = [];
+        const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
 
@@ -173,7 +173,7 @@ suite('Contributed Python Kernel Finder', () => {
 
     test('Notify status of discovery', async () => {
         when(pythonKernelFinder.kernels).thenReturn([pythonKernelSpec]);
-        const statuses: typeof finder.status[] = [];
+        const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
         const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
@@ -187,7 +187,7 @@ suite('Contributed Python Kernel Finder', () => {
     });
     test('Re-discover if there are changes to python interpreters and we have a new kernel spec', async () => {
         when(pythonKernelFinder.kernels).thenReturn([pythonKernelSpec]);
-        const statuses: typeof finder.status[] = [];
+        const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
         const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
@@ -209,7 +209,7 @@ suite('Contributed Python Kernel Finder', () => {
     });
     test('Re-discover if there are changes to python interpreters without any new kernels', async () => {
         when(pythonKernelFinder.kernels).thenReturn([pythonKernelSpec]);
-        const statuses: typeof finder.status[] = [];
+        const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
         const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
@@ -230,7 +230,7 @@ suite('Contributed Python Kernel Finder', () => {
     });
     test('Re-discover if there are changes to python interpreters without any new Python kernels', async () => {
         when(pythonKernelFinder.kernels).thenReturn([pythonKernelSpec]);
-        const statuses: typeof finder.status[] = [];
+        const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
         const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);
@@ -252,7 +252,7 @@ suite('Contributed Python Kernel Finder', () => {
     });
     test('Update status if interpreters are being refreshed', async () => {
         when(pythonKernelFinder.kernels).thenReturn([pythonKernelSpec]);
-        const statuses: typeof finder.status[] = [];
+        const statuses: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statuses.push(finder.status));
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels', disposables);
         const onDidChangeStatus = createEventHandler(finder, 'onDidChangeStatus', disposables);

@@ -84,7 +84,7 @@ suite(`Interpreter Service`, () => {
     test('Progress status triggered upon refresh', async () => {
         createInterpreterService();
 
-        const statuses: typeof interpreterService.status[] = [];
+        const statuses: (typeof interpreterService.status)[] = [];
         interpreterService.onDidChangeStatus(() => statuses.push(interpreterService.status));
         const progressEvent = createEventHandler(interpreterService, 'onDidChangeStatus', disposables);
         // const deferred = createDeferred<void>();

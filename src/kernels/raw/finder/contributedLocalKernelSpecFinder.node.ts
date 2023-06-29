@@ -89,7 +89,7 @@ export class ContributedLocalKernelSpecFinder
         this.loadData().then(noop, noop);
         let combinedProgress: Deferred<void> | undefined = undefined;
         const updateCombinedStatus = () => {
-            const latestStatus: typeof this.nonPythonKernelFinder.status[] = [
+            const latestStatus: (typeof this.nonPythonKernelFinder.status)[] = [
                 this.nonPythonKernelFinder.status,
                 this.pythonKernelFinder.status,
                 this.interpreters.status === 'refreshing' ? 'discovering' : 'idle'
