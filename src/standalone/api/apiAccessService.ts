@@ -24,13 +24,12 @@ export const TrustedExtensionPublishers = new Set([
     JVSC_EXTENSION_ID.split('.')[0],
     'rchiodo',
     'donjayamanne',
-    'SynapseVSCode',
-    'nuant'
+    'SynapseVSCode'
 ]);
 
 // We dont want to expose this API to everyone, else we'll keep track of who has access to this.
 // However, the user will still be prompted to grant these extensions access to the kernels..
-export const PublishersAllowedWithPrompts = new Set(['rchiodo']);
+export const PublishersAllowedWithPrompts = new Set(['rchiodo', 'nuant']);
 
 /**
  * Responisble for controlling what extensions can access the IExtensionApi
