@@ -72,8 +72,8 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     protected get session(): RawSession | undefined {
         return this._session;
     }
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
+    public get kernelId(): string | undefined {
+        return this.session?.kernel?.id;
     }
     public get kernel(): Kernel.IKernelConnection | undefined {
         if (this._wrappedKernel) {
@@ -94,10 +94,6 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     }
     public get status(): KernelMessage.Status {
         return this.getServerStatus();
-    }
-
-    public get isConnected(): boolean {
-        return this.connected;
     }
 
     protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
@@ -476,8 +472,8 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
     protected get session(): RawSession | undefined {
         return this._session;
     }
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
+    public get kernelId(): string | undefined {
+        return this.session?.kernel?.id;
     }
     public get kernel(): Kernel.IKernelConnection | undefined {
         if (this._wrappedKernel) {
@@ -495,10 +491,6 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
     }
     public get onSessionStatusChanged(): Event<KernelMessage.Status> {
         return this.onStatusChangedEvent.event;
-    }
-
-    public get isConnected(): boolean {
-        return this.connected;
     }
 
     protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();

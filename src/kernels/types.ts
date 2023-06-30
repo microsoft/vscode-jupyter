@@ -564,7 +564,7 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;
-    readonly kernelId: string;
+    readonly kernelId?: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;

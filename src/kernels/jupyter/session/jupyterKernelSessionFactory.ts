@@ -314,8 +314,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                     options.idleTimeout,
                     options.resource,
                     options.kernelConnection,
-                    options.token,
-                    false
+                    options.token
                 ).catch(noop);
             }
             if (options.token.isCancellationRequested) {
