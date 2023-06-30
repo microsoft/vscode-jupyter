@@ -557,7 +557,7 @@ export enum InterruptResult {
 }
 
 /**
- * Closely represents Jupyter Labs Kernel.IKernelConnection.
+ * Closely represents Jupyter Labs Session.ISessionConnection.
  */
 export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'> extends IAsyncDisposable {
     readonly kind: T;
@@ -580,18 +580,9 @@ export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
 export type ISessionWithSocket = Session.ISessionConnection & {
     /**
-     * The resource associated with this session.
-     */
-    resource: Resource;
-    /**
-     * Whether this is a remote session that we attached to.
-     */
-    isRemoteSession?: boolean;
-    /**
      * Socket information used for hooking messages to the kernel.
      */
     kernelSocketInformation: KernelSocketInformation;
-    kernelConnectionMetadata: KernelConnectionMetadata;
 };
 
 export interface IJupyterKernelSpec {

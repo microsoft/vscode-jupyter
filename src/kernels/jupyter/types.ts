@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Session, ContentsManager } from '@jupyterlab/services';
+import type { Session, ContentsManager, KernelManager, KernelSpecManager, SessionManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri } from 'vscode';
@@ -15,11 +15,9 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
     IJupyterConnection,
-    IJupyterKernelSession,
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
-    KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../types';
@@ -74,15 +72,11 @@ export interface IJupyterSessionManagerFactory {
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
+    readonly sessionManager: SessionManager;
+    readonly kernelSpecManager: KernelSpecManager;
+    readonly kernelManager: KernelManager;
+    readonly contentsManager: ContentsManager;
     readonly isDisposed: boolean;
-    startNew(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        workingDirectory: Uri,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken,
-        creator: KernelActionSource
-    ): Promise<IJupyterKernelSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;
