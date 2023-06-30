@@ -34,6 +34,11 @@ export interface JupyterAPI {
     openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
 }
 //#region Jupyter Server Providers
+
+// TODO: Scenario => AzML and other extensions start Jupyter Server locally and provide those servers to Jupyter extension.
+// When a user selects such Jupyter Kernels, Python Language Server (pylance) will not work, as the kernels are treated as remote.
+// However AzML and some other extensions end up using Jupyter locally and Jupyter extension will give preference to these kernels over python (in fact we are considering hiding Python envs when remoting to such envs).
+// So we need a way for these providers to tell Jupyter extension that path or id of the Python environment for a specific kernel (or all kernels, assuming all kernels have the same Python env).
 export interface IJupyterServerUri {
     baseUrl: string;
     /**
@@ -95,9 +100,15 @@ export interface IJupyterUriProvider {
               default?: boolean;
           })[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    // TODO: We could have something similar to the Python API, a get and a resolve.
+    // The get just returns the displayName and some other basic information (perhaps baseUrl)
+    // Calling resolve will return all of the auth information and related information.
     /**
      * Given the handle, returns the Jupyter Server information.
      */
+    // TODO: We also need a way to get just the display name (without any of the auth information).
+    // The internal Jupyter extension prompts for passwords when this method is called, and we call this only to get display names
+    // to populate the dropdown list, at that point we do not need the auth information, its only required when that item is selected.
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
     /**
      * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
