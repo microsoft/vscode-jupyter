@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri, commands } from 'vscode';
-import { Commands, JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../platform/common/constants';
 import { traceInfo } from '../../platform/logging';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
@@ -11,6 +11,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { computeHash } from '../../platform/common/crypto';
 import { Disposables } from '../../platform/common/utils';
 import { IJupyterServerUri } from '../../api';
+import { SelectJupyterURI } from '../../test/constants';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
@@ -35,7 +36,7 @@ export class JupyterServerSelectorCommand
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
     public activate() {
         this.disposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
-        this.disposables.push(commands.registerCommand(Commands.SelectJupyterURI, this.selectJupyterUri, this));
+        this.disposables.push(commands.registerCommand(SelectJupyterURI, this.selectJupyterUri, this));
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (!this.handleMappings.has(handle)) {
