@@ -560,6 +560,7 @@ export enum InterruptResult {
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
 export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'> extends IAsyncDisposable {
+    readonly id?: string;
     readonly kind: T;
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
