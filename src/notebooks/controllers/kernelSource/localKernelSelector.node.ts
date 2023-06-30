@@ -12,7 +12,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { ServiceContainer } from '../../../platform/ioc/container';
-import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator';
+import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator.node';
 import { CommandQuickPickItem, IQuickPickKernelItemProvider } from './types';
 import { BaseKernelSelector, CompoundQuickPickItem, CreateAndSelectItemFromQuickPick } from './baseKernelSelector';
 

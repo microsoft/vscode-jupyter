@@ -1,15 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IInterpreterSelector } from '../interpreter/configuration/types';
-import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceManager } from '../ioc/types';
-import { InterpreterSelector, InterpreterService, OldPythonApiProvider, PythonExtensionChecker } from './pythonApi';
+import { OldPythonApiProvider, PythonExtensionChecker } from './pythonApi';
 import { IPythonApiProvider, IPythonExtensionChecker } from './types';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IPythonApiProvider>(IPythonApiProvider, OldPythonApiProvider);
     serviceManager.addSingleton<IPythonExtensionChecker>(IPythonExtensionChecker, PythonExtensionChecker);
-    serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
-    serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
 }

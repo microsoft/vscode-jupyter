@@ -119,7 +119,9 @@ export async function getServices() {
         ) as IControllerRegistration,
         controllerPreferred: ControllerPreferredService.create(api.serviceContainer),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
-        interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
+        interpreterService: api.serviceContainer.get<boolean>(IsWebExtension)
+            ? undefined
+            : api.serviceContainer.get<IInterpreterService>(IInterpreterService),
         kernelFinder: api.serviceContainer.get<IKernelFinder>(IKernelFinder),
         serviceContainer: api.serviceContainer
     };
@@ -566,7 +568,7 @@ async function waitForActiveNotebookEditor(notebookEditor?: NotebookEditor): Pro
 async function getActiveInterpreterKernelConnection() {
     const { interpreterService, kernelFinder } = await getServices();
     const interpreter = await waitForCondition(
-        () => interpreterService.getActiveInterpreter(),
+        () => interpreterService?.getActiveInterpreter(),
         defaultNotebookTestTimeout,
         'Active Interpreter is undefined.2'
     );
@@ -593,7 +595,7 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
     const interpreter = isWeb()
         ? undefined
         : await waitForCondition(
-              () => interpreterService.getActiveInterpreter(),
+              () => interpreterService?.getActiveInterpreter(),
               defaultNotebookTestTimeout,
               'Active Interpreter is undefined.3'
           );
@@ -625,7 +627,7 @@ async function selectActiveInterpreterController(notebookEditor: NotebookEditor,
     const { controllerRegistration, interpreterService } = await getServices();
 
     // Get the list of NotebookControllers for this document
-    const interpreter = await interpreterService.getActiveInterpreter(notebookEditor.notebook.uri);
+    const interpreter = await interpreterService?.getActiveInterpreter(notebookEditor.notebook.uri);
 
     // Find the kernel id that matches the name we want
     const controller = await waitForCondition(
@@ -791,7 +793,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
                     (!useRemoteKernelSpec || d.connection.kind.includes('Remote'))
             );
 
-            const activeInterpreter = await interpreterService.getActiveInterpreter(notebookEditor!.notebook.uri);
+            const activeInterpreter = await interpreterService?.getActiveInterpreter(notebookEditor!.notebook.uri);
             traceInfoIfCI(
                 `Attempt to find a kernel that matches the active interpreter ${activeInterpreter?.uri.path}`
             );
