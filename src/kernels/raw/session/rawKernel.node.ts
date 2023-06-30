@@ -13,7 +13,7 @@ import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';
 import { IKernelSocket } from '../../types';
-import { suppressShutdownErrors } from '../../common/baseJupyterSession';
+import { suppressShutdownErrors } from '../../common/shutdownHelper';
 import { Signal } from '@lumino/signaling';
 import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
 
