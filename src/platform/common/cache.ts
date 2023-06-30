@@ -9,6 +9,22 @@ import { GLOBAL_MEMENTO, ICryptoUtils, IMemento, WORKSPACE_MEMENTO } from './typ
 import { inject, injectable, named } from 'inversify';
 import { getFilePath } from './platform/fs-paths';
 
+const GlobalMementoKeyPrefixesToRemove = [
+    'currentServerHash',
+    'connectToLocalKernelsOnly',
+    'JUPYTER_LOCAL_KERNELSPECS',
+    'JUPYTER_LOCAL_KERNELSPECS_V1',
+    'JUPYTER_LOCAL_KERNELSPECS_V2',
+    'JUPYTER_LOCAL_KERNELSPECS_V3',
+    'JUPYTER_REMOTE_KERNELSPECS',
+    'JUPYTER_REMOTE_KERNELSPECS_V1',
+    'JUPYTER_REMOTE_KERNELSPECS_V2',
+    'JUPYTER_REMOTE_KERNELSPECS_V3',
+    'JUPYTER_LOCAL_KERNELSPECS_V4',
+    'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10',
+    'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10',
+    'user-jupyter-server-uri-list-v2'
+];
 @injectable()
 export class OldCacheCleaner implements IExtensionSyncActivationService {
     constructor(
@@ -23,23 +39,8 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
     }
     async removeOldCachedItems(): Promise<void> {
         await Promise.all(
-            [
-                await this.getUriAccountKey(),
-                'currentServerHash',
-                'connectToLocalKernelsOnly',
-                'JUPYTER_LOCAL_KERNELSPECS',
-                'JUPYTER_LOCAL_KERNELSPECS_V1',
-                'JUPYTER_LOCAL_KERNELSPECS_V2',
-                'JUPYTER_LOCAL_KERNELSPECS_V3',
-                'JUPYTER_REMOTE_KERNELSPECS',
-                'JUPYTER_REMOTE_KERNELSPECS_V1',
-                'JUPYTER_REMOTE_KERNELSPECS_V2',
-                'JUPYTER_REMOTE_KERNELSPECS_V3',
-                'JUPYTER_LOCAL_KERNELSPECS_V4',
-                'LOCAL_KERNEL_SPECS_CACHE_KEY_V_2022_10',
-                'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2022_10',
-                'user-jupyter-server-uri-list-v2'
-            ]
+            [await this.getUriAccountKey()]
+                .concat(GlobalMementoKeyPrefixesToRemove)
                 .filter((key) => this.globalState.get(key, undefined) !== undefined)
                 .map((key) => this.globalState.update(key, undefined).then(noop, noop))
         );
@@ -47,6 +48,14 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
             .keys()
             .filter((key) => key.startsWith('LAST_EXECUTED_CELL_') && !key.startsWith('LAST_EXECUTED_CELL_V2_'));
         await Promise.all(workspaceStateKeysToRemove.map((key) => this.workspaceState.update(key, undefined)));
+        await Promise.all(
+            GlobalMementoKeyPrefixesToRemove.map((keyPrefix) =>
+                this.globalState
+                    .keys()
+                    .filter((key) => key.startsWith(keyPrefix))
+                    .map((key) => this.globalState.update(key, undefined).then(noop, noop))
+            ).flat()
+        );
     }
 
     async getUriAccountKey(): Promise<string> {
