@@ -8,12 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';
 import * as os from 'os';
-import {
-    EXTENSION_ROOT_DIR_FOR_TESTS,
-    IS_MULTI_ROOT_TEST,
-    IS_REMOTE_NATIVE_TEST,
-    SelectJupyterURI
-} from './constants.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_REMOTE_NATIVE_TEST } from './constants.node';
 import { noop, sleep } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
@@ -248,14 +243,14 @@ export function initializeCommonNodeApi() {
                     : await JupyterServer.instance.startJupyterWithToken();
                 console.info(`Jupyter started and listening at ${url}`);
                 try {
-                    await commands.executeCommand(SelectJupyterURI, Uri.parse(url));
+                    await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(url));
                 } catch (ex) {
                     console.error('Failed to select jupyter server, retry in 1s', ex);
                 }
                 // Todo: Fix in debt week, we need to retry, some changes have caused the first connection attempt to fail on CI.
                 // Possible we're trying to connect before the server is ready.
                 await sleep(5_000);
-                await commands.executeCommand(SelectJupyterURI, Uri.parse(url));
+                await commands.executeCommand('jupyter.selectjupyteruri', Uri.parse(url));
                 return { url, dispose: noop };
             } else {
                 console.info(`Jupyter not started and set to local`); // This is the default

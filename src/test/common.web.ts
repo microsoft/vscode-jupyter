@@ -4,7 +4,7 @@
 import { commands, Uri, workspace } from 'vscode';
 import { IDisposable } from '../platform/common/types';
 import { generateScreenShotFileName, initializeCommonApi } from './common';
-import { JUPYTER_SERVER_URI, SelectJupyterURI } from './constants';
+import { JUPYTER_SERVER_URI } from './constants';
 import uuid from 'uuid/v4';
 import { noop } from './core';
 import { initialize } from './initialize';
@@ -66,7 +66,7 @@ export function initializeCommonWebApi() {
             // Server URI should have been embedded in the constants file
             const uri = Uri.parse(url);
             // Use this URI to set our jupyter server URI
-            await commands.executeCommand(SelectJupyterURI, uri);
+            await commands.executeCommand('jupyter.selectjupyteruri', uri);
             return { url: url, dispose: noop };
         },
         async initialize() {

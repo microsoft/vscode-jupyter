@@ -11,7 +11,6 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { computeHash } from '../../platform/common/crypto';
 import { Disposables } from '../../platform/common/utils';
 import { IJupyterServerUri } from '../../api';
-import { SelectJupyterURI } from '../../test/constants';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
@@ -36,7 +35,7 @@ export class JupyterServerSelectorCommand
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
     public activate() {
         this.disposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
-        this.disposables.push(commands.registerCommand(SelectJupyterURI, this.selectJupyterUri, this));
+        this.disposables.push(commands.registerCommand('jupyter.selectjupyteruri', this.selectJupyterUri, this));
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (!this.handleMappings.has(handle)) {
