@@ -21,6 +21,7 @@ export class InteractiveWindowController {
     private disposables: Disposable[] = [];
     private systemInfoCell: SystemInfoCell | undefined;
     private fileInKernel: Uri | undefined;
+    private connectingListener: Disposable;
 
     constructor(
         private readonly controllerService: IInteractiveControllerHelper,
@@ -44,6 +45,7 @@ export class InteractiveWindowController {
     }
 
     public async startKernel(): Promise<IKernel> {
+        this.connectingListener?.dispose();
         if (this.kernel) {
             return this.kernel.promise;
         }
@@ -181,6 +183,11 @@ export class InteractiveWindowController {
                     this.metadata = e.controller.connection;
                     if (previouslyConnected) {
                         this.startKernel().catch(noop);
+                    } else {
+                        this.connectingListener?.dispose();
+                        this.connectingListener = e.controller.onConnecting(() => {
+                            this.startKernel().catch(noop);
+                        });
                     }
                 }
             },
