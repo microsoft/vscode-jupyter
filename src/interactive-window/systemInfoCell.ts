@@ -42,7 +42,17 @@ export class SystemInfoCell {
     private isDeleted = false;
 
     constructor(private readonly notebookDocument: NotebookDocument, message: string) {
-        this.sysInfoCellPromise = this.createCell(message);
+        if (notebookDocument.cellCount) {
+            const lastCell = notebookDocument.cellAt(notebookDocument.cellCount);
+            if (lastCell.metadata['isInteractiveWindowMessageCell']) {
+                this.sysInfoCellPromise = Promise.resolve(lastCell);
+                this.sysInfoCellPromise = this.updateMessage(message);
+            }
+        }
+
+        if (this.sysInfoCellPromise === undefined) {
+            this.sysInfoCellPromise = this.createCell(message);
+        }
     }
 
     private async createCell(message: string) {
@@ -77,6 +87,7 @@ export class SystemInfoCell {
                 }
             }
         });
+        return cell;
     }
 
     public async deleteCell() {
