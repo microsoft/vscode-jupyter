@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import * as sinon from 'sinon';
 import {
     NotebookCellData,
     NotebookCellKind,
@@ -46,7 +45,6 @@ suiteMandatory('Remote Tests', function () {
         traceInfo('Suite Setup Remote Tests, Step 4');
         await prewarmNotebooks();
         traceInfo('Suite Setup Remote Tests, Step 5');
-        sinon.restore();
         editor = (await createEmptyPythonNotebook(disposables, undefined, true)).editor;
         await selectDefaultController(editor);
         traceInfo('Suite Setup (completed)');
@@ -54,7 +52,6 @@ suiteMandatory('Remote Tests', function () {
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
-        sinon.restore();
         await startJupyterServer();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });

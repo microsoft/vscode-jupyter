@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
@@ -76,7 +75,6 @@ suite(`Interactive window execution @iw`, async function () {
             // For a flaky interrupt test.
             await captureScreenShot(this);
         }
-        sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
         // restore the default value
         const settings = vscode.workspace.getConfiguration('jupyter', null);

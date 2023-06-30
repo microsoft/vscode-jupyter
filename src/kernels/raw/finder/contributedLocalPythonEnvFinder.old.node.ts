@@ -82,7 +82,7 @@ export class OldContributedLocalPythonEnvFinder
         this.loadData().then(noop, noop);
         let combinedProgress: Deferred<void> | undefined = undefined;
         const updateCombinedStatus = () => {
-            const latestStatus: typeof this.pythonKernelFinder.status[] = [
+            const latestStatus: (typeof this.pythonKernelFinder.status)[] = [
                 this.pythonKernelFinder.status,
                 this.interpreters.status === 'refreshing' ? 'discovering' : 'idle'
             ];

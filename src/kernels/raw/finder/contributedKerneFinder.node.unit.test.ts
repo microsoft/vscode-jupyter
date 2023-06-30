@@ -7,7 +7,6 @@ import { assert } from 'chai';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -97,8 +96,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
         async function initialize(testData: TestData, activeInterpreter?: PythonEnvironment) {
             disposables.push(cancelToken);
             cancelToken = new CancellationTokenSource();
-            const getRealPathStub = sinon.stub(fsExtra, 'realpath');
-            getRealPathStub.returnsArg(0);
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);

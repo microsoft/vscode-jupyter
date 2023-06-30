@@ -4,7 +4,7 @@ module.exports = {
         es6: true,
         node: true
     },
-    extends: ['prettier', 'prettier/@typescript-eslint'],
+    extends: ['prettier'],
     ignorePatterns: ['*.js', 'vscode.*.d.ts', 'vscode.d.ts', 'types'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
