@@ -30,6 +30,7 @@ export interface IVSCodeNotebookController extends IDisposable {
         selected: boolean;
         notebook: vscode.NotebookDocument;
     }>;
+    readonly onConnecting: vscode.Event<void>;
     readonly onDidDispose: vscode.Event<void>;
     readonly onDidReceiveMessage: vscode.Event<{ editor: vscode.NotebookEditor; message: any }>;
     restoreConnection(notebook: vscode.NotebookDocument): Promise<void>;
