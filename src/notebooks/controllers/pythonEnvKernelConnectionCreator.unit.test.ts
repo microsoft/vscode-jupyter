@@ -22,7 +22,7 @@ import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { sleep } from '../../test/core';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { mockedVSCodeNamespaces } from '../../test/vscode-mock';
-import { PythonEnvKernelConnectionCreator } from './pythonEnvKernelConnectionCreator';
+import { PythonEnvKernelConnectionCreator } from './pythonEnvKernelConnectionCreator.node';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
 
 suite('Python Environment Kernel Connection Creator', () => {

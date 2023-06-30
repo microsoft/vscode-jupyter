@@ -88,7 +88,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined
     ) {}
     private handledErrors = new WeakSet<Error>();
     private handledKernelErrors = new WeakSet<Error>();
@@ -417,6 +417,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         } else if (
             (errorContext === 'start' || errorContext === 'restart') &&
             kernelConnection.kind === 'startUsingPythonInterpreter' &&
+            this.interpreterService &&
             !(await this.fs.exists(kernelConnection.interpreter.uri))
         ) {
             // Try to figure out why this happens, is it because the user deleted the env?
