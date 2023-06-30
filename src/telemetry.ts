@@ -1526,16 +1526,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A'
     };
     /**
-     * User has triggered selection of a Jupyter URI for a remote connection.
-     * Note: Might not come from a direct user action.
-     */
-    [Telemetry.SelectJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        source: 'N/A',
-        feature: ['KernelPicker'],
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * A URI has been selected and is being checked for validity.
      */
     [Telemetry.EnterJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
