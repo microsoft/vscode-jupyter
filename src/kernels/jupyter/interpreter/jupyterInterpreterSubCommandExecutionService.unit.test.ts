@@ -4,7 +4,6 @@
 import { assert, expect, use } from 'chai';
 import chaiPromise from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
-import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
@@ -44,8 +43,6 @@ suite('Jupyter InterpreterSubCommandExecutionService', () => {
         interpreterService = mock<IInterpreterService>();
         jupyterInterpreter = mock(JupyterInterpreterService);
         jupyterDependencyService = mock(JupyterInterpreterDependencyService);
-        const getRealPathStub = sinon.stub(fsExtra, 'realpath');
-        getRealPathStub.returns(Promise.resolve('foo'));
         const execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonExecutionService>();
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));

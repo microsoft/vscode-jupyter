@@ -7,8 +7,8 @@
 /** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
 import * as crypto from 'crypto';
-import getFreePort from 'get-port';
 import * as tcpPortUsed from 'tcp-port-used';
+import getPort from 'get-port';
 import uuid from 'uuid/v4';
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -97,7 +97,7 @@ export class JupyterServer {
         if (!this._jupyterServerWithCert) {
             this._jupyterServerWithCert = new Promise<string>(async (resolve, reject) => {
                 const token = this.generateToken();
-                const port = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
+                const port = await getPort({ host: 'localhost', port: this.nextPort });
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
                 await tcpPortUsed.waitUntilFree(port, 200, 10_000);
@@ -126,7 +126,7 @@ export class JupyterServer {
         jupyterLab?: boolean;
         password?: string;
     }): Promise<{ url: string } & IDisposable> {
-        const port = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
+        const port = await getPort({ host: 'localhost', port: this.nextPort });
         // Possible previous instance of jupyter has not completely shutdown.
         // Wait for it to shutdown fully so that we can re-use the same port.
         await tcpPortUsed.waitUntilFree(port, 200, 10_000);
@@ -195,7 +195,7 @@ export class JupyterServer {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
         // The remote uri is cached in a few places (known issue).
         if (!this.availablePort) {
-            this.availablePort = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
+            this.availablePort = await getPort({ host: 'localhost', port: this.nextPort });
         }
         return this.availablePort!;
     }
@@ -203,7 +203,7 @@ export class JupyterServer {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
         // The remote uri is cached in a few places (known issue).
         if (!this.availableSecondPort) {
-            this.availableSecondPort = await getFreePort({ host: 'localhost', port: this.nextPort }).then((p) => p);
+            this.availableSecondPort = await getPort({ host: 'localhost', port: this.nextPort });
         }
         return this.availableSecondPort!;
     }

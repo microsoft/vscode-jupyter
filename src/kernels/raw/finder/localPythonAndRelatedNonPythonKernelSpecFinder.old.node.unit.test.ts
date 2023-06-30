@@ -240,7 +240,7 @@ suite(`Local Python and related kernels`, async () => {
 
     test('Nothing found in cache', async () => {
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels');
-        const statues: typeof finder.status[] = [];
+        const statues: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statues.push(finder.status), this, disposables);
         when(globalState.get(localPythonKernelsCacheKey(), anything())).thenCall((_, defaultValue) => defaultValue);
         finder.activate();
@@ -254,7 +254,7 @@ suite(`Local Python and related kernels`, async () => {
     });
     test('Lists kernels from cache', async () => {
         const onDidChangeKernels = createEventHandler(finder, 'onDidChangeKernels');
-        const statues: typeof finder.status[] = [];
+        const statues: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statues.push(finder.status), this, disposables);
         const kernelsInCache = {
             extensionVersion: '1',
@@ -273,7 +273,7 @@ suite(`Local Python and related kernels`, async () => {
     });
     test('Discovers kernels as interpreters', async () => {
         when(interpreterService.resolvedEnvironments).thenReturn([venvInterpreter, condaInterpreter]);
-        const statues: typeof finder.status[] = [];
+        const statues: (typeof finder.status)[] = [];
         finder.onDidChangeStatus(() => statues.push(finder.status), this, disposables);
         when(globalState.get(localPythonKernelsCacheKey(), anything())).thenCall((_, defaultValue) => defaultValue);
         finder.activate();

@@ -531,10 +531,12 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
 
             test('Curly braces are required for substitution', () => {
                 // eslint-disable-next-line no-multi-str
-                const vars = parseEnvFile('\
+                const vars = parseEnvFile(
+                    '\
 SPAM=1234 \n\
 EGGS=$SPAM \n\
-                ');
+                '
+                );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
                 expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
@@ -629,11 +631,14 @@ HAM=$ ... $$ \n\
 
             test('base substitution variables', () => {
                 // eslint-disable-next-line no-multi-str
-                const vars = parseEnvFile('\
+                const vars = parseEnvFile(
+                    '\
 PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
-                ', {
-                    REPO: '/home/user/git/foobar'
-                });
+                ',
+                    {
+                        REPO: '/home/user/git/foobar'
+                    }
+                );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
                 expect(Object.keys(vars!)).lengthOf(1, 'Incorrect number of variables');
