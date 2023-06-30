@@ -11,6 +11,8 @@ import type {
 } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import uuid from 'uuid/v4';
+import { Observable } from 'rxjs/Observable';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { raceCancellationError } from '../../../platform/common/cancellation';
 import { BaseError, WrappedError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceWarning, traceInfo, traceInfoIfCI } from '../../../platform/logging';
@@ -46,7 +48,6 @@ import {
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import * as path from '../../../platform/vscode-path/resources';
-import { Observable, ReplaySubject } from 'rxjs';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { getResourceType } from '../../../platform/common/utils';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
