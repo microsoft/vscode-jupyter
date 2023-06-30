@@ -911,15 +911,6 @@
      ]
    }
  */
-//Telemetry.SelectJupyterURI
-/* __GDPR__
-   "DATASCIENCE.SELECT_JUPYTER_URI" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.SelectLocalJupyterKernel
 /* __GDPR__
    "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL" : {

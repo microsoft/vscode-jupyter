@@ -60,7 +60,7 @@ export class ControllerPreferredService {
     constructor(
         private readonly registration: IControllerRegistration,
         private readonly defaultService: ControllerDefaultService,
-        private readonly interpreters: IInterpreterService,
+        private readonly interpreters: IInterpreterService | undefined,
         private readonly notebook: IVSCodeNotebook,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly kernelRankHelper: KernelRankingHelper,
@@ -72,7 +72,9 @@ export class ControllerPreferredService {
             ControllerPreferredService.instance = new ControllerPreferredService(
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
                 ControllerDefaultService.create(serviceContainer),
-                serviceContainer.get<IInterpreterService>(IInterpreterService),
+                serviceContainer.get<boolean>(IsWebExtension)
+                    ? undefined
+                    : serviceContainer.get<IInterpreterService>(IInterpreterService),
                 serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
                 new KernelRankingHelper(
@@ -177,7 +179,10 @@ export class ControllerPreferredService {
             }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
                 const preferredInterpreter =
-                    !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                    !serverId &&
+                    isPythonNbOrInteractiveWindow &&
+                    this.extensionChecker.isPythonExtensionInstalled &&
+                    this.interpreters
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
                 traceInfoIfCI(
@@ -483,7 +488,8 @@ export class ControllerPreferredService {
                     isPythonNotebook(notebookMetadata)) &&
                 !isExactMatch &&
                 this.extensionChecker.isPythonExtensionActive &&
-                !this.isWebExtension
+                !this.isWebExtension &&
+                this.interpreters
             ) {
                 // If we're looking for local kernel connections then wait for all interpreters have been loaded
                 // & then fallback to the old approach of providing a best match.

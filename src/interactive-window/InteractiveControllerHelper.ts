@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { Disposable, Memento, NotebookController, NotebookDocument, Event } from 'vscode';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
@@ -23,7 +23,7 @@ const MostRecentKernelSelectedKey = 'LastInteractiveKernelSelected';
 export class InteractiveControllerHelper implements IInteractiveControllerHelper {
     constructor(
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
@@ -53,7 +53,9 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
                 return controller;
             }
         }
-
+        if (!this.interpreterService) {
+            return;
+        }
         // Just use the active interpreter
         return await createActiveInterpreterController(
             InteractiveWindowView,
@@ -108,17 +110,19 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         }
         const actualController = found.controller;
 
-        // save the kernel info if not the active interpreter
-        isActiveInterpreter(kernel.kernelConnectionMetadata, resource, this.interpreterService)
-            .then(async (isActiveInterpreter) => {
-                await this.workspaceMemento.update(
-                    MostRecentKernelSelectedKey,
-                    isActiveInterpreter ? undefined : kernel.kernelConnectionMetadata
-                );
-            })
-            .catch((reason) => {
-                traceWarning('Failed to store kernel connection metadata', reason);
-            });
+        if (this.interpreterService) {
+            // save the kernel info if not the active interpreter
+            isActiveInterpreter(kernel.kernelConnectionMetadata, resource, this.interpreterService)
+                .then(async (isActiveInterpreter) => {
+                    await this.workspaceMemento.update(
+                        MostRecentKernelSelectedKey,
+                        isActiveInterpreter ? undefined : kernel.kernelConnectionMetadata
+                    );
+                })
+                .catch((reason) => {
+                    traceWarning('Failed to store kernel connection metadata', reason);
+                });
+        }
 
         return { kernel, actualController };
     }

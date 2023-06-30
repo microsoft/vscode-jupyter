@@ -102,6 +102,9 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     protected get session(): ISessionWithSocket | undefined {
         return this._session;
     }
+    public get id() {
+        return this.session?.id;
+    }
     public get kernelId(): string {
         return this.session?.kernel?.id || '';
     }

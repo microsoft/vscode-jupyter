@@ -22,7 +22,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 export class ControllerDefaultService {
     constructor(
         private readonly registration: IControllerRegistration,
-        private readonly interpreters: IInterpreterService,
+        private readonly interpreters: IInterpreterService | undefined,
         private readonly notebook: IVSCodeNotebook,
         readonly disposables: IDisposableRegistry,
         private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
@@ -33,7 +33,9 @@ export class ControllerDefaultService {
         if (!ControllerDefaultService._instance) {
             ControllerDefaultService._instance = new ControllerDefaultService(
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
-                serviceContainer.get<IInterpreterService>(IInterpreterService),
+                serviceContainer.get<boolean>(IsWebExtension)
+                    ? undefined
+                    : serviceContainer.get<IInterpreterService>(IInterpreterService),
                 serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
                 serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider),
@@ -46,7 +48,7 @@ export class ControllerDefaultService {
         resource: Resource,
         viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): Promise<IVSCodeNotebookController | undefined> {
-        if (!IS_REMOTE_NATIVE_TEST()) {
+        if (!IS_REMOTE_NATIVE_TEST() && this.interpreters) {
             traceInfoIfCI('CreateActiveInterpreterController');
             return createActiveInterpreterController(viewType, resource, this.interpreters, this.registration);
         } else {

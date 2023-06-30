@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, Uri } from 'vscode';
-import { ICommandManager } from '../../platform/common/application/types';
-import { Commands, JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../platform/common/constants';
+import { EventEmitter, Uri, commands } from 'vscode';
+import { JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../platform/common/constants';
 import { traceInfo } from '../../platform/logging';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
@@ -25,7 +24,6 @@ export class JupyterServerSelectorCommand
     private _onDidChangeHandles = new EventEmitter<void>();
     public readonly extensionId: string = JVSC_EXTENSION_ID;
     constructor(
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(IJupyterUriProviderRegistration)
         private readonly uriProviderRegistration: IJupyterUriProviderRegistration
@@ -37,9 +35,7 @@ export class JupyterServerSelectorCommand
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
     public activate() {
         this.disposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
-        this.disposables.push(
-            this.commandManager.registerCommand(Commands.SelectJupyterURI, this.selectJupyterUri, this)
-        );
+        this.disposables.push(commands.registerCommand('jupyter.selectjupyteruri', this.selectJupyterUri, this));
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (!this.handleMappings.has(handle)) {

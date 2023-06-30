@@ -5,7 +5,7 @@ import { Memento } from 'vscode';
 import { noop } from './utils/misc';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
-import { GLOBAL_MEMENTO, ICryptoUtils, IMemento } from './types';
+import { GLOBAL_MEMENTO, ICryptoUtils, IMemento, WORKSPACE_MEMENTO } from './types';
 import { inject, injectable, named } from 'inversify';
 import { getFilePath } from './platform/fs-paths';
 
@@ -15,7 +15,8 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceState: Memento
     ) {}
     public activate(): void {
         this.removeOldCachedItems().then(noop, noop);
@@ -42,6 +43,10 @@ export class OldCacheCleaner implements IExtensionSyncActivationService {
                 .filter((key) => this.globalState.get(key, undefined) !== undefined)
                 .map((key) => this.globalState.update(key, undefined).then(noop, noop))
         );
+        const workspaceStateKeysToRemove = this.workspaceState
+            .keys()
+            .filter((key) => key.startsWith('LAST_EXECUTED_CELL_') && !key.startsWith('LAST_EXECUTED_CELL_V2_'));
+        await Promise.all(workspaceStateKeysToRemove.map((key) => this.workspaceState.update(key, undefined)));
     }
 
     async getUriAccountKey(): Promise<string> {
