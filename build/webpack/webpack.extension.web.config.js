@@ -127,7 +127,10 @@ const config = {
         alias: {
             // provides alternate implementation for node module and source files
             fs: './fs-empty.js',
-            moment: path.join(__dirname, 'moment.js')
+            moment: path.join(__dirname, 'moment.js'),
+            ...(process.env.VSC_TEST_BUNDLE === 'true'
+                ? { sinon: path.join(constants.ExtensionRootDir, 'node_modules', 'sinon', 'lib', 'sinon.js') }
+                : {})
         },
         fallback: {
             os: require.resolve('os-browserify')
