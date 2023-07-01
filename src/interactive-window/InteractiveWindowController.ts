@@ -188,6 +188,7 @@ export class InteractiveWindowController {
                         this.connectingListener = e.controller.onConnecting(() => {
                             this.startKernel().catch(noop);
                         });
+                        this.disposables.push(this.connectingListener);
                     }
                 }
             },
