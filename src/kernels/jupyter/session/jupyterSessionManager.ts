@@ -195,10 +195,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         );
         try {
             await session.connect({ token: cancelToken, ui });
-        } finally {
-            if (!session.isConnected) {
-                await session.dispose();
-            }
+        } catch (ex) {
+            await session.dispose();
+            throw ex;
         }
         return session;
     }

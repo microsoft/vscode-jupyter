@@ -500,13 +500,8 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
         return this.onStatusChangedEvent.event;
     }
 
-    public get isConnected(): boolean {
-        return this.connected;
-    }
-
     protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
     protected statusHandler: Slot<RawSession, KernelMessage.Status>;
-    protected connected: boolean = false;
     protected restartSessionPromise?: { token: CancellationTokenSource; promise: Promise<RawSession> };
     private _session: RawSession | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
@@ -554,17 +549,13 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
             // Listen for session status changes
             this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
         } catch (error) {
-            this.connected = false;
             if (isCancellationError(error) || options.token.isCancellationRequested) {
                 traceVerbose('Starting of raw session cancelled by user');
-                throw error;
             } else {
                 traceError(`Failed to connect raw kernel session: ${error}`);
-                throw error;
             }
+            throw error;
         }
-
-        this.connected = true;
     }
     public async dispose(): Promise<void> {
         await this.shutdownImplementation(false);

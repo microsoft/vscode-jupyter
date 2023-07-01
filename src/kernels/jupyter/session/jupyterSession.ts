@@ -32,7 +32,8 @@ import {
     KernelActionSource,
     IJupyterKernelSession,
     IBaseKernelSession,
-    KernelSocketInformation
+    KernelSocketInformation,
+    isRemoteConnection
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
@@ -125,13 +126,8 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
         return this.getServerStatus();
     }
 
-    public get isConnected(): boolean {
-        return this.connected;
-    }
-
     protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
     protected statusHandler: Slot<ISessionWithSocket, KernelMessage.Status>;
-    protected connected: boolean = false;
     protected restartSessionPromise?: { token: CancellationTokenSource; promise: Promise<ISessionWithSocket> };
     private _session: ISessionWithSocket | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
@@ -165,9 +161,6 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
 
         // Listen for session status changes
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
-
-        // Made it this far, we're connected now
-        this.connected = true;
     }
     public async dispose(): Promise<void> {
         await this.shutdownImplementation(false);
@@ -183,7 +176,7 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
     }
 
     public async restart(): Promise<void> {
-        if (this.session?.isRemoteSession && this.session.kernel) {
+        if (isRemoteConnection(this.kernelConnectionMetadata) && this.session?.kernel) {
             await this.session.kernel.restart();
             this.setSession(this.session, true);
             traceInfo(`Restarted ${this.session?.kernel?.id}`);
@@ -318,7 +311,6 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
                     ...this.kernelConnectionMetadata.kernelModel,
                     model: this.kernelConnectionMetadata.kernelModel.model
                 }) as ISessionWithSocket;
-                newSession.kernelConnectionMetadata = this.kernelConnectionMetadata;
                 newSession.kernelSocketInformation = {
                     socket: this.requestCreator.getWebsocket(this.kernelConnectionMetadata.id),
                     options: {
@@ -328,10 +320,6 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
                         userName: ''
                     }
                 };
-                newSession.isRemoteSession = true;
-                newSession.resource = this.resource;
-
-                // newSession.kernel?.connectionStatus
                 await waitForCondition(
                     async () =>
                         newSession?.kernel?.connectionStatus === 'connected' || options.token.isCancellationRequested,
@@ -344,7 +332,6 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
             } else {
                 traceVerbose(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
                 newSession = await this.createSession(options);
-                newSession.resource = this.resource;
 
                 // Make sure it is idle before we return
                 await this.waitForIdleOnSession(newSession, this.idleTimeout, options.token);
@@ -605,8 +592,6 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
                         const sessionWithSocket = session as ISessionWithSocket;
 
                         // Add on the kernel metadata & sock information
-                        sessionWithSocket.resource = this.resource;
-                        sessionWithSocket.kernelConnectionMetadata = this.kernelConnectionMetadata;
                         sessionWithSocket.kernelSocketInformation = {
                             get socket() {
                                 // When we restart kernels, a new websocket is created and we need to get the new one.
@@ -620,9 +605,6 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
                                 userName: session.kernel.username
                             }
                         };
-                        if (!isLocalConnection(this.kernelConnectionMetadata)) {
-                            sessionWithSocket.isRemoteSession = true;
-                        }
                         return sessionWithSocket;
                     }
                     throw new JupyterSessionStartError(new Error(`No kernel created`));
@@ -649,19 +631,19 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
         shutdownEvenIfRemote?: boolean
     ): Promise<void> {
         if (session && session.kernel) {
-            const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
+            const kernelIdForLogging = `${session.kernel.id}, ${this.kernelConnectionMetadata.id}`;
             traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
             try {
                 if (statusHandler) {
                     session.statusChanged.disconnect(statusHandler);
                 }
-                if (!this.canShutdownSession(session, isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
-                    traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
+                if (!this.canShutdownSession(isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
+                    traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
                     session.dispose();
                     return;
                 }
                 try {
-                    traceVerbose(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
+                    traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
                     suppressShutdownErrors(session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!session.isDisposed) {
@@ -712,12 +694,11 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
         traceVerbose('Shutdown session -- complete');
     }
     private canShutdownSession(
-        session: ISessionWithSocket,
         isRequestToShutDownRestartSession: boolean | undefined,
         shutdownEvenIfRemote?: boolean
     ): boolean {
         // We can never shut down existing (live) kernels.
-        if (session.kernelConnectionMetadata?.kind === 'connectToLiveRemoteKernel' && !shutdownEvenIfRemote) {
+        if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' && !shutdownEvenIfRemote) {
             return false;
         }
         // We can always shutdown restart sessions.
@@ -725,14 +706,14 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
             return true;
         }
         // If this Interactive Window, then always shutdown sessions (even with remote Jupyter).
-        if (session.resource && getResourceType(session.resource) === 'interactive') {
+        if (this.resource && getResourceType(this.resource) === 'interactive') {
             return true;
         }
         // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
         if (
-            session.resource &&
-            getResourceType(session.resource) === 'notebook' &&
-            session.isRemoteSession === true &&
+            this.resource &&
+            getResourceType(this.resource) === 'notebook' &&
+            isRemoteConnection(this.kernelConnectionMetadata) &&
             !shutdownEvenIfRemote
         ) {
             return false;

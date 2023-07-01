@@ -9,7 +9,6 @@ import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { IRawKernelSession, KernelSessionCreationOptions } from '../../types';
 import { IKernelLauncher, IRawKernelSessionFactory } from '../types';
@@ -78,11 +77,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             if (options.token.isCancellationRequested) {
                 throw new vscode.CancellationError();
             }
-            if (rawSession.isConnected) {
-                sessionPromise.resolve(rawSession);
-            } else {
-                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError));
-            }
+            sessionPromise.resolve(rawSession);
         } catch (ex) {
             // Make sure we shut down our session in case we started a process
             rawSession?.dispose().catch((error) => {
