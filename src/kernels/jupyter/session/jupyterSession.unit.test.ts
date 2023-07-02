@@ -39,7 +39,6 @@ import * as path from '../../../platform/vscode-path/path';
 import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
 import { Signal } from '@lumino/signaling';
 import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvalidKernelError';
-import { MockOutputChannel } from '../../../test/mockClasses';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
@@ -147,7 +146,6 @@ suite('JupyterSession', () => {
         );
         when(connection.rootDirectory).thenReturn(Uri.file(''));
         when(connection.localLaunch).thenReturn(false);
-        const channel = new MockOutputChannel('JUPYTER');
         const kernelService = mock(JupyterKernelService);
         when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -171,7 +169,6 @@ suite('JupyterSession', () => {
             instance(specManager),
             instance(sessionManager),
             instance(contentsManager),
-            channel,
             Uri.file(''),
             1,
             instance(kernelService),

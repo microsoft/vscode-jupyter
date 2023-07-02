@@ -10,7 +10,7 @@ import { IDisposable, Resource } from '../../../platform/common/types';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { Telemetry } from '../../../telemetry';
-import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
+import { ISessionWithSocket, KernelSocketInformation, LocalKernelConnectionMetadata } from '../../types';
 import { IKernelProcess } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel.node';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
@@ -23,7 +23,7 @@ ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
 export class RawSession implements ISessionWithSocket {
     public isDisposed: boolean = false;
-    public readonly kernelConnectionMetadata: KernelConnectionMetadata;
+    public readonly kernelConnectionMetadata: LocalKernelConnectionMetadata;
     private isDisposing?: boolean;
 
     // Note, ID is the ID of this session
@@ -94,7 +94,6 @@ export class RawSession implements ISessionWithSocket {
     public get disposed(): ISignal<this, void> {
         return this._disposed;
     }
-    isRemoteSession?: boolean | undefined;
 
     public async dispose() {
         // We want to know who called dispose on us

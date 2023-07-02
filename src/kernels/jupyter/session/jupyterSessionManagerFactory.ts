@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { JupyterSessionManager } from './jupyterSessionManager';
-import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
-import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel } from '../../../platform/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
 import { IJupyterConnection } from '../../types';
 import {
     IJupyterSessionManagerFactory,
@@ -20,7 +19,6 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
     constructor(
         @inject(IConfigurationService) private config: IConfigurationService,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IJupyterKernelService) @optional() private readonly kernelService: IJupyterKernelService | undefined,
         @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator,
         @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator,
@@ -36,7 +34,6 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
     public async create(connInfo: IJupyterConnection): Promise<IJupyterSessionManager> {
         const result = new JupyterSessionManager(
             this.config,
-            this.jupyterOutput,
             this.config,
             this.kernelService,
             this.backingFileCreator,

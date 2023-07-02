@@ -12,13 +12,7 @@ import type {
 import { JSONObject } from '@lumino/coreutils';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { traceError, traceVerbose } from '../../../platform/logging';
-import {
-    IConfigurationService,
-    IOutputChannel,
-    Resource,
-    IDisplayOptions,
-    IDisposable
-} from '../../../platform/common/types';
+import { IConfigurationService, Resource, IDisplayOptions, IDisposable } from '../../../platform/common/types';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
@@ -61,7 +55,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
     constructor(
         _config: IConfigurationService,
-        private outputChannel: IOutputChannel,
         private configService: IConfigurationService,
         private readonly kernelService: IJupyterKernelService | undefined,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
@@ -185,7 +178,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.specsManager,
             this.sessionManager,
             this.contentsManager,
-            this.outputChannel,
             workingDirectory,
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,

@@ -5,15 +5,7 @@ import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import {
-    CancellationError,
-    CancellationTokenSource,
-    CancellationToken,
-    Disposable,
-    Event,
-    EventEmitter,
-    Uri
-} from 'vscode';
+import { CancellationError, CancellationTokenSource, CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning, traceInfoIfCI } from '../../../platform/logging';
@@ -34,418 +26,13 @@ import {
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
 import { DisplayOptions } from '../../displayOptions';
-import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
+import { noop } from '../../../platform/common/utils/misc';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { getResourceType } from '../../../platform/common/utils';
 import { suppressShutdownErrors } from '../../common/shutdownHelper';
 import { KernelConnectionWrapper } from '../../common/kernelConnectionWrapper';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
-
-/**
- * Common code for a Jupyterlabs IKernelConnection. Raw and Jupyter both inherit from this.
- */
-export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
-    implements IBaseKernelSession<T>
-{
-    /**
-     * Keep a single instance of KernelConnectionWrapper.
-     * This way when sessions change, we still have a single Kernel.IKernelConnection proxy (wrapper),
-     * which will have all of the event handlers bound to it.
-     * This allows consumers to add event handlers hand not worry about internals & can use the lower level Jupyter API.
-     */
-    private _wrappedKernel?: KernelConnectionWrapper;
-    private _isDisposed?: boolean;
-    private readonly _disposed = new EventEmitter<void>();
-    private readonly didShutdown = new EventEmitter<void>();
-    protected readonly disposables: IDisposable[] = [];
-    public get id() {
-        return this.session?.id;
-    }
-    public get disposed() {
-        return this._isDisposed === true;
-    }
-    public get onDidDispose() {
-        return this._disposed.event;
-    }
-    public get onDidShutdown() {
-        return this.didShutdown.event;
-    }
-    protected get session(): RawSession | undefined {
-        return this._session;
-    }
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
-    }
-    public get kernel(): Kernel.IKernelConnection | undefined {
-        if (this._wrappedKernel) {
-            return this._wrappedKernel;
-        }
-        if (!this._session?.kernel) {
-            return;
-        }
-        this._wrappedKernel = new KernelConnectionWrapper(this._session.kernel, this.disposables);
-        return this._wrappedKernel;
-    }
-
-    public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
-        return this._kernelSocket;
-    }
-    public get onSessionStatusChanged(): Event<KernelMessage.Status> {
-        return this.onStatusChangedEvent.event;
-    }
-    public get status(): KernelMessage.Status {
-        return this.getServerStatus();
-    }
-
-    public get isConnected(): boolean {
-        return this.connected;
-    }
-
-    protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
-    protected statusHandler: Slot<RawSession, KernelMessage.Status>;
-    protected connected: boolean = false;
-    protected restartSessionPromise?: { token: CancellationTokenSource; promise: Promise<RawSession> };
-    private _session: RawSession | undefined;
-    private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
-    private unhandledMessageHandler: Slot<RawSession, KernelMessage.IMessage>;
-    private previousAnyMessageHandler?: IDisposable;
-
-    constructor(
-        public readonly kind: T,
-        protected resource: Resource,
-        protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
-        public workingDirectory: Uri
-    ) {
-        this.statusHandler = this.onStatusChanged.bind(this);
-        this.unhandledMessageHandler = (_s, m) => {
-            traceWarning(`Unhandled message found: ${m.header.msg_type}`);
-        };
-    }
-    public async dispose(): Promise<void> {
-        await this.shutdownImplementation(false);
-    }
-    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
-        if (this.session) {
-            return this.waitForIdleOnSession(this.session, timeout, token);
-        }
-    }
-
-    public async shutdown(): Promise<void> {
-        await this.shutdownImplementation(true);
-    }
-
-    public async restart(): Promise<void> {
-        if (this.session?.isRemoteSession && this.session.kernel) {
-            await this.session.kernel.restart();
-            this.setSession(this.session, true);
-            traceInfo(`Restarted ${this.session?.kernel?.id}`);
-            return;
-        }
-
-        // Save old state for shutdown
-        const oldSession = this.session;
-        const oldStatusHandler = this.statusHandler;
-
-        // TODO? Why aren't we killing this old session here now?
-        // We should, If we're restarting and it fails, how is it ok to
-        // keep the old session (user could be restarting for a number of reasons).
-
-        // Just switch to the other session. It should already be ready
-
-        // Start the restart session now in case it wasn't started
-        const newSession = await this.startRestartSession(false);
-        this.setSession(newSession);
-
-        if (newSession.kernel) {
-            traceVerbose(`New Session after restarting ${newSession.kernel.id}`);
-
-            // Rewire our status changed event.
-            newSession.statusChanged.connect(this.statusHandler);
-            newSession.kernel.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-        }
-        if (oldStatusHandler && oldSession) {
-            oldSession.statusChanged.disconnect(oldStatusHandler);
-            if (oldSession.kernel) {
-                oldSession.kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
-            }
-        }
-        traceInfo(`Shutdown old session ${oldSession?.kernel?.id}`);
-        this.shutdownSession(oldSession, undefined, false).catch(noop);
-    }
-
-    // Sub classes need to implement their own restarting specific code
-    protected abstract startRestartSession(disableUI: boolean): Promise<RawSession>;
-
-    protected async waitForIdleOnSession(
-        session: RawSession | undefined,
-        timeout: number,
-        token?: CancellationToken,
-        isRestartSession?: boolean
-    ): Promise<void> {
-        if (session && session.kernel) {
-            const progress = isRestartSession
-                ? undefined
-                : KernelProgressReporter.reportProgress(this.resource, DataScience.waitingForJupyterSessionToBeIdle);
-            const disposables: IDisposable[] = [];
-            if (progress) {
-                disposables.push(progress);
-            }
-            try {
-                traceVerbose(
-                    `Waiting for ${timeout}ms idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
-                );
-
-                // When our kernel connects and gets a status message it triggers the ready promise
-                const kernelStatus = createDeferred<string>();
-                if (token) {
-                    token.onCancellationRequested(
-                        () => kernelStatus.reject(new CancellationError()),
-                        this,
-                        disposables
-                    );
-                }
-                const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
-                    traceVerbose(`Got status ${status} in waitForIdleOnSession`);
-                    if (status == 'idle') {
-                        kernelStatus.resolve(status);
-                    }
-                };
-                session.kernel.statusChanged?.connect(handler);
-                disposables.push(
-                    new Disposable(() => swallowExceptions(() => session.kernel?.statusChanged?.disconnect(handler)))
-                );
-                if (session.kernel.status == 'idle') {
-                    kernelStatus.resolve(session.kernel.status);
-                }
-                // Check for possibility that kernel has died.
-                const sessionDisposed = createDeferred<string>();
-                const sessionDisposedHandler = () => sessionDisposed.resolve('');
-                session.disposed.connect(sessionDisposedHandler, sessionDisposed);
-                disposables.push(
-                    new Disposable(() =>
-                        swallowExceptions(() => session.disposed.disconnect(sessionDisposedHandler, sessionDisposed))
-                    )
-                );
-                sessionDisposed.promise.catch(noop);
-                kernelStatus.promise.catch(noop);
-                const result = await raceTimeout(timeout, '', kernelStatus.promise, sessionDisposed.promise);
-                if (session.isDisposed) {
-                    traceError('Session disposed while waiting for session to be idle.');
-                    throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
-                }
-
-                traceVerbose(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
-
-                if (result == 'idle') {
-                    return;
-                }
-                traceError(
-                    `Shutting down after failing to wait for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
-                );
-                // Before we throw an exception, make sure to shutdown the session as it's not usable anymore
-                this.shutdownSession(session, this.statusHandler, isRestartSession).catch(noop);
-                throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
-            } catch (ex) {
-                traceInfoIfCI(`Error waiting for idle`, ex);
-                throw ex;
-            } finally {
-                disposeAllDisposables(disposables);
-            }
-        } else {
-            throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
-        }
-    }
-
-    // Changes the current session.
-    protected setSession(session: RawSession | undefined, forceUpdateKernelSocketInfo: boolean = false) {
-        const oldSession = this._session;
-        this.previousAnyMessageHandler?.dispose();
-        if (session) {
-            traceInfo(`Started new session ${session?.kernel?.id}`);
-        }
-        if (oldSession) {
-            if (this.unhandledMessageHandler) {
-                oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
-            }
-            if (this.statusHandler) {
-                oldSession.statusChanged.disconnect(this.statusHandler);
-                oldSession.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
-            }
-        }
-        this._session = session;
-        if (session) {
-            if (session.kernel && this._wrappedKernel) {
-                this._wrappedKernel.changeKernel(session.kernel);
-            }
-
-            // Listen for session status changes
-            session.statusChanged.connect(this.statusHandler);
-            session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
-            if (session.kernelSocketInformation.socket?.onAnyMessage) {
-                // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
-                // As a result, we don't get any notification that messages were sent (on the anymessage signal).
-                // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
-                this.previousAnyMessageHandler = session.kernelSocketInformation.socket?.onAnyMessage((msg) => {
-                    try {
-                        if (this._wrappedKernel) {
-                            const jupyterLabSerialize =
-                                require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
-                            const message =
-                                typeof msg.msg === 'string' || msg.msg instanceof ArrayBuffer
-                                    ? jupyterLabSerialize.deserialize(msg.msg)
-                                    : msg.msg;
-                            this._wrappedKernel.anyMessage.emit({ direction: msg.direction, msg: message });
-                        }
-                    } catch (ex) {
-                        traceWarning(`failed to deserialize message to broadcast anymessage signal`);
-                    }
-                });
-            }
-            if (session.unhandledMessage) {
-                session.unhandledMessage.connect(this.unhandledMessageHandler);
-            }
-            // If we have a new session, then emit the new kernel connection information.
-            if ((forceUpdateKernelSocketInfo || oldSession !== session) && session.kernel) {
-                this._kernelSocket.next({
-                    options: {
-                        clientId: session.kernel.clientId,
-                        id: session.kernel.id,
-                        model: { ...session.kernel.model },
-                        userName: session.kernel.username
-                    },
-                    socket: session.kernelSocketInformation.socket
-                });
-            }
-        }
-    }
-    protected async shutdownSession(
-        session: RawSession | undefined,
-        statusHandler: Slot<RawSession, KernelMessage.Status> | undefined,
-        isRequestToShutDownRestartSession: boolean | undefined,
-        shutdownEvenIfRemote?: boolean
-    ): Promise<void> {
-        if (session && session.kernel) {
-            const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
-            traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
-            try {
-                if (statusHandler) {
-                    session.statusChanged.disconnect(statusHandler);
-                }
-                if (!this.canShutdownSession(session, isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
-                    traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
-                    session.dispose().catch(noop);
-                    return;
-                }
-                try {
-                    traceVerbose(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
-                    suppressShutdownErrors(session.kernel);
-                    // Shutdown may fail if the process has been killed
-                    if (!session.isDisposed) {
-                        await raceTimeout(1000, session.shutdown());
-                    }
-                } catch {
-                    noop();
-                }
-                // If session.shutdown didn't work, just dispose
-                if (session && !session.isDisposed) {
-                    session.dispose().catch(noop);
-                }
-            } catch (e) {
-                // Ignore, just trace.
-                traceWarning(e);
-            }
-            traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
-        }
-    }
-    private async shutdownImplementation(shutdownEvenIfRemote?: boolean) {
-        this._isDisposed = true;
-        if (this.session) {
-            try {
-                traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
-                await this.shutdownSession(this.session, this.statusHandler, false, shutdownEvenIfRemote);
-                traceVerbose('Shutdown session - get restart session');
-                if (this.restartSessionPromise) {
-                    this.restartSessionPromise.token.cancel();
-                    const restartSession = await this.restartSessionPromise.promise;
-                    this.restartSessionPromise.token.dispose();
-                    traceVerbose('Shutdown session - shutdown restart session');
-                    await this.shutdownSession(restartSession, undefined, true);
-                }
-            } catch {
-                noop();
-            }
-            this.setSession(undefined);
-            this.restartSessionPromise = undefined;
-            this.onStatusChangedEvent.fire('dead');
-            this._disposed.fire();
-            this.didShutdown.fire();
-            this.didShutdown.dispose();
-            this._disposed.dispose();
-            this.onStatusChangedEvent.dispose();
-            this.previousAnyMessageHandler?.dispose();
-        }
-        disposeAllDisposables(this.disposables);
-        traceVerbose('Shutdown session -- complete');
-    }
-    private canShutdownSession(
-        session: RawSession,
-        isRequestToShutDownRestartSession: boolean | undefined,
-        shutdownEvenIfRemote?: boolean
-    ): boolean {
-        // We can never shut down existing (live) kernels.
-        if (session.kernelConnectionMetadata?.kind === 'connectToLiveRemoteKernel' && !shutdownEvenIfRemote) {
-            return false;
-        }
-        // We can always shutdown restart sessions.
-        if (isRequestToShutDownRestartSession) {
-            return true;
-        }
-        // If this Interactive Window, then always shutdown sessions (even with remote Jupyter).
-        if (session.resource && getResourceType(session.resource) === 'interactive') {
-            return true;
-        }
-        // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
-        if (
-            session.resource &&
-            getResourceType(session.resource) === 'notebook' &&
-            session.isRemoteSession === true &&
-            !shutdownEvenIfRemote
-        ) {
-            return false;
-        }
-
-        return true;
-    }
-    private getServerStatus(): KernelMessage.Status {
-        if (this.disposed) {
-            return 'dead';
-        }
-        if (this.session?.kernel) {
-            return this.session.kernel.status;
-        }
-        traceInfoIfCI(
-            `Kernel status not started because real session is ${
-                this.session ? 'defined' : 'undefined'
-            } & real kernel is ${this.session?.kernel ? 'defined' : 'undefined'}`
-        );
-        return 'unknown';
-    }
-
-    private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
-        traceInfoIfCI(`Server Kernel Status = ${kernelConnection}`);
-        if (kernelConnection === 'disconnected') {
-            const status = this.getServerStatus();
-            this.onStatusChangedEvent.fire(status);
-        }
-    }
-    private onStatusChanged(_s: Session.ISessionConnection) {
-        const status = this.getServerStatus();
-        traceInfoIfCI(`Server Status = ${status}`);
-        this.onStatusChangedEvent.fire(status);
-    }
-}
+import { waitForIdleOnSession } from '../../common/sessionHelpers';
 
 /*
 RawJupyterSession is the implementation of IJupyterKernelConnectionSession that instead of
@@ -558,7 +145,7 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
         }
     }
     public async dispose(): Promise<void> {
-        await this.shutdownImplementation(false);
+        await this.shutdownImplementation();
     }
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         if (this.session) {
@@ -567,17 +154,10 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
     }
 
     public async shutdown(): Promise<void> {
-        await this.shutdownImplementation(true);
+        await this.shutdownImplementation();
     }
 
     public async restart(): Promise<void> {
-        if (this.session?.isRemoteSession && this.session.kernel) {
-            await this.session.kernel.restart();
-            this.setSession(this.session, true);
-            traceInfo(`Restarted ${this.session?.kernel?.id}`);
-            return;
-        }
-
         // Save old state for shutdown
         const oldSession = this.session;
         const oldStatusHandler = this.statusHandler;
@@ -612,8 +192,7 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
     private async shutdownSession(
         session: RawSession | undefined,
         statusHandler: Slot<RawSession, KernelMessage.Status> | undefined,
-        isRequestToShutdownRestartSession: boolean | undefined,
-        shutdownEvenIfRemote: boolean = false
+        isRequestToShutdownRestartSession: boolean | undefined
     ): Promise<void> {
         // Remove our process exit handler. Kernel is shutting down on purpose
         // so we don't need to listen to shutdown anymore.
@@ -627,11 +206,6 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
             try {
                 if (statusHandler) {
                     session.statusChanged.disconnect(statusHandler);
-                }
-                if (!this.canShutdownSession(session, isRequestToShutdownRestartSession, shutdownEvenIfRemote)) {
-                    traceVerbose(`Session cannot be shutdown ${session.kernelConnectionMetadata?.id}`);
-                    session.dispose().catch(noop);
-                    return;
                 }
                 try {
                     traceVerbose(`Session can be shutdown ${session.kernelConnectionMetadata?.id}`);
@@ -793,9 +367,6 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
         return promise;
     }
     private async createRestartSession(disableUI: boolean, cancelToken: CancellationToken): Promise<RawSession> {
-        if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
-            throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
-        }
         return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI), purpose: 'restart' });
     }
 
@@ -948,90 +519,36 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
     }
 
     protected async waitForIdleOnSession(
-        session: RawSession | undefined,
+        session: RawSession,
         timeout: number,
         token?: CancellationToken,
         isRestartSession?: boolean
     ): Promise<void> {
-        if (session && session.kernel) {
-            const progress = isRestartSession
-                ? undefined
-                : KernelProgressReporter.reportProgress(this.resource, DataScience.waitingForJupyterSessionToBeIdle);
-            const disposables: IDisposable[] = [];
-            if (progress) {
-                disposables.push(progress);
-            }
+        if (session.kernel) {
             try {
-                traceVerbose(
-                    `Waiting for ${timeout}ms idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
+                await waitForIdleOnSession(
+                    this.kernelConnectionMetadata,
+                    this.resource,
+                    session,
+                    timeout,
+                    token,
+                    isRestartSession
                 );
-
-                // When our kernel connects and gets a status message it triggers the ready promise
-                const kernelStatus = createDeferred<string>();
-                if (token) {
-                    token.onCancellationRequested(
-                        () => kernelStatus.reject(new CancellationError()),
-                        this,
-                        disposables
-                    );
-                }
-                const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
-                    traceVerbose(`Got status ${status} in waitForIdleOnSession`);
-                    if (status == 'idle') {
-                        kernelStatus.resolve(status);
-                    }
-                };
-                session.kernel.statusChanged?.connect(handler);
-                disposables.push(
-                    new Disposable(() => swallowExceptions(() => session.kernel?.statusChanged?.disconnect(handler)))
-                );
-                if (session.kernel.status == 'idle') {
-                    kernelStatus.resolve(session.kernel.status);
-                }
-                // Check for possibility that kernel has died.
-                const sessionDisposed = createDeferred<string>();
-                const sessionDisposedHandler = () => sessionDisposed.resolve('');
-                session.disposed.connect(sessionDisposedHandler, sessionDisposed);
-                disposables.push(
-                    new Disposable(() =>
-                        swallowExceptions(() => session.disposed.disconnect(sessionDisposedHandler, sessionDisposed))
-                    )
-                );
-                sessionDisposed.promise.catch(noop);
-                kernelStatus.promise.catch(noop);
-                const result = await raceTimeout(timeout, '', kernelStatus.promise, sessionDisposed.promise);
-                if (session.isDisposed) {
-                    traceError('Session disposed while waiting for session to be idle.');
-                    throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
-                }
-
-                traceVerbose(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
-
-                if (result == 'idle') {
-                    return;
-                }
-                traceError(
-                    `Shutting down after failing to wait for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`
-                );
-                // Before we throw an exception, make sure to shutdown the session as it's not usable anymore
-                this.shutdownSession(session, this.statusHandler, isRestartSession).catch(noop);
-                throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
             } catch (ex) {
                 traceInfoIfCI(`Error waiting for idle`, ex);
+                this.shutdownSession(session, this.statusHandler, isRestartSession).catch(noop);
                 throw ex;
-            } finally {
-                disposeAllDisposables(disposables);
             }
         } else {
             throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
         }
     }
-    private async shutdownImplementation(shutdownEvenIfRemote?: boolean) {
+    private async shutdownImplementation() {
         this._isDisposed = true;
         if (this.session) {
             try {
                 traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
-                await this.shutdownSession(this.session, this.statusHandler, false, shutdownEvenIfRemote);
+                await this.shutdownSession(this.session, this.statusHandler, false);
                 traceVerbose('Shutdown session - get restart session');
                 if (this.restartSessionPromise) {
                     this.restartSessionPromise.token.cancel();
@@ -1055,35 +572,6 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
         }
         disposeAllDisposables(this.disposables);
         traceVerbose('Shutdown session -- complete');
-    }
-    private canShutdownSession(
-        session: RawSession,
-        isRequestToShutDownRestartSession: boolean | undefined,
-        shutdownEvenIfRemote?: boolean
-    ): boolean {
-        // We can never shut down existing (live) kernels.
-        if (session.kernelConnectionMetadata?.kind === 'connectToLiveRemoteKernel' && !shutdownEvenIfRemote) {
-            return false;
-        }
-        // We can always shutdown restart sessions.
-        if (isRequestToShutDownRestartSession) {
-            return true;
-        }
-        // If this Interactive Window, then always shutdown sessions (even with remote Jupyter).
-        if (session.resource && getResourceType(session.resource) === 'interactive') {
-            return true;
-        }
-        // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
-        if (
-            session.resource &&
-            getResourceType(session.resource) === 'notebook' &&
-            session.isRemoteSession === true &&
-            !shutdownEvenIfRemote
-        ) {
-            return false;
-        }
-
-        return true;
     }
     private getServerStatus(): KernelMessage.Status {
         if (this.disposed) {
