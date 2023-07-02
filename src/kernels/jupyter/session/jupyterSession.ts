@@ -166,7 +166,9 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
         await this.session?.kernel?.restart();
         this.setSession(this.session, true);
         traceInfo(`Restarted ${this.session?.kernel?.id}`);
-        return;
+        if (this.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' && this.session) {
+            await this.waitForIdleOnSession(this.session, this.idleTimeout);
+        }
     }
     protected async waitForIdleOnSession(
         session: ISessionWithSocket,

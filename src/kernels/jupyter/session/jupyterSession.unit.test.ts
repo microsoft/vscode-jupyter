@@ -382,6 +382,7 @@ suite('JupyterSession', () => {
             let newSessionCreated: Deferred<void>;
             let sessionDisposed: Signal<Session.ISessionConnection, void>;
             setup(async () => {
+                console.error('Start');
                 createJupyterSession(
                     undefined,
                     LocalKernelSpecConnectionMetadata.create({
@@ -394,7 +395,6 @@ suite('JupyterSession', () => {
                         }
                     })
                 );
-                await connect();
                 newSession = mock(SessionConnection);
                 sessionDisposed = new Signal<Session.ISessionConnection, void>(instance(newSession));
                 when(newSession.disposed).thenReturn(sessionDisposed);
@@ -429,12 +429,13 @@ suite('JupyterSession', () => {
                     newSessionCreated.resolve();
                     return Promise.resolve(instance(newSession));
                 });
+                console.error('Done');
             });
             teardown(() => {
                 verify(sessionManager.connectTo(anything())).never();
             });
             suite('Executing user code', async () => {
-                setup(executeUserCode);
+                // setup(executeUserCode);
 
                 async function executeUserCode() {
                     const future =
@@ -454,7 +455,7 @@ suite('JupyterSession', () => {
                     await result!.done;
                 }
 
-                test('Restart should create a new session & kill old session', async () => {
+                test('Restart should not create a new session & kill old session', async () => {
                     const oldSessionShutDown = createDeferred();
                     const oldSessionDispose = createDeferred();
                     when(connection.localLaunch).thenReturn(true);
@@ -470,14 +471,15 @@ suite('JupyterSession', () => {
                     const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
                     when(session.serverSettings).thenReturn(instance(sessionServerSettings));
 
+                    await connect();
+                    await executeUserCode();
                     await jupyterSession.restart();
 
-                    // We should kill session and switch to new session, starting a new restart session.
-                    await Promise.all([oldSessionShutDown.promise, oldSessionDispose.promise]);
-                    verify(session.shutdown()).once();
-                    verify(session.dispose()).once();
-                    // Confirm kernel isn't restarted.
-                    verify(kernel.restart()).never();
+                    // We should not kill session.
+                    verify(session.shutdown()).never();
+                    verify(session.dispose()).never();
+                    // Confirm kernel is restarted.
+                    verify(kernel.restart()).once();
                 });
                 test('Restart should fail if new session dies while waiting for it to be idle', async () => {
                     when(connection.localLaunch).thenReturn(true);
@@ -487,6 +489,10 @@ suite('JupyterSession', () => {
                     const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
                     when(session.serverSettings).thenReturn(instance(sessionServerSettings));
 
+                    await connect();
+                    await executeUserCode();
+
+                    when(session.isDisposed).thenReturn(true);
                     const promise = jupyterSession.restart();
                     // Mark the new session as disposed
                     when(newSession.isDisposed).thenReturn(true);
