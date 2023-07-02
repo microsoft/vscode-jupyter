@@ -31,7 +31,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import * as path from '../../../platform/vscode-path/resources';
 
 // function is
-export class JupyterSession
+export class OldJupyterSession
     extends BaseJupyterSession<'localJupyter' | 'remoteJupyter'>
     implements IJupyterKernelSession
 {

@@ -19,7 +19,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers
 import { IRawKernelSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
-import { RawSession } from './rawSession.node';
+import { OldRawSession } from './rawSession.node';
 import { DisplayOptions } from '../../displayOptions';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
@@ -31,11 +31,11 @@ through ZMQ.
 It's responsible for translating our IJupyterKernelConnectionSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
-export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements IRawKernelSession {
-    private processExitHandler = new WeakMap<RawSession, IDisposable>();
+export class OldRawJupyterSession extends BaseJupyterSession<'localRaw'> implements IRawKernelSession {
+    private processExitHandler = new WeakMap<OldRawSession, IDisposable>();
     private terminatingStatus?: KernelMessage.Status;
     public get atleastOneCellExecutedSuccessfully() {
-        if (this.session && this.session instanceof RawSession) {
+        if (this.session && this.session instanceof OldRawSession) {
             return this.session.atleastOneCellExecutedSuccessfully;
         }
         return false;
@@ -59,7 +59,7 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Save the resource that we connect with
-        let newSession: RawSession;
+        let newSession: OldRawSession;
         await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
         try {
             // Try to start up our raw session, allow for cancellation or timeout
@@ -85,7 +85,7 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
     }
 
     protected override shutdownSession(
-        session: RawSession | undefined,
+        session: OldRawSession | undefined,
         statusHandler: Slot<ISessionWithSocket, KernelMessage.Status> | undefined,
         isRequestToShutdownRestartSession: boolean | undefined
     ): Promise<void> {
@@ -106,7 +106,7 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
         });
     }
 
-    protected override setSession(session: RawSession | undefined) {
+    protected override setSession(session: OldRawSession | undefined) {
         if (session) {
             traceInfo(
                 `Started Kernel ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)} (pid: ${
@@ -191,7 +191,7 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
         token: CancellationToken;
         ui: IDisplayOptions;
         purpose?: 'start' | 'restart';
-    }): Promise<RawSession> {
+    }): Promise<OldRawSession> {
         if (
             this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
@@ -224,9 +224,9 @@ export class RawJupyterSession extends BaseJupyterSession<'localRaw'> implements
     private async postStartRawSession(
         options: { token: CancellationToken; ui: IDisplayOptions },
         process: IKernelProcess
-    ): Promise<RawSession> {
+    ): Promise<OldRawSession> {
         // Create our raw session, it will own the process lifetime
-        const result = new RawSession(process, this.resource);
+        const result = new OldRawSession(process, this.resource);
 
         try {
             // Wait for it to be ready

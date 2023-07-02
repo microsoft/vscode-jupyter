@@ -22,7 +22,7 @@ RawKernel class represents the mapping from the JupyterLab services IKernel inte
 to a raw IPython kernel running on the local machine. RawKernel is in charge of taking
 input request, translating them, sending them to an IPython kernel over ZMQ, then passing back the messages
 */
-export class RawKernel implements Kernel.IKernelConnection {
+export class OldRawKernel implements Kernel.IKernelConnection {
     public socket: IKernelSocket & IDisposable;
     public readonly statusChanged = new Signal<this, Kernel.Status>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
@@ -270,7 +270,7 @@ export class RawKernel implements Kernel.IKernelConnection {
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
-export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
+export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): OldRawKernel {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
@@ -310,5 +310,5 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
     });
 
     // Use this real kernel in result.
-    return new RawKernel(realKernel, socketInstance, kernelProcess);
+    return new OldRawKernel(realKernel, socketInstance, kernelProcess);
 }
