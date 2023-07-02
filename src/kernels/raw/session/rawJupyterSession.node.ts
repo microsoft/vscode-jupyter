@@ -194,13 +194,15 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
         statusHandler: Slot<RawSession, KernelMessage.Status> | undefined,
         isRequestToShutdownRestartSession: boolean | undefined
     ): Promise<void> {
+        if (!session) {
+            return;
+        }
         // Remove our process exit handler. Kernel is shutting down on purpose
         // so we don't need to listen to shutdown anymore.
-        const disposable = session && this.processExitHandler.get(session);
-        disposable?.dispose();
+        this.processExitHandler.get(session)?.dispose();
         // We want to know why we got shut down
         const stacktrace = new Error().stack;
-        if (session && session.kernel) {
+        if (session.kernel) {
             const kernelIdForLogging = `${session.kernel.id}, ${session.kernelConnectionMetadata?.id}`;
             traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
             try {
@@ -232,9 +234,7 @@ export class RawJupyterSession implements IRawKernelSession, IBaseKernelSession<
             isRequestToShutdownRestartSession,
             stacktrace
         });
-        if (session) {
-            return session.kernelProcess.dispose();
-        }
+        return session.kernelProcess.dispose();
     }
 
     protected setSession(session: RawSession | undefined, forceUpdateKernelSocketInfo: boolean = false) {
