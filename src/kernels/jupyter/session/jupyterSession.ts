@@ -433,42 +433,47 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
         };
 
         const requestCreator = this.requestCreator;
-        const work = () =>
-            this.sessionManager!.startNew(sessionOptions, {
-                kernelConnectionOptions: {
-                    handleComms: true // This has to be true for ipywidgets to work
-                }
-            })
-                .then(async (session) => {
-                    if (session.kernel) {
-                        traceInfo(DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || ''));
-                        const sessionWithSocket = session as ISessionWithSocket;
-
-                        // Add on the kernel metadata & sock information
-                        sessionWithSocket.kernelSocketInformation = {
-                            get socket() {
-                                // When we restart kernels, a new websocket is created and we need to get the new one.
-                                // & the id in the dictionary is the kernel.id.
-                                return requestCreator.getWebsocket(session.kernel!.id);
-                            },
-                            options: {
-                                clientId: session.kernel.clientId,
-                                id: session.kernel.id,
-                                model: { ...session.kernel.model },
-                                userName: session.kernel.username
-                            }
-                        };
-                        return sessionWithSocket;
+        try {
+            const session = await raceCancellationError(
+                options.token,
+                this.sessionManager.startNew(sessionOptions, {
+                    kernelConnectionOptions: {
+                        handleComms: true // This has to be true for ipywidgets to work
                     }
-                    throw new JupyterSessionStartError(new Error(`No kernel created`));
                 })
-                .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
-                .finally(async () => {
-                    if (this.connInfo && backingFile) {
-                        this.contentsManager.delete(backingFile.filePath).catch(noop);
-                    }
-                });
-        return raceCancellationError(options.token, work());
+            );
+
+            if (!session.kernel) {
+                throw new JupyterSessionStartError(new Error(`No kernel created`));
+            }
+            traceInfo(DataScience.createdNewKernel(this.connInfo.baseUrl, session?.kernel?.id || ''));
+            const sessionWithSocket = session as ISessionWithSocket;
+
+            // Add on the kernel metadata & sock information
+            sessionWithSocket.kernelSocketInformation = {
+                get socket() {
+                    // When we restart kernels, a new websocket is created and we need to get the new one.
+                    // & the id in the dictionary is the kernel.id.
+                    return requestCreator.getWebsocket(session.kernel!.id);
+                },
+                options: {
+                    clientId: session.kernel.clientId,
+                    id: session.kernel.id,
+                    model: { ...session.kernel.model },
+                    userName: session.kernel.username
+                }
+            };
+            return sessionWithSocket;
+        } catch (ex) {
+            if (ex instanceof CancellationError || ex instanceof JupyterSessionStartError) {
+                throw ex;
+            }
+            throw new JupyterSessionStartError(ex);
+        } finally {
+            if (this.connInfo && backingFile) {
+                this.contentsManager.delete(backingFile.filePath).catch(noop);
+            }
+        }
     }
 
     protected async shutdownSession(
@@ -477,38 +482,39 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
         isRequestToShutDownRestartSession: boolean | undefined,
         shutdownEvenIfRemote?: boolean
     ): Promise<void> {
-        if (session && session.kernel) {
-            const kernelIdForLogging = `${session.kernel.id}, ${this.kernelConnectionMetadata.id}`;
-            traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
-            try {
-                if (statusHandler) {
-                    session.statusChanged.disconnect(statusHandler);
-                }
-                if (!this.canShutdownSession(isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
-                    traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
-                    session.dispose();
-                    return;
-                }
-                try {
-                    traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
-                    suppressShutdownErrors(session.kernel);
-                    // Shutdown may fail if the process has been killed
-                    if (!session.isDisposed) {
-                        await raceTimeout(1000, session.shutdown());
-                    }
-                } catch {
-                    noop();
-                }
-                // If session.shutdown didn't work, just dispose
-                if (session && !session.isDisposed) {
-                    session.dispose();
-                }
-            } catch (e) {
-                // Ignore, just trace.
-                traceWarning(e);
-            }
-            traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
+        if (!session || !session.kernel) {
+            return;
         }
+        const kernelIdForLogging = `${session.kernel.id}, ${this.kernelConnectionMetadata.id}`;
+        traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
+        try {
+            if (statusHandler) {
+                session.statusChanged.disconnect(statusHandler);
+            }
+            if (!this.canShutdownSession(isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
+                traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
+                session.dispose();
+                return;
+            }
+            try {
+                traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
+                suppressShutdownErrors(session.kernel);
+                // Shutdown may fail if the process has been killed
+                if (!session.isDisposed) {
+                    await raceTimeout(1000, session.shutdown());
+                }
+            } catch {
+                noop();
+            }
+            // If session.shutdown didn't work, just dispose
+            if (session && !session.isDisposed) {
+                session.dispose();
+            }
+        } catch (e) {
+            // Ignore, just trace.
+            traceWarning(e);
+        }
+        traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
     }
     private async shutdownImplementation(shutdownEvenIfRemote?: boolean) {
         this._isDisposed = true;
