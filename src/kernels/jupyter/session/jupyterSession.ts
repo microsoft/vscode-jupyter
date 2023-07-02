@@ -188,7 +188,7 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
                 );
             } catch (ex) {
                 traceInfoIfCI(`Error waiting for idle`, ex);
-                this.shutdownSession(session, this.statusHandler, isRestartSession).catch(noop);
+                this.shutdownSession(session, isRestartSession).catch(noop);
                 throw ex;
             }
         } else {
@@ -478,7 +478,6 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
 
     protected async shutdownSession(
         session: ISessionWithSocket | undefined,
-        statusHandler: Slot<ISessionWithSocket, KernelMessage.Status> | undefined,
         isRequestToShutDownRestartSession: boolean | undefined,
         shutdownEvenIfRemote?: boolean
     ): Promise<void> {
@@ -488,9 +487,7 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
         const kernelIdForLogging = `${session.kernel.id}, ${this.kernelConnectionMetadata.id}`;
         traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
         try {
-            if (statusHandler) {
-                session.statusChanged.disconnect(statusHandler);
-            }
+            session.statusChanged.disconnect(this.statusHandler);
             if (!this.canShutdownSession(isRequestToShutDownRestartSession, shutdownEvenIfRemote)) {
                 traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
                 session.dispose();
@@ -521,7 +518,7 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
         if (this.session) {
             try {
                 traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
-                await this.shutdownSession(this.session, this.statusHandler, false, shutdownEvenIfRemote);
+                await this.shutdownSession(this.session, false, shutdownEvenIfRemote);
                 traceVerbose('Shutdown session - get restart session');
             } catch {
                 noop();
