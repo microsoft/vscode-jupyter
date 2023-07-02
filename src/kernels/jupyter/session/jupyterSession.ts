@@ -173,22 +173,14 @@ export class JupyterSession implements IJupyterKernelSession, IBaseKernelSession
     protected async waitForIdleOnSession(
         session: ISessionWithSocket,
         timeout: number,
-        token?: CancellationToken,
-        isRestartSession?: boolean
+        token?: CancellationToken
     ): Promise<void> {
         if (session.kernel) {
             try {
-                await waitForIdleOnSession(
-                    this.kernelConnectionMetadata,
-                    this.resource,
-                    session,
-                    timeout,
-                    token,
-                    isRestartSession
-                );
+                await waitForIdleOnSession(this.kernelConnectionMetadata, this.resource, session, timeout, token);
             } catch (ex) {
                 traceInfoIfCI(`Error waiting for idle`, ex);
-                this.shutdownSession(session, isRestartSession).catch(noop);
+                this.shutdownSession(session, true).catch(noop);
                 throw ex;
             }
         } else {
