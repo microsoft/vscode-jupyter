@@ -406,6 +406,7 @@ export class RawSessionConnection implements INewSessionWithSocket {
         // Now actually dispose ourselves
         await this.shutdown();
         this.isDisposed = true;
+        this.disposed.emit();
         Signal.disconnectAll(this);
     }
     // Return the current kernel for this session

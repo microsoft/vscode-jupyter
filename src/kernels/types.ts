@@ -581,7 +581,7 @@ export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
-export type ISessionWithSocket = Session.ISessionConnection & {
+export interface ISessionWithSocket extends Session.ISessionConnection {
     /**
      * The resource associated with this session.
      */
@@ -595,7 +595,7 @@ export type ISessionWithSocket = Session.ISessionConnection & {
      */
     kernelSocketInformation: KernelSocketInformation;
     kernelConnectionMetadata: KernelConnectionMetadata;
-};
+}
 
 export interface INewSessionWithSocket extends Session.ISessionConnection {
     kernelSocketInformation: KernelSocketInformation;
@@ -680,27 +680,27 @@ export type ConnectNotebookProviderOptions = GetServerOptions;
 /**
  * Options for getting a notebook
  */
-export type KernelSessionCreationOptions = {
+export interface KernelSessionCreationOptions {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
     token: CancellationToken;
     creator: KernelActionSource;
-};
-export type RemoteKernelSessionCreationOptions = {
+}
+export interface RemoteKernelSessionCreationOptions {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
     token: CancellationToken;
     creator: KernelActionSource;
-};
-export type LocaLKernelSessionCreationOptions = {
+}
+export interface LocaLKernelSessionCreationOptions {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: LocalKernelConnectionMetadata;
     token: CancellationToken;
     creator: KernelActionSource;
-};
+}
 
 export const IJupyterServerConnector = Symbol('IJupyterServerConnector');
 /**
@@ -760,7 +760,7 @@ export interface IKernelSocket {
     removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
 }
 
-export type KernelSocketOptions = {
+export interface KernelSocketOptions {
     /**
      * Kernel Id.
      */
@@ -786,8 +786,8 @@ export type KernelSocketOptions = {
          */
         readonly name: string;
     };
-};
-export type KernelSocketInformation = {
+}
+export interface KernelSocketInformation {
     /**
      * Underlying socket used by jupyterlab/services to communicate with kernel.
      * See jupyterlab/services/kernel/default.ts
@@ -797,7 +797,7 @@ export type KernelSocketInformation = {
      * Options used to clone a kernel.
      */
     readonly options: KernelSocketOptions;
-};
+}
 
 /**
  * Response for installation of kernel dependencies such as ipykernel.

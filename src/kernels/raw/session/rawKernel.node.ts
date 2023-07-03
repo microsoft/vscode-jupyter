@@ -502,8 +502,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 }
             );
 
-            // Just kill the session.
-            this.shutdown().catch(noop);
+            this.dispose();
         }, this);
     }
     public dispose(): void {
@@ -514,6 +513,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         this.shutdown().finally(() => {
             this._isDisposed = true;
             this.disposed.emit();
+            Signal.disconnectAll(this);
         });
     }
     public async shutdown(): Promise<void> {

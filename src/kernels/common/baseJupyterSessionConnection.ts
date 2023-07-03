@@ -138,6 +138,7 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
         this.disposed.emit();
 
         disposeAllDisposables(this.disposables);
+        Signal.disconnectAll(this);
     }
     abstract shutdown(): Promise<void>;
     public async restart(): Promise<void> {
