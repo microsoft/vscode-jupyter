@@ -31,7 +31,7 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { JupyterKernelService } from '../../../kernels/jupyter/session/jupyterKernelService.node';
-import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
+import { OldJupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
@@ -43,10 +43,10 @@ import { MockOutputChannel } from '../../../test/mockClasses';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite('JupyterSession', () => {
+suite('Old JupyterSession', () => {
     const disposables: IDisposable[] = [];
     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
-    let jupyterSession: JupyterSession;
+    let jupyterSession: OldJupyterSession;
     let connection: IJupyterConnection;
     let mockKernelSpec: ReadWrite<KernelConnectionMetadata>;
     let sessionManager: SessionManager;
@@ -163,7 +163,7 @@ suite('JupyterSession', () => {
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
         when(fs.delete(anything())).thenResolve();
         when(fs.createDirectory(anything())).thenResolve();
-        jupyterSession = new JupyterSession(
+        jupyterSession = new OldJupyterSession(
             resource,
             instance(connection),
             mockKernelSpec,

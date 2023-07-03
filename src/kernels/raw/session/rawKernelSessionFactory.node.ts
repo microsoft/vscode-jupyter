@@ -13,7 +13,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { IRawKernelSession, KernelSessionCreationOptions } from '../../types';
 import { IKernelLauncher, IRawKernelSessionFactory } from '../types';
-import { RawJupyterSession } from './rawJupyterSession.node';
+import { OldRawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -54,14 +54,14 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
         traceVerbose(`Creating raw notebook for resource '${getDisplayPath(options.resource)}'`);
         const sessionPromise = createDeferred<IRawKernelSession>();
         this.trackDisposable(sessionPromise.promise);
-        let rawSession: RawJupyterSession | undefined;
+        let rawSession: OldRawJupyterSession | undefined;
 
         try {
             const kernelConnectionProvided = !!options.kernelConnection;
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(options.resource);
             Cancellation.throwIfCanceled(options.token);
             const launchTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
-            rawSession = new RawJupyterSession(
+            rawSession = new OldRawJupyterSession(
                 this.kernelLauncher,
                 options.resource,
                 vscode.Uri.file(workingDirectory),

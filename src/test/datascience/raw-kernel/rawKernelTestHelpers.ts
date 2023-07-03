@@ -4,11 +4,11 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import type { JSONObject } from '@lumino/coreutils';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { RawKernel } from '../../../kernels/raw/session/rawKernel.node';
+import { OldRawKernel } from '../../../kernels/raw/session/rawKernel.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export async function requestExecute(
-    rawKernel: RawKernel,
+    rawKernel: OldRawKernel,
     code: string,
     started?: Deferred<void>
 ): Promise<KernelMessage.IMessage[]> {
@@ -52,7 +52,7 @@ export async function requestExecute(
     });
 }
 
-export async function requestInspect(rawKernel: RawKernel, code: string): Promise<JSONObject> {
+export async function requestInspect(rawKernel: OldRawKernel, code: string): Promise<JSONObject> {
     // Create a deferred that will fire when the request completes
     const deferred = createDeferred<JSONObject>();
 
