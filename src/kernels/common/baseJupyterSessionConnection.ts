@@ -105,7 +105,7 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
 
     public disposed = new Signal<this, void>(this);
     public get isDisposed(): boolean {
-        return this._isDisposed;
+        return this._isDisposed === true;
     }
     protected _isDisposed: boolean;
     protected readonly _disposed = new EventEmitter<void>();
@@ -146,10 +146,32 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
         traceInfo(`Restarted ${this.session?.kernel?.id}`);
     }
 
+    private previousKernelSocketInformation?: KernelSocketInformation & { kernel: Kernel.IKernelConnection };
     protected initializeKernelSocket() {
         if (!this.session.kernel) {
             throw new Error('Kernel not initialized in Session');
         }
+        const newKernelSocketInformation = {
+            kernel: this.session.kernel,
+            options: {
+                clientId: this.session.kernel.clientId,
+                id: this.session.kernel.id,
+                model: { ...this.session.kernel.model },
+                userName: this.session.kernel.username
+            },
+            socket: this.session.kernelSocketInformation.socket
+        };
+        // If we have a new session, then emit the new kernel connection information.
+        if (
+            JSON.stringify(this.previousKernelSocketInformation?.options) ===
+                JSON.stringify(newKernelSocketInformation.options) &&
+            this.previousKernelSocketInformation?.kernel === newKernelSocketInformation.kernel &&
+            this.previousKernelSocketInformation?.socket === newKernelSocketInformation.socket
+        ) {
+            return;
+        }
+
+        this.previousKernelSocketInformation = newKernelSocketInformation;
         this.previousAnyMessageHandler?.dispose();
         this.session.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
 
@@ -179,16 +201,7 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
                 }
             });
         }
-        // If we have a new session, then emit the new kernel connection information.
-        this._kernelSocket.next({
-            options: {
-                clientId: this.session.kernel.clientId,
-                id: this.session.kernel.id,
-                model: { ...this.session.kernel.model },
-                userName: this.session.kernel.username
-            },
-            socket: this.session.kernelSocketInformation.socket
-        });
+        this._kernelSocket.next(newKernelSocketInformation);
     }
 
     private onPropertyChanged(_: unknown, value: 'path' | 'name' | 'type') {

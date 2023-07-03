@@ -365,7 +365,7 @@ export class JupyterSessionWrapper
 {
     public readonly kind: 'localJupyter' | 'remoteJupyter';
     public get status(): KernelMessage.Status {
-        if (this.disposed) {
+        if (this.isDisposed) {
             return 'dead';
         }
         if (this.session?.kernel) {
@@ -384,7 +384,6 @@ export class JupyterSessionWrapper
         private readonly resource: Resource,
         private readonly kernelConnectionMetadata: KernelConnectionMetadata,
         public readonly workingDirectory: Uri,
-        private readonly requestCreator: IJupyterRequestCreator,
         connection: IJupyterConnection
     ) {
         super(session);
@@ -408,16 +407,6 @@ export class JupyterSessionWrapper
 
     public override async shutdown(): Promise<void> {
         return this.shutdownImplementation(true);
-    }
-
-    protected override initializeKernelSocket() {
-        // When we restart a remote session, the socket information is different, hence reset it.
-        const socket = this.requestCreator.getWebsocket(this.kernelConnectionMetadata.id);
-        if (this.session.kernelSocketInformation?.socket && socket) {
-            (this.session.kernelSocketInformation as ReadWrite<typeof this.session.kernelSocketInformation>).socket =
-                socket;
-        }
-        super.initializeKernelSocket();
     }
 
     private async shutdownSession(shutdownEvenIfRemote?: boolean): Promise<void> {

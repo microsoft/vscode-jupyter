@@ -294,7 +294,6 @@ export class NewJupyterKernelSessionFactory implements IKernelSessionFactory {
                 options.resource,
                 options.kernelConnection,
                 Uri.file(workingDirectory),
-                this.requestCreator,
                 connection
             );
             const disposed = session.disposed;
@@ -422,8 +421,15 @@ export class NewJupyterKernelSessionFactory implements IKernelSessionFactory {
                     ...options.kernelConnection.kernelModel,
                     model: options.kernelConnection.kernelModel.model
                 }) as INewSessionWithSocket;
+
+                // Add on the kernel metadata & sock information
+                const requestCreator = this.requestCreator;
                 session.kernelSocketInformation = {
-                    socket: this.requestCreator.getWebsocket(options.kernelConnection.id),
+                    get socket() {
+                        // When we restart kernels, a new websocket is created and we need to get the new one.
+                        // & the id in the dictionary is the kernel.id.
+                        return requestCreator.getWebsocket(options.kernelConnection.id);
+                    },
                     options: {
                         clientId: '',
                         id: options.kernelConnection.id,

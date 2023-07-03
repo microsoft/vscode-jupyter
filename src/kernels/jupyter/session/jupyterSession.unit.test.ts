@@ -22,7 +22,6 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import {
     IJupyterConnection,
-    IKernelSocket,
     INewSessionWithSocket,
     ISessionWithSocket,
     KernelConnectionMetadata,
@@ -751,14 +750,11 @@ suite('JupyterSession', () => {
         const kernelService = mock(JupyterKernelService);
         when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
         resolvableInstance(session);
-        const requestCreator = mock<JupyterRequestCreator>();
-        when(requestCreator.getWebsocket(anything())).thenReturn(instance(mock<IKernelSocket>()));
         jupyterSession = new JupyterSessionWrapper(
             instance(session),
             resource,
             kernelConnectionMetadata,
             Uri.file(''),
-            instance(requestCreator),
             instance(connection)
         );
         disposables.push(new Disposable(() => clock.uninstall()));
