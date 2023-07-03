@@ -12,7 +12,7 @@ import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeo
 import { Telemetry } from '../../../telemetry';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
 import { IKernelProcess } from '../types';
-import { createRawKernel, RawKernel } from './rawKernel.node';
+import { createRawKernel, OldRawKernel } from './rawKernel.node';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -21,7 +21,7 @@ RawSession class implements a jupyterlab ISession object
 This provides enough of the ISession interface so that our direct
 ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
-export class RawSession implements ISessionWithSocket {
+export class OldRawSession implements ISessionWithSocket {
     public isDisposed: boolean = false;
     public readonly kernelConnectionMetadata: KernelConnectionMetadata;
     private isDisposing?: boolean;
@@ -31,7 +31,7 @@ export class RawSession implements ISessionWithSocket {
     // and is also the clientID of the active kernel
     private _id: string;
     private _clientID: string;
-    private _kernel: RawKernel;
+    private _kernel: OldRawKernel;
     private readonly _statusChanged: Signal<this, KernelMessage.Status>;
     private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
     private readonly _terminated: Signal<this, void>;
@@ -157,7 +157,7 @@ export class RawSession implements ISessionWithSocket {
         traceVerbose(`Waiting for Raw session to be ready, currently ${this.connectionStatus}`);
         // When our kernel connects and gets a status message it triggers the ready promise
         const deferred = createDeferred<'connected'>();
-        const handler = (_session: RawSession, status: Kernel.ConnectionStatus) => {
+        const handler = (_session: OldRawSession, status: Kernel.ConnectionStatus) => {
             if (status == 'connected') {
                 traceVerbose('Raw session connected');
                 deferred.resolve(status);

@@ -23,7 +23,7 @@ import { SessionDisposedError } from '../../../platform/errors/sessionDisposedEr
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
-import { JupyterSession } from './jupyterSession';
+import { OldJupyterSession } from './jupyterSession';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import {
     IJupyterSessionManager,
@@ -167,7 +167,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         ui: IDisplayOptions,
         cancelToken: CancellationToken,
         creator: KernelActionSource
-    ): Promise<JupyterSession> {
+    ): Promise<OldJupyterSession> {
         if (
             !this.connInfo ||
             !this.sessionManager ||
@@ -178,7 +178,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             throw new SessionDisposedError();
         }
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(
+        const session = new OldJupyterSession(
             resource,
             this.connInfo,
             kernelConnection,
