@@ -42,7 +42,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite.only('Old JupyterSession', () => {
+suite('Old JupyterSession', () => {
     const disposables: IDisposable[] = [];
     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: OldJupyterSession;
@@ -682,7 +682,7 @@ suite.only('Old JupyterSession', () => {
 });
 
 // /* eslint-disable , @typescript-eslint/no-explicit-any */
-// suite('JupyterSession', () => {
+// suite.only('JupyterSession', () => {
 //     const disposables: IDisposable[] = [];
 //     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
 //     let jupyterSession: JupyterSession;
