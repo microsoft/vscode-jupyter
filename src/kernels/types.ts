@@ -597,9 +597,9 @@ export type ISessionWithSocket = Session.ISessionConnection & {
     kernelConnectionMetadata: KernelConnectionMetadata;
 };
 
-export type INewSessionWithSocket = Session.ISessionConnection & {
+export interface INewSessionWithSocket extends Session.ISessionConnection {
     kernelSocketInformation: KernelSocketInformation;
-};
+}
 
 export interface IJupyterKernelSpec {
     /**

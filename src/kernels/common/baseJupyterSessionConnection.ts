@@ -132,8 +132,9 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
     protected previousAnyMessageHandler?: IDisposable;
     public dispose() {
         this.onStatusChangedEvent.fire('dead');
+        this.statusChanged.emit('dead');
         this._disposed.fire();
-        this.didShutdown.fire();
+        // this.didShutdown.fire();
         this.disposed.emit();
 
         disposeAllDisposables(this.disposables);
@@ -146,6 +147,9 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
     }
 
     protected initializeKernelSocket() {
+        if (!this.session.kernel) {
+            throw new Error('Kernel not initialized in Session');
+        }
         this.previousAnyMessageHandler?.dispose();
         this.session.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
 
@@ -176,17 +180,15 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
             });
         }
         // If we have a new session, then emit the new kernel connection information.
-        if (this.session.kernel) {
-            this._kernelSocket.next({
-                options: {
-                    clientId: this.session.kernel.clientId,
-                    id: this.session.kernel.id,
-                    model: { ...this.session.kernel.model },
-                    userName: this.session.kernel.username
-                },
-                socket: this.session.kernelSocketInformation.socket
-            });
-        }
+        this._kernelSocket.next({
+            options: {
+                clientId: this.session.kernel.clientId,
+                id: this.session.kernel.id,
+                model: { ...this.session.kernel.model },
+                userName: this.session.kernel.username
+            },
+            socket: this.session.kernelSocketInformation.socket
+        });
     }
 
     private onPropertyChanged(_: unknown, value: 'path' | 'name' | 'type') {
