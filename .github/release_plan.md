@@ -1,3 +1,5 @@
+* [Endgame Template](https://github.com/microsoft/vscode-jupyter/blob/main/.github/release_plan.md)
+
 # Get the build green (Early in endgame week)
 
 - [ ] Ensure that any CI test failures have issues assigned to that area's owner.
