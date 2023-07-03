@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import { Signal } from '@lumino/signaling';
 import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
@@ -29,6 +30,8 @@ import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { isTestExecution } from '../../platform/common/constants';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
+import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
+import { IChangedArgs } from '@jupyterlab/coreutils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function suppressShutdownErrors(realKernel: any) {
@@ -79,6 +82,52 @@ export class JupyterSessionStartError extends WrappedError {
 export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
     implements IBaseKernelSession<T>
 {
+    public get path() {
+        return this.session?.path || '';
+    }
+    public get name() {
+        return this.session?.name || '';
+    }
+    public get type() {
+        return this.session?.type || '';
+    }
+    public get serverSettings() {
+        if (!this.session?.serverSettings) {
+            throw new SessionDisposedError();
+        }
+        return this.session.serverSettings;
+    }
+    public get model() {
+        if (!this.session?.serverSettings) {
+            throw new SessionDisposedError();
+        }
+        return this.session.model;
+    }
+    public readonly propertyChanged = new Signal<this, 'path' | 'name' | 'type'>(this);
+    kernelChanged = new Signal<
+        this,
+        IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
+    >(this);
+    statusChanged = new Signal<this, Kernel.Status>(this);
+    /**
+     * The kernel connectionStatusChanged signal, proxied from the current
+     * kernel.
+     */
+    connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
+    /**
+     * The kernel iopubMessage signal, proxied from the current kernel.
+     */
+    iopubMessage = new Signal<this, KernelMessage.IIOPubMessage>(this);
+    /**
+     * The kernel unhandledMessage signal, proxied from the current kernel.
+     */
+    unhandledMessage = new Signal<this, KernelMessage.IMessage>(this);
+    /**
+     * The kernel anyMessage signal, proxied from the current kernel.
+     */
+    anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
+    disposed = new Signal<this, void>(this);
+
     /**
      * Keep a single instance of KernelConnectionWrapper.
      * This way when sessions change, we still have a single Kernel.IKernelConnection proxy (wrapper),
@@ -90,7 +139,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     private readonly _disposed = new EventEmitter<void>();
     private readonly didShutdown = new EventEmitter<void>();
     protected readonly disposables: IDisposable[] = [];
-    public get disposed() {
+    public get isDisposed() {
         return this._isDisposed === true;
     }
     public get onDidDispose() {
@@ -103,17 +152,17 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         return this._session;
     }
     public get id() {
-        return this.session?.id;
+        return this.session?.id || '';
     }
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
+    public get kernelId(): string | undefined {
+        return this.session?.kernel?.id;
     }
-    public get kernel(): Kernel.IKernelConnection | undefined {
+    public get kernel(): Kernel.IKernelConnection | null {
         if (this._wrappedKernel) {
             return this._wrappedKernel;
         }
         if (!this._session?.kernel) {
-            return;
+            return null;
         }
         this._wrappedKernel = new KernelConnectionWrapper(this._session.kernel, this.disposables);
         return this._wrappedKernel;
@@ -153,6 +202,59 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
             traceWarning(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
+    private onPropertyChanged(_: unknown, value: 'path' | 'name' | 'type') {
+        this.propertyChanged.emit(value);
+    }
+    private onKernelChanged(
+        _: unknown,
+        value: IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
+    ) {
+        this.kernelChanged.emit(value);
+    }
+    private onStatusChanged(_: unknown, value: Kernel.Status) {
+        const status = this.getServerStatus();
+        traceInfoIfCI(`Server Status = ${status}`);
+        this.onStatusChangedEvent.fire(status);
+        this.statusChanged.emit(value);
+    }
+    private onConnectionStatusChanged(_: unknown, value: Kernel.ConnectionStatus) {
+        this.connectionStatusChanged.emit(value);
+    }
+    private onIOPubMessage(_: unknown, value: KernelMessage.IIOPubMessage) {
+        this.iopubMessage.emit(value);
+    }
+    private onUnhandledMessage(_: unknown, value: KernelMessage.IMessage) {
+        traceWarning(`Unhandled message found: ${value.header.msg_type}`);
+        this.unhandledMessage.emit(value);
+    }
+    private onAnyMessage(_: unknown, value: Kernel.IAnyMessageArgs) {
+        this.anyMessage.emit(value);
+    }
+    public setPath(value: string) {
+        if (!this.session) {
+            throw new SessionDisposedError();
+        }
+        return this.session.setPath(value);
+    }
+    public setName(value: string) {
+        if (!this.session) {
+            throw new SessionDisposedError();
+        }
+        return this.session.setName(value);
+    }
+    public setType(value: string) {
+        if (!this.session) {
+            throw new SessionDisposedError();
+        }
+        return this.session.setType(value);
+    }
+    public changeKernel(options: Partial<Kernel.IModel>) {
+        if (!this.session) {
+            throw new SessionDisposedError();
+        }
+        return this.session.changeKernel(options);
+    }
+
     public async dispose(): Promise<void> {
         await this.shutdownImplementation(false);
     }
@@ -306,9 +408,24 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
                 oldSession.statusChanged.disconnect(this.statusHandler);
                 oldSession.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
             }
+
+            oldSession.propertyChanged.disconnect(this.onPropertyChanged, this);
+            oldSession.kernelChanged.disconnect(this.onKernelChanged, this);
+            oldSession.connectionStatusChanged.disconnect(this.onConnectionStatusChanged, this);
+            oldSession.iopubMessage.disconnect(this.onIOPubMessage, this);
+            oldSession.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+            oldSession.anyMessage.disconnect(this.onAnyMessage, this);
         }
         this._session = session;
         if (session) {
+            session.propertyChanged.connect(this.onPropertyChanged, this);
+            session.kernelChanged.connect(this.onKernelChanged, this);
+            session.statusChanged.connect(this.onStatusChanged, this);
+            session.connectionStatusChanged.connect(this.onConnectionStatusChanged, this);
+            session.iopubMessage.connect(this.onIOPubMessage, this);
+            session.unhandledMessage.connect(this.onUnhandledMessage, this);
+            session.anyMessage.connect(this.onAnyMessage, this);
+
             if (session.kernel && this._wrappedKernel) {
                 this._wrappedKernel.changeKernel(session.kernel);
             }
@@ -452,7 +569,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         return true;
     }
     private getServerStatus(): KernelMessage.Status {
-        if (this.disposed) {
+        if (this.isDisposed) {
             return 'dead';
         }
         if (this.session?.kernel) {
@@ -472,10 +589,5 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
             const status = this.getServerStatus();
             this.onStatusChangedEvent.fire(status);
         }
-    }
-    private onStatusChanged(_s: Session.ISessionConnection) {
-        const status = this.getServerStatus();
-        traceInfoIfCI(`Server Status = ${status}`);
-        this.onStatusChangedEvent.fire(status);
     }
 }

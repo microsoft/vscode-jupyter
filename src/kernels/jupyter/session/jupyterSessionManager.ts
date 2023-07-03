@@ -23,7 +23,7 @@ import { SessionDisposedError } from '../../../platform/errors/sessionDisposedEr
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
-import { JupyterSession, OldJupyterSession } from './jupyterSession';
+import { OldJupyterSession } from './jupyterSession';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import {
     IJupyterSessionManager,
@@ -320,13 +320,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export class NewJupyterSessionManager implements IJupyterSessionManager {
-    private sessionManager: SessionManager | undefined;
-    private specsManager: KernelSpecManager | undefined;
-    private kernelManager: KernelManager | undefined;
-    private contentsManager: ContentsManager | undefined;
-    private connInfo: IJupyterConnection | undefined;
-    private serverSettings: ServerConnection.ISettings | undefined;
+export class JupyterLabHelper {
+    public sessionManager: SessionManager;
+    public kernelSpecManager: KernelSpecManager;
+    public kernelManager: KernelManager;
+    public contentsManager: ContentsManager;
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private disposed?: boolean;
     public get isDisposed() {
@@ -340,25 +338,28 @@ export class NewJupyterSessionManager implements IJupyterSessionManager {
         return this._jupyterlab!;
     }
     constructor(
-        _config: IConfigurationService,
-        private configService: IConfigurationService,
-        private readonly kernelService: IJupyterKernelService | undefined,
-        private readonly backingFileCreator: IJupyterBackingFileCreator,
-        private readonly requestCreator: IJupyterRequestCreator,
-        private readonly jupyterConnection: JupyterConnection
-    ) {}
+        private readonly connInfo: IJupyterConnection,
+        private readonly serverSettings: ServerConnection.ISettings
+    ) {
+        this.kernelSpecManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
+        this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
+        this.sessionManager = new this.jupyterlab.SessionManager({
+            serverSettings: this.serverSettings,
+            kernelManager: this.kernelManager
+        });
+        this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
+    }
 
     public async dispose() {
         if (this.disposed) {
             return;
         }
         this.disposed = true;
-        traceVerbose(`Disposing session manager`);
+        traceVerbose(`Disposing Jupyter Lab Helper`);
         try {
             if (this.contentsManager) {
                 traceVerbose('SessionManager - dispose contents manager');
                 this.contentsManager.dispose();
-                this.contentsManager = undefined;
             }
             if (this.sessionManager && !this.sessionManager.isDisposed) {
                 traceVerbose('ShutdownSessionAndConnection - dispose session manager');
@@ -367,32 +368,18 @@ export class NewJupyterSessionManager implements IJupyterSessionManager {
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
-                this.sessionManager = undefined;
             }
             if (!this.kernelManager?.isDisposed) {
                 this.kernelManager?.dispose();
             }
-            if (!this.specsManager?.isDisposed) {
-                this.specsManager?.dispose();
-                this.specsManager = undefined;
+            if (!this.kernelSpecManager?.isDisposed) {
+                this.kernelSpecManager?.dispose();
             }
         } catch (e) {
-            traceError(`Exception on session manager shutdown: `, e);
+            traceError(`Exception on Jupyter Lab Helper shutdown: `, e);
         } finally {
-            traceVerbose('Finished disposing jupyter session manager');
+            traceVerbose('Finished disposing Jupyter Lab Helper');
         }
-    }
-
-    public async initialize(connInfo: IJupyterConnection): Promise<void> {
-        this.connInfo = connInfo;
-        this.serverSettings = await this.jupyterConnection.getServerConnectSettings(connInfo);
-        this.specsManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
-        this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
-        this.sessionManager = new this.jupyterlab.SessionManager({
-            serverSettings: this.serverSettings,
-            kernelManager: this.kernelManager
-        });
-        this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
     }
 
     public async getRunningSessions(): Promise<Session.IModel[]> {
@@ -439,58 +426,17 @@ export class NewJupyterSessionManager implements IJupyterSessionManager {
             });
     }
 
-    public async startNew(
-        resource: Resource,
-        kernelConnection: KernelConnectionMetadata,
-        workingDirectory: Uri,
-        ui: IDisplayOptions,
-        cancelToken: CancellationToken,
-        creator: KernelActionSource
-    ): Promise<JupyterSession> {
-        if (
-            !this.connInfo ||
-            !this.sessionManager ||
-            !this.contentsManager ||
-            !this.serverSettings ||
-            !this.specsManager
-        ) {
-            throw new SessionDisposedError();
-        }
-        // Create a new session and attempt to connect to it
-        const session = new JupyterSession(
-            resource,
-            this.connInfo,
-            kernelConnection,
-            this.specsManager,
-            this.sessionManager,
-            this.contentsManager,
-            workingDirectory,
-            this.configService.getSettings(resource).jupyterLaunchTimeout,
-            this.kernelService,
-            this.backingFileCreator,
-            this.requestCreator,
-            creator
-        );
-        try {
-            await session.connect({ token: cancelToken, ui });
-        } catch (ex) {
-            await session.dispose();
-            throw ex;
-        }
-        return session;
-    }
-
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager) {
             throw new SessionDisposedError();
         }
         try {
             const stopWatch = new StopWatch();
-            const specsManager = this.specsManager;
+            const specsManager = this.kernelSpecManager;
             if (!specsManager) {
                 traceError(
                     `No SessionManager to enumerate kernelspecs (no specs manager). Returning a default kernel. Specs ${JSON.stringify(
-                        this.specsManager?.specs?.kernelspecs || {}
+                        this.kernelSpecManager?.specs?.kernelspecs || {}
                     )}.`
                 );
                 sendTelemetryEvent(Telemetry.JupyterKernelSpecEnumeration, undefined, {
@@ -573,7 +519,7 @@ export class NewJupyterSessionManager implements IJupyterSessionManager {
                 return specs;
             } else {
                 traceError(
-                    `SessionManager cannot enumerate kernelspecs. Returning a default kernel. Specs ${JSON.stringify(
+                    `Jupyter Lab Helper cannot enumerate kernelspecs. Returning a default kernel. Specs ${JSON.stringify(
                         kernelspecs
                     )}.`
                 );
@@ -588,7 +534,7 @@ export class NewJupyterSessionManager implements IJupyterSessionManager {
                 return [await createInterpreterKernelSpec()];
             }
         } catch (e) {
-            traceError(`SessionManager:getKernelSpecs failure: `, e);
+            traceError(`Jupyter Lab Helper:getKernelSpecs failure: `, e);
             // For some reason this is failing. Just return nothing
             return [];
         }

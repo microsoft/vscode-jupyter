@@ -7,15 +7,16 @@ import cloneDeep from 'lodash/cloneDeep';
 import uuid from 'uuid/v4';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { getNameOfKernelConnection, isUserRegisteredKernelSpecConnection } from '../../../kernels/helpers';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';
-import { IKernelSocket } from '../../types';
+import { IKernelSocket, LocalKernelConnectionMetadata } from '../../types';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 import { Signal } from '@lumino/signaling';
 import type { IIOPubMessage, IMessage, IOPubMessageType, MessageType } from '@jupyterlab/services/lib/kernel/messages';
+import { ChainingExecuteRequester } from '../../common/chainingExecuteRequester';
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
@@ -311,4 +312,288 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
 
     // Use this real kernel in result.
     return new OldRawKernel(realKernel, socketInstance, kernelProcess);
+}
+
+/*
+RawKernel class represents the mapping from the JupyterLab services IKernel interface
+to a raw IPython kernel running on the local machine. RawKernel is in charge of taking
+input request, translating them, sending them to an IPython kernel over ZMQ, then passing back the messages
+*/
+export class RawKernelConnection implements Kernel.IKernelConnection {
+    private chainingExecute = new ChainingExecuteRequester();
+    public readonly statusChanged = new Signal<this, Kernel.Status>(this);
+    public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);
+    public readonly iopubMessage = new Signal<this, IIOPubMessage<IOPubMessageType>>(this);
+    public readonly unhandledMessage = new Signal<this, IMessage<MessageType>>(this);
+    public readonly anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
+    public readonly disposed = new Signal<this, void>(this);
+    public get connectionStatus() {
+        return this.realKernel.connectionStatus;
+    }
+    public get serverSettings(): ServerConnection.ISettings {
+        return this.realKernel.serverSettings;
+    }
+    public get id(): string {
+        return this.realKernel.id;
+    }
+    public get name(): string {
+        return this.realKernel.name;
+    }
+    public get model(): Kernel.IModel {
+        return this.realKernel.model;
+    }
+    public get username(): string {
+        return this.realKernel.username;
+    }
+    public get clientId(): string {
+        return this.realKernel.clientId;
+    }
+    private isRestarting?: boolean;
+    private isShuttingDown?: boolean;
+    private hasShutdown?: boolean;
+    public get status(): KernelMessage.Status {
+        if (this.isDisposed || this.hasShutdown) {
+            return 'dead';
+        }
+        if (this.isRestarting) {
+            return 'restarting';
+        }
+        if (this.isShuttingDown) {
+            return 'terminating';
+        }
+        return this.realKernel.status;
+    }
+    public get info() {
+        return this.realKernel.info;
+    }
+    public get handleComms(): boolean {
+        return this.realKernel.handleComms;
+    }
+    private _isDisposed?: boolean;
+    public get isDisposed(): boolean {
+        return this._isDisposed || this.realKernel.isDisposed;
+    }
+    constructor(
+        private realKernel: Kernel.IKernelConnection,
+        private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata,
+        public socket: IKernelSocket & IWebSocketLike & IDisposable,
+        private kernelProcess: { dispose: () => Promise<void>; interrupt: () => Promise<void>; canInterrupt: boolean },
+        private readonly restartCallback: () => Promise<{
+            realKernel: Kernel.IKernelConnection;
+            socket: IKernelSocket & IWebSocketLike & IDisposable;
+            kernelProcess: { dispose: () => Promise<void>; interrupt: () => Promise<void>; canInterrupt: boolean };
+        }>
+    ) {
+        this.startHandleKernelMessages();
+        // Pretend like an open occurred. This will prime the real kernel to be connected
+        socket.emit('open');
+    }
+    public createComm(targetName: string, commId?: string): Kernel.IComm {
+        return this.realKernel.createComm(targetName, commId);
+    }
+    public hasComm(commId: string): boolean {
+        return this.realKernel.hasComm(commId);
+    }
+    public clone(
+        _options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>
+    ): Kernel.IKernelConnection {
+        return this;
+    }
+    public dispose(): void {
+        this.shutdown().finally(() => {
+            this._isDisposed = true;
+            this.disposed.emit();
+        });
+    }
+
+    public async shutdown(): Promise<void> {
+        this.isShuttingDown = true;
+        suppressShutdownErrors(this.realKernel);
+        await this.kernelProcess.dispose().catch(noop);
+        this.socket.dispose();
+        this.stopHandlingKernelMessages();
+        this.isShuttingDown = false;
+        this.hasShutdown = true;
+    }
+    public get spec(): Promise<KernelSpec.ISpecModel | undefined> {
+        if (isUserRegisteredKernelSpecConnection(this.kernelConnectionMetadata)) {
+            const kernelSpec = cloneDeep(this.kernelConnectionMetadata.kernelSpec) as any;
+            const resources = 'resources' in kernelSpec ? kernelSpec.resources : {};
+            return {
+                ...kernelSpec,
+                resources
+            };
+        }
+        traceError('Fetching kernel spec from raw kernel using JLab API');
+        return this.realKernel.spec;
+    }
+    public sendShellMessage<T extends KernelMessage.ShellMessageType>(
+        msg: KernelMessage.IShellMessage<T>,
+        expectReply?: boolean,
+        disposeOnDone?: boolean
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<T>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        return this.realKernel.sendShellMessage(msg, expectReply, disposeOnDone);
+    }
+    public sendControlMessage<T extends KernelMessage.ControlMessageType>(
+        msg: KernelMessage.IControlMessage<T>,
+        expectReply?: boolean,
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<
+        KernelMessage.IControlMessage<T>,
+        KernelMessage.IControlMessage<KernelMessage.ControlMessageType>
+    > {
+        return this.realKernel.sendControlMessage(msg, expectReply, disposeOnDone);
+    }
+    public reconnect(): Promise<void> {
+        throw new Error('Reconnect is not supported for Local Kernels as connections cannot be lost.');
+    }
+    public async interrupt(): Promise<void> {
+        // Send a kernel interrupt request to the real process only for our python kernels.
+
+        // Send this directly to our kernel process. Don't send it through the real kernel. The
+        // real kernel will send a goofy API request to the websocket.
+        if (this.kernelProcess.canInterrupt) {
+            return this.kernelProcess.interrupt();
+        } else if (this.kernelConnectionMetadata.kernelSpec.interrupt_mode === 'message') {
+            traceInfo(`Interrupting kernel with a shell message`);
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+            const msg = jupyterLab.KernelMessage.createMessage({
+                msgType: 'interrupt_request' as any,
+                channel: 'shell',
+                username: this.realKernel.username,
+                session: this.realKernel.clientId,
+                content: {}
+            }) as any as KernelMessage.IShellMessage<'inspect_request'>;
+            await this.realKernel
+                .sendShellMessage<'interrupt_request'>(msg as any, true, true)
+                .done.catch((ex) => traceError('Failed to interrupt via a message', ex));
+        } else {
+            traceError('Kernel interrupt not supported');
+        }
+    }
+    public async restart(): Promise<void> {
+        this.stopHandlingKernelMessages();
+        this.isRestarting = true;
+        try {
+            this.statusChanged.emit('restarting');
+            const { kernelProcess, realKernel, socket } = await this.restartCallback();
+            this.kernelProcess = kernelProcess;
+            this.socket = socket;
+            this.realKernel = realKernel;
+            this.startHandleKernelMessages();
+            this.statusChanged.emit(this.realKernel.status);
+        } finally {
+            this.isRestarting = false;
+        }
+    }
+    public requestKernelInfo() {
+        return this.realKernel.requestKernelInfo();
+    }
+    public requestComplete(content: { code: string; cursor_pos: number }): Promise<KernelMessage.ICompleteReplyMsg> {
+        return this.realKernel.requestComplete(content);
+    }
+    public requestInspect(content: {
+        code: string;
+        cursor_pos: number;
+        detail_level: 0 | 1;
+    }): Promise<KernelMessage.IInspectReplyMsg> {
+        return this.realKernel.requestInspect(content);
+    }
+    public requestHistory(
+        content:
+            | KernelMessage.IHistoryRequestRange
+            | KernelMessage.IHistoryRequestSearch
+            | KernelMessage.IHistoryRequestTail
+    ): Promise<KernelMessage.IHistoryReplyMsg> {
+        return this.realKernel.requestHistory(content);
+    }
+    public requestExecute(
+        content: {
+            code: string;
+            silent?: boolean;
+            store_history?: boolean;
+            user_expressions?: import('@lumino/coreutils').JSONObject;
+            allow_stdin?: boolean;
+            stop_on_error?: boolean;
+        },
+        disposeOnDone?: boolean,
+        metadata?: import('@lumino/coreutils').JSONObject
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+        return this.chainingExecute.requestExecute(this.realKernel, content, disposeOnDone, metadata);
+    }
+    public requestDebug(
+        // eslint-disable-next-line no-caller,no-eval
+        content: { seq: number; type: 'request'; command: string; arguments?: any },
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
+        return this.realKernel.requestDebug(content, disposeOnDone);
+    }
+    public requestIsComplete(content: { code: string }): Promise<KernelMessage.IIsCompleteReplyMsg> {
+        return this.realKernel.requestIsComplete(content);
+    }
+    public requestCommInfo(content: {
+        target_name?: string;
+        target?: string;
+    }): Promise<KernelMessage.ICommInfoReplyMsg> {
+        return this.realKernel.requestCommInfo(content);
+    }
+    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
+        return this.realKernel.sendInputReply(content);
+    }
+    public registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ): void {
+        return this.realKernel.registerCommTarget(targetName, callback);
+    }
+    public removeCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ): void {
+        return this.realKernel.removeCommTarget(targetName, callback);
+    }
+    public registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        this.realKernel.registerMessageHook(msgId, hook);
+    }
+    public removeMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        this.realKernel.removeMessageHook(msgId, hook);
+    }
+    private startHandleKernelMessages() {
+        this.realKernel.anyMessage.connect(this.onAnyMessage, this);
+        this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
+        this.realKernel.unhandledMessage.connect(this.onUnhandledMessage, this);
+        this.realKernel.statusChanged.connect(this.onStatusChanged, this);
+        this.realKernel.disposed.connect(this.onDisposed, this);
+    }
+    private stopHandlingKernelMessages() {
+        this.realKernel.anyMessage.disconnect(this.onAnyMessage, this);
+        this.realKernel.iopubMessage.disconnect(this.onIOPubMessage, this);
+        this.realKernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+        this.realKernel.statusChanged.disconnect(this.onStatusChanged, this);
+        this.realKernel.disposed.disconnect(this.onDisposed, this);
+    }
+    private onAnyMessage(_connection: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {
+        this.anyMessage.emit(msg);
+    }
+    private onIOPubMessage(_connection: Kernel.IKernelConnection, msg: IIOPubMessage) {
+        this.iopubMessage.emit(msg);
+    }
+    private onUnhandledMessage(_connection: Kernel.IKernelConnection, msg: IMessage<MessageType>) {
+        this.unhandledMessage.emit(msg);
+    }
+    private onStatusChanged(_connection: Kernel.IKernelConnection, msg: Kernel.Status) {
+        this.statusChanged.emit(msg);
+    }
+    private onDisposed(_connection: Kernel.IKernelConnection) {
+        this.disposed.emit();
+    }
 }

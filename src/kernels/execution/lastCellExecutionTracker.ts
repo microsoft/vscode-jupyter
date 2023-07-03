@@ -132,9 +132,9 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             if (!kernel?.session?.kernel) {
                 return;
             }
-            kernel.session.kernel.anyMessage.connect(anyMessageHandler);
+            kernel.session.anyMessage.connect(anyMessageHandler);
             disposable = new Disposable(() =>
-                swallowExceptions(() => kernel.session?.kernel?.anyMessage?.disconnect(anyMessageHandler))
+                swallowExceptions(() => kernel.session?.anyMessage?.disconnect(anyMessageHandler))
             );
             disposables.push(disposable);
         };

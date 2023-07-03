@@ -12,12 +12,12 @@ import { KernelProgressReporter } from '../../platform/progress/kernelProgressRe
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { IDisposable, Resource } from '../../platform/common/types';
-import { ISessionWithSocket, KernelConnectionMetadata } from '../types';
+import { INewSessionWithSocket, KernelConnectionMetadata } from '../types';
 
 export async function waitForIdleOnSession(
     kernelConnectionMetadata: KernelConnectionMetadata,
     resource: Resource,
-    session: ISessionWithSocket | undefined,
+    session: INewSessionWithSocket | undefined,
     timeout: number,
     token?: CancellationToken,
     isRestartSession?: boolean

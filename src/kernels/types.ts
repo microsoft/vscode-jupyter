@@ -559,13 +559,15 @@ export enum InterruptResult {
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
-export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'> extends IAsyncDisposable {
-    readonly id?: string;
+export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
+    extends IAsyncDisposable,
+        Omit<Session.ISessionConnection, 'dispose'> {
+    readonly id: string;
     readonly kind: T;
-    readonly disposed: boolean;
-    readonly kernel?: Kernel.IKernelConnection;
+    readonly isDisposed: boolean;
+    readonly kernel: Kernel.IKernelConnection | null;
     readonly status: KernelMessage.Status;
-    readonly kernelId: string;
+    readonly kernelId?: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
@@ -593,6 +595,10 @@ export type ISessionWithSocket = Session.ISessionConnection & {
      */
     kernelSocketInformation: KernelSocketInformation;
     kernelConnectionMetadata: KernelConnectionMetadata;
+};
+
+export type INewSessionWithSocket = Session.ISessionConnection & {
+    kernelSocketInformation: KernelSocketInformation;
 };
 
 export interface IJupyterKernelSpec {
@@ -678,6 +684,20 @@ export type KernelSessionCreationOptions = {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
+    token: CancellationToken;
+    creator: KernelActionSource;
+};
+export type RemoteKernelSessionCreationOptions = {
+    resource: Resource;
+    ui: IDisplayOptions;
+    kernelConnection: KernelConnectionMetadata;
+    token: CancellationToken;
+    creator: KernelActionSource;
+};
+export type LocaLKernelSessionCreationOptions = {
+    resource: Resource;
+    ui: IDisplayOptions;
+    kernelConnection: LocalKernelConnectionMetadata;
     token: CancellationToken;
     creator: KernelActionSource;
 };
