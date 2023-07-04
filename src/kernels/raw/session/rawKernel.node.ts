@@ -421,7 +421,8 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             const oldKernelProcess = this.kernelProcess;
             this.kernelProcess = undefined;
             oldKernelProcess?.dispose()?.catch(noop);
-
+            swallowExceptions(() => this.socket?.dispose());
+            swallowExceptions(() => this.realKernel?.dispose());
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
             const kernelProcess = (this.kernelProcess = await KernelProgressReporter.wrapAndReportProgress(
