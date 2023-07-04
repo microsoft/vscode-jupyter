@@ -409,10 +409,8 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         try {
             this.statusChanged.emit('restarting');
             await this.start(this.restartToken.token);
-            this.statusChanged.emit(this.status);
         } finally {
             this.restartToken.dispose();
-            this.isRestarting = false;
         }
     }
     public async start(token: CancellationToken): Promise<void> {
@@ -440,13 +438,11 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
             this.socket = result.socket;
-            console.error('Started1');
             this.socket.emit('open');
             result.realKernel.info.then(
                 (info) => this.infoDeferred.resolve(info),
                 (ex) => this.infoDeferred.reject(ex)
             );
-            console.error('Started');
             await KernelProgressReporter.wrapAndReportProgress(
                 this.resource,
                 DataScience.waitingForJupyterSessionToBeIdle,
@@ -460,6 +456,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                     )
             );
             this.startHandleKernelMessages();
+            this.isRestarting = false;
             // Pretend like an open occurred. This will prime the real kernel to be connected
             this.statusChanged.emit(this.status);
         } catch (error) {
@@ -532,6 +529,8 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         this.stopHandlingKernelMessages();
         this.isShuttingDown = false;
         this.hasShutdown = true;
+        this.statusChanged.emit(this.status);
+        this.connectionStatusChanged.emit('disconnected');
     }
     public createComm(targetName: string, commId?: string): Kernel.IComm {
         return this.realKernel!.createComm(targetName, commId);

@@ -362,13 +362,34 @@ export class RawSessionConnection implements INewSessionWithSocket {
             }
         };
     }
+    private isTerminating?: boolean;
     get status(): KernelMessage.Status {
+        if (this.isTerminating) {
+            return 'terminating';
+        }
         return this.kernel?.status ?? 'unknown';
     }
 
     isRemoteSession?: boolean | undefined;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
+    // Return the current kernel for this session
+    get kernel(): Kernel.IKernelConnection | null {
+        return this._kernel as Kernel.IKernelConnection | null;
+    }
+
+    get kernelSocketInformation(): KernelSocketInformation {
+        return {
+            socket: this._kernel.socket,
+            options: {
+                id: this._kernel.id,
+                clientId: this._kernel.clientId,
+                userName: this._kernel.username,
+                model: this._kernel.model
+            }
+        };
+    }
+
     constructor(
         private readonly resource: Resource,
         kernelLauncher: IKernelLauncher,
@@ -411,32 +432,17 @@ export class RawSessionConnection implements INewSessionWithSocket {
         // Now actually dispose ourselves
         await this.shutdown().catch(noop);
         this.isDisposed = true;
+        this.terminated.emit();
         this.disposed.emit();
         Signal.disconnectAll(this);
     }
-    // Return the current kernel for this session
-    get kernel(): Kernel.IKernelConnection | null {
-        return this._kernel as Kernel.IKernelConnection | null;
-    }
-
-    get kernelSocketInformation(): KernelSocketInformation {
-        return {
-            socket: this._kernel.socket,
-            options: {
-                id: this._kernel.id,
-                clientId: this._kernel.clientId,
-                userName: this._kernel.username,
-                model: this._kernel.model
-            }
-        };
-    }
-
     // Shutdown our session and kernel
     public async shutdown(): Promise<void> {
         if (this._didShutDownOnce) {
             return;
         }
         this._didShutDownOnce = true;
+        this.isTerminating = true;
         this.statusChanged.emit('terminating');
         try {
             this._kernel.statusChanged.disconnect(this.onKernelStatus, this);
@@ -452,6 +458,7 @@ export class RawSessionConnection implements INewSessionWithSocket {
             .shutdown()
             .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
         this._kernel.dispose();
+        this.isTerminating = false;
         this.statusChanged.emit('dead');
     }
 
