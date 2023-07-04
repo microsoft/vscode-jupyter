@@ -15,7 +15,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { createEventHandler } from '../../test/common';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 
-suite.only('Base Jupyter Session Connection', () => {
+suite('Base Jupyter Session Connection', () => {
     const disposables: IDisposable[] = [];
     let jupyterSession: BaseJupyterSessionConnection<INewSessionWithSocket, 'remoteJupyter'>;
     let session: INewSessionWithSocket;
