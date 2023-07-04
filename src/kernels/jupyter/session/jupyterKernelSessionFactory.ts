@@ -301,7 +301,9 @@ export class NewJupyterKernelSessionFactory implements IKernelSessionFactory {
                 sessionManager.dispose().catch(noop);
                 disposed.disconnect(onDidDisposeSession);
             };
-            this.asyncDisposables.push({ dispose: () => wrapperSession.disposeAsync() });
+            this.asyncDisposables.push({
+                dispose: () => wrapperSession.shutdown().finally(() => wrapperSession.dispose())
+            });
             session.disposed.connect(onDidDisposeSession);
             const disposable = wrapperSession.onDidDispose(onDidDisposeSession);
             this.asyncDisposables.push(disposable);

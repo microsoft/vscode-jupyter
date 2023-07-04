@@ -365,6 +365,9 @@ export class RawSessionConnection implements INewSessionWithSocket {
     }
     private isTerminating?: boolean;
     get status(): KernelMessage.Status {
+        if (this.isDisposed) {
+            return 'dead';
+        }
         if (this.isTerminating) {
             return 'terminating';
         }
@@ -424,20 +427,29 @@ export class RawSessionConnection implements INewSessionWithSocket {
     }
     public dispose() {
         this._isDisposing = true;
-        this.disposeAsync().catch(noop);
-    }
-    public async disposeAsync() {
-        this._isDisposing = true;
         // We want to know who called dispose on us
         const stacktrace = new Error().stack;
         sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
 
         // Now actually dispose ourselves
-        await this.shutdown().catch(noop);
-        this.isDisposed = true;
-        this.terminated.emit();
-        this.disposed.emit();
-        Signal.disconnectAll(this);
+        this.shutdown()
+            .catch(noop)
+            .finally(() => {
+                try {
+                    this._kernel.statusChanged.disconnect(this.onKernelStatus, this);
+                    this._kernel.iopubMessage.disconnect(this.onIOPubMessage, this);
+                    this._kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatus, this);
+                    this._kernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+                    this._kernel.anyMessage.disconnect(this.onAnyMessage, this);
+                    this._kernel.disposed.disconnect(this.onDisposed, this);
+                } catch {
+                    //
+                }
+                this._kernel.dispose();
+                this.isDisposed = true;
+                this.disposed.emit();
+                Signal.disconnectAll(this);
+            });
     }
     // Shutdown our session and kernel
     public async shutdown(): Promise<void> {
@@ -447,34 +459,20 @@ export class RawSessionConnection implements INewSessionWithSocket {
         this._didShutDownOnce = true;
         this.isTerminating = true;
         this.statusChanged.emit('terminating');
-        try {
-            this._kernel.statusChanged.disconnect(this.onKernelStatus, this);
-            this._kernel.iopubMessage.disconnect(this.onIOPubMessage, this);
-            this._kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatus, this);
-            this._kernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
-            this._kernel.anyMessage.disconnect(this.onAnyMessage, this);
-            this._kernel.disposed.disconnect(this.onDisposed, this);
-        } catch {
-            //
-        }
         await this._kernel
             .shutdown()
             .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
-        this._kernel.dispose();
         this.isTerminating = false;
-        this.statusChanged.emit('dead');
+        // Before triggering any status events ensure this is marked as disposed.
+        if (this._isDisposing) {
+            this.isDisposed = true;
+        }
+        this.terminated.emit();
+        this.statusChanged.emit(this.status);
     }
     private onKernelStatus(_sender: Kernel.IKernelConnection, state: KernelMessage.Status) {
         traceInfoIfCI(`RawSession status changed to ${state}`);
         this.statusChanged.emit(state);
-        if (
-            (this._kernel.status === 'dead' || this._kernel.status === 'terminating') &&
-            !this._isDisposing &&
-            !this._didShutDownOnce
-        ) {
-            // Kernel died, kill the session as well.
-            this.dispose();
-        }
     }
 
     public setPath(_path: string): Promise<void> {

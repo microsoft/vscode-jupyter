@@ -12,7 +12,6 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { IBaseKernelSession, INewSessionWithSocket, KernelSocketInformation } from '../types';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
-import { Deferred, createDeferred } from '../../platform/common/utils/async';
 
 export abstract class BaseJupyterSessionConnection<
     S extends INewSessionWithSocket,
@@ -136,29 +135,25 @@ export abstract class BaseJupyterSessionConnection<
 
     public abstract readonly status: KernelMessage.Status;
     protected previousAnyMessageHandler?: IDisposable;
-    private disposedPromise?: Deferred<void>;
     private disposeInvoked?: boolean;
     public async disposeAsync(): Promise<void> {
-        this.disposedPromise = this.disposedPromise || createDeferred<void>();
         this.dispose();
-        await this.disposedPromise!.promise;
     }
     public dispose() {
         if (this.disposeInvoked) {
             return;
         }
-        this.disposedPromise = this.disposedPromise || createDeferred<void>();
-        try {
-            this.onStatusChangedEvent.fire('dead');
-            this.statusChanged.emit('dead');
-            this._disposed.fire();
-            this.disposed.emit();
+        // onStatusChangedEvent is Deprecated, use statusChanged instead.
+        // Until we remove onStatusChangedEvent, leave this comment so we know why we're still leaving this event around but not firing it.
+        // Only fired in the old session classes.
+        // this.onStatusChangedEvent.fire('dead');
+        this.statusChanged.emit('dead');
+        this._disposed.fire();
+        this.disposed.emit();
+        this.previousAnyMessageHandler?.dispose();
 
-            disposeAllDisposables(this.disposables);
-            Signal.disconnectAll(this);
-        } finally {
-            this.disposedPromise.resolve();
-        }
+        disposeAllDisposables(this.disposables);
+        Signal.disconnectAll(this);
     }
     abstract shutdown(): Promise<void>;
     abstract waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
@@ -236,7 +231,12 @@ export abstract class BaseJupyterSessionConnection<
         this.statusChanged.emit(value);
         const status = this.status;
         traceInfoIfCI(`Server Status = ${status}`);
-        this.onStatusChangedEvent.fire(status);
+        if (status !== 'dead') {
+            // onStatusChangedEvent is Deprecated, use statusChanged instead.
+            // Until we remove onStatusChangedEvent, leave this comment so we know why we're still leaving this event around but not firing it.
+            // Only fired in the old session classes.
+            this.onStatusChangedEvent.fire(status);
+        }
     }
     private onConnectionStatusChanged(_: unknown, value: Kernel.ConnectionStatus) {
         this.connectionStatusChanged.emit(value);
@@ -266,7 +266,12 @@ export abstract class BaseJupyterSessionConnection<
     private onKernelConnectionStatusHandler(_: unknown, kernelConnection: Kernel.ConnectionStatus) {
         traceInfoIfCI(`Server Kernel Status = ${kernelConnection}`);
         if (kernelConnection === 'disconnected') {
-            this.onStatusChangedEvent.fire(this.status);
+            if (this.status !== 'dead') {
+                // onStatusChangedEvent is Deprecated, use statusChanged instead.
+                // Until we remove onStatusChangedEvent, leave this comment so we know why we're still leaving this event around but not firing it.
+                // Only fired in the old session classes.
+                this.onStatusChangedEvent.fire(this.status);
+            }
         }
     }
 }

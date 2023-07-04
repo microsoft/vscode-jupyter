@@ -568,6 +568,9 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly status: KernelMessage.Status;
     readonly kernelId?: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    /**
+     * @deprecated Use statusChanged instead.
+     */
     onSessionStatusChanged: Event<KernelMessage.Status>;
     disposeAsync(): Promise<void>;
     onDidDispose: Event<void>;

@@ -404,6 +404,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     }
     public async restart(): Promise<void> {
         this.stopHandlingKernelMessages();
+        this._isDisposed = false;
+        this.isShuttingDown = false;
+        this.hasShutdown = false;
         this.isRestarting = true;
         this.restartToken = new CancellationTokenSource();
         try {
@@ -502,7 +505,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 }
             );
 
-            this.dispose();
+            this.shutdown().catch(noop);
         }, this);
     }
     public dispose(): void {
@@ -529,6 +532,10 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         this.stopHandlingKernelMessages();
         this.isShuttingDown = false;
         this.hasShutdown = true;
+        // Before triggering any status events ensure this is marked as disposed.
+        if (this.isDisposing) {
+            this._isDisposed = true;
+        }
         this.statusChanged.emit(this.status);
         this.connectionStatusChanged.emit('disconnected');
     }

@@ -392,13 +392,17 @@ export class JupyterSessionWrapper
     public override dispose() {
         this.shutdownImplementation(false).catch(noop);
     }
+    public override async disposeAsync(): Promise<void> {
+        await this.shutdownImplementation(false).catch(noop);
+        await super.disposeAsync();
+    }
 
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         try {
             await waitForIdleOnSession(this.kernelConnectionMetadata, this.resource, this.session, timeout, token);
         } catch (ex) {
             traceInfoIfCI(`Error waiting for idle`, ex);
-            await this.disposeAsync().catch(noop);
+            await this.shutdown().catch(noop);
             throw ex;
         }
     }
@@ -448,7 +452,6 @@ export class JupyterSessionWrapper
             } catch (e) {
                 traceWarning('Failures in disposing the session', e);
             }
-            this.previousAnyMessageHandler?.dispose();
             super.dispose();
             traceVerbose('Shutdown session -- complete');
         } catch (e) {

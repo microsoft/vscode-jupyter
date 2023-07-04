@@ -71,27 +71,25 @@ suite('Raw Jupyter Session Wrapper', () => {
     });
 
     test('Shutdown', async () => {
-        when(session.disposeAsync()).thenResolve();
         when(session.dispose()).thenReturn();
         const statuses: (typeof sessionWrapper.status)[] = [];
         sessionWrapper.statusChanged.connect((_, s) => statuses.push(s));
 
         await sessionWrapper.shutdown();
 
-        verify(session.disposeAsync()).once();
-        verify(session.dispose()).once();
+        verify(session.shutdown()).once();
+        verify(session.dispose()).never();
         assert.strictEqual(sessionWrapper.status, 'dead');
         assert.deepEqual(statuses, ['terminating', 'dead']);
     });
     test('Dispose', async () => {
-        when(session.disposeAsync()).thenResolve();
         when(session.dispose()).thenReturn();
         const statuses: (typeof sessionWrapper.status)[] = [];
         sessionWrapper.statusChanged.connect((_, s) => statuses.push(s));
 
         await sessionWrapper.disposeAsync();
 
-        verify(session.disposeAsync()).once();
+        verify(session.shutdown()).once();
         verify(session.dispose()).once();
         assert.strictEqual(sessionWrapper.status, 'dead');
         assert.deepEqual(statuses, ['terminating', 'dead']);

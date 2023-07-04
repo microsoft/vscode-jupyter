@@ -173,7 +173,10 @@ suite('Raw Session & Raw Kernel Connection', () => {
         nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
         sinon.reset();
         disposeAllDisposables(disposables);
-        await session.disposeAsync().catch(noop);
+        await session
+            .shutdown()
+            .catch(noop)
+            .finally(() => session.dispose());
     });
     suite('After Start', async () => {
         setup(async () => {
@@ -188,7 +191,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             when(kernel.status).thenReturn('busy');
             assert.strictEqual(session.status, 'busy');
         });
-        test('Session Dies when the Kernel process dies', async () => {
+        test('Kernel Dies when the Kernel process dies', async () => {
             let statusOfKernel: Kernel.Status | undefined;
             let disposed = false;
             session.kernel!.statusChanged.connect((_, s) => (statusOfKernel = s));
@@ -196,33 +199,40 @@ suite('Raw Session & Raw Kernel Connection', () => {
 
             exitedEvent.fire({ exitCode: 1, reason: 'Killed' });
 
-            await waitForCondition(() => disposed && statusOfKernel === 'dead', 1_000, 'Session not terminated');
+            await waitForCondition(
+                () => !disposed && statusOfKernel === 'dead',
+                1_000,
+                () => `Kernel is not dead, Kernel Disposed = ${disposed} && Kernel Status = ${statusOfKernel}`
+            );
+            assert.strictEqual(session.status, 'dead');
+            assert.strictEqual(session.isDisposed, false);
+            assert.strictEqual(session.kernel?.isDisposed ?? false, false);
         });
         test('Dispose', async () => {
-            const statuses: Kernel.Status[] = [];
+            let statusOfKernel: Kernel.Status | undefined;
             let disposed = false;
-            session.statusChanged.connect((_, s) => statuses.push(s));
+            session.statusChanged.connect((_, s) => (statusOfKernel = s));
             session.disposed.connect(() => (disposed = true));
 
             session.dispose();
 
             await waitForCondition(
-                () => disposed && statuses.join(',') === 'terminating,dead' && session.status === 'dead',
+                () => disposed && statusOfKernel === 'dead' && session.status === 'dead',
                 1_000,
-                () => `Session not terminated, Statuses = ${statuses.join(',')} and current status = ${session.status}`
+                () => `Session not terminated, Status = ${statusOfKernel} and current status = ${session.status}`
             );
             verify(kernelProcess.dispose()).once();
         });
         test('Shutdown', async () => {
-            const statuses: Kernel.Status[] = [];
+            let statusOfKernel: Kernel.Status | undefined;
             let disposed = false;
-            session.statusChanged.connect((_, s) => statuses.push(s));
+            session.statusChanged.connect((_, s) => (statusOfKernel = s));
             session.disposed.connect(() => (disposed = true));
 
             await session.shutdown();
 
             assert.strictEqual(session.status, 'dead');
-            assert.deepEqual(statuses, ['terminating', 'dead']);
+            assert.deepEqual(statusOfKernel, 'dead');
             assert.strictEqual(disposed, false);
             verify(kernelProcess.dispose()).once();
         });

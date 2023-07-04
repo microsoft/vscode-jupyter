@@ -141,7 +141,14 @@ export class NewRawKernelSessionFactory implements INewRawKernelSessionFactory {
         if (!this.disposed) {
             this.disposed = true;
             const notebooks = await Promise.all([...this.sessions.values()]);
-            await Promise.all(notebooks.map((session) => session.disposeAsync().catch(noop)));
+            await Promise.all(
+                notebooks.map((session) =>
+                    session
+                        .shutdown()
+                        .catch(noop)
+                        .finally(() => session.dispose())
+                )
+            );
         }
     }
 
@@ -185,9 +192,12 @@ export class NewRawKernelSessionFactory implements INewRawKernelSessionFactory {
             sessionPromise.resolve(rawSession);
         } catch (ex) {
             // Make sure we shut down our session in case we started a process
-            rawSession?.disposeAsync().catch((error) => {
-                traceError(`Failed to dispose of raw session on launch error: ${error} `);
-            });
+            rawSession
+                ?.shutdown()
+                .catch((error) => {
+                    traceError(`Failed to dispose of raw session on launch error: ${error} `);
+                })
+                .finally(() => rawSession?.dispose());
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
             sessionPromise.reject(ex);
