@@ -45,6 +45,7 @@ export class OldRawSession implements ISessionWithSocket {
     private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
     private readonly _terminated: Signal<this, void>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
+    private readonly _propertyChanged: ISignal<this, 'path' | 'name' | 'type'>;
     private readonly _unhandledMessage: Signal<this, KernelMessage.IMessage>;
     private readonly _anyMessage: Signal<this, Kernel.IAnyMessageArgs>;
     private readonly _disposed: Signal<this, void>;
@@ -71,6 +72,7 @@ export class OldRawSession implements ISessionWithSocket {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = (this.signaling = require('@lumino/signaling') as typeof import('@lumino/signaling'));
         this._statusChanged = new signaling.Signal<this, KernelMessage.Status>(this);
+        this._propertyChanged = new signaling.Signal<this, 'path' | 'name' | 'type'>(this);
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this._terminated = new signaling.Signal<this, void>(this);
@@ -203,7 +205,7 @@ export class OldRawSession implements ISessionWithSocket {
         return this._kernelChanged;
     }
     get propertyChanged(): ISignal<this, 'path' | 'name' | 'type'> {
-        throw new Error('Not yet implemented');
+        return this._propertyChanged;
     }
     get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessage;
