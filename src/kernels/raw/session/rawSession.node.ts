@@ -400,13 +400,16 @@ export class RawSessionConnection implements INewSessionWithSocket {
         await trackKernelResourceInformation(this.resource, { kernelConnection: this.kernelConnectionMetadata });
         await this._kernel.start(options.token);
     }
-    public async dispose() {
+    public dispose() {
+        this.disposeAsync().catch(noop);
+    }
+    public async disposeAsync() {
         // We want to know who called dispose on us
         const stacktrace = new Error().stack;
         sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
 
         // Now actually dispose ourselves
-        await this.shutdown();
+        await this.shutdown().catch(noop);
         this.isDisposed = true;
         this.disposed.emit();
         Signal.disconnectAll(this);

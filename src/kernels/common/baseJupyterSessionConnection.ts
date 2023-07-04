@@ -137,15 +137,17 @@ export abstract class BaseJupyterSessionConnection<
     public abstract readonly status: KernelMessage.Status;
     protected previousAnyMessageHandler?: IDisposable;
     private disposedPromise?: Deferred<void>;
+    private disposeInvoked?: boolean;
     public async disposeAsync(): Promise<void> {
+        this.disposedPromise = this.disposedPromise || createDeferred<void>();
         this.dispose();
         await this.disposedPromise!.promise;
     }
     public dispose() {
-        if (this.disposedPromise) {
+        if (this.disposeInvoked) {
             return;
         }
-        this.disposedPromise = createDeferred<void>();
+        this.disposedPromise = this.disposedPromise || createDeferred<void>();
         try {
             this.onStatusChangedEvent.fire('dead');
             this.statusChanged.emit('dead');

@@ -412,16 +412,11 @@ export class JupyterSessionWrapper
             return;
         }
         this._isDisposed = true;
+        traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
+        const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
+        traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
         try {
-            traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
-            const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
-            traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
-            try {
-                if (!shutdownEvenIfRemote && !this.canShutdownSession()) {
-                    traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
-                    this.session.dispose();
-                    return;
-                }
+            if (shutdownEvenIfRemote || this.canShutdownSession()) {
                 try {
                     traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
                     suppressShutdownErrors(this.session.kernel);
@@ -430,26 +425,36 @@ export class JupyterSessionWrapper
                         await raceTimeout(1000, this.session.shutdown());
                     }
                 } catch {
-                    noop();
+                    // If session.shutdown didn't work, just dispose
+                    if (!this.session.isDisposed) {
+                        this.session.dispose();
+                    }
+                } finally {
+                    this.didShutdown.fire();
                 }
+            } else {
+                traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
+            }
+            try {
                 // If session.shutdown didn't work, just dispose
                 if (!this.session.isDisposed) {
                     this.session.dispose();
                 }
             } catch (e) {
-                // Ignore, just trace.
-                traceWarning(e);
+                traceWarning('Failures in disposing the session', e);
             }
-            traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
-        } catch {
-            noop();
+            this.previousAnyMessageHandler?.dispose();
+            super.dispose();
+            traceVerbose('Shutdown session -- complete');
+        } catch (e) {
+            traceWarning('Failures in disposing the session', e);
         }
-        this.didShutdown.fire();
-        this.previousAnyMessageHandler?.dispose();
-        super.dispose();
-        traceVerbose('Shutdown session -- complete');
+        traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
     }
     private canShutdownSession(): boolean {
+        if (isLocalConnection(this.kernelConnectionMetadata)) {
+            return true;
+        }
         // We can never shut down existing (live) kernels.
         if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
             return false;

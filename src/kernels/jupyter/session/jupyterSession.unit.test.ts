@@ -40,6 +40,7 @@ import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvali
 import { MockOutputChannel } from '../../../test/mockClasses';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { resolvableInstance } from '../../../test/datascience/helpers';
+import { createEventHandler } from '../../../test/common';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('Old JupyterSession', () => {
@@ -776,15 +777,58 @@ suite('JupyterSession', () => {
                 })
             );
 
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
+            // const onDidDispose = jupyterSession.
             when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.dispose();
+            await jupyterSession.disposeAsync();
 
             // Shutdown sessions started for Interactive window.
             verify(session.shutdown()).once();
             verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 1);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
+        });
+        test('New Remote sessions started with Interactive should be shutdown when disposing the session (without calling disposeAsync)', async () => {
+            createJupyterSession(
+                Uri.file('test.py'),
+                RemoteKernelSpecConnectionMetadata.create({
+                    id: '',
+                    kernelSpec: {} as any,
+                    baseUrl: '',
+                    serverId: ''
+                })
+            );
+
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
+            // const onDidDispose = jupyterSession.
+            when(connection.localLaunch).thenReturn(false);
+            when(session.shutdown()).thenResolve();
+            when(session.dispose()).thenReturn();
+
+            jupyterSession.dispose();
+            await onDidShutdown.assertFiredExactly(1, 100);
+            await onDidDispose.assertFiredExactly(1, 100);
+
+            // Shutdown sessions started for Interactive window.
+            verify(session.shutdown()).once();
+            verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 1);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
         });
         test('Existing Remote session connected with Interactive should not be shutdown when disposing the session', async () => {
             createJupyterSession(
@@ -797,15 +841,24 @@ suite('JupyterSession', () => {
                 })
             );
 
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
             when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.dispose();
+            await jupyterSession.disposeAsync();
 
             // Never shutdown live sessions connected from Interactive window.
             verify(session.shutdown()).never();
             verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 0);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
         });
         test('New Remote sessions started with Notebook should not be shutdown when disposing the session', async () => {
             createJupyterSession(
@@ -818,15 +871,24 @@ suite('JupyterSession', () => {
                 })
             );
 
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
             when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.dispose();
+            await jupyterSession.disposeAsync();
 
             // Never shutdown sessions started from Notebooks.
             verify(session.shutdown()).never();
             verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 0);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
         });
         test('Existing Remote session connected with Notebook should not be shutdown when disposing the session', async () => {
             createJupyterSession(
@@ -839,15 +901,24 @@ suite('JupyterSession', () => {
                 })
             );
 
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
             when(connection.localLaunch).thenReturn(false);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.dispose();
+            await jupyterSession.disposeAsync();
 
             // Never shutdown live sessions connected from Notebooks.
             verify(session.shutdown()).never();
             verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 0);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
         });
         test('Local sessions should be shutdown when disposing the session', async () => {
             createJupyterSession(
@@ -859,15 +930,24 @@ suite('JupyterSession', () => {
                 })
             );
 
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
             when(connection.localLaunch).thenReturn(true);
             when(session.shutdown()).thenResolve();
             when(session.dispose()).thenReturn();
 
-            await jupyterSession.dispose();
+            await jupyterSession.disposeAsync();
 
             // always kill the sessions.
             verify(session.shutdown()).once();
             verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 1);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
         });
     });
     suite(`Wait for session idle`, () => {

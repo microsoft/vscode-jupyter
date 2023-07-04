@@ -398,38 +398,26 @@ export class RawJupyterSessionWrapper
             return;
         }
         this._isDisposed = true;
+        const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata?.id}`;
+        traceVerbose(`Shutdown session ${kernelIdForLogging} - start called from ${new Error('').stack}`);
         try {
-            traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
-            const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata?.id}`;
-            traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
-            try {
-                try {
-                    traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata?.id}`);
-                    suppressShutdownErrors(this.session.kernel);
-                    // Shutdown may fail if the process has been killed
-                    if (!this.session.isDisposed) {
-                        await raceTimeout(1000, this.session.shutdown());
-                    }
-                } catch {
-                    noop();
-                }
-                // If session.shutdown didn't work, just dispose
-                if (!this.session.isDisposed) {
-                    await this.session.dispose().catch(noop);
-                }
-            } catch (e) {
-                // Ignore, just trace.
-                traceWarning(e);
+            suppressShutdownErrors(this.session.kernel);
+            // Shutdown may fail if the process has been killed
+            if (!this.session.isDisposed) {
+                await raceTimeout(1000, this.session.shutdown());
             }
-            traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
-            traceVerbose('Shutdown session - get restart session');
-        } catch {
-            noop();
+            // If session.shutdown didn't work, just dispose
+            if (!this.session.isDisposed) {
+                await this.session.disposeAsync().catch(noop);
+                this.session.dispose();
+            }
+        } catch (e) {
+            traceWarning('Failures in disposing the session', e);
         }
 
         this.didShutdown.fire();
         this.previousAnyMessageHandler?.dispose();
         super.dispose();
-        traceVerbose('Shutdown session -- complete');
+        traceVerbose(`Shutdown session ${kernelIdForLogging} - shutdown complete`);
     }
 }
