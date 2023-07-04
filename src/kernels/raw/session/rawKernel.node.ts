@@ -417,7 +417,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
     }
     public async start(token: CancellationToken): Promise<void> {
         try {
-            this.kernelProcess?.dispose()?.catch(noop);
+            const oldKernelProcess = this.kernelProcess;
+            this.kernelProcess = undefined;
+            oldKernelProcess?.dispose()?.catch(noop);
 
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
@@ -438,10 +440,13 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             this.kernelProcess = result.kernelProcess;
             this.realKernel = result.realKernel;
             this.socket = result.socket;
+            console.error('Started1');
+            this.socket.emit('open');
             result.realKernel.info.then(
                 (info) => this.infoDeferred.resolve(info),
                 (ex) => this.infoDeferred.reject(ex)
             );
+            console.error('Started');
             await KernelProgressReporter.wrapAndReportProgress(
                 this.resource,
                 DataScience.waitingForJupyterSessionToBeIdle,
@@ -456,7 +461,6 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             );
             this.startHandleKernelMessages();
             // Pretend like an open occurred. This will prime the real kernel to be connected
-            this.socket.emit('open');
             this.statusChanged.emit(this.status);
         } catch (error) {
             await Promise.all([
@@ -474,8 +478,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         }
     }
     private hookupKernelProcessExitHandler(kernelProcess: IKernelProcess) {
-        this.exitHandler?.dispose();
+        const oldExitHandler = this.exitHandler;
         this.exitHandler = undefined;
+        oldExitHandler?.dispose();
         this.exitHandler = kernelProcess.exited((e: { exitCode?: number | undefined; reason?: string | undefined }) => {
             if (
                 // We have a new process, and the old is being shutdown.
@@ -487,8 +492,6 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             ) {
                 return;
             }
-            this.exitHandler?.dispose();
-            this.exitHandler = undefined;
 
             traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
             // Send telemetry so we know why the kernel process exited,

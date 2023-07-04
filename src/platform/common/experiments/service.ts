@@ -102,6 +102,9 @@ export class ExperimentService implements IExperimentService {
             return false;
         }
 
+        if (experiment === ExperimentGroups.NewJupyterSession) {
+            return true;
+        }
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
         if (this._optOutFrom.includes(experiment.toString())) {

@@ -96,7 +96,7 @@ export abstract class BaseJupyterSessionConnection<
      */
     protected _wrappedKernel?: KernelConnectionWrapper;
     public get kernel(): Kernel.IKernelConnection | null {
-        if (!this.session.kernel) {
+        if (this.isDisposed || !this.session.kernel) {
             return null;
         }
         if (this._wrappedKernel?.originalKernel === this.session.kernel) {

@@ -422,12 +422,17 @@ export class JupyterSessionWrapper
                     suppressShutdownErrors(this.session.kernel);
                     // Shutdown may fail if the process has been killed
                     if (!this.session.isDisposed) {
-                        await raceTimeout(1000, this.session.shutdown());
+                        await raceTimeout(1000, this.session.shutdown().catch(noop));
                     }
                 } catch {
                     // If session.shutdown didn't work, just dispose
-                    if (!this.session.isDisposed) {
-                        this.session.dispose();
+                    try {
+                        // If session.shutdown didn't work, just dispose
+                        if (!this.session.isDisposed) {
+                            this.session.dispose();
+                        }
+                    } catch (e) {
+                        traceWarning('Failures in disposing the session', e);
                     }
                 } finally {
                     this.didShutdown.fire();
