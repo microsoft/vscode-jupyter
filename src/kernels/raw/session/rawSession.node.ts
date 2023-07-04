@@ -328,6 +328,7 @@ export class RawSessionConnection implements INewSessionWithSocket {
     private _jupyterLabServices?: typeof import('@jupyterlab/services');
     private cellExecutedSuccessfully?: boolean;
     private _didShutDownOnce = false;
+    private _isDisposing?: boolean;
     public get atleastOneCellExecutedSuccessfully() {
         return this.cellExecutedSuccessfully === true;
     }
@@ -422,9 +423,11 @@ export class RawSessionConnection implements INewSessionWithSocket {
         await this._kernel.start(options.token);
     }
     public dispose() {
+        this._isDisposing = true;
         this.disposeAsync().catch(noop);
     }
     public async disposeAsync() {
+        this._isDisposing = true;
         // We want to know who called dispose on us
         const stacktrace = new Error().stack;
         sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
@@ -461,6 +464,18 @@ export class RawSessionConnection implements INewSessionWithSocket {
         this.isTerminating = false;
         this.statusChanged.emit('dead');
     }
+    private onKernelStatus(_sender: Kernel.IKernelConnection, state: KernelMessage.Status) {
+        traceInfoIfCI(`RawSession status changed to ${state}`);
+        this.statusChanged.emit(state);
+        if (
+            (this._kernel.status === 'dead' || this._kernel.status === 'terminating') &&
+            !this._isDisposing &&
+            !this._didShutDownOnce
+        ) {
+            // Kernel died, kill the session as well.
+            this.dispose();
+        }
+    }
 
     public setPath(_path: string): Promise<void> {
         throw new Error('Not yet implemented');
@@ -477,10 +492,6 @@ export class RawSessionConnection implements INewSessionWithSocket {
 
     // Private
     // Send out a message when our kernel changes state
-    private onKernelStatus(_sender: Kernel.IKernelConnection, state: KernelMessage.Status) {
-        traceInfoIfCI(`RawSession status changed to ${state}`);
-        this.statusChanged.emit(state);
-    }
     private onIOPubMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IIOPubMessage) {
         if (
             !this.cellExecutedSuccessfully &&
