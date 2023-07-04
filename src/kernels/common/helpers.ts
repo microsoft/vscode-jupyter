@@ -17,18 +17,15 @@ import { INewSessionWithSocket, KernelConnectionMetadata } from '../types';
 export async function waitForIdleOnSession(
     kernelConnectionMetadata: KernelConnectionMetadata,
     resource: Resource,
-    session: INewSessionWithSocket | undefined,
+    session: INewSessionWithSocket,
     timeout: number,
-    token?: CancellationToken,
-    isRestartSession?: boolean
+    token: CancellationToken
 ): Promise<void> {
-    if (!session || !session.kernel) {
+    if (!session.kernel) {
         throw new JupyterInvalidKernelError(kernelConnectionMetadata);
     }
 
-    const progress = isRestartSession
-        ? undefined
-        : KernelProgressReporter.reportProgress(resource, DataScience.waitingForJupyterSessionToBeIdle);
+    const progress = KernelProgressReporter.reportProgress(resource, DataScience.waitingForJupyterSessionToBeIdle);
     const disposables: IDisposable[] = [];
     if (progress) {
         disposables.push(progress);
@@ -38,9 +35,7 @@ export async function waitForIdleOnSession(
 
         // When our kernel connects and gets a status message it triggers the ready promise
         const kernelStatus = createDeferred<string>();
-        if (token) {
-            token.onCancellationRequested(() => kernelStatus.reject(new CancellationError()), undefined, disposables);
-        }
+        token.onCancellationRequested(() => kernelStatus.reject(new CancellationError()), undefined, disposables);
         const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
             traceVerbose(`Got status ${status} in waitForIdleOnSession`);
             if (status == 'idle') {
