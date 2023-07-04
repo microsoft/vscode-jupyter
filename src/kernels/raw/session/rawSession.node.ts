@@ -431,20 +431,22 @@ export class RawSessionConnection implements INewSessionWithSocket {
         const stacktrace = new Error().stack;
         sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionDisposed, undefined, { stacktrace });
 
+        // Since we're disposing, we don't want to be notified of any more messages, hence this can be done early.
+        try {
+            this._kernel.statusChanged.disconnect(this.onKernelStatus, this);
+            this._kernel.iopubMessage.disconnect(this.onIOPubMessage, this);
+            this._kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatus, this);
+            this._kernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+            this._kernel.anyMessage.disconnect(this.onAnyMessage, this);
+            this._kernel.disposed.disconnect(this.onDisposed, this);
+        } catch {
+            //
+        }
+
         // Now actually dispose ourselves
         this.shutdown()
             .catch(noop)
             .finally(() => {
-                try {
-                    this._kernel.statusChanged.disconnect(this.onKernelStatus, this);
-                    this._kernel.iopubMessage.disconnect(this.onIOPubMessage, this);
-                    this._kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatus, this);
-                    this._kernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
-                    this._kernel.anyMessage.disconnect(this.onAnyMessage, this);
-                    this._kernel.disposed.disconnect(this.onDisposed, this);
-                } catch {
-                    //
-                }
                 this._kernel.dispose();
                 this.isDisposed = true;
                 this.disposed.emit();
