@@ -351,10 +351,9 @@ It's responsible for translating our IJupyterKernelConnectionSession interface i
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSessionWrapper
-    extends BaseJupyterSessionConnection<RawSessionConnection>
+    extends BaseJupyterSessionConnection<RawSessionConnection, 'localRaw'>
     implements IRawKernelSession
 {
-    public readonly kind: 'localRaw';
     private terminatingStatus?: KernelMessage.Status;
     public get atleastOneCellExecutedSuccessfully() {
         return this.session.atleastOneCellExecutedSuccessfully;
@@ -378,18 +377,18 @@ export class RawJupyterSessionWrapper
         private readonly resource: Resource,
         private readonly kernelConnectionMetadata: LocalKernelConnectionMetadata
     ) {
-        super(session);
+        super('localRaw', session);
         this.initializeKernelSocket();
     }
-    public override async dispose(): Promise<void> {
-        await this.shutdown();
+    public override dispose() {
+        this.shutdown().catch(noop);
     }
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         try {
             await waitForIdleOnSession(this.kernelConnectionMetadata, this.resource, this.session, timeout, token);
         } catch (ex) {
             traceInfoIfCI(`Error waiting for idle`, ex);
-            await this.dispose().catch(noop);
+            await this.disposeAsync().catch(noop);
             throw ex;
         }
     }
@@ -401,39 +400,36 @@ export class RawJupyterSessionWrapper
         this._isDisposed = true;
         try {
             traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
-            await this.shutdownSession();
+            const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata?.id}`;
+            traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
+            try {
+                try {
+                    traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata?.id}`);
+                    suppressShutdownErrors(this.session.kernel);
+                    // Shutdown may fail if the process has been killed
+                    if (!this.session.isDisposed) {
+                        await raceTimeout(1000, this.session.shutdown());
+                    }
+                } catch {
+                    noop();
+                }
+                // If session.shutdown didn't work, just dispose
+                if (!this.session.isDisposed) {
+                    await this.session.dispose().catch(noop);
+                }
+            } catch (e) {
+                // Ignore, just trace.
+                traceWarning(e);
+            }
+            traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
             traceVerbose('Shutdown session - get restart session');
         } catch {
             noop();
         }
 
+        this.didShutdown.fire();
         this.previousAnyMessageHandler?.dispose();
         super.dispose();
         traceVerbose('Shutdown session -- complete');
-    }
-
-    protected async shutdownSession(): Promise<void> {
-        const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata?.id}`;
-        traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
-        try {
-            try {
-                traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata?.id}`);
-                suppressShutdownErrors(this.session.kernel);
-                // Shutdown may fail if the process has been killed
-                if (!this.session.isDisposed) {
-                    await raceTimeout(1000, this.session.shutdown());
-                }
-            } catch {
-                noop();
-            }
-            // If session.shutdown didn't work, just dispose
-            if (!this.session.isDisposed) {
-                await this.session.dispose().catch(noop);
-            }
-        } catch (e) {
-            // Ignore, just trace.
-            traceWarning(e);
-        }
-        traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
     }
 }

@@ -255,7 +255,10 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         return this.session.changeKernel(options);
     }
 
-    public async dispose(): Promise<void> {
+    public dispose() {
+        this.disposeAsync().catch(noop);
+    }
+    public async disposeAsync(): Promise<void> {
         await this.shutdownImplementation(false);
     }
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {

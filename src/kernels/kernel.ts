@@ -314,7 +314,7 @@ abstract class BaseKernel implements IBaseKernel {
                 : undefined;
             this._jupyterSessionPromise = undefined;
             if (this._session) {
-                promises.push(this._session.dispose().catch(noop));
+                promises.push(this._session.disposeAsync().catch(noop));
                 this._session = undefined;
             }
             this._disposed = true;
@@ -391,7 +391,7 @@ abstract class BaseKernel implements IBaseKernel {
                     undefined,
                     ex
                 );
-                await session?.dispose().catch(noop);
+                await session?.disposeAsync().catch(noop);
                 this._ignoreJupyterSessionDisposedErrors = false;
                 throw ex;
             }

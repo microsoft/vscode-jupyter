@@ -360,10 +360,9 @@ export class OldJupyterSession
 
 // function is
 export class JupyterSessionWrapper
-    extends BaseJupyterSessionConnection<INewSessionWithSocket>
+    extends BaseJupyterSessionConnection<INewSessionWithSocket, 'localJupyter' | 'remoteJupyter'>
     implements IJupyterKernelSession
 {
-    public readonly kind: 'localJupyter' | 'remoteJupyter';
     public get status(): KernelMessage.Status {
         if (this.isDisposed) {
             return 'dead';
@@ -386,13 +385,12 @@ export class JupyterSessionWrapper
         public readonly workingDirectory: Uri,
         connection: IJupyterConnection
     ) {
-        super(session);
-        this.kind = connection.localLaunch ? 'localJupyter' : 'remoteJupyter';
+        super(connection.localLaunch ? 'localJupyter' : 'remoteJupyter', session);
         this.initializeKernelSocket();
     }
 
-    public override async dispose(): Promise<void> {
-        return this.shutdownImplementation(false);
+    public override dispose() {
+        this.shutdownImplementation(false).catch(noop);
     }
 
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
@@ -400,7 +398,7 @@ export class JupyterSessionWrapper
             await waitForIdleOnSession(this.kernelConnectionMetadata, this.resource, this.session, timeout, token);
         } catch (ex) {
             traceInfoIfCI(`Error waiting for idle`, ex);
-            await this.dispose().catch(noop);
+            await this.disposeAsync().catch(noop);
             throw ex;
         }
     }
@@ -409,36 +407,6 @@ export class JupyterSessionWrapper
         return this.shutdownImplementation(true);
     }
 
-    private async shutdownSession(shutdownEvenIfRemote?: boolean): Promise<void> {
-        const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
-        traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
-        try {
-            if (!shutdownEvenIfRemote && !this.canShutdownSession()) {
-                traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
-                this.session.dispose();
-                return;
-            }
-            try {
-                traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
-                suppressShutdownErrors(this.session.kernel);
-                // Shutdown may fail if the process has been killed
-                if (!this.session.isDisposed) {
-                    await raceTimeout(1000, this.session.shutdown());
-                }
-            } catch {
-                noop();
-            }
-            // If session.shutdown didn't work, just dispose
-            if (!this.session.isDisposed) {
-                this.session.dispose();
-            }
-        } catch (e) {
-            // Ignore, just trace.
-            traceWarning(e);
-        } finally {
-        }
-        traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
-    }
     private async shutdownImplementation(shutdownEvenIfRemote?: boolean) {
         if (this._isDisposed) {
             return;
@@ -446,12 +414,37 @@ export class JupyterSessionWrapper
         this._isDisposed = true;
         try {
             traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
-            await this.shutdownSession(shutdownEvenIfRemote);
-            traceVerbose('Shutdown session - get restart session');
+            const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
+            traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
+            try {
+                if (!shutdownEvenIfRemote && !this.canShutdownSession()) {
+                    traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
+                    this.session.dispose();
+                    return;
+                }
+                try {
+                    traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
+                    suppressShutdownErrors(this.session.kernel);
+                    // Shutdown may fail if the process has been killed
+                    if (!this.session.isDisposed) {
+                        await raceTimeout(1000, this.session.shutdown());
+                    }
+                } catch {
+                    noop();
+                }
+                // If session.shutdown didn't work, just dispose
+                if (!this.session.isDisposed) {
+                    this.session.dispose();
+                }
+            } catch (e) {
+                // Ignore, just trace.
+                traceWarning(e);
+            }
+            traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
         } catch {
             noop();
         }
-
+        this.didShutdown.fire();
         this.previousAnyMessageHandler?.dispose();
         super.dispose();
         traceVerbose('Shutdown session -- complete');

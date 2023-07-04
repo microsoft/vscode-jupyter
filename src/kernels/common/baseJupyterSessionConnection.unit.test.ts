@@ -6,17 +6,18 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { mock, when, instance, verify } from 'ts-mockito';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IDisposable } from '../../platform/common/types';
 import { IKernelSocket, INewSessionWithSocket, KernelSocketInformation } from '../types';
 import { noop } from '../../test/core';
 import { BaseJupyterSessionConnection } from './baseJupyterSessionConnection';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { createEventHandler } from '../../test/common';
+import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 
-suite('Base Jupyter Session Connection', () => {
+suite.only('Base Jupyter Session Connection', () => {
     const disposables: IDisposable[] = [];
-    let jupyterSession: BaseJupyterSessionConnection<INewSessionWithSocket>;
+    let jupyterSession: BaseJupyterSessionConnection<INewSessionWithSocket, 'remoteJupyter'>;
     let session: INewSessionWithSocket;
     let kernel: Kernel.IKernelConnection;
     let token: CancellationTokenSource;
@@ -31,10 +32,13 @@ suite('Base Jupyter Session Connection', () => {
     let sessionUnhandledMessage: Signal<INewSessionWithSocket, KernelMessage.IMessage>;
     let sessionConnectionStatusChanged: Signal<INewSessionWithSocket, Kernel.ConnectionStatus>;
     let sessionAnyMessage: Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>;
-    class DummySessionClass extends BaseJupyterSessionConnection<INewSessionWithSocket> {
+    class DummySessionClass extends BaseJupyterSessionConnection<INewSessionWithSocket, 'remoteJupyter'> {
+        override waitForIdle(_timeout: number, _token: CancellationToken): Promise<void> {
+            throw new Error('Method not implemented.');
+        }
         public override status: Kernel.Status;
         constructor(session: INewSessionWithSocket) {
-            super(session);
+            super('remoteJupyter', session);
             this.initializeKernelSocket();
         }
         override shutdown(): Promise<void> {
@@ -42,12 +46,37 @@ suite('Base Jupyter Session Connection', () => {
         }
     }
 
+    function createKernel() {
+        const kernel = mock<Kernel.IKernelConnection>();
+        when(kernel.status).thenReturn('idle');
+        when(kernel.connectionStatus).thenReturn('connected');
+        when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
+        when(kernel.iopubMessage).thenReturn(
+            instance(
+                mock<ISignal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
+            )
+        );
+        when(kernel.anyMessage).thenReturn({ connect: noop, disconnect: noop } as any);
+        when(kernel.unhandledMessage).thenReturn(
+            instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
+        );
+        when(kernel.disposed).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, void>>()));
+        when(kernel.connectionStatusChanged).thenReturn(
+            instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
+        );
+        when(kernel.clientId).thenReturn('some Client Id');
+        when(kernel.id).thenReturn('some Kernel Id');
+        when(kernel.username).thenReturn('some User Name');
+        when(kernel.model).thenReturn({ id: 'some Model Id', name: 'some Model Name' });
+
+        return kernel;
+    }
     setup(() => {
         token = new CancellationTokenSource();
         disposables.push(token);
 
         session = mock<INewSessionWithSocket>();
-        kernel = mock<Kernel.IKernelConnection>();
+        kernel = createKernel();
         when(session.shutdown()).thenResolve();
         when(session.dispose()).thenReturn();
         when(session.kernel).thenReturn(instance(kernel));
@@ -73,26 +102,6 @@ suite('Base Jupyter Session Connection', () => {
         when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
         when(session.anyMessage).thenReturn(sessionAnyMessage);
         when(session.isDisposed).thenReturn(false);
-        when(kernel.status).thenReturn('idle');
-        when(kernel.connectionStatus).thenReturn('connected');
-        when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
-        when(kernel.iopubMessage).thenReturn(
-            instance(
-                mock<ISignal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
-            )
-        );
-        when(kernel.anyMessage).thenReturn({ connect: noop, disconnect: noop } as any);
-        when(kernel.unhandledMessage).thenReturn(
-            instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
-        );
-        when(kernel.disposed).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, void>>()));
-        when(kernel.connectionStatusChanged).thenReturn(
-            instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
-        );
-        when(kernel.clientId).thenReturn('some Client Id');
-        when(kernel.id).thenReturn('some Kernel Id');
-        when(kernel.username).thenReturn('some User Name');
-        when(kernel.model).thenReturn({ id: 'some Model Id', name: 'some Model Name' });
         jupyterSession = new DummySessionClass(instance(session));
     });
 
@@ -188,5 +197,21 @@ suite('Base Jupyter Session Connection', () => {
         assert.strictEqual(socketInfo?.options.userName, 'some User Name');
         assert.strictEqual(socketInfo?.options.model.id, 'some Model Id');
         assert.strictEqual(socketInfo?.options.model.name, 'some Model Name');
+    });
+    test('Wrap the Kernel.IKernelConnection only when necessary', async () => {
+        const wrapperKernel = jupyterSession.kernel as KernelConnectionWrapper;
+        assert.strictEqual(wrapperKernel.originalKernel, instance(kernel));
+
+        // If we restart, and the kernel is still the same, ensure we return the same instance of the kernel wrapper
+        await jupyterSession.restart();
+        assert.strictEqual(jupyterSession.kernel as KernelConnectionWrapper, wrapperKernel);
+        assert.strictEqual(wrapperKernel.originalKernel, instance(kernel));
+
+        // If there's a new kernel, then ensure we have a new wrapper returned.
+        const newKernel = createKernel();
+        when(session.kernel).thenReturn(instance(newKernel));
+
+        assert.notEqual(jupyterSession.kernel as KernelConnectionWrapper, wrapperKernel);
+        assert.strictEqual((jupyterSession.kernel as KernelConnectionWrapper).originalKernel, instance(newKernel));
     });
 });

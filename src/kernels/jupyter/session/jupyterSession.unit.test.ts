@@ -167,7 +167,7 @@ suite('Old JupyterSession', () => {
         }
     }
     teardown(async () => {
-        await jupyterSession.dispose().catch(noop);
+        await jupyterSession.disposeAsync().catch(noop);
         disposeAllDisposables(disposables);
     });
 
@@ -760,7 +760,7 @@ suite('JupyterSession', () => {
         disposables.push(new Disposable(() => clock.uninstall()));
     }
     teardown(async () => {
-        await jupyterSession.dispose().catch(noop);
+        await jupyterSession.disposeAsync().catch(noop);
         disposeAllDisposables(disposables);
     });
 

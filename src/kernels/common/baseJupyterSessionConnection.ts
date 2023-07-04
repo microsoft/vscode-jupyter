@@ -3,18 +3,21 @@
 
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { Signal } from '@lumino/signaling';
-import { Event, EventEmitter } from 'vscode';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import type { IChangedArgs } from '@jupyterlab/coreutils';
 import { IDisposable } from '../../platform/common/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
-import { INewSessionWithSocket, KernelSocketInformation } from '../types';
+import { IBaseKernelSession, INewSessionWithSocket, KernelSocketInformation } from '../types';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
 
-export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSocket>
-    implements Session.ISessionConnection
+export abstract class BaseJupyterSessionConnection<
+    S extends INewSessionWithSocket,
+    T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'
+> implements Session.ISessionConnection, IBaseKernelSession<T>
 {
     public get id() {
         return this.session.id;
@@ -60,7 +63,7 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
     protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
     protected readonly disposables: IDisposable[] = [];
 
-    constructor(protected readonly session: S) {
+    constructor(public readonly kind: T, protected readonly session: S) {
         session.propertyChanged.connect(this.onPropertyChanged, this);
         session.kernelChanged.connect(this.onKernelChanged, this);
         session.statusChanged.connect(this.onStatusChanged, this);
@@ -93,12 +96,15 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
      */
     protected _wrappedKernel?: KernelConnectionWrapper;
     public get kernel(): Kernel.IKernelConnection | null {
-        if (this._wrappedKernel) {
-            return this._wrappedKernel;
-        }
         if (!this.session.kernel) {
             return null;
         }
+        if (this._wrappedKernel?.originalKernel === this.session.kernel) {
+            return this._wrappedKernel;
+        }
+        // We need to use KernelConnectionWrapper just for one reason, we need to ensure all
+        // of the requestExecute methods are sent sequentially to the kernel.
+        // See KernelConnectionWrapper why we need to send these messages sequentially.
         this._wrappedKernel = new KernelConnectionWrapper(this.session.kernel, this.disposables);
         return this._wrappedKernel;
     }
@@ -130,23 +136,35 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
 
     public abstract readonly status: KernelMessage.Status;
     protected previousAnyMessageHandler?: IDisposable;
+    private disposedPromise?: Deferred<void>;
+    public async disposeAsync(): Promise<void> {
+        this.dispose();
+        await this.disposedPromise!.promise;
+    }
     public dispose() {
-        this.onStatusChangedEvent.fire('dead');
-        this.statusChanged.emit('dead');
-        this._disposed.fire();
-        // this.didShutdown.fire();
-        this.disposed.emit();
+        if (this.disposedPromise) {
+            return;
+        }
+        this.disposedPromise = createDeferred<void>();
+        try {
+            this.onStatusChangedEvent.fire('dead');
+            this.statusChanged.emit('dead');
+            this._disposed.fire();
+            this.disposed.emit();
 
-        disposeAllDisposables(this.disposables);
-        Signal.disconnectAll(this);
+            disposeAllDisposables(this.disposables);
+            Signal.disconnectAll(this);
+        } finally {
+            this.disposedPromise.resolve();
+        }
     }
     abstract shutdown(): Promise<void>;
+    abstract waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
     public async restart(): Promise<void> {
         await this.session.kernel?.restart();
         this.initializeKernelSocket();
         traceInfo(`Restarted ${this.session?.kernel?.id}`);
     }
-
     private previousKernelSocketInformation?: KernelSocketInformation & { kernel: Kernel.IKernelConnection };
     protected initializeKernelSocket() {
         if (!this.session.kernel) {
@@ -176,16 +194,14 @@ export abstract class BaseJupyterSessionConnection<S extends INewSessionWithSock
         this.previousAnyMessageHandler?.dispose();
         this.session.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
 
-        if (this.session.kernel && this._wrappedKernel) {
-            this._wrappedKernel.changeKernel(this.session.kernel);
-        }
-
         // Listen for session status changes
         this.session.kernel?.connectionStatusChanged.connect(this.onKernelConnectionStatusHandler, this);
         if (this.session.kernelSocketInformation.socket?.onAnyMessage) {
-            // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
-            // As a result, we don't get any notification that messages were sent (on the anymessage signal).
-            // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
+            // See IKernelSocket.onAnyMessage
+            // Some messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
+            // As a result onAnyMessage signal is not emitted for such messages.
+            // The IKernelSocket exposes an onAnyMessage event that can be used to listen to such messages
+            // Once we get these messages we can emit them on the anyMessage signal.
             this.previousAnyMessageHandler = this.session.kernelSocketInformation.socket?.onAnyMessage((msg) => {
                 try {
                     if (this._wrappedKernel) {
