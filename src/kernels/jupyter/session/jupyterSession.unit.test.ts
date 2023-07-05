@@ -25,7 +25,6 @@ import {
     IJupyterConnection,
     ISessionWithSocket,
     KernelConnectionMetadata,
-    LiveKernelModel,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
@@ -56,46 +55,7 @@ suite('Old JupyterSession', () => {
     let kernel: Kernel.IKernelConnection;
     let statusChangedSignal: ISignal<ISessionWithSocket, Kernel.Status>;
     let kernelChangedSignal: ISignal<ISessionWithSocket, IKernelChangedArgs>;
-    let restartCount = 0;
     let token: CancellationTokenSource;
-    const newActiveRemoteKernel: LiveKernelModel = {
-        argv: [],
-        display_name: 'new kernel',
-        language: 'python',
-        name: 'newkernel',
-        executable: 'path',
-        lastActivityTime: new Date(),
-        numberOfConnections: 1,
-        model: {
-            statusChanged: {
-                connect: noop,
-                disconnect: noop
-            },
-            kernelChanged: {
-                connect: noop,
-                disconnect: noop
-            },
-            iopubMessage: {
-                connect: noop,
-                disconnect: noop
-            },
-            unhandledMessage: {
-                connect: noop,
-                disconnect: noop
-            },
-            kernel: {
-                status: 'idle',
-                restart: () => (restartCount = restartCount + 1),
-                registerCommTarget: noop,
-                statusChanged: instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()),
-                connectionStatusChanged: instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
-            },
-            shutdown: () => Promise.resolve(),
-            isRemoteSession: false
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any,
-        id: 'liveKernel'
-    };
     function createJupyterSession(resource: Resource = undefined, kernelConnection?: KernelConnectionMetadata) {
         connection = mock<IJupyterConnection>();
         when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
@@ -126,6 +86,11 @@ suite('Old JupyterSession', () => {
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
         when(session.unhandledMessage).thenReturn(instance(ioPubSignal));
+        when(session.propertyChanged).thenReturn(new Signal<ISessionWithSocket, 'path'>(instance(session)));
+        when(session.connectionStatusChanged).thenReturn(
+            new Signal<ISessionWithSocket, Kernel.ConnectionStatus>(instance(session))
+        );
+        when(session.anyMessage).thenReturn(new Signal<ISessionWithSocket, Kernel.IAnyMessageArgs>(instance(session)));
         when(session.kernel).thenReturn(instance(kernel));
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
@@ -135,7 +100,6 @@ suite('Old JupyterSession', () => {
                 mock<ISignal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
             )
         );
-        // when(kernel.anyMessage).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.IAnyMessageArgs>>()));
         when(kernel.anyMessage).thenReturn({ connect: noop, disconnect: noop } as any);
         when(kernel.unhandledMessage).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
@@ -154,8 +118,7 @@ suite('Old JupyterSession', () => {
         sessionManager = mock(SessionManager);
         contentsManager = mock(ContentsManager);
         specManager = mock(KernelSpecManager);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
+        when(sessionManager.connectTo(anything())).thenReturn(instance(session));
         const fs = mock<FileSystem>();
         const tmpFile = path.join('tmp', 'tempfile.json');
         const backingFileCreator = new BackingFileCreator();
@@ -202,6 +165,7 @@ suite('Old JupyterSession', () => {
         }
     }
     teardown(async () => {
+        Signal.disconnectAll(instance(session));
         await jupyterSession.disposeAsync().catch(noop);
         disposeAllDisposables(disposables);
     });
@@ -375,6 +339,15 @@ suite('Old JupyterSession', () => {
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
                 when(newSession.iopubMessage).thenReturn(instance(newIoPubSignal));
                 when(newSession.unhandledMessage).thenReturn(instance(newIoPubSignal));
+                when(newSession.propertyChanged).thenReturn(
+                    new Signal<Session.ISessionConnection, 'path'>(instance(newSession))
+                );
+                when(newSession.connectionStatusChanged).thenReturn(
+                    new Signal<Session.ISessionConnection, Kernel.ConnectionStatus>(instance(newSession))
+                );
+                when(newSession.anyMessage).thenReturn(
+                    new Signal<Session.ISessionConnection, Kernel.IAnyMessageArgs>(instance(newSession))
+                );
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
@@ -392,12 +365,14 @@ suite('Old JupyterSession', () => {
                 when(newKernelConnection.iopubMessage).thenReturn({ connect: noop, disconnect: noop } as any);
                 when(newKernelConnection.unhandledMessage).thenReturn({ connect: noop, disconnect: noop } as any);
                 when(newSession.kernel).thenReturn(instance(newKernelConnection));
+
                 when(sessionManager.startNew(anything(), anything())).thenCall(() => {
                     newSessionCreated.resolve();
                     return Promise.resolve(instance(newSession));
                 });
             });
             teardown(() => {
+                Signal.disconnectAll(instance(newSession));
                 verify(sessionManager.connectTo(anything())).never();
             });
             suite('Executing user code', async () => {
@@ -484,7 +459,24 @@ suite('Old JupyterSession', () => {
                 remoteKernel = mock<Kernel.IKernelConnection>();
                 remoteSessionInstance = instance(remoteSession);
                 remoteSessionInstance.isRemoteSession = false;
+                (instance(remoteSessionInstance) as any).then = undefined;
                 when(remoteSession.kernel).thenReturn(instance(remoteKernel));
+                when(remoteSession.disposed).thenReturn(new Signal<ISessionWithSocket, void>(instance(remoteSession)));
+                when(remoteSession.propertyChanged).thenReturn(
+                    new Signal<ISessionWithSocket, 'path'>(instance(remoteSession))
+                );
+                when(remoteSession.connectionStatusChanged).thenReturn(
+                    new Signal<ISessionWithSocket, Kernel.ConnectionStatus>(instance(remoteSession))
+                );
+                when(remoteSession.anyMessage).thenReturn(
+                    new Signal<ISessionWithSocket, Kernel.IAnyMessageArgs>(instance(remoteSession))
+                );
+                when(remoteSession.kernelChanged).thenReturn(
+                    new Signal<
+                        ISessionWithSocket,
+                        IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
+                    >(instance(remoteSession))
+                );
                 when(remoteKernel.registerCommTarget(anything(), anything())).thenReturn();
                 const connectionStatusChanged = mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>();
                 when(remoteKernel.connectionStatusChanged).thenReturn(instance(connectionStatusChanged));
@@ -505,16 +497,15 @@ suite('Old JupyterSession', () => {
 
                 await connect('connectToLiveRemoteKernel');
             });
+            teardown(() => Signal.disconnectAll(instance(remoteSession)));
             test('Restart should restart the new remote kernel', async () => {
                 when(remoteKernel.restart()).thenResolve();
-                restartCount = 0;
 
                 await jupyterSession.restart();
 
-                assert.isTrue((newActiveRemoteKernel.model as any).isRemoteSession);
                 // We should restart the kernel, not a new session.
                 verify(sessionManager.startNew(anything(), anything())).never();
-                assert.equal(restartCount, 1, 'Did not restart the kernel');
+                verify(kernel.restart()).once();
                 verify(remoteSession.shutdown()).never();
                 verify(remoteSession.dispose()).never();
             });
