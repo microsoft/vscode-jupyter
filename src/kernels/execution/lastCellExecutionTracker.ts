@@ -129,12 +129,13 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         };
 
         const hookUpSession = () => {
-            if (!kernel?.session?.kernel) {
+            const session = kernel.session;
+            if (!session) {
                 return;
             }
-            kernel.session.kernel.anyMessage.connect(anyMessageHandler);
+            session.anyMessage.connect(anyMessageHandler);
             disposable = new Disposable(() =>
-                swallowExceptions(() => kernel.session?.kernel?.anyMessage?.disconnect(anyMessageHandler))
+                swallowExceptions(() => session.anyMessage?.disconnect(anyMessageHandler))
             );
             disposables.push(disposable);
         };

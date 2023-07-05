@@ -559,7 +559,8 @@ export enum InterruptResult {
 /**
  * Closely represents Jupyter Labs Session.ISessionConnection.
  */
-export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'> {
+export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
+    extends Session.ISessionConnection {
     readonly id: string;
     readonly kind: T;
     readonly isDisposed: boolean;
