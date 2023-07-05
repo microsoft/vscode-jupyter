@@ -34,6 +34,7 @@ export class OldRawSession implements ISessionWithSocket {
     private _kernel: OldRawKernel;
     private readonly _statusChanged: Signal<this, KernelMessage.Status>;
     private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
+    private readonly _propertyChanged: ISignal<this, 'path' | 'name' | 'type'>;
     private readonly _terminated: Signal<this, void>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
     private readonly _unhandledMessage: Signal<this, KernelMessage.IMessage>;
@@ -63,6 +64,7 @@ export class OldRawSession implements ISessionWithSocket {
         const signaling = (this.signaling = require('@lumino/signaling') as typeof import('@lumino/signaling'));
         this._statusChanged = new signaling.Signal<this, KernelMessage.Status>(this);
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
+        this._propertyChanged = new signaling.Signal<this, 'path' | 'name' | 'type'>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this._terminated = new signaling.Signal<this, void>(this);
         this._anyMessage = new signaling.Signal<this, Kernel.IAnyMessageArgs>(this);
@@ -194,7 +196,7 @@ export class OldRawSession implements ISessionWithSocket {
         return this._kernelChanged;
     }
     get propertyChanged(): ISignal<this, 'path' | 'name' | 'type'> {
-        throw new Error('Not yet implemented');
+        return this._propertyChanged;
     }
     get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessage;

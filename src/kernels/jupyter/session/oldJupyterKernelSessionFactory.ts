@@ -11,7 +11,7 @@ import {
     isLocalConnection,
     isRemoteConnection
 } from '../../types';
-import { IJupyterServerProvider, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
+import { IJupyterServerProvider, IJupyterSessionManager, IOldJupyterSessionManagerFactory } from '../types';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { inject, injectable } from 'inversify';
@@ -33,11 +33,12 @@ import { DataScience } from '../../../platform/common/utils/localize';
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 @injectable()
-export class JupyterKernelSessionFactory implements IKernelSessionFactory {
+export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
     constructor(
         @inject(IJupyterServerProvider)
         private readonly jupyterNotebookProvider: IJupyterServerProvider,
-        @inject(IJupyterSessionManagerFactory) private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IOldJupyterSessionManagerFactory)
+        private readonly sessionManagerFactory: IOldJupyterSessionManagerFactory,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService

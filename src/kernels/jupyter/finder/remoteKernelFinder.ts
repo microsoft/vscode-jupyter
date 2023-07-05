@@ -15,7 +15,7 @@ import {
 } from '../../types';
 import { IAsyncDisposable, IDisposable, IExtensions } from '../../../platform/common/types';
 import {
-    IJupyterSessionManagerFactory,
+    IOldJupyterSessionManagerFactory,
     IJupyterRemoteCachedKernelValidator,
     IRemoteKernelFinder,
     IJupyterServerUriEntry
@@ -87,7 +87,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         readonly id: string,
         readonly displayName: string,
         readonly cacheKey: string,
-        private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        private jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
         private extensionChecker: IPythonExtensionChecker,
         private readonly globalState: Memento,
         private readonly env: IApplicationEnvironment,

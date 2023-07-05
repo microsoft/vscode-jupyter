@@ -404,7 +404,7 @@ export interface IKernel extends IBaseKernel {
     readonly creator: 'jupyterExtension';
 }
 
-export type ResumeCellExecutionInformation = {
+export interface ResumeCellExecutionInformation {
     /**
      * msg_id from the Kernel.
      */
@@ -414,7 +414,7 @@ export type ResumeCellExecutionInformation = {
      */
     startTime: number;
     executionCount: number;
-};
+}
 export interface INotebookKernelExecution {
     /**
      * Total execution count on this kernel
@@ -451,7 +451,7 @@ export interface IThirdPartyKernel extends IBaseKernel {
 /**
  * Kernel options for creating first party kernels.
  */
-export type KernelOptions = {
+export interface KernelOptions {
     metadata: KernelConnectionMetadata;
     controller: IKernelController;
     /**
@@ -459,19 +459,19 @@ export type KernelOptions = {
      * In the case of Notebooks, just pass the uri of the notebook.
      */
     resourceUri: Resource;
-};
+}
 
 /**
  * Kernel options for creating third party kernels.
  */
-export type ThirdPartyKernelOptions = {
+export interface ThirdPartyKernelOptions {
     metadata: KernelConnectionMetadata;
     /**
      * When creating a kernel for an Interactive window, pass the Uri of the Python file here (to set the working directory, file & the like)
      * In the case of Notebooks, just pass the uri of the notebook.
      */
     resourceUri: Resource;
-};
+}
 
 /**
  * Common kernel provider interface shared between first party and third party kernel providers.
@@ -579,7 +579,7 @@ export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
-export type ISessionWithSocket = Session.ISessionConnection & {
+export interface ISessionWithSocket extends Session.ISessionConnection {
     /**
      * The resource associated with this session.
      */
@@ -593,7 +593,7 @@ export type ISessionWithSocket = Session.ISessionConnection & {
      */
     kernelSocketInformation: KernelSocketInformation;
     kernelConnectionMetadata: KernelConnectionMetadata;
-};
+}
 
 export interface IJupyterKernelSpec {
     /**
@@ -663,24 +663,24 @@ export interface IJupyterKernelSpec {
         | 'registeredByNewVersionOfExtForCustomKernelSpec';
 }
 
-export type GetServerOptions = {
+export interface GetServerOptions {
     ui: IDisplayOptions;
     token: CancellationToken | undefined;
     resource: Resource;
-};
+}
 
 // Options for connecting to a notebook provider
 export type ConnectNotebookProviderOptions = GetServerOptions;
 /**
  * Options for getting a notebook
  */
-export type KernelSessionCreationOptions = {
+export interface KernelSessionCreationOptions {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
     token: CancellationToken;
     creator: KernelActionSource;
-};
+}
 
 export const IJupyterServerConnector = Symbol('IJupyterServerConnector');
 /**
@@ -740,7 +740,7 @@ export interface IKernelSocket {
     removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
 }
 
-export type KernelSocketOptions = {
+export interface KernelSocketOptions {
     /**
      * Kernel Id.
      */
@@ -766,8 +766,8 @@ export type KernelSocketOptions = {
          */
         readonly name: string;
     };
-};
-export type KernelSocketInformation = {
+}
+export interface KernelSocketInformation {
     /**
      * Underlying socket used by jupyterlab/services to communicate with kernel.
      * See jupyterlab/services/kernel/default.ts
@@ -777,7 +777,7 @@ export type KernelSocketInformation = {
      * Options used to clone a kernel.
      */
     readonly options: KernelSocketOptions;
-};
+}
 
 /**
  * Response for installation of kernel dependencies such as ipykernel.
@@ -899,10 +899,10 @@ export interface IKernelSettings {
     runStartupCommands: string | string[];
 }
 
-export type IKernelController = {
+export interface IKernelController {
     id: string;
     createNotebookCellExecution(cell: NotebookCell): NotebookCellExecution;
-};
+}
 
 const capturedTelemetry = new Set<string>();
 function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
