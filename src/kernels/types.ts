@@ -557,15 +557,14 @@ export enum InterruptResult {
 }
 
 /**
- * Closely represents Jupyter Labs Kernel.IKernelConnection.
+ * Closely represents Jupyter Labs Session.ISessionConnection.
  */
 export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'> {
-    readonly id?: string;
+    readonly id: string;
     readonly kind: T;
     readonly isDisposed: boolean;
-    readonly kernel?: Kernel.IKernelConnection;
+    readonly kernel: Kernel.IKernelConnection | null;
     readonly status: KernelMessage.Status;
-    readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     disposeAsync(): Promise<void>;
     onSessionStatusChanged: Event<KernelMessage.Status>;
