@@ -19,7 +19,7 @@ import {
     IJupyterRequestCreator,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
+    IOldJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration
 } from '../types';
 import { IJupyterServerUri, JupyterServerUriHandle } from '../../../api';
@@ -63,8 +63,8 @@ export class JupyterConnection {
     constructor(
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        @inject(IJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IOldJupyterSessionManagerFactory)
+        private readonly jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,

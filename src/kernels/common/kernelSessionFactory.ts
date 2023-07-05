@@ -3,12 +3,19 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IKernelSession, IKernelSessionFactory, isLocalConnection, KernelSessionCreationOptions } from '../types';
+<<<<<<< HEAD
+import { IRawKernelSessionFactory, IOldRawKernelSessionFactory, IRawNotebookSupportedService } from '../raw/types';
+import { JupyterKernelSessionFactory } from '../jupyter/session/jupyterKernelSessionFactory';
+import { Experiments, IExperimentService } from '../../platform/common/types';
+import { OldJupyterKernelSessionFactory } from '../jupyter/session/oldJupyterKernelSessionFactory';
+=======
 import { INewRawKernelSessionFactory, IRawKernelSessionFactory, IRawNotebookSupportedService } from '../raw/types';
 import {
     JupyterKernelSessionFactory,
     NewJupyterKernelSessionFactory
 } from '../jupyter/session/jupyterKernelSessionFactory';
 import { Experiments, IExperimentService } from '../../platform/common/types';
+>>>>>>> refactorJupyterSessionClasses
 
 /**
  * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
@@ -19,8 +26,18 @@ export class KernelSessionFactory implements IKernelSessionFactory {
         @inject(IRawNotebookSupportedService)
         private readonly rawKernelSupported: IRawNotebookSupportedService,
 
+        @inject(IOldRawKernelSessionFactory)
+        @optional()
+        private readonly rawKernelSessionFactory: IOldRawKernelSessionFactory | undefined,
+        @inject(OldJupyterKernelSessionFactory)
+        private readonly jupyterSessionFactory: IKernelSessionFactory,
         @inject(IRawKernelSessionFactory)
         @optional()
+<<<<<<< HEAD
+        private readonly newRawKernelSessionFactory: IRawKernelSessionFactory | undefined,
+        @inject(JupyterKernelSessionFactory)
+        private readonly newJupyterSessionFactory: IKernelSessionFactory,
+=======
         private readonly rawKernelSessionFactory: IRawKernelSessionFactory | undefined,
         @inject(INewRawKernelSessionFactory)
         @optional()
@@ -29,6 +46,7 @@ export class KernelSessionFactory implements IKernelSessionFactory {
         private readonly jupyterSessionFactory: IKernelSessionFactory,
         @inject(NewJupyterKernelSessionFactory)
         private readonly newJupyterSessionFactory: NewJupyterKernelSessionFactory,
+>>>>>>> refactorJupyterSessionClasses
         @inject(IExperimentService)
         private readonly experiments: IExperimentService
     ) {}

@@ -21,7 +21,7 @@ import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import {
     IJupyterPasswordConnect,
-    IJupyterSessionManagerFactory,
+    IOldJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
     IJupyterBackingFileCreator,
@@ -34,13 +34,18 @@ import {
 } from './types';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
+<<<<<<< HEAD
+import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessionFactory';
+import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
+=======
 import { JupyterKernelSessionFactory, NewJupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
+>>>>>>> refactorJupyterSessionClasses
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
-    serviceManager.addSingleton<IJupyterSessionManagerFactory>(
-        IJupyterSessionManagerFactory,
+    serviceManager.addSingleton<IOldJupyterSessionManagerFactory>(
+        IOldJupyterSessionManagerFactory,
         JupyterSessionManagerFactory
     );
     serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
@@ -52,6 +57,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addBinding(IJupyterUriProviderRegistration, IExtensionSyncActivationService);
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
+    serviceManager.addSingleton<OldJupyterKernelSessionFactory>(
+        OldJupyterKernelSessionFactory,
+        OldJupyterKernelSessionFactory
+    );
     serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);
     serviceManager.addSingleton<NewJupyterKernelSessionFactory>(
         NewJupyterKernelSessionFactory,

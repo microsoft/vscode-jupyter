@@ -6,7 +6,7 @@ import { Memento } from 'vscode';
 import { IKernelFinder, IKernelProvider } from '../../types';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import {
-    IJupyterSessionManagerFactory,
+    IOldJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriEntry
@@ -26,8 +26,8 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     private serverFinderMapping: Map<string, RemoteKernelFinder> = new Map<string, RemoteKernelFinder>();
 
     constructor(
-        @inject(IJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IOldJupyterSessionManagerFactory)
+        private readonly jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,

@@ -79,9 +79,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
+                        return this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
                     } else {
-                        this.restartKernel(context).catch(noop);
+                        return this.restartKernel(context).catch(noop);
                     }
                 }
             )

@@ -199,8 +199,8 @@ class JupyterKernelService implements IExportedKernelService {
                 // associated with a controller.
                 // Note: In VS Code, a controller starts a kernel, however the controller only keeps track of the kernel spec.
                 // Hence when we return this connection, we're actually returning the controller's kernel spec & the uri.
-                if (kernel && kernel.session?.kernelId) {
-                    kernelsAlreadyListed.add(kernel.session.kernelId);
+                if (kernel && kernel.session?.kernel?.id) {
+                    kernelsAlreadyListed.add(kernel.session.kernel.id);
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
@@ -218,8 +218,8 @@ class JupyterKernelService implements IExportedKernelService {
                 // associated with a controller.
                 // Note: In VS Code, a controller starts a kernel, however the controller only keeps track of the kernel spec.
                 // Hence when we return this connection, we're actually returning the controller's kernel spec & the uri.
-                if (kernel && kernel.session?.kernelId) {
-                    kernelsAlreadyListed.add(kernel.session.kernelId);
+                if (kernel && kernel.session?.kernel?.id) {
+                    kernelsAlreadyListed.add(kernel.session.kernel.id);
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),

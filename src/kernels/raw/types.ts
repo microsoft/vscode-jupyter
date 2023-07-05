@@ -62,11 +62,13 @@ export interface IRawNotebookSupportedService {
 }
 
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
-export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');
-export interface IRawKernelSessionFactory extends IAsyncDisposable {
+export const IOldRawKernelSessionFactory = Symbol('IOldRawKernelSessionFactory');
+export interface IOldRawKernelSessionFactory extends IAsyncDisposable {
     create(options: KernelSessionCreationOptions): Promise<IRawKernelSession>;
 }
 
+export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');
+export interface IRawKernelSessionFactory extends IAsyncDisposable {
 export const INewRawKernelSessionFactory = Symbol('INewRawKernelSessionFactory');
 export interface INewRawKernelSessionFactory extends IAsyncDisposable {
     create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession>;

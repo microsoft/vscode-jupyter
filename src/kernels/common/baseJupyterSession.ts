@@ -77,7 +77,7 @@ export class JupyterSessionStartError extends WrappedError {
 }
 
 /**
- * Common code for a Jupyterlabs IKernelConnection. Raw and Jupyter both inherit from this.
+ * Common code for a Jupyterlabs Session.ISessionConnection. Raw and Jupyter both inherit from this.
  */
 export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
     implements IBaseKernelSession<T>
@@ -127,7 +127,10 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
      */
     anyMessage = new Signal<this, Kernel.IAnyMessageArgs>(this);
     disposed = new Signal<this, void>(this);
+<<<<<<< HEAD
+=======
 
+>>>>>>> refactorJupyterSessionClasses
     /**
      * Keep a single instance of KernelConnectionWrapper.
      * This way when sessions change, we still have a single Kernel.IKernelConnection proxy (wrapper),
@@ -154,9 +157,12 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     public get id() {
         return this.session?.id || '';
     }
+<<<<<<< HEAD
+=======
     public get kernelId(): string | undefined {
         return this.session?.kernel?.id;
     }
+>>>>>>> refactorJupyterSessionClasses
     public get kernel(): Kernel.IKernelConnection | null {
         if (this._wrappedKernel) {
             return this._wrappedKernel;
@@ -256,7 +262,13 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     }
 
     public dispose() {
+<<<<<<< HEAD
+        this.disposeAsync()
+            .catch(noop)
+            .finally(() => Signal.disconnectAll(this));
+=======
         this.disposeAsync().catch(noop);
+>>>>>>> refactorJupyterSessionClasses
     }
     public async disposeAsync(): Promise<void> {
         await this.shutdownImplementation(false);
@@ -411,7 +423,10 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
                 oldSession.statusChanged.disconnect(this.statusHandler);
                 oldSession.kernel?.connectionStatusChanged.disconnect(this.onKernelConnectionStatusHandler, this);
             }
+<<<<<<< HEAD
+=======
 
+>>>>>>> refactorJupyterSessionClasses
             oldSession.propertyChanged.disconnect(this.onPropertyChanged, this);
             oldSession.kernelChanged.disconnect(this.onKernelChanged, this);
             oldSession.connectionStatusChanged.disconnect(this.onConnectionStatusChanged, this);

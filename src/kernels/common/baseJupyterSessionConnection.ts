@@ -63,7 +63,6 @@ export abstract class BaseJupyterSessionConnection<
     protected readonly disposables: IDisposable[] = [];
 
     constructor(public readonly kind: T, protected readonly session: S) {
-        traceInfoIfCI(`Creating ${this.kind} session connection for ${this.constructor.name}.`);
         session.propertyChanged.connect(this.onPropertyChanged, this);
         session.kernelChanged.connect(this.onKernelChanged, this);
         session.statusChanged.connect(this.onStatusChanged, this);
