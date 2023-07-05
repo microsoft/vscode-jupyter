@@ -301,7 +301,9 @@ export class NewJupyterKernelSessionFactory implements IKernelSessionFactory {
                 options.resource,
                 options.kernelConnection,
                 Uri.file(workingDirectory),
-                connection
+                connection,
+                this.kernelService,
+                options.creator
             );
             const disposed = session.disposed;
             const onDidDisposeSession = () => {

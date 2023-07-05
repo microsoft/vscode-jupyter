@@ -683,7 +683,7 @@ abstract class BaseKernel implements IBaseKernel {
             session.kernelSocket.subscribe(this._kernelSocket);
             session.onDidDispose(() => {
                 traceInfoIfCI(
-                    `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
+                    `Kernel got disposed as a result of session.onDisposed (1) ${getDisplayPath(
                         this.resourceUri || this.uri
                     )}`
                 );

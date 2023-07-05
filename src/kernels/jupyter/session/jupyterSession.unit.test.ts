@@ -700,6 +700,7 @@ suite('JupyterSession', () => {
     let sessionUnhandledMessage: Signal<INewSessionWithSocket, KernelMessage.IMessage>;
     let sessionConnectionStatusChanged: Signal<INewSessionWithSocket, Kernel.ConnectionStatus>;
     let sessionAnyMessage: Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>;
+    let kernelService: JupyterKernelService;
     function createJupyterSession(resource: Resource = undefined, kernelConnectionMetadata: KernelConnectionMetadata) {
         connection = mock<IJupyterConnection>();
         when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
@@ -748,7 +749,7 @@ suite('JupyterSession', () => {
         );
         when(connection.rootDirectory).thenReturn(Uri.file(''));
         when(connection.localLaunch).thenReturn(false);
-        const kernelService = mock(JupyterKernelService);
+        kernelService = mock(JupyterKernelService);
         when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
         resolvableInstance(session);
         jupyterSession = new JupyterSessionWrapper(
@@ -756,9 +757,10 @@ suite('JupyterSession', () => {
             resource,
             kernelConnectionMetadata,
             Uri.file(''),
-            instance(connection)
+            instance(connection),
+            instance(kernelService),
+            'jupyterExtension'
         );
-        disposables.push(new Disposable(() => clock.uninstall()));
     }
     teardown(async () => {
         await jupyterSession.disposeAsync().catch(noop);
@@ -974,6 +976,7 @@ suite('JupyterSession', () => {
                 test('Will timeout', async () => {
                     when(kernel.status).thenReturn('unknown');
                     clock = fakeTimers.install();
+                    disposables.push(new Disposable(() => clock.uninstall()));
 
                     const promise = jupyterSession.waitForIdle(100, token.token);
                     promise.catch(noop);
@@ -1002,7 +1005,6 @@ suite('JupyterSession', () => {
                         interpreter: {} as any
                     })
                 );
-                clock.uninstall();
             });
 
             async function executeUserCode() {
@@ -1037,6 +1039,10 @@ suite('JupyterSession', () => {
                 verify(session.dispose()).never();
                 // Confirm kernel is restarted.
                 verify(kernel.restart()).once();
+
+                verify(
+                    kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), anything())
+                ).once();
             });
         });
     });

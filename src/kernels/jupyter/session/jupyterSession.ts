@@ -7,7 +7,7 @@ import uuid from 'uuid/v4';
 import { raceCancellationError } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../../platform/logging';
-import { Resource, IOutputChannel, IDisplayOptions, ReadWrite } from '../../../platform/common/types';
+import { Resource, IOutputChannel, IDisplayOptions, ReadWrite, IDisposable } from '../../../platform/common/types';
 import { raceTimeout, waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
@@ -33,6 +33,7 @@ import * as path from '../../../platform/vscode-path/resources';
 import { getResourceType } from '../../../platform/common/utils';
 import { waitForIdleOnSession } from '../../common/helpers';
 import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionConnection';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 // function is
 export class OldJupyterSession
@@ -377,19 +378,24 @@ export class JupyterSessionWrapper
         );
         return 'unknown';
     }
+    private restartToken?: CancellationTokenSource;
 
     constructor(
         session: INewSessionWithSocket,
         private readonly resource: Resource,
         private readonly kernelConnectionMetadata: KernelConnectionMetadata,
         public readonly workingDirectory: Uri,
-        connection: IJupyterConnection
+        connection: IJupyterConnection,
+        private readonly kernelService: IJupyterKernelService | undefined,
+        private readonly creator: KernelActionSource
     ) {
         super(connection.localLaunch ? 'localJupyter' : 'remoteJupyter', session);
         this.initializeKernelSocket();
     }
 
     public override dispose() {
+        this.restartToken?.cancel();
+        this.restartToken?.dispose();
         this.shutdownImplementation(false).catch(noop);
     }
     public override async disposeAsync(): Promise<void> {
@@ -406,8 +412,50 @@ export class JupyterSessionWrapper
             throw ex;
         }
     }
+    public override async restart(): Promise<void> {
+        const disposables: IDisposable[] = [];
+        const token = new CancellationTokenSource();
+        this.restartToken = token;
+        const ui = new DisplayOptions(false);
+        disposables.push(ui);
+        disposables.push(token);
+        try {
+            await this.validateLocalKernelDependencies(token.token, ui);
+            await super.restart();
+        } finally {
+            disposeAllDisposables(disposables);
+        }
+    }
+    private async validateLocalKernelDependencies(token: CancellationToken, ui: DisplayOptions) {
+        if (
+            !this.kernelConnectionMetadata?.interpreter ||
+            !isLocalConnection(this.kernelConnectionMetadata) ||
+            !this.kernelService
+        ) {
+            return;
+        }
+        if (token.isCancellationRequested) {
+            throw new CancellationError();
+        }
+        // Make sure the kernel has ipykernel installed if on a local machine.
+        // When using a Jupyter server to start kernels locally
+        // we need to ensure ipykernel is still available before we attempt to restart a kernel.
+        // Its possible for some reason that users uninstalled ipykernel or its in a broken state
+        // Hence we need to validate the env before we can restart the kernel.
+        // In the past users got into a state where ipykernel was no longer properly installed
+        // after the kernel was started.
+        await this.kernelService.ensureKernelIsUsable(
+            this.resource,
+            this.kernelConnectionMetadata,
+            ui,
+            token,
+            this.creator === '3rdPartyExtension'
+        );
+    }
 
     public override async shutdown(): Promise<void> {
+        this.restartToken?.cancel();
+        this.restartToken?.dispose();
         return this.shutdownImplementation(true);
     }
 
