@@ -47,7 +47,7 @@ async function safeExecuteSilently(
         kernel.disposing ||
         !kernel.session?.kernel ||
         !kernel.session.kernel ||
-        kernel.session.disposed
+        kernel.session.isDisposed
     ) {
         return [];
     }
