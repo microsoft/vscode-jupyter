@@ -12,8 +12,8 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { IRawKernelSession, KernelSessionCreationOptions } from '../../types';
-import { IKernelLauncher, IRawKernelSessionFactory } from '../types';
-import { OldRawJupyterSession } from './rawJupyterSession.node';
+import { IKernelLauncher, IOldRawKernelSessionFactory } from '../types';
+import { OldRawJupyterSession } from './oldRawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -24,7 +24,7 @@ import { noop } from '../../../platform/common/utils/misc';
  * Implements IRawNotebookProvider for raw kernel connections.
  */
 @injectable()
-export class RawKernelSessionFactory implements IRawKernelSessionFactory {
+export class OldRawKernelSessionFactory implements IOldRawKernelSessionFactory {
     public get id(): string {
         return this._id;
     }

@@ -68,8 +68,8 @@ export interface IJupyterPasswordConnect {
     }): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
-export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
-export interface IJupyterSessionManagerFactory {
+export const IOldJupyterSessionManagerFactory = Symbol('IOldJupyterSessionManagerFactory');
+export interface IOldJupyterSessionManagerFactory {
     create(connInfo: IJupyterConnection): Promise<IJupyterSessionManager>;
 }
 

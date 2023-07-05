@@ -23,7 +23,7 @@ import { SessionDisposedError } from '../../../platform/errors/sessionDisposedEr
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
-import { OldJupyterSession } from './jupyterSession';
+import { OldJupyterSession } from './oldJupyterSession';
 import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import {
     IJupyterSessionManager,

@@ -38,7 +38,7 @@ import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFac
 import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
     IJupyterPasswordConnect,
-    IJupyterSessionManagerFactory,
+    IOldJupyterSessionManagerFactory,
     INbConvertInterpreterDependencyChecker,
     INbConvertExportToPythonService,
     IJupyterServerProvider,
@@ -57,7 +57,7 @@ import {
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
-import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
+import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessionFactory';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
@@ -71,8 +71,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
-    serviceManager.addSingleton<IJupyterSessionManagerFactory>(
-        IJupyterSessionManagerFactory,
+    serviceManager.addSingleton<IOldJupyterSessionManagerFactory>(
+        IOldJupyterSessionManagerFactory,
         JupyterSessionManagerFactory
     );
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
@@ -114,7 +114,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, JupyterServerStarter);
     serviceManager.addSingleton<IJupyterServerConnector>(IJupyterServerConnector, JupyterServerConnector);
     serviceManager.addSingleton<IKernelSessionFactory>(IKernelSessionFactory, KernelSessionFactory);
-    serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);
+    serviceManager.addSingleton<OldJupyterKernelSessionFactory>(
+        OldJupyterKernelSessionFactory,
+        OldJupyterKernelSessionFactory
+    );
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);

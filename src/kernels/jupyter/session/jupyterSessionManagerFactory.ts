@@ -7,7 +7,7 @@ import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel } from '../../../platform/common/types';
 import { IJupyterConnection } from '../../types';
 import {
-    IJupyterSessionManagerFactory,
+    IOldJupyterSessionManagerFactory,
     IJupyterSessionManager,
     IJupyterBackingFileCreator,
     IJupyterKernelService,
@@ -17,7 +17,7 @@ import { JupyterConnection } from '../connection/jupyterConnection';
 import { IServiceContainer } from '../../../platform/ioc/types';
 
 @injectable()
-export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
+export class JupyterSessionManagerFactory implements IOldJupyterSessionManagerFactory {
     constructor(
         @inject(IConfigurationService) private config: IConfigurationService,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
