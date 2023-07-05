@@ -1,20 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ISignal } from '@lumino/signaling';
+import { ISignal, Signal } from '@lumino/signaling';
 import * as sinon from 'sinon';
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { mock, when, instance, verify, anything } from 'ts-mockito';
-import { CancellationTokenSource, EventEmitter, Uri } from 'vscode';
+import { CancellationError, CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { RawSessionConnection } from './rawSession.node';
-import { LocalKernelSpecConnectionMetadata } from '../../types';
+import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
 import { IKernelLauncher, IKernelProcess } from '../types';
-import { IDisposable } from '../../../platform/common/types';
+import { IDisposable, ReadWrite } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 import { waitForCondition } from '../../../test/common';
+import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 const nonSerializingKernel =
     require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -28,16 +29,9 @@ suite('Raw Session & Raw Kernel Connection', () => {
         exitCode?: number | undefined;
         reason?: string | undefined;
     }>;
+    const launchTimeout = 1_000;
     const disposables: IDisposable[] = [];
-    const kernelConnectionMetadata = LocalKernelSpecConnectionMetadata.create({
-        id: '1234',
-        kernelSpec: {
-            argv: ['r'],
-            display_name: 'Hello',
-            executable: 'r',
-            name: 'R'
-        }
-    });
+    let kernelConnectionMetadata: LocalKernelSpecConnectionMetadata;
     const OldKernelConnectionClass = nonSerializingKernel.KernelConnection;
     const kernelInfo: KernelMessage.IInfoReply = {
         banner: '',
@@ -108,7 +102,8 @@ suite('Raw Session & Raw Kernel Connection', () => {
         });
         when(kernelProcess.dispose()).thenResolve();
         when(kernelProcess.exited).thenReturn(exitedEvent.event);
-        when(kernelProcess.interrupt).thenResolve();
+        when(kernelProcess.canInterrupt).thenReturn(true);
+        when(kernelProcess.interrupt()).thenResolve();
         when(kernelProcess.kernelConnectionMetadata).thenReturn(kernelConnectionMetadata);
         when(kernelProcess.pid).thenReturn(9999);
         return kernelProcess;
@@ -124,7 +119,8 @@ suite('Raw Session & Raw Kernel Connection', () => {
         );
         when(kernel.status).thenReturn('idle');
         when(kernel.connectionStatus).thenReturn('connected');
-        when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
+        when(kernel.statusChanged).thenReturn(new Signal<Kernel.IKernelConnection, Kernel.Status>(instance(kernel)));
+        // when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
         when(kernel.iopubMessage).thenReturn(instance(iopubMessage));
         when(kernel.anyMessage).thenReturn({ connect: noop, disconnect: noop } as any);
         when(kernel.unhandledMessage).thenReturn(
@@ -135,6 +131,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
         );
         when(kernel.info).thenResolve(kernelInfo);
+        when(kernel.shutdown()).thenResolve();
         when(kernel.requestKernelInfo()).thenCall(async () => {
             ioPubHandlers.forEach((handler) => handler(instance(kernel), someIOPubMessage));
             return kernelInfoResponse;
@@ -149,6 +146,15 @@ suite('Raw Session & Raw Kernel Connection', () => {
         return kernel;
     }
     setup(() => {
+        kernelConnectionMetadata = LocalKernelSpecConnectionMetadata.create({
+            id: '1234',
+            kernelSpec: {
+                argv: ['r'],
+                display_name: 'Hello',
+                executable: 'r',
+                name: 'R'
+            }
+        });
         exitedEvent = new EventEmitter<{
             exitCode?: number | undefined;
             reason?: string | undefined;
@@ -169,7 +175,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             instance(kernelLauncher),
             Uri.file(''),
             kernelConnectionMetadata,
-            1_000,
+            launchTimeout,
             'notebook'
         );
     });
@@ -182,6 +188,50 @@ suite('Raw Session & Raw Kernel Connection', () => {
             .shutdown()
             .catch(noop)
             .finally(() => session.dispose());
+    });
+    suite('Start', async () => {
+        let startupToken: CancellationTokenSource;
+        setup(async () => {
+            startupToken = new CancellationTokenSource();
+            disposables.push(startupToken);
+        });
+        test('Verify kernel Status', async () => {
+            await session.startKernel({ token: startupToken.token });
+
+            when(kernel.status).thenReturn('idle');
+            assert.strictEqual(session.status, 'idle');
+        });
+        test('Verify startup times out', async () => {
+            const clock = sinon.useFakeTimers();
+            disposables.push(new Disposable(() => clock.restore()));
+            when(kernel.requestKernelInfo()).thenCall(() => {
+                clock.tick(launchTimeout);
+                return new Promise(noop);
+            });
+            const promise = session.startKernel({ token: startupToken.token });
+            clock.runAll();
+
+            await assert.isRejected(promise, new KernelConnectionTimeoutError(kernelConnectionMetadata).message);
+        }).timeout(2_000);
+        test('Verify startup can be cancelled', async () => {
+            const clock = sinon.useFakeTimers();
+            disposables.push(new Disposable(() => clock.restore()));
+            when(kernel.requestKernelInfo()).thenCall(() => {
+                clock.tick(launchTimeout);
+                return new Promise(noop);
+            });
+            const promise = session.startKernel({ token: startupToken.token });
+            clock.runAll();
+
+            startupToken.cancel();
+            await assert.isRejected(promise, new CancellationError().message);
+        }).timeout(2_000);
+        test('Verify startup can be cancelled (passing an already cancelled token', async () => {
+            startupToken.cancel();
+            const promise = session.startKernel({ token: startupToken.token });
+
+            await assert.isRejected(promise, new CancellationError().message);
+        }).timeout(2_000);
     });
     suite('After Start', async () => {
         setup(async () => {
@@ -197,47 +247,50 @@ suite('Raw Session & Raw Kernel Connection', () => {
             assert.strictEqual(session.status, 'busy');
         });
         test('Kernel Dies when the Kernel process dies', async () => {
-            let statusOfKernel: Kernel.Status | undefined;
             let disposed = false;
-            session.kernel!.statusChanged.connect((_, s) => (statusOfKernel = s));
+            const statuses: Kernel.Status[] = [];
+            session.kernel!.statusChanged.connect((_, s) => statuses.push(s));
             session.kernel!.disposed.connect(() => (disposed = true));
 
             exitedEvent.fire({ exitCode: 1, reason: 'Killed' });
 
             await waitForCondition(
-                () => !disposed && statusOfKernel === 'dead',
+                () => !disposed && statuses.join(',') === 'dead',
                 1_000,
-                () => `Kernel is not dead, Kernel Disposed = ${disposed} && Kernel Status = ${statusOfKernel}`
+                () => `Kernel is not dead, Kernel Disposed = ${disposed} && Kernel Status = ${statuses.join(',')}`
             );
             assert.strictEqual(session.status, 'dead');
             assert.strictEqual(session.isDisposed, false);
-            assert.strictEqual(session.kernel?.isDisposed ?? false, false);
+            assert.strictEqual(session.kernel?.isDisposed, false);
+            assert.strictEqual(session.kernel?.status, 'dead');
         });
         test('Dispose', async () => {
-            let statusOfKernel: Kernel.Status | undefined;
             let disposed = false;
-            session.statusChanged.connect((_, s) => (statusOfKernel = s));
+            const statuses: Kernel.Status[] = [];
+            session.kernel!.statusChanged.connect((_, s) => statuses.push(s));
             session.disposed.connect(() => (disposed = true));
 
             session.dispose();
 
             await waitForCondition(
-                () => disposed && statusOfKernel === 'dead' && session.status === 'dead',
+                () => disposed && statuses.join(',') === 'dead' && session.status === 'dead',
                 1_000,
-                () => `Session not terminated, Status = ${statusOfKernel} and current status = ${session.status}`
+                () => `Session not terminated, Status = ${statuses.join(',')} and current status = ${session.status}`
             );
+            assert.strictEqual(session.kernel?.isDisposed, true);
+            assert.strictEqual(session.kernel?.status, 'dead');
             verify(kernelProcess.dispose()).once();
         });
         test('Shutdown', async () => {
-            let statusOfKernel: Kernel.Status | undefined;
             let disposed = false;
-            session.statusChanged.connect((_, s) => (statusOfKernel = s));
+            const statuses: Kernel.Status[] = [];
+            session.kernel!.statusChanged.connect((_, s) => statuses.push(s));
             session.disposed.connect(() => (disposed = true));
 
             await session.shutdown();
 
             assert.strictEqual(session.status, 'dead');
-            assert.deepEqual(statusOfKernel, 'dead');
+            assert.deepEqual(statuses, ['dead']);
             assert.strictEqual(disposed, false);
             verify(kernelProcess.dispose()).once();
         });
@@ -266,19 +319,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             when(newKernel.status).thenReturn('busy');
             assert.strictEqual(session.status, 'busy');
         });
-        test('Shutdown & then Restart', async () => {
-            let statusOfKernel: Kernel.Status | undefined;
-            let disposed = false;
-            session.statusChanged.connect((_, s) => (statusOfKernel = s));
-            session.disposed.connect(() => (disposed = true));
-
-            await session.shutdown();
-
-            assert.strictEqual(session.status, 'dead');
-            assert.deepEqual(statusOfKernel, 'dead');
-            assert.strictEqual(disposed, false);
-            verify(kernelProcess.dispose()).once();
-
+        test('Restart Timeout', async () => {
             const newKernel = createKernel();
             const newKernelProcess = createKernelProcess();
             when(kernelLauncher.launch(anything(), anything(), anything(), anything(), anything())).thenResolve(
@@ -286,6 +327,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
             );
 
             const statuses: Kernel.Status[] = [];
+            let disposed = false;
             session.statusChanged.connect((_, s) => statuses.push(s));
             session.disposed.connect(() => (disposed = true));
 
@@ -294,6 +336,44 @@ suite('Raw Session & Raw Kernel Connection', () => {
             assert.strictEqual(session.status, 'idle');
             assert.deepEqual(statuses, ['restarting', 'idle']);
             assert.strictEqual(disposed, false);
+            verify(kernelProcess.dispose()).once();
+
+            // Verify we return the status of the new kernel and not the old kernel
+            when(kernel.status).thenReturn('busy');
+            assert.strictEqual(session.status, 'idle');
+            when(newKernel.status).thenReturn('busy');
+            assert.strictEqual(session.status, 'busy');
+        });
+        test('Shutdown & then Restart', async () => {
+            let disposed = false;
+            const statuses: Kernel.Status[] = [];
+            session.kernel!.statusChanged.connect((_, s) => statuses.push(s));
+            session.disposed.connect(() => (disposed = true));
+
+            await session.shutdown();
+
+            assert.strictEqual(session.status, 'dead');
+            assert.deepEqual(statuses, ['dead']);
+            assert.strictEqual(disposed, false);
+            assert.strictEqual(session.kernel?.isDisposed, false);
+            assert.strictEqual(session.kernel?.status, 'dead');
+            verify(kernelProcess.dispose()).once();
+
+            const newKernel = createKernel();
+            const newKernelProcess = createKernelProcess();
+            when(kernelLauncher.launch(anything(), anything(), anything(), anything(), anything())).thenResolve(
+                resolvableInstance(newKernelProcess)
+            );
+
+            const statusesOfNewKernel: Kernel.Status[] = [];
+            session.statusChanged.connect((_, s) => statusesOfNewKernel.push(s));
+            session.disposed.connect(() => (disposed = true));
+
+            await session.kernel?.restart();
+
+            assert.strictEqual(session.status, 'idle');
+            assert.deepEqual(statusesOfNewKernel, ['restarting', 'idle']);
+            assert.strictEqual(disposed, false);
             verify(kernelProcess.dispose()).atLeast(1);
 
             // Verify we return the status of the new kernel and not the old kernel
@@ -301,6 +381,104 @@ suite('Raw Session & Raw Kernel Connection', () => {
             assert.strictEqual(session.status, 'idle');
             when(newKernel.status).thenReturn('busy');
             assert.strictEqual(session.status, 'busy');
+        });
+        test('Restart after kernel status turns dead', async () => {
+            let disposed = false;
+            const statuses: Kernel.Status[] = [];
+            session.kernel!.statusChanged.connect((_, s) => statuses.push(s));
+            session.disposed.connect(() => (disposed = true));
+
+            when(kernel.status).thenReturn('dead');
+            (session.kernel!.statusChanged as Signal<Kernel.IKernelConnection, Kernel.Status>).emit('dead');
+
+            assert.strictEqual(session.status, 'dead');
+            assert.deepEqual(statuses, ['dead']);
+            assert.strictEqual(disposed, false);
+            verify(kernelProcess.dispose()).never();
+
+            const newKernel = createKernel();
+            const newKernelProcess = createKernelProcess();
+            when(kernelLauncher.launch(anything(), anything(), anything(), anything(), anything())).thenResolve(
+                resolvableInstance(newKernelProcess)
+            );
+
+            const statusesOfNewKernel: Kernel.Status[] = [];
+            session.statusChanged.connect((_, s) => statusesOfNewKernel.push(s));
+            session.disposed.connect(() => (disposed = true));
+
+            await session.kernel?.restart();
+
+            assert.strictEqual(session.status, 'idle');
+            assert.deepEqual(statusesOfNewKernel, ['restarting', 'idle']);
+            assert.strictEqual(disposed, false);
+            verify(kernelProcess.dispose()).atLeast(1);
+
+            // Verify we return the status of the new kernel and not the old kernel
+            when(kernel.status).thenReturn('busy');
+            assert.strictEqual(session.status, 'idle');
+            when(newKernel.status).thenReturn('busy');
+            assert.strictEqual(session.status, 'busy');
+        });
+        test('Restart after kernel is shutdown', async () => {
+            let disposed = false;
+            const statuses: Kernel.Status[] = [];
+            session.kernel!.statusChanged.connect((_, s) => statuses.push(s));
+            session.disposed.connect(() => (disposed = true));
+
+            await session.kernel!.shutdown();
+
+            assert.strictEqual(session.status, 'dead');
+            assert.deepEqual(statuses, ['dead']);
+            assert.strictEqual(disposed, false);
+            assert.strictEqual(session.kernel?.isDisposed, false);
+            assert.strictEqual(session.kernel?.status, 'dead');
+            verify(kernelProcess.dispose()).once();
+
+            const newKernel = createKernel();
+            const newKernelProcess = createKernelProcess();
+            when(kernelLauncher.launch(anything(), anything(), anything(), anything(), anything())).thenResolve(
+                resolvableInstance(newKernelProcess)
+            );
+
+            const statusesOfNewKernel: Kernel.Status[] = [];
+            session.statusChanged.connect((_, s) => statusesOfNewKernel.push(s));
+            session.disposed.connect(() => (disposed = true));
+
+            await session.kernel?.restart();
+
+            assert.strictEqual(session.status, 'idle');
+            assert.deepEqual(statusesOfNewKernel, ['restarting', 'idle']);
+            assert.strictEqual(disposed, false);
+            verify(kernelProcess.dispose()).atLeast(1);
+
+            // Verify we return the status of the new kernel and not the old kernel
+            when(kernel.status).thenReturn('busy');
+            assert.strictEqual(session.status, 'idle');
+            when(newKernel.status).thenReturn('busy');
+            assert.strictEqual(session.status, 'busy');
+        });
+        test('Interrupt the process', async () => {
+            when(kernelProcess.canInterrupt).thenReturn(true);
+            when(kernelProcess.interrupt()).thenResolve();
+
+            await session.kernel?.interrupt();
+
+            verify(kernelProcess.interrupt()).once();
+        });
+        test('Send and interrupt message', async () => {
+            (kernelConnectionMetadata.kernelSpec as ReadWrite<IJupyterKernelSpec>).interrupt_mode = 'message';
+            when(kernelProcess.canInterrupt).thenReturn(false);
+            let request: KernelMessage.IShellMessage<KernelMessage.ShellMessageType> | undefined;
+            when(kernel.sendShellMessage(anything(), anything(), anything())).thenCall((msg) => {
+                request = msg;
+                return { done: Promise.resolve() } as any;
+            });
+
+            await session.kernel?.interrupt();
+
+            verify(kernelProcess.interrupt()).never();
+            verify(kernel.sendShellMessage(anything(), anything(), anything())).once();
+            assert.strictEqual(request?.header.msg_type, 'interrupt_request');
         });
     });
 });

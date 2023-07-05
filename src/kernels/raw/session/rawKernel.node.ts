@@ -29,8 +29,13 @@ import { Telemetry } from '../../../telemetry';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { createDeferred, raceTimeout, sleep } from '../../../platform/common/utils/async';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
-import { isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
+import {
+    isCancellationError,
+    raceCancellationError,
+    wrapCancellationTokens
+} from '../../../platform/common/cancellation';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
@@ -417,6 +422,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
         }
     }
     public async start(token: CancellationToken): Promise<void> {
+        const disposables: IDisposable[] = [];
+        const postStartToken = wrapCancellationTokens(token);
+        disposables.push(postStartToken);
         try {
             const oldKernelProcess = this.kernelProcess;
             this.kernelProcess = undefined;
@@ -437,6 +445,9 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                         token
                     )
             ));
+            if (token.isCancellationRequested) {
+                throw new CancellationError();
+            }
             this.hookupKernelProcessExitHandler(kernelProcess);
             const result = newCreateRawKernel(this.kernelProcess, this.clientId, this.username, this.model);
             this.kernelProcess = result.kernelProcess;
@@ -447,18 +458,24 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                 (info) => this.infoDeferred.resolve(info),
                 (ex) => this.infoDeferred.reject(ex)
             );
+
+            const timeout = setTimeout(() => postStartToken.cancel(), this.launchTimeout);
+            disposables.push({ dispose: () => clearTimeout(timeout) });
             await KernelProgressReporter.wrapAndReportProgress(
                 this.resource,
                 DataScience.waitingForJupyterSessionToBeIdle,
                 () =>
                     postStartKernel(
-                        token,
+                        postStartToken.token,
                         this.launchTimeout,
                         this.resource,
                         this.kernelConnectionMetadata,
                         result.realKernel
                     )
             );
+            if (token.isCancellationRequested) {
+                throw new CancellationError();
+            }
             this.startHandleKernelMessages();
             this.isRestarting = false;
             // Pretend like an open occurred. This will prime the real kernel to be connected
@@ -470,12 +487,22 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
                     ?.shutdown()
                     .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex))
             ]);
+            if (
+                isCancellationError(error) &&
+                postStartToken.token.isCancellationRequested &&
+                !token.isCancellationRequested
+            ) {
+                // This happens when we timeout waiting for the kernel to connect.
+                throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);
+            }
             if (isCancellationError(error) || token.isCancellationRequested) {
                 traceVerbose('Starting of raw session cancelled by user');
             } else {
                 traceError(`Failed to connect raw kernel session: ${error}`);
             }
             throw error;
+        } finally {
+            disposeAllDisposables(disposables);
         }
     }
     private hookupKernelProcessExitHandler(kernelProcess: IKernelProcess) {
@@ -761,8 +788,10 @@ async function postStartKernel(
                 traceVerbose('Sending request for kernelInfo');
                 await raceCancellationError(
                     token,
-                    Promise.all([kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(launchTimeout, 1_500)).then(noop)
+                    Promise.race([
+                        Promise.all([kernel.requestKernelInfo(), gotIoPubMessage.promise]),
+                        sleep(Math.min(launchTimeout, 1_500)).then(noop)
+                    ])
                 );
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);

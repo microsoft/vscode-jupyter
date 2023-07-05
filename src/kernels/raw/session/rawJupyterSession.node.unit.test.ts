@@ -5,12 +5,14 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { mock, when, instance, verify } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
 import { RawSessionConnection } from './rawSession.node';
 import { LocalKernelSpecConnectionMetadata } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IDisposable } from '../../../platform/common/types';
 
 suite('Raw Jupyter Session Wrapper', () => {
     let sessionWrapper: RawJupyterSessionWrapper;
@@ -19,6 +21,7 @@ suite('Raw Jupyter Session Wrapper', () => {
         id: '1234',
         kernelSpec: {} as any
     });
+    const disposables: IDisposable[] = [];
     setup(() => {
         session = mock<RawSessionConnection>();
         const kernel = mock<Kernel.IKernelConnection>();
@@ -62,14 +65,14 @@ suite('Raw Jupyter Session Wrapper', () => {
         when(kernel.connectionStatusChanged).thenReturn(
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
         );
-
+        disposables.push(new Disposable(() => Signal.disconnectAll(instance(session))));
         sessionWrapper = new RawJupyterSessionWrapper(
             instance(session),
             Uri.file('one.ipynb'),
             kernelConnectionMetadata
         );
     });
-
+    teardown(() => disposeAllDisposables(disposables));
     test('Shutdown', async () => {
         when(session.dispose()).thenReturn();
         const statuses: (typeof sessionWrapper.status)[] = [];
