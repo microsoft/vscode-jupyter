@@ -579,17 +579,17 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Confirm message is displayed.
         installerSpy = sinon.spy(installer, 'install');
         const promptToInstall = await clickInstallFromIPyKernelPrompt();
-        await commandManager.executeCommand(Commands.RestartKernel, {
-            notebookEditor: { notebookUri: nbFile }
-        }),
-            await Promise.all([
-                waitForCondition(
-                    async () => promptToInstall.displayed.then(() => true),
-                    delayForUITest,
-                    'Prompt not displayed'
-                ),
-                waitForIPyKernelToGetInstalled()
-            ]);
+        await Promise.all([
+            commandManager.executeCommand(Commands.RestartKernel, {
+                notebookEditor: { notebookUri: nbFile }
+            }),
+            waitForCondition(
+                async () => promptToInstall.displayed.then(() => true),
+                delayForUITest,
+                'Prompt not displayed'
+            ),
+            waitForIPyKernelToGetInstalled()
+        ]);
     });
     test('Ensure ipykernel install prompt is displayed and we can select another kernel after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
@@ -609,10 +609,9 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Confirm message is displayed.
         const promptToInstall = await selectKernelFromIPyKernelPrompt();
         const { kernelSelected } = hookupKernelSelected(promptToInstall, venvNoRegPath);
-        await commands.executeCommand(Commands.RestartKernel, nbFile);
 
         await Promise.all([
-            await commandManager.executeCommand(Commands.RestartKernel, {
+            commandManager.executeCommand(Commands.RestartKernel, {
                 notebookEditor: { notebookUri: nbFile }
             }),
             waitForCondition(

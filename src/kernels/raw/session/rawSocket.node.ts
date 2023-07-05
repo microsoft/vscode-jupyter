@@ -61,6 +61,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
     public dispose() {
         if (!this.closed) {
+            this._onAnyMessage.dispose();
             this.close();
         }
     }
