@@ -7,12 +7,12 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { mock, when, instance, verify } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
+import { RawSessionConnection } from './rawSession.node';
 import { LocalKernelSpecConnectionMetadata } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
-import { RawSessionConnection } from './rawSessionConnection.node';
 
 suite('Raw Jupyter Session Wrapper', () => {
     let sessionWrapper: RawJupyterSessionWrapper;

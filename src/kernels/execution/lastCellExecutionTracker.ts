@@ -133,9 +133,15 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             if (!session) {
                 return;
             }
+<<<<<<< HEAD
             session.anyMessage.connect(anyMessageHandler);
             disposable = new Disposable(() =>
                 swallowExceptions(() => session.anyMessage?.disconnect(anyMessageHandler))
+=======
+            kernel.session.anyMessage.connect(anyMessageHandler);
+            disposable = new Disposable(() =>
+                swallowExceptions(() => kernel.session?.anyMessage?.disconnect(anyMessageHandler))
+>>>>>>> refactorJupyterSessionClasses
             );
             disposables.push(disposable);
         };

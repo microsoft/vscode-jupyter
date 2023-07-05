@@ -72,6 +72,10 @@ export const IOldJupyterSessionManagerFactory = Symbol('IOldJupyterSessionManage
 export interface IOldJupyterSessionManagerFactory {
     create(connInfo: IJupyterConnection): Promise<IJupyterSessionManager>;
 }
+export const INewJupyterSessionManagerFactory = Symbol('INewJupyterSessionManagerFactory');
+export interface INewJupyterSessionManagerFactory {
+    create(connInfo: IJupyterConnection): Promise<IJupyterKernelSession>;
+}
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
     readonly isDisposed: boolean;

@@ -7,6 +7,20 @@ import { traceVerbose, traceWarning, traceInfoIfCI } from '../../../platform/log
 import { Resource, IDisposable } from '../../../platform/common/types';
 import { raceTimeout } from '../../../platform/common/utils/async';
 import { suppressShutdownErrors } from '../../common/baseJupyterSession';
+import type { ContentsManager, KernelMessage, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
+import { CancellationError, CancellationToken, CancellationTokenSource, Uri } from 'vscode';
+import uuid from 'uuid/v4';
+import { raceCancellationError } from '../../../platform/common/cancellation';
+import { BaseError } from '../../../platform/errors/types';
+import { traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../../platform/logging';
+import { Resource, IOutputChannel, IDisplayOptions, ReadWrite, IDisposable } from '../../../platform/common/types';
+import { raceTimeout, waitForCondition } from '../../../platform/common/utils/async';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { JupyterInvalidKernelError } from '../../errors/jupyterInvalidKernelError';
+import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { BaseJupyterSession, JupyterSessionStartError, suppressShutdownErrors } from '../../common/baseJupyterSession';
+import { getNameOfKernelConnection } from '../../helpers';
 import {
     KernelConnectionMetadata,
     isLocalConnection,
@@ -18,6 +32,8 @@ import {
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IJupyterKernelService } from '../types';
+import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
+import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
 import * as path from '../../../platform/vscode-path/resources';
 import { getResourceType } from '../../../platform/common/utils';
@@ -25,6 +41,179 @@ import { waitForIdleOnSession } from '../../common/helpers';
 import { BaseJupyterSessionConnection } from '../../common/baseJupyterSessionConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 
+export class JupyterSessionWrapper
+    extends BaseJupyterSessionConnection<INewSessionWithSocket, 'localJupyter' | 'remoteJupyter'>
+    implements IJupyterKernelSession
+{
+    public get status(): KernelMessage.Status {
+        if (this.isDisposed) {
+            return 'dead';
+        }
+        if (this.session?.kernel) {
+            return this.session.kernel.status;
+        }
+        traceInfoIfCI(
+            `Kernel status not started because real session is ${
+                this.session ? 'defined' : 'undefined'
+            } & real kernel is ${this.session?.kernel ? 'defined' : 'undefined'}`
+        );
+        return 'unknown';
+    }
+    private restartToken?: CancellationTokenSource;
+
+    constructor(
+        session: INewSessionWithSocket,
+        private readonly resource: Resource,
+        private readonly kernelConnectionMetadata: KernelConnectionMetadata,
+        public readonly workingDirectory: Uri,
+        connection: IJupyterConnection,
+        private readonly kernelService: IJupyterKernelService | undefined,
+        private readonly creator: KernelActionSource
+    ) {
+        super(connection.localLaunch ? 'localJupyter' : 'remoteJupyter', session);
+        this.initializeKernelSocket();
+    }
+
+    public override dispose() {
+        this.restartToken?.cancel();
+        this.restartToken?.dispose();
+        this.shutdownImplementation(false).catch(noop);
+    }
+    public override async disposeAsync(): Promise<void> {
+        await this.shutdownImplementation(false).catch(noop);
+        await super.disposeAsync();
+    }
+
+    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
+        try {
+            await waitForIdleOnSession(this.kernelConnectionMetadata, this.resource, this.session, timeout, token);
+        } catch (ex) {
+            traceInfoIfCI(`Error waiting for idle`, ex);
+            await this.shutdown().catch(noop);
+            throw ex;
+        }
+    }
+    public override async restart(): Promise<void> {
+        const disposables: IDisposable[] = [];
+        const token = new CancellationTokenSource();
+        this.restartToken = token;
+        const ui = new DisplayOptions(false);
+        disposables.push(ui);
+        disposables.push(token);
+        try {
+            await this.validateLocalKernelDependencies(token.token, ui);
+            await super.restart();
+        } finally {
+            disposeAllDisposables(disposables);
+        }
+    }
+    private async validateLocalKernelDependencies(token: CancellationToken, ui: DisplayOptions) {
+        if (
+            !this.kernelConnectionMetadata?.interpreter ||
+            !isLocalConnection(this.kernelConnectionMetadata) ||
+            !this.kernelService
+        ) {
+            return;
+        }
+        if (token.isCancellationRequested) {
+            throw new CancellationError();
+        }
+        // Make sure the kernel has ipykernel installed if on a local machine.
+        // When using a Jupyter server to start kernels locally
+        // we need to ensure ipykernel is still available before we attempt to restart a kernel.
+        // Its possible for some reason that users uninstalled ipykernel or its in a broken state
+        // Hence we need to validate the env before we can restart the kernel.
+        // In the past users got into a state where ipykernel was no longer properly installed
+        // after the kernel was started.
+        await this.kernelService.ensureKernelIsUsable(
+            this.resource,
+            this.kernelConnectionMetadata,
+            ui,
+            token,
+            this.creator === '3rdPartyExtension'
+        );
+    }
+
+    public override async shutdown(): Promise<void> {
+        this.restartToken?.cancel();
+        this.restartToken?.dispose();
+        return this.shutdownImplementation(true);
+    }
+
+    private async shutdownImplementation(shutdownEvenIfRemote?: boolean) {
+        if (this._isDisposed) {
+            return;
+        }
+        this._isDisposed = true;
+        traceVerbose(`Shutdown session - current session, called from ${new Error('').stack}`);
+        const kernelIdForLogging = `${this.session.kernel?.id}, ${this.kernelConnectionMetadata.id}`;
+        traceVerbose(`shutdownSession ${kernelIdForLogging} - start`);
+        try {
+            if (shutdownEvenIfRemote || this.canShutdownSession()) {
+                try {
+                    traceVerbose(`Session can be shutdown ${this.kernelConnectionMetadata.id}`);
+                    suppressShutdownErrors(this.session.kernel);
+                    // Shutdown may fail if the process has been killed
+                    if (!this.session.isDisposed) {
+                        await raceTimeout(1000, this.session.shutdown().catch(noop));
+                    }
+                } catch {
+                    // If session.shutdown didn't work, just dispose
+                    try {
+                        // If session.shutdown didn't work, just dispose
+                        if (!this.session.isDisposed) {
+                            this.session.dispose();
+                        }
+                    } catch (e) {
+                        traceWarning('Failures in disposing the session', e);
+                    }
+                } finally {
+                    this.didShutdown.fire();
+                }
+            } else {
+                traceVerbose(`Session cannot be shutdown ${this.kernelConnectionMetadata.id}`);
+            }
+            try {
+                // If session.shutdown didn't work, just dispose
+                if (!this.session.isDisposed) {
+                    this.session.dispose();
+                }
+            } catch (e) {
+                traceWarning('Failures in disposing the session', e);
+            }
+            super.dispose();
+            traceVerbose('Shutdown session -- complete');
+        } catch (e) {
+            traceWarning('Failures in disposing the session', e);
+        }
+        traceVerbose(`shutdownSession ${kernelIdForLogging} - shutdown complete`);
+    }
+    private canShutdownSession(): boolean {
+        if (isLocalConnection(this.kernelConnectionMetadata)) {
+            return true;
+        }
+        // We can never shut down existing (live) kernels.
+        if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
+            return false;
+        }
+        // If this Interactive Window, then always shutdown sessions (even with remote Jupyter).
+        if (this.resource && getResourceType(this.resource) === 'interactive') {
+            return true;
+        }
+        // If we're in notebooks and using Remote Jupyter connections, then never shutdown the sessions.
+        if (
+            this.resource &&
+            getResourceType(this.resource) === 'notebook' &&
+            isRemoteConnection(this.kernelConnectionMetadata)
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+}
+
+// function is
 export class JupyterSessionWrapper
     extends BaseJupyterSessionConnection<INewSessionWithSocket, 'localJupyter' | 'remoteJupyter'>
     implements IJupyterKernelSession

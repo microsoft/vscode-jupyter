@@ -69,5 +69,7 @@ export interface IOldRawKernelSessionFactory extends IAsyncDisposable {
 
 export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');
 export interface IRawKernelSessionFactory extends IAsyncDisposable {
+export const INewRawKernelSessionFactory = Symbol('INewRawKernelSessionFactory');
+export interface INewRawKernelSessionFactory extends IAsyncDisposable {
     create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession>;
 }

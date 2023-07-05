@@ -32,7 +32,11 @@ import {
     IDisposable,
     IWatchableJupyterSettings
 } from '../../../platform/common/types';
+<<<<<<< HEAD
 import { JupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
+=======
+import { NewJupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
+>>>>>>> refactorJupyterSessionClasses
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import {
@@ -42,13 +46,21 @@ import {
     IJupyterKernelService
 } from '../types';
 import { DisplayOptions } from '../../displayOptions';
+<<<<<<< HEAD
 import { JupyterLabHelper } from './jupyterLabHelper';
+=======
+import { JupyterLabHelper } from './jupyterSessionManager';
+>>>>>>> refactorJupyterSessionClasses
 import { resolvableInstance } from '../../../test/datascience/helpers';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 
 suite('New Jupyter Kernel Session Factory', () => {
     const resource = Uri.parse('a.ipynb');
+<<<<<<< HEAD
     let factory: JupyterKernelSessionFactory;
+=======
+    let factory: NewJupyterKernelSessionFactory;
+>>>>>>> refactorJupyterSessionClasses
     let jupyterNotebookProvider: IJupyterServerProvider;
     let jupyterConnection: JupyterConnection;
     let asyncDisposables: IAsyncDisposable[];
@@ -161,7 +173,7 @@ suite('New Jupyter Kernel Session Factory', () => {
         } as unknown as JupyterLabHelper;
         sinon.stub(JupyterLabHelper, 'create').callsFake(() => stub);
 
-        factory = new JupyterKernelSessionFactory(
+        factory = new NewJupyterKernelSessionFactory(
             instance(jupyterNotebookProvider),
             instance(jupyterConnection),
             asyncDisposables as any,

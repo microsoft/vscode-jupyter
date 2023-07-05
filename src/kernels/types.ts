@@ -566,12 +566,18 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly isDisposed: boolean;
     readonly kernel: Kernel.IKernelConnection | null;
     readonly status: KernelMessage.Status;
+<<<<<<< HEAD
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     disposeAsync(): Promise<void>;
+=======
+    readonly kernelId?: string;
+    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+>>>>>>> refactorJupyterSessionClasses
     /**
      * @deprecated Use statusChanged instead.
      */
     onSessionStatusChanged: Event<KernelMessage.Status>;
+    disposeAsync(): Promise<void>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
     restart(): Promise<void>;
@@ -689,6 +695,16 @@ export interface KernelSessionCreationOptions {
     token: CancellationToken;
     creator: KernelActionSource;
 }
+<<<<<<< HEAD
+=======
+export interface RemoteKernelSessionCreationOptions {
+    resource: Resource;
+    ui: IDisplayOptions;
+    kernelConnection: KernelConnectionMetadata;
+    token: CancellationToken;
+    creator: KernelActionSource;
+}
+>>>>>>> refactorJupyterSessionClasses
 export interface LocaLKernelSessionCreationOptions {
     resource: Resource;
     ui: IDisplayOptions;
