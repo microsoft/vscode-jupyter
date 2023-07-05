@@ -494,10 +494,8 @@ async function postStartKernel(
                 traceVerbose('Sending request for kernelInfo');
                 await raceCancellationError(
                     token,
-                    Promise.race([
-                        Promise.all([kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                        sleep(Math.min(launchTimeout, 1_500)).then(noop)
-                    ])
+                    Promise.all([kernel.requestKernelInfo(), gotIoPubMessage.promise]),
+                    sleep(Math.min(launchTimeout, 1_500)).then(noop)
                 );
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
