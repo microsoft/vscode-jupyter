@@ -207,7 +207,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
-            traceVerbose(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
+            traceVerbose(`Restart kernel command handler for ${getDisplayPath(document.uri)}`);
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage;

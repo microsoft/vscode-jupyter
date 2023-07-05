@@ -609,10 +609,9 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         // Confirm message is displayed.
         const promptToInstall = await selectKernelFromIPyKernelPrompt();
         const { kernelSelected } = hookupKernelSelected(promptToInstall, venvNoRegPath);
-        await commands.executeCommand(Commands.RestartKernel, nbFile);
 
         await Promise.all([
-            await commandManager.executeCommand(Commands.RestartKernel, {
+            commandManager.executeCommand(Commands.RestartKernel, {
                 notebookEditor: { notebookUri: nbFile }
             }),
             waitForCondition(
