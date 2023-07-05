@@ -18,7 +18,7 @@ export class ChainingExecuteRequester {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-        // For requests we send out, there's no need to queue them.
+        // There is no need to queue the requests we send out (i.e. hidden requests, that are not directly sent by the user).
         // I.e. where possible we shouldn't have to queue requests unnecessarily.
         // Ensures we don't run into situations where we're waiting for a previous request to complete, which could result in a dead lock.
         // See here for such an example https://github.com/microsoft/vscode-jupyter/issues/10510

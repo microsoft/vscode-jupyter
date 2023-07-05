@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { IChangedArgs } from '@jupyterlab/coreutils';
+import * as fakeTimers from '@sinonjs/fake-timers';
 import {
     ContentsManager,
     Kernel,
@@ -11,36 +12,35 @@ import {
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import { SessionConnection } from '@jupyterlab/services/lib/session/default';
-import { ISignal } from '@lumino/signaling';
+import { ISignal, Signal } from '@lumino/signaling';
 import { assert } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { CancellationTokenSource, Uri } from 'vscode';
-
+import { CancellationTokenSource, Disposable, Uri } from 'vscode';
 import { IDisposable, ReadWrite, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import {
     IJupyterConnection,
+    INewSessionWithSocket,
     ISessionWithSocket,
     KernelConnectionMetadata,
-    LiveKernelModel,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { JupyterKernelService } from '../../../kernels/jupyter/session/jupyterKernelService.node';
-import { OldJupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
+import { JupyterSessionWrapper, OldJupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
 import * as path from '../../../platform/vscode-path/path';
 import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
-import { Signal } from '@lumino/signaling';
 import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvalidKernelError';
 import { MockOutputChannel } from '../../../test/mockClasses';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { resolvableInstance } from '../../../test/datascience/helpers';
+import { createEventHandler } from '../../../test/common';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('Old JupyterSession', () => {
@@ -56,46 +56,7 @@ suite('Old JupyterSession', () => {
     let kernel: Kernel.IKernelConnection;
     let statusChangedSignal: ISignal<ISessionWithSocket, Kernel.Status>;
     let kernelChangedSignal: ISignal<ISessionWithSocket, IKernelChangedArgs>;
-    let restartCount = 0;
     let token: CancellationTokenSource;
-    const newActiveRemoteKernel: LiveKernelModel = {
-        argv: [],
-        display_name: 'new kernel',
-        language: 'python',
-        name: 'newkernel',
-        executable: 'path',
-        lastActivityTime: new Date(),
-        numberOfConnections: 1,
-        model: {
-            statusChanged: {
-                connect: noop,
-                disconnect: noop
-            },
-            kernelChanged: {
-                connect: noop,
-                disconnect: noop
-            },
-            iopubMessage: {
-                connect: noop,
-                disconnect: noop
-            },
-            unhandledMessage: {
-                connect: noop,
-                disconnect: noop
-            },
-            kernel: {
-                status: 'idle',
-                restart: () => (restartCount = restartCount + 1),
-                registerCommTarget: noop,
-                statusChanged: instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()),
-                connectionStatusChanged: instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
-            },
-            shutdown: () => Promise.resolve(),
-            isRemoteSession: false
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any,
-        id: 'liveKernel'
-    };
     function createJupyterSession(resource: Resource = undefined, kernelConnection?: KernelConnectionMetadata) {
         connection = mock<IJupyterConnection>();
         when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
@@ -126,6 +87,11 @@ suite('Old JupyterSession', () => {
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
         when(session.unhandledMessage).thenReturn(instance(ioPubSignal));
+        when(session.propertyChanged).thenReturn(new Signal<ISessionWithSocket, 'path'>(instance(session)));
+        when(session.connectionStatusChanged).thenReturn(
+            new Signal<ISessionWithSocket, Kernel.ConnectionStatus>(instance(session))
+        );
+        when(session.anyMessage).thenReturn(new Signal<ISessionWithSocket, Kernel.IAnyMessageArgs>(instance(session)));
         when(session.kernel).thenReturn(instance(kernel));
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
@@ -155,7 +121,7 @@ suite('Old JupyterSession', () => {
         contentsManager = mock(ContentsManager);
         specManager = mock(KernelSpecManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
+        when(sessionManager.connectTo(anything())).thenReturn(instance(session));
         const fs = mock<FileSystem>();
         const tmpFile = path.join('tmp', 'tempfile.json');
         const backingFileCreator = new BackingFileCreator();
@@ -202,7 +168,7 @@ suite('Old JupyterSession', () => {
         }
     }
     teardown(async () => {
-        await jupyterSession.dispose().catch(noop);
+        await jupyterSession.disposeAsync().catch(noop);
         disposeAllDisposables(disposables);
     });
 
@@ -239,7 +205,7 @@ suite('Old JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // Shutdown sessions started for Interactive window.
@@ -265,7 +231,7 @@ suite('Old JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // Never shutdown live sessions connected from Interactive window.
@@ -289,7 +255,7 @@ suite('Old JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // Never shutdown sessions started from Notebooks.
@@ -315,7 +281,7 @@ suite('Old JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // Never shutdown live sessions connected from Notebooks.
@@ -327,7 +293,7 @@ suite('Old JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // always kill the sessions.
@@ -361,9 +327,10 @@ suite('Old JupyterSession', () => {
             let newSessionCreated: Deferred<void>;
             let sessionDisposed: Signal<Session.ISessionConnection, void>;
             setup(async () => {
-                newSession = mock(SessionConnection);
+                newSession = mock<Session.ISessionConnection>();
                 sessionDisposed = new Signal<Session.ISessionConnection, void>(instance(newSession));
                 when(newSession.disposed).thenReturn(sessionDisposed);
+                when(newSession.isDisposed).thenReturn(false);
                 newKernelConnection = mock<Kernel.IKernelConnection>();
                 newStatusChangedSignal = mock<ISignal<Session.ISessionConnection, Kernel.Status>>();
                 newKernelChangedSignal = mock<ISignal<Session.ISessionConnection, IKernelChangedArgs>>();
@@ -375,6 +342,15 @@ suite('Old JupyterSession', () => {
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
                 when(newSession.iopubMessage).thenReturn(instance(newIoPubSignal));
                 when(newSession.unhandledMessage).thenReturn(instance(newIoPubSignal));
+                when(newSession.propertyChanged).thenReturn(
+                    new Signal<Session.ISessionConnection, 'path'>(instance(newSession))
+                );
+                when(newSession.connectionStatusChanged).thenReturn(
+                    new Signal<Session.ISessionConnection, Kernel.ConnectionStatus>(instance(newSession))
+                );
+                when(newSession.anyMessage).thenReturn(
+                    new Signal<Session.ISessionConnection, Kernel.IAnyMessageArgs>(instance(newSession))
+                );
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
@@ -485,11 +461,28 @@ suite('Old JupyterSession', () => {
                 remoteSessionInstance = instance(remoteSession);
                 remoteSessionInstance.isRemoteSession = false;
                 when(remoteSession.kernel).thenReturn(instance(remoteKernel));
+                when(remoteSession.disposed).thenReturn(new Signal<ISessionWithSocket, void>(instance(remoteSession)));
+                when(remoteSession.propertyChanged).thenReturn(
+                    new Signal<ISessionWithSocket, 'path'>(instance(remoteSession))
+                );
+                when(remoteSession.connectionStatusChanged).thenReturn(
+                    new Signal<ISessionWithSocket, Kernel.ConnectionStatus>(instance(remoteSession))
+                );
+                when(remoteSession.anyMessage).thenReturn(
+                    new Signal<ISessionWithSocket, Kernel.IAnyMessageArgs>(instance(remoteSession))
+                );
+                when(remoteSession.kernelChanged).thenReturn(
+                    new Signal<
+                        ISessionWithSocket,
+                        IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
+                    >(instance(remoteSession))
+                );
+
                 when(remoteKernel.registerCommTarget(anything(), anything())).thenReturn();
                 const connectionStatusChanged = mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>();
                 when(remoteKernel.connectionStatusChanged).thenReturn(instance(connectionStatusChanged));
                 when(sessionManager.startNew(anything(), anything())).thenCall(() => {
-                    return Promise.resolve(instance(remoteSession));
+                    return resolvableInstance(remoteSession);
                 });
 
                 const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
@@ -507,14 +500,12 @@ suite('Old JupyterSession', () => {
             });
             test('Restart should restart the new remote kernel', async () => {
                 when(remoteKernel.restart()).thenResolve();
-                restartCount = 0;
 
                 await jupyterSession.restart();
 
-                assert.isTrue((newActiveRemoteKernel.model as any).isRemoteSession);
                 // We should restart the kernel, not a new session.
                 verify(sessionManager.startNew(anything(), anything())).never();
-                assert.equal(restartCount, 1, 'Did not restart the kernel');
+                verify(kernel.restart()).once();
                 verify(remoteSession.shutdown()).never();
                 verify(remoteSession.dispose()).never();
             });
@@ -686,6 +677,392 @@ suite('Old JupyterSession', () => {
                 assert.include(options.path, 'Interactive-5.interactive-jvsc');
                 assert.strictEqual(options.type, 'console');
                 assert.deepStrictEqual(options.kernel, { name: 'python3' });
+            });
+        });
+    });
+});
+
+suite('JupyterSession', () => {
+    const disposables: IDisposable[] = [];
+    let jupyterSession: JupyterSessionWrapper;
+    let connection: IJupyterConnection;
+    let session: INewSessionWithSocket;
+    let kernel: Kernel.IKernelConnection;
+    let token: CancellationTokenSource;
+    let clock: fakeTimers.InstalledClock;
+    let sessionDisposed: Signal<INewSessionWithSocket, void>;
+    let sessionPropertyChanged: Signal<INewSessionWithSocket, 'path'>;
+    let sessionIOPubMessage: Signal<INewSessionWithSocket, KernelMessage.IIOPubMessage>;
+    let sessionKernelChanged: Signal<
+        INewSessionWithSocket,
+        IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
+    >;
+    let sessionUnhandledMessage: Signal<INewSessionWithSocket, KernelMessage.IMessage>;
+    let sessionConnectionStatusChanged: Signal<INewSessionWithSocket, Kernel.ConnectionStatus>;
+    let sessionAnyMessage: Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>;
+    let kernelService: JupyterKernelService;
+    function createJupyterSession(resource: Resource = undefined, kernelConnectionMetadata: KernelConnectionMetadata) {
+        connection = mock<IJupyterConnection>();
+        when(connection.mappedRemoteNotebookDir).thenReturn(undefined);
+        token = new CancellationTokenSource();
+        disposables.push(token);
+
+        session = mock<INewSessionWithSocket>();
+        kernel = mock<Kernel.IKernelConnection>();
+        when(session.shutdown()).thenResolve();
+        when(session.dispose()).thenReturn();
+        when(session.kernel).thenReturn(instance(kernel));
+        sessionDisposed = new Signal<INewSessionWithSocket, void>(instance(session));
+        sessionPropertyChanged = new Signal<INewSessionWithSocket, 'path'>(instance(session));
+        sessionIOPubMessage = new Signal<INewSessionWithSocket, KernelMessage.IIOPubMessage>(instance(session));
+        sessionKernelChanged = new Signal<
+            INewSessionWithSocket,
+            IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>
+        >(instance(session));
+        sessionUnhandledMessage = new Signal<INewSessionWithSocket, KernelMessage.IMessage>(instance(session));
+        sessionConnectionStatusChanged = new Signal<INewSessionWithSocket, Kernel.ConnectionStatus>(instance(session));
+        sessionAnyMessage = new Signal<INewSessionWithSocket, Kernel.IAnyMessageArgs>(instance(session));
+        when(session.disposed).thenReturn(sessionDisposed);
+        when(session.propertyChanged).thenReturn(sessionPropertyChanged);
+        when(session.iopubMessage).thenReturn(sessionIOPubMessage);
+        when(session.kernelChanged).thenReturn(sessionKernelChanged);
+        when(session.statusChanged).thenReturn(new Signal<INewSessionWithSocket, Kernel.Status>(instance(session)));
+        when(session.unhandledMessage).thenReturn(sessionUnhandledMessage);
+        when(session.connectionStatusChanged).thenReturn(sessionConnectionStatusChanged);
+        when(session.anyMessage).thenReturn(sessionAnyMessage);
+        when(session.isDisposed).thenReturn(false);
+        when(kernel.status).thenReturn('idle');
+        when(kernel.connectionStatus).thenReturn('connected');
+        when(kernel.statusChanged).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, Kernel.Status>>()));
+        when(kernel.iopubMessage).thenReturn(
+            instance(
+                mock<ISignal<Kernel.IKernelConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>()
+            )
+        );
+        when(kernel.anyMessage).thenReturn({ connect: noop, disconnect: noop } as any);
+        when(kernel.unhandledMessage).thenReturn(
+            instance(mock<ISignal<Kernel.IKernelConnection, KernelMessage.IMessage<KernelMessage.MessageType>>>())
+        );
+        when(kernel.disposed).thenReturn(instance(mock<ISignal<Kernel.IKernelConnection, void>>()));
+        when(kernel.connectionStatusChanged).thenReturn(
+            instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
+        );
+        when(connection.rootDirectory).thenReturn(Uri.file(''));
+        when(connection.localLaunch).thenReturn(false);
+        kernelService = mock(JupyterKernelService);
+        when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
+        resolvableInstance(session);
+        jupyterSession = new JupyterSessionWrapper(
+            instance(session),
+            resource,
+            kernelConnectionMetadata,
+            Uri.file(''),
+            instance(connection),
+            instance(kernelService),
+            'jupyterExtension'
+        );
+    }
+    teardown(async () => {
+        await jupyterSession.disposeAsync().catch(noop);
+        disposeAllDisposables(disposables);
+    });
+
+    suite('Shutting down of sessions when disposing a session', () => {
+        test('New Remote sessions started with Interactive should be shutdown when disposing the session', async () => {
+            createJupyterSession(
+                Uri.file('test.py'),
+                RemoteKernelSpecConnectionMetadata.create({
+                    id: '',
+                    kernelSpec: {} as any,
+                    baseUrl: '',
+                    serverId: ''
+                })
+            );
+
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
+            // const onDidDispose = jupyterSession.
+            when(connection.localLaunch).thenReturn(false);
+            when(session.shutdown()).thenResolve();
+            when(session.dispose()).thenReturn();
+
+            await jupyterSession.disposeAsync();
+
+            // Shutdown sessions started for Interactive window.
+            verify(session.shutdown()).once();
+            verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 1);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
+        });
+        test('New Remote sessions started with Interactive should be shutdown when disposing the session (without calling disposeAsync)', async () => {
+            createJupyterSession(
+                Uri.file('test.py'),
+                RemoteKernelSpecConnectionMetadata.create({
+                    id: '',
+                    kernelSpec: {} as any,
+                    baseUrl: '',
+                    serverId: ''
+                })
+            );
+
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
+            // const onDidDispose = jupyterSession.
+            when(connection.localLaunch).thenReturn(false);
+            when(session.shutdown()).thenResolve();
+            when(session.dispose()).thenReturn();
+
+            jupyterSession.dispose();
+            await onDidShutdown.assertFiredExactly(1, 100);
+            await onDidDispose.assertFiredExactly(1, 100);
+
+            // Shutdown sessions started for Interactive window.
+            verify(session.shutdown()).once();
+            verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 1);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
+        });
+        test('Existing Remote session connected with Interactive should not be shutdown when disposing the session', async () => {
+            createJupyterSession(
+                Uri.file('test.py'),
+                LiveRemoteKernelConnectionMetadata.create({
+                    id: '',
+                    kernelModel: {} as any,
+                    baseUrl: '',
+                    serverId: ''
+                })
+            );
+
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
+            when(connection.localLaunch).thenReturn(false);
+            when(session.shutdown()).thenResolve();
+            when(session.dispose()).thenReturn();
+
+            await jupyterSession.disposeAsync();
+
+            // Never shutdown live sessions connected from Interactive window.
+            verify(session.shutdown()).never();
+            verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 0);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
+        });
+        test('New Remote sessions started with Notebook should not be shutdown when disposing the session', async () => {
+            createJupyterSession(
+                Uri.file('test.ipynb'),
+                RemoteKernelSpecConnectionMetadata.create({
+                    id: '',
+                    kernelSpec: {} as any,
+                    baseUrl: '',
+                    serverId: ''
+                })
+            );
+
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
+            when(connection.localLaunch).thenReturn(false);
+            when(session.shutdown()).thenResolve();
+            when(session.dispose()).thenReturn();
+
+            await jupyterSession.disposeAsync();
+
+            // Never shutdown sessions started from Notebooks.
+            verify(session.shutdown()).never();
+            verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 0);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
+        });
+        test('Existing Remote session connected with Notebook should not be shutdown when disposing the session', async () => {
+            createJupyterSession(
+                Uri.file('test.ipynb'),
+                LiveRemoteKernelConnectionMetadata.create({
+                    id: '',
+                    kernelModel: {} as any,
+                    baseUrl: '',
+                    serverId: ''
+                })
+            );
+
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
+            when(connection.localLaunch).thenReturn(false);
+            when(session.shutdown()).thenResolve();
+            when(session.dispose()).thenReturn();
+
+            await jupyterSession.disposeAsync();
+
+            // Never shutdown live sessions connected from Notebooks.
+            verify(session.shutdown()).never();
+            verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 0);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
+        });
+        test('Local sessions should be shutdown when disposing the session', async () => {
+            createJupyterSession(
+                Uri.file('test.ipynb'),
+                LocalKernelSpecConnectionMetadata.create({
+                    id: '',
+                    kernelSpec: {} as any,
+                    interpreter: {} as any
+                })
+            );
+
+            const onDidShutdown = createEventHandler(jupyterSession, 'onDidShutdown');
+            const onDidDispose = createEventHandler(jupyterSession, 'onDidDispose');
+            let disposeSignalled = false;
+            jupyterSession.disposed.connect(() => (disposeSignalled = true));
+            when(connection.localLaunch).thenReturn(true);
+            when(session.shutdown()).thenResolve();
+            when(session.dispose()).thenReturn();
+
+            await jupyterSession.disposeAsync();
+
+            // always kill the sessions.
+            verify(session.shutdown()).once();
+            verify(session.dispose()).once();
+            assert.strictEqual(onDidShutdown.count, 1);
+            assert.strictEqual(onDidDispose.count, 1);
+            assert.strictEqual(jupyterSession.status, 'dead');
+            assert.strictEqual(jupyterSession.isDisposed, true);
+            assert.strictEqual(disposeSignalled, true);
+        });
+    });
+    suite(`Wait for session idle`, () => {
+        ['local', 'remote'].forEach((connectionType) => {
+            suite(connectionType, () => {
+                const token = new CancellationTokenSource();
+                setup(async () => {
+                    const kernelConnection =
+                        connectionType === 'local'
+                            ? LocalKernelSpecConnectionMetadata.create({
+                                  id: '',
+                                  kernelSpec: {} as any,
+                                  interpreter: {} as any
+                              })
+                            : RemoteKernelSpecConnectionMetadata.create({
+                                  id: '',
+                                  kernelSpec: {} as any,
+                                  baseUrl: '',
+                                  serverId: ''
+                              });
+                    createJupyterSession(Uri.file('test.ipynb'), kernelConnection);
+                });
+                suiteTeardown(() => token.dispose());
+                test('Will timeout', async () => {
+                    when(kernel.status).thenReturn('unknown');
+                    clock = fakeTimers.install();
+                    disposables.push(new Disposable(() => clock.uninstall()));
+
+                    const promise = jupyterSession.waitForIdle(100, token.token);
+                    promise.catch(noop);
+                    await clock.runAllAsync();
+
+                    await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut);
+                });
+                test('Will succeed', async () => {
+                    when(kernel.status).thenReturn('idle');
+
+                    await jupyterSession.waitForIdle(100, token.token);
+
+                    verify(kernel.status).atLeast(1);
+                });
+            });
+        });
+    });
+    suite('Local Sessions', async () => {
+        suite('Executing user code', async () => {
+            setup(() => {
+                createJupyterSession(
+                    Uri.file('test.ipynb'),
+                    LocalKernelSpecConnectionMetadata.create({
+                        id: '',
+                        kernelSpec: {} as any,
+                        interpreter: {} as any
+                    })
+                );
+            });
+
+            async function executeUserCode() {
+                const future =
+                    mock<Kernel.IFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>>();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                when(future.done).thenReturn(Promise.resolve(undefined as any));
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                when(kernel.requestExecute(anything(), anything(), anything())).thenReturn(instance(future) as any);
+
+                const result = jupyterSession.kernel!.requestExecute({
+                    code: '',
+                    allow_stdin: false,
+                    silent: false
+                });
+
+                assert.isOk(result);
+                await result!.done;
+            }
+
+            test('Restart should just restart the kernel', async () => {
+                when(connection.localLaunch).thenReturn(true);
+                when(session.isDisposed).thenReturn(false);
+                const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
+                when(session.serverSettings).thenReturn(instance(sessionServerSettings));
+
+                await executeUserCode();
+                await jupyterSession.restart();
+
+                // We should not kill session.
+                verify(session.shutdown()).never();
+                verify(session.dispose()).never();
+                // Confirm kernel is restarted.
+                verify(kernel.restart()).once();
+
+                verify(
+                    kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), anything())
+                ).once();
+            });
+            test('Restart should fail if user cancels from installing missing dependencies', async () => {
+                when(connection.localLaunch).thenReturn(true);
+                when(session.isDisposed).thenReturn(false);
+                const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
+                when(session.serverSettings).thenReturn(instance(sessionServerSettings));
+                when(
+                    kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), anything())
+                ).thenReject(new Error('Do not install missing dependencies'));
+
+                await assert.isRejected(jupyterSession.restart(), 'Do not install missing dependencies');
+
+                // We should not kill session.
+                verify(session.shutdown()).never();
+                verify(session.dispose()).never();
+                // Confirm kernel was not restarted.
+                verify(kernel.restart()).never();
+                verify(
+                    kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), anything())
+                ).once();
             });
         });
     });

@@ -1409,7 +1409,8 @@
                         "enum": [
                             "FastKernelPicker",
                             "PasswordManager",
-                            "NewRemoteUriStorage"
+                            "NewRemoteUriStorage",
+                            "NewJupyterSession"
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
@@ -1422,7 +1423,8 @@
                         "enum": [
                             "FastKernelPicker",
                             "PasswordManager",
-                            "NewRemoteUriStorage"
+                            "NewRemoteUriStorage",
+                            "NewJupyterSession"
                         ]
                     },
                     "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
@@ -2139,7 +2141,7 @@
         "@types/redux-logger": "^3.0.7",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
-        "@types/sinon": "^7.5.1",
+        "@types/sinon": "^10.0.15",
         "@types/sinonjs__fake-timers": "^6.0.1",
         "@types/stack-trace": "0.0.29",
         "@types/strip-comments": "^2.0.1",

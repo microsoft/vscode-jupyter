@@ -101,7 +101,6 @@ export class ExperimentService implements IExperimentService {
         if (!this.experimentationService || !this.enabled) {
             return false;
         }
-
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
         if (this._optOutFrom.includes(experiment.toString())) {
@@ -115,9 +114,14 @@ export class ExperimentService implements IExperimentService {
             this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment as unknown as string);
             return true;
         }
+
+        // Temporarily until we enable an experiment for all insiders.
+        if (experiment === ExperimentGroups.NewJupyterSession && this.appEnvironment.channel === 'insiders') {
+            return true;
+        }
+
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
-
         const treatmentVariable = this.experimentationService.getTreatmentVariable(
             EXP_CONFIG_ID,
             experiment as unknown as string
@@ -174,6 +178,9 @@ export class ExperimentService implements IExperimentService {
             return;
         }
 
+        const optedOutOfExperiments = new Set(this._optOutFrom);
+        const optedIntoExperiments = new Set(this._optInto);
+
         // Log experiments that users manually opt out, these are experiments which are added using the exp framework.
         this._optOutFrom
             .filter((exp) => exp !== 'All')
@@ -201,9 +208,17 @@ export class ExperimentService implements IExperimentService {
                     !this._optOutFrom.includes(exp) &&
                     !this._optInto.includes(exp)
                 ) {
+                    optedIntoExperiments.add(exp);
                     traceInfo(Experiments.inGroup(exp));
                 }
             });
+
+            if (
+                !optedIntoExperiments.has(ExperimentGroups.NewJupyterSession) &&
+                !optedOutOfExperiments.has(ExperimentGroups.NewJupyterSession)
+            ) {
+                traceInfo(Experiments.inGroup(ExperimentGroups.NewJupyterSession));
+            }
         }
     }
 }

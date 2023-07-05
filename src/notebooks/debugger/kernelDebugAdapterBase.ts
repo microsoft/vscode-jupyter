@@ -287,7 +287,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     protected async sendMessageToJupyterSession(message: DebugProtocol.ProtocolMessage) {
-        if (this.jupyterSession.disposed || this.jupyterSession.status === 'dead' || !this.jupyterSession.kernel) {
+        if (this.jupyterSession.isDisposed || this.jupyterSession.status === 'dead' || !this.jupyterSession.kernel) {
             traceInfo(`Skipping sending message ${message.type} because session is disposed`);
             return;
         }

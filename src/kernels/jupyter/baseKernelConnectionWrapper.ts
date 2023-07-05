@@ -61,8 +61,10 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
         }
         return this.possibleKernelConnection;
     }
+    public readonly originalKernel: Kernel.IKernelConnection;
 
     constructor(private _previousKernelConnection: Kernel.IKernelConnection, disposables: IDisposable[]) {
+        this.originalKernel = _previousKernelConnection;
         this.startHandleKernelMessages(_previousKernelConnection);
         disposables.push(
             new Disposable(() => {

@@ -559,15 +559,20 @@ export enum InterruptResult {
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
-export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'> extends IAsyncDisposable {
-    readonly id?: string;
+export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'>
+    extends Session.ISessionConnection {
+    readonly id: string;
     readonly kind: T;
-    readonly disposed: boolean;
-    readonly kernel?: Kernel.IKernelConnection;
+    readonly isDisposed: boolean;
+    readonly kernel: Kernel.IKernelConnection | null;
     readonly status: KernelMessage.Status;
-    readonly kernelId: string;
+    readonly kernelId?: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    /**
+     * @deprecated Use statusChanged instead.
+     */
     onSessionStatusChanged: Event<KernelMessage.Status>;
+    disposeAsync(): Promise<void>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
     restart(): Promise<void>;
@@ -579,7 +584,7 @@ export interface IJupyterKernelSession extends IBaseKernelSession<'remoteJupyter
 export interface IRawKernelSession extends IBaseKernelSession<'localRaw'> {}
 export type IKernelSession = IJupyterKernelSession | IRawKernelSession;
 
-export type ISessionWithSocket = Session.ISessionConnection & {
+export interface ISessionWithSocket extends Session.ISessionConnection {
     /**
      * The resource associated with this session.
      */
@@ -593,7 +598,11 @@ export type ISessionWithSocket = Session.ISessionConnection & {
      */
     kernelSocketInformation: KernelSocketInformation;
     kernelConnectionMetadata: KernelConnectionMetadata;
-};
+}
+
+export interface INewSessionWithSocket extends Session.ISessionConnection {
+    kernelSocketInformation: KernelSocketInformation;
+}
 
 export interface IJupyterKernelSpec {
     /**
@@ -674,13 +683,27 @@ export type ConnectNotebookProviderOptions = GetServerOptions;
 /**
  * Options for getting a notebook
  */
-export type KernelSessionCreationOptions = {
+export interface KernelSessionCreationOptions {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
     token: CancellationToken;
     creator: KernelActionSource;
-};
+}
+export interface RemoteKernelSessionCreationOptions {
+    resource: Resource;
+    ui: IDisplayOptions;
+    kernelConnection: KernelConnectionMetadata;
+    token: CancellationToken;
+    creator: KernelActionSource;
+}
+export interface LocaLKernelSessionCreationOptions {
+    resource: Resource;
+    ui: IDisplayOptions;
+    kernelConnection: LocalKernelConnectionMetadata;
+    token: CancellationToken;
+    creator: KernelActionSource;
+}
 
 export const IJupyterServerConnector = Symbol('IJupyterServerConnector');
 /**
@@ -740,7 +763,7 @@ export interface IKernelSocket {
     removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
 }
 
-export type KernelSocketOptions = {
+export interface KernelSocketOptions {
     /**
      * Kernel Id.
      */
@@ -766,8 +789,8 @@ export type KernelSocketOptions = {
          */
         readonly name: string;
     };
-};
-export type KernelSocketInformation = {
+}
+export interface KernelSocketInformation {
     /**
      * Underlying socket used by jupyterlab/services to communicate with kernel.
      * See jupyterlab/services/kernel/default.ts
@@ -777,7 +800,7 @@ export type KernelSocketInformation = {
      * Options used to clone a kernel.
      */
     readonly options: KernelSocketOptions;
-};
+}
 
 /**
  * Response for installation of kernel dependencies such as ipykernel.
