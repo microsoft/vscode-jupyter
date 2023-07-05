@@ -56,7 +56,7 @@ import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpda
 import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,
-    IJupyterSessionManagerFactory
+    IOldJupyterSessionManagerFactory
 } from '../../../kernels/jupyter/types';
 import {
     IKernelFinder,
@@ -340,8 +340,9 @@ async function shutdownRemoteKernels() {
     const api = await initialize();
     const serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     const jupyterConnection = api.serviceContainer.get<JupyterConnection>(JupyterConnection);
-    const jupyterSessionManagerFactory =
-        api.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
+    const jupyterSessionManagerFactory = api.serviceContainer.get<IOldJupyterSessionManagerFactory>(
+        IOldJupyterSessionManagerFactory
+    );
     const cancelToken = new CancellationTokenSource();
     let sessionManager: IJupyterSessionManager | undefined;
     try {

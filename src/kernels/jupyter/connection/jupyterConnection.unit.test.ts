@@ -15,7 +15,7 @@ import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
-    IJupyterSessionManagerFactory,
+    IOldJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration
 } from '../types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -35,7 +35,7 @@ use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
     let registrationPicker: IJupyterUriProviderRegistration;
-    let sessionManagerFactory: IJupyterSessionManagerFactory;
+    let sessionManagerFactory: IOldJupyterSessionManagerFactory;
     let sessionManager: IJupyterSessionManager;
     let serverUriStorage: IJupyterServerUriStorage;
     let appShell: IApplicationShell;
@@ -59,7 +59,7 @@ suite('Jupyter Connection', async () => {
     };
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
-        sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
+        sessionManagerFactory = mock<IOldJupyterSessionManagerFactory>();
         sessionManager = mock<IJupyterSessionManager>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
         appShell = mock<IApplicationShell>();

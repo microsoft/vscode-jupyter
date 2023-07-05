@@ -3,8 +3,8 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IKernelSession, IKernelSessionFactory, isLocalConnection, KernelSessionCreationOptions } from '../types';
-import { IRawKernelSessionFactory, IRawNotebookSupportedService } from '../raw/types';
-import { JupyterKernelSessionFactory } from '../jupyter/session/jupyterKernelSessionFactory';
+import { IOldRawKernelSessionFactory, IRawNotebookSupportedService } from '../raw/types';
+import { OldJupyterKernelSessionFactory } from '../jupyter/session/oldJupyterKernelSessionFactory';
 
 /**
  * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
@@ -15,10 +15,10 @@ export class KernelSessionFactory implements IKernelSessionFactory {
         @inject(IRawNotebookSupportedService)
         private readonly rawKernelSupported: IRawNotebookSupportedService,
 
-        @inject(IRawKernelSessionFactory)
+        @inject(IOldRawKernelSessionFactory)
         @optional()
-        private readonly rawKernelSessionFactory: IRawKernelSessionFactory | undefined,
-        @inject(JupyterKernelSessionFactory)
+        private readonly rawKernelSessionFactory: IOldRawKernelSessionFactory | undefined,
+        @inject(OldJupyterKernelSessionFactory)
         private readonly jupyterSessionFactory: IKernelSessionFactory
     ) {}
 

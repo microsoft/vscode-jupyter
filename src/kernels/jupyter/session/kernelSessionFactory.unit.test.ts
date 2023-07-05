@@ -12,8 +12,8 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IAsyncDisposableRegistry } from '../../../platform/common/types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnection } from '../connection/jupyterConnection';
-import { JupyterKernelSessionFactory } from './jupyterKernelSessionFactory';
-import { IJupyterServerProvider, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
+import { OldJupyterKernelSessionFactory } from './oldJupyterKernelSessionFactory';
+import { IJupyterServerProvider, IJupyterSessionManager, IOldJupyterSessionManagerFactory } from '../types';
 import { IJupyterKernelSession, KernelConnectionMetadata } from '../../types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 
@@ -23,7 +23,7 @@ function Uri(filename: string): vscode.Uri {
 
 /* eslint-disable  */
 suite('NotebookProvider', () => {
-    let jupyterKernelSessionFactory: JupyterKernelSessionFactory;
+    let jupyterKernelSessionFactory: OldJupyterKernelSessionFactory;
     let jupyterNotebookProvider: IJupyterServerProvider;
     let cancelToken: vscode.CancellationTokenSource;
     const disposables: IDisposable[] = [];
@@ -48,7 +48,7 @@ suite('NotebookProvider', () => {
         when(
             jupyterSessionManager.startNew(anything(), anything(), anything(), anything(), anything(), anything())
         ).thenResolve(instance(mockSession));
-        const sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
+        const sessionManagerFactory = mock<IOldJupyterSessionManagerFactory>();
         when(sessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
         const jupyterConnection = mock<JupyterConnection>();
         when(jupyterConnection.createConnectionInfo(anything())).thenResolve({
@@ -62,7 +62,7 @@ suite('NotebookProvider', () => {
         asyncDisposables = new AsyncDisposableRegistry();
         const workspace = mock<IWorkspaceService>();
         when(workspace.computeWorkingDirectory(anything())).thenResolve('');
-        jupyterKernelSessionFactory = new JupyterKernelSessionFactory(
+        jupyterKernelSessionFactory = new OldJupyterKernelSessionFactory(
             instance(jupyterNotebookProvider),
             instance(sessionManagerFactory),
             instance(jupyterConnection),
