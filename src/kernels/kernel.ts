@@ -89,17 +89,17 @@ export function isKernelDead(k: IBaseKernel) {
         (!k.disposed &&
             !k.disposing &&
             (k.session?.status == 'unknown' || k.session?.kernel?.status == 'unknown') &&
-            (k.session.kernel?.isDisposed || k.session.disposed))
+            (k.session.kernel?.isDisposed || k.session.isDisposed))
     );
 }
 
 export function isKernelSessionDead(k: IKernelSession) {
     return (
         k.status === 'dead' ||
-        (k.status === 'terminating' && !k.disposed) ||
-        (!k.disposed &&
+        (k.status === 'terminating' && !k.isDisposed) ||
+        (!k.isDisposed &&
             (k.status == 'unknown' || k.kernel?.status == 'unknown') &&
-            (k.kernel?.isDisposed || k.disposed))
+            (k.kernel?.isDisposed || k.isDisposed))
     );
 }
 
@@ -148,7 +148,7 @@ abstract class BaseKernel implements IBaseKernel {
         return this._session?.status ?? (this.isKernelDead ? 'dead' : 'unknown');
     }
     get disposed(): boolean {
-        return this._disposed === true || this._session?.disposed === true;
+        return this._disposed === true || this._session?.isDisposed === true;
     }
     get disposing(): boolean {
         return this._disposing === true;
@@ -314,7 +314,7 @@ abstract class BaseKernel implements IBaseKernel {
                 : undefined;
             this._jupyterSessionPromise = undefined;
             if (this._session) {
-                promises.push(this._session.dispose().catch(noop));
+                promises.push(this._session.disposeAsync().catch(noop));
                 this._session = undefined;
             }
             this._disposed = true;
@@ -391,7 +391,7 @@ abstract class BaseKernel implements IBaseKernel {
                     undefined,
                     ex
                 );
-                await session?.dispose().catch(noop);
+                await session?.disposeAsync().catch(noop);
                 this._ignoreJupyterSessionDisposedErrors = false;
                 throw ex;
             }
