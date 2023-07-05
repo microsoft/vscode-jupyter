@@ -30,7 +30,7 @@ import { KernelProgressReporter } from '../../../platform/progress/kernelProgres
 import { DataScience } from '../../../platform/common/utils/localize';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const LocalHosts = ['localhost', '127.0.0.1', '::1'];
+export const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 @injectable()
 export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {

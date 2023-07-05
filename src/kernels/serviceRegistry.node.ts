@@ -35,8 +35,10 @@ import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsService.node';
 import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
 import { OldRawKernelSessionFactory } from './raw/session/oldRawKernelSessionFactory.node';
+import { IOldRawKernelSessionFactory } from './raw/types';
+import { RawKernelSessionFactory } from './raw/session/rawKernelSessionFactory.node';
 import { RawNotebookSupportedService } from './raw/session/rawNotebookSupportedService.node';
-import { IKernelLauncher, IOldRawKernelSessionFactory, IRawNotebookSupportedService } from './raw/types';
+import { IKernelLauncher, IRawKernelSessionFactory, IRawNotebookSupportedService } from './raw/types';
 import {
     IKernelDependencyService,
     IKernelFinder,
@@ -68,6 +70,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PreferredRemoteKernelIdProvider
     );
     serviceManager.addSingleton<IOldRawKernelSessionFactory>(IOldRawKernelSessionFactory, OldRawKernelSessionFactory);
+    serviceManager.addSingleton<IRawKernelSessionFactory>(IRawKernelSessionFactory, RawKernelSessionFactory);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(
         KernelEnvironmentVariablesService,

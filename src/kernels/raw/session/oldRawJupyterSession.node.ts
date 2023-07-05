@@ -265,8 +265,10 @@ export class OldRawJupyterSession extends BaseJupyterSession<'localRaw'> impleme
                 traceVerbose('Sending request for kernelinfo');
                 await raceCancellationError(
                     options.token,
-                    Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
-                    sleep(Math.min(this.launchTimeout, 1_500)).then(noop)
+                    Promise.race([
+                        Promise.all([result.kernel.requestKernelInfo(), gotIoPubMessage.promise]),
+                        sleep(Math.min(this.launchTimeout, 1_500)).then(noop)
+                    ])
                 );
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
