@@ -202,7 +202,7 @@ suite('Old JupyterSession', () => {
         }
     }
     teardown(async () => {
-        await jupyterSession.dispose().catch(noop);
+        await jupyterSession.disposeAsync().catch(noop);
         disposeAllDisposables(disposables);
     });
 
@@ -239,7 +239,7 @@ suite('Old JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // Shutdown sessions started for Interactive window.
@@ -265,7 +265,7 @@ suite('Old JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // Never shutdown live sessions connected from Interactive window.
@@ -289,7 +289,7 @@ suite('Old JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // Never shutdown sessions started from Notebooks.
@@ -315,7 +315,7 @@ suite('Old JupyterSession', () => {
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
 
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // Never shutdown live sessions connected from Notebooks.
@@ -327,7 +327,7 @@ suite('Old JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
-                await jupyterSession.dispose();
+                await jupyterSession.disposeAsync();
 
                 verify(sessionManager.refreshRunning()).never();
                 // always kill the sessions.

@@ -168,7 +168,7 @@ export class CellExecution implements IDisposable {
             return;
         }
         if (session.kind === 'remoteJupyter' && session.status === 'unknown') {
-            if (!session.kernel || session.kernel.isDisposed || session.disposed) {
+            if (!session.kernel || session.kernel.isDisposed || session.isDisposed) {
                 this.execution?.start();
                 this.execution?.clearOutput().then(noop, noop);
                 this.completedWithErrors(new SessionDisposedError());

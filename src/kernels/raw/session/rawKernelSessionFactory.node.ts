@@ -46,7 +46,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             this.disposed = true;
             traceInfo(`Shutting down notebooks for ${this.id}`);
             const notebooks = await Promise.all([...this.sessions.values()]);
-            await Promise.all(notebooks.map((session) => session.dispose()));
+            await Promise.all(notebooks.map((session) => session.disposeAsync()));
         }
     }
 
@@ -85,7 +85,7 @@ export class RawKernelSessionFactory implements IRawKernelSessionFactory {
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process
-            rawSession?.dispose().catch((error) => {
+            rawSession?.disposeAsync().catch((error) => {
                 traceError(`Failed to dispose of raw session on launch error: ${error} `);
             });
             // If there's an error, then reject the promise that is returned.

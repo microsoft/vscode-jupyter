@@ -90,7 +90,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
     private readonly _disposed = new EventEmitter<void>();
     private readonly didShutdown = new EventEmitter<void>();
     protected readonly disposables: IDisposable[] = [];
-    public get disposed() {
+    public get isDisposed() {
         return this._isDisposed === true;
     }
     public get onDidDispose() {
@@ -103,17 +103,14 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         return this._session;
     }
     public get id() {
-        return this.session?.id;
+        return this.session?.id || '';
     }
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
-    }
-    public get kernel(): Kernel.IKernelConnection | undefined {
+    public get kernel(): Kernel.IKernelConnection | null {
         if (this._wrappedKernel) {
             return this._wrappedKernel;
         }
         if (!this._session?.kernel) {
-            return;
+            return null;
         }
         this._wrappedKernel = new KernelConnectionWrapper(this._session.kernel, this.disposables);
         return this._wrappedKernel;
@@ -153,7 +150,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
             traceWarning(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
-    public async dispose(): Promise<void> {
+    public async disposeAsync(): Promise<void> {
         await this.shutdownImplementation(false);
     }
     public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
@@ -452,7 +449,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         return true;
     }
     private getServerStatus(): KernelMessage.Status {
-        if (this.disposed) {
+        if (this.isDisposed) {
             return 'dead';
         }
         if (this.session?.kernel) {
