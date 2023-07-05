@@ -103,17 +103,14 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
         return this._session;
     }
     public get id() {
-        return this.session?.id;
+        return this.session?.id || '';
     }
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
-    }
-    public get kernel(): Kernel.IKernelConnection | undefined {
+    public get kernel(): Kernel.IKernelConnection | null {
         if (this._wrappedKernel) {
             return this._wrappedKernel;
         }
         if (!this._session?.kernel) {
-            return;
+            return null;
         }
         this._wrappedKernel = new KernelConnectionWrapper(this._session.kernel, this.disposables);
         return this._wrappedKernel;
