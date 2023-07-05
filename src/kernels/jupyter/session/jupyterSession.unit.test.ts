@@ -1044,6 +1044,26 @@ suite('JupyterSession', () => {
                     kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), anything())
                 ).once();
             });
+            test('Restart should fail if user cancels from installing missing dependencies', async () => {
+                when(connection.localLaunch).thenReturn(true);
+                when(session.isDisposed).thenReturn(false);
+                const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
+                when(session.serverSettings).thenReturn(instance(sessionServerSettings));
+                when(
+                    kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), anything())
+                ).thenReject(new Error('Do not install missing dependencies'));
+
+                await assert.isRejected(jupyterSession.restart(), 'Do not install missing dependencies');
+
+                // We should not kill session.
+                verify(session.shutdown()).never();
+                verify(session.dispose()).never();
+                // Confirm kernel was not restarted.
+                verify(kernel.restart()).never();
+                verify(
+                    kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), anything())
+                ).once();
+            });
         });
     });
 });
