@@ -251,7 +251,7 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(workspaceService.computeWorkingDirectory(anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).never();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once()
+        verify(jupyterConnection.getServerConnectSettings(anything())).once();
 
         when(kernel.status).thenReturn('idle');
         assert.strictEqual(wrapperSession.status, 'idle');
@@ -337,7 +337,7 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(workspaceService.computeWorkingDirectory(anything())).never();
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once()
+        verify(jupyterConnection.getServerConnectSettings(anything())).once();
 
         when(kernel.status).thenReturn('idle');
         assert.strictEqual(wrapperSession.status, 'idle');
