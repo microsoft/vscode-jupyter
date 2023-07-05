@@ -337,7 +337,7 @@ export class JupyterLabHelper {
         }
         return this._jupyterlab!;
     }
-    constructor(
+    private constructor(
         private readonly connInfo: IJupyterConnection,
         private readonly serverSettings: ServerConnection.ISettings
     ) {
@@ -348,6 +348,9 @@ export class JupyterLabHelper {
             kernelManager: this.kernelManager
         });
         this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
+    }
+    public static create(connInfo: IJupyterConnection, serverSettings: ServerConnection.ISettings) {
+        return new JupyterLabHelper(connInfo, serverSettings);
     }
 
     public async dispose() {

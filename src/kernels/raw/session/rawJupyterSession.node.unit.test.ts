@@ -66,6 +66,7 @@ suite('Raw Jupyter Session Wrapper', () => {
             instance(mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>())
         );
         disposables.push(new Disposable(() => Signal.disconnectAll(instance(session))));
+        disposables.push(new Disposable(() => Signal.disconnectAll(instance(kernel))));
         sessionWrapper = new RawJupyterSessionWrapper(
             instance(session),
             Uri.file('one.ipynb'),

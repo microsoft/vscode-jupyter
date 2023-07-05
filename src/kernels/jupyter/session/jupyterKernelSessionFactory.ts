@@ -29,7 +29,7 @@ import {
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { inject, injectable, optional } from 'inversify';
-import { noop } from '../../../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -243,7 +243,10 @@ export class NewJupyterKernelSessionFactory implements IKernelSessionFactory {
         const idleTimeout = this.configService.getSettings(options.resource).jupyterLaunchTimeout;
         try {
             connection = isRemoteConnection(options.kernelConnection)
-                ? await this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverId)
+                ? await raceCancellationError(
+                      options.token,
+                      this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverId)
+                  )
                 : await this.jupyterNotebookProvider.getOrStartServer({
                       resource: options.resource,
                       token: options.token,
@@ -254,9 +257,12 @@ export class NewJupyterKernelSessionFactory implements IKernelSessionFactory {
             }
 
             await raceCancellationError(options.token, this.validateLocalKernelDependencies(options));
-            const serverSettings = await this.jupyterConnection.getServerConnectSettings(connection);
+            const serverSettings = await raceCancellationError(
+                options.token,
+                this.jupyterConnection.getServerConnectSettings(connection)
+            );
 
-            const sessionManager = new JupyterLabHelper(connection, serverSettings);
+            const sessionManager = JupyterLabHelper.create(connection, serverSettings);
             this.asyncDisposables.push(sessionManager);
             disposablesIfAnyErrors.push(new Disposable(() => sessionManager.dispose().catch(noop)));
 
@@ -283,7 +289,8 @@ export class NewJupyterKernelSessionFactory implements IKernelSessionFactory {
             });
             if (options.token.isCancellationRequested) {
                 // Even if this is a remote kernel, we should shut this down as it's not needed.
-                session.shutdown().catch(noop);
+                await session.shutdown().catch(noop);
+                swallowExceptions(() => session.dispose());
             }
             Cancellation.throwIfCanceled(options.token);
             traceInfo(`Started session for kernel ${options.kernelConnection.kind}:${options.kernelConnection.id}`);
@@ -544,30 +551,6 @@ export class NewJupyterKernelSessionFactory implements IKernelSessionFactory {
                 options.contentsManager
             );
             sessionPath = backingFile?.filePath;
-        }
-
-        // Make sure the kernel has ipykernel installed if on a local machine.
-        if (
-            options.kernelConnection?.interpreter &&
-            isLocalConnection(options.kernelConnection) &&
-            this.kernelService
-        ) {
-            // Make sure the kernel actually exists and is up to date.
-            try {
-                await this.kernelService.ensureKernelIsUsable(
-                    options.resource,
-                    options.kernelConnection,
-                    options.ui,
-                    options.token,
-                    options.creator === '3rdPartyExtension'
-                );
-            } catch (ex) {
-                // If we failed to create the kernel, we need to clean up the file.
-                if (backingFile) {
-                    options.contentsManager.delete(backingFile.filePath).catch(noop);
-                }
-                throw ex;
-            }
         }
 
         // If kernelName is empty this can cause problems for servers that don't
