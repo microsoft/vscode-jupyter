@@ -16,7 +16,7 @@ import { waitForIdleOnSession } from './helpers';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 
-suite.only('Kernel Common Helpers', () => {
+suite('Kernel Common Helpers', () => {
     const kernelConnectionMetadata = LocalKernelSpecConnectionMetadata.create({
         id: '1234',
         kernelSpec: {} as any
