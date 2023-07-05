@@ -16,7 +16,7 @@ import { waitForIdleOnSession } from './helpers';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 
-suite('Kernel Common Helpers', () => {
+suite.only('Kernel Common Helpers', () => {
     const kernelConnectionMetadata = LocalKernelSpecConnectionMetadata.create({
         id: '1234',
         kernelSpec: {} as any
@@ -106,7 +106,7 @@ suite('Kernel Common Helpers', () => {
         }, 3_000);
 
         clock.tick(4_000);
-        clock.runAllAsync();
+        await clock.runAllAsync();
 
         await promise;
     });
@@ -124,7 +124,7 @@ suite('Kernel Common Helpers', () => {
         );
 
         clock.tick(11_000);
-        clock.runAllAsync();
+        await clock.runAllAsync();
 
         await assert.isRejected(promise, new JupyterWaitForIdleError(kernelConnectionMetadata).message);
     });
@@ -142,7 +142,7 @@ suite('Kernel Common Helpers', () => {
         );
         setTimeout(() => token.cancel(), 3_000);
         clock.tick(3_000);
-        clock.runAllAsync();
+        await clock.runAllAsync();
 
         await assert.isRejected(promise, new CancellationError().message);
     });
@@ -163,7 +163,7 @@ suite('Kernel Common Helpers', () => {
             sessionDisposed.emit();
         }, 3_000);
         clock.tick(3_000);
-        clock.runAllAsync();
+        await clock.runAllAsync();
 
         await assert.isRejected(promise, new JupyterInvalidKernelError(kernelConnectionMetadata).message);
     });
