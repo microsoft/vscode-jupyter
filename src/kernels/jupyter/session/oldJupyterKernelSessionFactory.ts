@@ -28,9 +28,9 @@ import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { LocalHosts } from './jupyterKernelSessionFactory';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 @injectable()
 export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
