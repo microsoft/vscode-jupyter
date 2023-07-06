@@ -11,12 +11,10 @@ import {
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import { SessionConnection } from '@jupyterlab/services/lib/session/default';
-import { ISignal } from '@lumino/signaling';
+import { ISignal, Signal } from '@lumino/signaling';
 import { assert } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
-
 import { IDisposable, ReadWrite, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -36,10 +34,10 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
 import * as path from '../../../platform/vscode-path/path';
 import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
-import { Signal } from '@lumino/signaling';
 import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvalidKernelError';
 import { MockOutputChannel } from '../../../test/mockClasses';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { resolvableInstance } from '../../../test/datascience/helpers';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('Old JupyterSession', () => {
@@ -325,9 +323,10 @@ suite('Old JupyterSession', () => {
             let newSessionCreated: Deferred<void>;
             let sessionDisposed: Signal<Session.ISessionConnection, void>;
             setup(async () => {
-                newSession = mock(SessionConnection);
+                newSession = mock<Session.ISessionConnection>();
                 sessionDisposed = new Signal<Session.ISessionConnection, void>(instance(newSession));
                 when(newSession.disposed).thenReturn(sessionDisposed);
+                when(newSession.isDisposed).thenReturn(false);
                 newKernelConnection = mock<Kernel.IKernelConnection>();
                 newStatusChangedSignal = mock<ISignal<Session.ISessionConnection, Kernel.Status>>();
                 newKernelChangedSignal = mock<ISignal<Session.ISessionConnection, IKernelChangedArgs>>();
@@ -481,7 +480,7 @@ suite('Old JupyterSession', () => {
                 const connectionStatusChanged = mock<ISignal<Kernel.IKernelConnection, Kernel.ConnectionStatus>>();
                 when(remoteKernel.connectionStatusChanged).thenReturn(instance(connectionStatusChanged));
                 when(sessionManager.startNew(anything(), anything())).thenCall(() => {
-                    return Promise.resolve(instance(remoteSession));
+                    return resolvableInstance(remoteSession);
                 });
 
                 const signal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();

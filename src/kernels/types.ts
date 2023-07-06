@@ -568,6 +568,9 @@ export interface IBaseKernelSession<T extends 'remoteJupyter' | 'localJupyter' |
     readonly status: KernelMessage.Status;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     disposeAsync(): Promise<void>;
+    /**
+     * @deprecated Use statusChanged instead.
+     */
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onDidShutdown: Event<void>;
@@ -594,6 +597,10 @@ export interface ISessionWithSocket extends Session.ISessionConnection {
      */
     kernelSocketInformation: KernelSocketInformation;
     kernelConnectionMetadata: KernelConnectionMetadata;
+}
+
+export interface INewSessionWithSocket extends Session.ISessionConnection {
+    kernelSocketInformation: KernelSocketInformation;
 }
 
 export interface IJupyterKernelSpec {
@@ -679,6 +686,13 @@ export interface KernelSessionCreationOptions {
     resource: Resource;
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
+    token: CancellationToken;
+    creator: KernelActionSource;
+}
+export interface LocaLKernelSessionCreationOptions {
+    resource: Resource;
+    ui: IDisplayOptions;
+    kernelConnection: LocalKernelConnectionMetadata;
     token: CancellationToken;
     creator: KernelActionSource;
 }
