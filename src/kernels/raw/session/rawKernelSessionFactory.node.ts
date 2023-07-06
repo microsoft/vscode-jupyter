@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { injectable, inject } from 'inversify';
+import { inject } from 'inversify';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
