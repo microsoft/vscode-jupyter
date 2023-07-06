@@ -114,16 +114,16 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }
             let lastStdErr: string | undefined;
             let couldNotInstallErr: string | undefined;
-            const ticker = ['', '.', '..', '...'];
+            const ticker = ['.', '..', '...'];
             let counter = 0;
             if (observable) {
                 observable.out.subscribe({
                     next: (output) => {
-                        const suffix = ticker[counter % 4];
-                        const trimmedOutput = output.out.trim();
+                        const suffix = ticker[counter % 3];
+                        const trimmedOutput = output.out.trim().replace(/\r?\n/g, ' ');
                         counter += 1;
                         const message =
-                            trimmedOutput.length > 30 ? `${trimmedOutput.substring(0, 30)}${suffix}` : trimmedOutput;
+                            trimmedOutput.length > 28 ? `${trimmedOutput.substring(0, 28)}${suffix}` : trimmedOutput;
                         progress.report({ message });
                         traceVerbose(output.out);
                         if (output.source === 'stderr') {
