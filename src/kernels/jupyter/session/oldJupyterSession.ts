@@ -28,7 +28,6 @@ import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyte
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
 import * as path from '../../../platform/vscode-path/resources';
-import { getRemoteSessionOptions } from './jupyterSession';
 
 // function is
 export class OldJupyterSession
@@ -351,5 +350,31 @@ export class OldJupyterSession
         if (!isLocalConnection(this.kernelConnectionMetadata)) {
             this.outputChannel.appendLine(output);
         }
+    }
+}
+
+export function getRemoteSessionOptions(
+    remoteConnection: IJupyterConnection,
+    resource?: Uri
+): Pick<Session.ISessionOptions, 'path' | 'name'> | undefined | void {
+    if (!resource || resource.scheme === 'untitled' || !remoteConnection.mappedRemoteNotebookDir) {
+        return;
+    }
+    // Get Uris of both, local and remote files.
+    // Convert Uris to strings to Uri again, as its possible the Uris are not always compatible.
+    // E.g. one could be dealing with custom file system providers.
+    const filePath = Uri.file(resource.path);
+    const mappedLocalPath = Uri.file(remoteConnection.mappedRemoteNotebookDir);
+    if (!path.isEqualOrParent(filePath, mappedLocalPath)) {
+        return;
+    }
+    const sessionPath = path.relativePath(mappedLocalPath, filePath);
+    // If we have mapped the local dir to the remote dir, then we need to use the name of the file.
+    const sessionName = path.basename(resource);
+    if (sessionName && sessionPath) {
+        return {
+            path: sessionPath,
+            name: sessionName
+        };
     }
 }
