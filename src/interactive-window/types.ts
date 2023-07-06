@@ -98,7 +98,6 @@ export interface IInteractiveWindow extends IInteractiveBase {
     closed: Event<void>;
     ensureInitialized(): Promise<void>;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
-    addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;
     expandAllCells(): Promise<void>;
     collapseAllCells(): Promise<void>;
