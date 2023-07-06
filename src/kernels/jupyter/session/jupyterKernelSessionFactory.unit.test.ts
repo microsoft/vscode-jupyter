@@ -40,7 +40,8 @@ import {
     IJupyterServerProvider,
     IJupyterRequestCreator,
     IJupyterBackingFileCreator,
-    IJupyterKernelService
+    IJupyterKernelService,
+    IBackupFile
 } from '../types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterLabHelper } from './jupyterLabHelper';
@@ -60,6 +61,7 @@ suite('New Jupyter Kernel Session Factory', () => {
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
     let sessionManager: SessionManager;
+    let contentsManager: ContentsManager;
     const kernelConnectionMetadata = LocalKernelSpecConnectionMetadata.create({
         id: '1234',
         kernelSpec: {} as any
@@ -139,6 +141,7 @@ suite('New Jupyter Kernel Session Factory', () => {
         settings = mock<IWatchableJupyterSettings>();
         connection = mock<IJupyterConnection>();
         sessionManager = mock<SessionManager>();
+        contentsManager = mock<ContentsManager>();
         socket = mock<IKernelSocket>();
         serverSettings = mock<ServerConnection.ISettings>();
 
@@ -172,7 +175,7 @@ suite('New Jupyter Kernel Session Factory', () => {
         when(connection.token).thenReturn('1234');
 
         const stub: JupyterLabHelper = {
-            contentsManager: instance(mock<ContentsManager>()),
+            contentsManager: instance(contentsManager),
             kernelManager: instance(mock<KernelManager>()),
             kernelSpecManager: instance(mock<KernelSpecManager>()),
             dispose: () => Promise.resolve(),
@@ -361,6 +364,88 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(sessionManager.startNew(anything(), anything())).never();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
         verify(jupyterConnection.getServerConnectSettings(anything())).once();
+        verify(
+            backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
+        ).never();
+
+        when(kernel.status).thenReturn('idle');
+        assert.strictEqual(wrapperSession.status, 'idle');
+        when(kernel.status).thenReturn('busy');
+        assert.strictEqual(wrapperSession.status, 'busy');
+    });
+    test('Start new remote Session (notebook without a backing file)', async () => {
+        when(connection.localLaunch).thenReturn(false);
+        const resource = Uri.parse('a.ipynb');
+        const options: KernelSessionCreationOptions = {
+            kernelConnection: remoteKernelSpec,
+            creator: 'jupyterExtension',
+            resource,
+            token: token.token,
+            ui
+        };
+        const { session, kernel } = createSession();
+        when(sessionManager.startNew(anything(), anything())).thenCall(() => resolvableInstance(session));
+
+        const wrapperSession = await factory.create(options);
+
+        assert.ok(wrapperSession);
+
+        verify(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), false)).never();
+        verify(jupyterNotebookProvider.getOrStartServer(anything())).never();
+        verify(workspaceService.computeWorkingDirectory(anything())).never();
+        verify(sessionManager.startNew(anything(), anything())).once();
+        verify(jupyterConnection.createConnectionInfo(anything())).once();
+        verify(jupyterConnection.getServerConnectSettings(anything())).once();
+        verify(contentsManager.delete(anything())).never();
+        verify(backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())).never();
+
+        assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
+
+        when(kernel.status).thenReturn('idle');
+        assert.strictEqual(wrapperSession.status, 'idle');
+        when(kernel.status).thenReturn('busy');
+        assert.strictEqual(wrapperSession.status, 'busy');
+    });
+    test('Start new remote Session (notebook with a backing file)', async () => {
+        when(connection.localLaunch).thenReturn(false);
+        const resource = Uri.parse('a.ipynb');
+        const options: KernelSessionCreationOptions = {
+            kernelConnection: remoteKernelSpec,
+            creator: 'jupyterExtension',
+            resource,
+            token: token.token,
+            ui
+        };
+        const { session, kernel } = createSession();
+        const backingFile = mock<IBackupFile>();
+        resolvableInstance(backingFile);
+        when(contentsManager.delete(anything())).thenResolve();
+
+        when(
+            backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
+        ).thenResolve(resolvableInstance(backingFile));
+        when(sessionManager.startNew(anything(), anything())).thenCall(() => {
+            when(sessionManager.startNew(anything(), anything())).thenCall(() => resolvableInstance(session));
+
+            // First time we try to create a new session fail,
+            // next time we try we succeed, but we need to ensure we create a file on the server before the second attempt.
+            return Promise.reject(new Error('Kaboom'));
+        });
+
+        const wrapperSession = await factory.create(options);
+
+        assert.ok(wrapperSession);
+
+        verify(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), false)).never();
+        verify(jupyterNotebookProvider.getOrStartServer(anything())).never();
+        verify(workspaceService.computeWorkingDirectory(anything())).never();
+        verify(sessionManager.startNew(anything(), anything())).twice();
+        verify(jupyterConnection.createConnectionInfo(anything())).once();
+        verify(jupyterConnection.getServerConnectSettings(anything())).once();
+        verify(contentsManager.delete(anything())).once();
+        verify(backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())).once();
+
+        assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
 
         when(kernel.status).thenReturn('idle');
         assert.strictEqual(wrapperSession.status, 'idle');
@@ -390,6 +475,10 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
         verify(jupyterConnection.getServerConnectSettings(anything())).once();
+        verify(
+            backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
+        ).never();
+
         assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
 
         when(kernel.status).thenReturn('idle');
@@ -420,11 +509,141 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
         verify(jupyterConnection.getServerConnectSettings(anything())).once();
+        verify(
+            backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
+        ).never();
+
         assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'console');
 
         when(kernel.status).thenReturn('idle');
         assert.strictEqual(wrapperSession.status, 'idle');
         when(kernel.status).thenReturn('busy');
         assert.strictEqual(wrapperSession.status, 'busy');
+    });
+    test('Create Session with Jupyter style names (notebook)', async () => {
+        when(connection.localLaunch).thenReturn(false);
+        when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
+        const resource = Uri.file('/foo/bar/baz/abc.ipynb');
+        const options: KernelSessionCreationOptions = {
+            kernelConnection: remoteKernelSpec,
+            creator: 'jupyterExtension',
+            resource,
+            token: token.token,
+            ui
+        };
+        const { session, kernel } = createSession();
+        when(sessionManager.startNew(anything(), anything())).thenResolve(resolvableInstance(session));
+
+        const wrapperSession = await factory.create(options);
+
+        assert.ok(wrapperSession);
+
+        verify(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), false)).never();
+        verify(jupyterNotebookProvider.getOrStartServer(anything())).never();
+        verify(workspaceService.computeWorkingDirectory(anything())).never();
+        verify(sessionManager.startNew(anything(), anything())).once();
+        verify(jupyterConnection.createConnectionInfo(anything())).once();
+        verify(jupyterConnection.getServerConnectSettings(anything())).once();
+        assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
+
+        when(kernel.status).thenReturn('idle');
+        assert.strictEqual(wrapperSession.status, 'idle');
+        when(kernel.status).thenReturn('busy');
+        assert.strictEqual(wrapperSession.status, 'busy');
+
+        const newSessionOptions = capture(sessionManager.startNew).first()[0];
+        assert.strictEqual(newSessionOptions.name, 'abc.ipynb');
+        assert.strictEqual(newSessionOptions.path, 'baz/abc.ipynb');
+        assert.strictEqual(newSessionOptions.type, 'notebook');
+        assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
+    });
+    test('Create Session with non-Jupyter style names (notebook)', async () => {
+        when(connection.localLaunch).thenReturn(false);
+        when(connection.mappedRemoteNotebookDir).thenReturn();
+        const resource = Uri.file('/foo/bar/baz/abc.ipynb');
+        const options: KernelSessionCreationOptions = {
+            kernelConnection: remoteKernelSpec,
+            creator: 'jupyterExtension',
+            resource,
+            token: token.token,
+            ui
+        };
+        const { session, kernel } = createSession();
+        when(sessionManager.startNew(anything(), anything())).thenResolve(resolvableInstance(session));
+
+        const wrapperSession = await factory.create(options);
+
+        assert.ok(wrapperSession);
+
+        verify(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), false)).never();
+        verify(jupyterNotebookProvider.getOrStartServer(anything())).never();
+        verify(workspaceService.computeWorkingDirectory(anything())).never();
+        verify(sessionManager.startNew(anything(), anything())).once();
+        verify(jupyterConnection.createConnectionInfo(anything())).once();
+        verify(jupyterConnection.getServerConnectSettings(anything())).once();
+        assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
+
+        when(kernel.status).thenReturn('idle');
+        assert.strictEqual(wrapperSession.status, 'idle');
+        when(kernel.status).thenReturn('busy');
+        assert.strictEqual(wrapperSession.status, 'busy');
+
+        const newSessionOptions = capture(sessionManager.startNew).first()[0];
+        assert.notStrictEqual(newSessionOptions.name, 'abc.ipynb');
+        assert.ok(
+            newSessionOptions.name.startsWith('abc-'),
+            `Session name should start with abc, ${newSessionOptions.name}}`
+        );
+        assert.ok(
+            newSessionOptions.name.endsWith('.ipynb'),
+            `Session name should start with .ipynb, ${newSessionOptions.name}}`
+        );
+        assert.ok(
+            newSessionOptions.path.startsWith('abc-jvsc-'),
+            `Session path should start with abc, ${newSessionOptions.name}}`
+        );
+        assert.ok(
+            newSessionOptions.path.endsWith('.ipynb'),
+            `Session should path start with .ipynb, ${newSessionOptions.name}}`
+        );
+        assert.strictEqual(newSessionOptions.type, 'notebook');
+        assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
+    });
+    test('Create Session with Jupyter style names (interactive window with Python file)', async () => {
+        when(connection.localLaunch).thenReturn(false);
+        when(connection.mappedRemoteNotebookDir).thenReturn('/foo/bar');
+        const resource = Uri.file('/foo/bar/baz/abc.py');
+        const options: KernelSessionCreationOptions = {
+            kernelConnection: remoteKernelSpec,
+            creator: 'jupyterExtension',
+            resource,
+            token: token.token,
+            ui
+        };
+        const { session, kernel } = createSession();
+        when(sessionManager.startNew(anything(), anything())).thenResolve(resolvableInstance(session));
+
+        const wrapperSession = await factory.create(options);
+
+        assert.ok(wrapperSession);
+
+        verify(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything(), false)).never();
+        verify(jupyterNotebookProvider.getOrStartServer(anything())).never();
+        verify(workspaceService.computeWorkingDirectory(anything())).never();
+        verify(sessionManager.startNew(anything(), anything())).once();
+        verify(jupyterConnection.createConnectionInfo(anything())).once();
+        verify(jupyterConnection.getServerConnectSettings(anything())).once();
+        assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'console');
+
+        when(kernel.status).thenReturn('idle');
+        assert.strictEqual(wrapperSession.status, 'idle');
+        when(kernel.status).thenReturn('busy');
+        assert.strictEqual(wrapperSession.status, 'busy');
+
+        const newSessionOptions = capture(sessionManager.startNew).first()[0];
+        assert.strictEqual(newSessionOptions.name, 'abc.py');
+        assert.strictEqual(newSessionOptions.path, 'baz/abc.py');
+        assert.strictEqual(newSessionOptions.type, 'console');
+        assert.deepStrictEqual(newSessionOptions.kernel, { name: 'python3' });
     });
 });
