@@ -455,7 +455,7 @@ export function analyzeKernelErrors(
         }
     }
     // This happens when ipykernel is not installed and we attempt to run without checking for ipykernel.
-    // '/home/don/samples/pySamples/crap/.venv/bin/python: No module named ipykernel_launcher\n'
+    // '/home/don/samples/pySamples/sample/.venv/bin/python: No module named ipykernel_launcher\n'
     const noModule = 'No module named'.toLowerCase();
     const isNotAPackage = `is not a package`.toLowerCase();
     if (stdErr.includes(noModule) && !isNotAPackage) {
@@ -620,7 +620,7 @@ function extractModuleAndFileFromImportError(errorLine: string) {
 }
 /**
  * When we override the built in modules errors are of the form
- * `ImportError: cannot import name 'Random' from 'random' (/home/don/samples/pySamples/crap/kernel_crash/no_start/random.py)`
+ * `ImportError: cannot import name 'Random' from 'random' (/home/don/samples/pySamples/sample/kernel_crash/no_start/random.py)`
  */
 function isBuiltInModuleOverwritten(
     moduleName: string,
