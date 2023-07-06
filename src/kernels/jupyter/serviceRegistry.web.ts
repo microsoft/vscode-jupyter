@@ -35,6 +35,7 @@ import {
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
 import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessionFactory';
+import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
@@ -56,6 +57,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         OldJupyterKernelSessionFactory,
         OldJupyterKernelSessionFactory
     );
+    serviceManager.addSingleton<JupyterKernelSessionFactory>(JupyterKernelSessionFactory, JupyterKernelSessionFactory);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, JupyterServerProvider);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
