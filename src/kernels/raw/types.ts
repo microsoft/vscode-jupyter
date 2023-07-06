@@ -6,6 +6,7 @@ import { IAsyncDisposable, Resource } from '../../platform/common/types';
 import {
     IRawKernelSession,
     KernelSessionCreationOptions,
+    LocaLKernelSessionCreationOptions,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../types';
@@ -64,4 +65,9 @@ export interface IRawNotebookSupportedService {
 export const IOldRawKernelSessionFactory = Symbol('IOldRawKernelSessionFactory');
 export interface IOldRawKernelSessionFactory extends IAsyncDisposable {
     create(options: KernelSessionCreationOptions): Promise<IRawKernelSession>;
+}
+
+export const IRawKernelSessionFactory = Symbol('IRawKernelSessionFactory');
+export interface IRawKernelSessionFactory extends IAsyncDisposable {
+    create(options: LocaLKernelSessionCreationOptions): Promise<IRawKernelSession>;
 }

@@ -63,6 +63,7 @@ export class OldRawSession implements ISessionWithSocket {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = (this.signaling = require('@lumino/signaling') as typeof import('@lumino/signaling'));
         this._statusChanged = new signaling.Signal<this, KernelMessage.Status>(this);
+        this._propertyChanged = new signaling.Signal<this, 'path' | 'name' | 'type'>(this);
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._propertyChanged = new signaling.Signal<this, 'path' | 'name' | 'type'>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
