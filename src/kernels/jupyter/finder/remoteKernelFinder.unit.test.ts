@@ -136,20 +136,15 @@ suite(`Remote Kernel Finder`, () => {
         when(fs.delete(anything())).thenResolve();
         when(fs.createDirectory(uriEquals(globalStorageUri))).thenResolve();
         when(fs.exists(anything())).thenResolve(true);
-        // const jsonInCacheFile: CacheDataFormat = {
-        //     extensionVersion: ''
-        // };
         when(fs.readFile(uriEquals(Uri.joinPath(globalStorageUri, RemoteKernelSpecCacheFileName)))).thenReject(
             new Error('File does not exist')
         );
         when(
             fs.writeFile(uriEquals(Uri.joinPath(globalStorageUri, RemoteKernelSpecCacheFileName)), anything())
         ).thenCall(async (_, data: string) => {
-            // Object.assign(jsonInCacheFile, JSON.parse(data));
             when(fs.readFile(uriEquals(Uri.joinPath(globalStorageUri, RemoteKernelSpecCacheFileName)))).thenResolve(
                 data
             );
-            return;
         });
         cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
