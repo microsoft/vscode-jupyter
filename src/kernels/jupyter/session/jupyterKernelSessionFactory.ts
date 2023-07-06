@@ -26,7 +26,7 @@ import {
 } from '../types';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../../platform/logging';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { inject, optional } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
@@ -58,7 +58,7 @@ import { JupyterSessionWrapper, getRemoteSessionOptions } from './jupyterSession
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
-// @injectable()
+@injectable()
 export class JupyterKernelSessionFactory implements IKernelSessionFactory {
     constructor(
         @inject(IJupyterServerProvider)

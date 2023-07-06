@@ -60,6 +60,8 @@ process.on('unhandledRejection', (ex: Error, _a) => {
     const msg = `Unhandled Promise Rejection with the message ${message.join(', ')}`;
 
     if (
+        (msg.includes('Canceled future for') && msg.includes('message before replies were done')) ||
+        msg.includes('Channel has been closed') ||
         msg.includes('Error: custom request failed') ||
         msg.includes('ms-python.python') || // We don't care about unhanded promise rejections from the Python extension.
         msg.includes('ms-python.isort') || // We don't care about unhanded promise rejections from the Python related extensions.
