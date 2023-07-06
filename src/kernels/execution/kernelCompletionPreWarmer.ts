@@ -24,7 +24,12 @@ export class KernelCompletionsPreWarmer implements IExtensionSyncActivationServi
                      * Hence we end up waiting indefinitely.
                      * https://github.com/microsoft/vscode-jupyter/issues/9014
                      */
-                    kernel.session.kernel.requestComplete({ code: '__file__.', cursor_pos: 9 }).catch(noop);
+                    kernel.session.kernel
+                        .requestComplete({
+                            code: '__file__.',
+                            cursor_pos: 9
+                        })
+                        .catch(noop);
                 }
             },
             this,
