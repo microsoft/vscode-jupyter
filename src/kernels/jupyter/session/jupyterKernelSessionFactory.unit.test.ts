@@ -397,7 +397,9 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(jupyterConnection.createConnectionInfo(anything())).once();
         verify(jupyterConnection.getServerConnectSettings(anything())).once();
         verify(contentsManager.delete(anything())).never();
-        verify(backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())).never();
+        verify(
+            backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
+        ).never();
 
         assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
 
