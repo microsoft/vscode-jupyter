@@ -120,7 +120,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 observable.out.subscribe({
                     next: (output) => {
                         const suffix = ticker[counter % 3];
-                        const trimmedOutput = output.out.trim().replace(/\r?\n/g, ' ');
+                        const trimmedOutput = output.out.trim();
                         counter += 1;
                         const message =
                             trimmedOutput.length > 28 ? `${trimmedOutput.substring(0, 28)}${suffix}` : trimmedOutput;
