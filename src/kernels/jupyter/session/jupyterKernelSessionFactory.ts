@@ -58,7 +58,7 @@ import { JupyterSessionWrapper, getRemoteSessionOptions } from './jupyterSession
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
-@injectable()
+// @injectable()
 export class JupyterKernelSessionFactory implements IKernelSessionFactory {
     constructor(
         @inject(IJupyterServerProvider)

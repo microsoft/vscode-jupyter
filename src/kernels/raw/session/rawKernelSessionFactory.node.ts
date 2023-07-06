@@ -19,7 +19,7 @@ import { RawSessionConnection } from './rawSessionConnection.node';
 /**
  * Implements IRawNotebookProvider for raw kernel connections.
  */
-@injectable()
+// @injectable()
 export class RawKernelSessionFactory implements IRawKernelSessionFactory {
     private sessions = new Set<Promise<IRawKernelSession>>();
     private disposed = false;
