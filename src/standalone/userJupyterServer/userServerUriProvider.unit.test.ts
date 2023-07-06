@@ -14,7 +14,8 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposable,
-    IExperimentService
+    IExperimentService,
+    IExtensionContext
 } from '../../platform/common/types';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import {
@@ -38,6 +39,7 @@ import { assert } from 'chai';
 import { generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
@@ -211,7 +213,9 @@ suite('User Uri Provider', () => {
                         instance(commands),
                         undefined,
                         instance(requestCreator),
-                        instance(experiments)
+                        instance(experiments),
+                        instance(mock<IExtensionContext>()),
+                        instance(mock<IFileSystem>())
                     );
                 });
                 teardown(async () => {

@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectable, inject, named } from 'inversify';
-import { Memento } from 'vscode';
+import { injectable, inject } from 'inversify';
 import { IKernelFinder, IKernelProvider } from '../../types';
-import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
+import { IDisposableRegistry, IExtensionContext, IExtensions } from '../../../platform/common/types';
 import {
     IOldJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
@@ -17,9 +16,9 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { KernelFinder } from '../../kernelFinder';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { RemoteKernelFinder } from './remoteKernelFinder';
-import { ContributedKernelFinderKind } from '../../internalTypes';
-import { RemoteKernelSpecsCacheKey } from '../../common/commonFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { ContributedKernelFinderKind } from '../../internalTypes';
 
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
@@ -30,7 +29,6 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         private readonly jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IJupyterRemoteCachedKernelValidator)
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
@@ -38,7 +36,9 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
 
     activate() {
@@ -67,17 +67,17 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverUri.serverId}`,
                 serverUri.displayName || serverUri.uri,
-                `${RemoteKernelSpecsCacheKey}-${serverUri.serverId}`,
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,
-                this.globalState,
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,
                 this.kernelProvider,
                 this.extensions,
                 serverUri,
-                this.jupyterConnection
+                this.jupyterConnection,
+                this.fs,
+                this.context
             );
             this.disposables.push(finder);
 
