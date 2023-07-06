@@ -409,7 +409,7 @@ export function setUpDomEnvironment() {
     // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['Headers'] = fetchMod.Headers;
     // eslint-disable-next-line @typescript-eslint/dot-notation, no-eval, @typescript-eslint/no-explicit-any
-    (global as any)['WebSocket'] = eval('require')('ws');  // CodeQL [SM01632] Use of eval here is safe as this is non-production code and only used in tests.
+    (global as any)['WebSocket'] = eval('require')('ws'); // CodeQL [SM01632] Use of eval here is safe as this is non-production code and only used in tests.
     (global as any)['DOMParser'] = dom.window.DOMParser;
     (global as any)['Blob'] = dom.window.Blob;
 
