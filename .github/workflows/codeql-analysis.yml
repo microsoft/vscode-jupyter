@@ -30,6 +30,7 @@ jobs:
     permissions:
       actions: read
       contents: read    
+      security-events: true
 
     strategy:
       fail-fast: false
