@@ -41,7 +41,7 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
             const cli = await getPythonCli(pythonPath);
             const processService = new ProcessService();
             const argv = [...cli, fileToCommandArgument(path.join(SCRIPTS_DIR, 'interpreterInfo.py'))];
-            const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
+            const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), ''); // CodeQL [SM02383] Replace just the first occurrence of \\ as this could be a UNC path.
             const result = await processService.shellExec(cmd, {
                 timeout: executionTimeout,
                 env: process.env,

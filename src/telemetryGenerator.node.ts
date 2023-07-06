@@ -361,7 +361,7 @@ function getCommentForUnions(t: ts.TypeNode) {
             // Last time, remove trailing `*/`
             return line.trim().endsWith('*/') ? line.trim().replace('*/', '') : line;
         } else {
-            return line.trim().startsWith('*') ? line.trim().replace('*', '') : line;
+            return line.trim().startsWith('*') ? line.trim().replace('*', '') : line; // CodeQL [SM02383] Replace just the first occurrence of '*'.
         }
     });
 
