@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import type { ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
+import { CancellationError, CancellationToken, CancellationTokenSource, Uri } from 'vscode';
 import uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { raceCancellationError } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceWarning } from '../../../platform/logging';
@@ -25,7 +25,6 @@ import {
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
-import { CancellationError, Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
 import * as path from '../../../platform/vscode-path/resources';

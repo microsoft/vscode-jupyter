@@ -24,7 +24,7 @@ import * as path from '../../platform/vscode-path/resources';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
-import { getRemoteSessionOptions } from '../../kernels/jupyter/session/oldJupyterSession';
+import { getRemoteSessionOptions } from '../../kernels/jupyter/session/jupyterSession';
 
 /**
  * Attempt to clean up https://github.com/microsoft/vscode-jupyter/issues/11914

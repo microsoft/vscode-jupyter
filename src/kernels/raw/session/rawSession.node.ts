@@ -12,7 +12,7 @@ import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeo
 import { Telemetry } from '../../../telemetry';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
 import { IKernelProcess } from '../types';
-import { createRawKernel, OldRawKernel } from './rawKernel.node';
+import { OldRawKernel, createRawKernel } from './rawKernel.node';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { noop } from '../../../platform/common/utils/misc';
 

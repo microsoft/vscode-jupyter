@@ -3,7 +3,9 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IKernelSession, IKernelSessionFactory, isLocalConnection, KernelSessionCreationOptions } from '../types';
-import { IOldRawKernelSessionFactory, IRawNotebookSupportedService } from '../raw/types';
+import { IRawKernelSessionFactory, IOldRawKernelSessionFactory, IRawNotebookSupportedService } from '../raw/types';
+import { JupyterKernelSessionFactory } from '../jupyter/session/jupyterKernelSessionFactory';
+import { Experiments, IExperimentService } from '../../platform/common/types';
 import { OldJupyterKernelSessionFactory } from '../jupyter/session/oldJupyterKernelSessionFactory';
 
 /**
@@ -19,20 +21,31 @@ export class KernelSessionFactory implements IKernelSessionFactory {
         @optional()
         private readonly rawKernelSessionFactory: IOldRawKernelSessionFactory | undefined,
         @inject(OldJupyterKernelSessionFactory)
-        private readonly jupyterSessionFactory: IKernelSessionFactory
+        private readonly jupyterSessionFactory: IKernelSessionFactory,
+        @inject(IRawKernelSessionFactory)
+        @optional()
+        private readonly newRawKernelSessionFactory: IRawKernelSessionFactory | undefined,
+        @inject(JupyterKernelSessionFactory)
+        private readonly newJupyterSessionFactory: IKernelSessionFactory,
+        @inject(IExperimentService)
+        private readonly experiments: IExperimentService
     ) {}
 
     public async create(options: KernelSessionCreationOptions): Promise<IKernelSession> {
         const kernelConnection = options.kernelConnection;
-
         if (
             this.rawKernelSupported.isSupported &&
             isLocalConnection(kernelConnection) &&
-            this.rawKernelSessionFactory
+            this.rawKernelSessionFactory &&
+            this.newRawKernelSessionFactory
         ) {
-            return this.rawKernelSessionFactory.create(options);
+            return this.experiments.inExperiment(Experiments.NewJupyterSession)
+                ? this.newRawKernelSessionFactory.create({ ...options, kernelConnection: kernelConnection })
+                : this.rawKernelSessionFactory.create(options);
         } else {
-            return this.jupyterSessionFactory.create(options);
+            return this.experiments.inExperiment(Experiments.NewJupyterSession)
+                ? this.newJupyterSessionFactory.create(options)
+                : this.jupyterSessionFactory.create(options);
         }
     }
 }

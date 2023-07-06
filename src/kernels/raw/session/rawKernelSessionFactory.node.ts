@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import { inject } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -19,7 +19,7 @@ import { RawSessionConnection } from './rawSessionConnection.node';
 /**
  * Implements IRawNotebookProvider for raw kernel connections.
  */
-// @injectable()
+@injectable()
 export class RawKernelSessionFactory implements IRawKernelSessionFactory {
     private sessions = new Set<Promise<IRawKernelSession>>();
     private disposed = false;
