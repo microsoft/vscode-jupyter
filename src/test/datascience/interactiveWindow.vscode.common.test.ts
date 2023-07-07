@@ -82,8 +82,7 @@ suite(`Interactive window execution @iw`, async function () {
         await settings.update('interactiveWindow.creationMode', 'multiple');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    test.skip('__file__ exists even after restarting a kernel', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/12251
+    test('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
