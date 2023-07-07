@@ -277,6 +277,8 @@ export class InteractiveWindow implements IInteractiveWindow {
             } finally {
                 execution.end(false, notebookCell.executionSummary?.timing?.endTime);
             }
+        } else {
+            traceInfo(`Could not append error message to cell "${output}"`);
         }
     }
 
