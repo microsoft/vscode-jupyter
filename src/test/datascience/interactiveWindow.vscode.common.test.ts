@@ -54,6 +54,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/notebookPythonPathService.node';
+import { isSysInfoCell } from '../../interactive-window/systemInfoCell';
 
 suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
@@ -117,7 +118,7 @@ suite(`Interactive window execution @iw`, async function () {
         async function verifyCells() {
             // Verify sys info cell
             const firstCell = notebookDocument.cellAt(0);
-            assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
+            assert.ok(isSysInfoCell(firstCell), 'First cell should be sys info cell');
             assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
 
             // Verify executed cell input and output
@@ -375,7 +376,8 @@ ${actualCode}
 
         // Verify sys info cell
         const firstCell = notebookDocument?.cellAt(0);
-        assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
+        assert.ok(firstCell, 'cell not added');
+        assert.ok(isSysInfoCell(firstCell!), 'First cell should be sys info cell');
         assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
 
         // Verify executed cell input and output

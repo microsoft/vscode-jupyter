@@ -40,7 +40,7 @@ export class ExportToPythonPlain implements IExport {
     private exportDocument(document: NotebookDocument): string {
         return document
             .getCells()
-            .filter((cell) => !cell.metadata.isInteractiveWindowMessageCell) // We don't want interactive window sys info cells
+            .filter((cell) => !cell.metadata.custom?.metadata?.isInteractiveWindowMessageCell) // We don't want interactive window sys info cells
             .reduce((previousValue, currentValue) => previousValue + this.exportCell(currentValue), '');
     }
 

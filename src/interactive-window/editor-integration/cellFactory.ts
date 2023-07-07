@@ -9,6 +9,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/helpers';
 import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 import { splitLines } from '../../platform/common/helpers';
+import { isSysInfoCell } from '../systemInfoCell';
 
 export function createCodeCell(): nbformat.ICodeCell;
 // eslint-disable-next-line @typescript-eslint/unified-signatures
@@ -175,7 +176,7 @@ export function generateCellsFromNotebookDocument(
 ): ICell[] {
     return notebookDocument
         .getCells()
-        .filter((cell) => !cell.metadata.isInteractiveWindowMessageCell)
+        .filter((cell) => !isSysInfoCell(cell))
         .map((cell) => {
             // Reinstate cell structure + comments from cell metadata
             let code = splitLines(cell.document.getText(), { trim: false, removeEmptyEntries: false });
