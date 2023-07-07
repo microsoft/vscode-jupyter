@@ -265,32 +265,20 @@ export class InteractiveWindow implements IInteractiveWindow {
     }
 
     @chainable()
-    async addErrorMessage(message: string, notebookCell: NotebookCell): Promise<void> {
-        if (!this.notebookDocument) {
-            return;
-        }
-        const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
-        markdownCell.metadata = { custom: { metadata: { isInteractiveWindowMessageCell: true } } };
-        const insertionIndex =
-            notebookCell && notebookCell.index >= 0 ? notebookCell.index : this.notebookDocument.cellCount;
-        // If possible display the error message in the cell.
+    async showErrorForCell(message: string, notebookCell: NotebookCell): Promise<void> {
         const controller = this.controller?.controller;
         const output = createOutputWithErrorMessageForDisplay(message);
-        if (this.notebookDocument.cellCount === 0 || !controller || !output || !notebookCell) {
-            const edit = new WorkspaceEdit();
-            const nbEdit = NotebookEdit.insertCells(insertionIndex, [markdownCell]);
-            edit.set(this.notebookDocument.uri, [nbEdit]);
-            await workspace.applyEdit(edit);
-        } else {
+        if (controller && output && notebookCell) {
             const execution = CellExecutionCreator.getOrCreate(notebookCell, new KernelController(controller));
-            if (!execution.started) {
-                execution.start(notebookCell.executionSummary?.timing?.startTime);
+            try {
+                await execution.appendOutput(output);
+            } catch (err) {
+                traceWarning(`Could not append error message "${output}" to cell: ${err}`);
+            } finally {
+                execution.end(false, notebookCell.executionSummary?.timing?.endTime);
             }
-            execution.executionOrder = notebookCell.executionSummary?.executionOrder;
-            execution
-                .appendOutput(output)
-                .then(noop, (err) => traceWarning(`Could not append error message "${output}" to cell: ${err}`));
-            execution.end(false, notebookCell.executionSummary?.timing?.endTime);
+        } else {
+            traceInfo(`Could not append error message to cell "${output}"`);
         }
     }
 
@@ -397,7 +385,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                         notebookCellPromise
                             .then((cell) => {
                                 if (ex.cell !== cell) {
-                                    this.addErrorMessage(DataScience.cellStopOnErrorMessage, cell).then(noop, noop);
+                                    this.showErrorForCell(DataScience.cellStopOnErrorMessage, cell).then(noop, noop);
                                 }
                             })
                             .catch(noop);
@@ -407,7 +395,7 @@ export class InteractiveWindow implements IInteractiveWindow {
                                 // If our cell result was a failure show an error
                                 this.errorHandler
                                     .getErrorMessageForDisplayInCell(ex, 'execution', this.owningResource)
-                                    .then((message) => this.addErrorMessage(message, cell))
+                                    .then((message) => this.showErrorForCell(message, cell))
                             )
                             .catch(noop);
                     }
