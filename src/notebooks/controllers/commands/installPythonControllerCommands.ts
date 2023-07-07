@@ -122,7 +122,7 @@ export class InstallPythonControllerCommands implements IExtensionSyncActivation
                 );
 
                 // Make sure that we didn't timeout waiting for the hook
-                if (this.extensionChecker.isPythonExtensionInstalled && hookResult !== hooked) {
+                if (this.extensionChecker.isPythonExtensionInstalled && hookResult === hooked) {
                     traceVerbose('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
