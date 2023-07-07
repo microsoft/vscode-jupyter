@@ -950,7 +950,7 @@ export namespace vscMockExtHostedTypes {
                 this._tabstop = nested._tabstop;
                 defaultValue = nested.value;
             } else if (typeof defaultValue === 'string') {
-                defaultValue = defaultValue.replace(/\$|}/g, '\\$&');
+                defaultValue = defaultValue.replace(/\$|}/g, '\\$&'); // CodeQL [SM02383] This code is not used in production, only used for mocks in testing.
             }
 
             this.value += '${';

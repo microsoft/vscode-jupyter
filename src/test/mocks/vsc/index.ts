@@ -228,9 +228,9 @@ export namespace vscMock {
 
         public appendText(value: string): MarkdownString {
             // escape markdown syntax tokens: http://daringfireball.net/projects/markdown/syntax#backslash
-            this.value += (this.supportThemeIcons ? escapeCodicons(value) : value)
-                .replace(/[\\`*_{}[\]()#+\-.!]/g, '\\$&')
-                .replace(/\n/, '\n\n');
+            this.value += (this.supportThemeIcons ? escapeCodicons(value) : value) // CodeQL [SM02383] Non production (mock) code used only for tests.
+                .replace(/[\\`*_{}[\]()#+\-.!]/g, '\\$&') // CodeQL [SM02383] Non production (mock) code used only for tests.
+                .replace(/\n/, '\n\n'); // CodeQL [SM02383] Non production (mock) code used only for tests.
 
             return this;
         }
