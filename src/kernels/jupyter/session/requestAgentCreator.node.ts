@@ -8,6 +8,6 @@ import { IJupyterRequestAgentCreator } from '../types';
 @injectable()
 export class RequestAgentCreator implements IJupyterRequestAgentCreator {
     createHttpRequestAgent() {
-        return new HttpsAgent({ rejectUnauthorized: false });
+        return new HttpsAgent({ rejectUnauthorized: false }); // CodeQL [SM03616] User has been prompted at this point whether to allow making requests to http servers with invalid certificates.
     }
 }
