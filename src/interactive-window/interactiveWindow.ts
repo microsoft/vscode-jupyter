@@ -270,7 +270,7 @@ export class InteractiveWindow implements IInteractiveWindow {
             return;
         }
         const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
-        markdownCell.metadata = { isInteractiveWindowMessageCell: true };
+        markdownCell.metadata = { custom: { metadata: { isInteractiveWindowMessageCell: true } } };
         const insertionIndex =
             notebookCell && notebookCell.index >= 0 ? notebookCell.index : this.notebookDocument.cellCount;
         // If possible display the error message in the cell.
