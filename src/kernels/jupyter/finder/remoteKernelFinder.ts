@@ -421,7 +421,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 }
             } catch {
                 // File does not exist.
-                return [];
             }
 
             currentData.data[key] = serialized;
