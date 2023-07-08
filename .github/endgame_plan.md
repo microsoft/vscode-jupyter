@@ -1,4 +1,4 @@
-* [Endgame Template](https://github.com/microsoft/vscode-jupyter/blob/main/.github/release_plan.md)
+* [Endgame Template](https://github.com/microsoft/vscode-jupyter/blob/main/.github/endgame_plan.md)
 
 ## Thursday
 
@@ -39,7 +39,6 @@
     - [ ] linux-x64
     - [ ] alpine-arm64
     - [ ] alpine-x64
-  - [ ] Web
 - [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
   - After a candidate fix is merged, a pre-release build can be released by manually running [the pre-release devops pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=283) against the release branch.
 
@@ -50,7 +49,7 @@
   - [ ] Verify the PR Pipeline on Github actions is green against the release branch.
   - [ ] Approve the `Publish` stage of the last [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) that's successfully sanity tested.
   - [ ] Push a tag with the released version number on the commit that was released
-  - [ ] If any steps were unclear or changed in this release plan please update the `release_plan.md` file to make it clear for the next release
+  - [ ] If any steps were unclear or changed in this endgame plan please update the `endgame_plan.md` file to make it clear for the next release
 
 ## Wednesday/Thursday (Day of VS Code releasing the next insider version)
 - [ ] Bump the engines.vscode version on the `main` branch to point to the next version. For example, from `1.58.0` to `1.59.0`
