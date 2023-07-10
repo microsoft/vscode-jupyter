@@ -37,6 +37,7 @@ import {
     IDisposable,
     IDisposableRegistry,
     IExperimentService,
+    IExtensionContext,
     IMemento,
     IsWebExtension
 } from '../../platform/common/types';
@@ -51,6 +52,8 @@ import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsErr
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
 import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -93,7 +96,9 @@ export class UserJupyterServerUrlProvider
         @optional()
         agentCreator: IJupyterRequestAgentCreator | undefined,
         @inject(IJupyterRequestCreator) requestCreator: IJupyterRequestCreator,
-        @inject(IExperimentService) private readonly experiments: IExperimentService
+        @inject(IExperimentService) private readonly experiments: IExperimentService,
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
         this.disposables.push(this);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -117,7 +122,13 @@ export class UserJupyterServerUrlProvider
 
         this._localDisposables.push(
             this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
-                await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
+                await Promise.all([
+                    this.oldStorage.clear().catch(noop),
+                    this.newStorage.clear().catch(noop),
+                    this.fs
+                        .delete(Uri.joinPath(this.context.globalStorageUri, RemoteKernelSpecCacheFileName))
+                        .catch(noop)
+                ]);
                 this._onDidChangeHandles.fire();
             })
         );

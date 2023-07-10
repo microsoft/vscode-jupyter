@@ -13,7 +13,8 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposable,
-    IExperimentService
+    IExperimentService,
+    IExtensionContext
 } from '../../../platform/common/types';
 import { IS_REMOTE_NATIVE_TEST, initialize } from '../../initialize.node';
 import { startJupyterServer, closeNotebooksAndCleanUpAfterTests } from '../notebook/helper.node';
@@ -38,6 +39,7 @@ import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
 import { IMultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { JupyterPasswordConnect } from '../../../kernels/jupyter/connection/jupyterPasswordConnect';
+import { IFileSystem } from '../../../platform/common/platform/types';
 
 suite('Connect to Remote Jupyter Servers', function () {
     // On conda these take longer for some reason.
@@ -198,7 +200,9 @@ suite('Connect to Remote Jupyter Servers', function () {
                     instance(commands),
                     api.serviceContainer.get<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator),
                     api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator),
-                    instance(mockExperiments)
+                    instance(mockExperiments),
+                    api.serviceContainer.get<IExtensionContext>(IExtensionContext),
+                    api.serviceContainer.get<IFileSystem>(IFileSystem)
                 );
                 userUriProvider.activate();
 
