@@ -82,6 +82,12 @@ export class SystemInfoCell {
             if (cell.index >= 0) {
                 if (!this.isDeleted && isSysInfoCell(cell)) {
                     edit.replace(cell.document.uri, new Range(0, 0, cell.document.lineCount, 0), newMessage);
+
+                    edit.set(this.notebookDocument!.uri, [
+                        NotebookEdit.updateCellMetadata(cell.index, {
+                            custom: { metadata: { isInteractiveWindowMessageCell: true } }
+                        })
+                    ]);
                     return;
                 }
             }
