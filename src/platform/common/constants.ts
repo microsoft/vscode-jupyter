@@ -251,6 +251,7 @@ export namespace Commands {
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
+    export const ContinueEditSessionInCodespace = 'jupyter.continueEditSessionInCodespace';
 }
 
 export namespace CodeLensCommands {
@@ -286,6 +287,7 @@ export namespace EditorContexts {
     export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
     export const ZmqAvailable = 'jupyter.zmqavailable';
     export const ReplayLogLoaded = 'jupyter.replayLogLoaded';
+    export const KernelSource = 'jupyter.kernelSource';
 }
 
 export namespace RegExpValues {
