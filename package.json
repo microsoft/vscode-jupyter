@@ -776,6 +776,12 @@
                 "title": "%DataScience.runInDedicatedExtensionHost%",
                 "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.continueEditSessionInCodespace",
+                "title": "Continue On Codespace",
+                "enablement": "true",
+                "category": "Jupyter"
             }
         ],
         "submenus": [
@@ -884,6 +890,11 @@
                     "command": "jupyter.openOutlineView",
                     "group": "navigation@2",
                     "when": "notebookType == 'jupyter-notebook' && config.jupyter.showOutlineButtonInNotebookToolbar"
+                },
+                {
+                    "command": "jupyter.continueEditSessionInCodespace",
+                    "group": "navigation@3",
+                    "when": "notebookType == 'jupyter-notebook' && jupyter.kernelSource == 'github-codespaces'"
                 },
                 {
                     "command": "jupyter.notebookeditor.export",
