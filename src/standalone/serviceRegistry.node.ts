@@ -28,6 +28,7 @@ import { registerTypes as registerIntellisenseTypes } from './intellisense/servi
 import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
+import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
 import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
@@ -63,6 +64,11 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ExportCommandRegistry
+    );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CodespaceCommandRegistry
     );
 
     serviceManager.addSingleton<ISurveyBanner>(ISurveyBanner, DataScienceSurveyBanner);

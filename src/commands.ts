@@ -186,4 +186,5 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
     [DSCommands.InstallPythonViaKernelPicker]: [];
+    [DSCommands.ContinueEditSessionInCodespace]: [];
 }
