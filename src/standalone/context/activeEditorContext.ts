@@ -187,7 +187,7 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             this.canRestartNotebookKernelContext.set(false).catch(noop);
             this.canInterruptNotebookKernelContext.set(false).catch(noop);
         }
-        this.updateKernelSourceContext(kernel);
+        this.updateKernelSourceContext(kernel).catch(noop);
         this.updateSelectedKernelContext();
     }
     private async updateKernelSourceContext(kernel: IKernel | undefined) {
