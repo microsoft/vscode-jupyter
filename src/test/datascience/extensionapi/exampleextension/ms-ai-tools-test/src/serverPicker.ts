@@ -3,7 +3,7 @@
 
 import { exec } from 'child_process';
 import * as vscode from 'vscode';
-import { IJupyterServerUri, IJupyterUriProvider, string } from './typings/jupyter';
+import { IJupyterServerUri, IJupyterUriProvider } from './typings/jupyter';
 
 // This is an example of how to implement the IJupyterUriQuickPicker. Replace
 // the machine name and server URI below with your own version
