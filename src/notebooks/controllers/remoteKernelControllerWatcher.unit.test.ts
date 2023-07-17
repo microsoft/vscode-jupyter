@@ -22,7 +22,6 @@ import { IControllerRegistration, IVSCodeNotebookController } from './types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { waitForCondition } from '../../test/common';
-import { JupyterServerUriHandle } from '../../api';
 
 suite('RemoteKernelControllerWatcher', () => {
     let watcher: RemoteKernelControllerWatcher;
@@ -52,7 +51,7 @@ suite('RemoteKernelControllerWatcher', () => {
 
     test('Dispose controllers associated with an old handle', async () => {
         const provider1Id = 'provider1';
-        const provider1Handle1: JupyterServerUriHandle = 'provider1Handle1';
+        const provider1Handle1: string = 'provider1Handle1';
         const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
         const serverId = await computeServerId(remoteUriForProvider1);
         const serverProviderHandle = { handle: provider1Handle1, id: provider1Id };

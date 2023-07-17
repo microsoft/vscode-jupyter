@@ -3,7 +3,7 @@
 
 import { exec } from 'child_process';
 import * as vscode from 'vscode';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from './typings/jupyter';
+import { IJupyterServerUri, IJupyterUriProvider, string } from './typings/jupyter';
 
 // This is an example of how to implement the IJupyterUriQuickPicker. Replace
 // the machine name and server URI below with your own version
@@ -23,10 +23,7 @@ export class RemoteServerPickerExample implements IJupyterUriProvider {
             }
         ];
     }
-    public handleQuickPick(
-        _item: vscode.QuickPickItem,
-        back: boolean
-    ): Promise<JupyterServerUriHandle | 'back' | undefined> {
+    public handleQuickPick(_item: vscode.QuickPickItem, back: boolean): Promise<string | 'back' | undefined> {
         // Show a quick pick list to start off.
         const quickPick = vscode.window.createQuickPick();
         quickPick.title = 'Pick a compute instance';
@@ -34,7 +31,7 @@ export class RemoteServerPickerExample implements IJupyterUriProvider {
         quickPick.buttons = back ? [vscode.QuickInputButtons.Back] : [];
         quickPick.items = [{ label: Compute_Name }, { label: Compute_Name_NotWorking }];
         let resolved = false;
-        const result = new Promise<JupyterServerUriHandle | 'back' | undefined>((resolve, _reject) => {
+        const result = new Promise<string | 'back' | undefined>((resolve, _reject) => {
             quickPick.onDidTriggerButton((b) => {
                 if (b === vscode.QuickInputButtons.Back) {
                     resolved = true;
@@ -61,7 +58,7 @@ export class RemoteServerPickerExample implements IJupyterUriProvider {
         return result;
     }
 
-    public getServerUri(_handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+    public getServerUri(_handle: string): Promise<IJupyterServerUri> {
         return new Promise((resolve, reject) => {
             exec(
                 'az account get-access-token',

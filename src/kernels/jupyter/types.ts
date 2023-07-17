@@ -25,7 +25,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../api';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../api';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -157,7 +157,7 @@ export interface IJupyterServerProvider {
 
 export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
     readonly extensionId: string;
-    getServerUriWithoutAuthInfo?(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
 }
 export type JupyterServerProviderHandle = {
     /**
@@ -177,11 +177,7 @@ export interface IJupyterUriProviderRegistration {
     readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
     getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
-    getJupyterServerUri(
-        id: string,
-        handle: JupyterServerUriHandle,
-        doNotPromptForAuthInfo?: boolean
-    ): Promise<IJupyterServerUri>;
+    getJupyterServerUri(id: string, handle: string, doNotPromptForAuthInfo?: boolean): Promise<IJupyterServerUri>;
 }
 
 /**
@@ -194,7 +190,7 @@ export interface IJupyterServerUriEntry {
     uri: string;
     provider: {
         id: string;
-        handle: JupyterServerUriHandle;
+        handle: string;
     };
     /**
      * Unique ID using a hash of the full uri
@@ -228,10 +224,7 @@ export interface IJupyterServerUriStorage {
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
     get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
-    get(serverProviderHandle: {
-        id: string;
-        handle: JupyterServerUriHandle;
-    }): Promise<IJupyterServerUriEntry | undefined>;
+    get(serverProviderHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined>;
     add(
         serverProviderHandle: JupyterServerProviderHandle,
         options?: { time: number; displayName: string }
