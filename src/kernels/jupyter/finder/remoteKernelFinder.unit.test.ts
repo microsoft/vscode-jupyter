@@ -52,7 +52,8 @@ suite(`Remote Kernel Finder`, () => {
         providerId: 'a',
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
-        dispose: noop
+        dispose: noop,
+        serverProviderHandle: { handle: 'handle', id: 'id' }
     };
     const defaultPython3Name = 'python3';
     const python3spec: IJupyterKernelSpec = {
@@ -237,7 +238,8 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            serverId: 'serverId1'
+            serverId: 'serverId1',
+            serverProviderHandle: { handle: '1', id: '1' }
         });
         const cachedKernels = [
             RemoteKernelSpecConnectionMetadata.create({
@@ -249,7 +251,8 @@ suite(`Remote Kernel Finder`, () => {
                     name: '',
                     executable: ''
                 },
-                serverId: 'serverId1'
+                serverId: 'serverId1',
+                serverProviderHandle: { handle: '1', id: '1' }
             }).toJSON(),
             liveRemoteKernel.toJSON()
         ] as KernelConnectionMetadata[];
@@ -291,7 +294,8 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            serverId: 'serverId1'
+            serverId: 'serverId1',
+            serverProviderHandle: { handle: '1', id: '1' }
         });
         const cachedKernels = [
             RemoteKernelSpecConnectionMetadata.create({
@@ -303,7 +307,8 @@ suite(`Remote Kernel Finder`, () => {
                     name: '',
                     executable: ''
                 },
-                serverId: 'serverId1'
+                serverId: 'serverId1',
+                serverProviderHandle: { handle: '1', id: '1' }
             }).toJSON(),
             liveRemoteKernel.toJSON()
         ];

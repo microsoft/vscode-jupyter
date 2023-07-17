@@ -29,7 +29,8 @@ import {
     IJupyterInterpreterDependencyManager,
     IJupyterServerUriStorage,
     IJupyterUriProviderRegistration,
-    JupyterInterpreterDependencyResponse
+    JupyterInterpreterDependencyResponse,
+    JupyterServerProviderHandle
 } from '../jupyter/types';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
@@ -153,6 +154,10 @@ suite('Error Handler Unit Tests', () => {
         let kernelConnection: KernelConnectionMetadata;
         const uri = generateUriFromRemoteProvider('1', 'a');
         let serverId: string;
+        const serverProviderHandle: JupyterServerProviderHandle = {
+            handle: '1',
+            id: 'a'
+        };
         suiteSetup(async () => {
             serverId = await computeServerId(uri);
         });
@@ -795,7 +800,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId
+                serverId,
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
@@ -831,7 +837,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId
+                serverId,
+                serverProviderHandle
             });
             when(uriStorage.get(serverId)).thenResolve({
                 time: 1,
@@ -875,7 +882,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: '' // Send nothing for argv[0]
                 },
-                serverId
+                serverId,
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
@@ -904,7 +912,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId
+                serverId,
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
@@ -931,7 +940,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId
+                serverId,
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())

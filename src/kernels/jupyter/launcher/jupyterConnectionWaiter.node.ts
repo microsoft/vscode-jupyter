@@ -136,6 +136,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                 localLaunch: true,
                 serverId: 'bogus',
                 providerId: '_builtin.jupyterServerLauncher',
+                serverProviderHandle: { handle: '', id: '_builtin.jupyterServerLauncher' },
                 baseUrl,
                 token,
                 hostName,

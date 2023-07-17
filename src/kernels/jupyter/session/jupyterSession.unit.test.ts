@@ -118,7 +118,8 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelSpec: {} as any,
                     baseUrl: '',
-                    serverId: ''
+                    serverId: '',
+                    serverProviderHandle: { handle: '1', id: '1' }
                 })
             );
 
@@ -149,7 +150,8 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelSpec: {} as any,
                     baseUrl: '',
-                    serverId: ''
+                    serverId: '',
+                    serverProviderHandle: { handle: '1', id: '1' }
                 })
             );
 
@@ -182,7 +184,8 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelModel: {} as any,
                     baseUrl: '',
-                    serverId: ''
+                    serverId: '',
+                    serverProviderHandle: { handle: '1', id: '1' }
                 })
             );
 
@@ -212,7 +215,8 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelSpec: {} as any,
                     baseUrl: '',
-                    serverId: ''
+                    serverId: '',
+                    serverProviderHandle: { handle: '1', id: '1' }
                 })
             );
 
@@ -242,7 +246,8 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelModel: {} as any,
                     baseUrl: '',
-                    serverId: ''
+                    serverId: '',
+                    serverProviderHandle: { handle: '1', id: '1' }
                 })
             );
 
@@ -311,7 +316,8 @@ suite('JupyterSession', () => {
                                   id: '',
                                   kernelSpec: {} as any,
                                   baseUrl: '',
-                                  serverId: ''
+                                  serverId: '',
+                                  serverProviderHandle: { handle: '1', id: '1' }
                               });
                     createJupyterSession(Uri.file('test.ipynb'), kernelConnection);
                 });

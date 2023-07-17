@@ -55,7 +55,7 @@ suite('RemoteKernelControllerWatcher', () => {
         const provider1Handle1: JupyterServerUriHandle = 'provider1Handle1';
         const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
         const serverId = await computeServerId(remoteUriForProvider1);
-
+        const serverProviderHandle = { handle: provider1Handle1, id: provider1Id };
         let onDidChangeHandles: undefined | (() => Promise<void>);
         const provider1 = mock<IInternalJupyterUriProvider>();
         when(provider1.id).thenReturn(provider1Id);
@@ -98,7 +98,8 @@ suite('RemoteKernelControllerWatcher', () => {
                 id: 'remote1',
                 baseUrl: remoteUriForProvider1,
                 kernelSpec: mock<IJupyterKernelSpec>(),
-                serverId
+                serverId,
+                serverProviderHandle
             })
         );
         const remoteLiveKernel = mock<IVSCodeNotebookController>();
@@ -108,7 +109,8 @@ suite('RemoteKernelControllerWatcher', () => {
                 id: 'live1',
                 baseUrl: remoteUriForProvider1,
                 kernelModel: mock<LiveKernelModel>(),
-                serverId
+                serverId,
+                serverProviderHandle
             })
         );
         when(controllers.registered).thenReturn([
