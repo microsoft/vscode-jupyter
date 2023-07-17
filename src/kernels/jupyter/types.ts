@@ -222,7 +222,6 @@ export interface IJupyterServerUriStorage {
     getAll(): Promise<IJupyterServerUriEntry[]>;
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
-    get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
     get(serverProviderHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined>;
     add(
         serverProviderHandle: JupyterServerProviderHandle,
