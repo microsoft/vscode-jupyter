@@ -14,7 +14,7 @@ import {
     INotebookKernelExecution,
     RemoteKernelSpecConnectionMetadata
 } from './types';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import {
     Disposable,
     EventEmitter,
@@ -196,7 +196,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         monitor.activate();
     });
     teardown(() => disposeAllDisposables(disposables));
-    function createKernel() {
+    function createKernel(serverProviderHandle = { handle: '1234', id: '1234' }) {
         const kernel = mock<IKernel>();
         const onPreExecute = new EventEmitter<NotebookCell>();
         const onRestarted = new EventEmitter<void>();
@@ -212,7 +212,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
             serverId: '1234',
-            serverProviderHandle: { handle: '1234', id: '1234' }
+            serverProviderHandle
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.disposed).thenReturn(false);
@@ -322,7 +322,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
     });
 
     test('Handle contributed server disconnect (server contributed by uri provider)', async () => {
-        const kernel = createKernel();
         const server: IJupyterServerUriEntry = {
             uri: 'https://remote?id=remoteUriProvider&uriHandle=1',
             serverId: '1234',
@@ -332,8 +331,9 @@ suite('Kernel ReConnect Failed Monitor', () => {
                 id: '1'
             }
         };
+        const kernel = createKernel(server.provider);
         when(jupyterServerUriStorage.getAll()).thenResolve([server]);
-        when(jupyterServerUriStorage.get(server.serverId)).thenResolve(server);
+        when(jupyterServerUriStorage.get(deepEqual({ id: '1', handle: '1' }))).thenResolve(server);
         when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
             id: 'remoteUriProvider',
             extensionId: 'ms-python.python',

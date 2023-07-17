@@ -16,7 +16,11 @@ import { BaseError } from './types';
  */
 export class RemoteJupyterServerConnectionError extends BaseError {
     public readonly baseUrl: string;
-    constructor(readonly url: string, public readonly serverId: string, public readonly originalError: Error) {
+    constructor(
+        readonly url: string,
+        public readonly serverProviderHandle: { id: string; handle: string },
+        public readonly originalError: Error
+    ) {
         super(
             'remotejupyterserverconnection',
             DataScience.remoteJupyterConnectionFailedWithServerWithError(

@@ -6,10 +6,8 @@ import { noop } from '../../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../../platform/errors/types';
 import {
-    computeServerId,
     createRemoteConnectionInfo,
     extractJupyterServerHandleAndId,
-    generateUriFromRemoteProvider,
     handleExpiredCertsError,
     handleSelfCertsError
 } from '../jupyterUtils';
@@ -157,9 +155,8 @@ export class JupyterConnection {
                     throw err;
                 }
             } else if (serverUri && !doNotDisplayUnActionableMessages) {
-                const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
                 await this.errorHandler.handleError(
-                    new RemoteJupyterServerConnectionError(serverUri.baseUrl, serverId, err)
+                    new RemoteJupyterServerConnectionError(serverUri.baseUrl, provider, err)
                 );
                 // Can't set the URI in this case.
                 throw err;
@@ -181,8 +178,7 @@ export class JupyterConnection {
             if (ex instanceof BaseError) {
                 throw ex;
             }
-            const serverId = await computeServerId(generateUriFromRemoteProvider(provider.id, provider.handle));
-            throw new RemoteJupyterServerUriProviderError(provider.id, provider.handle, ex, serverId);
+            throw new RemoteJupyterServerUriProviderError(provider, ex);
         }
     }
 
