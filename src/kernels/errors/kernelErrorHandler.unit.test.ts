@@ -903,12 +903,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 time: 2,
                 provider: serverProviderHandle
             });
-            when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
-                uri,
-                serverId,
-                time: 2,
-                provider: serverProviderHandle
-            });
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
