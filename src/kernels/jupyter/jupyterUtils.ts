@@ -105,6 +105,7 @@ export async function createRemoteConnectionInfo(
         serverId,
         baseUrl,
         providerId: jupyterHandle.id,
+        serverProviderHandle: jupyterHandle,
         token,
         hostName,
         localLaunch: false,

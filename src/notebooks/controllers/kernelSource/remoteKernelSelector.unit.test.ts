@@ -47,7 +47,7 @@ suite('Remote Kernel Selector', () => {
     let onDidTriggerQuickPickButton: EventEmitter<QuickInputButton>;
     let quickPick: QuickPick<QuickPickItem | ConnectionQuickPickItem>;
     let options: Parameters<CreateAndSelectItemFromQuickPick>[0];
-
+    const serverProviderHandle = { handle: 'handle', id: 'id' };
     let remotePythonKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: 'remotePythonKernelSpec',
         kernelSpec: {
@@ -58,7 +58,8 @@ suite('Remote Kernel Selector', () => {
             language: 'python'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId'
+        serverId: 'serverId',
+        serverProviderHandle
     });
     let remoteJavaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: 'localJavaKernelSpec',
@@ -70,7 +71,8 @@ suite('Remote Kernel Selector', () => {
             language: 'java'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId'
+        serverId: 'serverId',
+        serverProviderHandle
     });
     let remoteJuliaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: 'localJuliaKernelSpec',
@@ -82,7 +84,8 @@ suite('Remote Kernel Selector', () => {
             language: 'julia'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId'
+        serverId: 'serverId',
+        serverProviderHandle
     });
     setup(() => {
         selectionPromise =

@@ -133,7 +133,8 @@ suite('ipywidget - Widget Script Source Provider', () => {
                             baseUrl: '',
                             id: '',
                             serverId: '',
-                            kernelSpec: {} as any
+                            kernelSpec: {} as any,
+                            serverProviderHandle: { handle: '', id: '' }
                         })
                     );
                 }
