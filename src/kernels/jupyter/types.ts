@@ -224,14 +224,10 @@ export interface IJupyterServerUriStorage {
      */
     update(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     getAll(): Promise<IJupyterServerUriEntry[]>;
-    remove(serverId: string): Promise<void>;
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
     get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
-    get(serverProviderHandle: {
-        id: string;
-        handle: JupyterServerUriHandle;
-    }): Promise<IJupyterServerUriEntry | undefined>;
+    get(serverProviderHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined>;
     add(
         serverProviderHandle: JupyterServerProviderHandle,
         options?: { time: number; displayName: string }
