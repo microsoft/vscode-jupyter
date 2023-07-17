@@ -42,6 +42,7 @@ suite('Kernel Crash Monitor', () => {
     let notebook: TestNotebookDocument;
     let controller: IKernelController;
     let clock: fakeTimers.InstalledClock;
+    const serverProviderHandle = { handle: 'handle', id: 'id' };
     let remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: 'remote',
         baseUrl: '1',
@@ -51,7 +52,8 @@ suite('Kernel Crash Monitor', () => {
             executable: '',
             name: 'remote'
         },
-        serverId: '1'
+        serverId: '1',
+        serverProviderHandle
     });
     let localKernelSpec = LocalKernelSpecConnectionMetadata.create({
         id: 'local',

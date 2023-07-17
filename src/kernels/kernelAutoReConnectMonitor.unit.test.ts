@@ -91,7 +91,8 @@ suite('Kernel ReConnect Progress Message', () => {
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverId: '1234'
+            serverId: '1234',
+            serverProviderHandle: { handle: '1', id: '1' }
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.session).thenReturn(instance(session));
@@ -210,7 +211,8 @@ suite('Kernel ReConnect Failed Monitor', () => {
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverId: '1234'
+            serverId: '1234',
+            serverProviderHandle: { handle: '1234', id: '1234' }
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.disposed).thenReturn(false);

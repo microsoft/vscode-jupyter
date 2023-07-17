@@ -348,7 +348,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                         kernelSpec: s,
                         id: getKernelId(s, undefined, serverId),
                         baseUrl: connInfo.baseUrl,
-                        serverId: serverId
+                        serverId: serverId,
+                        serverProviderHandle: connInfo.serverProviderHandle
                     });
                     return kernel;
                 })
@@ -378,7 +379,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     },
                     baseUrl: connInfo.baseUrl,
                     id: s.kernel?.id || '',
-                    serverId
+                    serverId,
+                    serverProviderHandle: connInfo.serverProviderHandle
                 });
                 return kernel;
             });

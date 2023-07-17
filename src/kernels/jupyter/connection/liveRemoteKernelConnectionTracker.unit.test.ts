@@ -28,6 +28,7 @@ suite('Live kernel Connection Tracker', async () => {
     const disposables: IDisposable[] = [];
     const server2Uri = 'http://one:1234/hello?token=1234';
     const server2Id = await computeServerId(server2Uri);
+    const serverProviderHandle2 = { handle: 'handle2', id: 'id2' };
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'connectionId',
@@ -47,7 +48,8 @@ suite('Live kernel Connection Tracker', async () => {
             },
             name: '',
             numberOfConnections: 0
-        }
+        },
+        serverProviderHandle: serverProviderHandle2
     });
     const remoteLiveKernel2 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'http://one:1234/',
@@ -68,7 +70,8 @@ suite('Live kernel Connection Tracker', async () => {
             },
             name: '',
             numberOfConnections: 0
-        }
+        },
+        serverProviderHandle: serverProviderHandle2
     });
     const remoteLiveKernel3 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'http://one:1234/',
@@ -89,7 +92,8 @@ suite('Live kernel Connection Tracker', async () => {
             },
             name: '',
             numberOfConnections: 0
-        }
+        },
+        serverProviderHandle: serverProviderHandle2
     });
     setup(() => {
         serverUriStorage = mock<IJupyterServerUriStorage>();

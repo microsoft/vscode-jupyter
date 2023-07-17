@@ -16,7 +16,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import * as path from '../platform/vscode-path/path';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, ReadWrite, Resource } from '../platform/common/types';
-import { IJupyterKernel } from './jupyter/types';
+import { IJupyterKernel, JupyterServerProviderHandle } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { IContributedKernelFinder } from './internalTypes';
@@ -93,6 +93,7 @@ export class LiveRemoteKernelConnectionMetadata {
      */
     public readonly baseUrl: string;
     public readonly serverId: string;
+    public readonly serverProviderHandle: JupyterServerProviderHandle;
     public readonly id: string;
     public readonly interpreter?: PythonEnvironment;
 
@@ -105,12 +106,14 @@ export class LiveRemoteKernelConnectionMetadata {
         baseUrl: string;
         serverId: string;
         id: string;
+        serverProviderHandle: JupyterServerProviderHandle;
     }) {
         this.kernelModel = options.kernelModel;
         this.interpreter = options.interpreter;
         this.baseUrl = options.baseUrl;
         this.id = options.id;
         this.serverId = options.serverId;
+        this.serverProviderHandle = options.serverProviderHandle;
         sendKernelTelemetry(this);
     }
     public static create(options: {
@@ -122,6 +125,7 @@ export class LiveRemoteKernelConnectionMetadata {
         baseUrl: string;
         serverId: string;
         id: string;
+        serverProviderHandle: JupyterServerProviderHandle;
     }) {
         return new LiveRemoteKernelConnectionMetadata(options);
     }
@@ -135,7 +139,8 @@ export class LiveRemoteKernelConnectionMetadata {
             baseUrl: this.baseUrl,
             serverId: this.serverId,
             interpreter: serializePythonEnvironment(this.interpreter),
-            kernelModel: this.kernelModel
+            kernelModel: this.kernelModel,
+            serverProviderHandle: this.serverProviderHandle
         };
     }
     public static fromJSON(json: Record<string, unknown> | LiveRemoteKernelConnectionMetadata) {
@@ -209,18 +214,21 @@ export class RemoteKernelSpecConnectionMetadata {
     public readonly baseUrl: string;
     public readonly serverId: string;
     public readonly interpreter?: PythonEnvironment; // Can be set if URL is localhost
+    public readonly serverProviderHandle: JupyterServerProviderHandle;
     private constructor(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
         kernelSpec: IJupyterKernelSpec;
         baseUrl: string;
         serverId: string;
         id: string;
+        serverProviderHandle: JupyterServerProviderHandle;
     }) {
         this.interpreter = options.interpreter;
         this.kernelSpec = options.kernelSpec;
         this.baseUrl = options.baseUrl;
         this.id = options.id;
         this.serverId = options.serverId;
+        this.serverProviderHandle = options.serverProviderHandle;
         sendKernelTelemetry(this);
     }
     public static create(options: {
@@ -229,6 +237,7 @@ export class RemoteKernelSpecConnectionMetadata {
         baseUrl: string;
         serverId: string;
         id: string;
+        serverProviderHandle: JupyterServerProviderHandle;
     }) {
         return new RemoteKernelSpecConnectionMetadata(options);
     }
@@ -242,7 +251,8 @@ export class RemoteKernelSpecConnectionMetadata {
             interpreter: serializePythonEnvironment(this.interpreter),
             baseUrl: this.baseUrl,
             serverId: this.serverId,
-            kind: this.kind
+            kind: this.kind,
+            serverProviderHandle: this.serverProviderHandle
         };
     }
     public static fromJSON(options: Record<string, unknown> | RemoteKernelSpecConnectionMetadata) {
@@ -533,6 +543,7 @@ export interface IJupyterConnection extends Disposable {
     readonly baseUrl: string;
     readonly token: string;
     readonly providerId: string;
+    readonly serverProviderHandle: JupyterServerProviderHandle;
     readonly hostName: string;
     /**
      * Directory where the notebook server was started.

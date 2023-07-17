@@ -15,6 +15,7 @@ suite('ipywidget - Remote Widget Script Source', () => {
     let scriptManagerFactory: IIPyWidgetScriptManagerFactory;
     let scriptManager: IIPyWidgetScriptManager;
     const baseUrl = 'http://hello.com/';
+    const serverProviderHandle = { handle: 'handle', id: 'id' };
     setup(() => {
         scriptManagerFactory = mock<IIPyWidgetScriptManagerFactory>();
         scriptManager = mock<IIPyWidgetScriptManager>();
@@ -24,7 +25,8 @@ suite('ipywidget - Remote Widget Script Source', () => {
             baseUrl,
             id: '1',
             kernelSpec: instance(mock<IJupyterKernelSpec>()),
-            serverId: '2'
+            serverId: '2',
+            serverProviderHandle
         });
         when(kernel.kernelConnectionMetadata).thenReturn(kernelConnection);
         scriptSourceProvider = new RemoteWidgetScriptSourceProvider(instance(kernel), instance(scriptManagerFactory));
