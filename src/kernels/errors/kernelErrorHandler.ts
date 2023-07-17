@@ -279,7 +279,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             const handles = await provider.getHandles();
 
             if (!handles.includes(info.provider.handle)) {
-                await this.serverUriStorage.remove(info.serverId);
+                await this.serverUriStorage.remove(info.provider);
             }
             return true;
         } catch (_ex) {
@@ -377,7 +377,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                     // Remove this uri if already found (going to add again with a new time)
                     const item = await this.serverUriStorage.get(serverId);
                     if (item) {
-                        await this.serverUriStorage.remove(item.serverId);
+                        await this.serverUriStorage.remove(item.provider);
                     }
                     // Wait until all of the remote controllers associated with this server have been removed.
                     return KernelInterpreterDependencyResponse.cancel;

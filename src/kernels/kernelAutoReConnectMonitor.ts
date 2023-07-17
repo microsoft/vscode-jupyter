@@ -224,7 +224,7 @@ export class KernelAutoReconnectMonitor implements IExtensionSyncActivationServi
             const handles = await provider.getHandles();
 
             if (!handles.includes(uriItem.provider.handle)) {
-                await this.serverUriStorage.remove(uriItem.serverId);
+                await this.serverUriStorage.remove(uriItem.provider);
                 this.kernelReconnectProgress.get(kernel)?.dispose();
                 this.kernelReconnectProgress.delete(kernel);
             }
