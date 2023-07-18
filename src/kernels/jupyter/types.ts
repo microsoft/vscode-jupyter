@@ -222,13 +222,18 @@ export interface IJupyterServerUriStorage {
     /**
      * Updates MRU list marking this server as the most recently used.
      */
-    update(serverId: string): Promise<void>;
+    update(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     getAll(): Promise<IJupyterServerUriEntry[]>;
     remove(serverId: string): Promise<void>;
+    remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
     get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
+    get(serverProviderHandle: {
+        id: string;
+        handle: JupyterServerUriHandle;
+    }): Promise<IJupyterServerUriEntry | undefined>;
     add(
-        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+        serverProviderHandle: JupyterServerProviderHandle,
         options?: { time: number; displayName: string }
     ): Promise<void>;
 }

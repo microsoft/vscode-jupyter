@@ -109,14 +109,18 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         await this.newStorage.migrateMRU();
         await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
     }
-    public async get(id: string): Promise<IJupyterServerUriEntry | undefined> {
+    public async get(server: string | JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         const savedList = await this.getAll();
-        return savedList.find((item) => item.serverId === id);
+        if (typeof server === 'string') {
+            return savedList.find((item) => item.serverId === server);
+        } else {
+            return savedList.find((item) => item.provider.id === server.id && item.provider.handle === server.handle);
+        }
     }
     public async add(
-        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+        jupyterHandle: JupyterServerProviderHandle,
         options?: { time: number; displayName: string }
     ): Promise<void> {
         this.hookupStorageEvents();
@@ -143,15 +147,15 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         }
         await Promise.all([this.newStorage.add(entry), this.oldStorage.add(entry)]);
     }
-    public async update(serverId: string) {
+    public async update(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        await Promise.all([this.newStorage.update(serverId), this.oldStorage.update(serverId)]);
+        await Promise.all([this.newStorage.update(server), this.oldStorage.update(server)]);
     }
-    public async remove(serverId: string) {
+    public async remove(server: string | JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        await Promise.all([this.newStorage.remove(serverId), this.oldStorage.remove(serverId)]);
+        await Promise.all([this.newStorage.remove(server), this.oldStorage.remove(server)]);
     }
 }
 
@@ -186,12 +190,15 @@ class OldStorage {
         traceInfoIfCI(`setUri: ${item.provider.id}.${item.provider.handle}`);
         await this.addToUriList(item.provider, item.serverId, item.displayName || '', item.time);
     }
-    public async update(serverId: string) {
+    public async update(server: string | JupyterServerProviderHandle) {
         const uriList = await this.getAll();
 
-        const existingEntry = uriList.find((entry) => entry.serverId === serverId);
+        const existingEntry =
+            typeof server === 'string'
+                ? uriList.find((entry) => entry.serverId === server)
+                : uriList.find((entry) => entry.provider.id === server.id && entry.provider.handle === server.handle);
         if (!existingEntry) {
-            throw new Error(`Uri not found for Server Id ${serverId}`);
+            throw new Error(`Uri not found for Server Id ${JSON.stringify(server)}`);
         }
 
         await this.addToUriList(
@@ -201,14 +208,20 @@ class OldStorage {
             Date.now()
         );
     }
-    public async remove(serverId: string) {
+    public async remove(server: string | JupyterServerProviderHandle) {
         const uriList = await this.getAll();
-        const editedList = uriList.filter((f) => f.serverId !== serverId);
+        const editedList =
+            typeof server === 'string'
+                ? uriList.filter((f) => f.serverId !== server)
+                : uriList.filter((f) => f.provider.id !== server.id && f.provider.handle !== server.handle);
         if (editedList.length === 0) {
             await this.clear();
         } else {
-            await this.updateMemento(uriList.filter((f) => f.serverId !== serverId));
-            const removedItem = uriList.find((f) => f.serverId === serverId);
+            await this.updateMemento(editedList);
+            const removedItem =
+                typeof server === 'string'
+                    ? uriList.find((f) => f.serverId === server)
+                    : uriList.find((f) => f.provider.id === server.id && f.provider.handle === server.handle);
             if (removedItem) {
                 this._onDidRemoveUris.fire([removedItem]);
             }
@@ -496,12 +509,15 @@ class NewStorage {
             })
             .catch(noop));
     }
-    public async update(serverId: string) {
+    public async update(server: string | JupyterServerProviderHandle) {
         const uriList = await this.getAllImpl(false);
 
-        const existingEntry = uriList.find((entry) => entry.serverId === serverId);
+        const existingEntry =
+            typeof server === 'string'
+                ? uriList.find((entry) => entry.serverId === server)
+                : uriList.find((entry) => entry.provider.id === server.id && entry.provider.handle === server.handle);
         if (!existingEntry) {
-            throw new Error(`Uri not found for Server Id ${serverId}`);
+            throw new Error(`Uri not found for Server Id ${JSON.stringify(server)}`);
         }
         const entry: IJupyterServerUriEntry = {
             provider: existingEntry.provider,
@@ -513,15 +529,21 @@ class NewStorage {
         };
         await this.add(entry);
     }
-    public async remove(serverId: string) {
+    public async remove(server: string | JupyterServerProviderHandle) {
         await (this.updatePromise = this.updatePromise
             .then(async () => {
                 const all = await this.getAllImpl(false);
                 if (all.length === 0) {
                     return;
                 }
-                const editedList = all.filter((f) => f.serverId !== serverId);
-                const removedItems = all.filter((f) => f.serverId === serverId);
+                const editedList =
+                    typeof server === 'string'
+                        ? all.filter((f) => f.serverId !== server)
+                        : all.filter((f) => f.provider.id !== server.id && f.provider.handle !== server.handle);
+                const removedItems =
+                    typeof server === 'string'
+                        ? all.filter((f) => f.serverId === server)
+                        : all.filter((f) => f.provider.id === server.id && f.provider.handle === server.handle);
 
                 if (editedList.length === 0) {
                     await this.clear();
