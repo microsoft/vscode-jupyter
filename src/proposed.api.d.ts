@@ -56,9 +56,19 @@ export type GetAuthenticationInformation = () => Promise<JupyterServerAuthentica
 export type GetRemoteNotebookDirectoryMapping = () => string;
 
 export interface JupyterServer extends Disposable {
+    /**
+     * Triggered when the server is removed by the user.
+     */
     onDidRemove: Event<void>;
     id: string;
+    /**
+     * A human-readable string which is rendered prominent.
+     */
     label: string;
+    /**
+     * Date time when the user last ran some code against a kernel on this server.
+     */
+    lastActivity?: Date;
 }
 
 export class JupyterServerPicker extends Disposable {
@@ -100,12 +110,32 @@ export class JupyterServerCollection extends Disposable {
      * A link to a page providing more information to the user about this item.
      */
     documentation?: Uri;
+    /**
+     * Creates an entry in the list of Jupyter Servers from which the user can pick.
+     *
+     * @param {string} id
+     * @param {string} label
+     * @param {GetAuthenticationInformation} resolveAuthenticationInformation Gets the authentication information for the Jupyter Server.
+     * @param {GetRemoteNotebookDirectoryMapping} [getDirectoryMapping] Gets the mapping of the notebook directory.
+     * @return {*}  {JupyterServer}
+     * @memberof JupyterServerCollection
+     */
     createJupyterServer(
         id: string,
         label: string,
         resolveAuthenticationInformation: GetAuthenticationInformation,
         getDirectoryMapping?: GetRemoteNotebookDirectoryMapping
     ): JupyterServer;
+    /**
+     * Creates an entry in the list of Jupyter Servers from which a user can pick.
+     * Picking an item is expected to result in the eventual creation of a JupyterServer.
+     * I.e. an extension is expected to listen to the `onDidSelect` event and optionally display their own UI and then create a JupyterServer.
+     *
+     * @param {string} label
+     * @param {() => PromiseLike<JupyterServer>} onDidSelect Callback invoked when this item is selected.
+     * @return {*}  {JupyterServerPicker}
+     * @memberof JupyterServerCollection
+     */
     createJupyterServerPicker(label: string, onDidSelect: () => PromiseLike<JupyterServer>): JupyterServerPicker;
 }
 
@@ -113,5 +143,5 @@ export interface JupyterAPI {
     /**
      * Provides the ability to register multiple collections of Jupyter Servers.
      */
-    createJupyterServerCollection(id: string, name: string): JupyterServerCollection;
+    createJupyterServerCollection(id: string, label: string): JupyterServerCollection;
 }
