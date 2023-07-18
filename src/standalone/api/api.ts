@@ -6,7 +6,7 @@ import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/ju
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
-import { IExportedKernelService, IJupyterUriProvider, JupyterServerUriHandle } from '../../api';
+import { IExportedKernelService, IJupyterUriProvider } from '../../api';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
@@ -58,14 +58,14 @@ export interface IExtensionApi {
      */
     getSuggestedController(
         providerId: string,
-        handle: JupyterServerUriHandle,
+        handle: string,
         notebook: NotebookDocument
     ): Promise<NotebookController | undefined>;
     /**
      * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
      * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
      */
-    addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
+    addRemoteJupyterServer(providerId: string, handle: string): Promise<void>;
     /**
      * Opens a notebook with a specific kernel as the active kernel.
      * @param {Uri} uri Uri of the notebook to open.
@@ -154,11 +154,7 @@ export function buildApi(
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
         },
-        getSuggestedController: async (
-            _providerId: string,
-            _handle: JupyterServerUriHandle,
-            _notebook: NotebookDocument
-        ) => {
+        getSuggestedController: async (_providerId: string, _handle: string, _notebook: NotebookDocument) => {
             traceError('The API getSuggestedController is being deprecated.');
             if (context.extensionMode === ExtensionMode.Development || context.extensionMode === ExtensionMode.Test) {
                 window.showErrorMessage('The Jupyter API getSuggestedController is being deprecated.').then(noop, noop);
@@ -167,7 +163,7 @@ export function buildApi(
             sendApiUsageTelemetry(extensions, 'getSuggestedController');
             return undefined;
         },
-        addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {
+        addRemoteJupyterServer: async (providerId: string, handle: string) => {
             sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
             await new Promise<void>(async (resolve) => {
                 const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
