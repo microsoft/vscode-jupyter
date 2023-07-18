@@ -444,9 +444,7 @@ suite('Server Uri Storage', async () => {
                     serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' }),
                     serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' })
                 ]);
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId2', 'NewHandle2'))
-                );
+                await serverUriStorage.remove({ id: 'NewId2', handle: 'NewHandle2' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -512,9 +510,7 @@ suite('Server Uri Storage', async () => {
                 await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' });
                 await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' });
                 await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' });
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId2', 'NewHandle2'))
-                );
+                await serverUriStorage.remove({ id: 'NewId2', handle: 'NewHandle2' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -582,17 +578,12 @@ suite('Server Uri Storage', async () => {
                     serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' }),
                     serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' })
                 ]);
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId1', 'NewHandle1'))
-                );
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId2', 'NewHandle2'))
-                );
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId3', 'NewHandle3'))
-                );
-                await serverUriStorage.remove(await computeServerId(generateUriFromRemoteProvider('1', 'handle1')));
-                await serverUriStorage.remove(await computeServerId(generateUriFromRemoteProvider('1', 'handle2')));
+
+                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1' });
+                await serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2' });
+                await serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3' });
+                await serverUriStorage.remove({ handle: 'handle1', id: '1' });
+                await serverUriStorage.remove({ handle: 'handle2', id: '1' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -635,17 +626,11 @@ suite('Server Uri Storage', async () => {
                     serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' })
                 ]);
                 await Promise.all([
-                    serverUriStorage.remove(
-                        await computeServerId(generateUriFromRemoteProvider('NewId1', 'NewHandle1'))
-                    ),
-                    serverUriStorage.remove(
-                        await computeServerId(generateUriFromRemoteProvider('NewId2', 'NewHandle2'))
-                    ),
-                    serverUriStorage.remove(
-                        await computeServerId(generateUriFromRemoteProvider('NewId3', 'NewHandle3'))
-                    ),
-                    serverUriStorage.remove(await computeServerId(generateUriFromRemoteProvider('1', 'handle1'))),
-                    serverUriStorage.remove(await computeServerId(generateUriFromRemoteProvider('1', 'handle2')))
+                    serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1' }),
+                    serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2' }),
+                    serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3' }),
+                    serverUriStorage.remove({ handle: 'handle1', id: '1' }),
+                    serverUriStorage.remove({ handle: 'handle2', id: '1' })
                 ]);
                 const all = await serverUriStorage.getAll();
 
@@ -694,9 +679,7 @@ suite('Server Uri Storage', async () => {
                     timeOfNewHandle2AfterUpdate.time > timeOfNewHandle2BeforeUpdate.time,
                     `time ${timeOfNewHandle2AfterUpdate.time} should be greater than ${timeOfNewHandle2BeforeUpdate.time}`
                 );
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId1', 'NewHandle1'))
-                );
+                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -737,17 +720,11 @@ suite('Server Uri Storage', async () => {
                 await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' });
                 await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' });
                 await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' });
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId1', 'NewHandle1'))
-                );
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId2', 'NewHandle2'))
-                );
-                await serverUriStorage.remove(
-                    await computeServerId(generateUriFromRemoteProvider('NewId3', 'NewHandle3'))
-                );
-                await serverUriStorage.remove(await computeServerId(generateUriFromRemoteProvider('1', 'handle1')));
-                await serverUriStorage.remove(await computeServerId(generateUriFromRemoteProvider('1', 'handle2')));
+                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1' });
+                await serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2' });
+                await serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3' });
+                await serverUriStorage.remove({ handle: 'handle1', id: '1' });
+                await serverUriStorage.remove({ handle: 'handle2', id: '1' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -838,7 +815,7 @@ suite('Server Uri Storage', async () => {
                 assert.strictEqual(server1?.provider.handle, 'handle1');
 
                 // Remove this.
-                await serverUriStorage.remove(await computeServerId(generateUriFromRemoteProvider('1', 'handle1')));
+                await serverUriStorage.remove({ handle: 'handle1', id: '1' });
 
                 assert.isUndefined(
                     await serverUriStorage.get(await computeServerId(generateUriFromRemoteProvider('1', 'handle1')))

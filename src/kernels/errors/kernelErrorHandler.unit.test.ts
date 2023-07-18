@@ -824,7 +824,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     DataScience.selectDifferentKernel
                 )
             ).once();
-            verify(uriStorage.remove(serverId)).never();
             verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
         });
         test('Display error when connection to remote jupyter server fails due to 3rd party extension', async () => {
@@ -869,7 +868,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     DataScience.selectDifferentKernel
                 )
             ).once();
-            verify(uriStorage.remove(serverId)).never();
             verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
             verify(uriStorage.get(serverId)).atLeast(1);
         });
@@ -935,7 +933,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
-            verify(uriStorage.remove(serverId)).never();
             verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
         });
         test('Select different kernel user choses to do so, when connection to remote jupyter server fails', async () => {
@@ -963,7 +960,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.selectDifferentKernel);
-            verify(uriStorage.remove(serverId)).never();
             verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
         });
         function verifyErrorMessage(message: string, linkInfo?: string) {
