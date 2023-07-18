@@ -4,15 +4,15 @@
 import { Disposable, Event, Uri } from 'vscode';
 
 export interface JupyterServerAuthenticationInformation {
-    baseUrl: Uri;
+    readonly baseUrl: Uri;
     /**
      * Jupyter auth Token
      */
-    token: string;
+    readonly token: string;
     /**
      * Authorization header to be used when connecting to the server.
      */
-    authorizationHeader?: Record<string, string>;
+    readonly authorizationHeader?: Record<string, string>;
     /**
      * The local directory that maps to the remote directory of the Jupyter Server.
      * E.g. assume you start Jupyter Notebook with --notebook-dir=/foo/bar,
@@ -28,13 +28,13 @@ export interface JupyterServerAuthenticationInformation {
      * As a result when attempting to create a new session for a notebook/file, Jupyter will
      * first check if a session already exists for the same file and same kernel, and if so, will re-use that session.
      */
-    mappedRemoteNotebookDir?: string;
+    readonly mappedRemoteNotebookDir?: string;
     /**
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
      * Useful if there is a custom authentication scheme that needs to be used for WebSocket connections.
      * Note: The client side npm package @jupyterlab/services uses WebSockets to connect to remote Kernels.
      */
-    webSocketProtocols?: string[];
+    readonly webSocketProtocols?: string[];
 }
 
 export type GetAuthenticationInformation = () => Promise<JupyterServerAuthenticationInformation>;
@@ -59,8 +59,8 @@ export interface JupyterServer extends Disposable {
     /**
      * Triggered when the server is removed by the user.
      */
-    onDidRemove: Event<void>;
-    id: string;
+    readonly onDidRemove: Event<void>;
+    readonly id: string;
     /**
      * A human-readable string which is rendered prominent.
      */
@@ -68,7 +68,7 @@ export interface JupyterServer extends Disposable {
     /**
      * Date time when the user last ran some code against a kernel on this server.
      */
-    lastActivity?: Date;
+    readonly lastActivity?: Date;
 }
 
 export class JupyterServerPicker extends Disposable {
@@ -101,7 +101,7 @@ export class JupyterServerCollection extends Disposable {
     /**
      * Must be unique and should not change between sessions.
      */
-    id: string;
+    readonly id: string;
     /**
      * A human-readable string which is rendered prominent.
      */
