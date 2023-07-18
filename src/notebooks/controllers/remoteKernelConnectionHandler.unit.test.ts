@@ -43,7 +43,6 @@ suite('Remote kernel connection handler', async () => {
     const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'remoteKernelSpec1',
-        serverId: 'server1',
         kernelSpec: {
             argv: [],
             display_name: '',
@@ -64,7 +63,6 @@ suite('Remote kernel connection handler', async () => {
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'connectionId',
-        serverId: 'server1',
         kernelModel: {
             lastActivityTime: new Date(),
             id: 'model1',

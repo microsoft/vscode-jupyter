@@ -52,7 +52,6 @@ suite('Kernel Crash Monitor', () => {
             executable: '',
             name: 'remote'
         },
-        serverId: '1',
         serverProviderHandle
     });
     let localKernelSpec = LocalKernelSpecConnectionMetadata.create({

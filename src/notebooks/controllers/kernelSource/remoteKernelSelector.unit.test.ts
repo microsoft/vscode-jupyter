@@ -58,7 +58,6 @@ suite('Remote Kernel Selector', () => {
             language: 'python'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId',
         serverProviderHandle
     });
     let remoteJavaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
@@ -71,7 +70,6 @@ suite('Remote Kernel Selector', () => {
             language: 'java'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId',
         serverProviderHandle
     });
     let remoteJuliaKernelSpec = RemoteKernelSpecConnectionMetadata.create({
@@ -84,7 +82,6 @@ suite('Remote Kernel Selector', () => {
             language: 'julia'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: 'serverId',
         serverProviderHandle
     });
     setup(() => {

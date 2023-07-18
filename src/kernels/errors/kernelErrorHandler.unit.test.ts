@@ -35,7 +35,7 @@ import {
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyter/jupyterUtils';
+import { generateUriFromRemoteProvider } from '../jupyter/jupyterUtils';
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from './kernelErrorHandler.node';
@@ -153,14 +153,10 @@ suite('Error Handler Unit Tests', () => {
     suite('Kernel startup errors', () => {
         let kernelConnection: KernelConnectionMetadata;
         const uri = generateUriFromRemoteProvider('1', 'a');
-        let serverId: string;
         const serverProviderHandle: JupyterServerProviderHandle = {
             handle: '1',
             id: 'a'
         };
-        suiteSetup(async () => {
-            serverId = await computeServerId(uri);
-        });
         setup(() => {
             when(applicationShell.showErrorMessage(anything(), Common.learnMore)).thenResolve(Common.learnMore as any);
             kernelConnection = PythonKernelConnectionMetadata.create({
@@ -804,7 +800,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId,
                 serverProviderHandle
             });
             when(
@@ -841,13 +836,11 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId,
                 serverProviderHandle
             });
             when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
                 time: 1,
                 uri,
-                serverId,
                 displayName: 'Hello Server',
                 provider: { id: '1', handle: 'a' }
             });
@@ -890,7 +883,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: '' // Send nothing for argv[0]
                 },
-                serverId,
                 serverProviderHandle
             });
             when(
@@ -899,7 +891,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(uriStorage.remove(anything())).thenResolve();
             when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
                 uri,
-                serverId,
                 time: 2,
                 provider: serverProviderHandle
             });
@@ -929,7 +920,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId,
                 serverProviderHandle
             });
             when(
@@ -961,7 +951,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId,
                 serverProviderHandle
             });
             when(

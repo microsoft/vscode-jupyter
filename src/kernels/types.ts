@@ -92,7 +92,6 @@ export class LiveRemoteKernelConnectionMetadata {
      * Python interpreter will be used for intellisense & the like.
      */
     public readonly baseUrl: string;
-    public readonly serverId: string;
     public readonly serverProviderHandle: JupyterServerProviderHandle;
     public readonly id: string;
     public readonly interpreter?: PythonEnvironment;
@@ -104,7 +103,6 @@ export class LiveRemoteKernelConnectionMetadata {
          */
         interpreter?: PythonEnvironment;
         baseUrl: string;
-        serverId: string;
         id: string;
         serverProviderHandle: JupyterServerProviderHandle;
     }) {
@@ -112,7 +110,6 @@ export class LiveRemoteKernelConnectionMetadata {
         this.interpreter = options.interpreter;
         this.baseUrl = options.baseUrl;
         this.id = options.id;
-        this.serverId = options.serverId;
         this.serverProviderHandle = options.serverProviderHandle;
         sendKernelTelemetry(this);
     }
@@ -123,7 +120,6 @@ export class LiveRemoteKernelConnectionMetadata {
          */
         interpreter?: PythonEnvironment;
         baseUrl: string;
-        serverId: string;
         id: string;
         serverProviderHandle: JupyterServerProviderHandle;
     }) {
@@ -137,7 +133,6 @@ export class LiveRemoteKernelConnectionMetadata {
             id: this.id,
             kind: this.kind,
             baseUrl: this.baseUrl,
-            serverId: this.serverId,
             interpreter: serializePythonEnvironment(this.interpreter),
             kernelModel: this.kernelModel,
             serverProviderHandle: this.serverProviderHandle
@@ -212,14 +207,12 @@ export class RemoteKernelSpecConnectionMetadata {
     public readonly id: string;
     public readonly kernelSpec: IJupyterKernelSpec;
     public readonly baseUrl: string;
-    public readonly serverId: string;
     public readonly interpreter?: PythonEnvironment; // Can be set if URL is localhost
     public readonly serverProviderHandle: JupyterServerProviderHandle;
     private constructor(options: {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
         kernelSpec: IJupyterKernelSpec;
         baseUrl: string;
-        serverId: string;
         id: string;
         serverProviderHandle: JupyterServerProviderHandle;
     }) {
@@ -227,7 +220,6 @@ export class RemoteKernelSpecConnectionMetadata {
         this.kernelSpec = options.kernelSpec;
         this.baseUrl = options.baseUrl;
         this.id = options.id;
-        this.serverId = options.serverId;
         this.serverProviderHandle = options.serverProviderHandle;
         sendKernelTelemetry(this);
     }
@@ -235,7 +227,6 @@ export class RemoteKernelSpecConnectionMetadata {
         interpreter?: PythonEnvironment; // Can be set if URL is localhost
         kernelSpec: IJupyterKernelSpec;
         baseUrl: string;
-        serverId: string;
         id: string;
         serverProviderHandle: JupyterServerProviderHandle;
     }) {
@@ -250,7 +241,6 @@ export class RemoteKernelSpecConnectionMetadata {
             kernelSpec: this.kernelSpec,
             interpreter: serializePythonEnvironment(this.interpreter),
             baseUrl: this.baseUrl,
-            serverId: this.serverId,
             kind: this.kind,
             serverProviderHandle: this.serverProviderHandle
         };
@@ -537,7 +527,6 @@ export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IThirdPar
 }
 
 export interface IJupyterConnection extends Disposable {
-    serverId: string;
     readonly localLaunch: boolean;
     displayName: string;
     readonly baseUrl: string;
