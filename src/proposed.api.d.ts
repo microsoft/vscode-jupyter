@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, QuickPick, QuickPickItem, Uri } from 'vscode';
+import { Disposable, Event, MarkdownString, QuickPick, QuickPickItem, Uri } from 'vscode';
 
 export interface JupyterServer {
     /**
@@ -56,6 +56,7 @@ export interface JupyterServerProvider {
      * Detailed description.
      */
     readonly detail: string;
+    documentation?: string | MarkdownString;
     /**
      * List of all known servers.
      */
