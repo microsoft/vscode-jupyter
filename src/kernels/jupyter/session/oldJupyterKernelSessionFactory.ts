@@ -70,7 +70,7 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
         const disposablesWhenThereAreFailures: IDisposable[] = [];
         try {
             connection = isRemoteConnection(options.kernelConnection)
-                ? await this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverId)
+                ? await this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverProviderHandle)
                 : await this.jupyterNotebookProvider.getOrStartServer({
                       resource: options.resource,
                       token: options.token,
