@@ -18,7 +18,8 @@ import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IOldJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    JupyterServerProviderHandle
 } from '../types';
 import { IJupyterServerUri } from '../../../api';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
@@ -86,7 +87,7 @@ export class JupyterConnection {
         );
     }
 
-    public async createConnectionInfo(serverId: string) {
+    public async createConnectionInfo(serverId: JupyterServerProviderHandle) {
         const server = await this.serverUriStorage.get(serverId);
         if (!server) {
             throw new Error('Server Not found');

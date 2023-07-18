@@ -14,12 +14,7 @@ import {
     isPythonKernelConnection,
     isPythonNotebook
 } from '../../../kernels/helpers';
-import {
-    isLocalConnection,
-    IJupyterKernelSpec,
-    KernelConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from '../../../kernels/types';
+import { IJupyterKernelSpec, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { isCI, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { Resource } from '../../../platform/common/types';
@@ -988,14 +983,9 @@ export class KernelRankingHelper {
         kernels: KernelConnectionMetadata[],
         notebookMetadata?: INotebookMetadata | undefined,
         preferredInterpreter?: PythonEnvironment,
-        cancelToken?: CancellationToken,
-        serverId?: string
+        cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata[] | undefined> {
         try {
-            // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            if (serverId) {
-                kernels = kernels.filter((kernel) => !isLocalConnection(kernel) && kernel.serverId === serverId);
-            }
             const preferredRemoteKernelId =
                 resource && this.preferredRemoteFinder
                     ? await this.preferredRemoteFinder.getPreferredRemoteKernelId(resource)

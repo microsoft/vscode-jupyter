@@ -102,7 +102,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             connection = isRemoteConnection(options.kernelConnection)
                 ? await raceCancellationError(
                       options.token,
-                      this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverId)
+                      this.jupyterConnection.createConnectionInfo(options.kernelConnection.serverProviderHandle)
                   )
                 : await this.jupyterNotebookProvider.getOrStartServer({
                       resource: options.resource,
