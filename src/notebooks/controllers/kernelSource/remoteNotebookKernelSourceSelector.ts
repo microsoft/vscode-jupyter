@@ -136,7 +136,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
 
         for (const server of servers) {
             // remote server
-            const savedURI = await this.serverUriStorage.get(server.serverUri.serverId);
+            const savedURI = await this.serverUriStorage.get(server.serverUri.provider);
             if (token.isCancellationRequested) {
                 return;
             }
