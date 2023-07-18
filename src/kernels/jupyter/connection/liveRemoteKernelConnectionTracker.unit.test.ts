@@ -124,7 +124,10 @@ suite('Live kernel Connection Tracker', async () => {
     });
     test('Kernel connection is not used if memento is not empty but does not contain the same connection info', async () => {
         const cachedItems = {
-            [remoteLiveKernel2.serverId]: {
+            [generateUriFromRemoteProvider(
+                remoteLiveKernel2.serverProviderHandle.id,
+                remoteLiveKernel2.serverProviderHandle.handle
+            )]: {
                 [remoteLiveKernel2.kernelModel.id!]: [Uri.file('a.ipynb').toString()]
             }
         };
