@@ -14,22 +14,6 @@ export interface JupyterServerAuthenticationInformation {
      */
     readonly authorizationHeader?: Record<string, string>;
     /**
-     * The local directory that maps to the remote directory of the Jupyter Server.
-     * E.g. assume you start Jupyter Notebook with --notebook-dir=/foo/bar,
-     * and you have a file named /foo/bar/sample.ipynb, /foo/bar/sample2.ipynb and the like.
-     * Then assume the mapped local directory will be /users/xyz/remoteServer and the files sample.ipynb and sample2.ipynb
-     * are in the above local directory.
-     *
-     * Using this setting one can map the local directory to the remote directory.
-     * In this case the value of this property would be /users/xyz/remoteServer.
-     *
-     * Note: A side effect of providing this value is the session names are generated the way they are in Jupyter Notebook/Lab.
-     * I.e. the session names map to the relative path of the notebook file.
-     * As a result when attempting to create a new session for a notebook/file, Jupyter will
-     * first check if a session already exists for the same file and same kernel, and if so, will re-use that session.
-     */
-    readonly mappedRemoteNotebookDir?: string;
-    /**
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
      * Useful if there is a custom authentication scheme that needs to be used for WebSocket connections.
      * Note: The client side npm package @jupyterlab/services uses WebSockets to connect to remote Kernels.
