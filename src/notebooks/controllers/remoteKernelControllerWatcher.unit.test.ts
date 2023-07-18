@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
-import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
     IInternalJupyterUriProvider,
@@ -53,7 +53,6 @@ suite('RemoteKernelControllerWatcher', () => {
         const provider1Id = 'provider1';
         const provider1Handle1: string = 'provider1Handle1';
         const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
-        const serverId = await computeServerId(remoteUriForProvider1);
         const serverProviderHandle = { handle: provider1Handle1, id: provider1Id };
         let onDidChangeHandles: undefined | (() => Promise<void>);
         const provider1 = mock<IInternalJupyterUriProvider>();
@@ -97,7 +96,6 @@ suite('RemoteKernelControllerWatcher', () => {
                 id: 'remote1',
                 baseUrl: remoteUriForProvider1,
                 kernelSpec: mock<IJupyterKernelSpec>(),
-                serverId,
                 serverProviderHandle
             })
         );
@@ -108,7 +106,6 @@ suite('RemoteKernelControllerWatcher', () => {
                 id: 'live1',
                 baseUrl: remoteUriForProvider1,
                 kernelModel: mock<LiveKernelModel>(),
-                serverId,
                 serverProviderHandle
             })
         );
@@ -121,7 +118,6 @@ suite('RemoteKernelControllerWatcher', () => {
         when(uriStorage.getAll()).thenResolve([
             {
                 time: 1,
-                serverId,
                 uri: remoteUriForProvider1,
                 displayName: 'Something',
                 provider: {
@@ -132,7 +128,6 @@ suite('RemoteKernelControllerWatcher', () => {
         ]);
         when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
             time: 1,
-            serverId,
             uri: remoteUriForProvider1,
             displayName: 'Something',
             provider: {

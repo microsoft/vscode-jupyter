@@ -91,7 +91,6 @@ suite('Kernel ReConnect Progress Message', () => {
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverId: '1234',
             serverProviderHandle: { handle: '1', id: '1' }
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
@@ -211,7 +210,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverId: '1234',
             serverProviderHandle
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
@@ -324,7 +322,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
     test('Handle contributed server disconnect (server contributed by uri provider)', async () => {
         const server: IJupyterServerUriEntry = {
             uri: 'https://remote?id=remoteUriProvider&uriHandle=1',
-            serverId: '1234',
             time: 1234,
             provider: {
                 handle: '1',

@@ -35,14 +35,12 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExt
     const serverProviderHandle = { handle: 'handle', id: 'id' };
     const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: '',
-        serverId: '',
         baseUrl: 'http://bogus.com',
         kernelSpec: instance(mock<IJupyterKernelSpec>()),
         serverProviderHandle
     });
     const remoteLiveKernel = LiveRemoteKernelConnectionMetadata.create({
         id: '',
-        serverId: '',
         baseUrl: 'http://bogus.com',
         kernelModel: instance(mock<LiveKernelModel>()),
         serverProviderHandle
