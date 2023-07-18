@@ -21,7 +21,6 @@ import {
     IJupyterUriProviderRegistration,
     JupyterServerProviderHandle
 } from '../types';
-import { JupyterServerUriHandle } from '../../../api';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import * as path from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
@@ -228,7 +227,7 @@ class OldStorage {
         }
     }
     private async addToUriList(
-        jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+        jupyterHandle: { id: string; handle: string },
         serverId: string,
         displayName: string,
         time: number

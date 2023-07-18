@@ -18,7 +18,7 @@ import {
 } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../../api';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -88,7 +88,7 @@ export class JupyterUriProviderRegistration
     }
     public async getJupyterServerUri(
         id: string,
-        handle: JupyterServerUriHandle,
+        handle: string,
         doNotPromptForAuthInfo?: boolean
     ): Promise<IJupyterServerUri> {
         await this.loadOtherExtensions();
@@ -190,8 +190,8 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
     public readonly detail: string | undefined;
 
     public readonly onDidChangeHandles?: Event<void>;
-    public readonly getHandles?: () => Promise<JupyterServerUriHandle[]>;
-    public readonly removeHandle?: (handle: JupyterServerUriHandle) => Promise<void>;
+    public readonly getHandles?: () => Promise<string[]>;
+    public readonly removeHandle?: (handle: string) => Promise<void>;
 
     constructor(private readonly provider: IJupyterUriProvider, public extensionId: string) {
         super();
@@ -212,7 +212,7 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         }
 
         if (provider.removeHandle) {
-            this.removeHandle = (handle: JupyterServerUriHandle) => provider.removeHandle!(handle);
+            this.removeHandle = (handle: string) => provider.removeHandle!(handle);
         }
     }
     public async getQuickPickEntryItems(): Promise<QuickPickItem[]> {
@@ -228,10 +228,7 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
             };
         });
     }
-    public async handleQuickPick(
-        item: QuickPickItem,
-        back: boolean
-    ): Promise<JupyterServerUriHandle | 'back' | undefined> {
+    public async handleQuickPick(item: QuickPickItem, back: boolean): Promise<string | 'back' | undefined> {
         if (!this.provider.handleQuickPick) {
             return;
         }
@@ -243,10 +240,7 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         return this.provider.handleQuickPick(item, back);
     }
 
-    public async getServerUri(
-        handle: JupyterServerUriHandle,
-        doNotPromptForAuthInfo?: boolean
-    ): Promise<IJupyterServerUri> {
+    public async getServerUri(handle: string, doNotPromptForAuthInfo?: boolean): Promise<IJupyterServerUri> {
         const provider = this.provider as IInternalJupyterUriProvider;
         if (doNotPromptForAuthInfo && this.id.startsWith('_builtin') && provider.getServerUriWithoutAuthInfo) {
             return provider.getServerUriWithoutAuthInfo(handle);

@@ -13,7 +13,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
-import { IJupyterServerUri, JupyterServerUriHandle } from '../../api';
+import { IJupyterServerUri } from '../../api';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -89,7 +89,7 @@ export async function handleExpiredCertsError(
 }
 
 export async function createRemoteConnectionInfo(
-    jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+    jupyterHandle: { id: string; handle: string },
     serverUri: IJupyterServerUri
 ): Promise<IJupyterConnection> {
     const serverId = await computeServerId(generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle));
@@ -129,14 +129,14 @@ export async function computeServerId(uri: string) {
     return computeHash(uri, 'SHA-256');
 }
 
-export function generateUriFromRemoteProvider(id: string, handle: JupyterServerUriHandle) {
+export function generateUriFromRemoteProvider(id: string, handle: string) {
     // eslint-disable-next-line
     return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
         Identifiers.REMOTE_URI_HANDLE_PARAM
     }=${encodeURI(handle)}`;
 }
 
-export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } {
+export function extractJupyterServerHandleAndId(uri: string): { handle: string; id: string } {
     try {
         const url: URL = new URL(uri);
 
