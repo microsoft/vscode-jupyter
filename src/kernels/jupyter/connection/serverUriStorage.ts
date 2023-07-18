@@ -108,15 +108,11 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         await this.newStorage.migrateMRU();
         await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
     }
-    public async get(server: string | JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined> {
+    public async get(server: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         const savedList = await this.getAll();
-        if (typeof server === 'string') {
-            return savedList.find((item) => item.serverId === server);
-        } else {
-            return savedList.find((item) => item.provider.id === server.id && item.provider.handle === server.handle);
-        }
+        return savedList.find((item) => item.provider.id === server.id && item.provider.handle === server.handle);
     }
     public async add(
         jupyterHandle: JupyterServerProviderHandle,
@@ -189,13 +185,12 @@ class OldStorage {
         traceInfoIfCI(`setUri: ${item.provider.id}.${item.provider.handle}`);
         await this.addToUriList(item.provider, item.serverId, item.displayName || '', item.time);
     }
-    public async update(server: string | JupyterServerProviderHandle) {
+    public async update(server: JupyterServerProviderHandle) {
         const uriList = await this.getAll();
 
-        const existingEntry =
-            typeof server === 'string'
-                ? uriList.find((entry) => entry.serverId === server)
-                : uriList.find((entry) => entry.provider.id === server.id && entry.provider.handle === server.handle);
+        const existingEntry = uriList.find(
+            (entry) => entry.provider.id === server.id && entry.provider.handle === server.handle
+        );
         if (!existingEntry) {
             throw new Error(`Uri not found for Server Id ${JSON.stringify(server)}`);
         }
@@ -207,20 +202,14 @@ class OldStorage {
             Date.now()
         );
     }
-    public async remove(server: string | JupyterServerProviderHandle) {
+    public async remove(server: JupyterServerProviderHandle) {
         const uriList = await this.getAll();
-        const editedList =
-            typeof server === 'string'
-                ? uriList.filter((f) => f.serverId !== server)
-                : uriList.filter((f) => f.provider.id !== server.id || f.provider.handle !== server.handle);
+        const editedList = uriList.filter((f) => f.provider.id !== server.id || f.provider.handle !== server.handle);
         if (editedList.length === 0) {
             await this.clear();
         } else {
             await this.updateMemento(editedList);
-            const removedItem =
-                typeof server === 'string'
-                    ? uriList.find((f) => f.serverId === server)
-                    : uriList.find((f) => f.provider.id === server.id && f.provider.handle === server.handle);
+            const removedItem = uriList.find((f) => f.provider.id === server.id && f.provider.handle === server.handle);
             if (removedItem) {
                 this._onDidRemoveUris.fire([removedItem]);
             }
@@ -508,13 +497,12 @@ class NewStorage {
             })
             .catch(noop));
     }
-    public async update(server: string | JupyterServerProviderHandle) {
+    public async update(server: JupyterServerProviderHandle) {
         const uriList = await this.getAllImpl(false);
 
-        const existingEntry =
-            typeof server === 'string'
-                ? uriList.find((entry) => entry.serverId === server)
-                : uriList.find((entry) => entry.provider.id === server.id && entry.provider.handle === server.handle);
+        const existingEntry = uriList.find(
+            (entry) => entry.provider.id === server.id && entry.provider.handle === server.handle
+        );
         if (!existingEntry) {
             throw new Error(`Uri not found for Server Id ${JSON.stringify(server)}`);
         }
