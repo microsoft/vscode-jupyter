@@ -225,7 +225,12 @@ class OldStorage {
         const uriList = await this.getAll();
 
         // Check if we have already found a display name for this server
-        displayName = uriList.find((entry) => entry.serverId === serverId)?.displayName || displayName || uri;
+        displayName =
+            uriList.find(
+                (entry) => entry.provider.id === jupyterHandle.id && entry.provider.handle === jupyterHandle.handle
+            )?.displayName ||
+            displayName ||
+            uri;
         const entry: IJupyterServerUriEntry = {
             uri,
             time,
