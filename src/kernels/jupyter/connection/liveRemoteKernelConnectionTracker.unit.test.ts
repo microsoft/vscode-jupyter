@@ -16,7 +16,7 @@ import {
     mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources
 } from '../../../kernels/jupyter/connection/liveRemoteKernelConnectionTracker';
 import { LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
-import { computeServerId, generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
+import { generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 import { waitForCondition } from '../../../test/common';
 
 use(chaiAsPromised);
@@ -27,12 +27,10 @@ suite('Live kernel Connection Tracker', async () => {
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
     const disposables: IDisposable[] = [];
     const server2Uri = 'http://one:1234/hello?token=1234';
-    const server2Id = await computeServerId(server2Uri);
     const serverProviderHandle = { handle: 'handle2', id: 'id2' };
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'connectionId',
-        serverId: 'server1',
         kernelModel: {
             lastActivityTime: new Date(),
             id: 'model1',
@@ -54,7 +52,6 @@ suite('Live kernel Connection Tracker', async () => {
     const remoteLiveKernel2 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'http://one:1234/',
         id: 'connectionId2',
-        serverId: server2Id,
         kernelModel: {
             id: 'modelId2',
             lastActivityTime: new Date(),
@@ -76,7 +73,6 @@ suite('Live kernel Connection Tracker', async () => {
     const remoteLiveKernel3 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'http://one:1234/',
         id: 'connectionId3',
-        serverId: server2Id,
         kernelModel: {
             lastActivityTime: new Date(),
             id: 'modelId3',
@@ -266,7 +262,7 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Forget the Uri connection all together.
-        onDidRemoveUris.fire([{ uri: server2Uri, serverId: server2Id, time: 0, provider: serverProviderHandle }]);
+        onDidRemoveUris.fire([{ uri: server2Uri, time: 0, provider: serverProviderHandle }]);
 
         await waitForCondition(
             () => {

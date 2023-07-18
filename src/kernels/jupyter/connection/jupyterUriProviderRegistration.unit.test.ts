@@ -17,7 +17,6 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { Disposable, EventEmitter, Memento, QuickPickItem } from 'vscode';
 import { createEventHandler } from '../../../test/common';
 import { resolvableInstance } from '../../../test/datascience/helpers';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
 import { DataScience } from '../../../platform/common/utils/localize';
 use(chaiAsPromised);
 
@@ -183,7 +182,6 @@ suite('Uri Provider Registration', () => {
 
         const removedServer: IJupyterServerUriEntry = {
             provider: { handle: 'handle2', id: 'a' },
-            serverId: await computeServerId(generateUriFromRemoteProvider('a', 'handle2')),
             time: Date.now(),
             uri: 'http://handle1:8888/?token=1234',
             displayName: 'Server for Handle2',

@@ -91,7 +91,6 @@ suite('New Jupyter Kernel Session Factory', () => {
             name: 'python3'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: '1234',
         serverProviderHandle: { handle: '1', id: '1' }
     });
     const liveRemoteSession = LiveRemoteKernelConnectionMetadata.create({
@@ -113,7 +112,6 @@ suite('New Jupyter Kernel Session Factory', () => {
             name: 'python3'
         },
         baseUrl: 'http://localhost:8888',
-        serverId: '1234',
         serverProviderHandle: { handle: '1', id: '1' }
     });
     const localPythonWithInterpreterKernelConnectionMetadata = LocalKernelSpecConnectionMetadata.create({

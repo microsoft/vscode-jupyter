@@ -25,7 +25,6 @@ suite('ipywidget - Remote Widget Script Source', () => {
             baseUrl,
             id: '1',
             kernelSpec: instance(mock<IJupyterKernelSpec>()),
-            serverId: '2',
             serverProviderHandle
         });
         when(kernel.kernelConnectionMetadata).thenReturn(kernelConnection);

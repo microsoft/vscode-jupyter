@@ -36,7 +36,7 @@ import { KernelProgressReporter } from '../../../platform/progress/kernelProgres
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isUnitTestExecution } from '../../../platform/common/constants';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { generateUriFromRemoteProvider } from '../jupyterUtils';
+import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
 import { RemoteKernelSpecCacheFileName } from '../constants';
 
 // Even after shutting down a kernel, the server API still returns the old information.
@@ -333,27 +333,28 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
-            const serverId = connInfo.serverId;
-            const [running, specs, sessions] = await Promise.all([
+            const [running, specs, sessions, serverId] = await Promise.all([
                 sessionManager.getRunningKernels(),
                 sessionManager.getKernelSpecs(),
-                sessionManager.getRunningSessions()
+                sessionManager.getRunningSessions(),
+                computeServerId(
+                    generateUriFromRemoteProvider(
+                        connInfo.serverProviderHandle.id,
+                        connInfo.serverProviderHandle.handle
+                    )
+                )
             ]);
 
             // Turn them both into a combined list
-            const mappedSpecs = await Promise.all(
-                specs.map(async (s) => {
-                    await sendKernelSpecTelemetry(s, 'remote');
-                    const kernel = RemoteKernelSpecConnectionMetadata.create({
-                        kernelSpec: s,
-                        id: getKernelId(s, undefined, serverId),
-                        baseUrl: connInfo.baseUrl,
-                        serverId: serverId,
-                        serverProviderHandle: connInfo.serverProviderHandle
-                    });
-                    return kernel;
-                })
-            );
+            const mappedSpecs = specs.map((s) => {
+                sendKernelSpecTelemetry(s, 'remote');
+                return RemoteKernelSpecConnectionMetadata.create({
+                    kernelSpec: s,
+                    id: getKernelId(s, undefined, serverId),
+                    baseUrl: connInfo.baseUrl,
+                    serverProviderHandle: connInfo.serverProviderHandle
+                });
+            });
             const mappedLive = sessions.map((s) => {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const liveKernel = s.kernel as any;
@@ -379,7 +380,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     },
                     baseUrl: connInfo.baseUrl,
                     id: s.kernel?.id || '',
-                    serverId,
                     serverProviderHandle: connInfo.serverProviderHandle
                 });
                 return kernel;

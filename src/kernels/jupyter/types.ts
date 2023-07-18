@@ -193,10 +193,6 @@ export interface IJupyterServerUriEntry {
         handle: string;
     };
     /**
-     * Unique ID using a hash of the full uri
-     */
-    serverId: string;
-    /**
      * The most recent time that we connected to this server
      */
     time: number;

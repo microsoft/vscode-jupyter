@@ -29,7 +29,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { CacheDataFormat, RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateUriFromRemoteProvider } from '../jupyterUtils';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { RemoteKernelSpecCacheFileName } from '../constants';
@@ -44,7 +44,6 @@ suite(`Remote Kernel Finder`, () => {
     let kernelsChanged: TestEventHandler<void>;
     let jupyterConnection: JupyterConnection;
     const connInfo: IJupyterConnection = {
-        serverId: 'a',
         localLaunch: false,
         baseUrl: 'http://foobar',
         displayName: 'foobar connection',
@@ -109,7 +108,6 @@ suite(`Remote Kernel Finder`, () => {
     const serverEntry = {
         uri: connInfo.baseUrl,
         time: Date.now(),
-        serverId: connInfo.baseUrl,
         isValidated: true,
         provider: {
             id: '1',
@@ -117,9 +115,6 @@ suite(`Remote Kernel Finder`, () => {
         }
     };
 
-    suiteSetup(async () => {
-        connInfo.serverId = await computeServerId(generateUriFromRemoteProvider('a', 'b'));
-    });
     setup(() => {
         const context = mock<IExtensionContext>();
         when(context.globalStorageUri).thenReturn(globalStorageUri);
@@ -238,7 +233,6 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            serverId: 'serverId1',
             serverProviderHandle: { handle: '1', id: '1' }
         });
         const cachedKernels = [
@@ -251,7 +245,6 @@ suite(`Remote Kernel Finder`, () => {
                     name: '',
                     executable: ''
                 },
-                serverId: 'serverId1',
                 serverProviderHandle: { handle: '1', id: '1' }
             }).toJSON(),
             liveRemoteKernel.toJSON()
@@ -294,7 +287,6 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            serverId: 'serverId1',
             serverProviderHandle: { handle: '1', id: '1' }
         });
         const cachedKernels = [
@@ -307,7 +299,6 @@ suite(`Remote Kernel Finder`, () => {
                     name: '',
                     executable: ''
                 },
-                serverId: 'serverId1',
                 serverProviderHandle: { handle: '1', id: '1' }
             }).toJSON(),
             liveRemoteKernel.toJSON()

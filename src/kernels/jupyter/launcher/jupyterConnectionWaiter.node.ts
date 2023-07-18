@@ -134,7 +134,6 @@ export class JupyterConnectionWaiter implements IDisposable {
         if (!this.startPromise.rejected) {
             const connection: IJupyterConnection = {
                 localLaunch: true,
-                serverId: 'bogus',
                 providerId: '_builtin.jupyterServerLauncher',
                 serverProviderHandle: { handle: '', id: '_builtin.jupyterServerLauncher' },
                 baseUrl,
