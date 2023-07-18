@@ -15,7 +15,6 @@ import {
     notebooks
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { computeServerId, generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUriStorage,
@@ -277,18 +276,21 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         }
 
         const finderPromise = (async () => {
-            const serverId = await computeServerId(generateUriFromRemoteProvider(selectedSource.provider.id, handle));
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
-            await this.serverSelector.addJupyterServer({ id: selectedSource.provider.id, handle });
+            const serverId = { id: selectedSource.provider.id, handle };
+            await this.serverSelector.addJupyterServer(serverId);
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
             // Wait for the remote provider to be registered.
             return new Promise<IContributedKernelFinder>((resolve) => {
                 const found = this.kernelFinder.registered.find(
-                    (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.serverId === serverId
+                    (f) =>
+                        f.kind === 'remote' &&
+                        (f as IRemoteKernelFinder).serverUri.provider.id === serverId.id &&
+                        (f as IRemoteKernelFinder).serverUri.provider.handle === serverId.handle
                 );
                 if (found) {
                     return resolve(found);
@@ -296,7 +298,10 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 this.kernelFinder.onDidChangeRegistrations(
                     (e) => {
                         const found = e.added.find(
-                            (f) => f.kind === 'remote' && (f as IRemoteKernelFinder).serverUri.serverId === serverId
+                            (f) =>
+                                f.kind === 'remote' &&
+                                (f as IRemoteKernelFinder).serverUri.provider.id === serverId.id &&
+                                (f as IRemoteKernelFinder).serverUri.provider.handle === serverId.handle
                         );
                         if (found) {
                             return resolve(found);
