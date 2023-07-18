@@ -299,11 +299,11 @@ export interface ILiveRemoteKernelConnectionUsageTracker {
     /**
      * Tracks the fact that the provided remote kernel for a given server was used by a notebook defined by the uri.
      */
-    trackKernelIdAsUsed(resource: Uri, serverId: string, kernelId: string): void;
+    trackKernelIdAsUsed(resource: Uri, serverId: JupyterServerProviderHandle, kernelId: string): void;
     /**
      * Tracks the fact that the provided remote kernel for a given server is no longer used by a notebook defined by the uri.
      */
-    trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string): void;
+    trackKernelIdAsNotUsed(resource: Uri, serverId: JupyterServerProviderHandle, kernelId: string): void;
 }
 
 export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedKernelValidator');
