@@ -1,13 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, MarkdownString, QuickPick, QuickPickItem, Uri } from 'vscode';
+import { Disposable, Event, Uri } from 'vscode';
 
-export interface JupyterServer {
-    /**
-     * Name of the server.
-     */
-    name: string;
+export interface JupyterServerAuthenticationInformation {
     baseUrl: Uri;
     /**
      * Jupyter auth Token
@@ -41,60 +37,81 @@ export interface JupyterServer {
     webSocketProtocols?: string[];
 }
 
-export type ProviderResult<T> = T | undefined | null | Promise<T | undefined | null>;
+export type GetAuthenticationInformation = () => Promise<JupyterServerAuthenticationInformation>;
+/**
+ * The local directory that maps to the remote directory of the Jupyter Server.
+ * E.g. assume you start Jupyter Notebook with --notebook-dir=/foo/bar,
+ * and you have a file named /foo/bar/sample.ipynb, /foo/bar/sample2.ipynb and the like.
+ * Then assume the mapped local directory will be /users/xyz/remoteServer and the files sample.ipynb and sample2.ipynb
+ * are in the above local directory.
+ *
+ * Using this setting one can map the local directory to the remote directory.
+ * In this case the value of this property would be /users/xyz/remoteServer.
+ *
+ * Note: A side effect of providing this value is the session names are generated the way they are in Jupyter Notebook/Lab.
+ * I.e. the session names map to the relative path of the notebook file.
+ * As a result when attempting to create a new session for a notebook/file, Jupyter will
+ * first check if a session already exists for the same file and same kernel, and if so, will re-use that session.
+ */
+export type GetRemoteNotebookDirectoryMapping = () => string;
 
-export interface JupyterServerProvider {
+export interface JupyterServer extends Disposable {
+    onDidRemove: Event<void>;
+    id: string;
+    label: string;
+}
+
+export class JupyterServerPicker extends Disposable {
     /**
-     * Needs to be unique and the same across sessions.
+     * A human-readable string which is rendered prominent. Supports rendering of {@link ThemeIcon theme icons} via
+     * the `$(<name>)`-syntax.
      */
-    readonly id: string;
+    label: string;
     /**
-     * Display name.
+     * A human-readable string which is rendered less prominent in a separate line. Supports rendering of
+     * {@link ThemeIcon theme icons} via the `$(<name>)`-syntax.
      */
-    readonly name: string;
+    detail?: string;
     /**
-     * Detailed description.
+     * A string that should be used when comparing this item
+     * with other items. When `falsy` the {@link JupyterServerPicker.label label}
+     * is used.
      */
-    readonly detail: string;
-    documentation?: string | MarkdownString;
+    sortText?: string;
     /**
-     * List of all known servers.
-     */
-    readonly servers: JupyterServer[];
-    /**
-     * Triggered when servers are added/removed.
-     */
-    onDidChangeServers?: Event<void>;
-    /**
-     * Called when the auth information needs to be populated for a server.
-     */
-    resolveServer(server: JupyterServer): Promise<JupyterServer>;
-    /**
-     * Called when a server is to be removed from the list of servers.
-     */
-    removeServer(server: JupyterServer): Promise<void>;
-    /**
-     * Provides full control of the quick pick to the extension, so that it can add additional buttons, etc.
-     * The result of this promise should be the selected server or undefined if no server was selected.
+     * Optional flag indicating if this item is picked by default.
+     * If there are no existing servers, and this flag is true, then this item will be picked by default.
      *
-     * If nothing is selected, then the quick pick reverts back to the previous View before this method was invoked.
+     * Note: this property is ignored when {@link JupyterServerCollection.createJupyterServer createJupyterServer} has been called.
      */
-    handleQuickPick?(quickPick: QuickPick<QuickPickItem>): ProviderResult<JupyterServer>;
+    picked?: boolean;
+}
+
+export class JupyterServerCollection extends Disposable {
+    /**
+     * Must be unique and should not change between sessions.
+     */
+    id: string;
+    /**
+     * A human-readable string which is rendered prominent.
+     */
+    label: string;
+    /**
+     * A link to a page providing more information to the user about this item.
+     */
+    documentation?: Uri;
+    createJupyterServer(
+        id: string,
+        label: string,
+        resolveAuthenticationInformation: GetAuthenticationInformation,
+        getDirectoryMapping?: GetRemoteNotebookDirectoryMapping
+    ): JupyterServer;
+    createJupyterServerPicker(label: string, onDidSelect: () => PromiseLike<JupyterServer>): JupyterServerPicker;
 }
 
 export interface JupyterAPI {
     /**
-     * Registers a remote server provider component that's used to pick remote jupyter server URIs
-     * Useful if an extension supports connecting to multiple servers, this way
-     * the extension can prompt the user to select a server.
+     * Provides the ability to register multiple collections of Jupyter Servers.
      */
-    registerRemoteServerProvider(serverProvider: JupyterServerProvider): Disposable;
-    /**
-     * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
-     * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
-     *
-     * Useful when an extension would like to manually add a server to the list of servers.
-     * I.e. bypassing the user from selecting a server.
-     */
-    addRemoteJupyterServer(server: JupyterServer): Promise<void>;
+    createJupyterServerCollection(id: string, name: string): JupyterServerCollection;
 }
