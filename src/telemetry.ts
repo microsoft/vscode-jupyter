@@ -2329,44 +2329,6 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Telemetry sent when we have attempted to find the preferred kernel.
-     */
-    [Telemetry.PreferredKernel]: TelemetryEventInfo<
-        {
-            /**
-             * Note if we did or did not find a preferred kernel.
-             */
-            result: 'found' | 'notfound' | 'failed';
-            /**
-             * Language of the target notebook or interactive window
-             */
-            language: string;
-            /**
-             * If we have an active interpreter or not.
-             */
-            hasActiveInterpreter?: boolean;
-        } & ResourceTypeTelemetryProperty
-    > = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook', 'KernelPicker'],
-        source: 'N/A',
-        properties: {
-            ...commonClassificationForResourceType(),
-            hasActiveInterpreter: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            language: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            result: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Telemetry event sent to when user customizes the jupyter command line
      */
     [Telemetry.JupyterCommandLineNonDefault]: TelemetryEventInfo<never | undefined> = {
