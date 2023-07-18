@@ -137,7 +137,6 @@ suite('RemoteKernelControllerWatcher', () => {
         });
         when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
             time: 1,
-            serverId,
             uri: remoteUriForProvider1,
             displayName: 'Something',
             provider: {
@@ -147,7 +146,6 @@ suite('RemoteKernelControllerWatcher', () => {
         });
         when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
             time: 1,
-            serverId,
             uri: remoteUriForProvider1,
             displayName: 'Something',
             provider: {
@@ -157,7 +155,6 @@ suite('RemoteKernelControllerWatcher', () => {
         });
         when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
             time: 1,
-            serverId,
             uri: remoteUriForProvider1,
             displayName: 'Something',
             provider: {
