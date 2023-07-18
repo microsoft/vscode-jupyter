@@ -111,13 +111,10 @@ export class JupyterServerCollection extends Disposable {
      */
     documentation?: Uri;
     /**
-     * TODO: An event signaling when the value of the filter text has changed.
+     * An event signaling when the value of the filter text has changed.
      *
      * Note: Useful for User Uri provider, as user types into the quick pick input box the event is triggered.
      * Then extensions can listen to this event and dispose the old JupyterServerPickers and create new ones.
-     *
-     * Unfortunately very specific to the User Uri provider. Don't see this being useful for other providers.
-     * However this is a very simple event to expose that makes the User Uri provider work the way we want it to.
      */
     readonly onDidChangeValue: Event<string>;
 
