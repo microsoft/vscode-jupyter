@@ -35,7 +35,7 @@ import {
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
-import { generateUriFromRemoteProvider } from '../jupyter/jupyterUtils';
+import { generateIdFromRemoteProvider } from '../jupyter/jupyterUtils';
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from './kernelErrorHandler.node';
@@ -152,7 +152,7 @@ suite('Error Handler Unit Tests', () => {
 
     suite('Kernel startup errors', () => {
         let kernelConnection: KernelConnectionMetadata;
-        const uri = generateUriFromRemoteProvider('1', 'a');
+        const uri = generateIdFromRemoteProvider({ id: '1', handle: 'a' });
         const serverProviderHandle: JupyterServerProviderHandle = {
             handle: '1',
             id: 'a'

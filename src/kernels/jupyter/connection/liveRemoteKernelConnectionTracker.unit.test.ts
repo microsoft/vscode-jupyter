@@ -16,7 +16,7 @@ import {
     mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources
 } from '../../../kernels/jupyter/connection/liveRemoteKernelConnectionTracker';
 import { LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
-import { generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
+import { generateIdFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 import { waitForCondition } from '../../../test/common';
 
 use(chaiAsPromised);
@@ -120,10 +120,7 @@ suite('Live kernel Connection Tracker', async () => {
     });
     test('Kernel connection is not used if memento is not empty but does not contain the same connection info', async () => {
         const cachedItems = {
-            [generateUriFromRemoteProvider(
-                remoteLiveKernel2.serverProviderHandle.id,
-                remoteLiveKernel2.serverProviderHandle.handle
-            )]: {
+            [generateIdFromRemoteProvider(remoteLiveKernel2.serverProviderHandle)]: {
                 [remoteLiveKernel2.kernelModel.id!]: [Uri.file('a.ipynb').toString()]
             }
         };
@@ -137,16 +134,10 @@ suite('Live kernel Connection Tracker', async () => {
     });
     test('Kernel connection is used if connection is tracked in memento', async () => {
         const cachedItems = {
-            [generateUriFromRemoteProvider(
-                remoteLiveKernel2.serverProviderHandle.id,
-                remoteLiveKernel2.serverProviderHandle.handle
-            )]: {
+            [generateIdFromRemoteProvider(remoteLiveKernel2.serverProviderHandle)]: {
                 [remoteLiveKernel2.kernelModel.id!]: [Uri.file('a.ipynb').toString()]
             },
-            [generateUriFromRemoteProvider(
-                remoteLiveKernel1.serverProviderHandle.id,
-                remoteLiveKernel1.serverProviderHandle.handle
-            )]: {
+            [generateIdFromRemoteProvider(remoteLiveKernel1.serverProviderHandle)]: {
                 [remoteLiveKernel1.kernelModel.id!]: [Uri.file('a.ipynb').toString()]
             }
         };
@@ -178,12 +169,9 @@ suite('Live kernel Connection Tracker', async () => {
         );
 
         assert.deepEqual(
-            cachedItems[
-                generateUriFromRemoteProvider(
-                    remoteLiveKernel1.serverProviderHandle.id,
-                    remoteLiveKernel1.serverProviderHandle.handle
-                )
-            ][remoteLiveKernel1.kernelModel.id!],
+            cachedItems[generateIdFromRemoteProvider(remoteLiveKernel1.serverProviderHandle)][
+                remoteLiveKernel1.kernelModel.id!
+            ],
             [Uri.file('a.ipynb').toString()]
         );
 
@@ -194,12 +182,9 @@ suite('Live kernel Connection Tracker', async () => {
         );
 
         assert.deepEqual(
-            cachedItems[
-                generateUriFromRemoteProvider(
-                    remoteLiveKernel2.serverProviderHandle.id,
-                    remoteLiveKernel2.serverProviderHandle.handle
-                )
-            ][remoteLiveKernel2.kernelModel.id!],
+            cachedItems[generateIdFromRemoteProvider(remoteLiveKernel2.serverProviderHandle)][
+                remoteLiveKernel2.kernelModel.id!
+            ],
             [Uri.file('a.ipynb').toString()]
         );
 
@@ -210,12 +195,9 @@ suite('Live kernel Connection Tracker', async () => {
         );
 
         assert.deepEqual(
-            cachedItems[
-                generateUriFromRemoteProvider(
-                    remoteLiveKernel3.serverProviderHandle.id,
-                    remoteLiveKernel3.serverProviderHandle.handle
-                )
-            ][remoteLiveKernel3.kernelModel.id!],
+            cachedItems[generateIdFromRemoteProvider(remoteLiveKernel3.serverProviderHandle)][
+                remoteLiveKernel3.kernelModel.id!
+            ],
             [Uri.file('a.ipynb').toString()]
         );
 
@@ -226,12 +208,9 @@ suite('Live kernel Connection Tracker', async () => {
         );
 
         assert.deepEqual(
-            cachedItems[
-                generateUriFromRemoteProvider(
-                    remoteLiveKernel3.serverProviderHandle.id,
-                    remoteLiveKernel3.serverProviderHandle.handle
-                )
-            ][remoteLiveKernel3.kernelModel.id!],
+            cachedItems[generateIdFromRemoteProvider(remoteLiveKernel3.serverProviderHandle)][
+                remoteLiveKernel3.kernelModel.id!
+            ],
             [Uri.file('a.ipynb').toString(), Uri.file('b.ipynb').toString()]
         );
 

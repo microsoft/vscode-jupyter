@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
-import { generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
     IInternalJupyterUriProvider,
@@ -52,8 +52,8 @@ suite('RemoteKernelControllerWatcher', () => {
     test('Dispose controllers associated with an old handle', async () => {
         const provider1Id = 'provider1';
         const provider1Handle1: string = 'provider1Handle1';
-        const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
         const serverProviderHandle = { handle: provider1Handle1, id: provider1Id };
+        const remoteUriForProvider1 = generateIdFromRemoteProvider(serverProviderHandle);
         let onDidChangeHandles: undefined | (() => Promise<void>);
         const provider1 = mock<IInternalJupyterUriProvider>();
         when(provider1.id).thenReturn(provider1Id);
