@@ -255,7 +255,11 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         // Remove any connections that are no longer available.
         uriEntries.forEach((item) => {
             this.registered.forEach((c) => {
-                if (isRemoteConnection(c.connection) && c.connection.serverId === item.serverId) {
+                if (
+                    isRemoteConnection(c.connection) &&
+                    c.connection.serverProviderHandle.id === item.provider.id &&
+                    c.connection.serverProviderHandle.handle === item.provider.handle
+                ) {
                     traceWarning(
                         `Deleting controller ${c.id} as it is associated with a connection that has been removed`
                     );

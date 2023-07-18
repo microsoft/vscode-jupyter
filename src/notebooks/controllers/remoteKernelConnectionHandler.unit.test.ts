@@ -3,7 +3,7 @@
 
 import { use } from 'chai';
 
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ILiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -151,7 +151,13 @@ suite('Remote kernel connection handler', async () => {
         subject.next(kernelInfo);
 
         if (connection.kind === 'startUsingRemoteKernelSpec' && source === 'jupyterExtension') {
-            verify(tracker.trackKernelIdAsUsed(nbUri, remoteKernelSpec.serverId, kernelInfo.options.id)).once();
+            verify(
+                tracker.trackKernelIdAsUsed(
+                    nbUri,
+                    deepEqual(remoteKernelSpec.serverProviderHandle),
+                    kernelInfo.options.id
+                )
+            ).once();
             verify(preferredRemoteKernelProvider.storePreferredRemoteKernelId(nbUri, kernelInfo.options.id)).once();
         } else {
             verify(tracker.trackKernelIdAsUsed(anything(), anything(), anything())).never();
@@ -179,11 +185,19 @@ suite('Remote kernel connection handler', async () => {
         if (connection.kind === 'connectToLiveRemoteKernel') {
             if (selected) {
                 verify(
-                    tracker.trackKernelIdAsUsed(nbUri, remoteKernelSpec.serverId, connection.kernelModel.id!)
+                    tracker.trackKernelIdAsUsed(
+                        nbUri,
+                        deepEqual(remoteKernelSpec.serverProviderHandle),
+                        connection.kernelModel.id!
+                    )
                 ).once();
             } else {
                 verify(
-                    tracker.trackKernelIdAsNotUsed(nbUri, remoteKernelSpec.serverId, connection.kernelModel.id!)
+                    tracker.trackKernelIdAsNotUsed(
+                        nbUri,
+                        deepEqual(remoteKernelSpec.serverProviderHandle),
+                        connection.kernelModel.id!
+                    )
                 ).once();
             }
         } else {

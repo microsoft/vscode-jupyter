@@ -50,6 +50,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         }
         const [handles, uris] = await Promise.all([provider.getHandles(), this.uriStorage.getAll()]);
         const serverJupyterProviderMap = new Map<string, { uri: string; providerId: string; handle: string }>();
+        const computeServerId = ({ id, handle }: { id: string; handle: string }) => `${id}-${handle}`;
         const registeredHandles: string[] = [];
         await Promise.all(
             uris.map(async (item) => {
@@ -57,7 +58,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 if (item.provider.id !== provider.id) {
                     return;
                 }
-                serverJupyterProviderMap.set(item.serverId, {
+                serverJupyterProviderMap.set(computeServerId(item.provider), {
                     uri: item.uri,
                     providerId: item.provider.id,
                     handle: item.provider.handle
@@ -96,7 +97,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             if (isLocalConnection(connection)) {
                 return;
             }
-            const info = serverJupyterProviderMap.get(connection.serverId);
+            const info = serverJupyterProviderMap.get(computeServerId(connection.serverProviderHandle));
             if (info && !handles.includes(info.handle)) {
                 // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                 traceWarning(
