@@ -19,7 +19,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { IJupyterServerUri } from '../../../api';
 import { Settings } from '../../../platform/common/constants';
 import { TestEventHandler, createEventHandler } from '../../../test/common';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateUriFromRemoteProvider } from '../jupyterUtils';
 import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { sleep } from '../../../test/core';
 
@@ -807,9 +807,7 @@ suite('Server Uri Storage', async () => {
                 }
 
                 // Should exist.
-                const server1 = await serverUriStorage.get(
-                    await computeServerId(generateUriFromRemoteProvider('1', 'handle1'))
-                );
+                const server1 = await serverUriStorage.get({ id: '1', handle: 'handle1' });
 
                 assert.strictEqual(server1?.provider.id, '1');
                 assert.strictEqual(server1?.provider.handle, 'handle1');
@@ -817,23 +815,17 @@ suite('Server Uri Storage', async () => {
                 // Remove this.
                 await serverUriStorage.remove({ handle: 'handle1', id: '1' });
 
-                assert.isUndefined(
-                    await serverUriStorage.get(await computeServerId(generateUriFromRemoteProvider('1', 'handle1')))
-                );
+                assert.isUndefined(await serverUriStorage.get({ id: '1', handle: 'handle1' }));
 
                 // Bogus
-                const serverBogus = await serverUriStorage.get(
-                    await computeServerId(generateUriFromRemoteProvider('Bogus', 'handle1'))
-                );
+                const serverBogus = await serverUriStorage.get({ id: 'Bogus', handle: 'handle1' });
 
                 assert.isUndefined(serverBogus);
 
                 // Add and it should exist.
                 await serverUriStorage.add({ handle: 'NewHandle11', id: 'NewId11' });
 
-                const newServer = await serverUriStorage.get(
-                    await computeServerId(generateUriFromRemoteProvider('NewId11', 'NewHandle11'))
-                );
+                const newServer = await serverUriStorage.get({ id: 'NewId11', handle: 'NewHandle11' });
 
                 assert.strictEqual(newServer?.provider.id, 'NewId11');
                 assert.strictEqual(newServer?.provider.handle, 'NewHandle11');
