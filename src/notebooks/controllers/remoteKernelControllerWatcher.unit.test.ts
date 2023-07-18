@@ -130,16 +130,6 @@ suite('RemoteKernelControllerWatcher', () => {
                 }
             }
         ]);
-        when(uriStorage.get(serverId)).thenResolve({
-            time: 1,
-            serverId,
-            uri: remoteUriForProvider1,
-            displayName: 'Something',
-            provider: {
-                handle: provider1Handle1,
-                id: provider1Id
-            }
-        });
         when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
             time: 1,
             serverId,

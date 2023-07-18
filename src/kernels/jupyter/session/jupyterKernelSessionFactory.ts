@@ -190,7 +190,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 } else {
                     throw new RemoteJupyterServerConnectionError(
                         connection.baseUrl,
-                        options.kernelConnection.serverId,
+                        options.kernelConnection.serverProviderHandle,
                         ex
                     );
                 }
@@ -225,7 +225,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             );
             throw new RemoteJupyterServerConnectionError(
                 options.kernelConnection.baseUrl,
-                options.kernelConnection.serverId,
+                options.kernelConnection.serverProviderHandle,
                 ex
             );
         }
