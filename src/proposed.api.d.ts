@@ -92,7 +92,7 @@ export class JupyterServerPicker extends Disposable {
      * Optional flag indicating if this item is picked by default.
      * If there are no existing servers, and this flag is true, then this item will be picked by default.
      *
-     * Note: this property is ignored when {@link JupyterServerCollection.createJupyterServer createJupyterServer} has been called.
+     * Note: this property is ignored when {@link JupyterServerCollection.createServer createJupyterServer} has been called.
      */
     picked?: boolean;
 }
@@ -125,7 +125,7 @@ export class JupyterServerCollection extends Disposable {
      * @return {*}  {JupyterServer}
      * @memberof JupyterServerCollection
      */
-    createJupyterServer(
+    createServer(
         id: string,
         label: string,
         resolveAuthenticationInformation: GetAuthenticationInformation,
@@ -141,12 +141,12 @@ export class JupyterServerCollection extends Disposable {
      * @return {*}  {JupyterServerPicker}
      * @memberof JupyterServerCollection
      */
-    createJupyterServerPicker(label: string, onDidSelect: () => PromiseLike<JupyterServer>): JupyterServerPicker;
+    createServerPicker(label: string, onDidSelect: () => PromiseLike<JupyterServer>): JupyterServerPicker;
 }
 
 export interface JupyterAPI {
     /**
      * Provides the ability to register multiple collections of Jupyter Servers.
      */
-    createJupyterServerCollection(id: string, label: string): JupyterServerCollection;
+    createServerCollection(id: string, label: string): JupyterServerCollection;
 }
