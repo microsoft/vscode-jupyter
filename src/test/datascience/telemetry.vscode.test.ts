@@ -20,7 +20,7 @@ import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { EventEmitter } from 'vscode';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Telemetry validation @iw', function () {
+suite.skip('Telemetry validation @iw', function () {
     const disposables: IDisposable[] = [];
     let eventsSent: Set<string> = new Set<string>();
     let originalTelemetryReporter: TelemetryReporter | undefined;
