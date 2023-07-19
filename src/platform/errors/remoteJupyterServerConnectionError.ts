@@ -18,7 +18,7 @@ export class RemoteJupyterServerConnectionError extends BaseError {
     public readonly baseUrl: string;
     constructor(
         readonly url: string,
-        public readonly serverProviderHandle: { id: string; handle: string },
+        public readonly serverProviderHandle: { id: string; handle: string; extensionId: string },
         public readonly originalError: Error
     ) {
         super(

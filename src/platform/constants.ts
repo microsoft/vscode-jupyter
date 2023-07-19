@@ -30,3 +30,8 @@ export const Exiting = {
 };
 
 export const TestingKernelPickerProviderId = '_builtin.JupyterServerSelectorForTesting';
+export const UserJupyterServerPickerProviderId = '_builtin.jupyterServerUrlProvider';
+
+export function isBuiltInJupyterProvider(id: string) {
+    return id === TestingKernelPickerProviderId || id === UserJupyterServerPickerProviderId;
+}

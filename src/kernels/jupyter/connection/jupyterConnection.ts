@@ -94,7 +94,7 @@ export class JupyterConnection {
     }
 
     public async validateRemoteUri(
-        provider: { id: string; handle: string },
+        provider: JupyterServerProviderHandle,
         serverUri?: IJupyterServerUri,
         doNotDisplayUnActionableMessages?: boolean
     ): Promise<void> {
@@ -105,7 +105,7 @@ export class JupyterConnection {
         }
     }
     private async validateRemoteUriOld(
-        provider: { id: string; handle: string },
+        provider: JupyterServerProviderHandle,
         serverUri?: IJupyterServerUri
     ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
@@ -125,7 +125,7 @@ export class JupyterConnection {
         }
     }
     public async validateRemoteUriNew(
-        provider: { id: string; handle: string },
+        provider: JupyterServerProviderHandle,
         serverUri?: IJupyterServerUri,
         doNotDisplayUnActionableMessages?: boolean
     ): Promise<void> {
@@ -168,7 +168,7 @@ export class JupyterConnection {
         }
     }
 
-    private async getJupyterServerUri(provider: { id: string; handle: string }) {
+    private async getJupyterServerUri(provider: JupyterServerProviderHandle) {
         try {
             return await this.jupyterPickerRegistration.getJupyterServerUri(provider.id, provider.handle);
         } catch (ex) {

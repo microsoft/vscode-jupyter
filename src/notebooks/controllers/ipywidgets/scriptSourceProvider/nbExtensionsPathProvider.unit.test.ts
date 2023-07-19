@@ -32,7 +32,7 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExt
             sysPrefix: __dirname
         } as any
     });
-    const serverProviderHandle = { handle: 'handle', id: 'id' };
+    const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };
     const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: '',
         baseUrl: 'http://bogus.com',

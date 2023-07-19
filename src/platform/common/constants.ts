@@ -89,6 +89,7 @@ export namespace Identifiers {
     export const REMOTE_URI = 'https://remote/';
     export const REMOTE_URI_ID_PARAM = 'id';
     export const REMOTE_URI_HANDLE_PARAM = 'uriHandle';
+    export const REMOTE_URI_EXTENSION_ID_PARAM = 'extensionId';
 }
 
 export namespace CodeSnippets {

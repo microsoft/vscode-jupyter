@@ -84,7 +84,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         await Promise.all(
             unregisteredHandles.map(async (handle) => {
                 try {
-                    await this.uriStorage.add({ id: provider.id, handle });
+                    await this.uriStorage.add({ id: provider.id, handle, extensionId: provider.extensionId });
                 } catch (ex) {
                     traceError(`Failed to get server uri and add it to uri Storage for handle ${handle}`, ex);
                 }
@@ -98,7 +98,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 return;
             }
             const info = serverJupyterProviderMap.get(computeServerId(connection.serverProviderHandle));
-            if (info && !handles.includes(info.handle)) {
+            if (info && !handles.includes(info.handle) && info.providerId === provider.id) {
                 // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                 traceWarning(
                     `Deleting controller ${controller.id} as it is associated with a server Id that has been removed`

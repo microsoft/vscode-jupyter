@@ -118,7 +118,7 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelSpec: {} as any,
                     baseUrl: '',
-                    serverProviderHandle: { handle: '1', id: '1' }
+                    serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                 })
             );
 
@@ -149,7 +149,7 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelSpec: {} as any,
                     baseUrl: '',
-                    serverProviderHandle: { handle: '1', id: '1' }
+                    serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                 })
             );
 
@@ -182,7 +182,7 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelModel: {} as any,
                     baseUrl: '',
-                    serverProviderHandle: { handle: '1', id: '1' }
+                    serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                 })
             );
 
@@ -212,7 +212,7 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelSpec: {} as any,
                     baseUrl: '',
-                    serverProviderHandle: { handle: '1', id: '1' }
+                    serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                 })
             );
 
@@ -242,7 +242,7 @@ suite('JupyterSession', () => {
                     id: '',
                     kernelModel: {} as any,
                     baseUrl: '',
-                    serverProviderHandle: { handle: '1', id: '1' }
+                    serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                 })
             );
 
@@ -311,7 +311,7 @@ suite('JupyterSession', () => {
                                   id: '',
                                   kernelSpec: {} as any,
                                   baseUrl: '',
-                                  serverProviderHandle: { handle: '1', id: '1' }
+                                  serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                               });
                     createJupyterSession(Uri.file('test.ipynb'), kernelConnection);
                 });

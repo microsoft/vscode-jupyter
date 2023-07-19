@@ -9,7 +9,7 @@ import { traceError, traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
-import { IJupyterServerUriStorage } from '../types';
+import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import {
     Experiments,
@@ -39,7 +39,7 @@ export async function validateSelectJupyterURI(
     applicationShell: IApplicationShell,
     configService: IConfigurationService,
     isWebExtension: boolean,
-    provider: { id: string; handle: string },
+    provider: { id: string; handle: string; extensionId: string },
     serverUri: IJupyterServerUri
 ): Promise<string | undefined> {
     // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
@@ -93,14 +93,14 @@ export class JupyterServerSelector {
         private readonly experiments: IExperimentService
     ) {}
 
-    public async addJupyterServer(provider: { id: string; handle: string }): Promise<void> {
+    public async addJupyterServer(provider: JupyterServerProviderHandle): Promise<void> {
         if (this.experiments.inExperiment(Experiments.PasswordManager)) {
             return this.addJupyterServerNew(provider);
         } else {
             return this.addJupyterServerOld(provider);
         }
     }
-    public async addJupyterServerOld(provider: { id: string; handle: string }): Promise<void> {
+    public async addJupyterServerOld(provider: JupyterServerProviderHandle): Promise<void> {
         const userURI = generateIdFromRemoteProvider(provider);
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
@@ -130,7 +130,7 @@ export class JupyterServerSelector {
         await this.serverUriStorage.add(provider);
     }
 
-    public async addJupyterServerNew(provider: { id: string; handle: string }): Promise<void> {
+    public async addJupyterServerNew(provider: JupyterServerProviderHandle): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
             await this.jupyterConnection.validateRemoteUri(provider);

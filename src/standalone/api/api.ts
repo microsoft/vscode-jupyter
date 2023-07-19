@@ -176,8 +176,9 @@ export function buildApi(
                     { id: providerId, handle },
                     controllerRegistration
                 );
+                const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
 
-                await selector.addJupyterServer({ id: providerId, handle });
+                await selector.addJupyterServer({ id: providerId, handle, extensionId });
                 await controllerCreatedPromise;
                 resolve();
             });

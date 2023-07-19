@@ -221,7 +221,7 @@ suite('Old JupyterSession', () => {
                         id: '',
                         kernelModel: {} as any,
                         baseUrl: '',
-                        serverProviderHandle: { handle: '1', id: '1' }
+                        serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                     })
                 );
                 when(session.shutdown()).thenResolve();
@@ -271,7 +271,7 @@ suite('Old JupyterSession', () => {
                         id: '',
                         kernelModel: {} as any,
                         baseUrl: '',
-                        serverProviderHandle: { handle: '1', id: '1' }
+                        serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                     })
                 );
                 when(session.shutdown()).thenResolve();
@@ -521,7 +521,7 @@ suite('Old JupyterSession', () => {
                         language: 'python',
                         executable: ''
                     },
-                    serverProviderHandle: { handle: '1', id: '1' }
+                    serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
                 });
                 createJupyterSession(resource, remoteKernelSpec);
 

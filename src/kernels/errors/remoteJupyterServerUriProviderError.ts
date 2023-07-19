@@ -18,7 +18,7 @@ import { BaseError } from '../../platform/errors/types';
  */
 export class RemoteJupyterServerUriProviderError extends BaseError {
     constructor(
-        public readonly serverProviderHandle: { id: string; handle: string },
+        public readonly serverProviderHandle: { id: string; handle: string; extensionId: string },
         public readonly originalError: Error
     ) {
         super('remotejupyterserveruriprovider', originalError.message || originalError.toString());
