@@ -321,7 +321,6 @@ suite('Kernel ReConnect Failed Monitor', () => {
 
     test('Handle contributed server disconnect (server contributed by uri provider)', async () => {
         const server: IJupyterServerUriEntry = {
-            uri: 'https://remote?id=remoteUriProvider&uriHandle=1',
             time: 1234,
             provider: {
                 handle: '1',

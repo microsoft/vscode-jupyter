@@ -429,11 +429,13 @@ export class UserJupyterServerUrlProvider
                     }
 
                     let passwordResult: IJupyterPasswordConnectInfo;
+                    const handle = uuid();
 
                     try {
                         passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
                             url: jupyterServerUri.baseUrl,
-                            isTokenEmpty: jupyterServerUri.token.length === 0
+                            isTokenEmpty: jupyterServerUri.token.length === 0,
+                            handle
                         });
                     } catch (err) {
                         if (err && err instanceof CancellationError) {
@@ -478,7 +480,6 @@ export class UserJupyterServerUrlProvider
                         }
                     }
 
-                    const handle = uuid();
                     let message = '';
                     try {
                         await this.jupyterConnection.validateRemoteUri(
@@ -597,7 +598,8 @@ export class UserJupyterServerUrlProvider
         const passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
             url: server.serverInfo.baseUrl,
             isTokenEmpty: server.serverInfo.token.length === 0,
-            displayName: server.serverInfo.displayName
+            displayName: server.serverInfo.displayName,
+            handle
         });
         return Object.assign({}, server.serverInfo, {
             authorizationHeader: passwordResult.requestHeaders || server.serverInfo.authorizationHeader

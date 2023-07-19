@@ -38,7 +38,7 @@ export async function getRemoteServerDisplayName(
     const targetConnection = await serverUriStorage.get(kernelConnection.serverProviderHandle);
 
     // We only show this if we have a display name and the name is not the same as the URI (this prevents showing the long token for user entered URIs).
-    if (targetConnection && targetConnection.displayName && targetConnection.uri !== targetConnection.displayName) {
+    if (targetConnection && targetConnection.displayName) {
         return targetConnection.displayName;
     }
 

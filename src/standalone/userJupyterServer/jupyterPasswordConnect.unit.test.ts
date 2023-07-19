@@ -155,7 +155,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            handle: '1234'
         });
         assert(result, 'Failed to get password');
         if (result) {
@@ -212,7 +213,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            handle: '1234'
         });
         assert(result, 'Failed to get password');
         if (result) {
@@ -269,7 +271,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: false
+            isTokenEmpty: false,
+            handle: '1234'
         });
         assert(result, 'Failed to get password');
         if (result) {
@@ -324,7 +327,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'https://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            handle: '1234'
         });
         assert(result, 'Failed to get password');
         if (result) {
@@ -346,7 +350,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            handle: '1234'
         });
         assert(!result.remappedBaseUrl);
         assert(!result.requestHeaders);
@@ -401,7 +406,8 @@ suite('JupyterPasswordConnect', () => {
 
         let result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            handle: '1234'
         });
         assert(!result.remappedBaseUrl, 'First call to get password should have failed');
         assert(!result.remappedToken, 'First call to get password should have failed');
@@ -449,7 +455,8 @@ suite('JupyterPasswordConnect', () => {
         // Retry the password
         result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            handle: '1234'
         });
         assert(result, 'Expected to get a result on the second call');
 
@@ -522,7 +529,8 @@ suite('JupyterPasswordConnect', () => {
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
-            isTokenEmpty: true
+            isTokenEmpty: true,
+            handle: '1234'
         });
         assert.ok(result, 'No hub connection info');
         assert.equal(result?.remappedBaseUrl, 'http://testname:8888/user/test', 'Url not remapped');

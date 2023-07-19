@@ -67,7 +67,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         if (!this.serverFinderMapping.has(serverId)) {
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverId}`,
-                serverUri.displayName || serverUri.uri,
+                serverUri.displayName || generateIdFromRemoteProvider(serverUri.provider),
                 this.jupyterSessionManagerFactory,
                 this.extensionChecker,
                 this.env,

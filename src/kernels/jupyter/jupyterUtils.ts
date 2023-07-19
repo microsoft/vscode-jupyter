@@ -15,6 +15,7 @@ import { Identifiers, JVSC_EXTENSION_ID, Telemetry, isBuiltInJupyterProvider } f
 import { computeHash } from '../../platform/common/crypto';
 import { IJupyterServerUri } from '../../api';
 import { traceWarning } from '../../platform/logging';
+import { JupyterServerProviderHandle } from './types';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -90,7 +91,7 @@ export async function handleExpiredCertsError(
 }
 
 export async function createRemoteConnectionInfo(
-    jupyterHandle: { id: string; handle: string; extensionId: string },
+    jupyterHandle: JupyterServerProviderHandle,
     serverUri: IJupyterServerUri
 ): Promise<IJupyterConnection> {
     const baseUrl = serverUri.baseUrl;
@@ -132,7 +133,7 @@ const ExtensionsWithKnownProviderIds = new Set(
     [JVSC_EXTENSION_ID, 'ms-toolsai.vscode-ai', 'GitHub.codespaces'].map((e) => e.toLowerCase())
 );
 
-export function generateIdFromRemoteProvider(provider: { id: string; handle: string; extensionId: string }) {
+export function generateIdFromRemoteProvider(provider: JupyterServerProviderHandle) {
     if (ExtensionsWithKnownProviderIds.has(provider.extensionId.toLowerCase())) {
         // For extensions that we support migration, like AzML and Jupyter extension and the like,
         // we can ignore storing the extension id in the url.
@@ -150,7 +151,7 @@ export function generateIdFromRemoteProvider(provider: { id: string; handle: str
 }
 
 class FailedToDetermineExtensionId extends Error {}
-export function extractJupyterServerHandleAndId(uri: string): { handle: string; id: string; extensionId: string } {
+export function extractJupyterServerHandleAndId(uri: string): JupyterServerProviderHandle {
     try {
         const url: URL = new URL(uri);
 

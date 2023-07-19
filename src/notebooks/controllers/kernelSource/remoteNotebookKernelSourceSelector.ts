@@ -52,7 +52,7 @@ enum KernelFinderEntityQuickPickType {
 interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
     type: KernelFinderEntityQuickPickType.KernelFinder;
     serverUri: string;
-    idAndHandle: { id: string; handle: string };
+    idAndHandle: { id: string; handle: string; extensionId: string };
     kernelFinderInfo: IContributedKernelFinder;
 }
 
@@ -128,9 +128,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
     ): Promise<InputStep<MultiStepResult> | void> {
-        const servers = this.kernelFinder.registered.filter(
-            (info) => info.kind === 'remote' && (info as IRemoteKernelFinder).serverUri.uri
-        ) as IRemoteKernelFinder[];
+        const servers = this.kernelFinder.registered.filter((info) => info.kind === 'remote') as IRemoteKernelFinder[];
         const items: (ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem)[] = [];
 
         for (const server of servers) {
@@ -147,7 +145,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 items.push({
                     type: KernelFinderEntityQuickPickType.KernelFinder,
                     kernelFinderInfo: server,
-                    serverUri: savedURI.uri,
                     idAndHandle,
                     label: server.displayName,
                     detail: DataScience.jupyterSelectURIMRUDetail(uriDate),
