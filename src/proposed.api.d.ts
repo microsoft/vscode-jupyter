@@ -94,18 +94,25 @@ export class JupyterServerCollection extends Disposable {
      * @return {*}  {JupyterServer}
      * @memberof JupyterServerCollection
      */
-    createServer(id: string, label: string, resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>): JupyterServer;
+    createServer(
+        id: string,
+        label: string,
+        resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>
+    ): JupyterServer;
     /**
      * Creates an entry in the list of Jupyter Servers from which a user can pick to create a server.
      * Picking an item is expected to result in the eventual creation of a JupyterServer.
      * I.e. an extension is expected to listen to the `onDidSelect` event and optionally display their own UI and then create a JupyterServer.
      *
      * @param {string} label
-     * @param {() => PromiseLike<JupyterServer>} onDidSelect Callback invoked when this item is selected.
+     * @param {() => Promise<JupyterServer | undefined>} onDidSelect Callback invoked when this item is selected.
      * @return {*}  {JupyterServerPicker}
      * @memberof JupyterServerCollection
      */
-    createServerCreationItem(label: string, onDidSelect: () => PromiseLike<JupyterServer>): JupyterServerCreationItem;
+    createServerCreationItem(
+        label: string,
+        onDidSelect: () => Promise<JupyterServer | undefined>
+    ): JupyterServerCreationItem;
 }
 
 /**
@@ -120,6 +127,5 @@ export interface JupyterAPI {
      * @return {*}  {JupyterServerCollection}
      * @memberof JupyterAPI
      */
-    createServerCollection(id: string, label: string): JupyterServerCollection;
+    createServerCollection(id: string, label: string): Promise<JupyterServerCollection>;
 }
-
