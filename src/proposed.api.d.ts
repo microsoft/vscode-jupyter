@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import { Disposable, Event, Uri, extensions } from 'vscode';
 
 export interface JupyterServerConnectionInformation {
@@ -109,6 +108,9 @@ export class JupyterServerCollection extends Disposable {
     createServerCreationItem(label: string, onDidSelect: () => PromiseLike<JupyterServer>): JupyterServerCreationItem;
 }
 
+/**
+ * Sample usage extensions.getExtension<JupyterAPI>('ms-ai-tools.jupyter')?.exports;
+ */
 export interface JupyterAPI {
     /**
      * Provides the ability to register multiple collections of Jupyter Servers.
