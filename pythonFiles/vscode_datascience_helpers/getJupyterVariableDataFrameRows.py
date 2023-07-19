@@ -30,6 +30,8 @@ elif _VSCODE_targetVariable["type"] == "ndarray":
     _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
 elif hasattr(_VSCODE_df, "toPandas"):
     _VSCODE_df = _VSCODE_df.toPandas()
+elif hasattr(_VSCODE_df, "to_pandas"):
+    _VSCODE_df = _VSCODE_df.to_pandas()
 # If not a known type, then just let pandas handle it.
 elif not (hasattr(_VSCODE_df, "iloc")):
     _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
