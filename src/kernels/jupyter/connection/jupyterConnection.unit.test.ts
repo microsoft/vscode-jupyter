@@ -174,7 +174,7 @@ suite('Jupyter Connection', async () => {
                 when(sessionManager.dispose()).thenResolve();
                 const id = '1';
                 const handle = 'handle1';
-                const uri = generateIdFromRemoteProvider({ id, handle, extensionId:'' });
+                const uri = generateIdFromRemoteProvider({ id, handle, extensionId: '' });
                 const server: IJupyterServerUriEntry = {
                     provider: { id, handle, extensionId: '' },
                     time: Date.now(),
@@ -213,7 +213,7 @@ suite('Jupyter Connection', async () => {
                 when(sessionManager.dispose()).thenResolve();
                 const id = '1';
                 const handle = 'handle1';
-                const uri = generateIdFromRemoteProvider({ id, handle, extensionId:'' });
+                const uri = generateIdFromRemoteProvider({ id, handle, extensionId: '' });
                 const server: IJupyterServerUriEntry = {
                     provider: { id, handle, extensionId: '' },
                     time: Date.now(),

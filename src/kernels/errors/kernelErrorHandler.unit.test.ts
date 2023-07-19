@@ -152,7 +152,7 @@ suite('Error Handler Unit Tests', () => {
 
     suite('Kernel startup errors', () => {
         let kernelConnection: KernelConnectionMetadata;
-        const uri = generateIdFromRemoteProvider({ id: '1', handle: 'a', extensionId:'' });
+        const uri = generateIdFromRemoteProvider({ id: '1', handle: 'a', extensionId: '' });
         const serverProviderHandle: JupyterServerProviderHandle = {
             handle: '1',
             id: 'a',
