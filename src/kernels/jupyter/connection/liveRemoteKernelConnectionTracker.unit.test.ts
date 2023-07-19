@@ -26,7 +26,6 @@ suite('Live kernel Connection Tracker', async () => {
     let tracker: LiveRemoteKernelConnectionUsageTracker;
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
     const disposables: IDisposable[] = [];
-    const server2Uri = 'http://one:1234/hello?token=1234';
     const serverProviderHandle = { handle: 'handle2', id: 'id2', extensionId: '' };
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
@@ -241,7 +240,7 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Forget the Uri connection all together.
-        onDidRemoveUris.fire([{ uri: server2Uri, time: 0, provider: serverProviderHandle }]);
+        onDidRemoveUris.fire([{ time: 0, provider: serverProviderHandle }]);
 
         await waitForCondition(
             () => {

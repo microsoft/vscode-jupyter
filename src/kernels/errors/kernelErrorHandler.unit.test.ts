@@ -841,7 +841,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             });
             when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
                 time: 1,
-                uri,
                 displayName: 'Hello Server',
                 provider: { id: '1', handle: 'a', extensionId: '' }
             });
@@ -891,7 +890,6 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText as any);
             when(uriStorage.remove(anything())).thenResolve();
             when(uriStorage.get(deepEqual(serverProviderHandle))).thenResolve({
-                uri,
                 time: 2,
                 provider: serverProviderHandle
             });
