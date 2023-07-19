@@ -128,7 +128,10 @@ export async function computeServerId(uri: string) {
     return computeHash(uri, 'SHA-256');
 }
 
-const ExtensionsWithKnownProviderIds = new Set([JVSC_EXTENSION_ID].map((e) => e.toLowerCase()));
+const ExtensionsWithKnownProviderIds = new Set(
+    [JVSC_EXTENSION_ID, 'ms-toolsai.vscode-ai', 'GitHub.codespaces'].map((e) => e.toLowerCase())
+);
+
 export function generateIdFromRemoteProvider(provider: { id: string; handle: string; extensionId: string }) {
     if (ExtensionsWithKnownProviderIds.has(provider.extensionId.toLowerCase())) {
         // For extensions that we support migration, like AzML and Jupyter extension and the like,
@@ -138,7 +141,11 @@ export function generateIdFromRemoteProvider(provider: { id: string; handle: str
             Identifiers.REMOTE_URI_HANDLE_PARAM
         }=${encodeURI(provider.handle)}`;
     } else {
-        return '';
+        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${provider.id}&${
+            Identifiers.REMOTE_URI_HANDLE_PARAM
+        }=${encodeURI(provider.handle)}&${Identifiers.REMOTE_URI_EXTENSION_ID_PARAM}=${encodeURI(
+            provider.extensionId
+        )}`;
     }
 }
 
@@ -187,6 +194,12 @@ function getSafeUrlForLogging(uri: string) {
 export function getOwnerExtensionOfProviderHandle(id: string) {
     if (isBuiltInJupyterProvider(id)) {
         return JVSC_EXTENSION_ID;
+    }
+    if (id.startsWith('azureml_compute_instances') || id.startsWith('azureml_connected_compute_instances')) {
+        return 'ms-toolsai.vscode-ai';
+    }
+    if (id === 'github-codespaces') {
+        return 'GitHub.codespaces';
     }
     traceWarning(`Extension Id not found for server Id ${id}`);
 }

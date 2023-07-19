@@ -592,12 +592,8 @@ class NewStorage {
         const json = await this.fs.readFile(this.storageFile);
         const items: StorageMRUItem[] = [];
         (JSON.parse(json) as StorageMRUItem[]).map((item) => {
-            if (!item.serverHandle.extensionId) {
-                const extensionId = getOwnerExtensionOfProviderHandle(item.serverHandle.id);
-                if (extensionId) {
-                    item.serverHandle.extensionId = extensionId;
-                }
-            }
+            item.serverHandle.extensionId =
+                item.serverHandle.extensionId || getOwnerExtensionOfProviderHandle(item.serverHandle.id) || '';
             if (item.serverHandle.extensionId) {
                 items.push(item);
             }
