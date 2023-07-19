@@ -188,11 +188,7 @@ export interface IJupyterUriProviderRegistration {
  * Entry into our list of saved servers
  */
 export interface IJupyterServerUriEntry {
-    provider: {
-        id: string;
-        handle: string;
-        extensionId: string;
-    };
+    provider: JupyterServerProviderHandle;
     /**
      * The most recent time that we connected to this server
      */
