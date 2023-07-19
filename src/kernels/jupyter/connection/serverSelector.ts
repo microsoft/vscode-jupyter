@@ -39,7 +39,7 @@ export async function validateSelectJupyterURI(
     applicationShell: IApplicationShell,
     configService: IConfigurationService,
     isWebExtension: boolean,
-    provider: { id: string; handle: string; extensionId: string },
+    provider: JupyterServerProviderHandle,
     serverUri: IJupyterServerUri
 ): Promise<string | undefined> {
     // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
