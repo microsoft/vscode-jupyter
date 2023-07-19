@@ -14,7 +14,7 @@ import {
     IDisposableRegistry
 } from '../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
-import { extractJupyterServerHandleAndId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { extractJupyterServerHandleAndId, generateIdFromRemoteProvider } from '../jupyterUtils';
 import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage,
@@ -121,7 +121,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
-        const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
+        const uri = generateIdFromRemoteProvider(jupyterHandle);
         const entry: IJupyterServerUriEntry = {
             uri,
             time: options?.time ?? Date.now(),
@@ -209,7 +209,7 @@ class OldStorage {
         }
     }
     private async addToUriList(jupyterHandle: { id: string; handle: string }, displayName: string, time: number) {
-        const uri = generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle);
+        const uri = generateIdFromRemoteProvider(jupyterHandle);
         const uriList = await this.getAll();
 
         // Check if we have already found a display name for this server
@@ -466,10 +466,7 @@ class NewStorage {
                             return <IJupyterServerUriEntry>{
                                 provider: removedItem.serverHandle,
                                 time: removedItem.time,
-                                uri: generateUriFromRemoteProvider(
-                                    removedItem.serverHandle.id,
-                                    removedItem.serverHandle.handle
-                                ),
+                                uri: generateIdFromRemoteProvider(removedItem.serverHandle),
                                 displayName: removedItem.displayName || '',
                                 isValidated: false
                             };
@@ -493,7 +490,7 @@ class NewStorage {
         const entry: IJupyterServerUriEntry = {
             provider: existingEntry.provider,
             time: Date.now(),
-            uri: generateUriFromRemoteProvider(existingEntry.provider.id, existingEntry.provider.handle),
+            uri: generateIdFromRemoteProvider(existingEntry.provider),
             displayName: existingEntry.displayName || '',
             isValidated: true
         };
@@ -545,7 +542,7 @@ class NewStorage {
 
         await Promise.all(
             data.map(async (item) => {
-                const uri = generateUriFromRemoteProvider(item.serverHandle.id, item.serverHandle.handle);
+                const uri = generateIdFromRemoteProvider(item.serverHandle);
                 const server: IJupyterServerUriEntry = {
                     time: item.time,
                     displayName: item.displayName || uri,

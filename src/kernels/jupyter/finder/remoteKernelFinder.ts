@@ -36,7 +36,7 @@ import { KernelProgressReporter } from '../../../platform/progress/kernelProgres
 import { DataScience } from '../../../platform/common/utils/localize';
 import { isUnitTestExecution } from '../../../platform/common/constants';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { computeServerId, generateIdFromRemoteProvider } from '../jupyterUtils';
 import { RemoteKernelSpecCacheFileName } from '../constants';
 
 // Even after shutting down a kernel, the server API still returns the old information.
@@ -107,7 +107,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         private readonly context: IExtensionContext
     ) {
         this.cacheFile = Uri.joinPath(context.globalStorageUri, RemoteKernelSpecCacheFileName);
-        this.cacheKey = generateUriFromRemoteProvider(serverUri.provider.id, serverUri.provider.handle);
+        this.cacheKey = generateIdFromRemoteProvider(serverUri.provider);
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
         this.disposables.push(kernelFinder.registerKernelFinder(this));
@@ -337,12 +337,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 sessionManager.getRunningKernels(),
                 sessionManager.getKernelSpecs(),
                 sessionManager.getRunningSessions(),
-                computeServerId(
-                    generateUriFromRemoteProvider(
-                        connInfo.serverProviderHandle.id,
-                        connInfo.serverProviderHandle.handle
-                    )
-                )
+                computeServerId(generateIdFromRemoteProvider(connInfo.serverProviderHandle))
             ]);
 
             // Turn them both into a combined list

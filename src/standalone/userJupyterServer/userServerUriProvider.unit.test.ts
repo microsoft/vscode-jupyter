@@ -36,7 +36,7 @@ import { noop, sleep } from '../../test/core';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { Settings } from '../../platform/common/constants';
 import { assert } from 'chai';
-import { generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { IFileSystem } from '../../platform/common/platform/types';
@@ -234,7 +234,7 @@ suite('User Uri Provider', () => {
                     const oldUrls: string[] = [
                         `http://localhost:1111${Settings.JupyterServerRemoteLaunchNameSeparator}Hello World`,
                         `http://localhost:2222${Settings.JupyterServerRemoteLaunchNameSeparator}Foo Bar`,
-                        `${generateUriFromRemoteProvider('1', '2')}${
+                        `${generateIdFromRemoteProvider({ id: '1', handle: '2' })}${
                             Settings.JupyterServerRemoteLaunchNameSeparator
                         }Remote Provider`
                     ];

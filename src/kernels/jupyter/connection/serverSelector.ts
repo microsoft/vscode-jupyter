@@ -17,7 +17,7 @@ import {
     IDisposableRegistry,
     IExperimentService
 } from '../../../platform/common/types';
-import { handleExpiredCertsError, handleSelfCertsError, generateUriFromRemoteProvider } from '../jupyterUtils';
+import { handleExpiredCertsError, handleSelfCertsError, generateIdFromRemoteProvider } from '../jupyterUtils';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
@@ -101,7 +101,7 @@ export class JupyterServerSelector {
         }
     }
     public async addJupyterServerOld(provider: { id: string; handle: string }): Promise<void> {
-        const userURI = generateUriFromRemoteProvider(provider.id, provider.handle);
+        const userURI = generateIdFromRemoteProvider(provider);
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
             await this.jupyterConnection.validateRemoteUri(provider);
