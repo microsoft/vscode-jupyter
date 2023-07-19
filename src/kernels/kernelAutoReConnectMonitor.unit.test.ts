@@ -91,7 +91,7 @@ suite('Kernel ReConnect Progress Message', () => {
             baseUrl: '<baseUrl>',
             id: '1234',
             kernelSpec: { name: 'python', display_name: 'Python', argv: [], executable: '' },
-            serverProviderHandle: { handle: '1', id: '1' }
+            serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
         });
         when(kernelConnection.connectionStatusChanged).thenReturn(kernelConnectionStatusSignal);
         when(kernel.session).thenReturn(instance(session));
@@ -195,7 +195,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         monitor.activate();
     });
     teardown(() => disposeAllDisposables(disposables));
-    function createKernel(serverProviderHandle = { handle: '1234', id: '1234' }) {
+    function createKernel(serverProviderHandle = { handle: '1234', id: '1234', extensionId: '' }) {
         const kernel = mock<IKernel>();
         const onPreExecute = new EventEmitter<NotebookCell>();
         const onRestarted = new EventEmitter<void>();
@@ -325,12 +325,13 @@ suite('Kernel ReConnect Failed Monitor', () => {
             time: 1234,
             provider: {
                 handle: '1',
-                id: '1'
+                id: '1',
+                extensionId: ''
             }
         };
         const kernel = createKernel(server.provider);
         when(jupyterServerUriStorage.getAll()).thenResolve([server]);
-        when(jupyterServerUriStorage.get(deepEqual({ id: '1', handle: '1' }))).thenResolve(server);
+        when(jupyterServerUriStorage.get(deepEqual({ id: '1', handle: '1', extensionId: '' }))).thenResolve(server);
         when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
             id: 'remoteUriProvider',
             extensionId: 'ms-python.python',

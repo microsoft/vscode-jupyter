@@ -57,8 +57,8 @@ suite('Preferred Kernel Connection', () => {
         updated?: PythonKernelConnectionMetadata[];
     }>;
     let interpreterService: IInterpreterService;
-    const serverProviderHandle1 = { handle: 'handle1', id: 'id1' };
-    const serverProviderHandle2 = { handle: 'handle2', id: 'id2' };
+    const serverProviderHandle1 = { handle: 'handle1', id: 'id1', extensionId: '' };
+    const serverProviderHandle2 = { handle: 'handle2', id: 'id2', extensionId: '' };
     const remoteLiveKernelConnection1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: '',
         id: 'liveRemote1',

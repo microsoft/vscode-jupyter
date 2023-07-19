@@ -100,7 +100,10 @@ export class JupyterUriProviderRegistration
             const handles = await provider.getHandles();
             if (!handles.includes(handle)) {
                 const extensionId = this.providerExtensionMapping.get(id)!;
-                throw new InvalidRemoteJupyterServerUriHandleError({ id, handle }, extensionId);
+                throw new InvalidRemoteJupyterServerUriHandleError(
+                    { id, handle, extensionId: provider.extensionId },
+                    extensionId
+                );
             }
         }
         return provider.getServerUri(handle, doNotPromptForAuthInfo);

@@ -52,7 +52,7 @@ suite(`Remote Kernel Finder`, () => {
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
         dispose: noop,
-        serverProviderHandle: { handle: 'handle', id: 'id' }
+        serverProviderHandle: { handle: 'handle', id: 'id', extensionId: '' }
     };
     const defaultPython3Name = 'python3';
     const python3spec: IJupyterKernelSpec = {
@@ -111,7 +111,8 @@ suite(`Remote Kernel Finder`, () => {
         isValidated: true,
         provider: {
             id: '1',
-            handle: '2'
+            handle: '2',
+            extensionId: ''
         }
     };
 
@@ -233,7 +234,7 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            serverProviderHandle: { handle: '1', id: '1' }
+            serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
         });
         const cachedKernels = [
             RemoteKernelSpecConnectionMetadata.create({
@@ -245,7 +246,7 @@ suite(`Remote Kernel Finder`, () => {
                     name: '',
                     executable: ''
                 },
-                serverProviderHandle: { handle: '1', id: '1' }
+                serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
             }).toJSON(),
             liveRemoteKernel.toJSON()
         ] as KernelConnectionMetadata[];
@@ -287,7 +288,7 @@ suite(`Remote Kernel Finder`, () => {
                 name: '',
                 numberOfConnections: 0
             },
-            serverProviderHandle: { handle: '1', id: '1' }
+            serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
         });
         const cachedKernels = [
             RemoteKernelSpecConnectionMetadata.create({
@@ -299,7 +300,7 @@ suite(`Remote Kernel Finder`, () => {
                     name: '',
                     executable: ''
                 },
-                serverProviderHandle: { handle: '1', id: '1' }
+                serverProviderHandle: { handle: '1', id: '1', extensionId: '' }
             }).toJSON(),
             liveRemoteKernel.toJSON()
         ];

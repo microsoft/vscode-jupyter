@@ -42,7 +42,7 @@ suite('Kernel Crash Monitor', () => {
     let notebook: TestNotebookDocument;
     let controller: IKernelController;
     let clock: fakeTimers.InstalledClock;
-    const serverProviderHandle = { handle: 'handle', id: 'id' };
+    const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };
     let remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: 'remote',
         baseUrl: '1',

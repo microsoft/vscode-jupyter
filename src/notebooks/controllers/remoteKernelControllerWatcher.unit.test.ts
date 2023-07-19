@@ -52,7 +52,7 @@ suite('RemoteKernelControllerWatcher', () => {
     test('Dispose controllers associated with an old handle', async () => {
         const provider1Id = 'provider1';
         const provider1Handle1: string = 'provider1Handle1';
-        const serverProviderHandle = { handle: provider1Handle1, id: provider1Id };
+        const serverProviderHandle = { handle: provider1Handle1, id: provider1Id, extensionId: '' };
         const remoteUriForProvider1 = generateIdFromRemoteProvider(serverProviderHandle);
         let onDidChangeHandles: undefined | (() => Promise<void>);
         const provider1 = mock<IInternalJupyterUriProvider>();
@@ -122,7 +122,8 @@ suite('RemoteKernelControllerWatcher', () => {
                 displayName: 'Something',
                 provider: {
                     handle: provider1Handle1,
-                    id: provider1Id
+                    id: provider1Id,
+                    extensionId: ''
                 }
             }
         ]);
@@ -132,7 +133,8 @@ suite('RemoteKernelControllerWatcher', () => {
             displayName: 'Something',
             provider: {
                 handle: provider1Handle1,
-                id: provider1Id
+                id: provider1Id,
+                extensionId: ''
             }
         });
         when(uriStorage.add(anything())).thenResolve();

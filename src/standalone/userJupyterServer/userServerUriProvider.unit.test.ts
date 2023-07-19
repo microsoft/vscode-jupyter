@@ -234,7 +234,7 @@ suite('User Uri Provider', () => {
                     const oldUrls: string[] = [
                         `http://localhost:1111${Settings.JupyterServerRemoteLaunchNameSeparator}Hello World`,
                         `http://localhost:2222${Settings.JupyterServerRemoteLaunchNameSeparator}Foo Bar`,
-                        `${generateIdFromRemoteProvider({ id: '1', handle: '2' })}${
+                        `${generateIdFromRemoteProvider({ id: '1', handle: '2', extensionId: '' })}${
                             Settings.JupyterServerRemoteLaunchNameSeparator
                         }Remote Provider`
                     ];

@@ -279,7 +279,11 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             if (token.isCancellationRequested) {
                 throw new CancellationError();
             }
-            const serverId = { id: selectedSource.provider.id, handle };
+            const serverId = {
+                id: selectedSource.provider.id,
+                handle,
+                extensionId: selectedSource.provider.extensionId
+            };
             await this.serverSelector.addJupyterServer(serverId);
             if (token.isCancellationRequested) {
                 throw new CancellationError();
