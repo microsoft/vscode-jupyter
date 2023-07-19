@@ -52,7 +52,7 @@ enum KernelFinderEntityQuickPickType {
 interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
     type: KernelFinderEntityQuickPickType.KernelFinder;
     serverUri: string;
-    idAndHandle: { id: string; handle: string };
+    idAndHandle: { id: string; handle: string; extensionId: string };
     kernelFinderInfo: IContributedKernelFinder;
 }
 
