@@ -138,9 +138,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
-        const uri = generateIdFromRemoteProvider(jupyterHandle);
         const entry: IJupyterServerUriEntry = {
-            uri,
             time: options?.time ?? Date.now(),
             displayName: options?.displayName,
             isValidated: true,
@@ -226,7 +224,7 @@ class OldStorage {
         }
     }
     private async addToUriList(jupyterHandle: JupyterServerProviderHandle, displayName: string, time: number) {
-        const uri = generateIdFromRemoteProvider(jupyterHandle);
+        const uriId = generateIdFromRemoteProvider(jupyterHandle);
         const uriList = await this.getAll();
 
         // Check if we have already found a display name for this server
@@ -235,9 +233,8 @@ class OldStorage {
                 (entry) => entry.provider.id === jupyterHandle.id && entry.provider.handle === jupyterHandle.handle
             )?.displayName ||
             displayName ||
-            uri;
+            uriId;
         const entry: IJupyterServerUriEntry = {
-            uri,
             time,
             displayName,
             isValidated: true,
@@ -248,7 +245,7 @@ class OldStorage {
         const editedList = [entry].concat(
             uriList
                 .sort((a, b) => b.time - a.time) // First sort by time
-                .filter((f) => f.uri !== uri)
+                .filter((f) => generateIdFromRemoteProvider(f.provider) !== uriId)
         );
         const removedItems = editedList.splice(Settings.JupyterServerUriListMax);
 
@@ -280,10 +277,8 @@ class OldStorage {
         const blob = sorted
             .map(
                 (e) =>
-                    `${e.uri}${Settings.JupyterServerRemoteLaunchNameSeparator}${
-                        !e.displayName || e.displayName === e.uri
-                            ? Settings.JupyterServerRemoteLaunchUriEqualsDisplayName
-                            : e.displayName
+                    `${generateIdFromRemoteProvider(e.provider)}${Settings.JupyterServerRemoteLaunchNameSeparator}${
+                        !e.displayName ? Settings.JupyterServerRemoteLaunchUriEqualsDisplayName : e.displayName
                     }`
             )
             .join(Settings.JupyterServerRemoteLaunchUriSeparator);
@@ -360,7 +355,6 @@ class OldStorage {
                     servers.push({
                         time: indexes[index].time,
                         displayName,
-                        uri,
                         isValidated: false,
                         provider: idAndHandle
                     });
@@ -453,7 +447,8 @@ class NewStorage {
                         `${item.provider.id}#${item.provider.handle}`
                 );
                 // Check if we have already found a display name for this server
-                item.displayName = item.displayName || existingEntry?.displayName || item.uri;
+                item.displayName =
+                    item.displayName || existingEntry?.displayName || generateIdFromRemoteProvider(item.provider);
 
                 const newItem: StorageMRUItem = {
                     displayName: item.displayName || '',
@@ -507,7 +502,6 @@ class NewStorage {
         const entry: IJupyterServerUriEntry = {
             provider: existingEntry.provider,
             time: Date.now(),
-            uri: generateIdFromRemoteProvider(existingEntry.provider),
             displayName: existingEntry.displayName || '',
             isValidated: true
         };
@@ -563,7 +557,6 @@ class NewStorage {
                 const server: IJupyterServerUriEntry = {
                     time: item.time,
                     displayName: item.displayName || uri,
-                    uri,
                     isValidated: false,
                     provider: item.serverHandle
                 };

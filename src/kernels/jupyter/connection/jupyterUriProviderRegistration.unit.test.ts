@@ -183,7 +183,6 @@ suite('Uri Provider Registration', () => {
         const removedServer: IJupyterServerUriEntry = {
             provider: { handle: 'handle2', id: 'a', extensionId: '' },
             time: Date.now(),
-            uri: 'http://handle1:8888/?token=1234',
             displayName: 'Server for Handle2',
             isValidated: false
         };

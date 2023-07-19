@@ -13,6 +13,7 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IControllerRegistration } from './types';
+import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 
 /**
  * Tracks 3rd party IJupyterUriProviders and requests URIs from their handles. We store URI information in our
@@ -49,8 +50,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             return;
         }
         const [handles, uris] = await Promise.all([provider.getHandles(), this.uriStorage.getAll()]);
-        const serverJupyterProviderMap = new Map<string, { uri: string; providerId: string; handle: string }>();
-        const computeServerId = ({ id, handle }: { id: string; handle: string }) => `${id}-${handle}`;
+        const serverJupyterProviderMap = new Map<string, { providerId: string; handle: string }>();
         const registeredHandles: string[] = [];
         await Promise.all(
             uris.map(async (item) => {
@@ -58,8 +58,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 if (item.provider.id !== provider.id) {
                     return;
                 }
-                serverJupyterProviderMap.set(computeServerId(item.provider), {
-                    uri: item.uri,
+                serverJupyterProviderMap.set(generateIdFromRemoteProvider(item.provider), {
                     providerId: item.provider.id,
                     handle: item.provider.handle
                 });
@@ -97,7 +96,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
             if (isLocalConnection(connection)) {
                 return;
             }
-            const info = serverJupyterProviderMap.get(computeServerId(connection.serverProviderHandle));
+            const info = serverJupyterProviderMap.get(generateIdFromRemoteProvider(connection.serverProviderHandle));
             if (info && !handles.includes(info.handle) && info.providerId === provider.id) {
                 // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                 traceWarning(
