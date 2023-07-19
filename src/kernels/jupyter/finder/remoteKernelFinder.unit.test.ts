@@ -29,7 +29,7 @@ import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { CacheDataFormat, RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { RemoteKernelSpecCacheFileName } from '../constants';
@@ -251,7 +251,7 @@ suite(`Remote Kernel Finder`, () => {
         ] as KernelConnectionMetadata[];
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
 
-        const cacheKey = generateUriFromRemoteProvider(serverEntry.provider.id, serverEntry.provider.handle);
+        const cacheKey = generateIdFromRemoteProvider(serverEntry.provider);
         when(fs.readFile(uriEquals(Uri.joinPath(globalStorageUri, RemoteKernelSpecCacheFileName)))).thenResolve(
             JSON.stringify(<CacheDataFormat>{ extensionVersion: '', data: { [cacheKey]: cachedKernels } })
         );
@@ -304,7 +304,7 @@ suite(`Remote Kernel Finder`, () => {
             liveRemoteKernel.toJSON()
         ];
         when(cachedRemoteKernelValidator.isValid(anything())).thenCall(async (k) => liveRemoteKernel.id === k.id);
-        const cacheKey = generateUriFromRemoteProvider(serverEntry.provider.id, serverEntry.provider.handle);
+        const cacheKey = generateIdFromRemoteProvider(serverEntry.provider);
         when(fs.readFile(uriEquals(Uri.joinPath(globalStorageUri, RemoteKernelSpecCacheFileName)))).thenResolve(
             JSON.stringify(<CacheDataFormat>{ extensionVersion: '', data: { [cacheKey]: cachedKernels } })
         );

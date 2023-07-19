@@ -7,7 +7,7 @@ import { IExtensionSyncActivationService } from '../../../platform/activation/ty
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { LiveRemoteKernelConnectionMetadata } from '../../types';
-import { generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage,
@@ -46,10 +46,7 @@ export class LiveRemoteKernelConnectionUsageTracker
     }
 
     public wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata) {
-        const id = generateUriFromRemoteProvider(
-            connection.serverProviderHandle.id,
-            connection.serverProviderHandle.handle
-        );
+        const id = generateIdFromRemoteProvider(connection.serverProviderHandle);
         return (
             id in this.usedRemoteKernelServerIdsAndSessions &&
             typeof connection.kernelModel.id === 'string' &&
@@ -57,7 +54,7 @@ export class LiveRemoteKernelConnectionUsageTracker
         );
     }
     public trackKernelIdAsUsed(resource: Uri, serverId: JupyterServerProviderHandle, kernelId: string) {
-        const id = generateUriFromRemoteProvider(serverId.id, serverId.handle);
+        const id = generateIdFromRemoteProvider(serverId);
         this.usedRemoteKernelServerIdsAndSessions[id] = this.usedRemoteKernelServerIdsAndSessions[id] || {};
         this.usedRemoteKernelServerIdsAndSessions[id][kernelId] =
             this.usedRemoteKernelServerIdsAndSessions[id][kernelId] || [];
@@ -74,7 +71,7 @@ export class LiveRemoteKernelConnectionUsageTracker
             .then(noop, noop);
     }
     public trackKernelIdAsNotUsed(resource: Uri, serverId: JupyterServerProviderHandle, kernelId: string) {
-        const id = generateUriFromRemoteProvider(serverId.id, serverId.handle);
+        const id = generateIdFromRemoteProvider(serverId);
         if (!(id in this.usedRemoteKernelServerIdsAndSessions)) {
             return;
         }
@@ -102,7 +99,7 @@ export class LiveRemoteKernelConnectionUsageTracker
     }
     private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
         uriEntries.forEach((uriEntry) => {
-            const id = generateUriFromRemoteProvider(uriEntry.provider.id, uriEntry.provider.handle);
+            const id = generateIdFromRemoteProvider(uriEntry.provider);
             delete this.usedRemoteKernelServerIdsAndSessions[id];
             this.memento
                 .update(

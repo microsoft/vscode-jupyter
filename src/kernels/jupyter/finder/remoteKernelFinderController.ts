@@ -19,7 +19,7 @@ import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import { generateUriFromRemoteProvider } from '../jupyterUtils';
+import { generateIdFromRemoteProvider } from '../jupyterUtils';
 
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
@@ -63,7 +63,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
             // when server uri is validated, an `onDidAddUri` event will be fired.
             return;
         }
-        const serverId = generateUriFromRemoteProvider(serverUri.provider.id, serverUri.provider.handle);
+        const serverId = generateIdFromRemoteProvider(serverUri.provider);
         if (!this.serverFinderMapping.has(serverId)) {
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverId}`,
@@ -91,7 +91,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     // When a URI is removed, dispose the kernel finder for it
     urisRemoved(uris: IJupyterServerUriEntry[]) {
         uris.forEach((uri) => {
-            const serverId = generateUriFromRemoteProvider(uri.provider.id, uri.provider.handle);
+            const serverId = generateIdFromRemoteProvider(uri.provider);
             const serverFinder = this.serverFinderMapping.get(serverId);
             serverFinder && serverFinder.dispose();
             this.serverFinderMapping.delete(serverId);

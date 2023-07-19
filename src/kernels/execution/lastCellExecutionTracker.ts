@@ -14,7 +14,7 @@ import { getParentHeaderMsgId } from './cellExecutionMessageHandler';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { generateUriFromRemoteProvider } from '../jupyter/jupyterUtils';
+import { generateIdFromRemoteProvider } from '../jupyter/jupyterUtils';
 
 const MAX_TRACKING_TIME = 1_000 * 60 * 60 * 24 * 2; // 2 days
 type CellExecutionInfo = Omit<ResumeCellExecutionInformation, 'token'> & { kernelId: string; cellIndex: number };
@@ -191,10 +191,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             executionCount: info.executionCount,
             kernelId: kernel.session?.kernel?.id || '',
             msg_id: info.msg_id,
-            serverId: generateUriFromRemoteProvider(
-                kernel.kernelConnectionMetadata.serverProviderHandle.id,
-                kernel.kernelConnectionMetadata.serverProviderHandle.handle
-            ),
+            serverId: generateIdFromRemoteProvider(kernel.kernelConnectionMetadata.serverProviderHandle),
             sessionId: kernel.session?.id,
             startTime: info.startTime
         };
@@ -227,9 +224,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
                 // Ignore, as this indicates the file does not exist.
             }
             let removed = false;
-            const removedServerIds = new Set(
-                removedServers.map((s) => generateUriFromRemoteProvider(s.provider.id, s.provider.handle))
-            );
+            const removedServerIds = new Set(removedServers.map((s) => generateIdFromRemoteProvider(s.provider)));
             Object.keys(store).forEach((key) => {
                 const data = store[key];
                 if (
