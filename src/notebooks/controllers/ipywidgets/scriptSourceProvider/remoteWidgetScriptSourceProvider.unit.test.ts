@@ -15,7 +15,7 @@ suite('ipywidget - Remote Widget Script Source', () => {
     let scriptManagerFactory: IIPyWidgetScriptManagerFactory;
     let scriptManager: IIPyWidgetScriptManager;
     const baseUrl = 'http://hello.com/';
-    const serverProviderHandle = { handle: 'handle', id: 'id' };
+    const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };
     setup(() => {
         scriptManagerFactory = mock<IIPyWidgetScriptManagerFactory>();
         scriptManager = mock<IIPyWidgetScriptManager>();

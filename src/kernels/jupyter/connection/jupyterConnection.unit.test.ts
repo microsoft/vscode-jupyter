@@ -50,7 +50,8 @@ suite('Jupyter Connection', async () => {
 
     const provider = {
         id: 'someProvider',
-        handle: 'someHandle'
+        handle: 'someHandle',
+        extensionId: ''
     };
     const server: IJupyterServerUri = {
         baseUrl: 'http://localhost:8888',
@@ -173,9 +174,9 @@ suite('Jupyter Connection', async () => {
                 when(sessionManager.dispose()).thenResolve();
                 const id = '1';
                 const handle = 'handle1';
-                const uri = generateIdFromRemoteProvider({ id, handle });
+                const uri = generateIdFromRemoteProvider({ id, handle, extensionId:'' });
                 const server: IJupyterServerUriEntry = {
-                    provider: { id, handle },
+                    provider: { id, handle, extensionId: '' },
                     time: Date.now(),
                     uri,
                     displayName: 'someDisplayName',
@@ -190,12 +191,12 @@ suite('Jupyter Connection', async () => {
                         token: '1234'
                     }
                 };
-                when(serverUriStorage.get(deepEqual({ id, handle }))).thenResolve(server);
+                when(serverUriStorage.get(deepEqual({ id, handle, extensionId: '' }))).thenResolve(server);
                 when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
                 when(sessionManager.getRunningKernels()).thenResolve([]);
 
-                const connection = await jupyterConnection.createConnectionInfo({ id, handle });
+                const connection = await jupyterConnection.createConnectionInfo({ id, handle, extensionId: '' });
 
                 assert.ok(connection, 'Connection not returned');
                 assert.strictEqual(connection.baseUrl, uriInfo.baseUrl, 'Base url is incorrect');
@@ -212,9 +213,9 @@ suite('Jupyter Connection', async () => {
                 when(sessionManager.dispose()).thenResolve();
                 const id = '1';
                 const handle = 'handle1';
-                const uri = generateIdFromRemoteProvider({ id, handle });
+                const uri = generateIdFromRemoteProvider({ id, handle, extensionId:'' });
                 const server: IJupyterServerUriEntry = {
-                    provider: { id, handle },
+                    provider: { id, handle, extensionId: '' },
                     time: Date.now(),
                     uri,
                     displayName: 'someDisplayName',
@@ -225,12 +226,12 @@ suite('Jupyter Connection', async () => {
                     displayName: 'someDisplayName',
                     token: '1234'
                 };
-                when(serverUriStorage.get(deepEqual({ id, handle }))).thenResolve(server);
+                when(serverUriStorage.get(deepEqual({ id, handle, extensionId: '' }))).thenResolve(server);
                 when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
                 when(sessionManager.getRunningKernels()).thenResolve([]);
 
-                const connection = await jupyterConnection.createConnectionInfo({ id, handle });
+                const connection = await jupyterConnection.createConnectionInfo({ id, handle, extensionId: '' });
 
                 assert.ok(connection, 'Connection not returned');
                 assert.strictEqual(connection.baseUrl, uriInfo.baseUrl, 'Base url is incorrect');

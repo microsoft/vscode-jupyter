@@ -60,7 +60,7 @@ export class JupyterServerSelectorCommand
         };
         this.handleMappings.set(handle, { uri: source, server: serverUri });
         // Set the uri directly
-        await this.serverSelector.addJupyterServer({ id: this.id, handle });
+        await this.serverSelector.addJupyterServer({ id: this.id, handle, extensionId: JVSC_EXTENSION_ID });
         this._onDidChangeHandles.fire();
     }
 }

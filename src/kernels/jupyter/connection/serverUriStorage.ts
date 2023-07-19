@@ -14,7 +14,11 @@ import {
     IDisposableRegistry
 } from '../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
-import { extractJupyterServerHandleAndId, generateIdFromRemoteProvider } from '../jupyterUtils';
+import {
+    extractJupyterServerHandleAndId,
+    generateIdFromRemoteProvider,
+    getOwnerExtensionOfProviderHandle
+} from '../jupyterUtils';
 import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage,
@@ -29,7 +33,20 @@ import { Disposables } from '../../../platform/common/utils';
 export type StorageMRUItem = {
     displayName: string;
     time: number;
-    serverHandle: JupyterServerProviderHandle;
+    serverHandle: {
+        /**
+         * Jupyter Server Provider Id.
+         */
+        id: string;
+        /**
+         * Jupyter Server handle, unique for each server.
+         */
+        handle: string;
+        /**
+         * Extension that owns this server.
+         */
+        extensionId: string;
+    };
 };
 
 /**
@@ -208,7 +225,7 @@ class OldStorage {
             }
         }
     }
-    private async addToUriList(jupyterHandle: { id: string; handle: string }, displayName: string, time: number) {
+    private async addToUriList(jupyterHandle: JupyterServerProviderHandle, displayName: string, time: number) {
         const uri = generateIdFromRemoteProvider(jupyterHandle);
         const uriList = await this.getAll();
 
@@ -573,6 +590,18 @@ class NewStorage {
             return [];
         }
         const json = await this.fs.readFile(this.storageFile);
-        return JSON.parse(json) as StorageMRUItem[];
+        const items: StorageMRUItem[] = [];
+        (JSON.parse(json) as StorageMRUItem[]).map((item) => {
+            if (!item.serverHandle.extensionId) {
+                const extensionId = getOwnerExtensionOfProviderHandle(item.serverHandle.id);
+                if (extensionId) {
+                    item.serverHandle.extensionId = extensionId;
+                }
+            }
+            if (item.serverHandle.extensionId) {
+                items.push(item);
+            }
+        });
+        return items;
     }
 }

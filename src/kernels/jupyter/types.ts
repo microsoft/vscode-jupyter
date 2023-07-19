@@ -168,6 +168,10 @@ export type JupyterServerProviderHandle = {
      * Jupyter Server handle, unique for each server.
      */
     handle: string;
+    /**
+     * Extension that owns this server.
+     */
+    extensionId: string;
 };
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
@@ -191,6 +195,7 @@ export interface IJupyterServerUriEntry {
     provider: {
         id: string;
         handle: string;
+        extensionId: string;
     };
     /**
      * The most recent time that we connected to this server

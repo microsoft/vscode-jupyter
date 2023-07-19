@@ -152,10 +152,11 @@ suite('Error Handler Unit Tests', () => {
 
     suite('Kernel startup errors', () => {
         let kernelConnection: KernelConnectionMetadata;
-        const uri = generateIdFromRemoteProvider({ id: '1', handle: 'a' });
+        const uri = generateIdFromRemoteProvider({ id: '1', handle: 'a', extensionId:'' });
         const serverProviderHandle: JupyterServerProviderHandle = {
             handle: '1',
-            id: 'a'
+            id: 'a',
+            extensionId: ''
         };
         setup(() => {
             when(applicationShell.showErrorMessage(anything(), Common.learnMore)).thenResolve(Common.learnMore as any);
@@ -842,7 +843,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 time: 1,
                 uri,
                 displayName: 'Hello Server',
-                provider: { id: '1', handle: 'a' }
+                provider: { id: '1', handle: 'a', extensionId: '' }
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())

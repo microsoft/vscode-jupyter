@@ -28,7 +28,12 @@ import {
     ICommandManager,
     IEncryptedStorage
 } from '../../platform/common/application/types';
-import { Identifiers, JVSC_EXTENSION_ID, Settings } from '../../platform/common/constants';
+import {
+    Identifiers,
+    JVSC_EXTENSION_ID,
+    Settings,
+    UserJupyterServerPickerProviderId
+} from '../../platform/common/constants';
 import {
     Experiments,
     GLOBAL_MEMENTO,
@@ -64,7 +69,7 @@ const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnec
 export class UserJupyterServerUrlProvider
     implements IExtensionSyncActivationService, IDisposable, IInternalJupyterUriProvider
 {
-    readonly id: string = '_builtin.jupyterServerUrlProvider';
+    readonly id: string = UserJupyterServerPickerProviderId;
     public readonly extensionId: string = JVSC_EXTENSION_ID;
     readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName;
     readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail;
@@ -199,7 +204,7 @@ export class UserJupyterServerUrlProvider
                                 try {
                                     await this.addNewServer(server);
                                     await this.serverUriStorage.add(
-                                        { id: this.id, handle: server.handle },
+                                        { id: this.id, handle: server.handle, extensionId: JVSC_EXTENSION_ID },
                                         { time: server.time, displayName: server.serverInfo.displayName }
                                     );
                                 } catch {
@@ -319,7 +324,7 @@ export class UserJupyterServerUrlProvider
                         this.applicationShell,
                         this.configService,
                         this.isWebExtension,
-                        { id: this.id, handle },
+                        { id: this.id, handle, extensionId: JVSC_EXTENSION_ID },
                         jupyterServerUri
                     );
 
@@ -476,7 +481,11 @@ export class UserJupyterServerUrlProvider
                     const handle = uuid();
                     let message = '';
                     try {
-                        await this.jupyterConnection.validateRemoteUri({ id: this.id, handle }, jupyterServerUri, true);
+                        await this.jupyterConnection.validateRemoteUri(
+                            { id: this.id, handle, extensionId: JVSC_EXTENSION_ID },
+                            jupyterServerUri,
+                            true
+                        );
                     } catch (err) {
                         traceWarning('Uri verification error', err);
                         if (JupyterSelfCertsError.isSelfCertsError(err)) {

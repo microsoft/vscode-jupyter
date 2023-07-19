@@ -11,9 +11,10 @@ import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../.
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../../platform/common/constants';
+import { Identifiers, JVSC_EXTENSION_ID, Telemetry, isBuiltInJupyterProvider } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
 import { IJupyterServerUri } from '../../api';
+import { traceWarning } from '../../platform/logging';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -89,7 +90,7 @@ export async function handleExpiredCertsError(
 }
 
 export async function createRemoteConnectionInfo(
-    jupyterHandle: { id: string; handle: string },
+    jupyterHandle: { id: string; handle: string; extensionId: string },
     serverUri: IJupyterServerUri
 ): Promise<IJupyterConnection> {
     const baseUrl = serverUri.baseUrl;
@@ -127,25 +128,44 @@ export async function computeServerId(uri: string) {
     return computeHash(uri, 'SHA-256');
 }
 
-export function generateIdFromRemoteProvider(provider: { id: string; handle: string }) {
-    // eslint-disable-next-line
-    return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${provider.id}&${
-        Identifiers.REMOTE_URI_HANDLE_PARAM
-    }=${encodeURI(provider.handle)}`;
+const ExtensionsWithKnownProviderIds = new Set([JVSC_EXTENSION_ID].map((e) => e.toLowerCase()));
+export function generateIdFromRemoteProvider(provider: { id: string; handle: string; extensionId: string }) {
+    if (ExtensionsWithKnownProviderIds.has(provider.extensionId.toLowerCase())) {
+        // For extensions that we support migration, like AzML and Jupyter extension and the like,
+        // we can ignore storing the extension id in the url.
+        // eslint-disable-next-line
+        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${provider.id}&${
+            Identifiers.REMOTE_URI_HANDLE_PARAM
+        }=${encodeURI(provider.handle)}`;
+    } else {
+        return '';
+    }
 }
 
-export function extractJupyterServerHandleAndId(uri: string): { handle: string; id: string } {
+class FailedToDetermineExtensionId extends Error {}
+export function extractJupyterServerHandleAndId(uri: string): { handle: string; id: string; extensionId: string } {
     try {
         const url: URL = new URL(uri);
 
         // Id has to be there too.
         const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
         const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
+        const extensionId =
+            url.searchParams.get(Identifiers.REMOTE_URI_EXTENSION_ID_PARAM) ||
+            getOwnerExtensionOfProviderHandle(id || '');
         if (id && uriHandle) {
-            return { handle: uriHandle, id };
+            if (!extensionId) {
+                throw new FailedToDetermineExtensionId(
+                    `Unable to determine the extension id for the remote server handle', { ${id}, ${uriHandle} }`
+                );
+            }
+            return { handle: uriHandle, id, extensionId };
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
+        if (ex instanceof FailedToDetermineExtensionId) {
+            throw ex;
+        }
         throw new Error(`'Failed to parse remote URI ${getSafeUrlForLogging(uri)}`);
     }
 }
@@ -162,4 +182,11 @@ function getSafeUrlForLogging(uri: string) {
             return uri;
         }
     }
+}
+
+export function getOwnerExtensionOfProviderHandle(id: string) {
+    if (isBuiltInJupyterProvider(id)) {
+        return JVSC_EXTENSION_ID;
+    }
+    traceWarning(`Extension Id not found for server Id ${id}`);
 }

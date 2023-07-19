@@ -220,7 +220,7 @@ suite('Server Uri Storage', async () => {
                     token: 'NewToken1'
                 });
 
-                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' });
+                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).once();
@@ -244,7 +244,7 @@ suite('Server Uri Storage', async () => {
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1', extensionId: '' })
                         })
                         .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
                 );
@@ -266,7 +266,7 @@ suite('Server Uri Storage', async () => {
                 });
 
                 await serverUriStorage.add(
-                    { handle: 'NewHandle1', id: 'NewId1' },
+                    { handle: 'NewHandle1', id: 'NewId1', extensionId: '' },
                     { time: 1234, displayName: 'Sample Name' }
                 );
                 const all = await serverUriStorage.getAll();
@@ -299,9 +299,9 @@ suite('Server Uri Storage', async () => {
                     displayName: 'NewDisplayName3',
                     token: 'NewToken3'
                 });
-                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' });
-                await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' });
-                await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' });
+                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -323,15 +323,15 @@ suite('Server Uri Storage', async () => {
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1', extensionId: '' })
                         })
                         .concat({
                             displayName: 'NewDisplayName2',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId2', handle: 'NewHandle2' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId2', handle: 'NewHandle2', extensionId: '' })
                         })
                         .concat({
                             displayName: 'NewDisplayName3',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3', extensionId: '' })
                         })
                         .sort((a, b) => a.displayName.localeCompare(b.displayName))
                 );
@@ -369,9 +369,9 @@ suite('Server Uri Storage', async () => {
                     token: 'NewToken3'
                 });
                 await Promise.all([
-                    serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' }),
-                    serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' }),
-                    serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' })
+                    serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' }),
+                    serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' }),
+                    serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' })
                 ]);
                 const all = await serverUriStorage.getAll();
 
@@ -394,15 +394,15 @@ suite('Server Uri Storage', async () => {
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1', extensionId: '' })
                         })
                         .concat({
                             displayName: 'NewDisplayName2',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId2', handle: 'NewHandle2' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId2', handle: 'NewHandle2', extensionId: '' })
                         })
                         .concat({
                             displayName: 'NewDisplayName3',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3', extensionId: '' })
                         })
                         .sort((a, b) => a.displayName.localeCompare(b.displayName))
                 );
@@ -440,11 +440,11 @@ suite('Server Uri Storage', async () => {
                     token: 'NewToken3'
                 });
                 await Promise.all([
-                    serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' }),
-                    serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' }),
-                    serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' })
+                    serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' }),
+                    serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' }),
+                    serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' })
                 ]);
-                await serverUriStorage.remove({ id: 'NewId2', handle: 'NewHandle2' });
+                await serverUriStorage.remove({ id: 'NewId2', handle: 'NewHandle2', extensionId: '' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -466,11 +466,11 @@ suite('Server Uri Storage', async () => {
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1', extensionId: '' })
                         })
                         .concat({
                             displayName: 'NewDisplayName3',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3', extensionId: '' })
                         })
                         .sort((a, b) => a.displayName.localeCompare(b.displayName))
                 );
@@ -507,10 +507,10 @@ suite('Server Uri Storage', async () => {
                     displayName: 'NewDisplayName3',
                     token: 'NewToken3'
                 });
-                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' });
-                await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' });
-                await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' });
-                await serverUriStorage.remove({ id: 'NewId2', handle: 'NewHandle2' });
+                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' });
+                await serverUriStorage.remove({ id: 'NewId2', handle: 'NewHandle2', extensionId: '' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -532,11 +532,11 @@ suite('Server Uri Storage', async () => {
                         })
                         .concat({
                             displayName: 'NewDisplayName1',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId1', handle: 'NewHandle1', extensionId: '' })
                         })
                         .concat({
                             displayName: 'NewDisplayName3',
-                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3' })
+                            uri: generateIdFromRemoteProvider({ id: 'NewId3', handle: 'NewHandle3', extensionId: '' })
                         })
                         .sort((a, b) => a.displayName.localeCompare(b.displayName))
                 );
@@ -574,16 +574,16 @@ suite('Server Uri Storage', async () => {
                     token: 'NewToken3'
                 });
                 await Promise.all([
-                    serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' }),
-                    serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' }),
-                    serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' })
+                    serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' }),
+                    serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' }),
+                    serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' })
                 ]);
 
-                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1' });
-                await serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2' });
-                await serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3' });
-                await serverUriStorage.remove({ handle: 'handle1', id: '1' });
-                await serverUriStorage.remove({ handle: 'handle2', id: '1' });
+                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'handle1', id: '1', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'handle2', id: '1', extensionId: '' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -621,16 +621,16 @@ suite('Server Uri Storage', async () => {
                     token: 'NewToken3'
                 });
                 await Promise.all([
-                    serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' }),
-                    serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' }),
-                    serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' })
+                    serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' }),
+                    serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' }),
+                    serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' })
                 ]);
                 await Promise.all([
-                    serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1' }),
-                    serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2' }),
-                    serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3' }),
-                    serverUriStorage.remove({ handle: 'handle1', id: '1' }),
-                    serverUriStorage.remove({ handle: 'handle2', id: '1' })
+                    serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' }),
+                    serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' }),
+                    serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' }),
+                    serverUriStorage.remove({ handle: 'handle1', id: '1', extensionId: '' }),
+                    serverUriStorage.remove({ handle: 'handle2', id: '1', extensionId: '' })
                 ]);
                 const all = await serverUriStorage.getAll();
 
@@ -662,16 +662,16 @@ suite('Server Uri Storage', async () => {
                     displayName: 'NewDisplayName3',
                     token: 'NewToken3'
                 });
-                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' });
-                await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' });
-                await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' });
+                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' });
                 const beforeUpdate = await serverUriStorage.getAll();
                 const timeOfNewHandle2BeforeUpdate = beforeUpdate.find(
                     (item) => item.provider.handle === 'NewHandle2'
                 )!;
                 assert.ok(timeOfNewHandle2BeforeUpdate);
                 await sleep(10);
-                await serverUriStorage.update({ id: 'NewId2', handle: 'NewHandle2' });
+                await serverUriStorage.update({ id: 'NewId2', handle: 'NewHandle2', extensionId: '' });
                 const afterUpdate = await serverUriStorage.getAll();
                 const timeOfNewHandle2AfterUpdate = afterUpdate.find((item) => item.provider.handle === 'NewHandle2')!;
                 assert.ok(timeOfNewHandle2BeforeUpdate);
@@ -679,7 +679,7 @@ suite('Server Uri Storage', async () => {
                     timeOfNewHandle2AfterUpdate.time > timeOfNewHandle2BeforeUpdate.time,
                     `time ${timeOfNewHandle2AfterUpdate.time} should be greater than ${timeOfNewHandle2BeforeUpdate.time}`
                 );
-                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1' });
+                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -717,14 +717,14 @@ suite('Server Uri Storage', async () => {
                     displayName: 'NewDisplayName3',
                     token: 'NewToken3'
                 });
-                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1' });
-                await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2' });
-                await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3' });
-                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1' });
-                await serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2' });
-                await serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3' });
-                await serverUriStorage.remove({ handle: 'handle1', id: '1' });
-                await serverUriStorage.remove({ handle: 'handle2', id: '1' });
+                await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'NewHandle2', id: 'NewId2', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'NewHandle3', id: 'NewId3', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'handle1', id: '1', extensionId: '' });
+                await serverUriStorage.remove({ handle: 'handle2', id: '1', extensionId: '' });
                 const all = await serverUriStorage.getAll();
 
                 verify(fs.writeFile(anything(), anything())).atLeast(1);
@@ -744,8 +744,8 @@ suite('Server Uri Storage', async () => {
                     });
                 }
 
-                await serverUriStorage.add({ handle: 'NewHandle9', id: 'NewId9' });
-                await serverUriStorage.add({ handle: 'NewHandle10', id: 'NewId10' });
+                await serverUriStorage.add({ handle: 'NewHandle9', id: 'NewId9', extensionId: '' });
+                await serverUriStorage.add({ handle: 'NewHandle10', id: 'NewId10', extensionId: '' });
 
                 let all = await serverUriStorage.getAll();
                 assert.strictEqual(all.length, 10);
@@ -756,7 +756,7 @@ suite('Server Uri Storage', async () => {
                 let oldest = all.sort((a, b) => a.time - b.time)[0];
                 onDidAddEvent.reset();
                 onDidRemoveEvent.reset();
-                await serverUriStorage.add({ handle: 'NewHandle11', id: 'NewId11' });
+                await serverUriStorage.add({ handle: 'NewHandle11', id: 'NewId11', extensionId: '' });
 
                 all = await serverUriStorage.getAll();
                 assert.strictEqual(all.length, 10);
@@ -770,8 +770,8 @@ suite('Server Uri Storage', async () => {
                 // Add (or update with the same item) does not remove any items.
                 onDidAddEvent.reset();
                 onDidRemoveEvent.reset();
-                await serverUriStorage.add({ handle: 'NewHandle11', id: 'NewId11' });
-                await serverUriStorage.update({ id: 'NewId11', handle: 'NewHandle11' });
+                await serverUriStorage.add({ handle: 'NewHandle11', id: 'NewId11', extensionId: '' });
+                await serverUriStorage.update({ id: 'NewId11', handle: 'NewHandle11', extensionId: '' });
 
                 all = await serverUriStorage.getAll();
                 assert.strictEqual(all.length, 10);
@@ -781,7 +781,7 @@ suite('Server Uri Storage', async () => {
                 oldest = all.sort((a, b) => a.time - b.time)[0];
                 onDidAddEvent.reset();
                 onDidRemoveEvent.reset();
-                await serverUriStorage.add({ handle: 'NewHandle12', id: 'NewId12' });
+                await serverUriStorage.add({ handle: 'NewHandle12', id: 'NewId12', extensionId: '' });
 
                 all = await serverUriStorage.getAll();
                 assert.strictEqual(all.length, 10);
@@ -807,25 +807,25 @@ suite('Server Uri Storage', async () => {
                 }
 
                 // Should exist.
-                const server1 = await serverUriStorage.get({ id: '1', handle: 'handle1' });
+                const server1 = await serverUriStorage.get({ id: '1', handle: 'handle1', extensionId: '' });
 
                 assert.strictEqual(server1?.provider.id, '1');
                 assert.strictEqual(server1?.provider.handle, 'handle1');
 
                 // Remove this.
-                await serverUriStorage.remove({ handle: 'handle1', id: '1' });
+                await serverUriStorage.remove({ handle: 'handle1', id: '1', extensionId: '' });
 
-                assert.isUndefined(await serverUriStorage.get({ id: '1', handle: 'handle1' }));
+                assert.isUndefined(await serverUriStorage.get({ id: '1', handle: 'handle1', extensionId: '' }));
 
                 // Bogus
-                const serverBogus = await serverUriStorage.get({ id: 'Bogus', handle: 'handle1' });
+                const serverBogus = await serverUriStorage.get({ id: 'Bogus', handle: 'handle1', extensionId: '' });
 
                 assert.isUndefined(serverBogus);
 
                 // Add and it should exist.
-                await serverUriStorage.add({ handle: 'NewHandle11', id: 'NewId11' });
+                await serverUriStorage.add({ handle: 'NewHandle11', id: 'NewId11', extensionId: '' });
 
-                const newServer = await serverUriStorage.get({ id: 'NewId11', handle: 'NewHandle11' });
+                const newServer = await serverUriStorage.get({ id: 'NewId11', handle: 'NewHandle11', extensionId: '' });
 
                 assert.strictEqual(newServer?.provider.id, 'NewId11');
                 assert.strictEqual(newServer?.provider.handle, 'NewHandle11');
@@ -836,7 +836,11 @@ suite('Server Uri Storage', async () => {
                 const uris: string[] = [];
                 const itemsInNewStorage: StorageMRUItem[] = [];
                 for (let index = 0; index < numberOfEntries; index += 1) {
-                    const uri = generateIdFromRemoteProvider({ id: '1', handle: `handle${index + 1}` });
+                    const uri = generateIdFromRemoteProvider({
+                        id: '1',
+                        handle: `handle${index + 1}`,
+                        extensionId: ''
+                    });
                     const displayName = `displayName${index}`;
                     uris.push(`${uri}${Settings.JupyterServerRemoteLaunchNameSeparator}${displayName}`);
                     data.push({
@@ -845,7 +849,7 @@ suite('Server Uri Storage', async () => {
                     });
                     itemsInNewStorage.push({
                         displayName,
-                        serverHandle: { id: '1', handle: `handle${index + 1}` },
+                        serverHandle: { id: '1', handle: `handle${index + 1}`, extensionId: '' },
                         time: index
                     });
                 }

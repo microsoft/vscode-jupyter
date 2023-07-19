@@ -47,7 +47,7 @@ suite('Remote Kernel Selector', () => {
     let onDidTriggerQuickPickButton: EventEmitter<QuickInputButton>;
     let quickPick: QuickPick<QuickPickItem | ConnectionQuickPickItem>;
     let options: Parameters<CreateAndSelectItemFromQuickPick>[0];
-    const serverProviderHandle = { handle: 'handle', id: 'id' };
+    const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };
     let remotePythonKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: 'remotePythonKernelSpec',
         kernelSpec: {

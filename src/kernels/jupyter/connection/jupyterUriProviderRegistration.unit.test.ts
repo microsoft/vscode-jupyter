@@ -181,7 +181,7 @@ suite('Uri Provider Registration', () => {
         when(provider2.removeHandle!(anything())).thenResolve();
 
         const removedServer: IJupyterServerUriEntry = {
-            provider: { handle: 'handle2', id: 'a' },
+            provider: { handle: 'handle2', id: 'a', extensionId: '' },
             time: Date.now(),
             uri: 'http://handle1:8888/?token=1234',
             displayName: 'Server for Handle2',

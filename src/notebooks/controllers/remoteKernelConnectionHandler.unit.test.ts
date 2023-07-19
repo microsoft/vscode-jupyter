@@ -49,7 +49,7 @@ suite('Remote kernel connection handler', async () => {
             name: '',
             executable: ''
         },
-        serverProviderHandle: { handle: 'handle', id: 'id' }
+        serverProviderHandle: { handle: 'handle', id: 'id', extensionId: '' }
     });
     const localKernelSpec = LocalKernelSpecConnectionMetadata.create({
         id: 'localKernelSpec1',
@@ -79,7 +79,7 @@ suite('Remote kernel connection handler', async () => {
             name: '',
             numberOfConnections: 0
         },
-        serverProviderHandle: { handle: 'handle', id: 'id' }
+        serverProviderHandle: { handle: 'handle', id: 'id', extensionId: '' }
     });
     setup(() => {
         onDidStartKernel = new EventEmitter<IKernel>();

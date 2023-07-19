@@ -27,7 +27,7 @@ suite('Live kernel Connection Tracker', async () => {
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
     const disposables: IDisposable[] = [];
     const server2Uri = 'http://one:1234/hello?token=1234';
-    const serverProviderHandle = { handle: 'handle2', id: 'id2' };
+    const serverProviderHandle = { handle: 'handle2', id: 'id2', extensionId: '' };
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'connectionId',
