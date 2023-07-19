@@ -25,7 +25,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterServerUri, IJupyterUriProvider } from '../../api';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../api.unstable';
 
 export type JupyterServerInfo = {
     base_url: string;

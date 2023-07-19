@@ -20,7 +20,7 @@ import { createKernelController, TestNotebookDocument } from '../datascience/not
 import { IKernelProvider, IKernelFinder } from '../../kernels/types';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { KernelConnectionMetadata } from '../../api';
+import { KernelConnectionMetadata } from '../../api.unstable';
 
 suite('3rd Party Kernel Service API @kernelCore', function () {
     let api: IExtensionTestApi;

@@ -16,7 +16,7 @@ import {
     IJupyterUriProviderRegistration,
     JupyterServerProviderHandle
 } from '../types';
-import { IJupyterServerUri } from '../../../api';
+import { IJupyterServerUri } from '../../../api.unstable';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';

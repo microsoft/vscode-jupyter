@@ -51,7 +51,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { JupyterPasswordConnect as OldJupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
-import { IJupyterServerUri } from '../../api';
+import { IJupyterServerUri } from '../../api.unstable';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';

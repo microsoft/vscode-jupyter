@@ -4,7 +4,7 @@
 import { SemVer, parse } from 'semver';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
+import { EventEmitter, NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
 import {
     InteractiveWindowView,
     jupyterLanguageToMonacoLanguageMapping,
@@ -417,6 +417,8 @@ export function parseSemVer(versionString: string): SemVer | undefined {
 export class Disposables implements IDisposable {
     public readonly disposables: IDisposable[] = [];
     private _isDisposed: boolean = false;
+    private onDidDisposeEmitter = new EventEmitter<void>();
+    public readonly onDidDispose = this.onDidDisposeEmitter.event;
     public get isDisposed(): boolean {
         return this._isDisposed;
     }
@@ -427,7 +429,9 @@ export class Disposables implements IDisposable {
         if (this._isDisposed) {
             return;
         }
-        this._isDisposed = true;
         disposeAllDisposables(this.disposables);
+        this._isDisposed = true;
+        this.onDidDisposeEmitter.fire();
+        this.onDidDisposeEmitter.dispose();
     }
 }
