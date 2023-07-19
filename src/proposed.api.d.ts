@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, Uri, extensions } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 
 export interface JupyterServerConnectionInformation {
     readonly baseUrl: Uri;
@@ -74,7 +74,7 @@ export class JupyterServerCreationItem extends Disposable {
 
 export class JupyterServerCollection extends Disposable {
     /**
-     * Must be unique and should not change between sessions.
+     * Identifier must be globally unique.
      */
     readonly id: string;
     /**
@@ -114,6 +114,11 @@ export class JupyterServerCollection extends Disposable {
 export interface JupyterAPI {
     /**
      * Provides the ability to register multiple collections of Jupyter Servers.
+     *
+     * @param {string} id Identifier must be globally unique.
+     * @param {string} label
+     * @return {*}  {JupyterServerCollection}
+     * @memberof JupyterAPI
      */
     createServerCollection(id: string, label: string): JupyterServerCollection;
 }
