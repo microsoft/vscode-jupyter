@@ -192,6 +192,9 @@ function getSafeUrlForLogging(uri: string) {
 }
 
 export function getOwnerExtensionOfProviderHandle(id: string) {
+    if (!id) {
+        return;
+    }
     if (isBuiltInJupyterProvider(id)) {
         return JVSC_EXTENSION_ID;
     }
