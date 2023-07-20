@@ -453,8 +453,8 @@ class NewStorage {
                         .sort((a, b) => b.time - a.time) // Also sort by time
                         .filter(
                             (entry) =>
-                                `${entry.serverHandle.id}#${entry.serverHandle.handle}` !==
-                                `${item.provider.id}#${item.provider.handle}`
+                                `${entry.serverHandle.extensionId}#${entry.serverHandle.id}#${entry.serverHandle.handle}` !==
+                                `${item.provider.extensionId}#${item.provider.id}#${item.provider.handle}`
                         )
                 );
                 const removedItems = newList.splice(Settings.JupyterServerUriListMax);
@@ -470,7 +470,6 @@ class NewStorage {
                             return <IJupyterServerUriEntry>{
                                 provider: removedItem.serverHandle,
                                 time: removedItem.time,
-                                uri: generateIdFromRemoteProvider(removedItem.serverHandle),
                                 displayName: removedItem.displayName || '',
                                 isValidated: false
                             };
