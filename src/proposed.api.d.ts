@@ -37,16 +37,17 @@ export interface JupyterServerConnectionInformation {
     readonly webSocketProtocols?: string[];
 }
 
-export interface JupyterServer extends Disposable {
+export interface JupyterServer {
     readonly id: string;
     /**
      * A human-readable string which is rendered prominent.
      */
     label: string;
     resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>;
+    dispose(): void;
 }
 
-export class JupyterServerCreationItem extends Disposable {
+export interface JupyterServerCreationItem {
     /**
      * A human-readable string which is rendered prominent. Supports rendering of {@link ThemeIcon theme icons} via
      * the `$(<name>)`-syntax.
@@ -70,9 +71,10 @@ export class JupyterServerCreationItem extends Disposable {
      * Note: this property is ignored when {@link JupyterServerCollection.createServer createJupyterServer} has been called.
      */
     picked?: boolean;
+    dispose(): void;
 }
 
-export class JupyterServerCollection extends Disposable {
+export interface JupyterServerCollection {
     /**
      * Identifier must be globally unique.
      */
@@ -114,6 +116,7 @@ export class JupyterServerCollection extends Disposable {
         label: string,
         onDidSelect: () => Promise<JupyterServer | undefined>
     ): JupyterServerCreationItem;
+    dispose(): void;
 }
 
 /**
