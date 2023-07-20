@@ -221,7 +221,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
             return this.handleJupyterServerUriProviderError(error, errorContext);
         } else if (error instanceof InvalidRemoteJupyterServerUriHandleError) {
             const extensionName =
-                this.extensions.getExtension(error.extensionId)?.packageJSON.displayName || error.extensionId;
+                this.extensions.getExtension(error.serverProviderHandle.extensionId)?.packageJSON.displayName ||
+                error.serverProviderHandle.extensionId;
             return getUserFriendlyErrorMessage(
                 DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid(extensionName),
                 errorContext
@@ -270,7 +271,10 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
         );
     }
     private async handleJupyterServerProviderConnectionError(info: IJupyterServerUriEntry) {
-        const provider = await this.jupyterUriProviderRegistration.getProvider(info.provider.id);
+        const provider = await this.jupyterUriProviderRegistration.getProvider(
+            info.provider.extensionId,
+            info.provider.id
+        );
         if (!provider || !provider.getHandles) {
             return false;
         }
@@ -357,7 +361,8 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 displayName && baseUrl ? `${displayName} (${baseUrl})` : displayName || baseUrl || idAndHandle;
             const extensionName =
                 err instanceof InvalidRemoteJupyterServerUriHandleError
-                    ? this.extensions.getExtension(err.extensionId)?.packageJSON.displayName || err.extensionId
+                    ? this.extensions.getExtension(err.serverProviderHandle.extensionId)?.packageJSON.displayName ||
+                      err.serverProviderHandle.extensionId
                     : '';
             const options = actionSource === 'jupyterExtension' ? [DataScience.selectDifferentKernel] : [];
             if (server && (await this.handleJupyterServerProviderConnectionError(server))) {

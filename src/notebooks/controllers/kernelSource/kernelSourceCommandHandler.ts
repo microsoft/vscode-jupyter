@@ -191,7 +191,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                 : undefined,
                             command: {
                                 command: 'jupyter.kernel.selectJupyterServerKernel',
-                                arguments: [provider.id],
+                                arguments: [provider.extensionId, provider.id],
                                 title: provider.displayName ?? provider.id
                             }
                         }
@@ -210,7 +210,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                 : undefined,
                             command: {
                                 command: 'jupyter.kernel.selectJupyterServerKernel',
-                                arguments: [provider.id],
+                                arguments: [provider.extensionId, provider.id],
                                 title: provider.displayName ?? provider.id
                             }
                         }
@@ -253,7 +253,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             return this.getSelectedController(notebook, kernel);
         }
     }
-    private async onSelectRemoteKernel(providerId: string, notebook?: NotebookDocument) {
+    private async onSelectRemoteKernel(extensionId: string, providerId: string, notebook?: NotebookDocument) {
         notebook = notebook || window.activeNotebookEditor?.notebook;
         if (!notebook && window.activeTextEditor) {
             // find associated notebook document for the active text editor
@@ -265,7 +265,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         const selector = ServiceContainer.instance.get<IRemoteNotebookKernelSourceSelector>(
             IRemoteNotebookKernelSourceSelector
         );
-        const kernel = await selector.selectRemoteKernel(notebook, providerId);
+        const kernel = await selector.selectRemoteKernel(notebook, extensionId, providerId);
         return this.getSelectedController(notebook, kernel);
     }
     private async getSelectedController(notebook: NotebookDocument, kernel?: KernelConnectionMetadata) {

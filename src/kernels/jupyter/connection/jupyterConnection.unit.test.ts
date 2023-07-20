@@ -110,20 +110,20 @@ suite('Jupyter Connection', async () => {
                 verify(sessionManager.getKernelSpecs()).once();
                 verify(sessionManager.getRunningKernels()).once();
                 verify(sessionManager.dispose()).once();
-                verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).never();
+                verify(registrationPicker.getJupyterServerUri(deepEqual(provider))).never();
             });
             test('Validation will result in fetching kernels and kernelSpecs (Uri info fetched from provider)', async () => {
                 when(sessionManager.dispose()).thenResolve();
                 when(sessionManager.getKernelSpecs()).thenResolve([]);
                 when(sessionManager.getRunningKernels()).thenResolve([]);
-                when(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).thenResolve(server);
+                when(registrationPicker.getJupyterServerUri(deepEqual(provider))).thenResolve(server);
 
                 await jupyterConnection.validateRemoteUri(provider);
 
                 verify(sessionManager.getKernelSpecs()).once();
                 verify(sessionManager.getRunningKernels()).once();
                 verify(sessionManager.dispose()).once();
-                verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).atLeast(1);
+                verify(registrationPicker.getJupyterServerUri(deepEqual(provider))).atLeast(1);
             });
             test('Validation will fail if info could not be fetched from provider', async () => {
                 when(sessionManager.dispose()).thenResolve();
@@ -136,7 +136,7 @@ suite('Jupyter Connection', async () => {
                 verify(sessionManager.getKernelSpecs()).never();
                 verify(sessionManager.getRunningKernels()).never();
                 verify(sessionManager.dispose()).never();
-                verify(registrationPicker.getJupyterServerUri(provider.id, provider.handle)).atLeast(1);
+                verify(registrationPicker.getJupyterServerUri(deepEqual(provider))).atLeast(1);
             });
             test('Validation will fail if fetching kernels fail', async () => {
                 when(sessionManager.dispose()).thenResolve();
@@ -189,7 +189,9 @@ suite('Jupyter Connection', async () => {
                     }
                 };
                 when(serverUriStorage.get(deepEqual({ id, handle, extensionId: '' }))).thenResolve(server);
-                when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
+                when(registrationPicker.getJupyterServerUri(deepEqual({ id, handle, extensionId: '' }))).thenResolve(
+                    uriInfo
+                );
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
                 when(sessionManager.getRunningKernels()).thenResolve([]);
 
@@ -222,7 +224,9 @@ suite('Jupyter Connection', async () => {
                     token: '1234'
                 };
                 when(serverUriStorage.get(deepEqual({ id, handle, extensionId: '' }))).thenResolve(server);
-                when(registrationPicker.getJupyterServerUri(id, handle)).thenResolve(uriInfo);
+                when(registrationPicker.getJupyterServerUri(deepEqual({ id, handle, extensionId: '' }))).thenResolve(
+                    uriInfo
+                );
                 when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
                 when(sessionManager.getRunningKernels()).thenResolve([]);
 

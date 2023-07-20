@@ -81,13 +81,14 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
     ) {}
     public async selectRemoteKernel(
         notebook: NotebookDocument,
+        extensionId: string,
         providerId: string
     ): Promise<RemoteKernelConnectionMetadata | undefined> {
         // Reject if it's not our type
         if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
             return;
         }
-        const provider = await this.uriProviderRegistration.getProvider(providerId);
+        const provider = await this.uriProviderRegistration.getProvider(extensionId, providerId);
         if (!provider) {
             throw new Error(`Remote Provider Id ${providerId} not found`);
         }
