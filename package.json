@@ -780,6 +780,7 @@
             {
                 "command": "jupyter.continueEditSessionInCodespace",
                 "title": "Continue On Codespace",
+                "icon": "$(vm)",
                 "enablement": "true",
                 "category": "Jupyter"
             }
