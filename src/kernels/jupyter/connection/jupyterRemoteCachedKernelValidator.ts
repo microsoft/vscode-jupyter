@@ -33,7 +33,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
             // Server has been removed and we have some old cached data.
             return false;
         }
-        const provider = await this.providerRegistration.getProvider(item.provider.id);
+        const provider = await this.providerRegistration.getProvider(item.provider.extensionId, item.provider.id);
         if (!provider) {
             traceWarning(
                 `Extension may have been uninstalled for provider ${item.provider.id}, handle ${item.provider.handle}`

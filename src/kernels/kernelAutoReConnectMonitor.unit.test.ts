@@ -331,7 +331,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         const kernel = createKernel(server.provider);
         when(jupyterServerUriStorage.getAll()).thenResolve([server]);
         when(jupyterServerUriStorage.get(deepEqual({ id: '1', handle: '1', extensionId: '' }))).thenResolve(server);
-        when(jupyterUriProviderRegistration.getProvider(anything())).thenResolve({
+        when(jupyterUriProviderRegistration.getProvider(anything(), anything())).thenResolve({
             id: 'remoteUriProvider',
             extensionId: 'ms-python.python',
             getServerUri: (_handle) =>
