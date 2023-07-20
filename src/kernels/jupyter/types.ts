@@ -179,9 +179,12 @@ export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegist
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
     readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
-    getProvider(id: string): Promise<IInternalJupyterUriProvider | undefined>;
+    getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
-    getJupyterServerUri(id: string, handle: string, doNotPromptForAuthInfo?: boolean): Promise<IJupyterServerUri>;
+    getJupyterServerUri(
+        serverHandle: JupyterServerProviderHandle,
+        doNotPromptForAuthInfo?: boolean
+    ): Promise<IJupyterServerUri>;
 }
 
 /**
