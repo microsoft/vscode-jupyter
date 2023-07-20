@@ -130,6 +130,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // Return a dummy object, to ensure other extension do not fall over.
         return {
             ready: Promise.resolve(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            createServerCollection: noop as any,
             registerPythonApi: noop,
             registerRemoteServerProvider: () => ({ dispose: noop }),
             showDataViewer: () => Promise.resolve(),

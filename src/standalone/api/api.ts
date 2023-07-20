@@ -17,6 +17,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
 import { JupyterAPI } from '../../api';
 import { JupyterAPI as ProposedJupyterAPI } from '../../api.proposed';
+import { createServerCollection } from './serverCollection';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -156,6 +157,14 @@ export function buildApi(
                 extension: JVSC_EXTENSION_ID
             });
             return notebookEditor.notebook;
+        },
+        createServerCollection: async (id: string, label: string) => {
+            const { extensionId } = await extensions.determineExtensionFromCallStack();
+            sendTelemetryEvent(Telemetry.JupyterApiUsage, undefined, {
+                clientExtId: extensionId,
+                pemUsed: 'createServerCollection'
+            });
+            return createServerCollection(serviceContainer, context, extensionId, id, label);
         }
     };
 
