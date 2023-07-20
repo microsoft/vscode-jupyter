@@ -7,7 +7,6 @@ import { CancellationToken, Disposable, Event, NotebookController, NotebookDocum
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
 import type { Session } from '@jupyterlab/services';
 import { IDataViewerDataProvider } from './webviews/extension-side/dataviewer/types';
-import { PythonApi } from './platform/api/types';
 
 export interface JupyterAPI {
     /**
@@ -22,7 +21,6 @@ export interface JupyterAPI {
      * @param {string} title Data Viewer title
      */
     showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-    registerPythonApi(pythonApi: PythonApi): void;
     /**
      * Returns the suggested controller for a give Jupyter server and notebook.
      */

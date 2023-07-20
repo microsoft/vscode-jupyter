@@ -17,6 +17,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
 import { JupyterAPI } from '../../api';
 import { JupyterAPI as ProposedJupyterAPI } from '../../api.proposed';
+import { JupyterAPI as PythonIntegrationAPI } from '../../api.pythonIntegration';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -28,7 +29,7 @@ export interface IExportedKernelServiceFactory {
  * This is the public API for other extensions to interact with this extension.
  */
 
-export interface IExtensionApi extends JupyterAPI, UnStableJupyterAPI, ProposedJupyterAPI {}
+export interface IExtensionApi extends JupyterAPI, UnStableJupyterAPI, ProposedJupyterAPI, PythonIntegrationAPI {}
 
 function waitForNotebookControllersCreationForServer(
     serverId: { id: string; handle: string },
