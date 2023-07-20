@@ -28,7 +28,7 @@ export interface JupyterServerConnectionInformation {
      * As a result when attempting to create a new session for a notebook/file, Jupyter will
      * first check if a session already exists for the same file and same kernel, and if so, will re-use that session.
      */
-    readonly mappedRemoteNotebookDir?: string;
+    readonly mappedRemoteNotebookDir?: Uri;
     /**
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
      * Useful if there is a custom authentication scheme that needs to be used for WebSocket connections.
