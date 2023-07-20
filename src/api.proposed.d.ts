@@ -3,7 +3,13 @@
 
 import { Disposable, Uri } from 'vscode';
 
+/**
+ * Information required to connect to a Jupyter Server
+ */
 export interface JupyterServerConnectionInformation {
+    /**
+     * Bse Url of the Jupyter Server.
+     */
     readonly baseUrl: Uri;
     /**
      * Jupyter auth Token
@@ -37,16 +43,29 @@ export interface JupyterServerConnectionInformation {
     readonly webSocketProtocols?: string[];
 }
 
-export interface JupyterServer extends Disposable {
+/**
+ * Represents a Jupyter Server that has been created and displayed in the list of servers.
+ */
+export interface JupyterServer {
     readonly id: string;
     /**
      * A human-readable string which is rendered prominent.
      */
     label: string;
+    /**
+     * Gets the connection information for the Jupyter Server.
+     */
     resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>;
+    /**
+     * Removes this server from the list of servers.
+     */
+    dispose(): void;
 }
 
-export class JupyterServerCreationItem extends Disposable {
+/**
+ * Represents an item in the list of Jupyter Servers from which the user can pick to create a start/server.
+ */
+export interface JupyterServerCreationItem {
     /**
      * A human-readable string which is rendered prominent. Supports rendering of {@link ThemeIcon theme icons} via
      * the `$(<name>)`-syntax.
@@ -70,6 +89,11 @@ export class JupyterServerCreationItem extends Disposable {
      * Note: this property is ignored when {@link JupyterServerCollection.createServer createJupyterServer} has been called.
      */
     picked?: boolean;
+    /**
+     * Removes this item from the list of Server Creation items.
+     */
+    dispose(): void;
+
 }
 
 export class JupyterServerCollection extends Disposable {
@@ -113,6 +137,7 @@ export class JupyterServerCollection extends Disposable {
         label: string,
         onDidSelect: () => Promise<JupyterServer | undefined>
     ): JupyterServerCreationItem;
+    dispose(): void;
 }
 
 /**
