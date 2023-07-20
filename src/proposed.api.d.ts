@@ -87,20 +87,17 @@ export interface JupyterServerCollection {
      * A link to a page providing more information to the user about this item.
      */
     documentation?: Uri;
-    onDidRemoveServer: Event<JupyterServer>;
     /**
      * Creates an entry in the list of Jupyter Servers from which the user can pick.
      *
      * @param {string} id
      * @param {string} label
      * @param {GetConnectionInformation} resolveConnectionInformation Gets the connection information for the Jupyter Server.
-     * @param {boolean} [supportsRemoval] Whether the user can remove this entry from the list of Jupyter Servers (allows users to manage the lifetime of the server).
      */
     createServer(
         id: string,
         label: string,
         resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>,
-        supportsRemoval?: boolean
     ): JupyterServer;
     /**
      * Creates an entry in the list of Jupyter Servers from which a user can pick to create a server.
