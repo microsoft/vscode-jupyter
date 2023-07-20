@@ -23,7 +23,7 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
-import { IJupyterServerUri } from '../../../api';
+import { IJupyterServerUri } from '../../../api.unstable';
 
 export type SelectJupyterUriCommandSource =
     | 'nonUser'

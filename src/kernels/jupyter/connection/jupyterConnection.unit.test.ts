@@ -27,7 +27,7 @@ import {
     IPersistentStateFactory
 } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
-import { IJupyterServerUri } from '../../../api';
+import { IJupyterServerUri } from '../../../api.unstable';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 use(chaiAsPromised);
