@@ -146,11 +146,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         };
 
         if (!options) {
-            const server = await this.jupyterPickerRegistration.getJupyterServerUri(
-                jupyterHandle.id,
-                jupyterHandle.handle,
-                true
-            );
+            const server = await this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle, true);
             entry.displayName = server.displayName;
         }
         await Promise.all([this.newStorage.add(entry), this.oldStorage.add(entry)]);
@@ -298,11 +294,7 @@ class OldStorage {
             const result = await Promise.all(
                 allServers.map(async (server) => {
                     try {
-                        await this.jupyterPickerRegistration.getJupyterServerUri(
-                            server.provider.id,
-                            server.provider.handle,
-                            true
-                        );
+                        await this.jupyterPickerRegistration.getJupyterServerUri(server.provider, true);
                         server.isValidated = true;
                         return server;
                     } catch (ex) {
@@ -565,11 +557,7 @@ class NewStorage {
                     return;
                 }
                 try {
-                    await this.jupyterPickerRegistration.getJupyterServerUri(
-                        item.serverHandle.id,
-                        item.serverHandle.handle,
-                        true
-                    );
+                    await this.jupyterPickerRegistration.getJupyterServerUri(item.serverHandle, true);
                     server.isValidated = true;
                 } catch (ex) {
                     server.isValidated = false;

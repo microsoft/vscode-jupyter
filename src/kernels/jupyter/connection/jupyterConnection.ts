@@ -170,7 +170,7 @@ export class JupyterConnection {
 
     private async getJupyterServerUri(provider: JupyterServerProviderHandle) {
         try {
-            return await this.jupyterPickerRegistration.getJupyterServerUri(provider.id, provider.handle);
+            return await this.jupyterPickerRegistration.getJupyterServerUri(provider);
         } catch (ex) {
             if (ex instanceof BaseError) {
                 throw ex;

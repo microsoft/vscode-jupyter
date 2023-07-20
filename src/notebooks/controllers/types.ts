@@ -114,6 +114,7 @@ export const IRemoteNotebookKernelSourceSelector = Symbol('IRemoteNotebookKernel
 export interface IRemoteNotebookKernelSourceSelector {
     selectRemoteKernel(
         notebook: vscode.NotebookDocument,
+        extensionId: string,
         providerId: string
     ): Promise<RemoteKernelConnectionMetadata | undefined>;
 }

@@ -198,7 +198,9 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
 
         const connection = kernel.kernelConnectionMetadata;
         const uriItem = await this.serverUriStorage.get(connection.serverProviderHandle);
-        const provider = uriItem && (await this.jupyterUriProviderRegistration.getProvider(uriItem.provider.id));
+        const provider =
+            uriItem &&
+            (await this.jupyterUriProviderRegistration.getProvider(uriItem.provider.extensionId, uriItem.provider.id));
 
         if (!provider) {
             this.kernelSourceContext.set('').catch(noop);
