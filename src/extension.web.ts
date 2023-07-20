@@ -136,7 +136,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         return {
             ready: Promise.resolve(),
             registerPythonApi: noop,
-            registerRemoteServerProvider: noop,
+            registerRemoteServerProvider: () => ({ dispose: noop }),
             showDataViewer: () => Promise.resolve(),
             getKernelService: () => Promise.resolve(undefined),
             getSuggestedController: () => Promise.resolve(undefined),

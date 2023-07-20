@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ExtensionMode, NotebookController, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
+import { ExtensionMode, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
-import { IExportedKernelService, IJupyterUriProvider } from '../../api';
+import { IExportedKernelService, IJupyterUriProvider, JupyterAPI as UnStableJupyterAPI } from '../../api.unstable';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
@@ -15,6 +15,8 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
+import { JupyterAPI } from '../../api';
+import { JupyterAPI as ProposedJupyterAPI } from '../../api.proposed';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -26,53 +28,7 @@ export interface IExportedKernelServiceFactory {
  * This is the public API for other extensions to interact with this extension.
  */
 
-export interface IExtensionApi {
-    /**
-     * Promise indicating whether all parts of the extension have completed loading or not.
-     * @type {Promise<void>}
-     * @memberof IExtensionApi
-     */
-    ready: Promise<void>;
-    /**
-     * Launches Data Viewer component.
-     * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-     * @param {string} title Data Viewer title
-     */
-    showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-    /**
-     * Registers a remote server provider component that's used to pick remote jupyter server URIs
-     * @param serverProvider object called back when picking jupyter server URI
-     */
-    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
-    registerPythonApi(pythonApi: PythonApi): void;
-    /**
-     * Gets the service that provides access to kernels.
-     * Returns `undefined` if the calling extension is not allowed to access this API. This could
-     * happen either when user doesn't allow this or the extension doesn't allow this.
-     * There are a specific set of extensions that are currently allowed to access this API.
-     */
-    getKernelService(): Promise<IExportedKernelService | undefined>;
-    /**
-     * Returns the suggested controller for a give Jupyter server and notebook.
-     */
-    getSuggestedController(
-        providerId: string,
-        handle: string,
-        notebook: NotebookDocument
-    ): Promise<NotebookController | undefined>;
-    /**
-     * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
-     * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
-     */
-    addRemoteJupyterServer(providerId: string, handle: string): Promise<void>;
-    /**
-     * Opens a notebook with a specific kernel as the active kernel.
-     * @param {Uri} uri Uri of the notebook to open.
-     * @param {String} kernelId Id of the kernel, retrieved from getKernelService().getKernelSpecifications()
-     * @returns {Promise<NotebookDocument>} Promise that resolves to the notebook document.
-     */
-    openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
-}
+export interface IExtensionApi extends JupyterAPI, UnStableJupyterAPI, ProposedJupyterAPI {}
 
 function waitForNotebookControllersCreationForServer(
     serverId: { id: string; handle: string },
