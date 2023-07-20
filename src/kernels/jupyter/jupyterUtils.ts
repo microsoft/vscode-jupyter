@@ -13,7 +13,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, JVSC_EXTENSION_ID, Telemetry, isBuiltInJupyterProvider } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
-import { IJupyterServerUri } from '../../api';
+import { IJupyterServerUri } from '../../api.unstable';
 import { traceWarning } from '../../platform/logging';
 import { JupyterServerProviderHandle } from './types';
 

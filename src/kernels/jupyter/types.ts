@@ -25,7 +25,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterServerUri, IJupyterUriProvider } from '../../api';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../api.unstable';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -188,11 +188,7 @@ export interface IJupyterUriProviderRegistration {
  * Entry into our list of saved servers
  */
 export interface IJupyterServerUriEntry {
-    provider: {
-        id: string;
-        handle: string;
-        extensionId: string;
-    };
+    provider: JupyterServerProviderHandle;
     /**
      * The most recent time that we connected to this server
      */

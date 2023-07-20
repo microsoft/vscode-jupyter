@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Disposable, Event, EventEmitter, Memento, QuickPickItem } from 'vscode';
+import { Disposable, EventEmitter, Memento, QuickPickItem } from 'vscode';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../../platform/common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
@@ -17,7 +17,7 @@ import {
 } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
-import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../../api.unstable';
 import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -67,7 +67,7 @@ export class JupyterUriProviderRegistration
             this.updateRegistrationInfo(provider.id, extensionId).catch(noop);
             this._providers.set(
                 provider.id,
-                // eslint-disable-next-line @typescript-eslint/no-use-before-define
+                // eslint-disable-next-line @typescript-eslint/no-use-before-define, @typescript-eslint/no-use-before-define
                 new JupyterUriProviderWrapper(provider, extensionId)
             );
         } else {
@@ -187,26 +187,22 @@ const handlesForWhichWeHaveSentTelemetry = new Set<string>();
  */
 class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterUriProvider {
     public readonly id: string;
-    public readonly displayName: string | undefined;
-    public readonly detail: string | undefined;
+    public get displayName() {
+        return this.provider.displayName;
+    }
+    public get detail() {
+        return this.provider.detail;
+    }
 
-    public readonly onDidChangeHandles?: Event<void>;
+    public get onDidChangeHandles() {
+        return this.provider.onDidChangeHandles;
+    }
     public readonly getHandles?: () => Promise<string[]>;
     public readonly removeHandle?: (handle: string) => Promise<void>;
 
     constructor(private readonly provider: IJupyterUriProvider, public extensionId: string) {
         super();
         this.id = this.provider.id;
-        this.displayName = this.provider.displayName;
-        this.detail = this.provider.detail;
-
-        if (provider.onDidChangeHandles) {
-            const _onDidChangeHandles = new EventEmitter<void>();
-            this.onDidChangeHandles = _onDidChangeHandles.event.bind(this);
-
-            this.disposables.push(_onDidChangeHandles);
-            this.disposables.push(provider.onDidChangeHandles(() => _onDidChangeHandles.fire()));
-        }
 
         if (provider.getHandles) {
             this.getHandles = async () => provider.getHandles!();
