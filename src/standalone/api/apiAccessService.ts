@@ -52,7 +52,7 @@ export class ApiAccessService {
         const publisherId =
             !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
         if (this.context.extensionMode === ExtensionMode.Test || !publisherId || this.env.channel === 'insiders') {
-            if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
+            if (!TrustedExtensionPublishers.has(publisherId) && !PublishersAllowedWithPrompts.has(publisherId)) {
                 traceWarning(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
                 const displayName = this.extensions.getExtension(info.extensionId)?.packageJSON?.displayName || '';
                 const extensionDisplay =
@@ -63,7 +63,13 @@ export class ApiAccessService {
                     .showErrorMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs(extensionDisplay))
                     .then(noop, noop);
             }
-            return { extensionId: info.extensionId, accessAllowed: true };
+            if (
+                !PublishersAllowedWithPrompts.has(publisherId) ||
+                !publisherId ||
+                this.context.extensionMode === ExtensionMode.Test
+            ) {
+                return { extensionId: info.extensionId, accessAllowed: true };
+            }
         }
         // Some extensions like our own (stuff we publish for exploration) are always allowed to access the API.
         if (TrustedExtensionPublishers.has(publisherId)) {

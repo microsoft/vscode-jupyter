@@ -73,7 +73,8 @@ export class Extensions implements IExtensions {
                                 if (
                                     matchingExt &&
                                     matchingExt.id === extensionId &&
-                                    frame.startsWith(matchingExt.extensionUri.toString())
+                                    (frame.startsWith(matchingExt.extensionUri.toString()) ||
+                                        frame.startsWith(matchingExt.extensionUri.fsPath.toString()))
                                 ) {
                                     return {
                                         extensionId: matchingExt.id,
