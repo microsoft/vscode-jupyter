@@ -82,7 +82,7 @@ export interface JupyterServerCreationItem {
     detail?: string;
     /**
      * A string that should be used when comparing this item
-     * with other items. When `falsy` the {@link JupyterServerCreationItem.label label}
+     * with other items. When `falsy` the {@link JupyterServerCreationItem label}
      * is used.
      */
     sortText?: string;
@@ -122,9 +122,9 @@ export interface JupyterServerCollection {
     /**
      * Creates an entry in the list of Jupyter Servers from which the user can pick.
      *
-     * @param {string} id
-     * @param {string} label
-     * @param {GetConnectionInformation} resolveConnectionInformation Gets the connection information for the Jupyter Server.
+     * @param id
+     * @param label
+     * @param resolveConnectionInformation Gets the connection information for the Jupyter Server.
      */
     createServer(
         id: string,
@@ -136,8 +136,8 @@ export interface JupyterServerCollection {
      * Picking an item is expected to result in the eventual creation of a JupyterServer.
      * I.e. an extension is expected to listen to the `onDidSelect` event and optionally display their own UI and then create a JupyterServer.
      *
-     * @param {string} label
-     * @param {() => Promise<JupyterServer | undefined>} onDidSelect Callback invoked when this item is selected.
+     * @param label
+     * @param onDidSelect Callback invoked when this item is selected.
      */
     createServerCreationItem(
         label: string,
@@ -156,8 +156,8 @@ export interface JupyterAPI {
     /**
      * Provides the ability to register multiple collections of Jupyter Servers.
      *
-     * @param {string} id Identifier must be globally unique.
-     * @param {string} label
+     * @param id Identifier must be globally unique.
+     * @param label
      */
     createServerCollection(id: string, label: string): Promise<JupyterServerCollection>;
 }
