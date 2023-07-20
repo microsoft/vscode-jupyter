@@ -44,6 +44,8 @@ class JupyterServerCollectionImpl extends Disposables implements JupyterServerCo
     detail?: string | undefined;
     private readonly _onDidChangeHandles = new EventEmitter<void>();
     public readonly onDidChangeHandles = this._onDidChangeHandles.event;
+    private readonly _onDidRemoveServer = new EventEmitter<JupyterServer>();
+    public readonly onDidRemoveServer = this._onDidRemoveServer.event;
     constructor(public readonly id: string, public label: string) {
         super();
     }
@@ -60,6 +62,7 @@ class JupyterServerCollectionImpl extends Disposables implements JupyterServerCo
             () => {
                 this.servers.delete(server);
                 this._onDidChangeHandles.fire();
+                this._onDidRemoveServer.fire(server);
             },
             this,
             this.disposables

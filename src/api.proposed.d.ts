@@ -43,6 +43,7 @@ export interface JupyterServer extends Disposable {
      * A human-readable string which is rendered prominent.
      */
     label: string;
+    removable?: boolean;
     resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>;
 }
 
@@ -85,7 +86,7 @@ export class JupyterServerCollection extends Disposable {
      * A link to a page providing more information to the user about this item.
      */
     documentation?: Uri;
-    onDidRemove: Event<JupyterServer>;
+    onDidRemoveServer: Event<JupyterServer>;
     /**
      * Creates an entry in the list of Jupyter Servers from which the user can pick.
      *
@@ -98,7 +99,6 @@ export class JupyterServerCollection extends Disposable {
     createServer(
         id: string,
         label: string,
-        supportsRemove: boolean,
         resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>
     ): JupyterServer;
     /**
