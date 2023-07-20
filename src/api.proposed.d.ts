@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 
 export interface JupyterServerConnectionInformation {
     readonly baseUrl: Uri;
@@ -43,7 +43,6 @@ export interface JupyterServer extends Disposable {
      * A human-readable string which is rendered prominent.
      */
     label: string;
-    removable?: boolean;
     resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>;
 }
 
@@ -86,7 +85,6 @@ export class JupyterServerCollection extends Disposable {
      * A link to a page providing more information to the user about this item.
      */
     documentation?: Uri;
-    onDidRemoveServer: Event<JupyterServer>;
     /**
      * Creates an entry in the list of Jupyter Servers from which the user can pick.
      *
