@@ -1,9 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Event, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
+/**
+ * Provides information required to connect to a Jupyter Server.
+ */
 export interface JupyterServerConnectionInformation {
+    /**
+     * Base Url of the Jupyter Server
+     */
     readonly baseUrl: Uri;
     /**
      * Jupyter auth Token
@@ -37,16 +43,32 @@ export interface JupyterServerConnectionInformation {
     readonly webSocketProtocols?: string[];
 }
 
+/**
+ * Represents a Jupyter Server displayed in the list of Servers.
+ */
 export interface JupyterServer {
+    /**
+     * Unique identifier for this server.
+     */
     readonly id: string;
     /**
      * A human-readable string which is rendered prominent.
      */
     label: string;
+    /**
+     * Returns the connection information for this server.
+     */
     resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>;
+    /**
+     * Removes this from the list of Servers.
+     */
     dispose(): void;
 }
 
+/**
+ * Creates an entry in the list of servers that the user can pick from to create/select a Jupyter Server.
+ * Selecting this item results in eventually creating a Jupyter Server.
+ */
 export interface JupyterServerCreationItem {
     /**
      * A human-readable string which is rendered prominent. Supports rendering of {@link ThemeIcon theme icons} via
@@ -71,9 +93,19 @@ export interface JupyterServerCreationItem {
      * Note: this property is ignored when {@link JupyterServerCollection.createServer createJupyterServer} has been called.
      */
     picked?: boolean;
+    /**
+     * Called by Jupyter Extension when this item is selected, and the extension is expected to create a Jupyter Server.
+     */
+    onDidSelect: () => Promise<JupyterServer | undefined>;
+    /**
+     * Removes this entry from the list.
+     */
     dispose(): void;
 }
 
+/**
+ * Creates an entry in the Kernel Picker for Jupyter Servers.
+ */
 export interface JupyterServerCollection {
     /**
      * Identifier must be globally unique.
@@ -97,7 +129,7 @@ export interface JupyterServerCollection {
     createServer(
         id: string,
         label: string,
-        resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>,
+        resolveConnectionInformation: () => Promise<JupyterServerConnectionInformation>
     ): JupyterServer;
     /**
      * Creates an entry in the list of Jupyter Servers from which a user can pick to create a server.
@@ -106,13 +138,14 @@ export interface JupyterServerCollection {
      *
      * @param {string} label
      * @param {() => Promise<JupyterServer | undefined>} onDidSelect Callback invoked when this item is selected.
-     * @return {*}  {JupyterServerPicker}
-     * @memberof JupyterServerCollection
      */
     createServerCreationItem(
         label: string,
         onDidSelect: () => Promise<JupyterServer | undefined>
     ): JupyterServerCreationItem;
+    /**
+     * Removes this item from the Kernel Picker.
+     */
     dispose(): void;
 }
 
@@ -125,8 +158,6 @@ export interface JupyterAPI {
      *
      * @param {string} id Identifier must be globally unique.
      * @param {string} label
-     * @return {*}  {JupyterServerCollection}
-     * @memberof JupyterAPI
      */
     createServerCollection(id: string, label: string): Promise<JupyterServerCollection>;
 }
