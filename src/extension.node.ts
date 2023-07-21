@@ -243,9 +243,29 @@ function addConsoleLogger() {
     }
 }
 
+function tryGetUsername() {
+    try {
+        return userInfo().username;
+    } catch (e) {
+        console.info(
+            `jupyter extension failed to get username info with ${e}\n username will not be obfuscated in local logs`
+        );
+    }
+}
+
+function tryGetHomePath() {
+    try {
+        return getUserHomeDir().fsPath;
+    } catch (e) {
+        console.info(
+            `jupyter extension failed to get home directory path with ${e}\n home Path will not be obfuscated in local logs`
+        );
+    }
+}
+
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel, getUserHomeDir().fsPath, userInfo().username));
+    registerLogger(new OutputChannelLogger(standardOutputChannel, tryGetHomePath(), tryGetUsername()));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
