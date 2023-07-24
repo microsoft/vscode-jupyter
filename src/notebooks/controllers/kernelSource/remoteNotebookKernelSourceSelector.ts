@@ -131,7 +131,11 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
     ): Promise<InputStep<MultiStepResult> | void> {
         const servers = this.kernelFinder.registered.filter((info) => info.kind === 'remote') as IRemoteKernelFinder[];
         const items: (ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem)[] = [];
-
+        const existingServers: (
+            | ContributedKernelFinderQuickPickItem
+            | KernelProviderItemsQuickPickItem
+            | QuickPickItem
+        )[] = [];
         for (const server of servers) {
             // remote server
             const savedURI = await this.serverUriStorage.get(server.serverUri.provider);
@@ -143,7 +147,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             if (idAndHandle && idAndHandle.id === provider.id) {
                 // local server
                 const uriDate = new Date(savedURI.time);
-                items.push({
+                existingServers.push({
                     type: KernelFinderEntityQuickPickType.KernelFinder,
                     kernelFinderInfo: server,
                     idAndHandle,
@@ -160,25 +164,32 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 });
             }
         }
+        if (provider.onBeforeQuickPickOpen) {
+            provider.onBeforeQuickPickOpen();
+        }
+        const getQuickPickEntries = async () => {
+            const quickPickEntries: (QuickPickItem | KernelProviderItemsQuickPickItem)[] = [];
+            if (provider.getQuickPickEntryItems && provider.handleQuickPick) {
+                if (existingServers.length > 0) {
+                    quickPickEntries.push({ label: 'More', kind: QuickPickItemKind.Separator });
+                }
 
-        if (provider.getQuickPickEntryItems && provider.handleQuickPick) {
-            if (items.length > 0) {
-                items.push({ label: 'More', kind: QuickPickItemKind.Separator });
-            }
-
-            const newProviderItems: KernelProviderItemsQuickPickItem[] = (await provider.getQuickPickEntryItems()).map(
-                (i) => {
-                    return {
+                const quickPickItems = await provider.getQuickPickEntryItems();
+                quickPickItems.forEach((i) =>
+                    quickPickEntries.push({
                         ...i,
                         provider: provider,
                         type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
                         description: undefined,
                         originalItem: i
-                    };
-                }
-            );
-            items.push(...newProviderItems);
-        }
+                    })
+                );
+            }
+            return quickPickEntries;
+        };
+
+        items.push(...existingServers);
+        items.push(...(await getQuickPickEntries()));
 
         const onDidChangeItems = new EventEmitter<typeof items>();
         const defaultSelection = items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
@@ -219,6 +230,23 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             });
 
             lazyQuickPick = quickPick;
+            if (provider.onDidChangeQuickPickEntryItems && provider.getQuickPickEntryItems) {
+                provider.onDidChangeQuickPickEntryItems(
+                    async () => {
+                        const newItems: (
+                            | ContributedKernelFinderQuickPickItem
+                            | KernelProviderItemsQuickPickItem
+                            | QuickPickItem
+                        )[] = [];
+                        newItems.push(...existingServers);
+                        newItems.push(...(await getQuickPickEntries()));
+                        quickPick.items = newItems;
+                    },
+                    this,
+                    this.localDisposables
+                );
+            }
+            quickPick.onDidChangeValue((e) => provider.onDidChangeValue?.(e));
             selectedSource = await selection;
         }
 

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { inject, injectable, named, optional } from 'inversify';
 import uuid from 'uuid/v4';
 import {
@@ -71,6 +72,8 @@ export class UserJupyterServerUrlProvider
     readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail;
     private _onDidChangeHandles = new EventEmitter<void>();
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
+    private _onDidChangeQuickPickEntryItems = new EventEmitter<void>();
+    onDidChangeQuickPickEntryItems = this._onDidChangeQuickPickEntryItems.event;
     private _cachedServerInfoInitialized: Promise<void> | undefined;
     private _localDisposables: Disposable[] = [];
     private readonly passwordConnect: JupyterPasswordConnect;
@@ -227,15 +230,42 @@ export class UserJupyterServerUrlProvider
     }
 
     getQuickPickEntryItems(): (QuickPickItem & { default?: boolean })[] {
-        return [
+        return (this.quickPickItem ? [this.quickPickItem] : []).concat([
             {
                 default: true,
                 label: DataScience.jupyterSelectURIPrompt,
                 detail: DataScience.jupyterSelectURINewDetail
             }
-        ];
+        ]);
     }
-
+    private quickPickItem?: QuickPickItem & { default?: boolean; url?: string };
+    onBeforeQuickPickOpen(): void {
+        this.quickPickItem = undefined;
+    }
+    onDidChangeValue(value: string): void {
+        if (!value.length) {
+            this.quickPickItem = undefined;
+            this._onDidChangeQuickPickEntryItems.fire();
+            return;
+        }
+        try {
+            const uri = new URL(value);
+            if (!['http:', 'https:'].includes(uri.protocol.toLowerCase())) {
+                return;
+            }
+            if (!uri.port && !uri.pathname) {
+                return;
+            }
+            this.quickPickItem = { label: `Connect to Jupyter Server on ${value}`, url: value.trim() };
+            this._onDidChangeQuickPickEntryItems.fire();
+            return;
+        } catch {
+            if (this.quickPickItem) {
+                this.quickPickItem = undefined;
+                this._onDidChangeQuickPickEntryItems.fire();
+            }
+        }
+    }
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
         await this.initializeServers();
         if (item.label !== DataScience.jupyterSelectURIPrompt) {

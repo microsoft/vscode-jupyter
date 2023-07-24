@@ -198,6 +198,10 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
     public get onDidChangeHandles() {
         return this.provider.onDidChangeHandles;
     }
+    public get onDidChangeQuickPickEntryItems() {
+        const provider = this.provider as IInternalJupyterUriProvider;
+        return this.id.startsWith('_builtin') ? provider.onDidChangeQuickPickEntryItems : undefined;
+    }
     public readonly getHandles?: () => Promise<string[]>;
     public readonly removeHandle?: (handle: string) => Promise<void>;
 
@@ -211,6 +215,18 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
 
         if (provider.removeHandle) {
             this.removeHandle = (handle: string) => provider.removeHandle!(handle);
+        }
+    }
+    public onBeforeQuickPickOpen(): void {
+        const provider = this.provider as IInternalJupyterUriProvider;
+        if (this.id.startsWith('_builtin') && provider.onBeforeQuickPickOpen) {
+            provider.onBeforeQuickPickOpen();
+        }
+    }
+    public onDidChangeValue(value: string): void {
+        const provider = this.provider as IInternalJupyterUriProvider;
+        if (this.id.startsWith('_builtin') && provider.onDidChangeValue) {
+            provider.onDidChangeValue(value);
         }
     }
     public async getQuickPickEntryItems(): Promise<QuickPickItem[]> {

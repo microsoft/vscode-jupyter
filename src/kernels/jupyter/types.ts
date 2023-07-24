@@ -143,6 +143,9 @@ export interface IJupyterServerProvider {
 
 export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
     readonly extensionId: string;
+    onDidChangeQuickPickEntryItems?: Event<void>;
+    onBeforeQuickPickOpen?(): void;
+    onDidChangeValue?(value: string): void;
     getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
 }
 export type JupyterServerProviderHandle = {
