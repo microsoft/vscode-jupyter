@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationError, ConfigurationTarget } from 'vscode';
+import { CancellationError, ConfigurationTarget, QuickInputButtons } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposable,
+    IDisposableRegistry
+} from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../platform/common/utils/multiStepInput';
@@ -16,6 +21,7 @@ import {
     IJupyterServerUriStorage
 } from '../../kernels/jupyter/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;
@@ -28,7 +34,7 @@ export interface IJupyterPasswordConnectInfo {
  * Responsible for intercepting connections to a remote server and asking for a password if necessary
  */
 export class JupyterPasswordConnect {
-    private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo>>();
+    private savedConnectInfo = new Map<string, Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }>>();
     constructor(
         private appShell: IApplicationShell,
 
@@ -52,7 +58,9 @@ export class JupyterPasswordConnect {
         isTokenEmpty: boolean;
         displayName?: string;
         handle: string;
-    }): Promise<IJupyterPasswordConnectInfo> {
+        validationErrorMessage?: string;
+        disposables?: IDisposable[];
+    }): Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }> {
         JupyterPasswordConnect._prompt = undefined;
         if (!options.url || options.url.length < 1) {
             throw new Error('Invalid URL');
@@ -60,6 +68,8 @@ export class JupyterPasswordConnect {
 
         // Add on a trailing slash to our URL if it's not there already
         const newUrl = addTrailingSlash(options.url);
+        const disposables = options.disposables || [];
+        const disposeOnDone = !Array.isArray(options.disposables);
 
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
         let result = this.savedConnectInfo.get(options.handle);
@@ -68,21 +78,32 @@ export class JupyterPasswordConnect {
             result = this.getNonCachedPasswordConnectionInfo({
                 url: newUrl,
                 isTokenEmpty: options.isTokenEmpty,
-                displayName: options.displayName
+                displayName: options.displayName,
+                disposables,
+                validationErrorMessage: options.validationErrorMessage
             }).then((value) => {
-                if (!value || (value.requiresPassword && Object.keys(value).length === 1)) {
+                if (!value || (value.result.requiresPassword && Object.keys(value.result).length === 1)) {
                     // If we fail to get a valid password connect info, don't save the value
                     traceWarning(`Password for ${newUrl} was invalid.`);
+                    this.savedConnectInfo.delete(options.handle);
+                }
+                if (value.goBack) {
                     this.savedConnectInfo.delete(options.handle);
                 }
 
                 return value;
             });
-            result.catch(() => this.savedConnectInfo.delete(options.handle));
+            result.catch((e) => {
+                this.savedConnectInfo.delete(options.handle);
+                console.error(e);
+            });
             result.finally(() => {
                 deferred.resolve();
                 if (JupyterPasswordConnect._prompt === deferred) {
                     JupyterPasswordConnect._prompt = undefined;
+                }
+                if (disposeOnDone) {
+                    disposeAllDisposables(disposables);
                 }
             });
             this.savedConnectInfo.set(options.handle, result);
@@ -95,19 +116,24 @@ export class JupyterPasswordConnect {
         url: string;
         isTokenEmpty: boolean;
         displayName?: string;
-    }): Promise<IJupyterPasswordConnectInfo> {
+        validationErrorMessage?: string;
+        disposables: IDisposable[];
+    }): Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }> {
         // If jupyter hub, go down a special path of asking jupyter hub for a token
         if (await this.isJupyterHub(options.url)) {
-            return this.getJupyterHubConnectionInfo(options.url);
+            return this.getJupyterHubConnectionInfo(options.url, options.validationErrorMessage);
         } else {
             return this.getJupyterConnectionInfo(options);
         }
     }
 
-    private async getJupyterHubConnectionInfo(uri: string): Promise<IJupyterPasswordConnectInfo> {
+    private async getJupyterHubConnectionInfo(
+        uri: string,
+        validationErrorMessage?: string
+    ): Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }> {
         try {
             // First ask for the user name and password
-            const userNameAndPassword = await this.getUserNameAndPassword();
+            const userNameAndPassword = await this.getUserNameAndPassword(validationErrorMessage);
             if (userNameAndPassword.username || userNameAndPassword.password) {
                 // Try the login method. It should work and doesn't require a token to be generated.
                 let result = await this.getJupyterHubConnectionInfoFromLogin(
@@ -142,14 +168,16 @@ export class JupyterPasswordConnect {
                     });
                 }
 
-                return result;
+                return { result };
             }
             sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, {
                 failed: false,
                 info: 'passwordNotRequired'
             });
             return {
-                requiresPassword: false
+                result: {
+                    requiresPassword: false
+                }
             };
         } catch (ex) {
             sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, { failed: true, info: 'failure' });
@@ -280,14 +308,28 @@ export class JupyterPasswordConnect {
         };
     }
 
+    /**
+     * The input prompts created here are not disposed and hidden immediately.
+     * The idea is that the workflow that requires this method to prompt for password
+     * will return with the prompt displayed and then if the password is invalid or the like,
+     * we can call this method once again and display a new quick pick avoiding flickers.
+     *
+     * Similarly, if there's another quick pick or input box that needs to be displayed after this method,
+     * leaving this UI open will avoid flickers.
+     *
+     * The disposables array is eventually disposed by the calling method.
+     */
     private async getJupyterConnectionInfo(options: {
         url: string;
         isTokenEmpty: boolean;
         displayName?: string;
-    }): Promise<IJupyterPasswordConnectInfo> {
+        validationErrorMessage?: string;
+        disposables: IDisposable[];
+    }): Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }> {
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
+        let userPassword: string | undefined = undefined;
 
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
         const requiresPassword = await this.needPassword(options.url);
@@ -298,15 +340,45 @@ export class JupyterPasswordConnect {
             const uri = new URL(options.url);
             friendlyUrl = `${uri.protocol}//${uri.hostname}`;
             friendlyUrl = options.displayName ? `${options.displayName} (${friendlyUrl})` : friendlyUrl;
-            const userPassword =
-                requiresPassword && options.isTokenEmpty
-                    ? await this.appShell.showInputBox({
-                          title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
-                          prompt: DataScience.jupyterSelectPasswordPrompt,
-                          ignoreFocusOut: true,
-                          password: true
-                      })
-                    : undefined;
+            if (requiresPassword && options.isTokenEmpty) {
+                const input = this.appShell.createInputBox();
+                options.disposables.push(input);
+                input.title = DataScience.jupyterSelectPasswordTitle(friendlyUrl);
+                input.prompt = DataScience.jupyterSelectPasswordPrompt;
+                input.ignoreFocusOut = true;
+                input.password = true;
+                input.validationMessage = options.validationErrorMessage || '';
+                input.show();
+                input.buttons = [QuickInputButtons.Back];
+                const result = await new Promise<{ password: string; goBack: boolean } | undefined>((resolve) => {
+                    input.onDidTriggerButton(
+                        (e) => {
+                            if (e === QuickInputButtons.Back) {
+                                resolve({ password: '', goBack: true });
+                            }
+                        },
+                        this,
+                        options.disposables
+                    );
+                    input.onDidChangeValue(() => (input.validationMessage = ''), this, options.disposables);
+                    input.onDidAccept(
+                        () => resolve({ password: input.value, goBack: false }),
+                        this,
+                        options.disposables
+                    );
+                    input.onDidHide(() => resolve(undefined), this, options.disposables);
+                });
+                if (!result) {
+                    // User exited out of the processes, same as hitting ESC.
+                    // We need this, as this method is called from the kernel finder as well,
+                    // And that doesn't support returning undefined (debt)
+                    throw new CancellationError();
+                } else if (result.goBack) {
+                    return { result: { requiresPassword: true }, goBack: true };
+                } else {
+                    userPassword = result.password;
+                }
+            }
 
             if (typeof userPassword === undefined && !userPassword && options.isTokenEmpty) {
                 // User exited out of the processes, same as hitting ESC.
@@ -333,11 +405,11 @@ export class JupyterPasswordConnect {
             } else {
                 // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
                 // like a standard connection. Might be the case where there is no token and no password
-                return { requiresPassword };
+                return { result: { requiresPassword } };
             }
         } else {
             // If no password needed, act like empty password and no cookie
-            return { requiresPassword };
+            return { result: { requiresPassword } };
         }
 
         // If we found everything return it all back if not, undefined as partial is useless
@@ -346,10 +418,10 @@ export class JupyterPasswordConnect {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
-            return { requestHeaders, requiresPassword };
+            return { result: { requestHeaders, requiresPassword } };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
-            return { requiresPassword };
+            return { result: { requiresPassword } };
         }
     }
 
@@ -366,21 +438,26 @@ export class JupyterPasswordConnect {
         return options;
     }
 
-    private async getUserNameAndPassword(): Promise<{ username: string; password: string }> {
-        const multistep = this.multiStepFactory.create<{ username: string; password: string }>();
-        const state = { username: '', password: '' };
+    private async getUserNameAndPassword(validationMessage?: string): Promise<{ username: string; password: string }> {
+        const multistep = this.multiStepFactory.create<{
+            username: string;
+            password: string;
+            validationMessage?: string;
+        }>();
+        const state = { username: '', password: '', validationMessage };
         await multistep.run(this.getUserNameMultiStep.bind(this), state);
         return state;
     }
 
     private async getUserNameMultiStep(
-        input: IMultiStepInput<{ username: string; password: string }>,
-        state: { username: string; password: string }
+        input: IMultiStepInput<{ username: string; password: string; validationErrorMessage?: string }>,
+        state: { username: string; password: string; validationMessage?: string }
     ) {
         state.username = await input.showInputBox({
             title: DataScience.jupyterSelectUserAndPasswordTitle,
             prompt: DataScience.jupyterSelectUserPrompt,
             validate: this.validateUserNameOrPassword,
+            validationMessage: state.validationMessage,
             value: ''
         });
         if (state.username) {

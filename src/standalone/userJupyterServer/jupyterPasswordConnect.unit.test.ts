@@ -153,7 +153,7 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponse.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+        const { result } = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true,
             handle: '1234'
@@ -211,7 +211,7 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponse.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+        const { result } = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true,
             handle: '1234'
@@ -269,7 +269,7 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponse.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+        const { result } = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: false,
             handle: '1234'
@@ -325,7 +325,7 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponse.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+        const { result } = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'https://TESTNAME:8888/',
             isTokenEmpty: true,
             handle: '1234'
@@ -348,7 +348,7 @@ suite('JupyterPasswordConnect', () => {
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, false);
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+        const { result } = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true,
             handle: '1234'
@@ -404,7 +404,7 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponseBad.object));
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
-        let result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+        let { result } = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true,
             handle: '1234'
@@ -453,11 +453,12 @@ suite('JupyterPasswordConnect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         // Retry the password
-        result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+        const result2 = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true,
             handle: '1234'
         });
+        result = result2.result;
         assert(result, 'Expected to get a result on the second call');
 
         // Verfiy calls
@@ -527,7 +528,7 @@ suite('JupyterPasswordConnect', () => {
         const fetch = createJupyterHubSetup();
         when(requestCreator.getFetchMethod()).thenReturn(fetch as any);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
+        const { result } = await jupyterPasswordConnect.getPasswordConnectionInfo({
             url: 'http://TESTNAME:8888/',
             isTokenEmpty: true,
             handle: '1234'

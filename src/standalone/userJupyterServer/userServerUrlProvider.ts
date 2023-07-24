@@ -48,7 +48,7 @@ import {
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
-import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
+import { JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { IJupyterServerUri } from '../../api.unstable';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
@@ -56,6 +56,7 @@ import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfC
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -266,84 +267,66 @@ export class UserJupyterServerUrlProvider
             }
         }
     }
-    async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
+    async handleQuickPick(item: QuickPickItem, _backEnabled: boolean): Promise<string | undefined> {
         await this.initializeServers();
         if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
         }
-
-        let initialValue = '';
-        try {
-            const text = await this.clipboard.readText().catch(() => '');
-            const parsedUri = Uri.parse(text.trim(), true);
-            // Only display http/https uris.
-            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
-        } catch {
-            // We can ignore errors.
-        }
-
+        let nextStep:
+            | 'Get Url'
+            | 'Check Passwords'
+            | 'Check Insecure Connections'
+            | 'Verify Connection'
+            | 'Get Display Name' = 'Get Url';
         const disposables: Disposable[] = [];
-
-        // Ask the user to enter a URI to connect to.
-        const input = this.applicationShell.createInputBox();
-        input.title = DataScience.jupyterSelectURIPrompt;
-        input.value = initialValue;
-        input.ignoreFocusOut = true;
-
-        return new Promise<string | undefined>((resolve) => {
-            if (backEnabled) {
-                input.buttons = [QuickInputButtons.Back];
-                disposables.push(
-                    input.onDidTriggerButton((item) => {
-                        if (item === QuickInputButtons.Back) {
-                            resolve('back');
-                        } else {
-                            resolve(undefined);
-                        }
-                    })
-                );
-            }
-
-            let inputWasHidden = false;
-            let promptingForServerName = false;
-            disposables.push(
-                input.onDidAccept(async () => {
-                    // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
-                    const uri = input.value.trim().replace(/\/(lab|tree)(\??)$/, '');
-                    const jupyterServerUri = parseUri(uri, '');
-                    if (!jupyterServerUri) {
-                        if (inputWasHidden) {
-                            input.show();
-                        }
-                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+        let jupyterServerUri: IJupyterServerUri = { baseUrl: '', displayName: '', token: '' };
+        let validationErrorMessage = '';
+        let requiresPassword = false;
+        let isInsecureConnection = false;
+        let handle: string;
+        let url = '';
+        try {
+            while (true) {
+                handle = uuid();
+                if (nextStep === 'Get Url') {
+                    const result = await this.getUrl(url, validationErrorMessage, disposables);
+                    if (!result) {
                         return;
                     }
-                    if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
-                        if (inputWasHidden) {
-                            input.show();
-                        }
-                        input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
-                        return;
+                    if (result.goBack) {
+                        return 'back';
                     }
+                    jupyterServerUri = result.jupyterServerUri;
+                    url = result.url;
+                    nextStep = 'Check Passwords';
+                }
 
-                    let passwordResult: IJupyterPasswordConnectInfo;
-                    const handle = uuid();
-
+                if (nextStep === 'Check Passwords') {
                     try {
-                        passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
+                        const result = await this.passwordConnect.getPasswordConnectionInfo({
                             url: jupyterServerUri.baseUrl,
                             isTokenEmpty: jupyterServerUri.token.length === 0,
-                            handle
+                            handle,
+                            displayName: jupyterServerUri.displayName,
+                            validationErrorMessage,
+                            disposables
                         });
+                        if (result.goBack) {
+                            nextStep = 'Get Url';
+                            continue;
+                        }
+                        requiresPassword = result.result.requiresPassword;
+                        jupyterServerUri.authorizationHeader = result.result.requestHeaders;
                     } catch (err) {
                         if (err && err instanceof CancellationError) {
-                            input.hide();
-                            resolve(undefined);
+                            return;
+                        } else if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                            // We can skip this for now, as this will get verified again
+                            // First we need to check with user whether to allow insecure connections and untrusted certs.
+                        } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                            // We can skip this for now, as this will get verified again
+                            // First we need to check with user whether to allow insecure connections and untrusted certs.
                         } else {
-                            traceError(`Failed to get the password for ${jupyterServerUri.baseUrl}`, err);
-                            if (inputWasHidden) {
-                                input.show();
-                            }
                             // Return the general connection error to show in the validation box
                             // Replace any Urls in the error message with markdown link.
                             const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -351,34 +334,44 @@ export class UserJupyterServerUrlProvider
                                 urlRegex,
                                 (url: string) => `[${url}](${url})`
                             );
-                            input.validationMessage = (
+                            validationErrorMessage = (
                                 this.isWebExtension
                                     ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
                                     : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
                             )(errorMessage);
+                            nextStep = 'Get Url';
+                            continue;
                         }
-                        return;
-                    }
-                    if (passwordResult.requestHeaders) {
-                        jupyterServerUri.authorizationHeader = passwordResult?.requestHeaders;
                     }
 
+                    nextStep = 'Check Insecure Connections';
+                }
+
+                if (nextStep === 'Check Insecure Connections') {
                     // If we do not have any auth header information & there is no token & no password, & this is HTTP then this is an insecure server
                     // & we need to ask the user for consent to use this insecure server.
                     if (
-                        !passwordResult.requiresPassword &&
+                        !requiresPassword &&
                         jupyterServerUri.token.length === 0 &&
                         new URL(jupyterServerUri.baseUrl).protocol.toLowerCase() === 'http:'
                     ) {
-                        const proceed = await this.secureConnectionCheck();
+                        isInsecureConnection = true;
+                        const proceed = await this.secureConnectionCheck(disposables);
                         if (!proceed) {
-                            resolve(undefined);
-                            input.hide();
+                            return;
+                        }
+                        if (proceed.goBack) {
+                            nextStep = requiresPassword ? 'Check Passwords' : 'Get Url';
+                            continue;
+                        }
+                        if (!proceed.allowed) {
                             return;
                         }
                     }
+                    nextStep = 'Verify Connection';
+                }
 
-                    let message = '';
+                if (nextStep === 'Verify Connection') {
                     try {
                         await this.jupyterConnection.validateRemoteUri(
                             { id: this.id, handle, extensionId: JVSC_EXTENSION_ID },
@@ -388,11 +381,17 @@ export class UserJupyterServerUrlProvider
                     } catch (err) {
                         traceWarning('Uri verification error', err);
                         if (JupyterSelfCertsError.isSelfCertsError(err)) {
-                            message = DataScience.jupyterSelfCertFailErrorMessageOnly;
+                            validationErrorMessage = DataScience.jupyterSelfCertFailErrorMessageOnly;
+                            nextStep = 'Get Url';
+                            continue;
                         } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
-                            message = DataScience.jupyterSelfCertExpiredErrorMessageOnly;
-                        } else if (passwordResult.requiresPassword && jupyterServerUri.token.length === 0) {
-                            message = DataScience.passwordFailure;
+                            validationErrorMessage = DataScience.jupyterSelfCertExpiredErrorMessageOnly;
+                            nextStep = 'Get Url';
+                            continue;
+                        } else if (requiresPassword && jupyterServerUri.token.length === 0) {
+                            validationErrorMessage = DataScience.passwordFailure;
+                            nextStep = 'Check Passwords';
+                            continue;
                         } else {
                             // Return the general connection error to show in the validation box
                             // Replace any Urls in the error message with markdown link.
@@ -401,52 +400,223 @@ export class UserJupyterServerUrlProvider
                                 urlRegex,
                                 (url: string) => `[${url}](${url})`
                             );
-                            message = (
+                            validationErrorMessage = (
                                 this.isWebExtension || true
                                     ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
                                     : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
                             )(errorMessage);
+                            nextStep = 'Get Url';
+                            continue;
                         }
                     }
+                    nextStep = 'Get Display Name';
+                }
 
-                    if (message) {
-                        if (inputWasHidden) {
-                            input.show();
-                        }
-                        input.validationMessage = message;
+                if (nextStep === 'Get Display Name') {
+                    const result = await this.getDisplayName(
+                        handle,
+                        jupyterServerUri.displayName || new URL(jupyterServerUri.baseUrl).hostname,
+                        disposables
+                    );
+                    if (!result) {
                         return;
                     }
-
-                    promptingForServerName = true;
-                    // Offer the user a chance to pick a display name for the server
-                    // Leaving it blank will use the URI as the display name
-                    jupyterServerUri.displayName =
-                        (await this.applicationShell.showInputBox({
-                            title: DataScience.jupyterRenameServer
-                        })) || new URL(jupyterServerUri.baseUrl).hostname;
-                    this.displayNamesOfHandles.set(handle, jupyterServerUri.displayName);
-                    await this.initializeServers();
-                    await this.addNewServer({
-                        handle: handle,
-                        uri: uri,
-                        serverInfo: jupyterServerUri
-                    });
-                    resolve(handle);
-                }),
-                input.onDidHide(() => {
-                    inputWasHidden = true;
-                    if (!JupyterPasswordConnect.prompt && !promptingForServerName) {
-                        resolve(undefined);
+                    if (result.goBack) {
+                        if (isInsecureConnection) {
+                            nextStep = 'Check Insecure Connections';
+                            continue;
+                        }
+                        if (requiresPassword) {
+                            nextStep = 'Check Passwords';
+                            continue;
+                        }
+                        nextStep = 'Get Url';
+                        continue;
                     }
-                })
-            );
 
-            input.show();
-        }).finally(() => {
-            disposables.forEach((d) => d.dispose());
-        });
+                    jupyterServerUri.displayName = result.displayName;
+                    break;
+                }
+            }
+
+            await this.addNewServer({
+                handle,
+                uri: url,
+                serverInfo: jupyterServerUri
+            });
+            return handle;
+        } finally {
+            disposeAllDisposables(disposables);
+        }
+    }
+    private async getDisplayName(
+        handle: string,
+        defaultValue: string,
+        disposables: IDisposable[]
+    ): Promise<{ displayName: string; goBack?: boolean } | undefined> {
+        const input = this.applicationShell.createInputBox();
+        disposables.push(input);
+        input.ignoreFocusOut = true;
+        input.title = DataScience.jupyterRenameServer;
+        input.value = defaultValue;
+        input.buttons = [QuickInputButtons.Back];
+        input.show();
+        const deferred = createDeferred<{ displayName: string; goBack?: boolean }>();
+        disposables.push(input.onDidHide(() => deferred.resolve(undefined)));
+        input.onDidTriggerButton(
+            (e) => {
+                if (e === QuickInputButtons.Back) {
+                    deferred.resolve({ goBack: true, displayName: '' });
+                }
+            },
+            this,
+            disposables
+        );
+        input.onDidAccept(
+            () => {
+                const displayName = input.value.trim() || defaultValue;
+                this.displayNamesOfHandles.set(handle, displayName);
+                deferred.resolve({ displayName });
+            },
+            this,
+            disposables
+        );
+        return deferred.promise;
+    }
+    async getUrl(
+        initialValue: string,
+        initialErrorMessage: string = '',
+        disposables: Disposable[]
+    ): Promise<{ url: string; jupyterServerUri: IJupyterServerUri; goBack?: boolean } | undefined> {
+        if (!initialValue) {
+            try {
+                const text = await this.clipboard.readText().catch(() => '');
+                const parsedUri = Uri.parse(text.trim(), true);
+                // Only display http/https uris.
+                initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
+            } catch {
+                // We can ignore errors.
+            }
+        }
+
+        // Ask the user to enter a URI to connect to.
+        const input = this.applicationShell.createInputBox();
+        disposables.push(input);
+        input.title = DataScience.jupyterSelectURIPrompt;
+        input.value = initialValue;
+        input.validationMessage = initialErrorMessage;
+        input.buttons = [QuickInputButtons.Back];
+        input.ignoreFocusOut = true;
+        input.show();
+
+        const deferred = createDeferred<
+            { url: string; jupyterServerUri: IJupyterServerUri; goBack?: boolean } | undefined
+        >();
+        input.onDidChangeValue(() => (input.validationMessage = ''), this, disposables);
+        input.onDidHide(() => deferred.resolve(undefined), this, disposables);
+        input.onDidTriggerButton(
+            (item) => {
+                if (item === QuickInputButtons.Back) {
+                    deferred.resolve({
+                        goBack: true,
+                        url: '',
+                        jupyterServerUri: { baseUrl: '', token: '', displayName: '' }
+                    });
+                }
+            },
+            this,
+            disposables
+        );
+
+        input.onDidAccept(
+            async () => {
+                // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
+                const uri = input.value.trim().replace(/\/(lab|tree)(\??)$/, '');
+                const jupyterServerUri = parseUri(uri, '');
+                if (!jupyterServerUri) {
+                    input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+                    return;
+                }
+                if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
+                    input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
+                    return;
+                }
+
+                // try {
+                //     await this.passwordConnect.verifyServerConnectivity(jupyterServerUri.baseUrl);
+                // } catch (err) {
+                //     if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                //         // We can ignore this, as we'll notify the user about this error message later.
+                //     } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                //         input.validationMessage = DataScience.jupyterSelfCertExpiredErrorMessageOnly;
+                //         return;
+                //     } else {
+                //         // Return the general connection error to show in the validation box
+                //         // Replace any Urls in the error message with markdown link.
+                //         const urlRegex = /(https?:\/\/[^\s]+)/g;
+                //         const errorMessage = (err.message || err.toString()).replace(
+                //             urlRegex,
+                //             (url: string) => `[${url}](${url})`
+                //         );
+                //         input.validationMessage = (
+                //             this.isWebExtension || true
+                //                 ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
+                //                 : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
+                //         )(errorMessage);
+                //         return;
+                //     }
+                // }
+
+                deferred.resolve({ jupyterServerUri, url: uri });
+            },
+            this,
+            disposables
+        );
+        return deferred.promise;
     }
 
+    /**
+     * Check if our server connection is considered secure. If it is not, ask the user if they want to connect
+     */
+    private async secureConnectionCheck(
+        disposables: IDisposable[]
+    ): Promise<{ allowed: boolean; goBack?: boolean } | undefined> {
+        if (this.globalMemento.get(GlobalStateUserAllowsInsecureConnections, false)) {
+            return { allowed: true };
+        }
+
+        const input = this.applicationShell.createQuickPick();
+        disposables.push(input);
+        input.canSelectMany = false;
+        input.ignoreFocusOut = true;
+        input.title = DataScience.insecureSessionMessage;
+        input.buttons = [QuickInputButtons.Back];
+        input.items = [{ label: Common.bannerLabelYes }, { label: Common.bannerLabelNo }];
+        input.show();
+        const deferred = createDeferred<{ allowed: boolean; goBack?: boolean }>();
+        disposables.push(input.onDidHide(() => deferred.resolve(undefined)));
+        input.onDidTriggerButton(
+            (e) => {
+                if (e === QuickInputButtons.Back) {
+                    deferred.resolve({ goBack: true, allowed: false });
+                }
+            },
+            this,
+            disposables
+        );
+        input.onDidAccept(
+            () => {
+                if (input.selectedItems.some((e) => e.label === Common.bannerLabelYes)) {
+                    deferred.resolve({ allowed: true });
+                } else {
+                    deferred.resolve({ allowed: false });
+                }
+            },
+            this,
+            disposables
+        );
+        return deferred.promise;
+    }
     private async addNewServer(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
         await this.newStorage.add(server);
         this._onDidChangeHandles.fire();
@@ -489,7 +659,7 @@ export class UserJupyterServerUrlProvider
             handle
         });
         return Object.assign({}, server.serverInfo, {
-            authorizationHeader: passwordResult.requestHeaders || server.serverInfo.authorizationHeader
+            authorizationHeader: passwordResult.result.requestHeaders || server.serverInfo.authorizationHeader
         });
     }
     async getHandles(): Promise<string[]> {
@@ -505,20 +675,6 @@ export class UserJupyterServerUrlProvider
     }
     dispose(): void {
         this._localDisposables.forEach((d) => d.dispose());
-    }
-
-    /**
-     * Check if our server connection is considered secure. If it is not, ask the user if they want to connect
-     */
-    private async secureConnectionCheck(): Promise<boolean> {
-        if (this.globalMemento.get(GlobalStateUserAllowsInsecureConnections, false)) {
-            return true;
-        }
-
-        const insecureMessage = DataScience.insecureSessionMessage;
-        const insecureLabels = [Common.bannerLabelYes, Common.bannerLabelNo];
-        const response = await this.applicationShell.showWarningMessage(insecureMessage, ...insecureLabels);
-        return response === Common.bannerLabelYes;
     }
 }
 
@@ -676,7 +832,7 @@ export class NewStorage {
             Settings.JupyterServerRemoteLaunchService,
             UserJupyterServerUriListKeyV2
         );
-        if (!data) {
+        if (!data || data === '[]') {
             return [];
         }
         try {

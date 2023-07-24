@@ -295,7 +295,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
 
         const handle = await selectedSource.provider.handleQuickPick(selectedSource.originalItem, true);
         if (!handle || token.isCancellationRequested) {
-            return;
+            throw InputFlowAction.cancel;
         }
         if (handle === 'back') {
             throw InputFlowAction.back;

@@ -116,6 +116,7 @@ export namespace DataScience {
     export const passwordFailure = l10n.t(
         'Failed to connect to password protected server. Check that password is correct.'
     );
+    export const incorrectPassword = l10n.t('Incorrect Password.');
     export const exportDialogFilter = l10n.t('Jupyter Notebooks');
     export const exportDialogComplete = (fileName: string) => l10n.t('Notebook written to {0}', fileName);
     export const exportDialogFailed = (errorMessage: string) => l10n.t('Failed to export notebook. {0}', errorMessage);
