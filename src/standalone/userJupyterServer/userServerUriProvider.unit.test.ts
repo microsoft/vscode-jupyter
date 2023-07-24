@@ -325,9 +325,7 @@ suite('User Uri Provider', () => {
         await testMigration();
         getPasswordConnectionInfoStub.restore();
         getPasswordConnectionInfoStub.reset();
-        sinon
-            .stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo')
-            .resolves({ result: { requiresPassword: true } });
+        sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: true });
         when(clipboard.readText()).thenResolve('http://localhost:3333');
         when(applicationShell.showInputBox(anything())).thenResolve('Foo Bar' as any);
         when(

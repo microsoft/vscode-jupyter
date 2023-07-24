@@ -11,7 +11,7 @@ import {
 } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { IMultiStepInputFactory, IMultiStepInput } from '../../platform/common/utils/multiStepInput';
+import { IMultiStepInputFactory, IMultiStepInput, InputFlowAction } from '../../platform/common/utils/multiStepInput';
 import { traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import {
@@ -34,7 +34,7 @@ export interface IJupyterPasswordConnectInfo {
  * Responsible for intercepting connections to a remote server and asking for a password if necessary
  */
 export class JupyterPasswordConnect {
-    private savedConnectInfo = new Map<string, Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }>>();
+    private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo>>();
     constructor(
         private appShell: IApplicationShell,
 
@@ -60,7 +60,7 @@ export class JupyterPasswordConnect {
         handle: string;
         validationErrorMessage?: string;
         disposables?: IDisposable[];
-    }): Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }> {
+    }): Promise<IJupyterPasswordConnectInfo> {
         JupyterPasswordConnect._prompt = undefined;
         if (!options.url || options.url.length < 1) {
             throw new Error('Invalid URL');
@@ -82,12 +82,9 @@ export class JupyterPasswordConnect {
                 disposables,
                 validationErrorMessage: options.validationErrorMessage
             }).then((value) => {
-                if (!value || (value.result.requiresPassword && Object.keys(value.result).length === 1)) {
+                if (!value || (value.requiresPassword && Object.keys(value).length === 1)) {
                     // If we fail to get a valid password connect info, don't save the value
                     traceWarning(`Password for ${newUrl} was invalid.`);
-                    this.savedConnectInfo.delete(options.handle);
-                }
-                if (value.goBack) {
                     this.savedConnectInfo.delete(options.handle);
                 }
 
@@ -118,7 +115,7 @@ export class JupyterPasswordConnect {
         displayName?: string;
         validationErrorMessage?: string;
         disposables: IDisposable[];
-    }): Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }> {
+    }): Promise<IJupyterPasswordConnectInfo> {
         // If jupyter hub, go down a special path of asking jupyter hub for a token
         if (await this.isJupyterHub(options.url)) {
             return this.getJupyterHubConnectionInfo(options.url, options.validationErrorMessage);
@@ -130,7 +127,7 @@ export class JupyterPasswordConnect {
     private async getJupyterHubConnectionInfo(
         uri: string,
         validationErrorMessage?: string
-    ): Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }> {
+    ): Promise<IJupyterPasswordConnectInfo> {
         try {
             // First ask for the user name and password
             const userNameAndPassword = await this.getUserNameAndPassword(validationErrorMessage);
@@ -168,16 +165,14 @@ export class JupyterPasswordConnect {
                     });
                 }
 
-                return { result };
+                return result;
             }
             sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, {
                 failed: false,
                 info: 'passwordNotRequired'
             });
             return {
-                result: {
-                    requiresPassword: false
-                }
+                requiresPassword: false
             };
         } catch (ex) {
             sendTelemetryEvent(Telemetry.CheckPasswordJupyterHub, undefined, { failed: true, info: 'failure' });
@@ -325,7 +320,7 @@ export class JupyterPasswordConnect {
         displayName?: string;
         validationErrorMessage?: string;
         disposables: IDisposable[];
-    }): Promise<{ result: IJupyterPasswordConnectInfo; goBack?: boolean }> {
+    }): Promise<IJupyterPasswordConnectInfo> {
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
@@ -350,34 +345,20 @@ export class JupyterPasswordConnect {
                 input.validationMessage = options.validationErrorMessage || '';
                 input.show();
                 input.buttons = [QuickInputButtons.Back];
-                const result = await new Promise<{ password: string; goBack: boolean } | undefined>((resolve) => {
+                userPassword = await new Promise<string>((resolve, reject) => {
                     input.onDidTriggerButton(
                         (e) => {
                             if (e === QuickInputButtons.Back) {
-                                resolve({ password: '', goBack: true });
+                                reject(InputFlowAction.back);
                             }
                         },
                         this,
                         options.disposables
                     );
                     input.onDidChangeValue(() => (input.validationMessage = ''), this, options.disposables);
-                    input.onDidAccept(
-                        () => resolve({ password: input.value, goBack: false }),
-                        this,
-                        options.disposables
-                    );
-                    input.onDidHide(() => resolve(undefined), this, options.disposables);
+                    input.onDidAccept(() => resolve(input.value), this, options.disposables);
+                    input.onDidHide(() => reject(InputFlowAction.cancel), this, options.disposables);
                 });
-                if (!result) {
-                    // User exited out of the processes, same as hitting ESC.
-                    // We need this, as this method is called from the kernel finder as well,
-                    // And that doesn't support returning undefined (debt)
-                    throw new CancellationError();
-                } else if (result.goBack) {
-                    return { result: { requiresPassword: true }, goBack: true };
-                } else {
-                    userPassword = result.password;
-                }
             }
 
             if (typeof userPassword === undefined && !userPassword && options.isTokenEmpty) {
@@ -405,11 +386,11 @@ export class JupyterPasswordConnect {
             } else {
                 // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
                 // like a standard connection. Might be the case where there is no token and no password
-                return { result: { requiresPassword } };
+                return { requiresPassword };
             }
         } else {
             // If no password needed, act like empty password and no cookie
-            return { result: { requiresPassword } };
+            return { requiresPassword };
         }
 
         // If we found everything return it all back if not, undefined as partial is useless
@@ -418,10 +399,10 @@ export class JupyterPasswordConnect {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
-            return { result: { requestHeaders, requiresPassword } };
+            return { requestHeaders, requiresPassword };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
-            return { result: { requiresPassword } };
+            return { requiresPassword };
         }
     }
 

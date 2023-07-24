@@ -282,7 +282,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.prompt = prompt;
                 input.validationMessage = validationMessage || '';
                 input.ignoreFocusOut = true;
-                input.validationMessage = validationMessage || ''
+                input.validationMessage = validationMessage || '';
                 input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : []), ...(buttons || [])];
                 disposables.push(
                     input.onDidTriggerButton((item) => {
