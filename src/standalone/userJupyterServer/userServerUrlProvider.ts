@@ -418,7 +418,7 @@ export class UserJupyterServerUrlProvider
     }
 
     private async addNewServer(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
-        await Promise.all([this.oldStorage.add(server), this.newStorage.add(server)]);
+        await this.newStorage.add(server);
         this._onDidChangeHandles.fire();
     }
     async getServerUriWithoutAuthInfo(handle: string): Promise<IJupyterServerUri> {
@@ -470,7 +470,7 @@ export class UserJupyterServerUrlProvider
 
     async removeHandle(handle: string): Promise<void> {
         await this.initializeServers();
-        await Promise.all([this.oldStorage.remove(handle), this.newStorage.remove(handle)]);
+        await this.newStorage.remove(handle);
         this._onDidChangeHandles.fire();
     }
     dispose(): void {
@@ -517,7 +517,6 @@ function parseUri(uri: string, displayName?: string): IJupyterServerUri | undefi
 }
 
 export class OldStorage {
-    private updatePromise = Promise.resolve();
     constructor(
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
@@ -535,14 +534,12 @@ export class OldStorage {
 
         if (!cache || !serverList || serverList.length === 0) {
             return [];
-            // return resolve([]);
         }
 
         const encryptedList = cache.split(Settings.JupyterServerRemoteLaunchUriSeparator);
         if (encryptedList.length === 0 || encryptedList.length !== serverList.length) {
             traceError('Invalid server list, unable to retrieve server info');
             return [];
-            // return resolve([]);
         }
 
         const servers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
@@ -564,48 +561,11 @@ export class OldStorage {
         }
         return servers;
     }
-
-    public async add(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
-        await (this.updatePromise = this.updatePromise
-            .then(async () => {
-                const servers = (await this.getServers()).concat(server);
-                const blob = servers.map((e) => `${e.uri}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
-                const mementoList = servers.map((v, i) => ({ index: i, handle: v.handle }));
-                await this.globalMemento.update(UserJupyterServerUriListMementoKey, mementoList);
-                return this.encryptedStorage.store(
-                    Settings.JupyterServerRemoteLaunchService,
-                    UserJupyterServerUriListKey,
-                    blob
-                );
-            })
-            .catch(noop));
-    }
-    public async remove(handle: string) {
-        await (this.updatePromise = this.updatePromise
-            .then(async () => {
-                const servers = (await this.getServers()).filter((server) => server.handle !== handle);
-                const blob = servers.map((e) => `${e.uri}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
-                const mementoList = servers.map((v, i) => ({ index: i, handle: v.handle }));
-                await this.globalMemento.update(UserJupyterServerUriListMementoKey, mementoList);
-                return this.encryptedStorage.store(
-                    Settings.JupyterServerRemoteLaunchService,
-                    UserJupyterServerUriListKey,
-                    blob
-                );
-            })
-            .catch(noop));
-    }
     public async clear() {
-        await (this.updatePromise = this.updatePromise
-            .then(async () => {
-                await this.encryptedStorage.store(
-                    Settings.JupyterServerRemoteLaunchService,
-                    UserJupyterServerUriListKey,
-                    ''
-                );
-                await this.globalMemento.update(UserJupyterServerUriListMementoKey, []);
-            })
-            .catch(noop));
+        await this.encryptedStorage
+            .store(Settings.JupyterServerRemoteLaunchService, UserJupyterServerUriListKey, '')
+            .catch(noop);
+        await this.globalMemento.update(UserJupyterServerUriListMementoKey, []).then(noop, noop);
     }
 }
 
