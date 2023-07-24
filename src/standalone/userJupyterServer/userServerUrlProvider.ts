@@ -542,31 +542,6 @@ export class UserJupyterServerUrlProvider
                     return;
                 }
 
-                // try {
-                //     await this.passwordConnect.verifyServerConnectivity(jupyterServerUri.baseUrl);
-                // } catch (err) {
-                //     if (JupyterSelfCertsError.isSelfCertsError(err)) {
-                //         // We can ignore this, as we'll notify the user about this error message later.
-                //     } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
-                //         input.validationMessage = DataScience.jupyterSelfCertExpiredErrorMessageOnly;
-                //         return;
-                //     } else {
-                //         // Return the general connection error to show in the validation box
-                //         // Replace any Urls in the error message with markdown link.
-                //         const urlRegex = /(https?:\/\/[^\s]+)/g;
-                //         const errorMessage = (err.message || err.toString()).replace(
-                //             urlRegex,
-                //             (url: string) => `[${url}](${url})`
-                //         );
-                //         input.validationMessage = (
-                //             this.isWebExtension || true
-                //                 ? DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb
-                //                 : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
-                //         )(errorMessage);
-                //         return;
-                //     }
-                // }
-
                 deferred.resolve({ jupyterServerUri, url: uri });
             },
             this,
