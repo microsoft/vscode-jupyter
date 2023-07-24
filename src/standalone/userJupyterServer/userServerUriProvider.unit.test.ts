@@ -235,17 +235,12 @@ suite('User Uri Provider', () => {
         verify(serverUriStorage.add(anything(), anything())).atLeast(2);
 
         // Verify the items were added into both of the stores.
-        const serversInOldStorage = await provider.oldStorage.getServers();
         const serversInNewStorage = await provider.newStorage.getServers();
 
         assert.strictEqual(serversInNewStorage.length, 2);
-        assert.deepEqual(
-            serversInOldStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri),
-            serversInNewStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri)
-        );
     }
     test('Migrate Old Urls', async () => testMigration());
-    test('Add a new Url and verify it is in both stores', async () => {
+    test('Add a new Url and verify it is in the storage', async () => {
         await testMigration();
         when(clipboard.readText()).thenResolve('https://localhost:3333?token=ABCD');
         when(applicationShell.showInputBox(anything())).thenResolve('Foo Bar' as any);
@@ -264,14 +259,9 @@ suite('User Uri Provider', () => {
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
         assert.include(handles, handle);
 
-        const serversInOldStorage = await provider.oldStorage.getServers();
         const serversInNewStorage = await provider.newStorage.getServers();
 
         assert.strictEqual(serversInNewStorage.length, 3);
-        assert.deepEqual(
-            serversInOldStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri),
-            serversInNewStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri)
-        );
     });
     test('When adding a HTTP url (without pwd, and without a token) prompt user to use insecure sites (in new pwd manager)', async function () {
         await testMigration();
@@ -299,14 +289,9 @@ suite('User Uri Provider', () => {
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
         assert.include(handles, handle);
 
-        const serversInOldStorage = await provider.oldStorage.getServers();
         const serversInNewStorage = await provider.newStorage.getServers();
 
         assert.strictEqual(serversInNewStorage.length, 3);
-        assert.deepEqual(
-            serversInOldStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri),
-            serversInNewStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri)
-        );
     });
     test('When prompted to use insecure sites and ignored/cancelled, then do not add the url', async function () {
         await testMigration();
@@ -333,14 +318,8 @@ suite('User Uri Provider', () => {
         const handles = await provider.getHandles();
         assert.isAtLeast(handles.length, 2, '2 migrated urls');
 
-        const serversInOldStorage = await provider.oldStorage.getServers();
         const serversInNewStorage = await provider.newStorage.getServers();
-
         assert.strictEqual(serversInNewStorage.length, 2);
-        assert.deepEqual(
-            serversInOldStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri),
-            serversInNewStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri)
-        );
     });
     test('When adding a HTTP url (with a pwd, and without a token) do not prompt user to use insecure sites (in new pwd manager)', async function () {
         await testMigration();
@@ -371,13 +350,8 @@ suite('User Uri Provider', () => {
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
         assert.include(handles, handle);
 
-        const serversInOldStorage = await provider.oldStorage.getServers();
         const serversInNewStorage = await provider.newStorage.getServers();
 
         assert.strictEqual(serversInNewStorage.length, 3);
-        assert.deepEqual(
-            serversInOldStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri),
-            serversInNewStorage.sort((a, b) => a.handle.localeCompare(b.handle)).map((s) => s.uri)
-        );
     });
 });
