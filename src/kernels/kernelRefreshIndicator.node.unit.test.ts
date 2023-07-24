@@ -5,7 +5,7 @@ import * as fakeTimers from '@sinonjs/fake-timers';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookControllerDetectionTask, NotebookDocument, NotebookEditor } from 'vscode';
 import { disposeAllDisposables } from '../platform/common/helpers';
-import { Experiments, IDisposable, IExperimentService } from '../platform/common/types';
+import { IDisposable } from '../platform/common/types';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { IKernelFinder } from './types';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
@@ -25,7 +25,6 @@ suite('Kernel Refresh Indicator (node)', () => {
     let interpreterService: IInterpreterService;
     let onPythonExtensionInstallationStatusChanged: EventEmitter<'installed' | 'uninstalled'>;
     let clock: fakeTimers.InstalledClock;
-    let experiments: IExperimentService;
     setup(() => {
         kernelFinder = mock<IKernelFinder>();
         onDidChangeStatus = new EventEmitter<void>();
@@ -46,14 +45,11 @@ suite('Kernel Refresh Indicator (node)', () => {
         when(mockedVSCodeNamespaces.notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)).thenReturn(
             instance(taskIW)
         );
-        experiments = mock<IExperimentService>();
-        when(experiments.inExperiment(anything())).thenReturn(false);
         indicator = new KernelRefreshIndicator(
             disposables,
             instance(extensionChecker),
             instance(interpreterService),
-            instance(kernelFinder),
-            instance(experiments)
+            instance(kernelFinder)
         );
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
@@ -65,9 +61,6 @@ suite('Kernel Refresh Indicator (node)', () => {
         disposeAllDisposables(disposables);
     });
     suite('Experiment FasterKernelPicker enabled', () => {
-        setup(() => {
-            when(experiments.inExperiment(Experiments.FastKernelPicker)).thenReturn(true);
-        });
         suite('Python extension not installed', () => {
             setup(() => {
                 when(extensionChecker.isPythonExtensionInstalled).thenReturn(false);

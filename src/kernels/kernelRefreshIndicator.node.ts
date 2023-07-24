@@ -7,7 +7,7 @@ import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
-import { Experiments, IDisposable, IDisposableRegistry, IExperimentService } from '../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { traceInfo } from '../platform/logging';
 import { IKernelFinder } from './types';
@@ -25,8 +25,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
-        @inject(IExperimentService) private readonly experiments: IExperimentService
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {
         disposables.push(this);
     }
@@ -95,45 +94,6 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         );
     }
     private startRefreshWithPython() {
-        if (this.experiments.inExperiment(Experiments.FastKernelPicker)) {
-            return this.startRefreshWithPythonWithExperiment();
-        } else {
-            return this.startRefreshWithPythonWithoutExperiment();
-        }
-    }
-    private startRefreshWithPythonWithoutExperiment() {
-        if (this.refreshedOnceBefore) {
-            return;
-        }
-        this.refreshedOnceBefore = true;
-        const id = Date.now().toString();
-        traceInfo(`Start refreshing Interpreter Kernel Picker (${id})`);
-        const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
-        const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
-        this.disposables.push(taskNb);
-        this.disposables.push(taskIW);
-
-        this.interpreterService.refreshInterpreters().finally(() => {
-            if (this.kernelFinder.status === 'idle') {
-                traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
-                taskNb.dispose();
-                taskIW.dispose();
-                return;
-            }
-            this.kernelFinder.onDidChangeStatus(
-                () => {
-                    if (this.kernelFinder.status === 'idle') {
-                        traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
-                        taskNb.dispose();
-                        taskIW.dispose();
-                    }
-                },
-                this,
-                this.disposables
-            );
-        });
-    }
-    private startRefreshWithPythonWithExperiment() {
         if (this.refreshedOnceBefore) {
             return;
         }

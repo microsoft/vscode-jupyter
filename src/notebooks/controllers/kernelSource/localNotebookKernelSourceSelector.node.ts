@@ -36,10 +36,7 @@ export class LocalNotebookKernelSourceSelector implements ILocalNotebookKernelSo
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
     ) {}
-    public async selectLocalKernel(
-        notebook: NotebookDocument,
-        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
-    ): Promise<LocalKernelConnectionMetadata | undefined> {
+    public async selectLocalKernel(notebook: NotebookDocument): Promise<LocalKernelConnectionMetadata | undefined> {
         // Reject if it's not our type
         if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
             return;
@@ -52,7 +49,9 @@ export class LocalNotebookKernelSourceSelector implements ILocalNotebookKernelSo
         this.cancellationTokenSource = new CancellationTokenSource();
         const multiStep = this.multiStepFactory.create<MultiStepResult>();
         const state: MultiStepResult = { disposables: [], notebook };
-        const kernelFinder = this.kernelFinder.registered.find((finder) => finder.id === kind)!;
+        const kernelFinder = this.kernelFinder.registered.find(
+            (finder) => finder.id === ContributedKernelFinderKind.LocalKernelSpec
+        )!;
         try {
             const result = await multiStep.run(
                 this.selectKernelFromKernelFinder.bind(

@@ -12,7 +12,6 @@ import {
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
-import { ContributedKernelFinderKind } from '../../kernels/internalTypes';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -120,10 +119,7 @@ export interface IRemoteNotebookKernelSourceSelector {
 }
 export const ILocalNotebookKernelSourceSelector = Symbol('ILocalNotebookKernelSourceSelector');
 export interface ILocalNotebookKernelSourceSelector {
-    selectLocalKernel(
-        notebook: vscode.NotebookDocument,
-        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
-    ): Promise<LocalKernelConnectionMetadata | undefined>;
+    selectLocalKernel(notebook: vscode.NotebookDocument): Promise<LocalKernelConnectionMetadata | undefined>;
 }
 export const ILocalPythonNotebookKernelSourceSelector = Symbol('ILocalPythonNotebookKernelSourceSelector');
 export interface ILocalPythonNotebookKernelSourceSelector {

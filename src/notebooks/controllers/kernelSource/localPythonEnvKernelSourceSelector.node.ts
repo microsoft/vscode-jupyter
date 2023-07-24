@@ -16,7 +16,7 @@ import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { Experiments, IDisposable, IDisposableRegistry, IExperimentService } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -90,7 +90,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly checker: IPythonExtensionChecker
     ) {
@@ -100,9 +99,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         this.disposables.push(this._onDidChangeStatus);
     }
     activate() {
-        if (!this.experiments.inExperiment(Experiments.FastKernelPicker)) {
-            return;
-        }
         this.promiseMonitor.onStateChange(
             () => (this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering'),
             this,

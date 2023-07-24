@@ -1419,9 +1419,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "FastKernelPicker",
-                            "PasswordManager",
-                            "NewRemoteUriStorage",
                             "NewJupyterSession"
                         ]
                     },
@@ -1433,9 +1430,6 @@
                     "default": [],
                     "items": {
                         "enum": [
-                            "FastKernelPicker",
-                            "PasswordManager",
-                            "NewRemoteUriStorage",
                             "NewJupyterSession"
                         ]
                     },
