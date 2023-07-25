@@ -780,6 +780,7 @@
             {
                 "command": "jupyter.continueEditSessionInCodespace",
                 "title": "Continue On Codespace",
+                "shortTitle": "Continue On",
                 "icon": "$(vm)",
                 "enablement": "true",
                 "category": "Jupyter"
@@ -874,6 +875,11 @@
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation@4",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
+                },
+                {
+                    "command": "jupyter.continueEditSessionInCodespace",
+                    "group": "navigation@5",
+                    "when": "notebookType == 'jupyter-notebook' && jupyter.kernelSource == 'github-codespaces' && config.notebook.globalToolbar != true"
                 }
             ],
             "notebook/toolbar": [
