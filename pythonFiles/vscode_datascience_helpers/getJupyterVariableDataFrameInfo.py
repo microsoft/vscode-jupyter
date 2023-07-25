@@ -58,6 +58,9 @@ else:
     elif hasattr(_VSCODE_df, "toPandas"):
         _VSCODE_df = _VSCODE_df.toPandas()
         _VSCODE_targetVariable["rowCount"] = _VSCODE_getRowCount(_VSCODE_df)
+    elif hasattr(_VSCODE_df, "to_pandas"):
+        _VSCODE_df = _VSCODE_df.to_pandas()
+        _VSCODE_targetVariable["rowCount"] = _VSCODE_getRowCount(_VSCODE_df)
 
     # If any rows, use pandas json to convert a single row to json. Extract
     # the column names and types from the json so we match what we'll fetch when
