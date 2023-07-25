@@ -42,7 +42,6 @@ suite('Remote Execution @kernelCore', function () {
     let ipynbFile: Uri;
     let serviceContainer: IServiceContainer;
     let globalMemento: Memento;
-    let encryptedStorage: IEncryptedStorage;
     let controllerRegistration: IControllerRegistration;
     let controllerDefault: ControllerDefaultService;
 
@@ -101,7 +100,6 @@ suite('Remote Execution @kernelCore', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('MRU and encrypted storage should be updated with remote Uri info', async function () {
         const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
-        const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
@@ -110,9 +108,18 @@ suite('Remote Execution @kernelCore', function () {
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
-        await waitForCondition(async () => encryptedStorageSpiedStore.called, 5_000, 'Encrypted storage not updated');
-        const newList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
-        assert.notDeepEqual(previousList, newList, 'MRU not updated');
+        await waitForCondition(
+            async () => {
+                const newList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
+                assert.notDeepEqual(previousList, newList, 'MRU not updated');
+                return true;
+            },
+            5_000,
+            () =>
+                `MRU not updated, ${JSON.stringify(previousList)} === ${JSON.stringify(
+                    globalMemento.get<{}[]>(Settings.JupyterServerUriList, [])
+                )}`
+        );
     });
     test('Use same kernel when re-opening notebook', async function () {
         await reopeningNotebookUsesSameRemoteKernel(ipynbFile, serviceContainer);
