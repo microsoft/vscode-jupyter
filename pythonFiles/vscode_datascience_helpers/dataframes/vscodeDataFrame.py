@@ -100,6 +100,8 @@ def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
             df = _VSCODE_pd.Series.to_frame(df).iloc[start:end]
         elif _VSCODE_builtins.hasattr(df, "toPandas"):
             df = df.toPandas().iloc[start:end]
+        elif _VSCODE_builtins.hasattr(df, "to_pandas"):
+            df = df.to_pandas().iloc[start:end]
         elif (
             _VSCODE_builtins.hasattr(vartype, "__name__")
             and vartype.__name__ in _VSCODE_allowedTensorTypes
