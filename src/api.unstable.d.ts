@@ -119,7 +119,6 @@ export interface IJupyterUriProvider {
      * Given the handle, returns the Jupyter Server information.
      */
     getServerUri(handle: string): Promise<IJupyterServerUri>;
-    getServerUriWithoutAuth?(handle: string): Promise<IJupyterServerUri>;
     /**
      * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
      */
