@@ -311,7 +311,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 return [await createInterpreterKernelSpec()];
             }
         } catch (e) {
-            traceError(`SessionManager:getKernelSpecs failure: `, e);
+            if (!this.isDisposed) {
+                traceError(`SessionManager:getKernelSpecs failure: `, e);
+            }
             // For some reason this is failing. Just return nothing
             return [];
         }

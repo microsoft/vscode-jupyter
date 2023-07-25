@@ -21,10 +21,10 @@ import { createDeferred } from './async';
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
 // Why re-invent the wheel :)
 
-export class InputFlowAction {
-    public static back = new InputFlowAction();
-    public static cancel = new InputFlowAction();
-    public static resume = new InputFlowAction();
+export class InputFlowAction extends Error {
+    public static back = new InputFlowAction('back');
+    public static cancel = new InputFlowAction('cancel');
+    public static resume = new InputFlowAction('resume');
 }
 
 export type InputStep<T extends any> = (input: MultiStepInput<T>, state: T) => Promise<InputStep<T> | void>;
@@ -68,6 +68,7 @@ export interface InputBoxParameters {
     prompt: string;
     buttons?: QuickInputButton[];
     validate(value: string): Promise<string | undefined>;
+    validationMessage?: string;
     shouldResume?(): Promise<boolean>;
 }
 
@@ -107,7 +108,8 @@ export interface IMultiStepInput<S> {
         prompt,
         validate,
         buttons,
-        shouldResume
+        shouldResume,
+        validationMessage
     }: P): Promise<MultiStepInputInputBoxResponseType<P>>;
 }
 
@@ -265,7 +267,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         validate,
         password,
         buttons,
-        shouldResume
+        shouldResume,
+        validationMessage
     }: P): Promise<MultiStepInputInputBoxResponseType<P>> {
         const disposables: Disposable[] = [];
         try {
@@ -277,6 +280,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.password = password ? true : false;
                 input.value = value || '';
                 input.prompt = prompt;
+                input.validationMessage = validationMessage || '';
                 input.ignoreFocusOut = true;
                 input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : []), ...(buttons || [])];
                 disposables.push(
@@ -369,7 +373,7 @@ export interface IMultiStepInputFactory {
     create<S>(): IMultiStepInput<S>;
 }
 @injectable()
-export class MultiStepInputFactory {
+export class MultiStepInputFactory implements IMultiStepInputFactory {
     constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell) {}
     public create<S>(): IMultiStepInput<S> {
         return new MultiStepInput<S>(this.shell);

@@ -47,48 +47,45 @@ export class JupyterPasswordConnect {
     public static get prompt(): Promise<void> | undefined {
         return JupyterPasswordConnect._prompt?.promise;
     }
-    public getPasswordConnectionInfo({
-        url,
-        isTokenEmpty,
-        displayName,
-        handle
-    }: {
+    public getPasswordConnectionInfo(options: {
         url: string;
         isTokenEmpty: boolean;
         displayName?: string;
         handle: string;
     }): Promise<IJupyterPasswordConnectInfo> {
         JupyterPasswordConnect._prompt = undefined;
-        if (!url || url.length < 1) {
+        if (!options.url || options.url.length < 1) {
             throw new Error('Invalid URL');
         }
 
         // Add on a trailing slash to our URL if it's not there already
-        const newUrl = addTrailingSlash(url);
+        const newUrl = addTrailingSlash(options.url);
 
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
-        let result = this.savedConnectInfo.get(handle);
+        let result = this.savedConnectInfo.get(options.handle);
         if (!result) {
             const deferred = (JupyterPasswordConnect._prompt = createDeferred());
-            result = this.getNonCachedPasswordConnectionInfo({ url: newUrl, isTokenEmpty, displayName }).then(
-                (value) => {
-                    if (!value || (value.requiresPassword && Object.keys(value).length === 1)) {
-                        // If we fail to get a valid password connect info, don't save the value
-                        traceWarning(`Password for ${newUrl} was invalid.`);
-                        this.savedConnectInfo.delete(handle);
-                    }
-
-                    return value;
+            result = this.getNonCachedPasswordConnectionInfo({
+                url: newUrl,
+                isTokenEmpty: options.isTokenEmpty,
+                displayName: options.displayName
+            }).then((value) => {
+                if (!value || (value.requiresPassword && Object.keys(value).length === 1)) {
+                    // If we fail to get a valid password connect info, don't save the value
+                    traceWarning(`Password for ${newUrl} was invalid.`);
+                    this.savedConnectInfo.delete(options.handle);
                 }
-            );
-            result.catch(() => this.savedConnectInfo.delete(handle));
+
+                return value;
+            });
+            result.catch(() => this.savedConnectInfo.delete(options.handle));
             result.finally(() => {
                 deferred.resolve();
                 if (JupyterPasswordConnect._prompt === deferred) {
                     JupyterPasswordConnect._prompt = undefined;
                 }
             });
-            this.savedConnectInfo.set(handle, result);
+            this.savedConnectInfo.set(options.handle, result);
         }
 
         return result;
@@ -283,11 +280,7 @@ export class JupyterPasswordConnect {
         };
     }
 
-    private async getJupyterConnectionInfo({
-        url,
-        isTokenEmpty,
-        displayName
-    }: {
+    private async getJupyterConnectionInfo(options: {
         url: string;
         isTokenEmpty: boolean;
         displayName?: string;
@@ -297,16 +290,16 @@ export class JupyterPasswordConnect {
         let sessionCookieValue: string | undefined;
 
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
-        const requiresPassword = await this.needPassword(url);
+        const requiresPassword = await this.needPassword(options.url);
 
-        if (requiresPassword || isTokenEmpty) {
+        if (requiresPassword || options.isTokenEmpty) {
             // Get password first
-            let friendlyUrl = url;
-            const uri = new URL(url);
+            let friendlyUrl = options.url;
+            const uri = new URL(options.url);
             friendlyUrl = `${uri.protocol}//${uri.hostname}`;
-            friendlyUrl = displayName ? `${displayName} (${friendlyUrl})` : friendlyUrl;
+            friendlyUrl = options.displayName ? `${options.displayName} (${friendlyUrl})` : friendlyUrl;
             const userPassword =
-                requiresPassword && isTokenEmpty
+                requiresPassword && options.isTokenEmpty
                     ? await this.appShell.showInputBox({
                           title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
                           prompt: DataScience.jupyterSelectPasswordPrompt,
@@ -315,18 +308,18 @@ export class JupyterPasswordConnect {
                       })
                     : undefined;
 
-            if (typeof userPassword === undefined && !userPassword && isTokenEmpty) {
+            if (typeof userPassword === undefined && !userPassword && options.isTokenEmpty) {
                 // User exited out of the processes, same as hitting ESC.
                 throw new CancellationError();
             }
 
             // If we do not have a password, but token is empty, then generate an xsrf token with session cookie
-            if (userPassword || isTokenEmpty) {
-                xsrfCookie = await this.getXSRFToken(url, '');
+            if (userPassword || options.isTokenEmpty) {
+                xsrfCookie = await this.getXSRFToken(options.url, '');
 
                 // Then get the session cookie by hitting that same page with the xsrftoken and the password
                 if (xsrfCookie) {
-                    const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword || '');
+                    const sessionResult = await this.getSessionCookie(options.url, xsrfCookie, userPassword || '');
                     sessionCookieName = sessionResult.sessionCookieName;
                     sessionCookieValue = sessionResult.sessionCookieValue;
                 } else {
@@ -335,7 +328,7 @@ export class JupyterPasswordConnect {
                     sessionCookieName = 'authservice_session';
                     sessionCookieValue = userPassword;
 
-                    xsrfCookie = await this.getXSRFToken(url, `${sessionCookieName}=${sessionCookieValue}`);
+                    xsrfCookie = await this.getXSRFToken(options.url, `${sessionCookieName}=${sessionCookieValue}`);
                 }
             } else {
                 // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
@@ -349,7 +342,7 @@ export class JupyterPasswordConnect {
 
         // If we found everything return it all back if not, undefined as partial is useless
         // Remember session cookie can be empty, if both token and password are empty
-        if (xsrfCookie && sessionCookieName && (sessionCookieValue || isTokenEmpty)) {
+        if (xsrfCookie && sessionCookieName && (sessionCookieValue || options.isTokenEmpty)) {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
             const cookieString = `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue || ''}`;
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
