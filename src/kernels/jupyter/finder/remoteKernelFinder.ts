@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
+import { CancellationError, CancellationToken, CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { getKernelId } from '../../helpers';
 import {
     BaseKernelConnectionMetadata,
@@ -216,8 +216,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     kernels = await kernelsWithoutCachePromise;
                     this._lastError = undefined;
                 } catch (ex) {
-                    traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
-                    this._lastError = ex;
+                    // CancellationError is when user cancels the request, no need to log errors related to that.
+                    if (!(ex instanceof CancellationError)) {
+                        traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
+                        this._lastError = ex;
+                    }
                 }
             }
 
