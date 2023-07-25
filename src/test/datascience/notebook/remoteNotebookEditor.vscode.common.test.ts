@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Memento, Position, Uri, window } from 'vscode';
-import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, initialize, startJupyterServer, waitForCondition } from '../../common';
@@ -55,7 +55,6 @@ suite('Remote Execution @kernelCore', function () {
         sinon.restore();
         serviceContainer = api.serviceContainer;
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        encryptedStorage = api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage);
         globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         controllerDefault = ControllerDefaultService.create(api.serviceContainer);
