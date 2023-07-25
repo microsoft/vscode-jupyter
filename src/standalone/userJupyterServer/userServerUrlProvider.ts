@@ -448,7 +448,7 @@ export class UserJupyterServerUrlProvider
                     if (ex === InputFlowAction.back) {
                         if (!previousStep) {
                             // Go back to the beginning of this workflow, ie. back to calling code.
-                            return;
+                            return 'back';
                         }
                         nextStep = previousStep;
                         continue;
