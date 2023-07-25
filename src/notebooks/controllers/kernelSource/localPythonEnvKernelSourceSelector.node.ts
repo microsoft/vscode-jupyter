@@ -12,7 +12,7 @@ import {
     Uri
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import { IKernelFinder, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -40,6 +40,7 @@ import { Environment } from '../../../platform/api/pythonApiTypes';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { KernelFinder } from '../../../kernels/kernelFinder';
 
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
@@ -91,12 +92,14 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IPythonExtensionChecker) private readonly checker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly checker: IPythonExtensionChecker,
+        @inject(IKernelFinder) kernelFinder: KernelFinder
     ) {
         super();
         disposables.push(this);
         this.disposables.push(this._onDidChangeKernels);
         this.disposables.push(this._onDidChangeStatus);
+        kernelFinder.registerKernelFinder(this);
     }
     activate() {
         this.promiseMonitor.onStateChange(
