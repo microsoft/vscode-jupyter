@@ -286,8 +286,10 @@ export class UserJupyterServerUrlProvider
         let nextStep: Steps = 'Get Url';
         let previousStep: Steps | undefined = 'Get Url';
         if (url) {
+            // Validate the URI first, which would otherwise be validated when user enters the Uri into the input box.
             const initialVerification = this.parseUserUriAndGetValidationError(url);
             if (typeof initialVerification.validationError === 'string') {
+                // Uri has an error, show the error message by displaying the input box and pre-populating the url.
                 validationErrorMessage = initialVerification.validationError;
                 nextStep = 'Get Url';
             } else {
@@ -303,7 +305,7 @@ export class UserJupyterServerUrlProvider
                         nextStep = 'Check Passwords';
                         previousStep = undefined;
                         const errorMessage = validationErrorMessage;
-                        validationErrorMessage = '';
+                        validationErrorMessage = ''; // Never display this validation message again.
                         const result = await this.getUrl(url, errorMessage, disposables);
                         jupyterServerUri = result.jupyterServerUri;
                         url = result.url;
@@ -315,7 +317,7 @@ export class UserJupyterServerUrlProvider
 
                         try {
                             const errorMessage = validationErrorMessage;
-                            validationErrorMessage = '';
+                            validationErrorMessage = ''; // Never display this validation message again.
                             const result = await this.passwordConnect.getPasswordConnectionInfo({
                                 url: jupyterServerUri.baseUrl,
                                 isTokenEmpty: jupyterServerUri.token.length === 0,
@@ -388,7 +390,13 @@ export class UserJupyterServerUrlProvider
                             );
                         } catch (err) {
                             traceWarning('Uri verification error', err);
-                            if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                            if (
+                                err instanceof CancellationError ||
+                                err == InputFlowAction.back ||
+                                err == InputFlowAction.cancel
+                            ) {
+                                throw err;
+                            } else if (JupyterSelfCertsError.isSelfCertsError(err)) {
                                 validationErrorMessage = DataScience.jupyterSelfCertFailErrorMessageOnly;
                                 nextStep = 'Get Url';
                                 continue;
