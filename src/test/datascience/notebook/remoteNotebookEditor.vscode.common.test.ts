@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Position, Uri, window } from 'vscode';
-import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, initialize, startJupyterServer, waitForCondition } from '../../common';
@@ -32,7 +32,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { ControllerDefaultService } from './controllerDefaultService';
-import { NewStorage } from '../../../standalone/userJupyterServer/userServerUrlProvider';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Remote Execution @kernelCore', function () {
@@ -44,7 +44,7 @@ suite('Remote Execution @kernelCore', function () {
     let serviceContainer: IServiceContainer;
     let controllerRegistration: IControllerRegistration;
     let controllerDefault: ControllerDefaultService;
-    let storage: NewStorage;
+    let storage: IJupyterServerUriStorage;
 
     suiteSetup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
@@ -58,7 +58,7 @@ suite('Remote Execution @kernelCore', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
         controllerDefault = ControllerDefaultService.create(api.serviceContainer);
-        storage = new NewStorage(api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage));
+        storage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -99,19 +99,19 @@ suite('Remote Execution @kernelCore', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('MRU and encrypted storage should be updated with remote Uri info', async function () {
-        const previousList = await storage.getServers();
         const { editor } = await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = editor.notebook.cellAt(0)!;
+        const previousList = await storage.getAll();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
         let newList = previousList;
         await waitForCondition(
             async () => {
-                newList = await storage.getServers();
+                newList = await storage.getAll();
                 assert.notDeepEqual(previousList, newList, 'MRU not updated');
                 return true;
             },
