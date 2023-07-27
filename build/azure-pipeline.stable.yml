@@ -27,8 +27,6 @@ extends:
     l10nSourcePaths: ./src
     buildPlatforms:
       - name: Linux
-        vsceTarget: ''
-      - name: Linux
         vsceTarget: 'web'
       - name: Linux
         packageArch: arm64
