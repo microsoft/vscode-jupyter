@@ -8,7 +8,10 @@ export class MockWorkspaceFolder implements WorkspaceFolder {
     public name: string;
     public ownedResources = new Set<string>();
 
-    constructor(folder: string, public index: number) {
+    constructor(
+        folder: string,
+        public index: number
+    ) {
         this.uri = Uri.file(folder);
         this.name = folder;
     }

@@ -897,29 +897,29 @@ suite('Install IPyKernel (install) @kernelInstall', function () {
         }
 
         const kernelSelected = createDeferred<boolean>();
-        const selectADifferentKernelStub = sinon
-            .stub(commandManager, 'executeCommand')
-            .callsFake(async function (cmd: string) {
-                if (cmd === 'notebook.selectKernel') {
-                    // After we change the kernel, we might get a prompt to install ipykernel.
-                    // Ensure we click ok to install.
-                    if (promptToInstall.getDisplayCount() > 0) {
-                        promptToInstall.dispose();
-                        if (ipykernelInstallRequirement === 'ShouldInstallIPYKernel') {
-                            await clickInstallFromIPyKernelPrompt();
-                        }
+        const selectADifferentKernelStub = sinon.stub(commandManager, 'executeCommand').callsFake(async function (
+            cmd: string
+        ) {
+            if (cmd === 'notebook.selectKernel') {
+                // After we change the kernel, we might get a prompt to install ipykernel.
+                // Ensure we click ok to install.
+                if (promptToInstall.getDisplayCount() > 0) {
+                    promptToInstall.dispose();
+                    if (ipykernelInstallRequirement === 'ShouldInstallIPYKernel') {
+                        await clickInstallFromIPyKernelPrompt();
                     }
-                    await commands.executeCommand('notebook.selectKernel', {
-                        id: controller.controller.id,
-                        extension: JVSC_EXTENSION_ID_FOR_TESTS
-                    });
-
-                    kernelSelected.resolve(true);
-                    return Promise.resolve(true);
-                } else {
-                    return commands.executeCommand.apply(commands, [cmd, ...Array.from(arguments).slice(1)]);
                 }
-            } as any);
+                await commands.executeCommand('notebook.selectKernel', {
+                    id: controller.controller.id,
+                    extension: JVSC_EXTENSION_ID_FOR_TESTS
+                });
+
+                kernelSelected.resolve(true);
+                return Promise.resolve(true);
+            } else {
+                return commands.executeCommand.apply(commands, [cmd, ...Array.from(arguments).slice(1)]);
+            }
+        } as any);
 
         return { kernelSelected: kernelSelected.promise, selectADifferentKernelStub };
     }
