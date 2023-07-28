@@ -150,7 +150,8 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
                     this,
                     this.disposables
                 );
-            });
+            })
+            .catch(noop);
     }
     public get kernels(): LocalKernelConnectionMetadata[] {
         return Array.from(this._kernels.values());

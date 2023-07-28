@@ -527,7 +527,7 @@ export class InterpreterService implements IInterpreterService {
             this.getInterpretersCancellation?.dispose();
             const cancellation = (this.getInterpretersCancellation = new CancellationTokenSource());
             this.interpreterListCachePromise = this.getInterpretersImpl(cancellation.token);
-            this.interpreterListCachePromise.finally(() => cancellation.dispose());
+            this.interpreterListCachePromise.finally(() => cancellation.dispose()).catch(noop);
             this.refreshPromises.push(this.interpreterListCachePromise);
         }
         return this.interpreterListCachePromise;
@@ -628,9 +628,8 @@ export class InterpreterService implements IInterpreterService {
                     traceInfo(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
-                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${
-                            item?.version?.patch
-                        })`
+                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${item
+                            ?.version?.patch})`
                     );
                 })
                 .catch(noop);
@@ -829,9 +828,9 @@ export class InterpreterService implements IInterpreterService {
                             const env = await api.environments.resolveEnvironment(item);
                             const resolved = this.trackResolvedEnvironment(env);
                             traceInfoIfCI(
-                                `Python environment for ${item.id} is ${
-                                    env?.id
-                                } from Python Extension API is ${JSON.stringify(
+                                `Python environment for ${
+                                    item.id
+                                } is ${env?.id} from Python Extension API is ${JSON.stringify(
                                     env
                                 )} and original env is ${JSON.stringify(item)} and translated is ${JSON.stringify(
                                     resolved
@@ -948,22 +947,24 @@ export class InterpreterService implements IInterpreterService {
                                 e.env.executable.uri
                                     ? true
                                     : false;
-                            this.populateCachedListOfInterpreters(true).finally(() => {
-                                const info = this._interpreters.get(e.env.id);
-                                if (e.type === 'remove' && !info) {
-                                    this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
-                                    this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
-                                    this._onDidRemoveInterpreter.fire({ id: e.env.id });
-                                } else if (
-                                    e.type === 'update' &&
-                                    info &&
-                                    pythonInstalledIntoConda &&
-                                    !info.resolved.isCondaEnvWithoutPython
-                                ) {
-                                    this.triggerEventIfAllowed('interpreterChangeEvent', info.resolved);
-                                    this.triggerEventIfAllowed('interpretersChangeEvent', info.resolved);
-                                }
-                            });
+                            this.populateCachedListOfInterpreters(true)
+                                .finally(() => {
+                                    const info = this._interpreters.get(e.env.id);
+                                    if (e.type === 'remove' && !info) {
+                                        this.triggerEventIfAllowed('interpreterChangeEvent', undefined);
+                                        this.triggerEventIfAllowed('interpretersChangeEvent', undefined);
+                                        this._onDidRemoveInterpreter.fire({ id: e.env.id });
+                                    } else if (
+                                        e.type === 'update' &&
+                                        info &&
+                                        pythonInstalledIntoConda &&
+                                        !info.resolved.isCondaEnvWithoutPython
+                                    ) {
+                                        this.triggerEventIfAllowed('interpreterChangeEvent', info.resolved);
+                                        this.triggerEventIfAllowed('interpretersChangeEvent', info.resolved);
+                                    }
+                                })
+                                .catch(noop);
                         },
                         this,
                         this.disposables

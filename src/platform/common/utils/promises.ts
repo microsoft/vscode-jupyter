@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { EventEmitter } from 'vscode';
+import { noop } from './misc';
 
 /**
  * Keeps track of the promises and notifies when all are completed.
@@ -19,11 +20,13 @@ export class PromiseMonitor {
     push(promise: Promise<unknown>) {
         this.promises.add(promise);
         this._onStateChange.fire();
-        promise.finally(() => {
-            this.promises.delete(promise);
-            if (this.isComplete) {
-                this._onStateChange.fire();
-            }
-        });
+        promise
+            .finally(() => {
+                this.promises.delete(promise);
+                if (this.isComplete) {
+                    this._onStateChange.fire();
+                }
+            })
+            .catch(noop);
     }
 }

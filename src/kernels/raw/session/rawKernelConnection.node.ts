@@ -247,11 +247,13 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             return;
         }
         this.isDisposing = true;
-        this.shutdown().finally(() => {
-            this._isDisposed = true;
-            this.disposed.emit();
-            Signal.disconnectAll(this);
-        });
+        this.shutdown()
+            .finally(() => {
+                this._isDisposed = true;
+                this.disposed.emit();
+                Signal.disconnectAll(this);
+            })
+            .catch(noop);
     }
     public async shutdown(): Promise<void> {
         if (this.isShuttingDown || this.hasShutdown) {

@@ -271,11 +271,13 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 }
             }
         })();
-        promise.finally(() => {
-            if (this.pendingRestartInterrupt.get(kernel) === promise) {
-                this.pendingRestartInterrupt.delete(kernel);
-            }
-        });
+        promise
+            .finally(() => {
+                if (this.pendingRestartInterrupt.get(kernel) === promise) {
+                    this.pendingRestartInterrupt.delete(kernel);
+                }
+            })
+            .catch(noop);
         this.pendingRestartInterrupt.set(kernel, promise);
         return promise;
     }

@@ -17,6 +17,7 @@ import {
 import { IApplicationShell } from '../application/types';
 import { disposeAllDisposables } from '../helpers';
 import { createDeferred } from './async';
+import { noop } from './misc';
 
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
 // Why re-invent the wheel :)
@@ -254,7 +255,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         }
         this.current = input;
         this.current.show();
-        deferred.promise.finally(() => disposeAllDisposables(disposables));
+        deferred.promise.finally(() => disposeAllDisposables(disposables)).catch(noop);
         return { quickPick: input, selection: deferred.promise };
     }
 
