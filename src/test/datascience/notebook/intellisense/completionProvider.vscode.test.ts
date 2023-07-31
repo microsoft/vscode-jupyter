@@ -221,7 +221,8 @@ import { Settings } from '../../../../platform/common/constants';
                 const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('df.', '.', fileName, 'Age', 'S', 'Sex');
             });
-            test('Dataframe column completions', async () => {
+            test.skip('Dataframe column completions', async () => {
+                // https://github.com/microsoft/vscode-jupyter/issues/14012
                 const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
                 await testCompletions('df.Name.', '.', fileName, 'add_prefix', 'add_s', 'add_suffix');
             });
