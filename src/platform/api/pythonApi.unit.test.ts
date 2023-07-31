@@ -15,8 +15,8 @@ import {
     ActiveEnvironmentPathChangeEvent,
     EnvironmentsChangeEvent,
     EnvironmentVariablesChangeEvent,
-    ProposedExtensionAPI
-} from './pythonApiTypes';
+    PythonExtension
+} from '@vscode/python-extension';
 import { IPythonApiProvider, IPythonExtensionChecker } from './types';
 
 suite(`Interpreter Service`, () => {
@@ -32,8 +32,8 @@ suite(`Interpreter Service`, () => {
     let onDidChangeActiveEnvironmentPath: EventEmitter<ActiveEnvironmentPathChangeEvent>;
     let onDidChangeEnvironments: EventEmitter<EnvironmentsChangeEvent>;
     let onDidEnvironmentVariablesChange: EventEmitter<EnvironmentVariablesChangeEvent>;
-    let newPythonApi: ProposedExtensionAPI;
-    let environments: ProposedExtensionAPI['environments'];
+    let newPythonApi: PythonExtension;
+    let environments: PythonExtension['environments'];
     setup(() => {
         interpreterService = mock<IInterpreterService>();
         apiProvider = mock<IPythonApiProvider>();
@@ -51,8 +51,8 @@ suite(`Interpreter Service`, () => {
         disposables.push(onDidChangeEnvironments);
         disposables.push(onDidEnvironmentVariablesChange);
 
-        newPythonApi = mock<ProposedExtensionAPI>();
-        environments = mock<ProposedExtensionAPI['environments']>();
+        newPythonApi = mock<PythonExtension>();
+        environments = mock<PythonExtension['environments']>();
         when(newPythonApi.environments).thenReturn(instance(environments));
         when(environments.onDidChangeActiveEnvironmentPath).thenReturn(onDidChangeActiveEnvironmentPath.event);
         when(environments.onDidChangeEnvironments).thenReturn(onDidChangeEnvironments.event);

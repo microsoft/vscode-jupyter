@@ -18,7 +18,7 @@ import { clearCache } from '../utils/cacheUtils';
 import { EnvironmentVariablesService } from './environment.node';
 import { FileSystem } from '../platform/fileSystem.node';
 import * as sinon from 'sinon';
-import { ProposedExtensionAPI } from '../../api/pythonApiTypes';
+import { PythonExtension } from '@vscode/python-extension';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../test/constants.node';
 import { createEventHandler } from '../../../test/common';
 
@@ -29,7 +29,7 @@ suite('Custom Environment Variables Provider', () => {
     let workspace: IWorkspaceService;
     let pythonExtChecker: IPythonExtensionChecker;
     let pythonApiProvider: IPythonApiProvider;
-    let pythonApi: ProposedExtensionAPI;
+    let pythonApi: PythonExtension;
     const envFile = Uri.joinPath(Uri.file(EXTENSION_ROOT_DIR_FOR_TESTS), 'src', 'test', 'datascience', '.env');
     let contentsOfOldEnvFile: string;
     let customPythonEnvFile = Uri.joinPath(
@@ -50,7 +50,7 @@ suite('Custom Environment Variables Provider', () => {
         pythonExtChecker = mock<IPythonExtensionChecker>();
         when(pythonExtChecker.isPythonExtensionInstalled).thenReturn(true);
         pythonApiProvider = mock<IPythonApiProvider>();
-        pythonApi = mock<ProposedExtensionAPI>();
+        pythonApi = mock<PythonExtension>();
         (instance(pythonApi) as any).then = undefined;
         when(pythonApiProvider.getNewApi()).thenResolve(instance(pythonApi));
         contentsOfOldEnvFile = fs.readFileSync(envFile.fsPath).toString();
@@ -204,7 +204,7 @@ suite('Custom Environment Variables Provider', () => {
                     `;
         traceInfo('Write to python env file', customPythonEnvFile.fsPath);
         fs.writeFileSync(customPythonEnvFile.fsPath, pythonEnvVars);
-        const environments = mock<ProposedExtensionAPI['environments']>();
+        const environments = mock<PythonExtension['environments']>();
         when(environments.getEnvironmentVariables(anything())).thenReturn({
             VSCODE_JUPYTER_ENV_TEST_VAR1: 'PYTHON_FOO',
             VSCODE_JUPYTER_ENV_TEST_VAR2: 'PYTHON_BAR'

@@ -9,7 +9,7 @@ import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
-import { isCI, PythonExtension, Telemetry } from '../common/constants';
+import { isCI, PythonExtensionId, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
@@ -20,12 +20,12 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import { Environment, KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
+import { ResolvedEnvironment, KnownEnvironmentTools, Environment, PythonExtension } from '@vscode/python-extension';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -254,9 +254,9 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         this.init().catch(noop);
         return this.api.promise;
     }
-    public async getNewApi(): Promise<ProposedExtensionAPI | undefined> {
+    public async getNewApi(): Promise<PythonExtension | undefined> {
         await this.init();
-        const extension = this.extensions.getExtension<ProposedExtensionAPI>(PythonExtension);
+        const extension = this.extensions.getExtension<PythonExtension>(PythonExtensionId);
         if (extension?.packageJSON?.version) {
             this._pythonExtensionVersion = new SemVer(extension?.packageJSON?.version);
         }
@@ -276,7 +276,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         if (this.initialized) {
             return;
         }
-        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
+        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtensionId);
         if (!pythonExtension) {
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
         } else {
@@ -288,7 +288,7 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         if (this.hooksRegistered) {
             return;
         }
-        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtension);
+        const pythonExtension = this.extensions.getExtension<{ jupyter: { registerHooks(): void } }>(PythonExtensionId);
         if (!pythonExtension) {
             return;
         }
@@ -347,15 +347,15 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     public get isPythonExtensionInstalled() {
-        return this.extensions.getExtension(PythonExtension) !== undefined;
+        return this.extensions.getExtension(PythonExtensionId) !== undefined;
     }
     public get isPythonExtensionActive() {
-        return this.extensions.getExtension(PythonExtension)?.isActive === true;
+        return this.extensions.getExtension(PythonExtensionId)?.isActive === true;
     }
 
     // Directly install the python extension instead of just showing the extension open page
     public async directlyInstallPythonExtension(): Promise<void> {
-        return this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension, {
+        return this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtensionId, {
             context: { skipWalkthrough: true }
         });
     }
@@ -386,7 +386,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
     private async installPythonExtension() {
         // Have the user install python
-        this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
+        this.commandManager.executeCommand('extension.open', PythonExtensionId).then(noop, noop);
     }
 
     private async extensionsChangeHandler(): Promise<void> {
@@ -445,8 +445,8 @@ export class InterpreterService implements IInterpreterService {
     public onDidEnvironmentVariablesChange = this._onDidEnvironmentVariablesChange.event;
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
-    private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
-    private api?: ProposedExtensionAPI;
+    private apiPromise: Promise<PythonExtension | undefined> | undefined;
+    private api?: PythonExtension;
     private _status: 'refreshing' | 'idle' = 'idle';
     public get status() {
         return this._status;
@@ -773,7 +773,7 @@ export class InterpreterService implements IInterpreterService {
         }
         this.pendingInterpretersChangeEventTriggers.clear();
     }
-    private async getApi(): Promise<ProposedExtensionAPI | undefined> {
+    private async getApi(): Promise<PythonExtension | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
