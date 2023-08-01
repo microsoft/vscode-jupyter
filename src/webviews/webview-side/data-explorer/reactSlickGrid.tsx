@@ -91,7 +91,10 @@ class ColumnFilter {
     private equalToRegEx = /^\s*(?:=|==)\s*((?<Number>-?\d+.*)|(?<NaN>nan)|(?<Inf>inf)|(?<NegInf>-inf)).*/i;
     private textRegex: RegExp | undefined;
 
-    constructor(public text: string, column: Slick.Column<Slick.SlickData>) {
+    constructor(
+        public text: string,
+        column: Slick.Column<Slick.SlickData>
+    ) {
         if (text && text.length > 0) {
             const columnType = (column as any).type;
             switch (columnType) {

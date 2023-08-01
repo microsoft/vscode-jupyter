@@ -235,7 +235,7 @@ export class CellExecution implements IDisposable {
             this.disposables
         );
 
-        this.cellExecutionHandler.completed.finally(() => this.completedSuccessfully());
+        this.cellExecutionHandler.completed.finally(() => this.completedSuccessfully()).catch(noop);
     }
 
     /**

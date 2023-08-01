@@ -79,12 +79,14 @@ export class JupyterPasswordConnect {
                 return value;
             });
             result.catch(() => this.savedConnectInfo.delete(options.handle));
-            result.finally(() => {
-                deferred.resolve();
-                if (JupyterPasswordConnect._prompt === deferred) {
-                    JupyterPasswordConnect._prompt = undefined;
-                }
-            });
+            result
+                .finally(() => {
+                    deferred.resolve();
+                    if (JupyterPasswordConnect._prompt === deferred) {
+                        JupyterPasswordConnect._prompt = undefined;
+                    }
+                })
+                .catch(noop);
             this.savedConnectInfo.set(options.handle, result);
         }
 

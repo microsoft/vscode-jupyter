@@ -15,7 +15,7 @@ import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactiv
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
-import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 
 /**
  * Tracks a lot of the context keys needed in the extension.
@@ -49,7 +49,6 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration
     ) {
@@ -197,10 +196,9 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         }
 
         const connection = kernel.kernelConnectionMetadata;
-        const uriItem = await this.serverUriStorage.get(connection.serverProviderHandle);
-        const provider =
-            uriItem &&
-            (await this.jupyterUriProviderRegistration.getProvider(uriItem.provider.extensionId, uriItem.provider.id));
+        const provider = await this.jupyterUriProviderRegistration
+            .getProvider(connection.serverProviderHandle.extensionId, connection.serverProviderHandle.id)
+            .catch(noop);
 
         if (!provider) {
             this.kernelSourceContext.set('').catch(noop);

@@ -294,7 +294,7 @@ export class JupyterPaths {
                 this.cachedKernelSpecRootPaths = undefined;
             }
         }, this);
-        promise.finally(() => disposable.dispose());
+        promise.finally(() => disposable.dispose()).catch(noop);
         return promise;
     }
     private async getKernelSpecRootPathsImpl(cancelToken: CancellationToken): Promise<Uri[]> {

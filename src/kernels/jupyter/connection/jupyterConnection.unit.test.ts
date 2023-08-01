@@ -6,13 +6,10 @@
 import { assert, use } from 'chai';
 
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { EventEmitter } from 'vscode';
 import { JupyterConnection } from './jupyterConnection';
 import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
-    IJupyterServerUriEntry,
-    IJupyterServerUriStorage,
     IJupyterSessionManager,
     IOldJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration
@@ -29,7 +26,6 @@ suite('Jupyter Connection', async () => {
     let registrationPicker: IJupyterUriProviderRegistration;
     let sessionManagerFactory: IOldJupyterSessionManagerFactory;
     let sessionManager: IJupyterSessionManager;
-    let serverUriStorage: IJupyterServerUriStorage;
     let appShell: IApplicationShell;
     let configService: IConfigurationService;
     let errorHandler: IDataScienceErrorHandler;
@@ -51,7 +47,6 @@ suite('Jupyter Connection', async () => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
         sessionManagerFactory = mock<IOldJupyterSessionManagerFactory>();
         sessionManager = mock<IJupyterSessionManager>();
-        serverUriStorage = mock<IJupyterServerUriStorage>();
         appShell = mock<IApplicationShell>();
         configService = mock<IConfigurationService>();
         errorHandler = mock<IDataScienceErrorHandler>();
@@ -60,7 +55,6 @@ suite('Jupyter Connection', async () => {
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
             instance(sessionManagerFactory),
-            instance(serverUriStorage),
             instance(appShell),
             instance(configService),
             instance(errorHandler),
@@ -70,10 +64,6 @@ suite('Jupyter Connection', async () => {
 
         (instance(sessionManager) as any).then = undefined;
         when(sessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
-        const serverConnectionChangeEvent = new EventEmitter<void>();
-        disposables.push(serverConnectionChangeEvent);
-
-        when(serverUriStorage.onDidChange).thenReturn(serverConnectionChangeEvent.event);
     });
     teardown(() => {
         disposeAllDisposables(disposables);
@@ -142,12 +132,6 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.dispose()).thenResolve();
         const id = '1';
         const handle = 'handle1';
-        const server: IJupyterServerUriEntry = {
-            provider: { id, handle, extensionId: '' },
-            time: Date.now(),
-            displayName: 'someDisplayName',
-            isValidated: true
-        };
         const uriInfo: IJupyterServerUri = {
             baseUrl: 'http://localhost:8888',
             displayName: 'someDisplayName',
@@ -157,7 +141,6 @@ suite('Jupyter Connection', async () => {
                 token: '1234'
             }
         };
-        when(serverUriStorage.get(deepEqual({ id, handle, extensionId: '' }))).thenResolve(server);
         when(registrationPicker.getJupyterServerUri(deepEqual({ id, handle, extensionId: '' }))).thenResolve(uriInfo);
         when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
         when(sessionManager.getRunningKernels()).thenResolve([]);
@@ -172,18 +155,11 @@ suite('Jupyter Connection', async () => {
         when(sessionManager.dispose()).thenResolve();
         const id = '1';
         const handle = 'handle1';
-        const server: IJupyterServerUriEntry = {
-            provider: { id, handle, extensionId: '' },
-            time: Date.now(),
-            displayName: 'someDisplayName',
-            isValidated: true
-        };
         const uriInfo: IJupyterServerUri = {
             baseUrl: 'http://localhost:8888',
             displayName: 'someDisplayName',
             token: '1234'
         };
-        when(serverUriStorage.get(deepEqual({ id, handle, extensionId: '' }))).thenResolve(server);
         when(registrationPicker.getJupyterServerUri(deepEqual({ id, handle, extensionId: '' }))).thenResolve(uriInfo);
         when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
         when(sessionManager.getRunningKernels()).thenResolve([]);

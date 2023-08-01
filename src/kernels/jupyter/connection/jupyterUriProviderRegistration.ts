@@ -201,7 +201,10 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
     public readonly getHandles?: () => Promise<string[]>;
     public readonly removeHandle?: (handle: string) => Promise<void>;
 
-    constructor(private readonly provider: IJupyterUriProvider, public extensionId: string) {
+    constructor(
+        private readonly provider: IJupyterUriProvider,
+        public extensionId: string
+    ) {
         super();
         this.id = this.provider.id;
 
@@ -267,4 +270,23 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         }
         return server;
     }
+}
+
+export async function getJupyterDisplayName(
+    serverHandle: JupyterServerProviderHandle,
+    jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
+    defaultValue?: string
+) {
+    let displayName: string | undefined = '';
+    const provider = await jupyterUriProviderRegistration
+        .getProvider(serverHandle.extensionId, serverHandle.id)
+        .catch(noop);
+    if (provider) {
+        const server = provider.getServerUriWithoutAuthInfo
+            ? await provider.getServerUriWithoutAuthInfo(serverHandle.handle)
+            : await provider.getServerUri(serverHandle.handle);
+        displayName = server.displayName;
+    }
+    defaultValue = defaultValue || `${serverHandle.id}:${serverHandle.handle}`;
+    return displayName || defaultValue;
 }
