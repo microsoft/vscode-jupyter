@@ -200,7 +200,6 @@ export interface IJupyterServerUriStorage {
     getAll(): Promise<IJupyterServerUriEntry[]>;
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
-    get(serverProviderHandle: JupyterServerProviderHandle): Promise<IJupyterServerUriEntry | undefined>;
     add(
         serverProviderHandle: JupyterServerProviderHandle,
         options?: { time: number; displayName: string }

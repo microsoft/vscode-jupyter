@@ -12,6 +12,7 @@ import {
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
+import { IInternalJupyterUriProvider } from '../../kernels/jupyter/types';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -113,8 +114,7 @@ export const IRemoteNotebookKernelSourceSelector = Symbol('IRemoteNotebookKernel
 export interface IRemoteNotebookKernelSourceSelector {
     selectRemoteKernel(
         notebook: vscode.NotebookDocument,
-        extensionId: string,
-        providerId: string
+        provider: IInternalJupyterUriProvider
     ): Promise<RemoteKernelConnectionMetadata | undefined>;
 }
 export const ILocalNotebookKernelSourceSelector = Symbol('ILocalNotebookKernelSourceSelector');
