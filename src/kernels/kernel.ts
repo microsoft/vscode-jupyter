@@ -799,11 +799,11 @@ abstract class BaseKernel implements IBaseKernel {
                 traceError('Failed to determine version of IPyWidgets', ex)
             );
             if (Array.isArray(version)) {
-                const isVersion8 = version.some(
-                    (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
+                const isVersion8 = version.some((output) =>
+                    (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
                 );
-                const isVersion7 = version.some(
-                    (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}7.`)
+                const isVersion7 = version.some((output) =>
+                    (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}7.`)
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);

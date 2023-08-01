@@ -14,10 +14,9 @@ import { IBaseKernelSession, INewSessionWithSocket, KernelSocketInformation } fr
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 
 export abstract class BaseJupyterSessionConnection<
-        S extends INewSessionWithSocket,
-        T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'
-    >
-    implements Session.ISessionConnection, IBaseKernelSession<T>
+    S extends INewSessionWithSocket,
+    T extends 'remoteJupyter' | 'localJupyter' | 'localRaw'
+> implements Session.ISessionConnection, IBaseKernelSession<T>
 {
     public get id() {
         return this.session.id;
@@ -63,10 +62,7 @@ export abstract class BaseJupyterSessionConnection<
     protected onStatusChangedEvent = new EventEmitter<KernelMessage.Status>();
     protected readonly disposables: IDisposable[] = [];
 
-    constructor(
-        public readonly kind: T,
-        protected readonly session: S
-    ) {
+    constructor(public readonly kind: T, protected readonly session: S) {
         session.propertyChanged.connect(this.onPropertyChanged, this);
         session.kernelChanged.connect(this.onKernelChanged, this);
         session.statusChanged.connect(this.onStatusChanged, this);

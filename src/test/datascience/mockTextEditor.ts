@@ -22,10 +22,7 @@ import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
 
 class MockEditorEdit implements TextEditorEdit {
-    constructor(
-        private _documentManager: MockDocumentManager,
-        private _document: MockDocument
-    ) {}
+    constructor(private _documentManager: MockDocumentManager, private _document: MockDocument) {}
 
     public replace(location: Selection | Range | Position, value: string): void {
         this._documentManager.changeDocument(this._document.fileName, [
@@ -57,10 +54,7 @@ export class MockEditor implements TextEditor {
     public selections: Selection[] = [];
     private _revealCallback: () => void;
 
-    constructor(
-        private _documentManager: MockDocumentManager,
-        private _document: MockDocument
-    ) {
+    constructor(private _documentManager: MockDocumentManager, private _document: MockDocument) {
         this.selection = new Selection(0, 0, 0, 0);
         this._revealCallback = noop;
     }

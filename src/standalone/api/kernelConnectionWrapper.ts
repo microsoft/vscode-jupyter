@@ -27,10 +27,7 @@ export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
         }
     }
 
-    constructor(
-        readonly kernel: IBaseKernel,
-        disposables: IDisposable[]
-    ) {
+    constructor(readonly kernel: IBaseKernel, disposables: IDisposable[]) {
         super(kernel.session!.kernel!, disposables);
         const emiStatusChangeEvents = () => {
             this.statusChanged.emit(kernel.status);

@@ -19,10 +19,7 @@ import { traceWarning } from '../../../platform/logging';
  * base class of the data viewer dependency implementation.
  */
 export abstract class BaseDataViewerDependencyImplementation<TExecuter> implements IDataViewerDependencyService {
-    constructor(
-        private readonly applicationShell: IApplicationShell,
-        private isCodeSpace: boolean
-    ) {}
+    constructor(private readonly applicationShell: IApplicationShell, private isCodeSpace: boolean) {}
 
     abstract checkAndInstallMissingDependencies(executionEnvironment: IKernel | PythonEnvironment): Promise<void>;
 

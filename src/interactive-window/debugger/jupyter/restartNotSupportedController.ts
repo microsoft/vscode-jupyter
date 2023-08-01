@@ -16,10 +16,7 @@ import { traceVerbose } from '../../../platform/logging';
 export class RestartNotSupportedController implements IDebuggingDelegate {
     private readonly applicationShell: IApplicationShell;
 
-    constructor(
-        public readonly debugCell: NotebookCell,
-        serviceContainer: IServiceContainer
-    ) {
+    constructor(public readonly debugCell: NotebookCell, serviceContainer: IServiceContainer) {
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
     }
 

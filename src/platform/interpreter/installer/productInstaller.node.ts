@@ -79,10 +79,7 @@ export class DataScienceInstaller {
 
     protected readonly persistentStateFactory: IPersistentStateFactory;
 
-    constructor(
-        protected serviceContainer: IServiceContainer,
-        _outputChannel: IOutputChannel
-    ) {
+    constructor(protected serviceContainer: IServiceContainer, _outputChannel: IOutputChannel) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);

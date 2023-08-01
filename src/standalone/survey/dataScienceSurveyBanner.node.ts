@@ -109,12 +109,9 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
         this.setPersistentState(BannerType.ExperimentNotebookSurvey, ExperimentNotebookSurveyStateKeys.ShowBanner);
 
         // Change the surveyDelay flag after 10 minutes
-        setTimeout(
-            () => {
-                DataScienceSurveyBanner.surveyDelay = true;
-            },
-            10 * 60 * 1000
-        );
+        setTimeout(() => {
+            DataScienceSurveyBanner.surveyDelay = true;
+        }, 10 * 60 * 1000);
     }
 
     public activate() {
