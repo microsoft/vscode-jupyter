@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot, initializeCommonNodeApi } from './common.node';
 import { IS_SMOKE_TEST } from './constants.node';
 import { startJupyterServer } from './datascience/notebook/helper.node';
-import { PythonExtensionId, setTestExecution } from '../platform/common/constants';
+import { PythonExtension, setTestExecution } from '../platform/common/constants';
 import { activateExtension, closeActiveWindows } from './initialize';
 
 export * from './initialize';
@@ -22,7 +22,7 @@ export async function initializePython() {
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
     // Make sure the python extension can load if this test allows it
     if (!process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
-        const extension = vscode.extensions.getExtension(PythonExtensionId);
+        const extension = vscode.extensions.getExtension(PythonExtension);
         if (!extension) {
             console.error('Python extension not found');
             throw new Error('Python extension not found');

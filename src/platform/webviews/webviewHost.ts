@@ -11,7 +11,7 @@ import {
     WorkspaceConfiguration
 } from 'vscode';
 import { IWebview, IWorkspaceService } from '../common/application/types';
-import { DefaultTheme, PythonExtensionId } from '../common/constants';
+import { DefaultTheme, PythonExtension } from '../common/constants';
 import { traceInfo } from '../logging';
 import { Resource, IConfigurationService, IDisposable } from '../common/types';
 import { Deferred, createDeferred } from '../common/utils/async';
@@ -200,7 +200,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
-        const pythonExt = extensions.getExtension(PythonExtensionId);
+        const pythonExt = extensions.getExtension(PythonExtension);
         const sendableSettings = JSON.parse(JSON.stringify(this.configService.getSettings(resource)));
 
         return {
