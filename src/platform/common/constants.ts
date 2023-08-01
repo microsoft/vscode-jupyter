@@ -108,7 +108,7 @@ export const DefaultTheme = 'Default Light+';
 
 // Python Module to be used when instantiating the Python Daemon.
 
-export const PythonExtension = 'ms-python.python';
+export const PythonExtensionId = 'ms-python.python';
 export const RendererExtension = 'ms-toolsai.jupyter-renderers';
 export const PylanceExtension = 'ms-python.vscode-pylance';
 

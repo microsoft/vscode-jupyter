@@ -36,11 +36,11 @@ import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { pythonEnvToJupyterEnv } from '../../../platform/api/pythonApi';
 import { createInterpreterKernelSpec, getKernelId } from '../../../kernels/helpers';
-import { Environment } from '../../../platform/api/pythonApiTypes';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { KernelFinder } from '../../../kernels/kernelFinder';
+import { Environment } from '@vscode/python-extension';
 
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
