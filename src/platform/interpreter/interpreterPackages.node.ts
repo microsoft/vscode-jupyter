@@ -162,17 +162,19 @@ export class InterpreterPackages implements IInterpreterPackages {
         }
 
         const promise = this.getPackageInformation({ interpreter });
-        promise.finally(() => {
-            // If this promise was resolved, then remove it from the pending list.
-            // But cache for at least 5m (this is used only to diagnose failures in kernels).
-            const timer = setTimeout(() => {
-                if (this.pendingInterpreterInformation.get(key) === promise) {
-                    this.pendingInterpreterInformation.delete(key);
-                }
-            }, 300_000);
-            const disposable = { dispose: () => clearTimeout(timer) };
-            this.disposables.push(disposable);
-        });
+        promise
+            .finally(() => {
+                // If this promise was resolved, then remove it from the pending list.
+                // But cache for at least 5m (this is used only to diagnose failures in kernels).
+                const timer = setTimeout(() => {
+                    if (this.pendingInterpreterInformation.get(key) === promise) {
+                        this.pendingInterpreterInformation.delete(key);
+                    }
+                }, 300_000);
+                const disposable = { dispose: () => clearTimeout(timer) };
+                this.disposables.push(disposable);
+            })
+            .catch(noop);
         this.pendingInterpreterInformation.set(key, promise);
     }
 

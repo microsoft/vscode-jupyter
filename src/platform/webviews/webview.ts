@@ -86,8 +86,8 @@ export abstract class Webview implements IWebview {
                 <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob: ${
                     this.webviewHost.webview.cspSource
                 }; default-src 'unsafe-inline' 'unsafe-eval' data: https: http: blob: ${
-            this.webviewHost.webview.cspSource
-        };">
+                    this.webviewHost.webview.cspSource
+                };">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>VS Code Python React UI</title>

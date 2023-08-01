@@ -69,7 +69,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private isUsingIPyWidgets = false;
     private readonly deserialize: (data: string | ArrayBuffer) => KernelMessage.IMessage<KernelMessage.MessageType>;
 
-    constructor(private readonly kernelProvider: IKernelProvider, public readonly document: NotebookDocument) {
+    constructor(
+        private readonly kernelProvider: IKernelProvider,
+        public readonly document: NotebookDocument
+    ) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
         // been registered, in which case kaboom. As we know this is always required, pre-register this.

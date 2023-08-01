@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 import * as React from 'react';
-// eslint-disable-next-line ,
-import InlineSVG from 'svg-inline-react';
 
 // This react component loads our svg files inline so that we can load them in vscode as it no longer
 // supports loading svgs from disk. Please put new images in this list as appropriate.
@@ -223,7 +221,7 @@ export class Image extends React.Component<IImageProps> {
         const key = ImageName[this.props.image].toString();
         const image = images.hasOwnProperty(key) ? images[key] : images.Cancel; // Default is cancel.
         const source = this.props.baseTheme.includes('dark') ? image.dark : image.light;
-        return <InlineSVG className={this.props.class} src={source} title={this.props.title} />;
+        return <i className={this.props.class} dangerouslySetInnerHTML={{ __html: source }} title={this.props.title} />;
     }
 }
 
