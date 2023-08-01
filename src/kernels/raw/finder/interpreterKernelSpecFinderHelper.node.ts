@@ -320,15 +320,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
 
             // We could be dealing with a powershell kernel where kernelspec looks like
             // { "argv": ["python", "-m", "powershell_kernel", "-f", "{connection_file}" ], "display_name": "PowerShell", "language": "powershell" }
-            if (
-                !isCreatedByUs &&
-                pathInArgv &&
-                kernelSpec.specFile &&
-                (path.basename(pathInArgv).toLocaleLowerCase() === 'python' ||
-                    path.basename(pathInArgv).toLocaleLowerCase() === 'python3' ||
-                    path.basename(pathInArgv).toLocaleLowerCase() === 'python.exe' ||
-                    path.basename(pathInArgv).toLocaleLowerCase() === 'python3.exe')
-            ) {
+            if (!isCreatedByUs && pathInArgv && kernelSpec.specFile && isLikelyAPythonExecutable(pathInArgv)) {
                 sendTelemetryEvent(Telemetry.AmbiguousGlobalKernelSpec, undefined, {
                     kernelSpecHash,
                     kernelConnectionType,
@@ -480,7 +472,11 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         traceWarning(
             `Kernel Spec for '${kernelSpec.display_name}' (${getDisplayPath(
                 kernelSpec.specFile
-            )}) hidden, as we cannot find a matching interpreter argv = '${kernelSpec.argv[0]}'`
+            )}) hidden, as we cannot find a matching interpreter argv = '${
+                kernelSpec.argv[0]
+            }'. To resolve this, please change '${
+                kernelSpec.argv[0]
+            }' to point to the fully qualified Python executable.`
         );
     }
     private async listKernelSpecsImpl() {
@@ -555,8 +551,15 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
                         'startUsingLocalKernelSpec'
                     );
                     if (!matchingInterpreter) {
-                        this.warnAboutPythonKernelSpecWithInvalidPythonExec(item.kernelSpec);
-                        return;
+                        // If we cannot find a matching interpreter, then we cannot start this kernelspec.
+                        // However users can have kernelspecs that have `/bin/bash` as the first argument in argv.
+                        // These are situations where users are in full control of the kernel, hence we can ignore these.
+                        // Thus we should not warn about these.
+                        const executable = item.kernelSpec.argv.length ? item.kernelSpec.argv[0].toLowerCase() : '';
+                        if (isLikelyAPythonExecutable(executable)) {
+                            this.warnAboutPythonKernelSpecWithInvalidPythonExec(item.kernelSpec);
+                            return;
+                        }
                     }
                     const kernelSpec = LocalKernelSpecConnectionMetadata.create({
                         kernelSpec: item.kernelSpec,
@@ -738,4 +741,14 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
 
         return Array.from(distinctKernelMetadata.values());
     }
+}
+
+function isLikelyAPythonExecutable(executable: string) {
+    executable = path.basename(executable).trim().toLowerCase();
+    return (
+        executable === 'python' ||
+        executable === 'python3' ||
+        executable === 'python.exe' ||
+        executable === 'python3.exe'
+    );
 }
