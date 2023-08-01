@@ -9,7 +9,6 @@ import { createRemoteConnectionInfo, handleExpiredCertsError, handleSelfCertsErr
 import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
-    IJupyterServerUriStorage,
     IJupyterSessionManager,
     IOldJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
@@ -45,7 +44,6 @@ export class JupyterConnection {
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         @inject(IOldJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDataScienceErrorHandler)
@@ -58,13 +56,7 @@ export class JupyterConnection {
     ) {}
 
     public async createConnectionInfo(serverId: JupyterServerProviderHandle) {
-        const [server, serverUri] = await Promise.all([
-            this.serverUriStorage.get(serverId),
-            this.getJupyterServerUri(serverId)
-        ]);
-        if (!server) {
-            throw new Error('Server Not found');
-        }
+        const serverUri = await this.getJupyterServerUri(serverId);
         return createRemoteConnectionInfo(serverId, serverUri);
     }
 
