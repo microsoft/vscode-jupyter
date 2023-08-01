@@ -189,8 +189,7 @@ suite('Uri Provider Registration', () => {
         const removedServer: IJupyterServerUriEntry = {
             provider: { handle: 'handle2', id: 'a', extensionId: 'ext' },
             time: Date.now(),
-            displayName: 'Server for Handle2',
-            isValidated: false
+            displayName: 'Server for Handle2'
         };
         onDidRemoveServer.fire([removedServer]);
         await clock.runAllAsync();

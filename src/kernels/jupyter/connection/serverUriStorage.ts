@@ -121,7 +121,6 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         const entry: IJupyterServerUriEntry = {
             time: options?.time ?? Date.now(),
             displayName: options?.displayName,
-            isValidated: true,
             provider: jupyterHandle
         };
 
@@ -185,7 +184,6 @@ class OldStorage {
                     servers.push({
                         time: indexes[index].time,
                         displayName,
-                        isValidated: false,
                         provider: idAndHandle
                     });
                 } catch (ex) {
@@ -302,8 +300,7 @@ class NewStorage {
                             return <IJupyterServerUriEntry>{
                                 provider: removedItem.serverHandle,
                                 time: removedItem.time,
-                                displayName: removedItem.displayName || '',
-                                isValidated: false
+                                displayName: removedItem.displayName || ''
                             };
                         })
                     );
@@ -325,8 +322,7 @@ class NewStorage {
         const entry: IJupyterServerUriEntry = {
             provider: existingEntry.provider,
             time: Date.now(),
-            displayName: existingEntry.displayName || '',
-            isValidated: true
+            displayName: existingEntry.displayName || ''
         };
         await this.add(entry);
     }
@@ -380,18 +376,17 @@ class NewStorage {
                 const server: IJupyterServerUriEntry = {
                     time: item.time,
                     displayName: item.displayName || uri,
-                    isValidated: false,
                     provider: item.serverHandle
                 };
-                entries.push(server);
                 if (!validate) {
+                    entries.push(server);
                     return;
                 }
                 try {
                     await this.jupyterPickerRegistration.getJupyterServerUri(item.serverHandle, true);
-                    server.isValidated = true;
-                } catch (ex) {
-                    server.isValidated = false;
+                    entries.push(server);
+                } catch {
+                    //
                 }
             })
         );

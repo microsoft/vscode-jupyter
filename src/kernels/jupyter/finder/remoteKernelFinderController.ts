@@ -59,10 +59,6 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     }
 
     createRemoteKernelFinder(serverUri: IJupyterServerUriEntry) {
-        if (!serverUri.isValidated) {
-            // when server uri is validated, an `onDidAddUri` event will be fired.
-            return;
-        }
         const serverId = generateIdFromRemoteProvider(serverUri.provider);
         if (!this.serverFinderMapping.has(serverId)) {
             const finder = new RemoteKernelFinder(
