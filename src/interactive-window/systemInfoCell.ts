@@ -49,10 +49,7 @@ export class SystemInfoCell {
     private sysInfoCellPromise: Promise<NotebookCell>;
     private isDeleted = false;
 
-    constructor(
-        private readonly notebookDocument: NotebookDocument,
-        message: string
-    ) {
+    constructor(private readonly notebookDocument: NotebookDocument, message: string) {
         if (notebookDocument.cellCount) {
             const lastCell = notebookDocument.cellAt(notebookDocument.cellCount);
             if (isSysInfoCell(lastCell)) {

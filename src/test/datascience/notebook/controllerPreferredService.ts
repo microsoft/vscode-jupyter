@@ -236,8 +236,9 @@ export class ControllerPreferredService {
                         // & now that we have more controllers, we know more about what needs to be matched
                         // & since we no longer have a preferred, we should probably unset the previous preferred
                         traceVerbose(
-                            `Resetting the previous preferred controller ${this.preferredControllers.get(document)
-                                ?.id} to default affinity for document ${getDisplayPath(document.uri)}`
+                            `Resetting the previous preferred controller ${
+                                this.preferredControllers.get(document)?.id
+                            } to default affinity for document ${getDisplayPath(document.uri)}`
                         );
                         await this.preferredControllers
                             .get(document)
@@ -327,8 +328,9 @@ export class ControllerPreferredService {
                 // & now that we have more controllers, we know more about what needs to be matched
                 // & since we no longer have a preferred, we should probably unset the previous preferred
                 traceVerbose(
-                    `Resetting the previous preferred controller ${this.preferredControllers.get(document)
-                        ?.id} to default affinity for document ${getDisplayPath(document.uri)}`
+                    `Resetting the previous preferred controller ${
+                        this.preferredControllers.get(document)?.id
+                    } to default affinity for document ${getDisplayPath(document.uri)}`
                 );
                 await this.preferredControllers
                     .get(document)
@@ -358,9 +360,11 @@ export class ControllerPreferredService {
                 }
             }
             traceInfoIfCI(
-                `TargetController found ID: ${preferredConnection?.id} type ${preferredConnection?.kind} for document ${getDisplayPath(
-                    document.uri
-                )} & associated controller id ${targetController?.connection?.kind}:${targetController?.id}`
+                `TargetController found ID: ${preferredConnection?.id} type ${
+                    preferredConnection?.kind
+                } for document ${getDisplayPath(document.uri)} & associated controller id ${
+                    targetController?.connection?.kind
+                }:${targetController?.id}`
             );
 
             return { preferredConnection, controller: targetController };

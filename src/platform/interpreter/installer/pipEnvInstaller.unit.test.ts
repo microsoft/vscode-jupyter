@@ -78,7 +78,7 @@ suite('PipEnv installer', async () => {
             .setup((p) => p.getActiveInterpreter(resource))
             .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, uri: interpreterPath } as any));
 
-        workspaceService.setup((w) => w.getWorkspaceFolder(resource)).returns(() => ({ uri: workspaceFolder }) as any);
+        workspaceService.setup((w) => w.getWorkspaceFolder(resource)).returns(() => ({ uri: workspaceFolder } as any));
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(true, 'Should be true');
     });
@@ -91,7 +91,7 @@ suite('PipEnv installer', async () => {
 
         workspaceService
             .setup((w) => w.getWorkspaceFolder(resource))
-            .returns(() => ({ uri: { fsPath: workspaceFolder } }) as any);
+            .returns(() => ({ uri: { fsPath: workspaceFolder } } as any));
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(false, 'Should be false');
     });
@@ -104,7 +104,7 @@ suite('PipEnv installer', async () => {
 
         workspaceService
             .setup((w) => w.getWorkspaceFolder(resource))
-            .returns(() => ({ uri: { fsPath: workspaceFolder } }) as any);
+            .returns(() => ({ uri: { fsPath: workspaceFolder } } as any));
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(false, 'Should be false');
     });

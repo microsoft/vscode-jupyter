@@ -145,11 +145,7 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly handledEvents: any[] = [];
     private readonly cancellationHandlers = new Set<Function>();
-    constructor(
-        event: Event<T>,
-        private readonly eventNameForErrorMessages: string,
-        disposables: IDisposable[] = []
-    ) {
+    constructor(event: Event<T>, private readonly eventNameForErrorMessages: string, disposables: IDisposable[] = []) {
         disposables.push(this);
         this.cancellationToken = {
             isCancellationRequested: false,

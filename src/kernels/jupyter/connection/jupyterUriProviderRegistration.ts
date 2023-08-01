@@ -201,10 +201,7 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
     public readonly getHandles?: () => Promise<string[]>;
     public readonly removeHandle?: (handle: string) => Promise<void>;
 
-    constructor(
-        private readonly provider: IJupyterUriProvider,
-        public extensionId: string
-    ) {
+    constructor(private readonly provider: IJupyterUriProvider, public extensionId: string) {
         super();
         this.id = this.provider.id;
 

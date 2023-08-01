@@ -37,10 +37,7 @@ export class PythonEnvKernelConnectionCreator {
         this.cancelTokeSource.dispose();
         disposeAllDisposables(this.disposables);
     }
-    constructor(
-        private readonly notebook: NotebookDocument,
-        cancelToken: CancellationToken
-    ) {
+    constructor(private readonly notebook: NotebookDocument, cancelToken: CancellationToken) {
         const controllerSelection = ServiceContainer.instance.get<IControllerRegistration>(IControllerRegistration);
         // If user selects another controller for this notebook, then stop waiting for the environment to be created.
         controllerSelection.onControllerSelected(

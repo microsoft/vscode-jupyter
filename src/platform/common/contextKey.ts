@@ -13,10 +13,7 @@ export class ContextKey<T extends ContextKeyValue = boolean> {
     }
     private lastValue?: T;
 
-    constructor(
-        private name: string,
-        private commandManager: ICommandManager
-    ) {}
+    constructor(private name: string, private commandManager: ICommandManager) {}
 
     public async set(value: T): Promise<void> {
         if (this.lastValue === value) {

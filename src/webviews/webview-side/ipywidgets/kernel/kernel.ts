@@ -97,10 +97,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernelConnection {
     private _options: KernelSocketOptions;
     // Messages that are awaiting extension messages to be fully handled
     private awaitingExtensionMessage: Map<string, Deferred<void>>;
-    constructor(
-        options: KernelSocketOptions,
-        private postOffice: PostOffice
-    ) {
+    constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
         class ProxyWebSocket {

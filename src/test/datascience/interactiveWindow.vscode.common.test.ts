@@ -110,11 +110,9 @@ suite(`Interactive window execution @iw`, async function () {
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
                 `Controller does not match active interpreter for ${getDisplayPath(
                     notebookDocument?.uri
-                )}, active interpreter is ${getDisplayPath(
-                    activeInterpreter?.uri
-                )} and controller is ${controller?.id} with interpreter ${getDisplayPath(
-                    controller?.connection?.interpreter?.uri
-                )}`
+                )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
+                    controller?.id
+                } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
             );
         }
         async function verifyCells() {
@@ -370,11 +368,9 @@ ${actualCode}
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
                 `Controller does not match active interpreter for ${getDisplayPath(
                     notebookDocument?.uri
-                )}, active interpreter is ${getDisplayPath(
-                    activeInterpreter?.uri
-                )} and controller is ${controller?.id} with interpreter ${getDisplayPath(
-                    controller?.connection?.interpreter?.uri
-                )}`
+                )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
+                    controller?.id
+                } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
             );
         }
 
