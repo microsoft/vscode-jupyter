@@ -58,7 +58,10 @@ export class OldRawSession implements ISessionWithSocket {
     }
 
     // RawSession owns the lifetime of the kernel process and will dispose it
-    constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
+    constructor(
+        public kernelProcess: IKernelProcess,
+        public readonly resource: Resource
+    ) {
         this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = (this.signaling = require('@lumino/signaling') as typeof import('@lumino/signaling'));
