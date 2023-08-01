@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 
 import { Uri } from 'vscode';
 import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher';
@@ -24,7 +24,7 @@ import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 @injectable()
 export class JupyterExporter implements INotebookExporter {
     constructor(
-        @inject(IJupyterServerHelper) private jupyterServerHelper: IJupyterServerHelper,
+        @inject(IJupyterServerHelper) @optional() private jupyterServerHelper: IJupyterServerHelper | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
@@ -143,6 +143,9 @@ export class JupyterExporter implements INotebookExporter {
     };
 
     private extractPythonMainVersion = async (): Promise<number> => {
+        if (!this.jupyterServerHelper) {
+            return 3;
+        }
         // Use the active interpreter
         const usableInterpreter = await this.jupyterServerHelper.getUsableJupyterPython();
         return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;

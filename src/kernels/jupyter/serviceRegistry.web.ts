@@ -10,7 +10,6 @@ import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterKernelService } from './session/jupyterKernelService.web';
 import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
-import { JupyterServerHelper } from './launcher/jupyterServerHelper.web';
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.web';
 import { JupyterServerUriStorage } from './connection/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
@@ -27,8 +26,7 @@ import {
     IJupyterServerProvider,
     IJupyterRequestCreator,
     ILiveRemoteKernelConnectionUsageTracker,
-    IJupyterRemoteCachedKernelValidator,
-    IJupyterServerHelper
+    IJupyterRemoteCachedKernelValidator
 } from './types';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
@@ -36,7 +34,6 @@ import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessio
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
-    serviceManager.addSingleton<IJupyterServerHelper>(IJupyterServerHelper, JupyterServerHelper);
     serviceManager.addSingleton<IOldJupyterSessionManagerFactory>(
         IOldJupyterSessionManagerFactory,
         JupyterSessionManagerFactory
