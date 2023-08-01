@@ -8,7 +8,7 @@ import { Disposable, EventEmitter, WorkspaceFoldersChangeEvent } from 'vscode';
 import { createEventHandler } from '../../test/common';
 import { IWorkspaceService } from '../common/application/types';
 import { disposeAllDisposables } from '../common/helpers';
-import { IDisposable, IExperimentService, IExtensionContext } from '../common/types';
+import { IDisposable, IExtensionContext } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterService } from './pythonApi';
 import {
@@ -26,7 +26,6 @@ suite(`Interpreter Service`, () => {
     let extensionChecker: IPythonExtensionChecker;
     let workspace: IWorkspaceService;
     let context: IExtensionContext;
-    let experiments: IExperimentService;
     const disposables: IDisposable[] = [];
     let onDidActivatePythonExtension: EventEmitter<void>;
     let onDidChangeWorkspaceFolders: EventEmitter<WorkspaceFoldersChangeEvent>;
@@ -41,7 +40,6 @@ suite(`Interpreter Service`, () => {
         extensionChecker = mock<IPythonExtensionChecker>();
         workspace = mock<IWorkspaceService>();
         context = mock<IExtensionContext>();
-        experiments = mock<IExperimentService>();
         onDidActivatePythonExtension = new EventEmitter<void>();
         onDidChangeWorkspaceFolders = new EventEmitter<WorkspaceFoldersChangeEvent>();
         onDidChangeActiveEnvironmentPath = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
@@ -66,7 +64,6 @@ suite(`Interpreter Service`, () => {
         when(apiProvider.onDidActivatePythonExtension).thenReturn(onDidActivatePythonExtension.event);
         when(workspace.onDidChangeWorkspaceFolders).thenReturn(onDidChangeWorkspaceFolders.event);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        when(experiments.inExperiment(anything())).thenReturn(false);
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
     });
@@ -77,8 +74,7 @@ suite(`Interpreter Service`, () => {
             instance(extensionChecker),
             disposables,
             instance(workspace),
-            instance(context),
-            instance(experiments)
+            instance(context)
         );
     }
     test('Progress status triggered upon refresh', async () => {

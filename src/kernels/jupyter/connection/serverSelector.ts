@@ -10,17 +10,10 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../telemetry';
 import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
-import { IDataScienceErrorHandler } from '../../errors/types';
-import {
-    Experiments,
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentService
-} from '../../../platform/common/types';
-import { handleExpiredCertsError, handleSelfCertsError, generateIdFromRemoteProvider } from '../jupyterUtils';
+import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
+import { handleExpiredCertsError, handleSelfCertsError } from '../jupyterUtils';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
-import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
 import { IJupyterServerUri } from '../../../api.unstable';
@@ -82,55 +75,12 @@ export async function validateSelectJupyterURI(
 export class JupyterServerSelector {
     constructor(
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IDataScienceErrorHandler)
-        private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry,
-        @inject(IExperimentService)
-        private readonly experiments: IExperimentService
+        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
     ) {}
 
     public async addJupyterServer(provider: JupyterServerProviderHandle): Promise<void> {
-        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
-            return this.addJupyterServerNew(provider);
-        } else {
-            return this.addJupyterServerOld(provider);
-        }
-    }
-    public async addJupyterServerOld(provider: JupyterServerProviderHandle): Promise<void> {
-        const userURI = generateIdFromRemoteProvider(provider);
-        // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
-        try {
-            await this.jupyterConnection.validateRemoteUri(provider);
-        } catch (err) {
-            if (JupyterSelfCertsError.isSelfCertsError(err)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
-                if (!handled) {
-                    return;
-                }
-            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
-                if (!handled) {
-                    return;
-                }
-            } else if (err && err instanceof JupyterInvalidPasswordError) {
-                return;
-            } else {
-                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, provider, err));
-                // Can't set the URI in this case.
-                return;
-            }
-        }
-
-        await this.serverUriStorage.add(provider);
-    }
-
-    public async addJupyterServerNew(provider: JupyterServerProviderHandle): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
             await this.jupyterConnection.validateRemoteUri(provider);

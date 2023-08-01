@@ -5,14 +5,7 @@ import { EventEmitter, Memento, Uri } from 'vscode';
 import { inject, injectable, named } from 'inversify';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { Identifiers, Settings } from '../../../platform/common/constants';
-import {
-    IMemento,
-    GLOBAL_MEMENTO,
-    IExperimentService,
-    Experiments,
-    IExtensionContext,
-    IDisposableRegistry
-} from '../../../platform/common/types';
+import { IMemento, GLOBAL_MEMENTO, IExtensionContext, IDisposableRegistry } from '../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import {
     extractJupyterServerHandleAndId,
@@ -74,8 +67,6 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        @inject(IExperimentService)
-        private readonly experiments: IExperimentService,
         @inject(IFileSystem)
         fs: IFileSystem,
         @inject(IExtensionContext)
@@ -87,13 +78,12 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         disposables.push(this);
         const storageFile = Uri.joinPath(this.context.globalStorageUri, 'remoteServersMRUList.json');
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.oldStorage = new OldStorage(encryptedStorage, globalMemento, jupyterPickerRegistration);
+        this.oldStorage = new OldStorage(encryptedStorage, globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.newStorage = new NewStorage(jupyterPickerRegistration, fs, storageFile, this.oldStorage);
         this.disposables.push(this._onDidAddUri);
         this.disposables.push(this._onDidChangeUri);
         this.disposables.push(this._onDidRemoveUris);
-        this.disposables.push(this.oldStorage);
         this.disposables.push(this.newStorage);
     }
     private hookupStorageEvents() {
@@ -101,24 +91,14 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
             return;
         }
         this.storageEventsHooked = true;
-        if (this.experiments.inExperiment(Experiments.NewRemoteUriStorage)) {
-            this.newStorage.onDidAdd((e) => this._onDidAddUri.fire(e), this, this.disposables);
-            this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
-            this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
-        } else {
-            this.oldStorage.onDidAdd((e) => this._onDidAddUri.fire(e), this, this.disposables);
-            this.oldStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
-            this.oldStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
-        }
+        this.newStorage.onDidAdd((e) => this._onDidAddUri.fire(e), this, this.disposables);
+        this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
+        this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
     }
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        if (this.experiments.inExperiment(Experiments.NewRemoteUriStorage)) {
-            return this.newStorage.getAll();
-        } else {
-            return this.oldStorage.getAll();
-        }
+        return this.newStorage.getAll();
     }
     public async clear(): Promise<void> {
         this.hookupStorageEvents();
@@ -149,167 +129,25 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
             const server = await this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle, true);
             entry.displayName = server.displayName;
         }
-        await Promise.all([this.newStorage.add(entry), this.oldStorage.add(entry)]);
+        await this.newStorage.add(entry);
     }
     public async update(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        await Promise.all([this.newStorage.update(server), this.oldStorage.update(server)]);
+        await this.newStorage.update(server);
     }
     public async remove(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        await Promise.all([this.newStorage.remove(server), this.oldStorage.remove(server)]);
+        await this.newStorage.remove(server);
     }
 }
 
 class OldStorage {
-    private _onDidChangeUri = new EventEmitter<void>();
-    public get onDidChange() {
-        return this._onDidChangeUri.event;
-    }
-    private _onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
-    public get onDidRemove() {
-        return this._onDidRemoveUris.event;
-    }
-    private _onDidAddUri = new EventEmitter<IJupyterServerUriEntry>();
-    public get onDidAdd() {
-        return this._onDidAddUri.event;
-    }
-
-    private lastSavedList?: Promise<IJupyterServerUriEntry[]>;
     constructor(
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
-    dispose() {
-        this._onDidAddUri.dispose();
-        this._onDidChangeUri.dispose();
-        this._onDidRemoveUris.dispose();
-    }
-
-    public async add(item: IJupyterServerUriEntry) {
-        traceInfoIfCI(`setUri: ${item.provider.id}.${item.provider.handle}`);
-        await this.addToUriList(item.provider, item.displayName || '', item.time);
-    }
-    public async update(server: JupyterServerProviderHandle) {
-        const uriList = await this.getAll();
-
-        const existingEntry = uriList.find(
-            (entry) => entry.provider.id === server.id && entry.provider.handle === server.handle
-        );
-        if (!existingEntry) {
-            throw new Error(`Uri not found for Server Id ${JSON.stringify(server)}`);
-        }
-
-        await this.addToUriList(existingEntry.provider, existingEntry.displayName || '', Date.now());
-    }
-    public async remove(server: JupyterServerProviderHandle) {
-        const uriList = await this.getAll();
-        const editedList = uriList.filter((f) => f.provider.id !== server.id || f.provider.handle !== server.handle);
-        if (editedList.length === 0) {
-            await this.clear();
-        } else {
-            await this.updateMemento(editedList);
-            const removedItem = uriList.find((f) => f.provider.id === server.id && f.provider.handle === server.handle);
-            if (removedItem) {
-                this._onDidRemoveUris.fire([removedItem]);
-            }
-        }
-    }
-    private async addToUriList(jupyterHandle: JupyterServerProviderHandle, displayName: string, time: number) {
-        const uriId = generateIdFromRemoteProvider(jupyterHandle);
-        const uriList = await this.getAll();
-
-        // Check if we have already found a display name for this server
-        displayName =
-            uriList.find(
-                (entry) => entry.provider.id === jupyterHandle.id && entry.provider.handle === jupyterHandle.handle
-            )?.displayName ||
-            displayName ||
-            uriId;
-        const entry: IJupyterServerUriEntry = {
-            time,
-            displayName,
-            isValidated: true,
-            provider: jupyterHandle
-        };
-
-        // Remove this uri if already found (going to add again with a new time)
-        const editedList = [entry].concat(
-            uriList
-                .sort((a, b) => b.time - a.time) // First sort by time
-                .filter((f) => generateIdFromRemoteProvider(f.provider) !== uriId)
-        );
-        const removedItems = editedList.splice(Settings.JupyterServerUriListMax);
-
-        // Signal that we added in the entry
-        this._onDidAddUri.fire(entry);
-        this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
-        await this.updateMemento(editedList);
-        if (removedItems.length) {
-            this._onDidRemoveUris.fire(removedItems);
-        }
-    }
-
-    private async updateMemento(editedList: IJupyterServerUriEntry[]) {
-        // Sort based on time. Newest time first
-        const sorted = editedList.sort((a, b) => b.time - a.time);
-
-        // Transform the sorted into just indexes. Uris can't show up in
-        // non encrypted storage (so remove even the display name)
-        const mementoList = sorted.map((v, i) => {
-            return { index: i, time: v.time };
-        });
-
-        // Then write just the indexes to global memento
-        this.lastSavedList = Promise.resolve(sorted);
-        await this.globalMemento.update(Settings.JupyterServerUriList, mementoList);
-
-        // Write the uris to the storage in one big blob (max length issues?)
-        // This is because any part of the URI may be a secret (we don't know it's just token values for instance)
-        const blob = sorted
-            .map(
-                (e) =>
-                    `${generateIdFromRemoteProvider(e.provider)}${Settings.JupyterServerRemoteLaunchNameSeparator}${
-                        !e.displayName ? Settings.JupyterServerRemoteLaunchUriEqualsDisplayName : e.displayName
-                    }`
-            )
-            .join(Settings.JupyterServerRemoteLaunchUriSeparator);
-        return this.encryptedStorage.store(
-            Settings.JupyterServerRemoteLaunchService,
-            Settings.JupyterServerRemoteLaunchUriListKey,
-            blob
-        );
-    }
-    public async getAll(): Promise<IJupyterServerUriEntry[]> {
-        if (this.lastSavedList) {
-            return this.lastSavedList.then((items) => items.sort((a, b) => b.time - a.time));
-        }
-        const promise = async () => {
-            // List is in the global memento, URIs are in encrypted storage
-            const allServers = await this.getAllRaw();
-            const result = await Promise.all(
-                allServers.map(async (server) => {
-                    try {
-                        await this.jupyterPickerRegistration.getJupyterServerUri(server.provider, true);
-                        server.isValidated = true;
-                        return server;
-                    } catch (ex) {
-                        server.isValidated = false;
-                        return server;
-                    }
-                })
-            );
-
-            traceVerbose(`Found ${result.length} saved URIs, ${JSON.stringify(result)}`);
-            return result.filter((item) => !!item) as IJupyterServerUriEntry[];
-        };
-        this.lastSavedList = promise();
-        return this.lastSavedList.then((items) => items.sort((a, b) => b.time - a.time));
-    }
     public async getAllRaw(): Promise<IJupyterServerUriEntry[]> {
         // List is in the global memento, URIs are in encrypted storage
         const indexes = this.globalMemento.get<{ index: number; time: number }[]>(Settings.JupyterServerUriList);
@@ -362,17 +200,11 @@ class OldStorage {
         return servers;
     }
     public async clear(): Promise<void> {
-        const oldList = this.lastSavedList ? (await this.lastSavedList).slice() : [];
-        this.lastSavedList = Promise.resolve([]);
         // Clear out memento and encrypted storage
-        await this.globalMemento.update(Settings.JupyterServerUriList, []);
-        await this.encryptedStorage.store(
-            Settings.JupyterServerRemoteLaunchService,
-            Settings.JupyterServerRemoteLaunchUriListKey,
-            undefined
-        );
-
-        this._onDidRemoveUris.fire(oldList);
+        await this.globalMemento.update(Settings.JupyterServerUriList, []).then(noop, noop);
+        await this.encryptedStorage
+            .store(Settings.JupyterServerRemoteLaunchService, Settings.JupyterServerRemoteLaunchUriListKey, undefined)
+            .then(noop, noop);
     }
 }
 
