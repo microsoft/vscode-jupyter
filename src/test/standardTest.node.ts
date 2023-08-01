@@ -8,7 +8,7 @@ import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTest
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import * as tmp from 'tmp';
 import {
-    PythonExtensionId,
+    PythonExtension,
     PylanceExtension,
     setTestExecution,
     RendererExtension,
@@ -67,13 +67,13 @@ async function installPythonExtension(vscodeExecutablePath: string, extensionsDi
         console.info('Python Extension not required');
         return;
     }
-    console.info(`Installing Python Extension ${PythonExtensionId} to ${extensionsDir}`);
+    console.info(`Installing Python Extension ${PythonExtension} to ${extensionsDir}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, platform);
     spawnSync(
         cliPath,
         [
             '--install-extension',
-            PythonExtensionId,
+            PythonExtension,
             '--pre-release',
             '--extensions-dir',
             extensionsDir,
