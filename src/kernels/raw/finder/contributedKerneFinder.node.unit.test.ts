@@ -52,7 +52,6 @@ import { noop } from '../../../platform/common/utils/misc';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFinder.node';
-import { OldContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.old.node';
 import { ITrustedKernelPaths } from './types';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
@@ -275,17 +274,8 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                 instance(interpreterService),
                 instance(extensions)
             );
-            const pythonEnvKernelFinder = new OldContributedLocalPythonEnvFinder(
-                pythonKernelFinderWrapper,
-                kernelFinder,
-                [],
-                instance(extensionChecker),
-                instance(interpreterService),
-                instance(extensions)
-            );
             changeEventFired = createEventHandler(kernelFinder, 'onDidChangeKernels', disposables);
             localKernelSpecFinder.activate();
-            pythonEnvKernelFinder.activate();
             nonPythonKernelSpecFinder.activate();
             pythonKernelFinderWrapper.activate();
         }

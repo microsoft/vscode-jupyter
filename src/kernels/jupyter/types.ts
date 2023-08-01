@@ -54,20 +54,6 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
     refreshCommands(): Promise<void>;
 }
 
-export interface IJupyterPasswordConnectInfo {
-    requestHeaders?: HeadersInit;
-    remappedBaseUrl?: string;
-    remappedToken?: string;
-}
-
-export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
-export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(options: {
-        url: string;
-        isTokenEmpty: boolean;
-    }): Promise<IJupyterPasswordConnectInfo | undefined>;
-}
-
 export const IOldJupyterSessionManagerFactory = Symbol('IOldJupyterSessionManagerFactory');
 export interface IOldJupyterSessionManagerFactory {
     create(connInfo: IJupyterConnection): Promise<IJupyterSessionManager>;

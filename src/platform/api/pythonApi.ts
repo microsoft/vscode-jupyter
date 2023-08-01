@@ -10,14 +10,7 @@ import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import {
-    IExtensions,
-    IDisposableRegistry,
-    Resource,
-    IExtensionContext,
-    IExperimentService,
-    Experiments
-} from '../common/types';
+import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
@@ -475,8 +468,7 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IExperimentService) private readonly experiments: IExperimentService
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -824,7 +816,6 @@ export class InterpreterService implements IInterpreterService {
         }
 
         const allInterpreters: PythonEnvironment[] = [];
-        const stopWatch = new StopWatch();
         let buildListOfInterpretersAgain = false;
         await this.getApi().then(async (api) => {
             if (!api || cancelToken.isCancellationRequested) {
@@ -832,26 +823,6 @@ export class InterpreterService implements IInterpreterService {
             }
             let previousListOfInterpreters = api.environments.known.length;
             try {
-                if (!this.experiments.inExperiment(Experiments.FastKernelPicker)) {
-                    const apiResolveTime = stopWatch.elapsedTime;
-                    await api.environments.refreshEnvironments();
-                    if (cancelToken.isCancellationRequested) {
-                        return;
-                    }
-                    const totalTime = stopWatch.elapsedTime;
-                    traceVerbose(
-                        `Full interpreter list after refreshing (total ${totalTime}ms, resolve ${apiResolveTime}ms, refresh ${
-                            totalTime - apiResolveTime
-                        }ms) is length: ${api.environments.known.length}, ${api.environments.known
-                            .map(
-                                (item) =>
-                                    `${item.id}:${item.environment?.name}:${item.tools.join(',')}:${getDisplayPath(
-                                        item.executable.uri
-                                    )}:${item.path}`
-                            )
-                            .join(', ')}`
-                    );
-                }
                 await Promise.all(
                     api.environments.known.map(async (item) => {
                         try {

@@ -202,9 +202,7 @@ export class ExperimentService implements IExperimentService {
                 // Filter out experiment groups that are not already opted out or opted into.
                 if (
                     (exp.toLowerCase().startsWith('jupyter') ||
-                        exp.toLowerCase() === ExperimentGroups.FastKernelPicker.toLowerCase() ||
-                        exp.toLowerCase() === ExperimentGroups.NewRemoteUriStorage.toLowerCase() ||
-                        exp.toLowerCase() === ExperimentGroups.PasswordManager.toLowerCase()) &&
+                        exp.toLowerCase() === ExperimentGroups.NewJupyterSession.toLowerCase()) &&
                     !this._optOutFrom.includes(exp) &&
                     !this._optInto.includes(exp)
                 ) {

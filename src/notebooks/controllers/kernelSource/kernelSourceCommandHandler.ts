@@ -33,13 +33,7 @@ import {
     TestingKernelPickerProviderId
 } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import {
-    Experiments,
-    IDisposable,
-    IDisposableRegistry,
-    IExperimentService,
-    IsWebExtension
-} from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { ServiceContainer } from '../../../platform/ioc/container';
@@ -64,8 +58,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IKernelDependencyService) private readonly kernelDependency: IKernelDependencyService,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IExperimentService) private readonly experiments: IExperimentService
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
     }
@@ -236,10 +229,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         if (!notebook) {
             return;
         }
-        if (
-            this.experiments.inExperiment(Experiments.FastKernelPicker) &&
-            kind === ContributedKernelFinderKind.LocalPythonEnvironment
-        ) {
+        if (kind === ContributedKernelFinderKind.LocalPythonEnvironment) {
             const selector = ServiceContainer.instance.get<ILocalPythonNotebookKernelSourceSelector>(
                 ILocalPythonNotebookKernelSourceSelector
             );
@@ -249,7 +239,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             const selector = ServiceContainer.instance.get<ILocalNotebookKernelSourceSelector>(
                 ILocalNotebookKernelSourceSelector
             );
-            const kernel = await selector.selectLocalKernel(notebook, kind);
+            const kernel = await selector.selectLocalKernel(notebook);
             return this.getSelectedController(notebook, kernel);
         }
     }

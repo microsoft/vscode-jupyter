@@ -35,13 +35,11 @@ import {
     UserJupyterServerPickerProviderId
 } from '../../platform/common/constants';
 import {
-    Experiments,
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposable,
     IDisposableRegistry,
-    IExperimentService,
     IExtensionContext,
     IMemento,
     IsWebExtension
@@ -50,12 +48,10 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
-import { JupyterPasswordConnect as OldJupyterPasswordConnect } from '../../kernels/jupyter/connection/jupyterPasswordConnect';
 import { IJupyterServerUri } from '../../api.unstable';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
-import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serverSelector';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
@@ -87,7 +83,7 @@ export class UserJupyterServerUrlProvider
         @inject(IJupyterUriProviderRegistration)
         private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IConfigurationService) configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
@@ -101,7 +97,6 @@ export class UserJupyterServerUrlProvider
         @optional()
         agentCreator: IJupyterRequestAgentCreator | undefined,
         @inject(IJupyterRequestCreator) requestCreator: IJupyterRequestCreator,
-        @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
@@ -224,9 +219,7 @@ export class UserJupyterServerUrlProvider
         }
 
         this._cachedServerInfoInitialized = new Promise<void>(async (resolve) => {
-            if (this.experiments.inExperiment(Experiments.NewRemoteUriStorage)) {
-                await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
-            }
+            await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
             resolve();
         });
 
@@ -244,131 +237,6 @@ export class UserJupyterServerUrlProvider
     }
 
     async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
-        if (this.experiments.inExperiment(Experiments.PasswordManager)) {
-            return this.handleQuickPickNew(item, backEnabled);
-        } else {
-            return this.handleQuickPickOld(item, backEnabled);
-        }
-    }
-    async handleQuickPickOld(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
-        await this.initializeServers();
-        if (item.label !== DataScience.jupyterSelectURIPrompt) {
-            return undefined;
-        }
-
-        let initialValue = '';
-        try {
-            const text = await this.clipboard.readText().catch(() => '');
-            const parsedUri = Uri.parse(text.trim(), true);
-            // Only display http/https uris.
-            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
-        } catch {
-            // We can ignore errors.
-        }
-
-        const disposables: Disposable[] = [];
-
-        // Ask the user to enter a URI to connect to.
-        const input = this.applicationShell.createInputBox();
-        input.title = DataScience.jupyterSelectURIPrompt;
-        input.value = initialValue;
-        input.ignoreFocusOut = true;
-
-        return new Promise<string | undefined>((resolve) => {
-            if (backEnabled) {
-                input.buttons = [QuickInputButtons.Back];
-                disposables.push(
-                    input.onDidTriggerButton((item) => {
-                        if (item === QuickInputButtons.Back) {
-                            resolve('back');
-                        } else {
-                            resolve(undefined);
-                        }
-                    })
-                );
-            }
-
-            let inputWasHidden = false;
-            let promptingForServerName = false;
-            disposables.push(
-                input.onDidAccept(async () => {
-                    // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
-                    const uri = input.value.trim().replace(/\/(lab|tree)(\??)$/, '');
-                    try {
-                        new URL(uri);
-                    } catch (err) {
-                        if (inputWasHidden) {
-                            input.show();
-                        }
-                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
-                        return;
-                    }
-                    if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
-                        if (inputWasHidden) {
-                            input.show();
-                        }
-                        input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
-                        return;
-                    }
-                    const jupyterServerUri = parseUri(uri, '');
-                    if (!jupyterServerUri) {
-                        if (inputWasHidden) {
-                            input.show();
-                        }
-                        input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
-                        return;
-                    }
-                    const handle = uuid();
-                    const message = await validateSelectJupyterURI(
-                        this.jupyterConnection,
-                        this.applicationShell,
-                        this.configService,
-                        this.isWebExtension,
-                        { id: this.id, handle, extensionId: JVSC_EXTENSION_ID },
-                        jupyterServerUri
-                    );
-
-                    if (message) {
-                        if (inputWasHidden) {
-                            input.show();
-                        }
-                        input.validationMessage = message;
-                    } else {
-                        promptingForServerName = true;
-                        // Offer the user a chance to pick a display name for the server
-                        // Leaving it blank will use the URI as the display name
-                        jupyterServerUri.displayName =
-                            (await this.applicationShell.showInputBox({
-                                title: DataScience.jupyterRenameServer
-                            })) || jupyterServerUri.displayName;
-                        this.displayNamesOfHandles.set(handle, jupyterServerUri.displayName);
-                        await this.initializeServers();
-                        await this.addNewServer({
-                            handle: handle,
-                            uri: uri,
-                            serverInfo: jupyterServerUri
-                        });
-                        resolve(handle);
-                    }
-                }),
-                input.onDidHide(() => {
-                    inputWasHidden = true;
-                    if (
-                        !JupyterPasswordConnect.prompt &&
-                        !OldJupyterPasswordConnect.prompt &&
-                        !promptingForServerName
-                    ) {
-                        resolve(undefined);
-                    }
-                })
-            );
-
-            input.show();
-        }).finally(() => {
-            disposables.forEach((d) => d.dispose());
-        });
-    }
-    async handleQuickPickNew(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
         await this.initializeServers();
         if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
@@ -537,11 +405,7 @@ export class UserJupyterServerUrlProvider
                 }),
                 input.onDidHide(() => {
                     inputWasHidden = true;
-                    if (
-                        !JupyterPasswordConnect.prompt &&
-                        !OldJupyterPasswordConnect.prompt &&
-                        !promptingForServerName
-                    ) {
+                    if (!JupyterPasswordConnect.prompt && !promptingForServerName) {
                         resolve(undefined);
                     }
                 })
@@ -554,14 +418,12 @@ export class UserJupyterServerUrlProvider
     }
 
     private async addNewServer(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
-        await Promise.all([this.oldStorage.add(server), this.newStorage.add(server)]);
+        await this.newStorage.add(server);
         this._onDidChangeHandles.fire();
     }
     async getServerUriWithoutAuthInfo(handle: string): Promise<IJupyterServerUri> {
         await this.initializeServers();
-        const servers = this.experiments.inExperiment(Experiments.NewRemoteUriStorage)
-            ? await this.newStorage.getServers()
-            : await this.oldStorage.getServers();
+        const servers = await this.newStorage.getServers();
         const server = servers.find((s) => s.handle === handle);
         if (!server) {
             throw new Error('Server not found');
@@ -577,9 +439,7 @@ export class UserJupyterServerUrlProvider
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         await this.initializeServers();
-        const servers = this.experiments.inExperiment(Experiments.NewRemoteUriStorage)
-            ? await this.newStorage.getServers()
-            : await this.oldStorage.getServers();
+        const servers = await this.newStorage.getServers();
         const server = servers.find((s) => s.handle === handle);
         if (!server) {
             throw new Error('Server not found');
@@ -590,9 +450,6 @@ export class UserJupyterServerUrlProvider
         const displayName = this.displayNamesOfHandles.get(handle);
         if (displayName) {
             server.serverInfo.displayName = displayName;
-        }
-        if (!this.experiments.inExperiment(Experiments.PasswordManager)) {
-            return server.serverInfo;
         }
 
         const passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
@@ -607,15 +464,13 @@ export class UserJupyterServerUrlProvider
     }
     async getHandles(): Promise<string[]> {
         await this.initializeServers();
-        const servers = this.experiments.inExperiment(Experiments.NewRemoteUriStorage)
-            ? await this.newStorage.getServers()
-            : await this.oldStorage.getServers();
+        const servers = await this.newStorage.getServers();
         return servers.map((s) => s.handle);
     }
 
     async removeHandle(handle: string): Promise<void> {
         await this.initializeServers();
-        await Promise.all([this.oldStorage.remove(handle), this.newStorage.remove(handle)]);
+        await this.newStorage.remove(handle);
         this._onDidChangeHandles.fire();
     }
     dispose(): void {
@@ -662,7 +517,6 @@ function parseUri(uri: string, displayName?: string): IJupyterServerUri | undefi
 }
 
 export class OldStorage {
-    private updatePromise = Promise.resolve();
     constructor(
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
@@ -680,14 +534,12 @@ export class OldStorage {
 
         if (!cache || !serverList || serverList.length === 0) {
             return [];
-            // return resolve([]);
         }
 
         const encryptedList = cache.split(Settings.JupyterServerRemoteLaunchUriSeparator);
         if (encryptedList.length === 0 || encryptedList.length !== serverList.length) {
             traceError('Invalid server list, unable to retrieve server info');
             return [];
-            // return resolve([]);
         }
 
         const servers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
@@ -709,48 +561,11 @@ export class OldStorage {
         }
         return servers;
     }
-
-    public async add(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
-        await (this.updatePromise = this.updatePromise
-            .then(async () => {
-                const servers = (await this.getServers()).concat(server);
-                const blob = servers.map((e) => `${e.uri}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
-                const mementoList = servers.map((v, i) => ({ index: i, handle: v.handle }));
-                await this.globalMemento.update(UserJupyterServerUriListMementoKey, mementoList);
-                return this.encryptedStorage.store(
-                    Settings.JupyterServerRemoteLaunchService,
-                    UserJupyterServerUriListKey,
-                    blob
-                );
-            })
-            .catch(noop));
-    }
-    public async remove(handle: string) {
-        await (this.updatePromise = this.updatePromise
-            .then(async () => {
-                const servers = (await this.getServers()).filter((server) => server.handle !== handle);
-                const blob = servers.map((e) => `${e.uri}`).join(Settings.JupyterServerRemoteLaunchUriSeparator);
-                const mementoList = servers.map((v, i) => ({ index: i, handle: v.handle }));
-                await this.globalMemento.update(UserJupyterServerUriListMementoKey, mementoList);
-                return this.encryptedStorage.store(
-                    Settings.JupyterServerRemoteLaunchService,
-                    UserJupyterServerUriListKey,
-                    blob
-                );
-            })
-            .catch(noop));
-    }
     public async clear() {
-        await (this.updatePromise = this.updatePromise
-            .then(async () => {
-                await this.encryptedStorage.store(
-                    Settings.JupyterServerRemoteLaunchService,
-                    UserJupyterServerUriListKey,
-                    ''
-                );
-                await this.globalMemento.update(UserJupyterServerUriListMementoKey, []);
-            })
-            .catch(noop));
+        await this.encryptedStorage
+            .store(Settings.JupyterServerRemoteLaunchService, UserJupyterServerUriListKey, '')
+            .catch(noop);
+        await this.globalMemento.update(UserJupyterServerUriListMementoKey, []).then(noop, noop);
     }
 }
 
