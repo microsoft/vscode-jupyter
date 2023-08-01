@@ -72,8 +72,6 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 if (!handles.includes(item.provider.handle)) {
                     // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                     await this.uriStorage.remove(item.provider);
-                } else if (!item.isValidated) {
-                    await this.uriStorage.add(item.provider).catch(noop);
                 }
             })
         );

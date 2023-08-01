@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, extensions } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../activation/types';
-import { PythonExtensionId, PylanceExtension } from '../../constants';
+import { PythonExtension, PylanceExtension } from '../../constants';
 import { noop } from '../../utils/misc';
 import { ICommandManager, IWorkspaceService } from '../types';
 
@@ -38,8 +38,8 @@ export class RunInDedicatedExtensionHostCommandHandler implements IExtensionSync
             'ms-toolsai.jupyter-renderers': targetAffinity
         };
 
-        if (extensions.getExtension(PythonExtensionId)) {
-            update[PythonExtensionId] = targetAffinity;
+        if (extensions.getExtension(PythonExtension)) {
+            update[PythonExtension] = targetAffinity;
         }
 
         if (extensions.getExtension(PylanceExtension)) {

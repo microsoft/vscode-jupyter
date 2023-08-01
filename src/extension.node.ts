@@ -79,7 +79,7 @@ import {
     isCI,
     isTestExecution,
     JUPYTER_OUTPUT_CHANNEL,
-    PythonExtensionId,
+    PythonExtension,
     STANDARD_OUTPUT_CHANNEL
 } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
@@ -283,7 +283,7 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
     // Log env info.
     standardOutputChannel.appendLine(`${env.appName} (${version}, ${env.remoteName}, ${env.appHost})`);
     standardOutputChannel.appendLine(`Jupyter Extension Version: ${context.extension.packageJSON['version']}.`);
-    const pythonExtension = extensions.getExtension(PythonExtensionId);
+    const pythonExtension = extensions.getExtension(PythonExtension);
     if (pythonExtension) {
         standardOutputChannel.appendLine(`Python Extension Version: ${pythonExtension.packageJSON['version']}.`);
     } else {
