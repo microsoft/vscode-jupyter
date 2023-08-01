@@ -19,7 +19,6 @@ import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serve
 import {
     IJupyterServerUriStorage,
     IInternalJupyterUriProvider,
-    IJupyterUriProviderRegistration,
     IRemoteKernelFinder
 } from '../../../kernels/jupyter/types';
 import { IKernelFinder, KernelConnectionMetadata, RemoteKernelConnectionMetadata } from '../../../kernels/types';
@@ -42,6 +41,7 @@ import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { CreateAndSelectItemFromQuickPick } from './baseKernelSelector';
+import { generateIdFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 
 enum KernelFinderEntityQuickPickType {
     KernelFinder = 'finder',
@@ -73,24 +73,17 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
     private cancellationTokenSource: CancellationTokenSource | undefined;
     constructor(
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
     ) {}
     public async selectRemoteKernel(
         notebook: NotebookDocument,
-        extensionId: string,
-        providerId: string
+        provider: IInternalJupyterUriProvider
     ): Promise<RemoteKernelConnectionMetadata | undefined> {
         // Reject if it's not our type
         if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
             return;
-        }
-        const provider = await this.uriProviderRegistration.getProvider(extensionId, providerId);
-        if (!provider) {
-            throw new Error(`Remote Provider Id ${providerId} not found`);
         }
         this.localDisposables.forEach((d) => d.dispose());
         this.localDisposables = [];
@@ -132,34 +125,38 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         const servers = this.kernelFinder.registered.filter((info) => info.kind === 'remote') as IRemoteKernelFinder[];
         const items: (ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem)[] = [];
 
-        for (const server of servers) {
-            // remote server
-            const savedURI = await this.serverUriStorage.get(server.serverUri.provider);
-            if (token.isCancellationRequested) {
-                return;
-            }
-
-            const idAndHandle = savedURI?.provider;
-            if (idAndHandle && idAndHandle.id === provider.id) {
-                // local server
-                const uriDate = new Date(savedURI.time);
-                items.push({
-                    type: KernelFinderEntityQuickPickType.KernelFinder,
-                    kernelFinderInfo: server,
-                    idAndHandle,
-                    label: server.displayName,
-                    detail: DataScience.jupyterSelectURIMRUDetail(uriDate),
-                    buttons: provider.removeHandle
-                        ? [
-                              {
-                                  iconPath: new ThemeIcon('trash'),
-                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
-                              }
-                          ]
-                        : []
-                });
-            }
-        }
+        await Promise.all(
+            servers
+                .filter((s) => s.serverUri.provider.id === provider.id)
+                .map(async (server) => {
+                    // remote server
+                    const lastUsedTime = await (
+                        await this.serverUriStorage.getAll()
+                    ).find(
+                        (item) =>
+                            generateIdFromRemoteProvider(item.provider) ===
+                            generateIdFromRemoteProvider(server.serverUri.provider)
+                    );
+                    if (token.isCancellationRequested || !lastUsedTime) {
+                        return;
+                    }
+                    items.push({
+                        type: KernelFinderEntityQuickPickType.KernelFinder,
+                        kernelFinderInfo: server,
+                        idAndHandle: server.serverUri.provider,
+                        label: server.displayName,
+                        detail: DataScience.jupyterSelectURIMRUDetail(new Date(lastUsedTime.time)),
+                        buttons: provider.removeHandle
+                            ? [
+                                  {
+                                      iconPath: new ThemeIcon('trash'),
+                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                                  }
+                              ]
+                            : []
+                    });
+                })
+        );
 
         if (provider.getQuickPickEntryItems && provider.handleQuickPick) {
             if (items.length > 0) {
