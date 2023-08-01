@@ -190,8 +190,9 @@ export interface ILocalKernelFinder<T extends LocalKernelSpecConnectionMetadata 
  * Base class for searching for local kernels that are based on a kernel spec file.
  */
 export abstract class LocalKernelSpecFinderBase<
-    T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-> implements IDisposable, ILocalKernelFinder<T>
+        T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    >
+    implements IDisposable, ILocalKernelFinder<T>
 {
     protected readonly disposables: IDisposable[] = [];
 

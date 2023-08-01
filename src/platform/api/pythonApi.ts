@@ -628,9 +628,8 @@ export class InterpreterService implements IInterpreterService {
                     traceInfo(
                         `Active Interpreter ${resource ? `for '${getDisplayPath(resource)}' ` : ''}is ${getDisplayPath(
                             item?.id
-                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${
-                            item?.version?.patch
-                        })`
+                        )} (${item?.envType}, '${item?.envName}', ${item?.version?.major}.${item?.version?.minor}.${item
+                            ?.version?.patch})`
                     );
                 })
                 .catch(noop);
@@ -829,9 +828,9 @@ export class InterpreterService implements IInterpreterService {
                             const env = await api.environments.resolveEnvironment(item);
                             const resolved = this.trackResolvedEnvironment(env);
                             traceInfoIfCI(
-                                `Python environment for ${item.id} is ${
-                                    env?.id
-                                } from Python Extension API is ${JSON.stringify(
+                                `Python environment for ${
+                                    item.id
+                                } is ${env?.id} from Python Extension API is ${JSON.stringify(
                                     env
                                 )} and original env is ${JSON.stringify(item)} and translated is ${JSON.stringify(
                                     resolved

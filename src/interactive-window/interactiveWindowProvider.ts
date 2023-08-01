@@ -189,9 +189,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
             let initialController = await this.controllerHelper.getInitialController(resource, connection);
 
             traceInfo(
-                `Starting interactive window for resource '${getDisplayPath(resource)}' with controller '${
-                    initialController?.id
-                }'`
+                `Starting interactive window for resource '${getDisplayPath(
+                    resource
+                )}' with controller '${initialController?.id}'`
             );
 
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -323,7 +323,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IE
                     owner: iw.owner?.toString(),
                     uriString: iw.notebookUri.toString(),
                     inputBoxUriString: iw.inputUri.toString()
-                } as IInteractiveWindowCache)
+                }) as IInteractiveWindowCache
         );
         this.workspaceMemento.update(InteractiveWindowCacheKey, windowCache).then(noop, noop);
     }

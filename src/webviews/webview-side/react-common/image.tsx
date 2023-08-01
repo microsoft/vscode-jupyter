@@ -221,7 +221,7 @@ export class Image extends React.Component<IImageProps> {
         const key = ImageName[this.props.image].toString();
         const image = images.hasOwnProperty(key) ? images[key] : images.Cancel; // Default is cancel.
         const source = this.props.baseTheme.includes('dark') ? image.dark : image.light;
-        return <i className={this.props.class} dangerouslySetInnerHTML={{ __html:source }} title={this.props.title} />;
+        return <i className={this.props.class} dangerouslySetInnerHTML={{ __html: source }} title={this.props.title} />;
     }
 }
 
