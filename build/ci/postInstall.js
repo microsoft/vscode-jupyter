@@ -241,14 +241,22 @@ function verifyMomentIsOnlyUsedByJupyterLabCoreUtils() {
 
 /**
  * Work around for https://github.com/microsoft/vscode-python/issues/21720
- * 
+ *
  * The npm package @vscode/python-extension has a peer dependency on @types/vscode.
  * However Jupyter extensions uses @vscode-dts with the cli arg '-f' instead of @types/vscode.
  * The webpack builds when running the command `npm list --production --parseable --depth=99999 --loglevel=error`
  * Work around is to remove the peerDepencency on @types/vscode.
  */
 function fixPythonExtensionNpmPackageJson() {
-    const jsonFilePath = path.join(__dirname, '..', '..', 'node_modules','@vscode','python-extension','package.json');
+    const jsonFilePath = path.join(
+        __dirname,
+        '..',
+        '..',
+        'node_modules',
+        '@vscode',
+        'python-extension',
+        'package.json'
+    );
     const packageJson = JSON.parse(fs.readFileSync(jsonFilePath));
     if (packageJson.peerDependencies && packageJson.peerDependencies['@types/vscode']) {
         delete packageJson.peerDependencies['@types/vscode'];
