@@ -314,10 +314,7 @@ export namespace vscMock {
     }
 
     export class DebugAdapterServer {
-        constructor(
-            public readonly port: number,
-            public readonly host?: string
-        ) {}
+        constructor(public readonly port: number, public readonly host?: string) {}
     }
     export class DebugAdapterExecutable {
         constructor(

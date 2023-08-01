@@ -100,10 +100,7 @@ export class PathIterator implements IKeyIterator<string> {
     private _from!: number;
     private _to!: number;
 
-    constructor(
-        private readonly _splitOnBackslash: boolean = true,
-        private readonly _caseSensitive: boolean = true
-    ) {}
+    constructor(private readonly _splitOnBackslash: boolean = true, private readonly _caseSensitive: boolean = true) {}
 
     reset(key: string): this {
         this._from = 0;
@@ -253,10 +250,7 @@ interface ResourceMapKeyFn {
 }
 
 class ResourceMapEntry<T> {
-    constructor(
-        readonly uri: URI,
-        readonly value: T
-    ) {}
+    constructor(readonly uri: URI, readonly value: T) {}
 }
 
 export class ResourceMap<T> implements Map<URI, T> {

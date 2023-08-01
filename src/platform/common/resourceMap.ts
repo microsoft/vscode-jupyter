@@ -8,10 +8,7 @@ interface ResourceMapKeyFn {
 }
 
 class ResourceMapEntry<T> {
-    constructor(
-        readonly Uri: Uri,
-        readonly value: T
-    ) {}
+    constructor(readonly Uri: Uri, readonly value: T) {}
 }
 
 /**

@@ -9,10 +9,7 @@
 export abstract class BaseError extends Error {
     public stdErr?: string;
     public isJupyterError = true;
-    constructor(
-        public readonly category: ErrorCategory,
-        message: string
-    ) {
+    constructor(public readonly category: ErrorCategory, message: string) {
         super(message);
     }
 }
@@ -21,11 +18,7 @@ export abstract class BaseError extends Error {
  * Wraps an error with a custom error message, retaining the call stack information.
  */
 export class WrappedError extends BaseError {
-    constructor(
-        message: string,
-        public readonly originalException?: Error,
-        category?: ErrorCategory
-    ) {
+    constructor(message: string, public readonly originalException?: Error, category?: ErrorCategory) {
         super(category || getErrorCategory(originalException), message);
         if (originalException) {
             // Retain call stack that trapped the error and rethrows this error.

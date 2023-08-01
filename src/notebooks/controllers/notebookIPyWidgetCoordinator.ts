@@ -33,10 +33,7 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
         }
         return this._controller.controller;
     }
-    constructor(
-        public readonly editor: NotebookEditor,
-        controller: IVSCodeNotebookController
-    ) {
+    constructor(public readonly editor: NotebookEditor, controller: IVSCodeNotebookController) {
         this.changeController(controller);
     }
     public changeController(controller: IVSCodeNotebookController) {

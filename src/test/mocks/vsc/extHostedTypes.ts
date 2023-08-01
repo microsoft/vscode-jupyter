@@ -99,10 +99,7 @@ export namespace vscMockExtHostedTypes {
             return NotebookCellOutputItem.text(rawStr, mime);
         }
 
-        constructor(
-            public data: Uint8Array,
-            public mime: string
-        ) {
+        constructor(public data: Uint8Array, public mime: string) {
             this.mime = mime;
         }
     }
@@ -2373,10 +2370,7 @@ export namespace vscMockExtHostedTypes {
     }
     export class NotebookRendererScript {
         public readonly provides: string[];
-        constructor(
-            public uri: vscode.Uri,
-            provides: string | string[] = []
-        ) {
+        constructor(public uri: vscode.Uri, provides: string | string[] = []) {
             this.provides = typeof provides === 'string' ? [provides] : provides;
         }
     }
@@ -2451,10 +2445,7 @@ export namespace vscMockExtHostedTypes {
          * @param start start index
          * @param end end index.
          */
-        constructor(
-            public readonly start: number,
-            public readonly end: number
-        ) {}
+        constructor(public readonly start: number, public readonly end: number) {}
 
         /**
          * Derive a new range for this range.
@@ -2526,10 +2517,7 @@ export namespace vscMockExtHostedTypes {
          */
         newNotebookMetadata?: { [key: string]: any };
 
-        constructor(
-            public readonly range: NotebookRange,
-            public readonly newCells: vscode.NotebookCellData[]
-        ) {}
+        constructor(public readonly range: NotebookRange, public readonly newCells: vscode.NotebookCellData[]) {}
     }
 
     /**
