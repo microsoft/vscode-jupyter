@@ -6,10 +6,10 @@ import { traceWarning } from '../../../platform/logging';
 import { LiveRemoteKernelConnectionMetadata } from '../../types';
 import {
     IJupyterRemoteCachedKernelValidator,
-    IJupyterServerUriStorage,
     IJupyterUriProviderRegistration,
     ILiveRemoteKernelConnectionUsageTracker
 } from '../types';
+import { noop } from '../../../platform/common/utils/misc';
 
 /**
  * Used to verify remote jupyter connections from 3rd party URIs are still valid.
@@ -20,7 +20,6 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         @inject(ILiveRemoteKernelConnectionUsageTracker)
         private readonly liveKernelConnectionTracker: ILiveRemoteKernelConnectionUsageTracker,
 
-        @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistration: IJupyterUriProviderRegistration
     ) {}
     public async isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean> {
@@ -28,25 +27,22 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         if (!this.liveKernelConnectionTracker.wasKernelUsed(kernel)) {
             return false;
         }
-        const item = await this.uriStorage.get(kernel.serverProviderHandle);
-        if (!item) {
-            // Server has been removed and we have some old cached data.
-            return false;
-        }
-        const provider = await this.providerRegistration.getProvider(item.provider.extensionId, item.provider.id);
+        const provider = await this.providerRegistration
+            .getProvider(kernel.serverProviderHandle.extensionId, kernel.serverProviderHandle.id)
+            .catch(noop);
         if (!provider) {
             traceWarning(
-                `Extension may have been uninstalled for provider ${item.provider.id}, handle ${item.provider.handle}`
+                `Extension may have been uninstalled for provider ${kernel.serverProviderHandle.id}, handle ${kernel.serverProviderHandle.handle}`
             );
             return false;
         }
         if (provider.getHandles) {
             const handles = await provider.getHandles();
-            if (handles.includes(item.provider.handle)) {
+            if (handles.includes(kernel.serverProviderHandle.handle)) {
                 return true;
             } else {
                 traceWarning(
-                    `Hiding remote kernel ${kernel.id} for ${provider.id} as the remote Jupyter Server ${item.provider.id}:${item.provider.handle} is no longer available`
+                    `Hiding remote kernel ${kernel.id} for ${provider.id} as the remote Jupyter Server ${kernel.serverProviderHandle.id}:${kernel.serverProviderHandle.handle} is no longer available`
                 );
                 // 3rd party extensions own these kernels, if these are no longer
                 // available, then just don't display them.
