@@ -11,7 +11,10 @@ const PrefixesToStore = ['INTERPRETERS_CACHE'];
 const persistedState = new Map<string, any>();
 
 class TestPersistentState<T> implements IPersistentState<T> {
-    constructor(private key: string, defaultValue?: T | undefined) {
+    constructor(
+        private key: string,
+        defaultValue?: T | undefined
+    ) {
         if (defaultValue) {
             persistedState.set(key, defaultValue);
         }
