@@ -4,31 +4,27 @@
 import { inject, injectable } from 'inversify';
 import {
     CancellationError,
-    CancellationToken,
     CancellationTokenSource,
+    Disposable,
     EventEmitter,
     NotebookDocument,
-    QuickPickItem,
-    Uri
+    QuickInputButtons,
+    Uri,
+    window
 } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { IKernelFinder, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import { IKernelFinder, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
-import {
-    IMultiStepInput,
-    IMultiStepInputFactory,
-    InputFlowAction
-} from '../../../platform/common/utils/multiStepInput';
+import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { ILocalPythonNotebookKernelSourceSelector } from '../types';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
-import { ConnectionQuickPickItem, MultiStepResult } from './types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { LocalKernelSelector } from './localKernelSelector.node';
-import { CreateAndSelectItemFromQuickPick } from './baseKernelSelector';
+import { CompoundQuickPickItem, CreateAndSelectItemFromQuickPick } from './baseKernelSelector';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { Disposables } from '../../../platform/common/utils';
@@ -41,6 +37,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { KernelFinder } from '../../../kernels/kernelFinder';
+import { createDeferred } from '../../../platform/common/utils/async';
 
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
@@ -51,8 +48,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         IContributedKernelFinder<PythonKernelConnectionMetadata>,
         IExtensionSyncActivationService
 {
-    private localDisposables: IDisposable[] = [];
-    private cancellationTokenSource: CancellationTokenSource | undefined;
     kind = ContributedKernelFinderKind.LocalPythonEnvironment;
     id: string = ContributedKernelFinderKind.LocalPythonEnvironment;
     displayName: string = DataScience.localPythonEnvironments;
@@ -81,7 +76,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
     private previousCancellationTokens: CancellationTokenSource[] = [];
     private tempDirForKernelSpecs?: Promise<Uri>;
     constructor(
-        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(PythonEnvironmentFilter)
         private readonly pythonEnvFilter: PythonEnvironmentFilter,
 
@@ -153,39 +147,84 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                 this.promiseMonitor.push(api.environments.refreshEnvironments().catch(noop));
             })
             .catch(noop);
-        this.localDisposables.forEach((d) => d.dispose());
-        this.localDisposables = [];
-        this.cancellationTokenSource?.cancel();
-        this.cancellationTokenSource?.dispose();
-
-        this.cancellationTokenSource = new CancellationTokenSource();
-        const multiStep = this.multiStepFactory.create<MultiStepResult>();
-        const state: MultiStepResult = { disposables: [], notebook };
+        const cancellationTokenSource = new CancellationTokenSource();
+        const disposables: IDisposable[] = [];
+        disposables.push(new Disposable(() => cancellationTokenSource.cancel()));
+        disposables.push(cancellationTokenSource);
         try {
-            const result = await multiStep.run(
-                this.selectKernelFromKernelFinder.bind(
-                    this,
-                    this,
-                    this.cancellationTokenSource.token,
-                    multiStep,
-                    state
-                ),
-                state
+            const provider = new QuickPickKernelItemProvider(
+                notebook,
+                this.kind,
+                this,
+                this.pythonEnvFilter,
+                this.jupyterConnection
             );
-            if (result === InputFlowAction.cancel || state.selection?.type === 'userPerformedSomeOtherAction') {
+            const selector = new LocalKernelSelector(this.workspace, notebook, provider, cancellationTokenSource.token);
+            disposables.push(selector);
+            disposables.push(provider);
+
+            const quickPick = window.createQuickPick();
+            disposables.push(quickPick);
+            quickPick.matchOnDescription = true;
+            quickPick.matchOnDetail = true;
+            quickPick.ignoreFocusOut = false;
+            quickPick.buttons = [QuickInputButtons.Back];
+            quickPick.show();
+
+            const selection = createDeferred<CompoundQuickPickItem>();
+            const navigation = createDeferred<CompoundQuickPickItem>();
+            quickPick.onDidChangeSelection((e) => (e.length ? selection.resolve(e[0]) : undefined));
+            quickPick.onDidHide(() => navigation.reject(new CancellationError()));
+            quickPick.onDidTriggerButton((e) => {
+                if (e === QuickInputButtons.Back) {
+                    navigation.reject(InputFlowAction.back);
+                }
+            });
+
+            const quickPickFactory: CreateAndSelectItemFromQuickPick = (options) => {
+                quickPick.title = options.title;
+                quickPick.buttons = quickPick.buttons.concat(options.buttons);
+                quickPick.onDidTriggerButton((e) => options.onDidTriggerButton(e));
+                quickPick.items = options.items;
+                return { quickPick, selection: selection.promise };
+            };
+
+            const result = await Promise.race([selector.selectKernel(quickPickFactory), navigation.promise]);
+            if (!result || ('selection' in result && result.selection === 'userPerformedSomeOtherAction')) {
+                // User hit cancel button (old code paths).
                 throw new CancellationError();
             }
-            if (this.cancellationTokenSource.token.isCancellationRequested) {
-                disposeAllDisposables(state.disposables);
-                return;
+            if (!('connection' in result)) {
+                // Invalid selection.
+                throw new CancellationError();
             }
 
-            // If we got both parts of the equation, then perform the kernel source and kernel switch
-            if (state.source && state.selection?.type === 'connection') {
-                return state.selection.connection as PythonKernelConnectionMetadata;
+            // Resolve the Python environment.
+            const interpreterUri = result.connection.interpreter?.uri;
+            if (!interpreterUri) {
+                return;
             }
+            const interpreter = await this.interpreterService.getInterpreterDetails(interpreterUri);
+            if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
+                return;
+            }
+            const spec = await createInterpreterKernelSpec(interpreter, await this.getKernelSpecsDir());
+            const connection = PythonKernelConnectionMetadata.create({
+                kernelSpec: spec,
+                interpreter: interpreter,
+                id: getKernelId(spec, interpreter)
+            });
+            return connection as PythonKernelConnectionMetadata;
+        } catch (e) {
+            if (e instanceof CancellationError || e === InputFlowAction.cancel) {
+                throw new CancellationError();
+            }
+            if (e === InputFlowAction.back) {
+                return;
+            }
+            throw e;
         } finally {
-            disposeAllDisposables(state.disposables);
+            disposeAllDisposables(disposables);
         }
     }
     private getKernelSpecsDir() {
@@ -240,62 +279,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         } else {
             this._kernels.set(e.id, result);
             this._onDidChangeKernels.fire({ added: [result] });
-        }
-    }
-
-    private async selectKernelFromKernelFinder(
-        source: IContributedKernelFinder<KernelConnectionMetadata>,
-        token: CancellationToken,
-        multiStep: IMultiStepInput<MultiStepResult>,
-        state: MultiStepResult
-    ) {
-        if (token.isCancellationRequested) {
-            return;
-        }
-        state.source = source;
-        const provider = new QuickPickKernelItemProvider(
-            state.notebook,
-            source.kind,
-            source,
-            this.pythonEnvFilter,
-            this.jupyterConnection
-        );
-        state.disposables.push(provider);
-        const selector = new LocalKernelSelector(this.workspace, state.notebook, provider, token);
-        state.disposables.push(selector);
-        const quickPickFactory: CreateAndSelectItemFromQuickPick = (options) => {
-            const { quickPick, selection } = multiStep.showLazyLoadQuickPick({
-                ...options,
-                placeholder: '',
-                matchOnDescription: true,
-                matchOnDetail: true,
-                supportBackInFirstStep: true,
-                activeItem: undefined,
-                ignoreFocusOut: false
-            });
-            return { quickPick, selection: selection as Promise<ConnectionQuickPickItem | QuickPickItem> };
-        };
-        const result = await selector.selectKernel(quickPickFactory);
-        if (result?.selection === 'controller') {
-            // Resolve the Python environment.
-            const interpreterUri = result.connection?.interpreter?.uri;
-            if (!interpreterUri) {
-                return;
-            }
-            const interpreter = await this.interpreterService.getInterpreterDetails(interpreterUri);
-            if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
-                return;
-            }
-            const spec = await createInterpreterKernelSpec(interpreter, await this.getKernelSpecsDir());
-            const connection = PythonKernelConnectionMetadata.create({
-                kernelSpec: spec,
-                interpreter: interpreter,
-                id: getKernelId(spec, interpreter)
-            });
-            state.source = result.finder;
-            state.selection = { type: 'connection', connection };
-        } else if (result?.selection === 'userPerformedSomeOtherAction') {
-            state.selection = { type: 'userPerformedSomeOtherAction' };
         }
     }
 }
