@@ -42,6 +42,15 @@ export class SelectorQuickPickItem<T extends { id: string }> extends BaseQuickPi
         super(label);
     }
 }
+export class CategoryQuickPickItem extends BaseQuickPickItem {
+    constructor(
+        label: string,
+        public readonly sortKey: string
+    ) {
+        super(label);
+        this.kind = QuickPickItemKind.Separator;
+    }
+}
 
 export interface IQuickPickItemProvider<T extends { id: string }> {
     readonly title: string;
@@ -50,9 +59,6 @@ export interface IQuickPickItemProvider<T extends { id: string }> {
     readonly items: T[];
     readonly status: 'discovering' | 'idle';
     refresh: () => Promise<void>;
-}
-interface SeparatorQuickPickItem extends QuickPickItem {
-    isEmptyCondaEnvironment?: boolean;
 }
 class CommandQuickPickItem<T extends { id: string }> extends BaseQuickPickItem {
     constructor(
@@ -257,15 +263,12 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 this.quickPickItems.splice(indexOfExistingCategory + 1, oldItemCount, ...newItems);
             } else {
                 // Since we sort items by Env type, ensure this new item is inserted in the right place.
-                const currentCategories = this.quickPickItems
-                    .map((item, index) => [item, index])
-                    .filter(([item, _]) => (item as QuickPickItem).kind === QuickPickItemKind.Separator)
-                    .map(([item, index]) => [(item as QuickPickItem).label, index]);
+                const currentCategories: [CategoryQuickPickItem, number][] = this.quickPickItems
+                    .filter((item) => item instanceof CategoryQuickPickItem)
+                    .map((item, index) => [item as CategoryQuickPickItem, index]);
 
-                currentCategories.push([newCategory.label, -1]);
-                if (!newCategory.isEmptyCondaEnvironment) {
-                    currentCategories.sort((a, b) => a[0].toString().localeCompare(b[0].toString()));
-                }
+                currentCategories.push([newCategory, -1]);
+                currentCategories.sort((a, b) => a[0].sortKey.localeCompare(b[0].sortKey));
 
                 // Find where we need to insert this new category.
                 const indexOfNewCategoryInList = currentCategories.findIndex((item) => item[1] === -1);
@@ -373,11 +376,9 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         }
     }
 
-    private connectionToCategory(item: T): SeparatorQuickPickItem {
-        return {
-            kind: QuickPickItemKind.Separator,
-            label: this.options.getCategory(item).label
-        };
+    private connectionToCategory(item: T) {
+        const category = this.options.getCategory(item);
+        return new CategoryQuickPickItem(category.label, category.sortKey || category.label);
     }
 }
 
