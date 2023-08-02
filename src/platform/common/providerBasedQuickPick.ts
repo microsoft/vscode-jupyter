@@ -17,7 +17,7 @@ import {
 } from 'vscode';
 import { InputFlowAction } from './utils/multiStepInput';
 import { Disposables } from './utils';
-import { Common } from './utils/localize';
+import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
