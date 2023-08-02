@@ -109,7 +109,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             }
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
-            if (state.source && state.selection?.type === 'connection') {
+            if (state.selection?.type === 'connection') {
                 return state.selection.connection as RemoteKernelConnectionMetadata;
             }
         } finally {
@@ -330,7 +330,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         multiStep: IMultiStepInput<MultiStepResult>,
         state: MultiStepResult
     ) {
-        state.source = source;
         const provider = new QuickPickKernelItemProvider(
             state.notebook,
             source.kind,
@@ -369,7 +368,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         };
         const result = await selector.selectKernel(quickPickFactory);
         if (result?.selection === 'controller') {
-            state.source = result.finder;
             state.selection = { type: 'connection', connection: result.connection };
         } else if (result?.selection === 'userPerformedSomeOtherAction') {
             state.selection = { type: 'userPerformedSomeOtherAction' };

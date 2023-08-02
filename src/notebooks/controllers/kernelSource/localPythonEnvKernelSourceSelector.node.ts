@@ -292,7 +292,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                 interpreter: interpreter,
                 id: getKernelId(spec, interpreter)
             });
-            state.source = result.finder;
             state.selection = { type: 'connection', connection };
         } else if (result?.selection === 'userPerformedSomeOtherAction') {
             state.selection = { type: 'userPerformedSomeOtherAction' };

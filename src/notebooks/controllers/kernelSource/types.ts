@@ -21,7 +21,6 @@ export interface CommandQuickPickItem extends QuickPickItem {
 
 export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
     notebook: NotebookDocument;
-    source?: IContributedKernelFinder;
     selection?: { type: 'connection'; connection: T } | { type: 'userPerformedSomeOtherAction' };
     disposables: IDisposable[];
 };

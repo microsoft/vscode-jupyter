@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, CancellationTokenSource, commands, Disposable, NotebookDocument, QuickPick } from 'vscode';
-import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
+import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
@@ -76,7 +76,7 @@ export class LocalKernelSelector extends BaseKernelSelector implements IDisposab
         quickPickFactory: CreateAndSelectItemFromQuickPick,
         quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined }
     ): Promise<
-        | { selection: 'controller'; finder: IContributedKernelFinder; connection: KernelConnectionMetadata }
+        | { selection: 'controller'; connection: KernelConnectionMetadata }
         | { selection: 'userPerformedSomeOtherAction' }
         | undefined
     > {
