@@ -293,7 +293,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         if (recommendedItemQuickPick) {
             recommendedItems.push(
                 <QuickPickItem>{
-                    label: DataScience.recommendedKernelCategoryInQuickPick,
+                    label: DataScience.recommendedItemCategoryInQuickPick,
                     kind: QuickPickItemKind.Separator
                 },
                 recommendedItemQuickPick
