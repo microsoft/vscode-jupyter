@@ -104,11 +104,12 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         quickPick.onDidTriggerButton(
             async (e) => {
                 if (e === refreshButton) {
+                    const oldButtons = quickPick.buttons;
                     quickPick.buttons = quickPick.buttons
                         .filter((btn) => btn !== refreshButton)
                         .concat(refreshingButton);
                     await this.provider.refresh().catch(noop);
-                    quickPick.buttons = quickPick.buttons.filter((btn) => btn !== refreshButton);
+                    quickPick.buttons = oldButtons;
                 }
             },
             this,
