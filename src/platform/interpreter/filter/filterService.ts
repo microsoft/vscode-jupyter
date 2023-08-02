@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { disposeAllDisposables } from '../../common/helpers';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../common/constants';
 import { getDisplayPath } from '../../common/platform/fs-paths';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { traceVerbose } from '../../logging';
+import { Environment } from '../../api/pythonApiTypes';
 
 /**
  * Determine whether a Python environment should be excluded from the Kernel filter.
@@ -42,11 +42,16 @@ export class PythonEnvironmentFilter implements IDisposable {
         this._onDidChange.dispose();
         disposeAllDisposables(this.disposables);
     }
-    public isPythonEnvironmentExcluded(interpreter: PythonEnvironment): boolean {
+    public isPythonEnvironmentExcluded(interpreter: { uri: Uri; envPath?: Uri } | Environment): boolean {
         if (this.webExtension) {
             return false;
         }
         const hiddenList = this.getExcludedPythonEnvironments();
+        const envFolderUri = 'uri' in interpreter ? interpreter.envPath : interpreter.environment?.folderUri;
+        const interpreterUri = 'uri' in interpreter ? interpreter.uri : interpreter.executable.uri;
+        if (!interpreterUri && !envFolderUri) {
+            return false;
+        }
         const hidden = hiddenList.some((item) => {
             /**
              * Filter paths can be prefixed with `~`
@@ -57,12 +62,12 @@ export class PythonEnvironmentFilter implements IDisposable {
              */
             const displayPath = getDisplayPath(item.trim()).toLowerCase().replace(/\\/g, '/');
             item = item.trim().toLowerCase().replace(/\\/g, '/');
-            if (item.length === 0) {
+            if (item.length === 0 || displayPath.length === 0) {
                 return false;
             }
-            const displayInterpreterPath = getDisplayPath(interpreter.uri).toLowerCase().replace(/\\/g, '/');
+            const displayInterpreterPath = getDisplayPath(interpreterUri).toLowerCase().replace(/\\/g, '/');
             // eslint-disable-next-line local-rules/dont-use-fspath
-            const interpreterPath = interpreter.uri.fsPath.toLowerCase().replace(/\\/g, '/');
+            const interpreterPath = interpreterUri ? interpreterUri.fsPath.toLowerCase().replace(/\\/g, '/') : '';
             if (
                 item === displayInterpreterPath ||
                 displayPath === displayInterpreterPath ||
@@ -72,10 +77,10 @@ export class PythonEnvironmentFilter implements IDisposable {
                 return true;
             }
             // Possible user entered the path to the environment instead of the executable.
-            const displayEnvPath = getDisplayPath(interpreter.envPath || '')
+            const displayEnvPath = getDisplayPath(envFolderUri || '')
                 .toLowerCase()
                 .replace(/\\/g, '/');
-            const envPath = getDisplayPath(interpreter.envPath || '')
+            const envPath = getDisplayPath(envFolderUri || '')
                 .toLowerCase()
                 .replace(/\\/g, '/');
             if (
@@ -91,7 +96,7 @@ export class PythonEnvironmentFilter implements IDisposable {
 
         if (hidden) {
             sendTelemetryEvent(Telemetry.JupyterKernelHiddenViaFilter);
-            traceVerbose(`Python Env hidden via filter: ${getDisplayPath(interpreter.uri)}`);
+            traceVerbose(`Python Env hidden via filter: ${getDisplayPath(interpreterUri)}`);
         }
         return hidden;
     }
