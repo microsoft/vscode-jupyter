@@ -10,11 +10,10 @@ import { injectable, inject } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
+import { IExtensions, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { createDeferred, sleep } from '../common/utils/async';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
-import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironments/info/interpreter';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
@@ -400,39 +399,6 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 }
 
-// eslint-disable-next-line max-classes-per-file
-@injectable()
-export class InterpreterSelector implements IInterpreterSelector {
-    constructor(
-        @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
-
-    public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
-        const [api, newApi] = await Promise.all([this.apiProvider.getApi(), this.apiProvider.getNewApi()]);
-
-        let suggestions = api.getKnownSuggestions
-            ? api.getKnownSuggestions(resource)
-            : await api.getSuggestions(resource);
-
-        const deserializedSuggestions: IInterpreterQuickPickItem[] = [];
-        if (this.workspace.isTrusted) {
-            await Promise.all(
-                suggestions.map(async (item) => {
-                    const env = await newApi!.environments.resolveEnvironment(item.interpreter.path);
-                    if (!env) {
-                        return;
-                    }
-                    const interpreter = deserializePythonEnvironment(item.interpreter, env?.id);
-                    if (interpreter) {
-                        deserializedSuggestions.push({ ...item, interpreter: interpreter });
-                    }
-                })
-            );
-        }
-        return deserializedSuggestions;
-    }
-}
 type InterpreterId = string;
 // eslint-disable-next-line max-classes-per-file
 @injectable()

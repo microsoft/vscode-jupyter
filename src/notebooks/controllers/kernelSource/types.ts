@@ -35,4 +35,9 @@ export interface IQuickPickKernelItemProvider {
     status: 'discovering' | 'idle';
     refresh: () => Promise<void>;
     recommended: KernelConnectionMetadata | undefined;
+    /**
+     * Temporary work around.
+     * This means that the item marked as recommended is actually the selected item.
+     */
+    recommendedMeansSelected?: boolean;
 }
