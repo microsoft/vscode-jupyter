@@ -10,7 +10,7 @@ import {
     QuickPickItemKind,
     ThemeIcon
 } from 'vscode';
-import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
+import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
@@ -94,7 +94,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
     public async selectKernel(
         quickPickFactory: CreateAndSelectItemFromQuickPick
     ): Promise<
-        | { selection: 'controller'; finder: IContributedKernelFinder; connection: KernelConnectionMetadata }
+        | { selection: 'controller'; connection: KernelConnectionMetadata }
         | { selection: 'userPerformedSomeOtherAction' }
         | undefined
     > {
@@ -105,7 +105,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         quickPickFactory: CreateAndSelectItemFromQuickPick,
         quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined }
     ): Promise<
-        | { selection: 'controller'; finder: IContributedKernelFinder; connection: KernelConnectionMetadata }
+        | { selection: 'controller'; connection: KernelConnectionMetadata }
         | { selection: 'userPerformedSomeOtherAction' }
         | undefined
     > {
@@ -176,7 +176,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         quickPickFactory: CreateAndSelectItemFromQuickPick,
         quickPickToBeUpdated: { quickPick: QuickPick<CompoundQuickPickItem> | undefined }
     ): Promise<
-        | { selection: 'controller'; finder: IContributedKernelFinder; connection: KernelConnectionMetadata }
+        | { selection: 'controller'; connection: KernelConnectionMetadata }
         | { selection: 'userPerformedSomeOtherAction' }
         | undefined
     > {
@@ -238,9 +238,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         if (isCommandQuickPickItem(result)) {
             try {
                 const connection = await result.command();
-                return connection
-                    ? { selection: 'controller', finder: this.provider.finder!, connection: connection }
-                    : undefined;
+                return connection ? { selection: 'controller', connection: connection } : undefined;
             } catch (ex) {
                 if (ex instanceof SomeOtherActionError) {
                     return { selection: 'userPerformedSomeOtherAction' };
@@ -251,7 +249,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
             }
         }
         if (result && 'connection' in result) {
-            return { selection: 'controller', finder: this.provider.finder!, connection: result.connection };
+            return { selection: 'controller', connection: result.connection };
         } else if (result && 'error' in result) {
             throw InputFlowAction.back;
         }
@@ -337,7 +335,6 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
     }
     private buildErrorQuickPickItem(error?: Error): KernelListErrorQuickPickItem[] {
         if (this.provider.kind === ContributedKernelFinderKind.Remote && error) {
-            this.provider.finder?.displayName;
             return [
                 {
                     error,
