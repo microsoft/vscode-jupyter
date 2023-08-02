@@ -181,7 +181,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             }
 
             // If we got both parts of the equation, then perform the kernel source and kernel switch
-            if (state.source && state.selection?.type === 'connection') {
+            if (state.selection?.type === 'connection') {
                 return state.selection.connection as PythonKernelConnectionMetadata;
             }
         } finally {
@@ -252,7 +252,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         if (token.isCancellationRequested) {
             return;
         }
-        state.source = source;
         const provider = new QuickPickKernelItemProvider(
             state.notebook,
             source.kind,
@@ -292,7 +291,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                 interpreter: interpreter,
                 id: getKernelId(spec, interpreter)
             });
-            state.source = result.finder;
             state.selection = { type: 'connection', connection };
         } else if (result?.selection === 'userPerformedSomeOtherAction') {
             state.selection = { type: 'userPerformedSomeOtherAction' };
