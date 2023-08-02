@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../common/platform/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IServiceContainer } from '../ioc/types';
-import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IWorkspaceService } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
 import { createCondaEnv, createPythonEnv } from './pythonEnvironment.node';
@@ -18,6 +17,8 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService
 } from './types.node';
+import { Environment } from '../api/pythonApiTypes';
+import { Uri } from 'vscode';
 
 /**
  * Creates IPythonExecutionService objects. They can be either process based or daemon based.
@@ -73,7 +74,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 }
 
 function createPythonService(
-    interpreter: PythonEnvironment,
+    interpreter: { uri: Uri; id: string } | Environment,
     procService: IProcessService,
     fs: IFileSystem,
     conda?: [
