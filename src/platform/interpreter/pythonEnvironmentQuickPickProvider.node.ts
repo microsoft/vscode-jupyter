@@ -24,19 +24,10 @@ export class PythonEnvironmentQuickPickItemProvider
 {
     title: string = DataScience.selectPythonEnvironmentTitle;
     private _onDidChange = new EventEmitter<void>();
-    private _onDidFail = new EventEmitter<Error>();
     private _onDidChangeStatus = new EventEmitter<void>();
-    private _onDidChangeRecommended = new EventEmitter<void>();
-    private _onDidChangeSelected = new EventEmitter<void>();
     onDidChange = this._onDidChange.event;
-    onDidFail = this._onDidFail.event;
     onDidChangeStatus = this._onDidChangeStatus.event;
-    onDidChangeRecommended = this._onDidChangeRecommended.event;
-    onDidChangeSelected = this._onDidChangeSelected.event;
-
     private refreshedOnceBefore = false;
-    recommended?: Environment | undefined;
-    selected?: Environment | undefined;
     private api?: ProposedExtensionAPI;
     private readonly disposables: IDisposable[] = [];
     private readonly promiseMonitor = new PromiseMonitor();

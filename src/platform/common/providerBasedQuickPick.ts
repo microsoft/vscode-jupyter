@@ -17,7 +17,7 @@ import {
 } from 'vscode';
 import { InputFlowAction } from './utils/multiStepInput';
 import { Disposables } from './utils';
-import { Common, DataScience } from './utils/localize';
+import { Common } from './utils/localize';
 import { noop } from './utils/misc';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
@@ -46,14 +46,14 @@ export class SelectorQuickPickItem<T extends { id: string }> extends BaseQuickPi
 export interface IQuickPickItemProvider<T extends { id: string }> {
     readonly title: string;
     onDidChange: Event<void>;
-    onDidFail: Event<Error>;
+    // onDidFail: Event<Error>;
     onDidChangeStatus: Event<void>;
-    onDidChangeRecommended: Event<void>;
-    onDidChangeSelected: Event<void>;
+    // onDidChangeRecommended: Event<void>;
+    // onDidChangeSelected: Event<void>;
     readonly items: T[];
     readonly status: 'discovering' | 'idle';
-    readonly recommended?: T;
-    readonly selected?: T;
+    // readonly recommended?: T;
+    // readonly selected?: T;
     refresh: () => Promise<void>;
     toQuickPick(item: T): SelectorQuickPickItem<T>;
     getCategory(item: T): { label: string; sortKey?: string };
@@ -134,17 +134,17 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             this,
             this.disposables
         );
-        this.provider.onDidChangeRecommended(
-            () => (this.updateRecommendedItems() ? this.rebuildQuickPickItems(quickPick) : undefined),
-            this,
-            this.disposables
-        );
-        this.provider.onDidChangeSelected(
-            () => (this.updateRecommendedItems() ? this.rebuildQuickPickItems(quickPick) : undefined),
-            this,
-            this.disposables
-        );
-        this.provider.onDidFail((error) => this.rebuildQuickPickItems(quickPick, error), this, this.disposables);
+        // this.provider.onDidChangeRecommended(
+        //     () => (this.updateRecommendedItems() ? this.rebuildQuickPickItems(quickPick) : undefined),
+        //     this,
+        //     this.disposables
+        // );
+        // this.provider.onDidChangeSelected(
+        //     () => (this.updateRecommendedItems() ? this.rebuildQuickPickItems(quickPick) : undefined),
+        //     this,
+        //     this.disposables
+        // );
+        // this.provider.onDidFail((error) => this.rebuildQuickPickItems(quickPick, error), this, this.disposables);
         this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, this.disposables);
 
         groupBy(
@@ -158,7 +158,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             this.categories.set(item, new Set(items));
         });
 
-        this.updateRecommendedItems();
+        // this.updateRecommendedItems();
         this.updateQuickPickItems(quickPick);
     }
 
@@ -373,42 +373,42 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         }
     }
 
-    /**
-     * Updates the quick pick items with the new recommended items.
-     * @returns Returns `true` if the recommended items have changed.
-     */
-    private updateRecommendedItems() {
-        const previousCount = this.recommendedItems.length;
-        if (!this.provider.recommended) {
-            this.recommendedItems.length = 0;
-            return previousCount > 0;
-        }
-        let hasChanged = false;
-        if (!this.recommendedItems.length) {
-            hasChanged = true;
-            this.recommendedItems.push(<QuickPickItem>{
-                label: DataScience.recommendedKernelCategoryInQuickPick,
-                kind: QuickPickItemKind.Separator
-            });
-        }
-        const recommendedItem = this.provider.toQuickPick(this.provider.recommended);
-        if (this.recommendedItems.length === 2) {
-            const previousRecommendedItem = this.recommendedItems[1];
+    // /**
+    //  * Updates the quick pick items with the new recommended items.
+    //  * @returns Returns `true` if the recommended items have changed.
+    //  */
+    // private updateRecommendedItems() {
+    //     const previousCount = this.recommendedItems.length;
+    //     if (!this.provider.recommended) {
+    //         this.recommendedItems.length = 0;
+    //         return previousCount > 0;
+    //     }
+    //     let hasChanged = false;
+    //     if (!this.recommendedItems.length) {
+    //         hasChanged = true;
+    //         this.recommendedItems.push(<QuickPickItem>{
+    //             label: DataScience.recommendedKernelCategoryInQuickPick,
+    //             kind: QuickPickItemKind.Separator
+    //         });
+    //     }
+    //     const recommendedItem = this.provider.toQuickPick(this.provider.recommended);
+    //     if (this.recommendedItems.length === 2) {
+    //         const previousRecommendedItem = this.recommendedItems[1];
 
-            // Compare ref, as its possible the object ref has changed and we have more information in the new obj.
-            if (
-                isSelectorQuickPickItem(previousRecommendedItem) &&
-                previousRecommendedItem.item !== recommendedItem.item
-            ) {
-                hasChanged = true;
-                this.recommendedItems[1] = recommendedItem;
-            }
-        } else if (this.recommendedItems.length !== 2) {
-            hasChanged = true;
-            this.recommendedItems.push(recommendedItem);
-        }
-        return hasChanged;
-    }
+    //         // Compare ref, as its possible the object ref has changed and we have more information in the new obj.
+    //         if (
+    //             isSelectorQuickPickItem(previousRecommendedItem) &&
+    //             previousRecommendedItem.item !== recommendedItem.item
+    //         ) {
+    //             hasChanged = true;
+    //             this.recommendedItems[1] = recommendedItem;
+    //         }
+    //     } else if (this.recommendedItems.length !== 2) {
+    //         hasChanged = true;
+    //         this.recommendedItems.push(recommendedItem);
+    //     }
+    //     return hasChanged;
+    // }
     /**
      * Possible the labels have changed, hence update the quick pick labels.
      * E.g. we got more information about an interpreter or a display name of a kernelSpec has changed.
