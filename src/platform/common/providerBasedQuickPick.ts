@@ -106,8 +106,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 if (e === refreshButton) {
                     const oldButtons = quickPick.buttons;
                     quickPick.buttons = quickPick.buttons
-                        .filter((btn) => btn !== refreshButton)
-                        .concat(refreshingButton);
+                        .map((btn) => btn !== refreshButton ? btn : refreshingButton);
                     await this.provider.refresh().catch(noop);
                     quickPick.buttons = oldButtons;
                 }
