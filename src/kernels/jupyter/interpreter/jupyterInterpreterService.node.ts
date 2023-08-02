@@ -12,7 +12,7 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
-import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
+import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';

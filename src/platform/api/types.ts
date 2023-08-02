@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Event, QuickPickItem, Uri } from 'vscode';
+import { Event, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
@@ -63,17 +63,6 @@ export type PythonEnvironment_PythonApi = InterpreterInformation_PythonApi & {
     envPath?: string;
 };
 
-export interface IInterpreterQuickPickItem_PythonApi extends QuickPickItem {
-    path: string;
-    /**
-     * The interpreter related to this quickpick item.
-     *
-     * @type {PythonEnvironment}
-     * @memberof IInterpreterQuickPickItem
-     */
-    interpreter: PythonEnvironment_PythonApi;
-}
-
 export interface PythonApi {
     /**
      * IEnvironmentActivationService
@@ -83,8 +72,6 @@ export interface PythonApi {
         interpreter: PythonEnvironment_PythonApi,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
-    getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem_PythonApi[]>;
-    getKnownSuggestions?(resource: Resource): IInterpreterQuickPickItem_PythonApi[];
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
      */

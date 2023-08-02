@@ -123,7 +123,7 @@ export interface ILocalNotebookKernelSourceSelector {
 }
 export const ILocalPythonNotebookKernelSourceSelector = Symbol('ILocalPythonNotebookKernelSourceSelector');
 export interface ILocalPythonNotebookKernelSourceSelector {
-    selectLocalKernel(notebook: vscode.NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined>;
+    selectLocalKernel(notebook?: vscode.NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined>;
 }
 
 export interface IConnectionDisplayData extends IDisposable {
