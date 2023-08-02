@@ -89,10 +89,6 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         this.provider = options.provider;
         this.token = options.token;
         const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh };
-        const refreshingButton: QuickInputButton = {
-            iconPath: new ThemeIcon('loading~spin'),
-            tooltip: Common.refreshing
-        };
         const quickPick = (this.quickPick = window.createQuickPick());
         this.disposables.push(quickPick);
         quickPick.title = this.provider.title;
@@ -104,11 +100,9 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         quickPick.onDidTriggerButton(
             async (e) => {
                 if (e === refreshButton) {
-                    const oldButtons = quickPick.buttons;
-                    quickPick.buttons = quickPick.buttons
-                        .map((btn) => btn !== refreshButton ? btn : refreshingButton);
+                    quickPick.busy = true;
                     await this.provider.refresh().catch(noop);
-                    quickPick.buttons = oldButtons;
+                    quickPick.busy = false;
                 }
             },
             this,
