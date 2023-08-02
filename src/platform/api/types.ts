@@ -74,7 +74,7 @@ export interface IInterpreterQuickPickItem_PythonApi extends QuickPickItem {
     interpreter: PythonEnvironment_PythonApi;
 }
 
-export type PythonApi = {
+export interface PythonApi {
     /**
      * IEnvironmentActivationService
      */
@@ -102,10 +102,6 @@ export type PythonApi = {
      * Returns the conda executable.
      */
     getCondaFile?(): Promise<string | undefined>;
-    getEnvironmentActivationShellCommands?(
-        resource: Resource,
-        interpreter?: PythonEnvironment_PythonApi
-    ): Promise<string[] | undefined>;
 
     /**
      * Call to provide a function that the Python extension can call to request the Python
@@ -121,4 +117,4 @@ export type PythonApi = {
      * @param func : The function that Python should call when requesting the notebook URI.
      */
     registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
-};
+}
