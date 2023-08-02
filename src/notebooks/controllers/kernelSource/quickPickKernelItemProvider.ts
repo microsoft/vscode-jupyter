@@ -34,10 +34,6 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
     recommended: KernelConnectionMetadata | undefined;
     private readonly disposables: IDisposable[] = [];
     private refreshInvoked?: boolean;
-    private _finder: IContributedKernelFinder | undefined;
-    public get finder(): IContributedKernelFinder | undefined {
-        return this._finder;
-    }
     constructor(
         private readonly notebook: NotebookDocument,
         kind: ContributedKernelFinderKind,
@@ -63,7 +59,6 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         disposeAllDisposables(this.disposables);
     }
     private setupFinder(finder: IContributedKernelFinder) {
-        this._finder = finder;
         this.refresh = async () => finder.refresh();
         if (this.status !== finder.status && !this.refreshInvoked) {
             this.status = finder.status;
