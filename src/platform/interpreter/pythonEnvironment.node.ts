@@ -6,14 +6,16 @@ import { getExecutablePath } from '../pythonEnvironments/info/executable.node';
 import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from '../common/process/types.node';
 import { SemVer } from 'semver';
-import type { PythonEnvironment as PyEnv } from '../pythonEnvironments/info';
 import { getFilePath } from '../common/platform/fs-paths';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 import { traceWarning } from '../logging';
+import { Environment } from '../api/pythonApiTypes';
 class PythonEnvironment {
+    private readonly executable: Uri;
+    private readonly pythonEnvId: string;
     constructor(
-        protected readonly interpreter: PyEnv,
+        interpreter: { uri: Uri; id: string } | Environment,
         // "deps" is the externally defined functionality used by the class.
         protected readonly deps: {
             getPythonArgv(python: Uri): string[];
@@ -23,21 +25,31 @@ class PythonEnvironment {
             exec(file: string, args: string[], options?: SpawnOptions): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
         }
-    ) {}
+    ) {
+        this.pythonEnvId = interpreter.id;
+        if ('executable' in interpreter) {
+            if (!interpreter.executable.uri) {
+                throw new Error(`interpreter.executable.uri is not defined for ${interpreter.id}`);
+            }
+            this.executable = interpreter.executable.uri;
+        } else {
+            this.executable = interpreter.uri;
+        }
+    }
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
-        const python = this.deps.getPythonArgv(this.interpreter.uri);
+        const python = this.deps.getPythonArgv(this.executable);
         return buildPythonExecInfo(python, pythonArgs);
     }
     public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
-        const python = this.deps.getObservablePythonArgv(this.interpreter.uri);
+        const python = this.deps.getObservablePythonArgv(this.executable);
         return buildPythonExecInfo(python, pythonArgs);
     }
     public async getExecutablePath(): Promise<Uri> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
-        if (await this.deps.isValidExecutable(this.interpreter.uri)) {
-            return this.interpreter.uri;
+        if (await this.deps.isValidExecutable(this.executable)) {
+            return this.executable;
         }
         const python = this.getExecutionInfo();
         return getExecutablePath(python, this.deps.exec);
@@ -51,7 +63,7 @@ class PythonEnvironment {
             const output = await this.deps.exec(info.command, info.args, { throwOnStdErr: false });
             return parse(output.stdout);
         } catch (ex) {
-            traceWarning(`Module ${moduleName} not installed in environment ${this.interpreter.id}`, ex);
+            traceWarning(`Module ${moduleName} not installed in environment ${this.pythonEnvId}`, ex);
             return false;
         }
     }
@@ -76,7 +88,7 @@ function createDeps(
 }
 
 export function createPythonEnv(
-    interpreter: PyEnv,
+    interpreter: { uri: Uri; id: string } | Environment,
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem
@@ -99,7 +111,7 @@ export function createCondaEnv(
         path: string;
         version?: SemVer;
     },
-    interpreter: PyEnv,
+    interpreter: { uri: Uri; id: string } | Environment,
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem
