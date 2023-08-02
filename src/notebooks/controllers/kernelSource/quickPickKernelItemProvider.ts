@@ -3,7 +3,7 @@
 
 import { CancellationToken, CancellationTokenSource, Disposable, EventEmitter, NotebookDocument } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
+import { KernelConnectionMetadata } from '../../../kernels/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../platform/common/types';
@@ -14,8 +14,6 @@ import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/fi
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IQuickPickKernelItemProvider } from './types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
-import { JupyterInterpreterStateStore } from '../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 
 export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider {
     private readonly _onDidRefresh = new EventEmitter<void>();
@@ -36,17 +34,13 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
     recommended: KernelConnectionMetadata | undefined;
     private readonly disposables: IDisposable[] = [];
     private refreshInvoked?: boolean;
-    public readonly recommendedMeansSelected: boolean;
     constructor(
-        private readonly notebook: NotebookDocument | undefined,
+        private readonly notebook: NotebookDocument,
         kind: ContributedKernelFinderKind,
         finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>,
         private readonly pythonEnvFilter: PythonEnvironmentFilter | undefined,
-        private readonly connection: JupyterConnection,
-        private readonly interpreterSelectionState?: JupyterInterpreterStateStore
+        private readonly connection: JupyterConnection
     ) {
-        // Debt, easy work around, to use kernel picker as an interpreter picker.
-        this.recommendedMeansSelected = !notebook;
         this.refresh = async () => {
             this.refreshInvoked = true;
         };
@@ -144,16 +138,13 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         preferred: PreferredKernelConnectionService,
         cancelToken: CancellationToken
     ) {
-        if (!this.notebook) {
-            return;
-        }
         preferred
             .findPreferredRemoteKernelConnection(this.notebook, finder, cancelToken)
             .then((kernel) => {
                 this.recommended = kernel;
                 this._onDidChangeRecommended.fire();
             })
-            .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook?.uri)}`, ex));
+            .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook.uri)}`, ex));
     }
     private computePreferredLocalKernel(
         finder: IContributedKernelFinder,
@@ -161,18 +152,6 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         cancelToken: CancellationToken
     ) {
         const computePreferred = () => {
-            if (!this.notebook) {
-                const currentlySelectedEnvironment = this.interpreterSelectionState?.selectedPythonPath;
-                // We are trying to pick the Python Environment to start Jupyter Server.
-                // Temporary hacky code (debt: Split all of this out and make a generic Python Env picker)
-                this.recommended =
-                    currentlySelectedEnvironment &&
-                    this.kernels
-                        .filter((k) => k.kind === 'startUsingPythonInterpreter')
-                        .map((k) => k as PythonKernelConnectionMetadata)
-                        .find((k) => areInterpreterPathsSame(k.interpreter.uri, currentlySelectedEnvironment));
-                return;
-            }
             // Check if the preferred kernel is in the list of kernels
             if (this.recommended && !this.kernels.find((k) => k.id === this.recommended?.id)) {
                 this.recommended = undefined;

@@ -41,11 +41,9 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { KernelFinder } from '../../../kernels/kernelFinder';
-import { JupyterInterpreterStateStore } from '../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore';
 
 export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
-    notebook?: NotebookDocument;
-    source?: IContributedKernelFinder;
+    notebook: NotebookDocument;
     selection?: { type: 'connection'; connection: T } | { type: 'userPerformedSomeOtherAction' };
     disposables: IDisposable[];
 };
@@ -101,8 +99,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly checker: IPythonExtensionChecker,
-        @inject(IKernelFinder) kernelFinder: KernelFinder,
-        @inject(JupyterInterpreterStateStore) private readonly interpreterSelectionState: JupyterInterpreterStateStore
+        @inject(IKernelFinder) kernelFinder: KernelFinder
     ) {
         super();
         disposables.push(this);
@@ -148,13 +145,9 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             })
             .catch(noop);
     }
-    public async selectLocalKernel(notebook?: NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined> {
+    public async selectLocalKernel(notebook: NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined> {
         // Reject if it's not our type
-        if (
-            notebook &&
-            notebook.notebookType !== JupyterNotebookView &&
-            notebook.notebookType !== InteractiveWindowView
-        ) {
+        if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
             return;
         }
         this.pythonApi
@@ -270,8 +263,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             source.kind,
             source,
             this.pythonEnvFilter,
-            this.jupyterConnection,
-            this.interpreterSelectionState
+            this.jupyterConnection
         );
         state.disposables.push(provider);
         const selector = new LocalKernelSelector(this.workspace, state.notebook, provider, token);

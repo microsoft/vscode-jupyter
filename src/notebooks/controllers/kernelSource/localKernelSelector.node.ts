@@ -34,7 +34,7 @@ export class LocalKernelSelector extends BaseKernelSelector implements IDisposab
     private readonly createPythonEnvQuickPickItem: CommandQuickPickItem;
     constructor(
         private readonly workspace: IWorkspaceService,
-        private readonly notebook: NotebookDocument | undefined,
+        private readonly notebook: NotebookDocument,
         provider: IQuickPickKernelItemProvider,
         token: CancellationToken
     ) {

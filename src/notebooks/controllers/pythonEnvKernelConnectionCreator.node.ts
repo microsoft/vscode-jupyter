@@ -38,7 +38,7 @@ export class PythonEnvKernelConnectionCreator {
         disposeAllDisposables(this.disposables);
     }
     constructor(
-        private readonly notebook: NotebookDocument | undefined,
+        private readonly notebook: NotebookDocument,
         cancelToken: CancellationToken
     ) {
         const controllerSelection = ServiceContainer.instance.get<IControllerRegistration>(IControllerRegistration);
@@ -102,23 +102,21 @@ export class PythonEnvKernelConnectionCreator {
         }
         traceVerbose(`Python Environment ${env.id} found as a kernel ${kernelConnection.kind}:${kernelConnection.id}`);
         const dependencyService = ServiceContainer.instance.get<IKernelDependencyService>(IKernelDependencyService);
-        const result = this.notebook
-            ? await dependencyService.installMissingDependencies({
-                  resource: this.notebook.uri,
-                  kernelConnection,
-                  ui: new DisplayOptions(false),
-                  token: this.cancelTokeSource.token,
-                  ignoreCache: true,
-                  cannotChangeKernels: true,
-                  installWithoutPrompting: true
-              })
-            : KernelInterpreterDependencyResponse.ok;
+        const result = await dependencyService.installMissingDependencies({
+            resource: this.notebook.uri,
+            kernelConnection,
+            ui: new DisplayOptions(false),
+            token: this.cancelTokeSource.token,
+            ignoreCache: true,
+            cannotChangeKernels: true,
+            installWithoutPrompting: true
+        });
         let dependenciesInstalled = true;
         if (result !== KernelInterpreterDependencyResponse.ok) {
             dependenciesInstalled = false;
             traceWarning(
                 `Dependencies not installed for new Python Env ${getDisplayPath(env.uri)} for notebook ${getDisplayPath(
-                    this.notebook?.uri
+                    this.notebook.uri
                 )}`
             );
         }
