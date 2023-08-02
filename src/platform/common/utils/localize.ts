@@ -435,6 +435,7 @@ export namespace DataScience {
     export const selectDifferentKernel = l10n.t('Select a different Kernel');
     export const kernelFilterPlaceholder = l10n.t('Choose the kernels that are available in the kernel picker.');
     export const recommendedKernelCategoryInQuickPick = l10n.t('Recommended');
+    export const selectedKernelCategoryInQuickPick = l10n.t('Selected');
     export const createPythonEnvironmentInQuickPick = l10n.t('Create Python Environment');
     export const createPythonEnvironmentInQuickPickTooltip = l10n.t(
         'Create an isolated Python Environment per workspace folder'

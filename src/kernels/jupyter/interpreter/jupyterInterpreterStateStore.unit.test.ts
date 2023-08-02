@@ -8,7 +8,7 @@ import { arePathsSame } from '../../../platform/common/platform/fileUtils';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { MockMemento } from '../../../test/mocks/mementos';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
-import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
+import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 
 suite('Jupyter Interpreter State', () => {
     let selected: JupyterInterpreterStateStore;

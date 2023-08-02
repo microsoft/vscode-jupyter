@@ -17,7 +17,7 @@ import { JupyterInterpreterDependencyResponse } from '../types';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
-import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
+import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 
 /* eslint-disable  */
 
