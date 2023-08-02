@@ -4,8 +4,23 @@
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { basename } from '../../platform/vscode-path/resources';
+import { Environment } from '../api/pythonApiTypes';
 
-export function getPythonEnvDisplayName(interpreter: PythonEnvironment) {
+export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment) {
+    if ('executable' in interpreter) {
+        const version = interpreter.version?.major
+            ? `${interpreter.version.major}.${interpreter.version.minor}.${interpreter.version.micro}`
+            : '';
+        const envName = interpreter.environment ? basename(interpreter.environment?.folderUri) : '';
+        const nameWithVersion = version ? `Python ${version}` : 'Python';
+        if (isCondaEnvironmentWithoutPython(interpreter) && envName) {
+            return envName;
+        }
+        if (envName) {
+            return `${envName} (${nameWithVersion})`;
+        }
+        return nameWithVersion;
+    }
     const pythonVersion = (getTelemetrySafeVersion(interpreter.version?.raw || '') || '').trim();
     // If this is a conda environment without Python, then don't display `Python` in it.
     const isCondaEnvWithoutPython =
@@ -33,4 +48,27 @@ export function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
         envName = basename(pythonEnv.envPath);
     }
     return envName;
+}
+
+const environmentTypes = [
+    EnvironmentType.Unknown,
+    EnvironmentType.Conda,
+    EnvironmentType.Pipenv,
+    EnvironmentType.Poetry,
+    EnvironmentType.Pyenv,
+    EnvironmentType.Venv,
+    EnvironmentType.VirtualEnv,
+    EnvironmentType.VirtualEnvWrapper
+];
+export function getEnvironmentType(env: Environment): EnvironmentType {
+    for (const type of environmentTypes) {
+        if (env.tools.some((tool) => tool.toLowerCase() === type.toLowerCase())) {
+            return type;
+        }
+    }
+    return EnvironmentType.Unknown;
+}
+
+export function isCondaEnvironmentWithoutPython(env: Environment) {
+    return getEnvironmentType(env) === EnvironmentType.Conda && !env.executable.uri;
 }
