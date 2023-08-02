@@ -162,7 +162,7 @@ export namespace DataScience {
     export const selectJupyterInterpreter = l10n.t('Select an Interpreter to start Jupyter');
     export const jupyterInstall = l10n.t('Install');
     export const currentlySelectedJupyterInterpreterForPlaceholder = (pythonEnvPath: string) =>
-        l10n.t('current: {0}', pythonEnvPath);
+        l10n.t('Selected Environment {0}', pythonEnvPath);
     export const jupyterNotSupported = (errorMessage: string) =>
         l10n.t('Jupyter cannot be started. Error attempting to locate Jupyter: {0}', errorMessage);
     export const jupyterNotebookNotInstalledOrNotFound = (interpreter: PythonEnvironment | undefined) => {

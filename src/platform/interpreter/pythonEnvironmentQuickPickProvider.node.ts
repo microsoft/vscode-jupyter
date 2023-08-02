@@ -87,15 +87,8 @@ export class PythonEnvironmentQuickPickItemProvider
         this.promiseMonitor.push(promise);
         await promise.catch(noop);
     }
-    isRecommended(_item: Environment): boolean {
-        return false;
-    }
-    isSelected(_item: Environment): boolean {
-        return false;
-    }
-    toQuickPick(item: Environment): SelectorQuickPickItem<Environment> {
+    static toQuickPick(item: Environment, recommended: boolean): SelectorQuickPickItem<Environment> {
         const label = getPythonEnvDisplayName(item);
-        const recommended = this.isRecommended(item);
         const icon = recommended ? ' $(star-full) ' : isCondaEnvironmentWithoutPython(item) ? '$(warning) ' : '';
         const quickPick = new SelectorQuickPickItem(`${icon}${label}`, item);
         quickPick.description = getDisplayPath(
@@ -106,7 +99,7 @@ export class PythonEnvironmentQuickPickItemProvider
         quickPick.tooltip = isCondaEnvironmentWithoutPython(item) ? DataScience.pythonCondaKernelsWithoutPython : '';
         return quickPick;
     }
-    getCategory(item: Environment): { label: string; sortKey?: string } {
+    static getCategory(item: Environment): { label: string; sortKey?: string } {
         switch (getEnvironmentType(item)) {
             case EnvironmentType.Conda:
                 return isCondaEnvironmentWithoutPython(item)

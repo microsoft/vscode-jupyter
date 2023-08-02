@@ -17,7 +17,7 @@ import {
 } from 'vscode';
 import { InputFlowAction } from './utils/multiStepInput';
 import { Disposables } from './utils';
-import { Common } from './utils/localize';
+import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
@@ -46,25 +46,10 @@ export class SelectorQuickPickItem<T extends { id: string }> extends BaseQuickPi
 export interface IQuickPickItemProvider<T extends { id: string }> {
     readonly title: string;
     onDidChange: Event<void>;
-    // onDidFail: Event<Error>;
     onDidChangeStatus: Event<void>;
-    // onDidChangeRecommended: Event<void>;
-    // onDidChangeSelected: Event<void>;
     readonly items: T[];
     readonly status: 'discovering' | 'idle';
-    // readonly recommended?: T;
-    // readonly selected?: T;
     refresh: () => Promise<void>;
-    toQuickPick(item: T): SelectorQuickPickItem<T>;
-    getCategory(item: T): { label: string; sortKey?: string };
-}
-class ErrorQuickPickItem extends BaseQuickPickItem {
-    constructor(
-        label: string,
-        public readonly error: Error
-    ) {
-        super(label);
-    }
 }
 interface SeparatorQuickPickItem extends QuickPickItem {
     isEmptyCondaEnvironment?: boolean;
@@ -82,13 +67,24 @@ function isSelectorQuickPickItem<T extends { id: string }>(item: QuickPickItem):
 }
 
 export class BaseProviderBasedQuickPick<T extends { id: string }> extends Disposables {
-    private readonly recommendedItems: QuickPickItem[] = [];
     private readonly categories = new Map<QuickPickItem, Set<SelectorQuickPickItem<T>>>();
     private quickPickItems: QuickPickItem[] = [];
     private readonly quickPick: QuickPick<QuickPickItem>;
     private readonly provider: IQuickPickItemProvider<T>;
     private readonly token: CancellationToken;
-    constructor(options: { provider: IQuickPickItemProvider<T>; token: CancellationToken; supportsBack: boolean }) {
+
+    constructor(
+        private readonly options: {
+            provider: IQuickPickItemProvider<T>;
+            token: CancellationToken;
+            placeholder?: string;
+            supportsBack: boolean;
+            isSelected?: (item: T) => boolean;
+            isRecommended?: (item: T) => boolean;
+            toQuickPick: (item: T) => SelectorQuickPickItem<T>;
+            getCategory: (item: T) => { label: string; sortKey?: string };
+        }
+    ) {
         super();
         this.provider = options.provider;
         this.token = options.token;
@@ -100,6 +96,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         const quickPick = (this.quickPick = window.createQuickPick());
         this.disposables.push(quickPick);
         quickPick.title = this.provider.title;
+        quickPick.placeholder = options.placeholder || '';
         quickPick.items = this.getAdditionalQuickPickItems().concat(this.quickPickItems);
         quickPick.buttons = options.supportsBack ? [QuickInputButtons.Back, refreshButton] : [refreshButton];
         quickPick.ignoreFocusOut = true;
@@ -134,22 +131,11 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             this,
             this.disposables
         );
-        // this.provider.onDidChangeRecommended(
-        //     () => (this.updateRecommendedItems() ? this.rebuildQuickPickItems(quickPick) : undefined),
-        //     this,
-        //     this.disposables
-        // );
-        // this.provider.onDidChangeSelected(
-        //     () => (this.updateRecommendedItems() ? this.rebuildQuickPickItems(quickPick) : undefined),
-        //     this,
-        //     this.disposables
-        // );
-        // this.provider.onDidFail((error) => this.rebuildQuickPickItems(quickPick, error), this, this.disposables);
         this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, this.disposables);
 
         groupBy(
-            this.provider.items.map((item) => this.provider.toQuickPick(item)),
-            (a, b) => compareIgnoreCase(this.provider.getCategory(a.item), this.provider.getCategory(b.item))
+            this.provider.items.map((item) => this.options.toQuickPick(item)),
+            (a, b) => compareIgnoreCase(this.options.getCategory(a.item), this.options.getCategory(b.item))
         ).forEach((items) => {
             const item = this.connectionToCategory(items[0].item);
             this.quickPickItems.push(item);
@@ -158,7 +144,6 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             this.categories.set(item, new Set(items));
         });
 
-        // this.updateRecommendedItems();
         this.updateQuickPickItems(quickPick);
     }
 
@@ -233,15 +218,25 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 .map((item) => [item.item.id, item.item])
         );
 
+        // Possible some information has changed, update the quick pick items.
+        this.quickPickItems = this.quickPickItems.map((item) => {
+            if (isSelectorQuickPickItem(item)) {
+                const latestInfo = currentItems.get(item.item.id);
+                if (latestInfo && latestInfo !== item.item) {
+                    return this.options.toQuickPick(latestInfo);
+                }
+            }
+            return item;
+        });
+
         const newQuickPickItems = this.provider.items
             .filter((item) => !currentItems.has(item.id))
-            .map((item) => this.provider.toQuickPick(item));
+            .map((item) => this.options.toQuickPick(item));
 
-        this.updateQuickPickWithLatestConnection(quickPick);
         this.removeOutdatedQuickPickItems(quickPick);
 
         groupBy(newQuickPickItems, (a, b) =>
-            compareIgnoreCase(this.provider.getCategory(a.item), this.provider.getCategory(b.item))
+            compareIgnoreCase(this.options.getCategory(a.item), this.options.getCategory(b.item))
         ).forEach((items) => {
             items.sort((a, b) => a.label.localeCompare(b.label));
             const newCategory = this.connectionToCategory(items[0].item);
@@ -295,40 +290,51 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         });
         this.rebuildQuickPickItems(quickPick);
     }
-    private buildErrorQuickPickItem(_error?: Error): ErrorQuickPickItem[] {
-        // This is an unlikely scenario, and we don't want to display an messages here.
-        // The only other providers are local kernels pecs and local python environments.
-        return [];
-    }
-    private rebuildQuickPickItems(quickPick: QuickPick<QuickPickItem>, error?: Error) {
-        let recommendedItem = this.recommendedItems.find((item) => isSelectorQuickPickItem(item));
-        const recommendedConnections = new Set(
-            this.recommendedItems.filter(isSelectorQuickPickItem).map((item) => item.item.id)
+    private rebuildQuickPickItems(quickPick: QuickPick<QuickPickItem>) {
+        const recommendedItem = this.provider.items.find((item) =>
+            this.options.isRecommended ? this.options.isRecommended(item) : false
         );
+        let recommendedItemQuickPick = recommendedItem ? this.options.toQuickPick(recommendedItem) : undefined;
+        const recommendedItems: QuickPickItem[] = [];
+        if (recommendedItemQuickPick) {
+            recommendedItems.push(
+                <QuickPickItem>{
+                    label: DataScience.recommendedKernelCategoryInQuickPick,
+                    kind: QuickPickItemKind.Separator
+                },
+                recommendedItemQuickPick
+            );
+        }
+
+        let selectedQuickPickItem = recommendedItemQuickPick;
+
+        const isSelected = this.options.isSelected;
+        if (isSelected) {
+            selectedQuickPickItem =
+                this.quickPickItems
+                    .filter((item) => isSelectorQuickPickItem(item))
+                    .map((item) => item as SelectorQuickPickItem<T>)
+                    .find((item) => isSelected!(item.item as T)) || selectedQuickPickItem;
+        }
         // Ensure the recommended items isn't duplicated in the list.
         const connections = this.quickPickItems.filter(
-            (item) => !isSelectorQuickPickItem(item) || !recommendedConnections.has(item.item.id)
+            (item) => !isSelectorQuickPickItem(item) || item.item.id !== recommendedItemQuickPick?.item?.id
         );
-        const errorItems = this.buildErrorQuickPickItem(error);
         const currentActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
-        if (recommendedItem && isSelectorQuickPickItem(recommendedItem) && currentActiveItem) {
+        if (selectedQuickPickItem && currentActiveItem) {
             if (!isSelectorQuickPickItem(currentActiveItem)) {
                 // If user has selected a non-kernel item, then we need to ensure the recommended item is not selected.
                 // Else always select the recommended item
-                recommendedItem = undefined;
-            } else if (currentActiveItem.item.id !== recommendedItem.item.id) {
+                selectedQuickPickItem = undefined;
+            } else if (currentActiveItem.item.id !== selectedQuickPickItem.item.id) {
                 // If user has selected a different kernel, then do not change the selection, leave it as is.
                 // Except when the selection is the recommended item (as thats the default).
-                recommendedItem = undefined;
+                selectedQuickPickItem = undefined;
             }
         }
-
-        const items = this.getAdditionalQuickPickItems()
-            .concat(this.recommendedItems)
-            .concat(connections)
-            .concat(errorItems);
-        const activeItems = recommendedItem
-            ? [recommendedItem]
+        const items = this.getAdditionalQuickPickItems().concat(recommendedItems).concat(connections);
+        const activeItems = selectedQuickPickItem
+            ? [selectedQuickPickItem]
             : quickPick.activeItems.length
             ? [quickPick.activeItems[0]]
             : [];
@@ -373,74 +379,10 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         }
     }
 
-    // /**
-    //  * Updates the quick pick items with the new recommended items.
-    //  * @returns Returns `true` if the recommended items have changed.
-    //  */
-    // private updateRecommendedItems() {
-    //     const previousCount = this.recommendedItems.length;
-    //     if (!this.provider.recommended) {
-    //         this.recommendedItems.length = 0;
-    //         return previousCount > 0;
-    //     }
-    //     let hasChanged = false;
-    //     if (!this.recommendedItems.length) {
-    //         hasChanged = true;
-    //         this.recommendedItems.push(<QuickPickItem>{
-    //             label: DataScience.recommendedKernelCategoryInQuickPick,
-    //             kind: QuickPickItemKind.Separator
-    //         });
-    //     }
-    //     const recommendedItem = this.provider.toQuickPick(this.provider.recommended);
-    //     if (this.recommendedItems.length === 2) {
-    //         const previousRecommendedItem = this.recommendedItems[1];
-
-    //         // Compare ref, as its possible the object ref has changed and we have more information in the new obj.
-    //         if (
-    //             isSelectorQuickPickItem(previousRecommendedItem) &&
-    //             previousRecommendedItem.item !== recommendedItem.item
-    //         ) {
-    //             hasChanged = true;
-    //             this.recommendedItems[1] = recommendedItem;
-    //         }
-    //     } else if (this.recommendedItems.length !== 2) {
-    //         hasChanged = true;
-    //         this.recommendedItems.push(recommendedItem);
-    //     }
-    //     return hasChanged;
-    // }
-    /**
-     * Possible the labels have changed, hence update the quick pick labels.
-     * E.g. we got more information about an interpreter or a display name of a kernelSpec has changed.
-     *
-     * Similarly its possible the user updated the kernelSpec args or the like and we need to update the quick pick to have the latest connection object.
-     */
-    private updateQuickPickWithLatestConnection(quickPick: QuickPick<QuickPickItem>) {
-        // const kernels = new Map<string, KernelConnectionMetadata>(
-        //     this.provider.kernels.map((kernel) => [kernel.id, kernel])
-        // );
-        // this.recommendedItems.concat(this.quickPickItems).forEach((item) => {
-        //     if (!isSelectorQuickPickItem(item) || !kernels.has(item.connection.id)) {
-        //         return;
-        //     }
-        //     const kernel = kernels.get(item.connection.id);
-        //     if (!kernel) {
-        //         return;
-        //     }
-        //     item.label = this.connectionToQuickPick(kernel, item.isRecommended).label;
-        //     item.tooltip = this.connectionToQuickPick(kernel, item.isRecommended).tooltip;
-        //     item.detail = this.connectionToQuickPick(kernel, item.isRecommended).detail;
-        //     item.description = this.connectionToQuickPick(kernel, item.isRecommended).description;
-        //     item.isRecommended = this.connectionToQuickPick(kernel, item.isRecommended).isRecommended;
-        //     item.connection = kernel; // Possible some other information since then has changed, hence keep the connection up to date.
-        // });
-        this.rebuildQuickPickItems(quickPick);
-    }
-
     private connectionToCategory(item: T): SeparatorQuickPickItem {
         return {
             kind: QuickPickItemKind.Separator,
-            label: this.provider.getCategory(item).label
+            label: this.options.getCategory(item).label
         };
     }
 }
