@@ -22,7 +22,7 @@ import { noop } from '../common/utils/misc';
 export class PythonEnvironmentQuickPickItemProvider
     implements IQuickPickItemProvider<Environment>, IExtensionSyncActivationService
 {
-    title: string = DataScience.selectPythonEnvironmentTitle;
+    title: string = DataScience.kernelPickerSelectPythonEnvironmentTitle;
     private _onDidChange = new EventEmitter<void>();
     private _onDidChangeStatus = new EventEmitter<void>();
     onDidChange = this._onDidChange.event;

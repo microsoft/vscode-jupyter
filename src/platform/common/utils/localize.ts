@@ -693,7 +693,7 @@ export namespace DataScience {
     export const UserJupyterServerUrlProviderDetail = l10n.t('Connect to an existing Jupyter Server');
     export const kernelPickerSelectKernelTitle = l10n.t('Select Kernel');
     export const kernelPickerSelectLocalKernelSpecTitle = l10n.t('Select a Jupyter Kernel');
-    export const selectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
+    export const kernelPickerSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = (kernelProvider: string) =>
         l10n.t('Select a Kernel from {0}', kernelProvider);
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');

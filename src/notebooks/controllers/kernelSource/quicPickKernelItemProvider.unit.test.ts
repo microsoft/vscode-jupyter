@@ -92,7 +92,7 @@ suite('Quick Pick Kernel Item Provider', () => {
                         expectedTitle = DataScience.kernelPickerSelectLocalKernelSpecTitle;
                         break;
                     case ContributedKernelFinderKind.LocalPythonEnvironment:
-                        expectedTitle = DataScience.selectPythonEnvironmentTitle;
+                        expectedTitle = DataScience.kernelPickerSelectPythonEnvironmentTitle;
                         break;
                     default:
                         expectedTitle = DataScience.kernelPickerSelectKernelFromRemoteTitle(
