@@ -411,9 +411,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         }
         if (!this.recommendedItems.length) {
             this.recommendedItems.push(<QuickPickItem>{
-                label: this.provider.recommendedMeansSelected
-                    ? DataScience.selectedKernelCategoryInQuickPick
-                    : DataScience.recommendedKernelCategoryInQuickPick,
+                label: DataScience.recommendedItemCategoryInQuickPick,
                 kind: QuickPickItemKind.Separator
             });
         }
@@ -460,9 +458,8 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         const displayData = this.displayDataProvider.getDisplayData(connection);
 
         // If the recommended item is actually the selected item, then do not display the star.
-        const recommendedIcon = this.provider.recommendedMeansSelected ? '' : '$(star-full) ';
         const icon = recommended
-            ? recommendedIcon
+            ? '$(star-full) '
             : connection.kind === 'startUsingPythonInterpreter' && connection.interpreter.isCondaEnvWithoutPython
             ? '$(warning) '
             : '';

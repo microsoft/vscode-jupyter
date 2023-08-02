@@ -434,7 +434,7 @@ export namespace DataScience {
     export const selectKernel = l10n.t('Change Kernel');
     export const selectDifferentKernel = l10n.t('Select a different Kernel');
     export const kernelFilterPlaceholder = l10n.t('Choose the kernels that are available in the kernel picker.');
-    export const recommendedKernelCategoryInQuickPick = l10n.t('Recommended');
+    export const recommendedItemCategoryInQuickPick = l10n.t('Recommended');
     export const selectedKernelCategoryInQuickPick = l10n.t('Selected');
     export const createPythonEnvironmentInQuickPick = l10n.t('Create Python Environment');
     export const createPythonEnvironmentInQuickPickTooltip = l10n.t(
@@ -693,7 +693,7 @@ export namespace DataScience {
     export const UserJupyterServerUrlProviderDetail = l10n.t('Connect to an existing Jupyter Server');
     export const kernelPickerSelectKernelTitle = l10n.t('Select Kernel');
     export const kernelPickerSelectLocalKernelSpecTitle = l10n.t('Select a Jupyter Kernel');
-    export const kernelPickerSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
+    export const quickPickSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = (kernelProvider: string) =>
         l10n.t('Select a Kernel from {0}', kernelProvider);
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');

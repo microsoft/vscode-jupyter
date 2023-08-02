@@ -28,6 +28,7 @@ import {
     ProductType
 } from './installer/types';
 import { InterpreterPackages } from './interpreterPackages.node';
+import { PythonEnvironmentQuickPickItemProvider } from './pythonEnvironmentQuickPickProvider.node';
 import { PythonExecutionFactory } from './pythonExecutionFactory.node';
 import { ReservedNamedProvider } from './reservedNamedProvider.node';
 import { IInterpreterPackages, IReservedPythonNamedProvider, IWorkspaceInterpreterTracker } from './types';
@@ -80,4 +81,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         DataScienceProductPathService,
         ProductType.DataScience
     );
+    serviceManager.addSingleton<PythonEnvironmentQuickPickItemProvider>(
+        PythonEnvironmentQuickPickItemProvider,
+        PythonEnvironmentQuickPickItemProvider
+    );
+    serviceManager.addBinding(PythonEnvironmentQuickPickItemProvider, IExtensionSyncActivationService);
 }
