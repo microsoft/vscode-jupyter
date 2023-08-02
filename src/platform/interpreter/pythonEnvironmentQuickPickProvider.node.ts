@@ -6,9 +6,9 @@ import { injectable, inject } from 'inversify';
 import { IQuickPickItemProvider, SelectorQuickPickItem } from '../common/providerBasedQuickPick';
 import { Environment, ProposedExtensionAPI } from '../api/pythonApiTypes';
 import { IExtensionSyncActivationService } from '../activation/types';
-import { IDisposable } from '../common/types';
+import { IDisposable, IDisposableRegistry } from '../common/types';
 import { PromiseMonitor } from '../common/utils/promises';
-import { IPythonApiProvider } from '../api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import { PythonEnvironmentFilter } from './filter/filterService';
 import { traceError } from '../logging';
 import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
@@ -17,6 +17,7 @@ import { PlatformService } from '../common/platform/platformService.node';
 import { DataScience } from '../common/utils/localize';
 import { EnvironmentType } from '../pythonEnvironments/info';
 import { noop } from '../common/utils/misc';
+import { disposeAllDisposables } from '../common/helpers';
 
 @injectable()
 export class PythonEnvironmentQuickPickItemProvider
@@ -51,32 +52,53 @@ export class PythonEnvironmentQuickPickItemProvider
     }
     constructor(
         @inject(IPythonApiProvider) api: IPythonApiProvider,
-        @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter
+        @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
+        @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
+        disposables.push(this);
         this.promiseMonitor.onStateChange(
             () => (this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering'),
             this,
             this.disposables
         );
-        const apiPromise = api.getNewApi();
-        this.promiseMonitor.push(apiPromise);
-        apiPromise
-            .then((api?: ProposedExtensionAPI) => {
-                this.api = api;
-                if (!api) {
-                    this.status = 'idle';
-                    this._onDidChangeStatus.fire();
-                    return;
-                }
-                this._onDidChange.fire();
-                api.environments.onDidChangeEnvironments(() => this._onDidChange.fire(), this, this.disposables);
-            })
-            .catch((ex) => traceError('Failed to get python api', ex));
+        const initializeApi = () => {
+            const apiPromise = api.getNewApi();
+            this.promiseMonitor.push(apiPromise);
+            apiPromise
+                .then((api?: ProposedExtensionAPI) => {
+                    this.api = api;
+                    if (!api) {
+                        this.status = 'idle';
+                        this._onDidChangeStatus.fire();
+                        return;
+                    }
+                    this._onDidChange.fire();
+                    api.environments.onDidChangeEnvironments(() => this._onDidChange.fire(), this, this.disposables);
+                })
+                .catch((ex) => traceError('Failed to get python api', ex));
+        };
+        if (extensionChecker.isPythonExtensionInstalled) {
+            initializeApi();
+        } else {
+            extensionChecker.onPythonExtensionInstallationStatusChanged(
+                () => {
+                    if (extensionChecker.isPythonExtensionInstalled) {
+                        initializeApi();
+                    }
+                },
+                this,
+                this.disposables
+            );
+        }
     }
     activate(): void {
         // Ensure we resolve the Python API ASAP.
         // This makes the api.environments.known available soon, hence improving over all
         // perceived performance for the user.
+    }
+    dispose() {
+        disposeAllDisposables(this.disposables);
     }
     async refresh() {
         // very unlikely that we have been unable to get the Python extension api, hence no need to wait on the promise.
