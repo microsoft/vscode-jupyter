@@ -86,7 +86,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
                 this.title = DataScience.kernelPickerSelectLocalKernelSpecTitle;
                 break;
             case ContributedKernelFinderKind.LocalPythonEnvironment:
-                this.title = DataScience.selectPythonEnvironmentTitle;
+                this.title = DataScience.kernelPickerSelectPythonEnvironmentTitle;
                 break;
             default:
                 this.title = DataScience.kernelPickerSelectKernelFromRemoteTitle(finder.displayName);
