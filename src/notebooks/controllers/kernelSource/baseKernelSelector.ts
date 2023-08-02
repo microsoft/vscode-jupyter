@@ -413,7 +413,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
             this.recommendedItems.push(<QuickPickItem>{
                 label: this.provider.recommendedMeansSelected
                     ? DataScience.selectedKernelCategoryInQuickPick
-                    : DataScience.recommendedKernelCategoryInQuickPick,
+                    : DataScience.recommendedItemCategoryInQuickPick,
                 kind: QuickPickItemKind.Separator
             });
         }

@@ -23,7 +23,7 @@ import { disposeAllDisposables } from '../common/helpers';
 export class PythonEnvironmentQuickPickItemProvider
     implements IQuickPickItemProvider<Environment>, IExtensionSyncActivationService
 {
-    title: string = DataScience.kernelPickerSelectPythonEnvironmentTitle;
+    title: string = DataScience.quickPickSelectPythonEnvironmentTitle;
     private _onDidChange = new EventEmitter<void>();
     private _onDidChangeStatus = new EventEmitter<void>();
     onDidChange = this._onDidChange.event;
