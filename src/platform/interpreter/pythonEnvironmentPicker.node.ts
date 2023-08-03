@@ -1,35 +1,49 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken } from 'vscode';
+import { QuickPickItem, workspace } from 'vscode';
 import { Environment } from '../api/pythonApiTypes';
 import { BaseProviderBasedQuickPick } from '../common/providerBasedQuickPick';
-import { ServiceContainer } from '../ioc/container';
-import { PythonEnvironmentQuickPickItemProvider } from './pythonEnvironmentQuickPickProvider.node';
+import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
+import { getDisplayPath } from '../common/platform/fs-paths';
+import { PlatformService } from '../common/platform/platformService.node';
+import { DataScience } from '../common/utils/localize';
+import { EnvironmentType } from '../pythonEnvironments/info';
 
-export class PythonEnvironmentPicker extends BaseProviderBasedQuickPick<Environment> {
-    constructor(options: {
-        token: CancellationToken;
-        supportsBack: boolean;
-        placeholder?: string;
-        isSelected?: (item: Environment) => boolean;
-        isRecommended?: (item: Environment) => boolean;
-    }) {
-        super({
-            provider: ServiceContainer.instance.get<PythonEnvironmentQuickPickItemProvider>(
-                PythonEnvironmentQuickPickItemProvider
-            ),
-            supportsBack: options.supportsBack,
-            token: options.token,
-            placeholder: options.placeholder,
-            isSelected: (item) => (options.isSelected ? options.isSelected(item) : false),
-            isRecommended: (item) => (options.isRecommended ? options.isRecommended(item) : false),
-            toQuickPick: (item) =>
-                PythonEnvironmentQuickPickItemProvider.toQuickPick(
-                    item,
-                    options.isRecommended ? options.isRecommended(item) : false
-                ),
-            getCategory: (item) => PythonEnvironmentQuickPickItemProvider.getCategory(item)
-        });
+export function pythonEnvironmentQuickPick(item: Environment, quickPick: BaseProviderBasedQuickPick<Environment>) {
+    const label = getPythonEnvDisplayName(item);
+    const icon =
+        item.id === quickPick.recommended?.id
+            ? ' $(star-full) '
+            : isCondaEnvironmentWithoutPython(item)
+            ? '$(warning) '
+            : '';
+    const quickPickItem: QuickPickItem = { label: `${icon}${label}` };
+    quickPickItem.description = getDisplayPath(
+        item.executable.uri || item.path,
+        workspace.workspaceFolders || [],
+        new PlatformService().homeDir
+    );
+    quickPickItem.tooltip = isCondaEnvironmentWithoutPython(item) ? DataScience.pythonCondaKernelsWithoutPython : '';
+    return quickPickItem;
+}
+export function getPythonEnvironmentCategory(item: Environment): { label: string; sortKey?: string } {
+    switch (getEnvironmentType(item)) {
+        case EnvironmentType.Conda:
+            return isCondaEnvironmentWithoutPython(item)
+                ? { label: DataScience.kernelCategoryForCondaWithoutPython, sortKey: 'Z' }
+                : { label: DataScience.kernelCategoryForConda };
+        case EnvironmentType.Pipenv:
+            return { label: DataScience.kernelCategoryForPipEnv };
+        case EnvironmentType.Poetry:
+            return { label: DataScience.kernelCategoryForPoetry };
+        case EnvironmentType.Pyenv:
+            return { label: DataScience.kernelCategoryForPyEnv };
+        case EnvironmentType.Venv:
+        case EnvironmentType.VirtualEnv:
+        case EnvironmentType.VirtualEnvWrapper:
+            return { label: DataScience.kernelCategoryForVirtual };
+        default:
+            return { label: DataScience.kernelCategoryForGlobal };
     }
 }
