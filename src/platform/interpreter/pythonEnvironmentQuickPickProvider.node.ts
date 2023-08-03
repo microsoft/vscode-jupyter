@@ -103,18 +103,17 @@ export class PythonEnvironmentQuickPickItemProvider
         this.promiseMonitor.push(promise);
         await promise.catch(noop);
     }
+    /**
+     * Returns the same class with the ability to filer environments.
+     */
     withFilter(filter: (env: Environment) => boolean): PythonEnvironmentQuickPickItemProvider {
         return new Proxy(this, {
             get(target: PythonEnvironmentQuickPickItemProvider, propKey: keyof PythonEnvironmentQuickPickItemProvider) {
                 switch (propKey) {
                     case 'items':
-                        try {
-                            return target.items.filter(filter);
-                        } catch (ex) {
-                            console.error(ex);
-                            return [];
-                        }
+                        return target.items.filter(filter);
                     case 'dispose':
+                        // Dispose can only be called on the original instance (prevent anyone else calling this).
                         return noop;
                     default:
                         return target[propKey];
