@@ -55,10 +55,10 @@ export interface IQuickPickItemProvider<T extends { id: string }> {
     onDidChangeStatus: Event<void>;
     readonly items: readonly T[];
     readonly status: 'discovering' | 'idle';
-    refresh: () => Promise<void>;
+    refresh(): Promise<void>;
 }
 interface CommandQuickPickItem<T extends { id: string }> extends QuickPickItem {
-    execute: () => Promise<T | undefined | typeof InputFlowAction.back>;
+    execute(): Promise<T | undefined | typeof InputFlowAction.back>;
 }
 
 export class BaseProviderBasedQuickPick<T extends { id: string }> extends Disposables {
