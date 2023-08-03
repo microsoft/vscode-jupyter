@@ -145,7 +145,7 @@ export type Environment = EnvironmentPath & {
     /**
      * Carries Python version information known at this moment.
      */
-    readonly version: VersionInfo & {
+    readonly version?: VersionInfo & {
         /**
          * Value of `sys.version` in sys module if known at this moment.
          */
