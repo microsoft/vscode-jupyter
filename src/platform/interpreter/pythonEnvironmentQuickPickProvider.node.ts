@@ -1,21 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { EventEmitter, workspace } from 'vscode';
+import { EventEmitter } from 'vscode';
 import { injectable, inject } from 'inversify';
-import { IQuickPickItemProvider, SelectorQuickPickItem } from '../common/providerBasedQuickPick';
+import { IQuickPickItemProvider } from '../common/providerBasedQuickPick';
 import { Environment, ProposedExtensionAPI } from '../api/pythonApiTypes';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { PromiseMonitor } from '../common/utils/promises';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
-import { PythonEnvironmentFilter } from './filter/filterService';
 import { traceError } from '../logging';
-import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
-import { getDisplayPath } from '../common/platform/fs-paths';
-import { PlatformService } from '../common/platform/platformService.node';
 import { DataScience } from '../common/utils/localize';
-import { EnvironmentType } from '../pythonEnvironments/info';
 import { noop } from '../common/utils/misc';
 import { disposeAllDisposables } from '../common/helpers';
 
@@ -32,7 +27,7 @@ export class PythonEnvironmentQuickPickItemProvider
     private api?: ProposedExtensionAPI;
     private readonly disposables: IDisposable[] = [];
     private readonly promiseMonitor = new PromiseMonitor();
-    public get items(): Environment[] {
+    public get items(): readonly Environment[] {
         if (!this.api) {
             return [];
         }
@@ -40,7 +35,7 @@ export class PythonEnvironmentQuickPickItemProvider
             this.refreshedOnceBefore = true;
             this.refresh().catch(noop);
         }
-        return this.api.environments.known.filter((item) => !this.filter.isPythonEnvironmentExcluded(item));
+        return this.api.environments.known;
     }
     private _status: 'idle' | 'discovering' = 'idle';
     public get status() {
@@ -53,7 +48,6 @@ export class PythonEnvironmentQuickPickItemProvider
     constructor(
         @inject(IPythonApiProvider) api: IPythonApiProvider,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
@@ -109,36 +103,22 @@ export class PythonEnvironmentQuickPickItemProvider
         this.promiseMonitor.push(promise);
         await promise.catch(noop);
     }
-    static toQuickPick(item: Environment, recommended: boolean): SelectorQuickPickItem<Environment> {
-        const label = getPythonEnvDisplayName(item);
-        const icon = recommended ? ' $(star-full) ' : isCondaEnvironmentWithoutPython(item) ? '$(warning) ' : '';
-        const quickPick = new SelectorQuickPickItem(`${icon}${label}`, item);
-        quickPick.description = getDisplayPath(
-            item.executable.uri || item.path,
-            workspace.workspaceFolders || [],
-            new PlatformService().homeDir
-        );
-        quickPick.tooltip = isCondaEnvironmentWithoutPython(item) ? DataScience.pythonCondaKernelsWithoutPython : '';
-        return quickPick;
-    }
-    static getCategory(item: Environment): { label: string; sortKey?: string } {
-        switch (getEnvironmentType(item)) {
-            case EnvironmentType.Conda:
-                return isCondaEnvironmentWithoutPython(item)
-                    ? { label: DataScience.kernelCategoryForCondaWithoutPython, sortKey: 'Z' }
-                    : { label: DataScience.kernelCategoryForConda };
-            case EnvironmentType.Pipenv:
-                return { label: DataScience.kernelCategoryForPipEnv };
-            case EnvironmentType.Poetry:
-                return { label: DataScience.kernelCategoryForPoetry };
-            case EnvironmentType.Pyenv:
-                return { label: DataScience.kernelCategoryForPyEnv };
-            case EnvironmentType.Venv:
-            case EnvironmentType.VirtualEnv:
-            case EnvironmentType.VirtualEnvWrapper:
-                return { label: DataScience.kernelCategoryForVirtual };
-            default:
-                return { label: DataScience.kernelCategoryForGlobal };
-        }
+    /**
+     * Returns the same class with the ability to filer environments.
+     */
+    withFilter(filter: (env: Environment) => boolean): PythonEnvironmentQuickPickItemProvider {
+        return new Proxy(this, {
+            get(target: PythonEnvironmentQuickPickItemProvider, propKey: keyof PythonEnvironmentQuickPickItemProvider) {
+                switch (propKey) {
+                    case 'items':
+                        return target.items.filter(filter);
+                    case 'dispose':
+                        // Dispose can only be called on the original instance (prevent anyone else calling this).
+                        return noop;
+                    default:
+                        return target[propKey];
+                }
+            }
+        });
     }
 }
