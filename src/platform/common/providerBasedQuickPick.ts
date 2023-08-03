@@ -57,13 +57,8 @@ export interface IQuickPickItemProvider<T extends { id: string }> {
     readonly status: 'discovering' | 'idle';
     refresh: () => Promise<void>;
 }
-export class CommandQuickPickItem<T extends { id: string }> extends BaseQuickPickItem {
-    constructor(
-        label: string,
-        public readonly execute: () => Promise<T | undefined | typeof InputFlowAction.back>
-    ) {
-        super(label);
-    }
+interface CommandQuickPickItem<T extends { id: string }> extends QuickPickItem {
+    execute: () => Promise<T | undefined | typeof InputFlowAction.back>;
 }
 
 export class BaseProviderBasedQuickPick<T extends { id: string }> extends Disposables {
@@ -85,16 +80,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
     ) {
         super();
     }
-    private _commands: CommandQuickPickItem<T>[] = [];
-    public set commands(items: CommandQuickPickItem<T>[]) {
-        this._commands = items;
-        if (this.quickPick) {
-            this.rebuildQuickPickItems(this.quickPick);
-        }
-    }
-    public get commands() {
-        return this._commands;
-    }
+    private commands = new Set<CommandQuickPickItem<T>>();
     private _recommended?: T;
     public set recommended(item: T | undefined) {
         this._recommended = item;
@@ -184,6 +170,22 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         this.disposables.push(...disposables);
         return { quickPick, disposables };
     }
+    private isCommandQuickPickItem(item: QuickPickItem): item is CommandQuickPickItem<T> {
+        return this.commands.has(item as CommandQuickPickItem<T>);
+    }
+    public addCommand(item: QuickPickItem, execute: () => Promise<T | undefined | typeof InputFlowAction.back>) {
+        const quickPickItem = item as CommandQuickPickItem<T>;
+        quickPickItem.execute = execute;
+        this.commands.add(quickPickItem);
+        if (this.quickPick) {
+            this.rebuildQuickPickItems(this.quickPick);
+        }
+        return {
+            dispose: () => {
+                this.commands.delete(quickPickItem);
+            }
+        };
+    }
     public async selectItem(
         token: CancellationToken
     ): Promise<T | typeof InputFlowAction.back | typeof InputFlowAction.cancel | undefined> {
@@ -199,7 +201,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                                 const selection = e[0];
                                 if (this.isSelectorQuickPickItem(selection)) {
                                     resolve(selection.item);
-                                } else if (selection instanceof CommandQuickPickItem) {
+                                } else if (this.isCommandQuickPickItem(selection)) {
                                     resolve(selection);
                                 }
                             }
@@ -225,7 +227,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                     return result === InputFlowAction.back ? InputFlowAction.back : undefined;
                 }
 
-                if (result && result instanceof CommandQuickPickItem) {
+                if (result && 'label' in result && this.isCommandQuickPickItem(result)) {
                     this.previouslySelectedItem = result;
                     // We have a command, execute it, check the result and display the quick pick again.
                     const commandResult = await result.execute();
@@ -362,7 +364,10 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 selectedQuickPickItem = undefined;
             }
         }
-        const items = (<QuickPickItem[]>[]).concat(this.commands).concat(recommendedItems).concat(connections);
+        const items = (<QuickPickItem[]>[])
+            .concat(Array.from(this.commands.values()))
+            .concat(recommendedItems)
+            .concat(connections);
         const activeItems = selectedQuickPickItem
             ? [selectedQuickPickItem]
             : quickPick.activeItems.length

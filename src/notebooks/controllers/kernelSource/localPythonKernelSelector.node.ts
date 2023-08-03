@@ -12,7 +12,7 @@ import {
     getPythonEnvironmentCategory,
     pythonEnvironmentQuickPick
 } from '../../../platform/interpreter/pythonEnvironmentPicker.node';
-import { BaseProviderBasedQuickPick, CommandQuickPickItem } from '../../../platform/common/providerBasedQuickPick';
+import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';
 import { Environment } from '../../../platform/api/pythonApiTypes';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator.node';
@@ -39,12 +39,10 @@ export class LocalPythonKernelSelector extends Disposables {
             { supportsBack: true }
         );
         this.disposables.push(this.pythonEnvPicker);
-        this.pythonEnvPicker.commands = [
-            new CommandQuickPickItem<Environment>(
-                `$(add) ${DataScience.createPythonEnvironmentInQuickPick}`,
-                this.createNewEnvironment.bind(this)
-            )
-        ];
+        this.pythonEnvPicker.addCommand(
+            { label: `$(add) ${DataScience.createPythonEnvironmentInQuickPick}` },
+            this.createNewEnvironment.bind(this)
+        );
     }
 
     public async selectKernel(): Promise<
