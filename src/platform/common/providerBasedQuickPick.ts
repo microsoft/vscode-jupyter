@@ -19,6 +19,8 @@ import { InputFlowAction } from './utils/multiStepInput';
 import { Disposables } from './utils';
 import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';
+import { IDisposable } from './types';
+import { disposeAllDisposables } from './helpers';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
     label: string;
@@ -56,11 +58,11 @@ export interface IQuickPickItemProvider<T extends { id: string }> {
     readonly title: string;
     onDidChange: Event<void>;
     onDidChangeStatus: Event<void>;
-    readonly items: T[];
+    readonly items: readonly T[];
     readonly status: 'discovering' | 'idle';
     refresh: () => Promise<void>;
 }
-class CommandQuickPickItem<T extends { id: string }> extends BaseQuickPickItem {
+export class CommandQuickPickItem<T extends { id: string }> extends BaseQuickPickItem {
     constructor(
         label: string,
         public readonly execute: () => Promise<T | undefined | typeof InputFlowAction.back>
@@ -75,34 +77,78 @@ function isSelectorQuickPickItem<T extends { id: string }>(item: QuickPickItem):
 export class BaseProviderBasedQuickPick<T extends { id: string }> extends Disposables {
     private readonly categories = new Map<QuickPickItem, Set<SelectorQuickPickItem<T>>>();
     private quickPickItems: QuickPickItem[] = [];
-    private readonly quickPick: QuickPick<QuickPickItem>;
-    private readonly provider: IQuickPickItemProvider<T>;
-    private readonly token: CancellationToken;
-
+    private quickPick?: QuickPick<QuickPickItem>;
+    private previouslyEnteredValue: string = '';
+    private previouslySelectedItem?: CommandQuickPickItem<T>;
     constructor(
+        private readonly provider: IQuickPickItemProvider<T>,
+        private readonly toQuickPickItem: (
+            item: T,
+            provider: BaseProviderBasedQuickPick<T>
+        ) => SelectorQuickPickItem<T>,
+        private readonly getCategory: (
+            item: T,
+            provider: BaseProviderBasedQuickPick<T>
+        ) => { label: string; sortKey?: string },
         private readonly options: {
-            provider: IQuickPickItemProvider<T>;
-            token: CancellationToken;
-            placeholder?: string;
             supportsBack: boolean;
-            isSelected?: (item: T) => boolean;
-            isRecommended?: (item: T) => boolean;
-            toQuickPick: (item: T) => SelectorQuickPickItem<T>;
-            getCategory: (item: T) => { label: string; sortKey?: string };
         }
     ) {
         super();
-        this.provider = options.provider;
-        this.token = options.token;
+    }
+    private _commands: CommandQuickPickItem<T>[] = [];
+    public set commands(items: CommandQuickPickItem<T>[]) {
+        this._commands = items;
+        if (this.quickPick) {
+            this.rebuildQuickPickItems(this.quickPick);
+        }
+    }
+    public get commands() {
+        return this._commands;
+    }
+    private _recommended?: T;
+    public set recommended(item: T | undefined) {
+        this._recommended = item;
+    }
+    public get recommended() {
+        return this._recommended;
+    }
+    private _placeholder = '';
+    public set placeholder(value: string) {
+        if (this.quickPick) {
+            this.quickPick.placeholder = value;
+        }
+        this._placeholder = value;
+    }
+    public get placeholder() {
+        return this._placeholder;
+    }
+    private _selected?: T;
+    public set selected(item: T | undefined) {
+        const changed = this._selected !== item;
+        this._selected = item;
+        if (changed && this.quickPick) {
+            this.rebuildQuickPickItems(this.quickPick);
+        }
+    }
+    public get selected() {
+        return this._selected;
+    }
+    private createQuickPick() {
+        const disposables: IDisposable[] = [];
         const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh };
         const quickPick = (this.quickPick = window.createQuickPick());
-        this.disposables.push(quickPick);
+        disposables.push(quickPick);
+        this.quickPickItems = [];
         quickPick.title = this.provider.title;
-        quickPick.placeholder = options.placeholder || '';
-        quickPick.items = this.getAdditionalQuickPickItems().concat(this.quickPickItems);
-        quickPick.buttons = options.supportsBack ? [QuickInputButtons.Back, refreshButton] : [refreshButton];
+        quickPick.placeholder = this.placeholder;
+        quickPick.buttons = this.options.supportsBack ? [QuickInputButtons.Back, refreshButton] : [refreshButton];
         quickPick.ignoreFocusOut = true;
         quickPick.busy = this.provider.status === 'discovering';
+        quickPick.value = this.previouslyEnteredValue;
+        quickPick.onDidChangeValue((e) => (this.previouslyEnteredValue = e), this, disposables);
+        quickPick.onDidHide(() => disposeAllDisposables(disposables), this, disposables);
+        this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, disposables);
         quickPick.onDidTriggerButton(
             async (e) => {
                 if (e === refreshButton) {
@@ -112,7 +158,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 }
             },
             this,
-            this.disposables
+            disposables
         );
         let timeout: NodeJS.Timer | undefined;
         this.provider.onDidChangeStatus(
@@ -124,18 +170,17 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                         break;
                     case 'idle':
                         timeout = setTimeout(() => (quickPick.busy = false), 500);
-                        this.disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
+                        disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
                         break;
                 }
             },
             this,
-            this.disposables
+            disposables
         );
-        this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, this.disposables);
 
         groupBy(
-            this.provider.items.map((item) => this.options.toQuickPick(item)),
-            (a, b) => compareIgnoreCase(this.options.getCategory(a.item), this.options.getCategory(b.item))
+            this.provider.items.map((item) => this.toQuickPickItem(item, this)),
+            (a, b) => compareIgnoreCase(this.getCategory(a.item, this), this.getCategory(b.item, this))
         ).forEach((items) => {
             const item = this.connectionToCategory(items[0].item);
             this.quickPickItems.push(item);
@@ -144,70 +189,73 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             this.categories.set(item, new Set(items));
         });
 
-        this.updateQuickPickItems(quickPick);
+        this.updateQuickPickItems(this.quickPick);
+
+        this.disposables.push(...disposables);
+        return { quickPick, disposables };
     }
-
-    public async selectItem(): Promise<T | typeof InputFlowAction.back | typeof InputFlowAction.cancel | undefined> {
-        if (this.token.isCancellationRequested) {
-            return;
-        }
-
-        while (true) {
-            if (this.token.isCancellationRequested) {
-                return;
-            }
-            this.quickPick.show();
-            const result = await new Promise<T | undefined | typeof InputFlowAction.back | CommandQuickPickItem<T>>(
-                (resolve, _reject) => {
-                    this.quickPick.onDidChangeSelection((e) => {
-                        if (e.length) {
-                            const selection = e[0];
-                            if (isSelectorQuickPickItem<T>(selection)) {
-                                resolve(selection.item);
-                            } else if (selection instanceof CommandQuickPickItem) {
-                                resolve(selection);
+    public async selectItem(
+        token: CancellationToken
+    ): Promise<T | typeof InputFlowAction.back | typeof InputFlowAction.cancel | undefined> {
+        while (!token.isCancellationRequested) {
+            const { quickPick, disposables } = this.createQuickPick();
+            quickPick.show();
+            try {
+                this.previouslySelectedItem = undefined;
+                const result = await new Promise<T | undefined | typeof InputFlowAction.back | CommandQuickPickItem<T>>(
+                    (resolve, _reject) => {
+                        quickPick.onDidChangeSelection((e) => {
+                            if (e.length) {
+                                const selection = e[0];
+                                if (isSelectorQuickPickItem<T>(selection)) {
+                                    resolve(selection.item);
+                                } else if (selection instanceof CommandQuickPickItem) {
+                                    resolve(selection);
+                                }
                             }
-                        }
-                    });
-                    this.quickPick.onDidTriggerButton(
-                        (e) => (e === QuickInputButtons.Back ? resolve(InputFlowAction.back) : undefined),
-                        this,
-                        this.disposables
-                    );
-                    this.quickPick.onDidHide(() => resolve(undefined), this, this.disposables);
-                }
-            );
+                        });
+                        quickPick.onDidTriggerButton(
+                            (e) => (e === QuickInputButtons.Back ? resolve(InputFlowAction.back) : undefined),
+                            this,
+                            disposables
+                        );
+                        quickPick.onDidHide(() => resolve(undefined), this, disposables);
+                    }
+                );
 
-            if (this.token.isCancellationRequested) {
-                return;
-            }
-
-            if (!result) {
-                // User escaped the quick pick.
-                return;
-            }
-            if (result instanceof InputFlowAction) {
-                return result === InputFlowAction.back ? InputFlowAction.back : undefined;
-            }
-
-            if (result && result instanceof CommandQuickPickItem) {
-                // We have a command, execute it, check the result and display the quick pick again.
-                const commandResult = await result.execute();
-                if (!commandResult) {
-                    // Re-display the quick pick.
-                    continue;
+                if (token.isCancellationRequested) {
+                    return;
                 }
 
-                if (commandResult instanceof InputFlowAction) {
-                    return commandResult === InputFlowAction.back ? InputFlowAction.back : undefined;
+                if (!result) {
+                    // User escaped the quick pick.
+                    return;
                 }
-                return commandResult;
+                if (result instanceof InputFlowAction) {
+                    return result === InputFlowAction.back ? InputFlowAction.back : undefined;
+                }
+
+                if (result && result instanceof CommandQuickPickItem) {
+                    this.previouslySelectedItem = result;
+                    // We have a command, execute it, check the result and display the quick pick again.
+                    const commandResult = await result.execute();
+                    if (!commandResult) {
+                        // Re-display the quick pick.
+                        continue;
+                    }
+                    if (commandResult === InputFlowAction.back) {
+                        continue;
+                    }
+                    if (commandResult instanceof InputFlowAction) {
+                        return commandResult;
+                    }
+                    return commandResult;
+                }
+                return result ? result : undefined;
+            } finally {
+                disposeAllDisposables(disposables);
             }
-            return result ? result : undefined;
         }
-    }
-    private getAdditionalQuickPickItems(): QuickPickItem[] {
-        return [];
     }
 
     private updateQuickPickItems(quickPick: QuickPick<QuickPickItem>) {
@@ -223,7 +271,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             if (isSelectorQuickPickItem(item)) {
                 const latestInfo = currentItems.get(item.item.id);
                 if (latestInfo && latestInfo !== item.item) {
-                    return this.options.toQuickPick(latestInfo);
+                    return this.toQuickPickItem(latestInfo, this);
                 }
             }
             return item;
@@ -231,12 +279,12 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
 
         const newQuickPickItems = this.provider.items
             .filter((item) => !currentItems.has(item.id))
-            .map((item) => this.options.toQuickPick(item));
+            .map((item) => this.toQuickPickItem(item, this));
 
         this.removeOutdatedQuickPickItems(quickPick);
 
         groupBy(newQuickPickItems, (a, b) =>
-            compareIgnoreCase(this.options.getCategory(a.item), this.options.getCategory(b.item))
+            compareIgnoreCase(this.getCategory(a.item, this), this.getCategory(b.item, this))
         ).forEach((items) => {
             items.sort((a, b) => a.label.localeCompare(b.label));
             const newCategory = this.connectionToCategory(items[0].item);
@@ -288,10 +336,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         this.rebuildQuickPickItems(quickPick);
     }
     private rebuildQuickPickItems(quickPick: QuickPick<QuickPickItem>) {
-        const recommendedItem = this.provider.items.find((item) =>
-            this.options.isRecommended ? this.options.isRecommended(item) : false
-        );
-        let recommendedItemQuickPick = recommendedItem ? this.options.toQuickPick(recommendedItem) : undefined;
+        let recommendedItemQuickPick = this.recommended ? this.toQuickPickItem(this.recommended, this) : undefined;
         const recommendedItems: QuickPickItem[] = [];
         if (recommendedItemQuickPick) {
             recommendedItems.push(
@@ -304,15 +349,13 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         }
 
         let selectedQuickPickItem = recommendedItemQuickPick;
+        selectedQuickPickItem = !this.selected
+            ? selectedQuickPickItem
+            : this.quickPickItems
+                  .filter((item) => isSelectorQuickPickItem(item))
+                  .map((item) => item as SelectorQuickPickItem<T>)
+                  .find((item) => item.item.id === this.selected?.id);
 
-        const isSelected = this.options.isSelected;
-        if (isSelected) {
-            selectedQuickPickItem =
-                this.quickPickItems
-                    .filter((item) => isSelectorQuickPickItem(item))
-                    .map((item) => item as SelectorQuickPickItem<T>)
-                    .find((item) => isSelected!(item.item as T)) || selectedQuickPickItem;
-        }
         // Ensure the recommended items isn't duplicated in the list.
         const connections = this.quickPickItems.filter(
             (item) => !isSelectorQuickPickItem(item) || item.item.id !== recommendedItemQuickPick?.item?.id
@@ -329,7 +372,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 selectedQuickPickItem = undefined;
             }
         }
-        const items = this.getAdditionalQuickPickItems().concat(recommendedItems).concat(connections);
+        const items = (<QuickPickItem[]>[]).concat(this.commands).concat(recommendedItems).concat(connections);
         const activeItems = selectedQuickPickItem
             ? [selectedQuickPickItem]
             : quickPick.activeItems.length
@@ -349,6 +392,14 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         }
         quickPick.items = items;
         quickPick.activeItems = activeItems;
+
+        if (
+            !quickPick.activeItems.length &&
+            this.previouslySelectedItem &&
+            items.includes(this.previouslySelectedItem)
+        ) {
+            quickPick.activeItems = [this.previouslySelectedItem];
+        }
     }
     private removeOutdatedQuickPickItems(quickPick: QuickPick<QuickPickItem>) {
         const currentConnections = quickPick.items
@@ -377,7 +428,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
     }
 
     private connectionToCategory(item: T) {
-        const category = this.options.getCategory(item);
+        const category = this.getCategory(item, this);
         return new CategoryQuickPickItem(category.label, category.sortKey || category.label);
     }
 }
