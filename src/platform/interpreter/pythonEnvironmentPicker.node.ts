@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { workspace } from 'vscode';
+import { QuickPickItem, workspace } from 'vscode';
 import { Environment } from '../api/pythonApiTypes';
-import { BaseProviderBasedQuickPick, SelectorQuickPickItem } from '../common/providerBasedQuickPick';
+import { BaseProviderBasedQuickPick } from '../common/providerBasedQuickPick';
 import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { PlatformService } from '../common/platform/platformService.node';
@@ -18,7 +18,7 @@ export function pythonEnvironmentQuickPick(item: Environment, quickPick: BasePro
             : isCondaEnvironmentWithoutPython(item)
             ? '$(warning) '
             : '';
-    const quickPickItem = new SelectorQuickPickItem(`${icon}${label}`, item);
+    const quickPickItem: QuickPickItem = { label: `${icon}${label}` };
     quickPickItem.description = getDisplayPath(
         item.executable.uri || item.path,
         workspace.workspaceFolders || [],
