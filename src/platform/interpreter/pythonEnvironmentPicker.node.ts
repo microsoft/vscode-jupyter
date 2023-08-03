@@ -14,7 +14,7 @@ export function pythonEnvironmentQuickPick(item: Environment, quickPick: BasePro
     const label = getPythonEnvDisplayName(item);
     const icon =
         item.id === quickPick.recommended?.id
-            ? ' $(star-full) '
+            ? '$(star-full) '
             : isCondaEnvironmentWithoutPython(item)
             ? '$(warning) '
             : '';
