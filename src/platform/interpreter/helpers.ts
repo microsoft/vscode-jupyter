@@ -4,7 +4,7 @@
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { basename } from '../../platform/vscode-path/resources';
-import { Environment } from '../api/pythonApiTypes';
+import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes } from '../api/pythonApiTypes';
 
 export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment) {
     if ('executable' in interpreter) {
@@ -68,7 +68,28 @@ const environmentTypes = [
     EnvironmentType.VirtualEnv,
     EnvironmentType.VirtualEnvWrapper
 ];
+
 export function getEnvironmentType(env: Environment): EnvironmentType {
+    if ((env.environment?.type as KnownEnvironmentTypes) === 'Conda') {
+        return EnvironmentType.Conda;
+    }
+
+    // Map the Python env tool to a Jupyter environment type.
+    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
+        ['Conda', EnvironmentType.Conda],
+        ['Pyenv', EnvironmentType.Pyenv],
+        ['Pipenv', EnvironmentType.Pipenv],
+        ['Poetry', EnvironmentType.Poetry],
+        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
+        ['VirtualEnv', EnvironmentType.VirtualEnv],
+        ['Venv', EnvironmentType.Venv]
+    ];
+    for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
+        if (env.tools.includes(pythonEnvTool)) {
+            return JupyterEnv;
+        }
+    }
+
     for (const type of environmentTypes) {
         if (env.tools.some((tool) => tool.toLowerCase() === type.toLowerCase())) {
             return type;

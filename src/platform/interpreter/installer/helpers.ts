@@ -4,14 +4,17 @@
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { Environment } from '../../api/pythonApiTypes';
 
 /**
  * Returns the workspace folder this interpreter is based in or the root if not a virtual env
  */
 export function getInterpreterWorkspaceFolder(
-    interpreter: PythonEnvironment,
+    interpreter: PythonEnvironment | Environment,
     workspaceService: IWorkspaceService
 ): Uri | undefined {
-    const folder = workspaceService.getWorkspaceFolder(interpreter.uri);
+    const uri =
+        'executable' in interpreter ? interpreter.executable.uri || Uri.file(interpreter.path) : interpreter.uri;
+    const folder = workspaceService.getWorkspaceFolder(uri);
     return folder?.uri || workspaceService.rootFolder;
 }

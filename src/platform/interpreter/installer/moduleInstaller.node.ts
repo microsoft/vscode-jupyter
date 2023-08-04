@@ -17,6 +17,7 @@ import { EOL } from 'os';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { splitLines } from '../../common/helpers';
 import { IPythonExecutionFactory } from '../types.node';
+import { Environment } from '../../api/pythonApiTypes';
 
 export type ExecutionInstallArgs = {
     args: string[];
@@ -38,7 +39,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
     public async installModule(
         productOrModuleName: Product | string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
         flags?: ModuleInstallFlags
     ): Promise<void> {
@@ -193,10 +194,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         };
         await shell.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
     }
-    public abstract isSupported(interpreter: PythonEnvironment): Promise<boolean>;
+    public abstract isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean>;
     protected abstract getExecutionArgs(
         moduleName: string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         flags?: ModuleInstallFlags
     ): Promise<ExecutionInstallArgs>;
 }

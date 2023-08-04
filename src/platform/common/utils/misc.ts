@@ -6,6 +6,7 @@ import { NotebookCellScheme } from '../constants';
 import { InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
+import { Environment } from '../../api/pythonApiTypes';
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
 export function noop() {}
@@ -105,7 +106,7 @@ export function tracing<T>(log: (t: TraceInfo) => void, run: () => T, logBeforeC
  * @param {InterpreterUri} [resource]
  * @returns {resource is Resource}
  */
-export function isResource(resource?: InterpreterUri): resource is Resource {
+export function isResource(resource?: InterpreterUri | Environment): resource is Resource {
     if (!resource) {
         return true;
     }

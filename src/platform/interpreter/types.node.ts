@@ -4,15 +4,16 @@
 import { Uri } from 'vscode';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types.node';
 import { PythonEnvironment } from '../pythonEnvironments/info';
+import { Environment } from '../api/pythonApiTypes';
 
 export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
-    interpreter: PythonEnvironment;
+    interpreter: PythonEnvironment | Environment;
 };
 
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
-    interpreter: PythonEnvironment;
+    interpreter: PythonEnvironment | Environment;
     allowEnvironmentFetchExceptions?: boolean;
 };
 export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');

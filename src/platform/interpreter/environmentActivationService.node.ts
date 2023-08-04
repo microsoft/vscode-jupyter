@@ -7,7 +7,7 @@ import * as path from '../vscode-path/path';
 import { IWorkspaceService } from '../common/application/types';
 import { IDisposable, Resource } from '../common/types';
 import { ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../common/variables/types';
-import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
+import { EnvironmentType } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -19,11 +19,13 @@ import { KernelProgressReporter } from '../progress/kernelProgressReporter';
 import { Telemetry } from '../common/constants';
 import { ignoreLogging, logValue, traceDecoratorVerbose, traceError, traceVerbose, traceWarning } from '../logging';
 import { TraceOptions } from '../logging/types';
-import { serializePythonEnvironment } from '../api/pythonApi';
+import { pythonEnvToJupyterEnv, serializePythonEnvironment } from '../api/pythonApi';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
 import { CancellationToken } from 'vscode';
 import { raceCancellation } from '../common/cancellation';
+import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
+import { Environment } from '../api/pythonApiTypes';
 
 const ENV_VAR_CACHE_TIMEOUT = 60_000;
 
@@ -56,28 +58,36 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     public async getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter: PythonEnvironment,
+        interpreter: { id: string },
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const title = DataScience.activatingPythonEnvironment(
-            interpreter.displayName || getDisplayPath(interpreter.uri)
-        );
-        return KernelProgressReporter.wrapAndReportProgress(resource, title, () =>
-            this.getActivatedEnvironmentVariablesImplWithCaching(resource, interpreter, token)
+        const env =
+            this.interpreterService.known.find((e) => e.id === interpreter.id) ||
+            (await this.interpreterService.resolveEnvironment(interpreter.id));
+        if (!env) {
+            return;
+        }
+        const title = DataScience.activatingPythonEnvironment(getPythonEnvDisplayName(env));
+        return KernelProgressReporter.wrapAndReportProgress(resource, title, async () =>
+            this.getActivatedEnvironmentVariablesImplWithCaching(
+                resource,
+                (await this.interpreterService.resolveEnvironment(env)) || env,
+                token
+            )
         );
     }
     private async getActivatedEnvironmentVariablesImplWithCaching(
         resource: Resource,
-        interpreter: PythonEnvironment,
+        environment: Environment,
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const key = `${resource?.toString() || ''}${interpreter.id}`;
+        const key = `${resource?.toString() || ''}${environment.id}`;
         const info = this.activatedEnvVariablesCache.get(key);
         if (info && info.time.elapsedTime >= ENV_VAR_CACHE_TIMEOUT) {
             this.activatedEnvVariablesCache.delete(key);
         }
         if (!this.activatedEnvVariablesCache.has(key)) {
-            const promise = this.getActivatedEnvironmentVariablesImpl(resource, interpreter, token);
+            const promise = this.getActivatedEnvironmentVariablesImpl(resource, environment, token);
             promise.catch(noop);
             this.activatedEnvVariablesCache.set(key, { promise, time: new StopWatch() });
         }
@@ -90,14 +100,14 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @traceDecoratorVerbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        @logValue<Environment>('id') environment: Environment,
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
         const stopWatch = new StopWatch();
-        return this.getActivatedEnvironmentVariablesFromPython(resource, interpreter, token)
+        return this.getActivatedEnvironmentVariablesFromPython(resource, environment, token)
             .then((env) => {
                 if (token?.isCancellationRequested) {
                     return;
@@ -106,7 +116,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             })
             .catch((ex) => {
                 traceError(
-                    `Failed to get env vars with python ${getDisplayPath(interpreter?.uri)} in ${
+                    `Failed to get env vars with python ${getDisplayPath(environment.id)} in ${
                         stopWatch.elapsedTime
                     }ms`,
                     ex
@@ -121,10 +131,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     >();
     private async getActivatedEnvironmentVariablesFromPython(
         resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
+        @logValue<{ id: string }>('id') environment: Environment,
         @ignoreLogging() token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const key = `${resource?.toString() || ''}${interpreter?.id || ''}`;
+        const key = `${resource?.toString() || ''}${environment.id || ''}`;
 
         // Ensure the cache is only valid for a limited time.
         const info = this.cachedEnvVariables.get(key);
@@ -132,7 +142,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.cachedEnvVariables.delete(key);
         }
         if (!this.cachedEnvVariables.has(key)) {
-            const promise = this.getActivatedEnvironmentVariablesFromPythonImpl(resource, interpreter, token);
+            const promise = this.getActivatedEnvironmentVariablesFromPythonImpl(resource, environment, token);
             this.cachedEnvVariables.set(key, { promise, lastRequestedTime: new StopWatch() });
         }
 
@@ -140,7 +150,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     private async getActivatedEnvironmentVariablesFromPythonImpl(
         resource: Resource,
-        interpreter: PythonEnvironment,
+        environment: Environment,
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
         resource = resource
@@ -163,11 +173,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         let env = await this.apiProvider.getApi().then((api) =>
             api
-                .getActivatedEnvironmentVariables(resource, serializePythonEnvironment(interpreter)!, false)
+                .getActivatedEnvironmentVariables(
+                    resource,
+                    serializePythonEnvironment(pythonEnvToJupyterEnv(environment, true))!,
+                    false
+                )
                 .catch((ex) => {
                     traceError(
                         `Failed to get activated env variables from Python Extension for ${getDisplayPath(
-                            interpreter.uri
+                            environment.path
                         )}`,
                         ex
                     );
@@ -178,7 +192,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (token?.isCancellationRequested) {
             return;
         }
-        const envType = interpreter.envType;
+        const envType = getEnvironmentType(environment);
         sendTelemetryEvent(
             Telemetry.GetActivatedEnvironmentVariables,
             { duration: stopWatch.elapsedTime },
@@ -193,7 +207,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         if (env) {
             traceVerbose(
-                `Got env vars with python ${getDisplayPath(interpreter?.uri)}, with env var count ${
+                `Got env vars with python ${getDisplayPath(environment.path)}, with env var count ${
                     Object.keys(env || {}).length
                 } in ${stopWatch.elapsedTime}ms. \n    PATH value is ${env.PATH} and \n    Path value is ${env.Path}`
             );
@@ -201,23 +215,32 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // We must get activated env variables for Conda env, if not running stuff against conda will not work.
             // Hence we must log these as errors (so we can see them in jupyter logs).
             traceError(
-                `Failed to get activated conda env vars for ${getDisplayPath(interpreter?.uri)}
+                `Failed to get activated conda env vars for ${getDisplayPath(environment.path)}
                  in ${stopWatch.elapsedTime}ms`
             );
         } else {
             traceWarning(
-                `Failed to get activated env vars for ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
+                `Failed to get activated env vars for ${getDisplayPath(environment.path)} in ${stopWatch.elapsedTime}ms`
             );
         }
         if (!env) {
-            // Temporary work around until https://github.com/microsoft/vscode-python/issues/20663
+            // Temporary work around until https://github.com/microsoft/vscode-python/issues/20678
             // However we might still need a work around for failure to activate conda envs without Python.
             const customEnvVars = await customEnvVarsPromise;
             env = {};
 
             // Patch for conda envs.
-            if (interpreter.envType === EnvironmentType.Conda && interpreter.sysPrefix) {
-                env.CONDA_PREFIX = interpreter.sysPrefix;
+            if (getEnvironmentType(environment) === EnvironmentType.Conda) {
+                const sysPrefix =
+                    this.interpreterService.known.find((e) => e.id === environment.id)?.executable.sysPrefix ||
+                    (await this.interpreterService.resolveEnvironment(environment))?.executable.sysPrefix;
+                if (sysPrefix) {
+                    env.CONDA_PREFIX = sysPrefix;
+                } else {
+                    traceWarning(
+                        `Failed to get the SysPrefix for the Conda Environment ${getDisplayPath(environment.path)}}`
+                    );
+                }
             }
 
             this.envVarsService.mergeVariables(process.env, env); // Copy current proc vars into new obj.
@@ -234,7 +257,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 this.envVarsService.appendPythonPath(env, customEnvVars!.PYTHONPATH);
             }
 
-            const executablesPath = await this.globalExecPaths.getExecutablesPath(interpreter).catch(noop);
+            const executablesPath = await this.globalExecPaths.getExecutablesPath(environment).catch(noop);
             if (token?.isCancellationRequested) {
                 return;
             }
@@ -245,19 +268,19 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // Second value in PATH is expected to be the site packages directory.
             if (executablesPath && pathValues[1] !== executablesPath.fsPath) {
                 traceVerbose(
-                    `Prepend PATH with user site path for ${getDisplayPath(interpreter.id)}, user site ${
+                    `Prepend PATH with user site path for ${getDisplayPath(environment.path)}, user site ${
                         executablesPath.fsPath
                     }`
                 );
                 // Based on docs this is the right path and must be setup in the path.
                 this.envVarsService.prependPath(env, executablesPath.fsPath);
-            } else if (interpreter.isCondaEnvWithoutPython) {
+            } else if (isCondaEnvironmentWithoutPython(environment)) {
                 //
             } else {
                 traceError(
-                    `Unable to determine site packages path for python ${getDisplayPath(interpreter.uri.fsPath)} (${
-                        interpreter.envType
-                    })`
+                    `Unable to determine site packages path for python ${getDisplayPath(
+                        environment.path
+                    )} (${getEnvironmentType(environment)})`
                 );
             }
 
@@ -272,7 +295,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Ensure the first path in PATH variable points to the directory of python executable.
         // We need to add this to ensure kernels start and work correctly, else things can fail miserably.
         traceVerbose(
-            `Prepend PATH with python bin for ${getDisplayPath(interpreter.id)}, \n    PATH value is ${
+            `Prepend PATH with python bin for ${getDisplayPath(environment.path)}, \n    PATH value is ${
                 env.PATH
             } and \n    Path value is ${env.Path}`
         );
@@ -280,10 +303,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
         // Also applies to `!java` where java could be an executable in the conda bin directory.
         // Also required for conda environments that do not have Python installed (in the conda env).
-        this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
+        if (environment.executable.uri) {
+            this.envVarsService.prependPath(env, path.dirname(environment.executable.uri.fsPath));
+        }
 
         traceVerbose(
-            `Activated Env Variables for ${getDisplayPath(interpreter.id)}, \n    PATH value is ${
+            `Activated Env Variables for ${getDisplayPath(environment.path)}, \n    PATH value is ${
                 env.PATH
             } and \n    Path value is ${env.Path}`
         );

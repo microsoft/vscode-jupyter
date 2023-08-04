@@ -13,6 +13,8 @@ import { isPipenvEnvironmentRelatedToFolder } from './pipenv.node';
 import { IServiceContainer } from '../../ioc/types';
 import { getFilePath } from '../../common/platform/fs-paths';
 import { getInterpreterWorkspaceFolder } from './helpers';
+import { Environment } from '../../api/pythonApiTypes';
+import { getEnvironmentType } from '../helpers';
 
 export const pipenvName = 'pipenv';
 
@@ -42,7 +44,7 @@ export class PipEnvInstaller extends ModuleInstaller {
         return 10;
     }
 
-    public async isSupported(resource?: InterpreterUri): Promise<boolean> {
+    public async isSupported(resource?: InterpreterUri | Environment): Promise<boolean> {
         if (isResource(resource)) {
             const interpreter = await this.serviceContainer
                 .get<IInterpreterService>(IInterpreterService)
@@ -56,12 +58,14 @@ export class PipEnvInstaller extends ModuleInstaller {
             // Install using `pipenv install` only if the active environment is related to the current folder.
             return isPipenvEnvironmentRelatedToFolder(interpreter.uri, workspaceFolder.uri);
         } else {
-            return resource.envType === EnvironmentType.Pipenv;
+            return (
+                ('executable' in resource ? getEnvironmentType(resource) : resource.envType) === EnvironmentType.Pipenv
+            );
         }
     }
     protected async getExecutionArgs(
         moduleName: string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         flags: ModuleInstallFlags = 0
     ): Promise<ExecutionInstallArgs> {
         // In pipenv the only way to update/upgrade or re-install is update (apart from a complete uninstall and re-install).
