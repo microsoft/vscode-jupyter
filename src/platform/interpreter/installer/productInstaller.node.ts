@@ -38,6 +38,7 @@ import { trackPackageInstalledIntoInterpreter } from './productInstaller';
 import { translateProductToModule } from './utils';
 import { IInterpreterPackages } from '../types';
 import { IPythonExecutionFactory } from '../types.node';
+import { Environment } from '../../api/pythonApiTypes';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${await getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
@@ -125,7 +126,10 @@ export class DataScienceInstaller {
     }
 
     @traceDecoratorVerbose('Checking if product is installed')
-    public async isInstalled(product: Product, @logValue('path') interpreter: PythonEnvironment): Promise<boolean> {
+    public async isInstalled(
+        product: Product,
+        @logValue('path') interpreter: PythonEnvironment | Environment
+    ): Promise<boolean> {
         const executableName = this.getExecutableNameFromSettings(product, undefined);
         const isModule = this.isExecutableAModule(product, undefined);
         if (isModule) {
@@ -235,7 +239,7 @@ export class ProductInstaller implements IInstaller {
         }
     }
 
-    public async isInstalled(product: Product, interpreter: PythonEnvironment): Promise<boolean> {
+    public async isInstalled(product: Product, interpreter: PythonEnvironment | Environment): Promise<boolean> {
         return this.createInstaller(product).isInstalled(product, interpreter);
     }
 

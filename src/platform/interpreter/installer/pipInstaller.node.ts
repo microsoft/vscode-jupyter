@@ -12,6 +12,8 @@ import { IServiceContainer } from '../../ioc/types';
 import { translateProductToModule } from './utils';
 import { IPythonExecutionFactory } from '../types.node';
 import { getPinnedPackages } from './pinnedPackages';
+import { Environment } from '../../api/pythonApiTypes';
+import { getEnvironmentType } from '../helpers';
 
 /**
  * Installer for pip. Default installer for most everything.
@@ -37,9 +39,10 @@ export class PipInstaller extends ModuleInstaller {
     public get priority(): number {
         return 0;
     }
-    public async isSupported(interpreter: PythonEnvironment): Promise<boolean> {
+    public async isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean> {
+        const envType = 'executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType;
         // Skip this on conda, poetry, and pipenv environments
-        switch (interpreter.envType) {
+        switch (envType) {
             case EnvironmentType.Conda:
             case EnvironmentType.Pipenv:
             case EnvironmentType.Poetry:
@@ -51,7 +54,7 @@ export class PipInstaller extends ModuleInstaller {
     }
     protected async getExecutionArgs(
         moduleName: string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         flags: ModuleInstallFlags = 0
     ): Promise<ExecutionInstallArgs> {
         if (moduleName === translateProductToModule(Product.pip)) {
@@ -80,14 +83,17 @@ export class PipInstaller extends ModuleInstaller {
         if (flags & ModuleInstallFlags.reInstall) {
             args.push('--force-reinstall');
         }
-        if (interpreter.envType === EnvironmentType.Unknown) {
+        if (
+            ('executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType) ===
+            EnvironmentType.Unknown
+        ) {
             args.push('--user');
         }
         return {
             args: ['-m', 'pip', ...args, moduleName].concat(getPinnedPackages('pip', moduleName))
         };
     }
-    private isPipAvailable(interpreter: PythonEnvironment): Promise<boolean> {
+    private isPipAvailable(interpreter: PythonEnvironment | Environment): Promise<boolean> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         return pythonExecutionFactory
             .create({ resource: undefined, interpreter })
