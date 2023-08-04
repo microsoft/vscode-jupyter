@@ -3,9 +3,16 @@
 
 import { Event, Uri, CancellationToken } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
+import { Environment, ResolvedEnvironment } from '../api/pythonApiTypes';
 type InterpreterId = string;
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
+    // #region New API
+    readonly known: readonly Environment[];
+    resolveEnvironment(id: string | Environment): Promise<ResolvedEnvironment | undefined>;
+    // #endregion
+
+    // #region Old API
     readonly status: 'refreshing' | 'idle';
     readonly onDidChangeStatus: Event<void>;
     readonly onDidEnvironmentVariablesChange: Event<void>;
@@ -39,4 +46,5 @@ export interface IInterpreterService {
         token?: CancellationToken
     ): Promise<undefined | PythonEnvironment>;
     getInterpreterHash(id: string): string | undefined;
+    // #endregion
 }
