@@ -25,6 +25,7 @@ import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivat
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
 import { getOSType, OSType } from '../common/utils/platform';
 import { SemVer } from 'semver';
+import { getEnvironmentType } from '../interpreter/helpers';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined,
@@ -123,31 +124,7 @@ export function resolvedPythonEnvToJupyterEnv(
     };
 }
 export function pythonEnvToJupyterEnv(env: Environment, supportsEmptyCondaEnv: boolean): PythonEnvironment | undefined {
-    const envTools = env.tools as KnownEnvironmentTools[];
-    // Map the Python env tool to a Jupyter environment type.
-    const orderOrEnvs: [pythonEnvTool: KnownEnvironmentTools, JupyterEnv: EnvironmentType][] = [
-        ['Conda', EnvironmentType.Conda],
-        ['Pyenv', EnvironmentType.Pyenv],
-        ['Pipenv', EnvironmentType.Pipenv],
-        ['Poetry', EnvironmentType.Poetry],
-        ['VirtualEnvWrapper', EnvironmentType.VirtualEnvWrapper],
-        ['VirtualEnv', EnvironmentType.VirtualEnv],
-        ['Venv', EnvironmentType.Venv]
-    ];
-    let envType = envTools.length ? (envTools[0] as EnvironmentType) : EnvironmentType.Unknown;
-    if (env.environment?.type === 'Conda') {
-        envType = EnvironmentType.Conda;
-    } else {
-        for (const [pythonEnvTool, JupyterEnv] of orderOrEnvs) {
-            if (envTools.includes(pythonEnvTool)) {
-                envType = JupyterEnv;
-                break;
-            }
-        }
-        if (envType === EnvironmentType.Unknown && env.environment?.type === 'VirtualEnvironment') {
-            envType = EnvironmentType.VirtualEnv;
-        }
-    }
+    const envType = getEnvironmentType(env);
     let isCondaEnvWithoutPython = false;
     let uri: Uri;
     let id = env.id;
@@ -429,6 +406,9 @@ export class InterpreterService implements IInterpreterService {
     private refreshPromises = new PromiseMonitor();
     private pauseEnvDetection = false;
     private readonly onResumeEnvDetection = new EventEmitter<void>();
+    public get known() {
+        return this.api?.environments.known || [];
+    }
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
@@ -464,6 +444,15 @@ export class InterpreterService implements IInterpreterService {
             this,
             this.disposables
         );
+    }
+    public async resolveEnvironment(id: string | Environment): Promise<ResolvedEnvironment | undefined> {
+        return this.getApi().then((api) => {
+            if (!api) {
+                return;
+            }
+            const env = typeof id === 'string' ? api.environments.known.find((e) => e.id === id || e.path === id) : id;
+            return api.environments.resolveEnvironment(env || id);
+        });
     }
     public get onDidChangeInterpreter(): Event<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();
