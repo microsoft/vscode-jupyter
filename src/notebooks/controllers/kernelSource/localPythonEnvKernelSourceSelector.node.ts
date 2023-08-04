@@ -64,9 +64,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
     displayName: string = DataScience.localPythonEnvironments;
 
     private _onDidChangeKernels = new EventEmitter<{
-        added?: PythonKernelConnectionMetadata[];
-        updated?: PythonKernelConnectionMetadata[];
-        removed?: PythonKernelConnectionMetadata[];
+        removed?: { id: string }[];
     }>();
     onDidChangeKernels = this._onDidChangeKernels.event;
     private _kernels = new Map<string, PythonKernelConnectionMetadata>();
@@ -242,10 +240,10 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         const existingInterpreterInfo = this._kernels.get(e.id);
         if (existingInterpreterInfo) {
             this._kernels.set(e.id, Object.assign(existingInterpreterInfo, result));
-            this._onDidChangeKernels.fire({ updated: [result] });
+            this._onDidChangeKernels.fire({});
         } else {
             this._kernels.set(e.id, result);
-            this._onDidChangeKernels.fire({ added: [result] });
+            this._onDidChangeKernels.fire({});
         }
     }
 

@@ -77,9 +77,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     private cache: RemoteKernelConnectionMetadata[] = [];
     private cacheLoggingTimeout?: NodeJS.Timer | number;
     private _onDidChangeKernels = new EventEmitter<{
-        added?: RemoteKernelConnectionMetadata[];
-        updated?: RemoteKernelConnectionMetadata[];
-        removed?: RemoteKernelConnectionMetadata[];
+        removed?: { id: string }[];
     }>();
     onDidChangeKernels = this._onDidChangeKernels.event;
 
@@ -432,7 +430,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 });
 
             if (added.length || updated.length || removed.length) {
-                this._onDidChangeKernels.fire({ added, updated, removed });
+                this._onDidChangeKernels.fire({ removed });
+                // this._onDidChangeKernels.fire({ added, updated, removed });
             }
             if (values.length) {
                 if (this.cacheLoggingTimeout) {
