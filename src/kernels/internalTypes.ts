@@ -22,9 +22,8 @@ export interface IContributedKernelFinder<T extends KernelConnectionMetadata = K
     displayName: string;
     kind: ContributedKernelFinderKind;
     onDidChangeKernels: Event<{
-        added?: T[];
-        updated?: T[];
-        removed?: T[];
+        // Expose just the ID, used to minimize the places where we use the old type PythonEnvironment.
+        removed?: { id: string }[];
     }>;
     kernels: T[];
     refresh(): Promise<void>;

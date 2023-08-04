@@ -226,7 +226,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     private async monitorDeletionOfConnections(finder: IContributedKernelFinder) {
         const eventHandler = finder.onDidChangeKernels(
             ({ removed: connections }) => {
-                const deletedConnections = new Set((connections || []).map((item) => item.id));
+                const deletedConnections = new Set((connections || []).map((c) => c.id));
                 this.registered
                     .filter((item) => deletedConnections.has(item.connection.id))
                     .forEach((controller) => {

@@ -49,9 +49,7 @@ export class ContributedLocalKernelSpecFinder
     displayName: string = DataScience.localKernelSpecs;
 
     private _onDidChangeKernels = new EventEmitter<{
-        added?: LocalKernelConnectionMetadata[];
-        updated?: LocalKernelConnectionMetadata[];
-        removed?: LocalKernelConnectionMetadata[];
+        removed?: { id: string }[];
     }>();
     onDidChangeKernels = this._onDidChangeKernels.event;
 
@@ -225,7 +223,7 @@ export class ContributedLocalKernelSpecFinder
 
         this.cache = values;
         if (added.length || updated.length || removed.length) {
-            this._onDidChangeKernels.fire({ added, updated, removed });
+            this._onDidChangeKernels.fire({ removed });
         }
 
         if (values.length) {
