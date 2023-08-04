@@ -4,6 +4,7 @@
 import { CancellationTokenSource, Event, Uri } from 'vscode';
 import { InterpreterUri } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { Environment } from '../../api/pythonApiTypes';
 
 export enum InstallerResponse {
     Installed,
@@ -72,7 +73,7 @@ export interface IModuleInstaller {
      */
     installModule(
         product: string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
         flags?: ModuleInstallFlags
     ): Promise<void>;
@@ -89,11 +90,11 @@ export interface IModuleInstaller {
      */
     installModule(
         product: Product,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
         flags?: ModuleInstallFlags
     ): Promise<void>;
-    isSupported(resource?: InterpreterUri): Promise<boolean>;
+    isSupported(resource?: InterpreterUri | Environment): Promise<boolean>;
 }
 
 export const IPythonInstallation = Symbol('IPythonInstallation');
@@ -136,6 +137,6 @@ export interface IInstaller {
         reInstallAndUpdate?: boolean,
         installPipIfRequired?: boolean
     ): Promise<InstallerResponse>;
-    isInstalled(product: Product, resource: InterpreterUri): Promise<boolean | undefined>;
+    isInstalled(product: Product, resource: InterpreterUri | Environment): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }

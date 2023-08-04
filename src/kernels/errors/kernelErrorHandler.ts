@@ -68,6 +68,7 @@ import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platfor
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
 import { getJupyterDisplayName } from '../jupyter/connection/jupyterUriProviderRegistration';
+import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
 
 /***
  * Common code for handling errors.
@@ -160,8 +161,10 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 typeof error.product === 'string'
                     ? error.product
                     : ProductNames.get(error.product) || `${error.product}`;
-            const interpreterDisplayName = error.interpreter.displayName || error.interpreter.envName || '';
-            const displayPath = getDisplayPath(error.interpreter.uri);
+            const interpreterDisplayName = getPythonEnvDisplayName(error.interpreter) || error.interpreter.id || '';
+            const displayPath = getDisplayPath(
+                'executable' in error.interpreter ? error.interpreter.executable.uri : error.interpreter.uri
+            );
             let displayName = interpreterDisplayName ? ` ${interpreterDisplayName} (${displayPath})` : displayPath;
             return DataScience.packageNotInstalledWindowsLongPathNotEnabledError(packageName, displayName);
         } else if (
