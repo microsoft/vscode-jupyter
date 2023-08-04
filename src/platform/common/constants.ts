@@ -508,7 +508,8 @@ export enum Telemetry {
     DataViewerUsingInterpreter = 'DATAVIEWER.USING_INTERPRETER',
     DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL',
     DataViewerWebviewLoaded = 'DATAVIEWER.WEBVIEW_LOADED',
-    PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED'
+    PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED',
+    EnterRemoteJupyterUrl = 'DATASCIENCE.ENTER_REMOTE_JUPYTER_URL'
 }
 
 export enum JupyterCommands {

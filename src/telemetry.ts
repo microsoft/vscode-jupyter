@@ -1010,6 +1010,57 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Sent when user enters a Remote Jupyter Url
+     */
+    [Telemetry.EnterRemoteJupyterUrl]: TelemetryEventInfo<{
+        /**
+         * Has of the origin/base Url.
+         */
+        baseUrlHash: string;
+        /**
+         * Whether user is connecting to the local host.
+         */
+        isLocalHost: boolean;
+        /**
+         * Whether the Url was successfully validated or not.
+         */
+        failed?: boolean;
+        /**
+         * Failure reason.
+         */
+        reason?:
+            | 'InvalidUrl'
+            | 'NonHttpUrl'
+            | 'ConnectionFailure'
+            | 'InsecureHTTP'
+            | 'SelfCert'
+            | 'ExpiredCert'
+            | 'AuthFailure';
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        tags: ['KernelStartup'],
+        properties: {
+            baseUrlHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            failed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            isLocalHost: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            reason: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
+    /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
     [Telemetry.DisableInteractiveShiftEnter]: TelemetryEventInfo<never | undefined> = {
