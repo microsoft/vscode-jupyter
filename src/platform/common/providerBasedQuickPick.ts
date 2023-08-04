@@ -83,7 +83,11 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
     private commands = new Set<CommandQuickPickItem<T>>();
     private _recommended?: T;
     public set recommended(item: T | undefined) {
+        const changed = this._recommended?.id !== item?.id;
         this._recommended = item;
+        if (changed && this.quickPick) {
+            this.rebuildQuickPickItems(this.quickPick);
+        }
     }
     public get recommended() {
         return this._recommended;

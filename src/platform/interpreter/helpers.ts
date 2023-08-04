@@ -8,9 +8,17 @@ import { Environment } from '../api/pythonApiTypes';
 
 export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment) {
     if ('executable' in interpreter) {
-        const version = interpreter.version?.major
-            ? `${interpreter.version.major}.${interpreter.version.minor}.${interpreter.version.micro}`
-            : '';
+        const versionParts: string[] = [];
+        if (typeof interpreter.version?.major === 'number') {
+            versionParts.push(interpreter.version.major.toString());
+            if (typeof interpreter.version.minor === 'number') {
+                versionParts.push(interpreter.version.minor.toString());
+                if (typeof interpreter.version.micro === 'number') {
+                    versionParts.push(interpreter.version.micro.toString());
+                }
+            }
+        }
+        const version = versionParts.length ? versionParts.join('.') : '';
         const envName = interpreter.environment ? basename(interpreter.environment?.folderUri) : '';
         const nameWithVersion = version ? `Python ${version}` : 'Python';
         if (isCondaEnvironmentWithoutPython(interpreter) && envName) {
