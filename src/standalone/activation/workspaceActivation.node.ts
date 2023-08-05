@@ -8,15 +8,15 @@ import { IWorkspaceService, IDocumentManager } from '../../platform/common/appli
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { traceDecoratorError } from '../../platform/logging';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { noop } from '../../platform/common/utils/misc';
 
 /**
- * Responsible for sending workspace level telemetry and making sure that the list of interpreters is always fetched when opening a workspace.
+ * Responsible for sending workspace level telemetry.
  */
 @injectable()
-export class WorkspaceActivation implements IExtensionSingleActivationService {
+export class WorkspaceActivation implements IExtensionSyncActivationService {
     public readonly activatedWorkspaces = new Set<string>();
     private readonly disposables: IDisposable[] = [];
     private docOpenedHandler?: IDisposable;
@@ -27,10 +27,10 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
         @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {}
 
-    public async activate(): Promise<void> {
+    public activate() {
         this.addHandlers();
         this.addRemoveDocOpenedHandlers();
-        return this.activateWorkspace(this.getActiveResource());
+        this.activateWorkspace(this.getActiveResource()).catch(noop);
     }
 
     private getActiveResource(): Resource {

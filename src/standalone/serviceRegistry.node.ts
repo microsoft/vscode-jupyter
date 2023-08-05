@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {
-    IExtensionActivationManager,
-    IExtensionSingleActivationService,
-    IExtensionSyncActivationService
-} from '../platform/activation/types';
+import { IExtensionActivationManager, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { INotebookExporter, INotebookImporter } from '../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
@@ -33,10 +29,7 @@ import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProvide
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        WorkspaceActivation
-    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, WorkspaceActivation);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ExtensionRecommendationService

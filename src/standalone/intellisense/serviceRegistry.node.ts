@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { INotebookCompletionProvider } from '../../notebooks/types';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { IntellisenseProvider } from './intellisenseProvider.node';
@@ -30,6 +30,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
 
     serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
-    serviceManager.addBinding(NotebookPythonPathService, IExtensionSingleActivationService);
+    serviceManager.addBinding(NotebookPythonPathService, IExtensionSyncActivationService);
     serviceManager.addSingleton<INotebookCompletionProvider>(INotebookCompletionProvider, IntellisenseProvider);
 }
