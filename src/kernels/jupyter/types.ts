@@ -171,6 +171,7 @@ export interface IJupyterUriProviderRegistration {
         serverHandle: JupyterServerProviderHandle,
         doNotPromptForAuthInfo?: boolean
     ): Promise<IJupyterServerUri>;
+    isHandleValid(serverHandle: JupyterServerProviderHandle): Promise<boolean>;
 }
 
 /**
@@ -190,6 +191,7 @@ export interface IJupyterServerUriEntry {
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
+    all: IJupyterServerUriEntry[];
     readonly onDidChange: Event<void>;
     readonly onDidRemove: Event<IJupyterServerUriEntry[]>;
     readonly onDidAdd: Event<IJupyterServerUriEntry>;
@@ -197,7 +199,8 @@ export interface IJupyterServerUriStorage {
      * Updates MRU list marking this server as the most recently used.
      */
     update(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
-    getAll(): Promise<IJupyterServerUriEntry[]>;
+    getAll(validate?: boolean): Promise<IJupyterServerUriEntry[]>;
+    getServers(extensionId: string, providerId: string): Promise<IJupyterServerUriEntry[]>;
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
     add(

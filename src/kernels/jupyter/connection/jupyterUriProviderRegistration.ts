@@ -62,6 +62,12 @@ export class JupyterUriProviderRegistration
     }
     public async getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined> {
         await this.loadOtherExtensions();
+        try {
+            await this.loadExtension(extensionId, id);
+        } catch (ex) {
+            traceError(`Failed to load the extension ${extensionId}`, ex);
+            return;
+        }
         return this._providers.get(getProviderId(extensionId, id));
     }
 
@@ -94,6 +100,7 @@ export class JupyterUriProviderRegistration
         doNotPromptForAuthInfo?: boolean
     ): Promise<IJupyterServerUri> {
         await this.loadOtherExtensions();
+        await this.loadExtension(providerHandle.extensionId, providerHandle.id);
         const id = getProviderId(providerHandle.extensionId, providerHandle.id);
         const provider = this._providers.get(id);
         if (!provider) {
@@ -110,7 +117,47 @@ export class JupyterUriProviderRegistration
         }
         return provider.getServerUri(providerHandle.handle, doNotPromptForAuthInfo);
     }
+    public async isHandleValid(providerHandle: JupyterServerProviderHandle): Promise<boolean> {
+        try {
+            await this.loadExtension(providerHandle.extensionId, providerHandle.id);
+        } catch (ex) {
+            traceError(`Failed to load the extension ${providerHandle.extensionId}`, ex);
+            return false;
+        }
 
+        const id = getProviderId(providerHandle.extensionId, providerHandle.id);
+        const provider = this._providers.get(id);
+        if (!provider) {
+            traceError(
+                `${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${providerHandle.handle}`
+            );
+            throw new Error(localize.DataScience.unknownServerUri);
+        }
+        if (provider.getHandles) {
+            const handles = await provider.getHandles();
+            return handles.includes(providerHandle.handle);
+        }
+        try {
+            // This is the only other way to validate the handle.
+            // await provider.getServerUri(providerHandle.handle, true);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    private async loadExtension(extensionId: string, providerId: string) {
+        if (extensionId === JVSC_EXTENSION_ID) {
+            return;
+        }
+        this.loadOtherExtensions().catch(noop);
+        const ext = this.extensions.getExtension(extensionId);
+        if (!ext) {
+            throw new Error(`Extension '${extensionId}' that provides Jupyter Server '${providerId}' not found`);
+        }
+        if (!ext.isActive) {
+            await ext.activate().then(noop, noop);
+        }
+    }
     private onDidRemoveServer(e: IJupyterServerUriEntry[]) {
         Promise.all(
             e.map(async (s) => {
@@ -141,26 +188,6 @@ export class JupyterUriProviderRegistration
             .filter((e) => e.id !== JVSC_EXTENSION_ID);
         await Promise.all(extensions.map((e) => (e.isActive ? Promise.resolve() : e.activate().then(noop, noop))));
     }
-
-    // /**
-    //  * Ideally we should activate just the extension that registered the provider.
-    //  * Debt, we should fix this.
-    //  */
-    // private async loadProviderExtension(providerId: string): Promise<void> {
-    //     this.loadOtherExtensions().catch(noop);
-    //     this.loadExistingProviderExtensionMapping();
-    //     const extensionId = this.providerExtensionMapping.get(providerId);
-    //     if (!extensionId) {
-    //         return;
-    //     }
-
-    //     const extension = this.extensions.getExtension(extensionId);
-    //     if (extension) {
-    //         if (!extension.isActive) {
-    //             await extension.activate().then(noop, noop);
-    //         }
-    //     }
-    // }
 
     @swallowExceptions()
     private async trackExtensionWithProvider(extensionId: string): Promise<void> {

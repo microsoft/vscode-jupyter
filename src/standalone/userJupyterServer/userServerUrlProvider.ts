@@ -78,6 +78,8 @@ export class UserJupyterServerUrlProvider
     public readonly newStorage: NewStorage;
     private migratedOldServers?: Promise<unknown>;
     private displayNamesOfHandles = new Map<string, string>();
+    private cachedHandles = new Set<string>();
+
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IJupyterUriProviderRegistration)
@@ -132,7 +134,18 @@ export class UserJupyterServerUrlProvider
                 this._onDidChangeHandles.fire();
             })
         );
-        this.migrateOldServers().catch(noop);
+        this.migrateOldServers()
+            .catch(noop)
+            .then(() => this.getHandles())
+            .catch(noop);
+
+        // this.getHandles()
+        //     .then((items) => {
+        //         if (items.length) {
+        //             this._onDidChangeHandles.fire();
+        //         }
+        //     })
+        //     .catch(noop);
     }
     private migrateOldServers() {
         if (!this.migratedOldServers) {
@@ -419,6 +432,7 @@ export class UserJupyterServerUrlProvider
 
     private async addNewServer(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
         await this.newStorage.add(server);
+        this.cachedHandles.add(server.handle);
         this._onDidChangeHandles.fire();
     }
     async getServerUriWithoutAuthInfo(handle: string): Promise<IJupyterServerUri> {
@@ -463,14 +477,25 @@ export class UserJupyterServerUrlProvider
         });
     }
     async getHandles(): Promise<string[]> {
-        await this.initializeServers();
-        const servers = await this.newStorage.getServers();
-        return servers.map((s) => s.handle);
+        const getHandles = async () => {
+            await this.initializeServers();
+            const servers = await this.newStorage.getServers();
+            return servers.map((s) => s.handle);
+        };
+        getHandles()
+            .then((items) => items.forEach((item) => this.cachedHandles.add(item)))
+            .catch((ex) => traceError('Failed to get handles', ex));
+
+        if (this.cachedHandles.size) {
+            return Array.from(this.cachedHandles.values());
+        }
+        return getHandles();
     }
 
     async removeHandle(handle: string): Promise<void> {
         await this.initializeServers();
         await this.newStorage.remove(handle);
+        this.cachedHandles.delete(handle);
         this._onDidChangeHandles.fire();
     }
     dispose(): void {

@@ -62,6 +62,10 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     private readonly oldStorage: OldStorage;
     private readonly newStorage: NewStorage;
     private storageEventsHooked?: boolean;
+    private cache = new Map<string, IJupyterServerUriEntry>();
+    public get all() {
+        return Array.from(this.cache.values());
+    }
     constructor(
         @inject(IEncryptedStorage) encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
@@ -95,14 +99,25 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
         this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
     }
-    public async getAll(): Promise<IJupyterServerUriEntry[]> {
+    public async getAll(validate = true): Promise<IJupyterServerUriEntry[]> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        return this.newStorage.getAll();
+        const all = await this.newStorage.getAll(undefined, validate);
+        all.forEach((s) => this.cache.set(generateIdFromRemoteProvider(s.provider), s));
+        this._onDidChangeUri.fire();
+        return all;
     }
+    async getServers(extensionId: string, providerId: string): Promise<IJupyterServerUriEntry[]> {
+        this.hookupStorageEvents();
+        await this.newStorage.migrateMRU();
+        const all = await this.newStorage.getAll({ id: providerId, extensionId });
+        return all.filter((s) => s.provider.extensionId === extensionId && s.provider.id === providerId);
+    }
+
     public async clear(): Promise<void> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
+        this.cache.clear();
         await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
     }
     public async add(
@@ -122,17 +137,22 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
             const server = await this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle, true);
             entry.displayName = server.displayName;
         }
+        this.cache.set(generateIdFromRemoteProvider(jupyterHandle), entry);
         await this.newStorage.add(entry);
+        this.getAll().catch(noop);
     }
     public async update(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         await this.newStorage.update(server);
+        this.getAll().catch(noop);
     }
     public async remove(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
+        this.cache.delete(generateIdFromRemoteProvider(server));
         await this.newStorage.remove(server);
+        this.getAll().catch(noop);
     }
 }
 
@@ -350,8 +370,11 @@ class NewStorage {
             })
             .catch(noop));
     }
-    public async getAll(): Promise<IJupyterServerUriEntry[]> {
-        return this.getAllImpl(true).then((items) => items.sort((a, b) => b.time - a.time));
+    public async getAll(
+        provider?: { extensionId: string; id: string },
+        validate = true
+    ): Promise<IJupyterServerUriEntry[]> {
+        return this.getAllImpl(validate, provider).then((items) => items.sort((a, b) => b.time - a.time));
     }
     public async clear(): Promise<void> {
         const all = await this.getAllImpl(false);
@@ -360,12 +383,20 @@ class NewStorage {
             this._onDidRemoveUris.fire(all);
         }
     }
-    private async getAllImpl(validate = true): Promise<IJupyterServerUriEntry[]> {
+    private async getAllImpl(
+        validate = true,
+        search?: { extensionId: string; id: string }
+    ): Promise<IJupyterServerUriEntry[]> {
         const data = await this.getAllRaw();
         const entries: IJupyterServerUriEntry[] = [];
-
         await Promise.all(
             data.map(async (item) => {
+                if (
+                    search &&
+                    (search.extensionId !== item.serverHandle.extensionId || search.id !== item.serverHandle.id)
+                ) {
+                    return;
+                }
                 const uri = generateIdFromRemoteProvider(item.serverHandle);
                 const server: IJupyterServerUriEntry = {
                     time: item.time,
@@ -376,11 +407,9 @@ class NewStorage {
                     entries.push(server);
                     return;
                 }
-                try {
-                    await this.jupyterPickerRegistration.getJupyterServerUri(item.serverHandle, true);
+                const valid = await this.jupyterPickerRegistration.isHandleValid(item.serverHandle).catch(() => false);
+                if (valid) {
                     entries.push(server);
-                } catch {
-                    //
                 }
             })
         );
