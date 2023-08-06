@@ -32,6 +32,7 @@ import {
     Identifiers,
     JVSC_EXTENSION_ID,
     Settings,
+    Telemetry,
     UserJupyterServerPickerProviderId
 } from '../../platform/common/constants';
 import {
@@ -55,6 +56,8 @@ import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfC
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -274,6 +277,32 @@ export class UserJupyterServerUrlProvider
                 );
             }
 
+            async function sendTelemetryEventForRemoteUrl(
+                uri: string,
+                failureReason?:
+                    | 'InvalidUrl'
+                    | 'NonHttpUrl'
+                    | 'ConnectionFailure'
+                    | 'InsecureHTTP'
+                    | 'SelfCert'
+                    | 'ExpiredCert'
+                    | 'AuthFailure'
+            ) {
+                try {
+                    const url = new URL(uri);
+                    const isLocalHost =
+                        url.hostname.toLowerCase() === 'localhost' || url.host.toLowerCase() === '127.0.0.1';
+                    const baseUrlHash = await getTelemetrySafeHashedString(url.origin.toLowerCase());
+                    sendTelemetryEvent(Telemetry.EnterRemoteJupyterUrl, undefined, {
+                        failed: !!failureReason,
+                        baseUrlHash,
+                        isLocalHost,
+                        reason: failureReason
+                    });
+                } catch (ex) {
+                    traceWarning(`Failed to generate a hash of the Url`, ex);
+                }
+            }
             let inputWasHidden = false;
             let promptingForServerName = false;
             disposables.push(
@@ -286,6 +315,7 @@ export class UserJupyterServerUrlProvider
                             input.show();
                         }
                         input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
+                        sendTelemetryEventForRemoteUrl(uri, 'InvalidUrl').catch(noop);
                         return;
                     }
                     if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
@@ -293,6 +323,7 @@ export class UserJupyterServerUrlProvider
                             input.show();
                         }
                         input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
+                        sendTelemetryEventForRemoteUrl(uri, 'NonHttpUrl').catch(noop);
                         return;
                     }
 
@@ -327,6 +358,7 @@ export class UserJupyterServerUrlProvider
                                     : DataScience.remoteJupyterConnectionFailedWithoutServerWithError
                             )(errorMessage);
                         }
+                        sendTelemetryEventForRemoteUrl(uri, 'ConnectionFailure').catch(noop);
                         return;
                     }
                     if (passwordResult.requestHeaders) {
@@ -344,6 +376,7 @@ export class UserJupyterServerUrlProvider
                         if (!proceed) {
                             resolve(undefined);
                             input.hide();
+                            sendTelemetryEventForRemoteUrl(uri, 'InsecureHTTP').catch(noop);
                             return;
                         }
                     }
@@ -355,15 +388,20 @@ export class UserJupyterServerUrlProvider
                             jupyterServerUri,
                             true
                         );
+                        sendTelemetryEventForRemoteUrl(uri).catch(noop);
                     } catch (err) {
                         traceWarning('Uri verification error', err);
                         if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                            sendTelemetryEventForRemoteUrl(uri, 'SelfCert').catch(noop);
                             message = DataScience.jupyterSelfCertFailErrorMessageOnly;
                         } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                            sendTelemetryEventForRemoteUrl(uri, 'ExpiredCert').catch(noop);
                             message = DataScience.jupyterSelfCertExpiredErrorMessageOnly;
                         } else if (passwordResult.requiresPassword && jupyterServerUri.token.length === 0) {
+                            sendTelemetryEventForRemoteUrl(uri, 'AuthFailure').catch(noop);
                             message = DataScience.passwordFailure;
                         } else {
+                            sendTelemetryEventForRemoteUrl(uri, 'ConnectionFailure').catch(noop);
                             // Return the general connection error to show in the validation box
                             // Replace any Urls in the error message with markdown link.
                             const urlRegex = /(https?:\/\/[^\s]+)/g;

@@ -96,7 +96,7 @@ export class JupyterInterpreterService {
      */
     public async selectInterpreter(): Promise<PythonEnvironment | undefined> {
         sendTelemetryEvent(Telemetry.SelectJupyterInterpreter);
-        const interpreter = await this.jupyterInterpreterSelector.selectInterpreter();
+        const interpreter = await this.jupyterInterpreterSelector.selectPythonInterpreter();
         if (!interpreter) {
             sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'notSelected' });
             return;

@@ -236,6 +236,18 @@
      ]
    }
  */
+//Telemetry.EnterRemoteJupyterUrl
+/* __GDPR__
+   "DATASCIENCE.ENTER_REMOTE_JUPYTER_URL" : {
+     "baseUrlHash": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Has of the origin/base Url.","owner":"donjayamanne"},
+     "isLocalHost": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether user is connecting to the local host.","owner":"donjayamanne"},
+     "reason": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Failure reason.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.ExecuteCell
 /* __GDPR__
    "DATASCIENCE.EXECUTE_CELL" : {

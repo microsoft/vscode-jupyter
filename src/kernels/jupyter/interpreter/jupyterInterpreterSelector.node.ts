@@ -24,6 +24,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';
+import { Environment } from '../../../platform/api/pythonApiTypes';
 
 /**
  * Displays interpreter select and returns the selection to the user.
@@ -37,7 +38,19 @@ export class JupyterInterpreterSelector {
     /**
      * Displays interpreter selector and returns the selection.
      */
-    public async selectInterpreter(): Promise<PythonEnvironment | undefined> {
+    public async selectPythonInterpreter(): Promise<PythonEnvironment | undefined> {
+        const env = await this.selectPythonEnvironment();
+        return (
+            env?.executable?.uri &&
+            (await this.serviceContainer
+                .get<IInterpreterService>(IInterpreterService)
+                .getInterpreterDetails(env.executable.uri))
+        );
+    }
+    /**
+     * Displays interpreter selector and returns the selection.
+     */
+    public async selectPythonEnvironment(): Promise<Environment | undefined> {
         const token = new CancellationTokenSource();
         const platformService = new PlatformService();
         const selectedInterpreter =
@@ -84,9 +97,7 @@ export class JupyterInterpreterSelector {
             if (!item || item instanceof InputFlowAction) {
                 return;
             }
-            return await this.serviceContainer
-                .get<IInterpreterService>(IInterpreterService)
-                .getInterpreterDetails(item.path);
+            return item;
         } catch (ex) {
             traceError(`Failed to select a Python Environment to start Jupyter`, ex);
         } finally {

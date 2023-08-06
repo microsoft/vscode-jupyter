@@ -10,6 +10,9 @@ import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { isPoetryEnvironmentRelatedToFolder } from './poetry.node';
 import { ModuleInstallerType } from './types';
+import { Environment } from '../../api/pythonApiTypes';
+import { Uri } from 'vscode';
+import { getEnvironmentType } from '../helpers';
 
 export const poetryName = 'poetry';
 
@@ -46,16 +49,23 @@ export class PoetryInstaller extends ModuleInstaller {
         super(serviceContainer);
     }
 
-    public async isSupported(interpreter: PythonEnvironment): Promise<boolean> {
-        if (interpreter.envType !== EnvironmentType.Poetry) {
+    public async isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean> {
+        if (
+            ('executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType) !==
+            EnvironmentType.Poetry
+        ) {
             return false;
         }
 
         const folder = getInterpreterWorkspaceFolder(interpreter, this.workspaceService);
         if (folder) {
+            const executable =
+                'executable' in interpreter
+                    ? interpreter.executable.uri || Uri.file(interpreter.path)
+                    : interpreter.uri;
             // Install using poetry CLI only if the active poetry environment is related to the current folder.
             return isPoetryEnvironmentRelatedToFolder(
-                interpreter.uri.fsPath,
+                executable.fsPath,
                 folder.fsPath,
                 this.configurationService.getSettings(undefined).poetryPath
             );
@@ -66,7 +76,7 @@ export class PoetryInstaller extends ModuleInstaller {
 
     protected async getExecutionArgs(
         moduleName: string,
-        interpreter: PythonEnvironment
+        interpreter: PythonEnvironment | Environment
     ): Promise<ExecutionInstallArgs> {
         const execPath = this.configurationService.getSettings(undefined).poetryPath;
         const args = [execPath, 'add', '--dev', moduleName];
