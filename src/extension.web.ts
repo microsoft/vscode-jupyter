@@ -333,14 +333,10 @@ async function activateLegacy(
     cmdManager.executeCommand('setContext', 'jupyter.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     // "activate" everything else
-    const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
-    context.subscriptions.push(manager);
-    manager.activateSync();
-    const activationPromise = manager.activate();
+    serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager).activate();
     const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
     featureManager.initialize();
     context.subscriptions.push(featureManager);
-    return activationPromise;
 }
 
 function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {

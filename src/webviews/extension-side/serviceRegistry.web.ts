@@ -18,7 +18,7 @@ import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { DataViewer } from './dataviewer/dataViewer';
 import { IServiceManager } from '../../platform/ioc/types';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotViewer } from './plotting/plotViewer';
@@ -30,7 +30,7 @@ import { IPlotSaveHandler } from './plotView/types';
 import { IPyWidgetRendererComms } from './ipywidgets/rendererComms';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication
     );

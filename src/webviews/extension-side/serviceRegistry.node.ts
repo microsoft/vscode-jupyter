@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataViewer } from './dataviewer/dataViewer';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
@@ -30,7 +30,7 @@ import { VariableViewActivationService } from './variablesView/variableViewActiv
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication
     );
