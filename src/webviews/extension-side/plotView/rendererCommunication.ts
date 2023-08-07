@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, extensions, NotebookEditor, window } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { RendererExtension } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
@@ -23,7 +23,7 @@ export type SaveImageAs = {
 };
 
 @injectable()
-export class RendererCommunication implements IExtensionSingleActivationService, IDisposable {
+export class RendererCommunication implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(IPlotSaveHandler) private readonly plotSaveHandler: IPlotSaveHandler,
@@ -33,7 +33,10 @@ export class RendererCommunication implements IExtensionSingleActivationService,
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    public async activate() {
+    public activate() {
+        this.activateImpl().catch(noop);
+    }
+    public async activateImpl() {
         const ext = extensions.getExtension(RendererExtension);
         if (!ext) {
             return;
