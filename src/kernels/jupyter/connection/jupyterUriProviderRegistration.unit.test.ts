@@ -317,6 +317,15 @@ suite('Uri Provider Registration', () => {
         when(provider.onDidChangeHandles).thenReturn(onDidChangeHandles.event);
         when(provider.id).thenReturn(id);
 
+        when(extensions.getExtension(extensionId)).thenReturn({
+            activate: () => {
+                return Promise.resolve();
+            },
+            id: extensionId,
+            isActive: false,
+            packageJSON: { contributes: { pythonRemoteServerProvider: {} } } as any
+        } as any);
+
         const disposable = registration.registerProvider(instance(provider), extensionId);
         return { provider, disposable, onDidChangeHandles };
     }
