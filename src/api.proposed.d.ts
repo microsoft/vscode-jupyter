@@ -96,7 +96,7 @@ export interface JupyterServerCreationItem {
 
 }
 
-export class JupyterServerCollection extends Disposable {
+export class JupyterServerCollection {
     /**
      * Identifier must be globally unique.
      */

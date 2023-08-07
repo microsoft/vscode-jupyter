@@ -59,6 +59,9 @@ import { validateSelectJupyterURI } from '../../kernels/jupyter/connection/serve
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
+import { createServerCollection } from '../api/serverCollection';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { JupyterServerCollection } from '../../api.proposed';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -82,10 +85,11 @@ export class UserJupyterServerUrlProvider
     public readonly newStorage: NewStorage;
     private migratedOldServers?: Promise<unknown>;
     private displayNamesOfHandles = new Map<string, string>();
+    private collection: JupyterServerCollection;
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IJupyterUriProviderRegistration)
-        private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
+        private readonly _uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
@@ -103,7 +107,8 @@ export class UserJupyterServerUrlProvider
         @inject(IJupyterRequestCreator) requestCreator: IJupyterRequestCreator,
         @inject(IExperimentService) private readonly experiments: IExperimentService,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         this.disposables.push(this);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -123,7 +128,11 @@ export class UserJupyterServerUrlProvider
     }
 
     activate() {
-        this._localDisposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
+        this.collection = createServerCollection(this.serviceContainer, this.context, JVSC_EXTENSION_ID, this.id, this.displayName);
+        this.collection.createServerCreationItem(DataScience.jupyterSelectURIPrompt,  ()=> {
+
+        });
+        // this._localDisposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
 
         this._localDisposables.push(
             this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
