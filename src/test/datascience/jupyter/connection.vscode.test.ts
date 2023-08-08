@@ -186,7 +186,7 @@ suite('Connect to Remote Jupyter Servers', function () {
             api.serviceContainer.get<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator),
             api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator),
             api.serviceContainer.get<IExtensionContext>(IExtensionContext),
-            api.serviceContainer.get<IFileSystem>(IFileSystem),
+            api.serviceContainer.get<IFileSystem>(IFileSystem)
         );
         userUriProvider.activate();
 
