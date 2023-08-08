@@ -43,17 +43,16 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     ) {}
 
     activate() {
+        // Check for when more URIs are added
+        this.serverUriStorage.onDidAdd(this.createRemoteKernelFinder, this, this.disposables);
+
+        // Also check for when a URI is removed
+        this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
         // Add in the URIs that we already know about
         this.serverUriStorage
             .getAll()
             .then((currentServers) => {
                 currentServers.forEach(this.createRemoteKernelFinder.bind(this));
-
-                // Check for when more URIs are added
-                this.serverUriStorage.onDidAdd(this.createRemoteKernelFinder, this, this.disposables);
-
-                // Also check for when a URI is removed
-                this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
             })
             .catch(noop);
     }
