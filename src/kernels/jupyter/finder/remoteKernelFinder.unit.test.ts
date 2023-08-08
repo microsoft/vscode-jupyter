@@ -22,9 +22,8 @@ import { JupyterSessionManager } from '../session/jupyterSessionManager';
 import { JupyterSessionManagerFactory } from '../session/jupyterSessionManagerFactory';
 import { IJupyterKernel, IJupyterRemoteCachedKernelValidator, IJupyterSessionManager } from '../types';
 import { KernelFinder } from '../../kernelFinder';
-import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
-import { IExtensionContext, IExtensions } from '../../../platform/common/types';
+import { IExtensionContext } from '../../../platform/common/types';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { CacheDataFormat, RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
@@ -128,8 +127,6 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManager.dispose()).thenResolve();
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
-        const extensionChecker = mock(PythonExtensionChecker);
-        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
         when(fs.delete(anything())).thenResolve();
         when(fs.createDirectory(uriEquals(globalStorageUri))).thenResolve();
         when(fs.exists(anything())).thenResolve(true);
@@ -148,7 +145,6 @@ suite(`Remote Kernel Finder`, () => {
         const env = mock<IApplicationEnvironment>();
         when(env.extensionVersion).thenReturn('');
         const kernelProvider = mock<IKernelProvider>();
-        const extensions = mock<IExtensions>();
         kernelFinder = new KernelFinder(disposables);
         kernelsChanged = createEventHandler(kernelFinder, 'onDidChangeKernels');
         disposables.push(kernelsChanged);
@@ -158,12 +154,10 @@ suite(`Remote Kernel Finder`, () => {
             'currentremote',
             'Local Kernels',
             instance(jupyterSessionManagerFactory),
-            instance(extensionChecker),
             instance(env),
             instance(cachedRemoteKernelValidator),
             kernelFinder,
             instance(kernelProvider),
-            instance(extensions),
             serverEntry,
             instance(jupyterConnection),
             instance(fs),
