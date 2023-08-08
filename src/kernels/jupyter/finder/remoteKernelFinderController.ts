@@ -8,7 +8,9 @@ import {
     IOldJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
     IJupyterRemoteCachedKernelValidator,
-    IJupyterServerUriEntry
+    IJupyterServerUriEntry,
+    IJupyterUriProviderRegistration,
+    JupyterServerProviderHandle
 } from '../types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -19,6 +21,7 @@ import { JupyterConnection } from '../connection/jupyterConnection';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
+import { swallowExceptions } from '../../../platform/common/utils/decorators';
 
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
@@ -36,36 +39,44 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IJupyterUriProviderRegistration)
+        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
     ) {}
 
     activate() {
         // Check for when more URIs are added
-        this.serverUriStorage.onDidAdd(this.createRemoteKernelFinder, this, this.disposables);
+        this.serverUriStorage.onDidAdd((server) => this.validateAndCreateFinder(server), this, this.disposables);
 
         // Also check for when a URI is removed
         this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
+
         // Add in the URIs that we already know about
         this.serverUriStorage
             .getAll()
-            .then((currentServers) => {
-                currentServers.forEach(this.createRemoteKernelFinder.bind(this));
+            .then(async (currentServers) => {
+                await Promise.all(currentServers.map((server) => this.validateAndCreateFinder(server)));
             })
             .catch(noop);
     }
+    @swallowExceptions('Failed to create a Remote Kernel Finder')
+    private async validateAndCreateFinder(serverUri: IJupyterServerUriEntry) {
+        const info = await this.jupyterPickerRegistration.getJupyterServerUri(serverUri.provider, true);
+        this.createRemoteKernelFinder(serverUri.provider, info.displayName);
+    }
 
-    createRemoteKernelFinder(serverUri: IJupyterServerUriEntry) {
-        const serverId = generateIdFromRemoteProvider(serverUri.provider);
+    createRemoteKernelFinder(serverProviderHandle: JupyterServerProviderHandle, displayName: string) {
+        const serverId = generateIdFromRemoteProvider(serverProviderHandle);
         if (!this.serverFinderMapping.has(serverId)) {
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverId}`,
-                serverUri.displayName || generateIdFromRemoteProvider(serverUri.provider),
+                displayName,
                 this.jupyterSessionManagerFactory,
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,
                 this.kernelProvider,
-                serverUri,
+                serverProviderHandle,
                 this.jupyterConnection,
                 this.fs,
                 this.context

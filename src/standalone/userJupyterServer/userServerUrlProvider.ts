@@ -203,7 +203,7 @@ export class UserJupyterServerUrlProvider
                                     await this.addNewServer(server);
                                     await this.serverUriStorage.add(
                                         { id: this.id, handle: server.handle, extensionId: JVSC_EXTENSION_ID },
-                                        { time: server.time, displayName: server.serverInfo.displayName }
+                                        { time: server.time }
                                     );
                                 } catch {
                                     //
@@ -704,7 +704,7 @@ export class NewStorage {
             // No migration necessary
             return;
         }
-        const allServers = await uriStorage.getAll(true).catch((ex) => {
+        const allServers = await uriStorage.getAll().catch((ex) => {
             traceError('Failed to get all servers from storage', ex);
             return [];
         });
