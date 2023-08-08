@@ -8,7 +8,8 @@ import {
     IOldJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
     IJupyterRemoteCachedKernelValidator,
-    IJupyterServerUriEntry
+    IJupyterServerUriEntry,
+    IJupyterUriProviderRegistration
 } from '../types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -36,7 +37,9 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IJupyterUriProviderRegistration)
+        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
     ) {}
 
     activate() {
@@ -45,11 +48,19 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
 
         // Also check for when a URI is removed
         this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
+
         // Add in the URIs that we already know about
         this.serverUriStorage
             .getAll()
-            .then((currentServers) => {
-                currentServers.forEach(this.createRemoteKernelFinder.bind(this));
+            .then(async (currentServers) => {
+                await Promise.all(
+                    currentServers.map(async (server) => {
+                        //Validate each of the servers
+                        if (await this.jupyterPickerRegistration.isValidHandle(server.provider)) {
+                            this.createRemoteKernelFinder(server);
+                        }
+                    })
+                );
             })
             .catch(noop);
     }

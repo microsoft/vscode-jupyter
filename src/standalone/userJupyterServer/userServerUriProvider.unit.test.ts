@@ -118,7 +118,7 @@ suite('User Uri Provider', () => {
         multiStepFactory = mock<IMultiStepInputFactory>();
         commands = mock<ICommandManager>();
         requestCreator = mock<IJupyterRequestCreator>();
-        when(serverUriStorage.getAll(true)).thenResolve([]);
+        when(serverUriStorage.getAll()).thenResolve([]);
         when(applicationShell.createInputBox()).thenReturn(inputBox);
         when(jupyterConnection.validateRemoteUri(anything())).thenResolve();
         when(globalMemento.get(UserJupyterServerUriListKey)).thenReturn([]);
@@ -258,7 +258,7 @@ suite('User Uri Provider', () => {
         when(
             encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, UserJupyterServerUriListKeyV2)
         ).thenResolve(JSON.stringify(dataInUserJupyterServerStorage));
-        when(serverUriStorage.getAll(true)).thenResolve([
+        when(serverUriStorage.getAll()).thenResolve([
             {
                 provider: {
                     extensionId: JVSC_EXTENSION_ID,

@@ -130,9 +130,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 .filter((s) => s.serverUri.provider.id === provider.id)
                 .map(async (server) => {
                     // remote server
-                    const lastUsedTime = await (
-                        await this.serverUriStorage.getAll()
-                    ).find(
+                    const lastUsedTime = (await this.serverUriStorage.getAll()).find(
                         (item) =>
                             generateIdFromRemoteProvider(item.provider) ===
                             generateIdFromRemoteProvider(server.serverUri.provider)

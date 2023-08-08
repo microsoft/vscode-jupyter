@@ -704,7 +704,7 @@ export class NewStorage {
             // No migration necessary
             return;
         }
-        const allServers = await uriStorage.getAll(true).catch((ex) => {
+        const allServers = await uriStorage.getAll().catch((ex) => {
             traceError('Failed to get all servers from storage', ex);
             return [];
         });

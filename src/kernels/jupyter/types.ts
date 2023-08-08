@@ -167,6 +167,7 @@ export interface IJupyterUriProviderRegistration {
     readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
     getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
+    isValidHandle(providerHandle: JupyterServerProviderHandle): Promise<boolean>;
     getJupyterServerUri(
         serverHandle: JupyterServerProviderHandle,
         doNotPromptForAuthInfo?: boolean
@@ -197,15 +198,7 @@ export interface IJupyterServerUriStorage {
      * Updates MRU list marking this server as the most recently used.
      */
     update(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
-    /**
-     * Gets the list of used servers.
-     * Note: When this method is called, it will validate the server information against
-     * the corresponding extension that contributed the server.
-     * As a result, this method is slow and will wait for all extensions to activate that have contributed servers.
-     *
-     * @param skipValidation If true, will not validate the server information before returning it.
-     */
-    getAll(skipValidation?: boolean): Promise<IJupyterServerUriEntry[]>;
+    getAll(): Promise<IJupyterServerUriEntry[]>;
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
     add(

@@ -80,7 +80,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.oldStorage = new OldStorage(encryptedStorage, globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.newStorage = new NewStorage(jupyterPickerRegistration, fs, storageFile, this.oldStorage);
+        this.newStorage = new NewStorage(fs, storageFile, this.oldStorage);
         this.disposables.push(this._onDidAddUri);
         this.disposables.push(this._onDidChangeUri);
         this.disposables.push(this._onDidRemoveUris);
@@ -95,10 +95,10 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
         this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
     }
-    public async getAll(skipValidation?: boolean): Promise<IJupyterServerUriEntry[]> {
+    public async getAll(): Promise<IJupyterServerUriEntry[]> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        return this.newStorage.getAll(!skipValidation);
+        return this.newStorage.getAll();
     }
     public async clear(): Promise<void> {
         this.hookupStorageEvents();
@@ -217,8 +217,6 @@ class NewStorage {
     private migration: Promise<void> | undefined;
     private updatePromise = Promise.resolve();
     constructor(
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         private readonly fs: IFileSystem,
         private readonly storageFile: Uri,
         private readonly oldStorage: OldStorage
@@ -305,7 +303,7 @@ class NewStorage {
             .catch(noop));
     }
     public async update(server: JupyterServerProviderHandle) {
-        const uriList = await this.getAllImpl(false);
+        const uriList = await this.getAllImpl();
 
         const existingEntry = uriList.find(
             (entry) => entry.provider.id === server.id && entry.provider.handle === server.handle
@@ -323,7 +321,7 @@ class NewStorage {
     public async remove(server: JupyterServerProviderHandle) {
         await (this.updatePromise = this.updatePromise
             .then(async () => {
-                const all = await this.getAllImpl(false);
+                const all = await this.getAllImpl();
                 if (all.length === 0) {
                     return;
                 }
@@ -350,17 +348,17 @@ class NewStorage {
             })
             .catch(noop));
     }
-    public async getAll(validate = true): Promise<IJupyterServerUriEntry[]> {
-        return this.getAllImpl(validate).then((items) => items.sort((a, b) => b.time - a.time));
+    public async getAll(): Promise<IJupyterServerUriEntry[]> {
+        return this.getAllImpl().then((items) => items.sort((a, b) => b.time - a.time));
     }
     public async clear(): Promise<void> {
-        const all = await this.getAllImpl(false);
+        const all = await this.getAllImpl();
         await this.fs.delete(this.storageFile);
         if (all.length) {
             this._onDidRemoveUris.fire(all);
         }
     }
-    private async getAllImpl(validate = true): Promise<IJupyterServerUriEntry[]> {
+    private async getAllImpl(): Promise<IJupyterServerUriEntry[]> {
         const data = await this.getAllRaw();
         const entries: IJupyterServerUriEntry[] = [];
 
@@ -372,16 +370,7 @@ class NewStorage {
                     displayName: item.displayName || uri,
                     provider: item.serverHandle
                 };
-                if (!validate) {
-                    entries.push(server);
-                    return;
-                }
-                try {
-                    await this.jupyterPickerRegistration.getJupyterServerUri(item.serverHandle, true);
-                    entries.push(server);
-                } catch {
-                    //
-                }
+                entries.push(server);
             })
         );
         return entries;
