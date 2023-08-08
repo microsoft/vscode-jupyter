@@ -18,7 +18,7 @@ import {
 } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError } from '../../../platform/logging';
-import { IJupyterServerUri, IJupyterUriProvider } from '../../../api.unstable';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';

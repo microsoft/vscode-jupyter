@@ -20,7 +20,7 @@ import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
 import { IExtensionApi } from './standalone/api/api';
-import { IExportedKernelService, IJupyterServerUri } from './api.unstable';
+import { IExportedKernelService, IJupyterServerUri } from './api';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {

@@ -16,7 +16,7 @@ import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { JupyterServerUriStorage, StorageMRUItem } from './serverUriStorage';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { IJupyterServerUri } from '../../../api.unstable';
+import { IJupyterServerUri } from '../../../api';
 import { JVSC_EXTENSION_ID, Settings, UserJupyterServerPickerProviderId } from '../../../platform/common/constants';
 import { TestEventHandler, createEventHandler } from '../../../test/common';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
