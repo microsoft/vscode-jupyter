@@ -96,7 +96,7 @@ export interface JupyterServerCreationItem {
     /**
      * Called by Jupyter Extension when this item is selected, and the extension is expected to create a Jupyter Server.
      */
-    onDidSelect: () => Promise<JupyterServer | undefined>;
+    onDidSelect: () => Promise<JupyterServer | 'back' | undefined>;
     /**
      * Removes this entry from the list.
      */
@@ -137,11 +137,11 @@ export interface JupyterServerCollection {
      * I.e. an extension is expected to listen to the `onDidSelect` event and optionally display their own UI and then create a JupyterServer.
      *
      * @param label
-     * @param onDidSelect Callback invoked when this item is selected.
+     * @param onDidSelect Callback invoked when this item is selected. Returning 'back' results in the Kernel Picker being displayed again.
      */
     createServerCreationItem(
         label: string,
-        onDidSelect: () => Promise<JupyterServer | undefined>
+        onDidSelect: () => Promise<JupyterServer | 'back' | undefined>
     ): JupyterServerCreationItem;
     /**
      * Removes this item from the Kernel Picker.
@@ -156,8 +156,8 @@ export interface JupyterAPI {
     /**
      * Provides the ability to register multiple collections of Jupyter Servers.
      *
-     * @param id Identifier must be globally unique.
-     * @param label
+     * @param id Unique identifier
+     * @param label Displayed in the Kernel Picker
      */
     createServerCollection(id: string, label: string): Promise<JupyterServerCollection>;
 }
