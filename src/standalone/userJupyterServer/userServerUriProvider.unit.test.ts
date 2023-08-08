@@ -32,7 +32,7 @@ import {
 } from '../../platform/common/application/types';
 import { noop, sleep } from '../../test/core';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { Settings } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID, Settings, UserJupyterServerPickerProviderId } from '../../platform/common/constants';
 import { assert } from 'chai';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { Common, DataScience } from '../../platform/common/utils/localize';
@@ -118,6 +118,7 @@ suite('User Uri Provider', () => {
         multiStepFactory = mock<IMultiStepInputFactory>();
         commands = mock<ICommandManager>();
         requestCreator = mock<IJupyterRequestCreator>();
+        when(serverUriStorage.getAll(true)).thenResolve([]);
         when(applicationShell.createInputBox()).thenReturn(inputBox);
         when(jupyterConnection.validateRemoteUri(anything())).thenResolve();
         when(globalMemento.get(UserJupyterServerUriListKey)).thenReturn([]);
@@ -237,9 +238,77 @@ suite('User Uri Provider', () => {
         // Verify the items were added into both of the stores.
         const serversInNewStorage = await provider.newStorage.getServers();
 
-        assert.strictEqual(serversInNewStorage.length, 2);
+        assert.deepEqual(
+            serversInNewStorage.map((s) => s.serverInfo.displayName),
+            ['Hello World', 'Foo Bar']
+        );
     }
     test('Migrate Old Urls', async () => testMigration());
+    test('Migrate display names from Uri Storage', async () => {
+        const dataInUserJupyterServerStorage = [
+            {
+                handle: '1',
+                uri: 'http://microsoft.com/server'
+            },
+            {
+                handle: '3',
+                uri: 'http://localhost:8080'
+            }
+        ];
+        when(
+            encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, UserJupyterServerUriListKeyV2)
+        ).thenResolve(JSON.stringify(dataInUserJupyterServerStorage));
+        when(serverUriStorage.getAll(true)).thenResolve([
+            {
+                provider: {
+                    extensionId: JVSC_EXTENSION_ID,
+                    handle: '1',
+                    id: UserJupyterServerPickerProviderId
+                },
+                time: Date.now() - 1000,
+                displayName: 'Azure ML'
+            },
+            {
+                provider: {
+                    extensionId: JVSC_EXTENSION_ID,
+                    handle: '3',
+                    id: UserJupyterServerPickerProviderId
+                },
+                time: Date.now() - 1000,
+                displayName: 'My Remote Server Name'
+            }
+        ]);
+        provider.activate();
+        let handles = await provider.getHandles();
+
+        try {
+            assert.deepEqual(handles, ['1', '3']);
+        } catch {
+            // Wait for a while and try again
+            await sleep(100);
+            handles = await provider.getHandles();
+            assert.deepEqual(handles, ['1', '3']);
+        }
+
+        const servers = await Promise.all(handles.map((h) => provider.getServerUri(h)));
+        assert.strictEqual(servers.length, 2);
+        servers.sort((a, b) => a.baseUrl.localeCompare(b.baseUrl));
+        assert.deepEqual(
+            servers.map((s) => s.baseUrl),
+            ['http://localhost:8080/', 'http://microsoft.com/server']
+        );
+        assert.deepEqual(
+            servers.map((s) => s.displayName),
+            ['My Remote Server Name', 'Azure ML']
+        );
+
+        // Verify the of the servers have the actual names in the stores.
+        const serversInNewStorage = await provider.newStorage.getServers();
+        assert.deepEqual(
+            serversInNewStorage.map((s) => s.serverInfo.displayName),
+            ['Azure ML', 'My Remote Server Name']
+        );
+    });
     test('Add a new Url and verify it is in the storage', async () => {
         await testMigration();
         when(clipboard.readText()).thenResolve('https://localhost:3333?token=ABCD');

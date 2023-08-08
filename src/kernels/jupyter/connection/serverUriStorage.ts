@@ -95,10 +95,10 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.newStorage.onDidChange((e) => this._onDidChangeUri.fire(e), this, this.disposables);
         this.newStorage.onDidRemove((e) => this._onDidRemoveUris.fire(e), this, this.disposables);
     }
-    public async getAll(): Promise<IJupyterServerUriEntry[]> {
+    public async getAll(skipValidation?: boolean): Promise<IJupyterServerUriEntry[]> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        return this.newStorage.getAll();
+        return this.newStorage.getAll(!skipValidation);
     }
     public async clear(): Promise<void> {
         this.hookupStorageEvents();
@@ -350,8 +350,8 @@ class NewStorage {
             })
             .catch(noop));
     }
-    public async getAll(): Promise<IJupyterServerUriEntry[]> {
-        return this.getAllImpl(true).then((items) => items.sort((a, b) => b.time - a.time));
+    public async getAll(validate = true): Promise<IJupyterServerUriEntry[]> {
+        return this.getAllImpl(validate).then((items) => items.sort((a, b) => b.time - a.time));
     }
     public async clear(): Promise<void> {
         const all = await this.getAllImpl(false);

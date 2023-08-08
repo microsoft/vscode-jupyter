@@ -142,7 +142,7 @@ export class UserJupyterServerUrlProvider
             this.migratedOldServers = this.oldStorage
                 .getServers()
                 .then(async (servers) => {
-                    await this.newStorage.migrate(servers);
+                    await this.newStorage.migrate(servers, this.serverUriStorage);
                     // List is in the global memento, URIs are in encrypted storage
                     const indexes = this.globalMemento.get<{ index: number; time: number }[]>(
                         Settings.JupyterServerUriList
@@ -610,6 +610,7 @@ export class OldStorage {
 type StorageItem = {
     handle: string;
     uri: string;
+    displayName: string;
 };
 function serverToStorageFormat(
     servers: {
@@ -618,7 +619,7 @@ function serverToStorageFormat(
         serverInfo: IJupyterServerUri;
     }[]
 ): StorageItem[] {
-    return servers.map((s) => ({ handle: s.handle, uri: s.uri }));
+    return servers.map((s) => ({ handle: s.handle, uri: s.uri, displayName: s.serverInfo.displayName }));
 }
 function storageFormatToServers(items: StorageItem[]) {
     const servers: {
@@ -627,7 +628,7 @@ function storageFormatToServers(items: StorageItem[]) {
         serverInfo: IJupyterServerUri;
     }[] = [];
     items.forEach((s) => {
-        const server = parseUri(s.uri);
+        const server = parseUri(s.uri, s.displayName);
         if (!server) {
             return;
         }
@@ -655,14 +656,29 @@ export class NewStorage {
             handle: string;
             uri: string;
             serverInfo: IJupyterServerUri;
-        }[]
+        }[],
+        uriStorage: IJupyterServerUriStorage
     ) {
         const data = await this.encryptedStorage.retrieve(
             Settings.JupyterServerRemoteLaunchService,
             UserJupyterServerUriListKeyV2
         );
+
         if (typeof data === 'string') {
-            // Already migrated once before.
+            // Already migrated once before, next migrate the display names
+            let userServers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[] = [];
+            let displayNamesMigrated = false;
+            try {
+                const storageData: StorageItem[] = JSON.parse(data || '[]');
+                displayNamesMigrated = storageData.some((s) => s.displayName);
+                userServers = storageFormatToServers(storageData);
+            } catch {
+                return;
+            }
+
+            if (!displayNamesMigrated) {
+                await this.migrateDisplayNames(userServers, uriStorage);
+            }
             return this._migrationDone.resolve();
         }
         this.encryptedStorage
@@ -672,12 +688,44 @@ export class NewStorage {
                 undefined
             )
             .catch(noop);
+        await this.migrateDisplayNames(servers, uriStorage);
         await this.encryptedStorage.store(
             Settings.JupyterServerRemoteLaunchService,
             UserJupyterServerUriListKeyV2,
             JSON.stringify(servers)
         );
         this._migrationDone.resolve();
+    }
+    public async migrateDisplayNames(
+        userServers: { handle: string; uri: string; serverInfo: IJupyterServerUri }[],
+        uriStorage: IJupyterServerUriStorage
+    ) {
+        if (userServers.length === 0) {
+            // No migration necessary
+            return;
+        }
+        const allServers = await uriStorage.getAll(true).catch((ex) => {
+            traceError('Failed to get all servers from storage', ex);
+            return [];
+        });
+        const userServersFromUriStorage = new Map(
+            allServers
+                .filter(
+                    (s) =>
+                        s.provider.extensionId === JVSC_EXTENSION_ID &&
+                        s.provider.id === UserJupyterServerPickerProviderId
+                )
+                .map((s) => [s.provider.handle, s.displayName])
+        );
+        // Get the display name from the UriStorage and save that in here.
+        userServers.forEach((server) => {
+            server.serverInfo.displayName = userServersFromUriStorage.get(server.handle) || server.uri;
+        });
+        await this.encryptedStorage.store(
+            Settings.JupyterServerRemoteLaunchService,
+            UserJupyterServerUriListKeyV2,
+            JSON.stringify(serverToStorageFormat(userServers))
+        );
     }
     public async getServers(): Promise<{ handle: string; uri: string; serverInfo: IJupyterServerUri }[]> {
         const data = await this.encryptedStorage.retrieve(

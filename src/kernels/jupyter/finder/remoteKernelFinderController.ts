@@ -3,14 +3,13 @@
 
 import { injectable, inject } from 'inversify';
 import { IKernelFinder, IKernelProvider } from '../../types';
-import { IDisposableRegistry, IExtensionContext, IExtensions } from '../../../platform/common/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import {
     IOldJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriEntry
 } from '../types';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
@@ -28,14 +27,12 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     constructor(
         @inject(IOldJupyterSessionManagerFactory)
         private readonly jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IJupyterRemoteCachedKernelValidator)
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         @inject(IKernelFinder) private readonly kernelFinder: KernelFinder,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -43,17 +40,16 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     ) {}
 
     activate() {
+        // Check for when more URIs are added
+        this.serverUriStorage.onDidAdd(this.createRemoteKernelFinder, this, this.disposables);
+
+        // Also check for when a URI is removed
+        this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
         // Add in the URIs that we already know about
         this.serverUriStorage
             .getAll()
             .then((currentServers) => {
                 currentServers.forEach(this.createRemoteKernelFinder.bind(this));
-
-                // Check for when more URIs are added
-                this.serverUriStorage.onDidAdd(this.createRemoteKernelFinder, this, this.disposables);
-
-                // Also check for when a URI is removed
-                this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
             })
             .catch(noop);
     }
@@ -65,12 +61,10 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
                 `${ContributedKernelFinderKind.Remote}-${serverId}`,
                 serverUri.displayName || generateIdFromRemoteProvider(serverUri.provider),
                 this.jupyterSessionManagerFactory,
-                this.extensionChecker,
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,
                 this.kernelProvider,
-                this.extensions,
                 serverUri,
                 this.jupyterConnection,
                 this.fs,
