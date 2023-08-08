@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Disposable, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
 /**
  * Information required to connect to a Jupyter Server
@@ -96,7 +96,7 @@ export interface JupyterServerCreationItem {
 
 }
 
-export class JupyterServerCollection {
+export interface JupyterServerCollection {
     /**
      * Identifier must be globally unique.
      */
@@ -135,7 +135,7 @@ export class JupyterServerCollection {
      */
     createServerCreationItem(
         label: string,
-        onDidSelect: () => Promise<JupyterServer | undefined>
+        onDidSelect: () => Promise<JupyterServer | 'back' | undefined | void>
     ): JupyterServerCreationItem;
     dispose(): void;
 }
