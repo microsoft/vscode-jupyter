@@ -203,7 +203,7 @@ export class UserJupyterServerUrlProvider
                                     await this.addNewServer(server);
                                     await this.serverUriStorage.add(
                                         { id: this.id, handle: server.handle, extensionId: JVSC_EXTENSION_ID },
-                                        { time: server.time, displayName: server.serverInfo.displayName }
+                                        { time: server.time }
                                     );
                                 } catch {
                                     //

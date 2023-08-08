@@ -9,7 +9,8 @@ import {
     IJupyterServerUriStorage,
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriEntry,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    JupyterServerProviderHandle
 } from '../types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -44,7 +45,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
 
     activate() {
         // Check for when more URIs are added
-        this.serverUriStorage.onDidAdd(this.createRemoteKernelFinder, this, this.disposables);
+        this.serverUriStorage.onDidAdd((server) => this.validateAndCreateFinder(server), this, this.disposables);
 
         // Also check for when a URI is removed
         this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
@@ -53,30 +54,30 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         this.serverUriStorage
             .getAll()
             .then(async (currentServers) => {
-                await Promise.all(
-                    currentServers.map(async (server) => {
-                        //Validate each of the servers
-                        if (await this.jupyterPickerRegistration.isValidHandle(server.provider)) {
-                            this.createRemoteKernelFinder(server);
-                        }
-                    })
-                );
+                await Promise.all(currentServers.map((server) => this.validateAndCreateFinder(server)));
             })
             .catch(noop);
     }
+    private async validateAndCreateFinder(serverUri: IJupyterServerUriEntry) {
+        //Validate each of the servers
+        try {
+            const info = await this.jupyterPickerRegistration.getJupyterServerUri(serverUri.provider, true);
+            this.createRemoteKernelFinder(serverUri.provider, info.displayName);
+        } catch (ex) {}
+    }
 
-    createRemoteKernelFinder(serverUri: IJupyterServerUriEntry) {
-        const serverId = generateIdFromRemoteProvider(serverUri.provider);
+    createRemoteKernelFinder(serverProviderHandle: JupyterServerProviderHandle, displayName: string) {
+        const serverId = generateIdFromRemoteProvider(serverProviderHandle);
         if (!this.serverFinderMapping.has(serverId)) {
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverId}`,
-                serverUri.displayName || generateIdFromRemoteProvider(serverUri.provider),
+                displayName,
                 this.jupyterSessionManagerFactory,
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,
                 this.kernelProvider,
-                serverUri,
+                serverProviderHandle,
                 this.jupyterConnection,
                 this.fs,
                 this.context

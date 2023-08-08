@@ -167,7 +167,6 @@ export interface IJupyterUriProviderRegistration {
     readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
     getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
-    isValidHandle(providerHandle: JupyterServerProviderHandle): Promise<boolean>;
     getJupyterServerUri(
         serverHandle: JupyterServerProviderHandle,
         doNotPromptForAuthInfo?: boolean
@@ -185,6 +184,7 @@ export interface IJupyterServerUriEntry {
     time: number;
     /**
      * An optional display name to show for this server as opposed to just the Uri
+     * @deprecated Used only for migration of display names into the User Provided Server list. Else other providers will have the Display Names.
      */
     displayName?: string;
 }
@@ -201,10 +201,7 @@ export interface IJupyterServerUriStorage {
     getAll(): Promise<IJupyterServerUriEntry[]>;
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
-    add(
-        serverProviderHandle: JupyterServerProviderHandle,
-        options?: { time: number; displayName: string }
-    ): Promise<void>;
+    add(serverProviderHandle: JupyterServerProviderHandle, options?: { time: number }): Promise<void>;
 }
 
 export interface IBackupFile {
@@ -291,5 +288,5 @@ export interface IJupyterRemoteCachedKernelValidator {
 
 export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
     kind: ContributedKernelFinderKind.Remote;
-    serverUri: IJupyterServerUriEntry;
+    serverProviderHandle: JupyterServerProviderHandle;
 }

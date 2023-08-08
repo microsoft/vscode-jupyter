@@ -12,12 +12,7 @@ import {
     generateIdFromRemoteProvider,
     getOwnerExtensionOfProviderHandle
 } from '../jupyterUtils';
-import {
-    IJupyterServerUriEntry,
-    IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration,
-    JupyterServerProviderHandle
-} from '../types';
+import { IJupyterServerUriEntry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import * as path from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
@@ -65,8 +60,6 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     constructor(
         @inject(IEncryptedStorage) encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         @inject(IFileSystem)
         fs: IFileSystem,
         @inject(IExtensionContext)
@@ -105,23 +98,16 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         await this.newStorage.migrateMRU();
         await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
     }
-    public async add(
-        jupyterHandle: JupyterServerProviderHandle,
-        options?: { time: number; displayName: string }
-    ): Promise<void> {
+    public async add(jupyterHandle: JupyterServerProviderHandle, options?: { time: number }): Promise<void> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         traceInfoIfCI(`setUri: ${jupyterHandle.id}.${jupyterHandle.handle}`);
         const entry: IJupyterServerUriEntry = {
             time: options?.time ?? Date.now(),
-            displayName: options?.displayName,
+            displayName: '',
             provider: jupyterHandle
         };
 
-        if (!options) {
-            const server = await this.jupyterPickerRegistration.getJupyterServerUri(jupyterHandle, true);
-            entry.displayName = server.displayName;
-        }
         await this.newStorage.add(entry);
     }
     public async update(server: JupyterServerProviderHandle) {

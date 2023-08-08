@@ -127,13 +127,13 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
 
         await Promise.all(
             servers
-                .filter((s) => s.serverUri.provider.id === provider.id)
+                .filter((s) => s.serverProviderHandle.id === provider.id)
                 .map(async (server) => {
                     // remote server
                     const lastUsedTime = (await this.serverUriStorage.getAll()).find(
                         (item) =>
                             generateIdFromRemoteProvider(item.provider) ===
-                            generateIdFromRemoteProvider(server.serverUri.provider)
+                            generateIdFromRemoteProvider(server.serverProviderHandle)
                     );
                     if (token.isCancellationRequested || !lastUsedTime) {
                         return;
@@ -141,7 +141,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     items.push({
                         type: KernelFinderEntityQuickPickType.KernelFinder,
                         kernelFinderInfo: server,
-                        idAndHandle: server.serverUri.provider,
+                        idAndHandle: server.serverProviderHandle,
                         label: server.displayName,
                         detail: DataScience.jupyterSelectURIMRUDetail(new Date(lastUsedTime.time)),
                         buttons: provider.removeHandle
@@ -286,8 +286,8 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 const found = this.kernelFinder.registered.find(
                     (f) =>
                         f.kind === 'remote' &&
-                        (f as IRemoteKernelFinder).serverUri.provider.id === serverId.id &&
-                        (f as IRemoteKernelFinder).serverUri.provider.handle === serverId.handle
+                        (f as IRemoteKernelFinder).serverProviderHandle.id === serverId.id &&
+                        (f as IRemoteKernelFinder).serverProviderHandle.handle === serverId.handle
                 );
                 if (found) {
                     return resolve(found);
@@ -297,8 +297,8 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         const found = e.added.find(
                             (f) =>
                                 f.kind === 'remote' &&
-                                (f as IRemoteKernelFinder).serverUri.provider.id === serverId.id &&
-                                (f as IRemoteKernelFinder).serverUri.provider.handle === serverId.handle
+                                (f as IRemoteKernelFinder).serverProviderHandle.id === serverId.id &&
+                                (f as IRemoteKernelFinder).serverProviderHandle.handle === serverId.handle
                         );
                         if (found) {
                             return resolve(found);
