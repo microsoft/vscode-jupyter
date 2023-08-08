@@ -21,6 +21,7 @@ import { JupyterConnection } from '../connection/jupyterConnection';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
+import { traceWarning } from '../../../platform/logging';
 
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
@@ -63,7 +64,9 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         try {
             const info = await this.jupyterPickerRegistration.getJupyterServerUri(serverUri.provider, true);
             this.createRemoteKernelFinder(serverUri.provider, info.displayName);
-        } catch (ex) {}
+        } catch (ex) {
+            traceWarning(`Failed to validate server ${generateIdFromRemoteProvider(serverUri.provider)}`, ex);
+        }
     }
 
     createRemoteKernelFinder(serverProviderHandle: JupyterServerProviderHandle, displayName: string) {
