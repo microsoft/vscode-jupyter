@@ -158,7 +158,7 @@ suite(`Remote Kernel Finder`, () => {
             instance(cachedRemoteKernelValidator),
             kernelFinder,
             instance(kernelProvider),
-            serverEntry,
+            serverEntry.provider,
             instance(jupyterConnection),
             instance(fs),
             instance(context)

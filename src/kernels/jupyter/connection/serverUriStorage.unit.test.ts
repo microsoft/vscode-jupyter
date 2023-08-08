@@ -55,7 +55,6 @@ suite('Server Uri Storage', async () => {
         serverUriStorage = new JupyterServerUriStorage(
             instance(encryptedStorage),
             instance(memento),
-            instance(jupyterPickerRegistration),
             instance(fs),
             instance(context),
             disposables
@@ -219,35 +218,30 @@ suite('Server Uri Storage', async () => {
                 .sort((a, b) => a.time - b.time)
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.provider)
                     };
-                })
-                .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
+                }),
             itemsInNewStorage
                 .sort((a, b) => a.time - b.time)
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.serverHandle)
                     };
                 })
                 .concat({
-                    displayName: 'NewDisplayName1',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId1',
                         handle: 'NewHandle1',
                         extensionId: JVSC_EXTENSION_ID
                     })
                 })
-                .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''))
         );
 
         assert.equal(onDidRemoveEvent.count, 0, 'Event should not be fired');
         assert.equal(onDidAddEvent.count, 1, 'Event should be fired once');
         assert.equal(onDidChangeEvent.count, 1, 'Event should be fired once');
     });
-    test('Add new entry with time and display name', async () => {
+    test('Add new entry with time', async () => {
         generateDummyData(2, true);
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
@@ -263,12 +257,12 @@ suite('Server Uri Storage', async () => {
 
         await serverUriStorage.add(
             { handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID },
-            { time: 1234, displayName: 'Sample Name' }
+            { time: 1234 }
         );
         const all = await serverUriStorage.getAll();
 
         verify(fs.writeFile(anything(), anything())).once();
-        assert.strictEqual(all.find((a) => a.displayName === 'Sample Name')?.time, 1234, 'Incorrect time');
+        assert.strictEqual(all.find((a) => a.provider.handle === 'NewHandle1')?.time, 1234, 'Incorrect time');
     });
     test('Add three new entries', async () => {
         const itemsInNewStorage = generateDummyData(2, true);
@@ -314,20 +308,17 @@ suite('Server Uri Storage', async () => {
             all
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.provider)
                     };
                 })
-                .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
+                .sort((a, b) => a.uri.localeCompare(b.uri)),
             itemsInNewStorage
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.serverHandle)
                     };
                 })
                 .concat({
-                    displayName: 'NewDisplayName1',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId1',
                         handle: 'NewHandle1',
@@ -335,7 +326,6 @@ suite('Server Uri Storage', async () => {
                     })
                 })
                 .concat({
-                    displayName: 'NewDisplayName2',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId2',
                         handle: 'NewHandle2',
@@ -343,14 +333,13 @@ suite('Server Uri Storage', async () => {
                     })
                 })
                 .concat({
-                    displayName: 'NewDisplayName3',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId3',
                         handle: 'NewHandle3',
                         extensionId: JVSC_EXTENSION_ID
                     })
                 })
-                .sort((a, b) => a.displayName.localeCompare(b.displayName))
+                .sort((a, b) => a.uri.localeCompare(b.uri))
         );
 
         assert.equal(onDidRemoveEvent.count, 0, 'Event should not be fired');
@@ -403,20 +392,17 @@ suite('Server Uri Storage', async () => {
             all
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.provider)
                     };
                 })
-                .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
+                .sort((a, b) => a.uri.localeCompare(b.uri)),
             itemsInNewStorage
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.serverHandle)
                     };
                 })
                 .concat({
-                    displayName: 'NewDisplayName1',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId1',
                         handle: 'NewHandle1',
@@ -424,7 +410,6 @@ suite('Server Uri Storage', async () => {
                     })
                 })
                 .concat({
-                    displayName: 'NewDisplayName2',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId2',
                         handle: 'NewHandle2',
@@ -432,14 +417,13 @@ suite('Server Uri Storage', async () => {
                     })
                 })
                 .concat({
-                    displayName: 'NewDisplayName3',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId3',
                         handle: 'NewHandle3',
                         extensionId: JVSC_EXTENSION_ID
                     })
                 })
-                .sort((a, b) => a.displayName.localeCompare(b.displayName))
+                .sort((a, b) => a.uri.localeCompare(b.uri))
         );
 
         assert.equal(onDidRemoveEvent.count, 0, 'Event should not be fired');
@@ -493,20 +477,17 @@ suite('Server Uri Storage', async () => {
             all
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.provider)
                     };
                 })
-                .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
+                .sort((a, b) => a.uri.localeCompare(b.uri)),
             itemsInNewStorage
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.serverHandle)
                     };
                 })
                 .concat({
-                    displayName: 'NewDisplayName1',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId1',
                         handle: 'NewHandle1',
@@ -514,14 +495,13 @@ suite('Server Uri Storage', async () => {
                     })
                 })
                 .concat({
-                    displayName: 'NewDisplayName3',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId3',
                         handle: 'NewHandle3',
                         extensionId: JVSC_EXTENSION_ID
                     })
                 })
-                .sort((a, b) => a.displayName.localeCompare(b.displayName))
+                .sort((a, b) => a.uri.localeCompare(b.uri))
         );
 
         assert.equal(onDidRemoveEvent.count, 1, 'Event should be fired once');
@@ -573,20 +553,17 @@ suite('Server Uri Storage', async () => {
             all
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.provider)
                     };
                 })
-                .sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '')),
+                .sort((a, b) => a.uri.localeCompare(b.uri)),
             itemsInNewStorage
                 .map((a) => {
                     return {
-                        displayName: a.displayName,
                         uri: generateIdFromRemoteProvider(a.serverHandle)
                     };
                 })
                 .concat({
-                    displayName: 'NewDisplayName1',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId1',
                         handle: 'NewHandle1',
@@ -594,14 +571,13 @@ suite('Server Uri Storage', async () => {
                     })
                 })
                 .concat({
-                    displayName: 'NewDisplayName3',
                     uri: generateIdFromRemoteProvider({
                         id: 'NewId3',
                         handle: 'NewHandle3',
                         extensionId: JVSC_EXTENSION_ID
                     })
                 })
-                .sort((a, b) => a.displayName.localeCompare(b.displayName))
+                .sort((a, b) => a.uri.localeCompare(b.uri))
         );
 
         assert.equal(onDidRemoveEvent.count, 1, 'Event should be fired once');

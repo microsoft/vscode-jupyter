@@ -18,7 +18,7 @@ import {
     IOldJupyterSessionManagerFactory,
     IJupyterRemoteCachedKernelValidator,
     IRemoteKernelFinder,
-    IJupyterServerUriEntry
+    JupyterServerProviderHandle
 } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
@@ -95,13 +95,13 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         kernelFinder: KernelFinder,
         private readonly kernelProvider: IKernelProvider,
-        readonly serverUri: IJupyterServerUriEntry,
+        readonly serverProviderHandle: JupyterServerProviderHandle,
         private readonly jupyterConnection: JupyterConnection,
         private readonly fs: IFileSystem,
         private readonly context: IExtensionContext
     ) {
         this.cacheFile = Uri.joinPath(context.globalStorageUri, RemoteKernelSpecCacheFileName);
-        this.cacheKey = generateIdFromRemoteProvider(serverUri.provider);
+        this.cacheKey = generateIdFromRemoteProvider(serverProviderHandle);
         // When we register, add a disposable to clean ourselves up from the main kernel finder list
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
         this.disposables.push(kernelFinder.registerKernelFinder(this));
@@ -260,7 +260,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             disposables.push(KernelProgressReporter.createProgressReporter(undefined, DataScience.connectingToJupyter));
         }
         return this.jupyterConnection
-            .createConnectionInfo(this.serverUri.provider)
+            .createConnectionInfo(this.serverProviderHandle)
             .finally(() => disposeAllDisposables(disposables));
     }
 
