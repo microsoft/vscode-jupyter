@@ -167,7 +167,6 @@ export interface IJupyterUriProviderRegistration {
     readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
     getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
-    isValidHandle(providerHandle: JupyterServerProviderHandle): Promise<boolean>;
     getJupyterServerUri(
         serverHandle: JupyterServerProviderHandle,
         doNotPromptForAuthInfo?: boolean

@@ -95,40 +95,6 @@ export class JupyterUriProviderRegistration
         this.disposables.push(disposable);
         return disposable;
     }
-    public async isValidHandle(providerHandle: JupyterServerProviderHandle): Promise<boolean> {
-        try {
-            await this.loadExtension(providerHandle.extensionId, providerHandle.id);
-        } catch (ex) {
-            traceError(`Failed to load the extension ${providerHandle.extensionId}`, ex);
-            return false;
-        }
-        const id = getProviderId(providerHandle.extensionId, providerHandle.id);
-        const provider = this._providers.get(id);
-        if (!provider) {
-            traceError(
-                `${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${providerHandle.handle}`
-            );
-            return false;
-        }
-        if (provider.getHandles) {
-            try {
-                const handles = await provider.getHandles();
-                if (!handles.includes(providerHandle.handle)) {
-                    return false;
-                }
-            } catch (ex) {
-                traceError(`Failed to get handles for ${providerHandle.extensionId}`, ex);
-                return false;
-            }
-        }
-        try {
-            await provider.getServerUri(providerHandle.handle, true);
-            return true;
-        } catch (ex) {
-            traceError(`Failed to get server URI for ${providerHandle.extensionId}`, ex);
-            return false;
-        }
-    }
     public async getJupyterServerUri(
         providerHandle: JupyterServerProviderHandle,
         doNotPromptForAuthInfo?: boolean
