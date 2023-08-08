@@ -13,7 +13,7 @@ import {
     RemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
-import { IAsyncDisposable, IDisposable, IExtensionContext, IExtensions } from '../../../platform/common/types';
+import { IAsyncDisposable, IDisposable, IExtensionContext } from '../../../platform/common/types';
 import {
     IOldJupyterSessionManagerFactory,
     IJupyterRemoteCachedKernelValidator,
@@ -22,7 +22,6 @@ import {
 } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
@@ -86,19 +85,16 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     // Track our delay timer for when we update on kernel dispose
     private kernelDisposeDelayTimer: NodeJS.Timeout | number | undefined;
 
-    private wasPythonInstalledWhenFetchingKernels = false;
     private readonly cacheKey: string;
     private readonly cacheFile: Uri;
     constructor(
         readonly id: string,
         readonly displayName: string,
         private jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
-        private extensionChecker: IPythonExtensionChecker,
         private readonly env: IApplicationEnvironment,
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         kernelFinder: KernelFinder,
         private readonly kernelProvider: IKernelProvider,
-        private readonly extensions: IExtensions,
         readonly serverUri: IJupyterServerUriEntry,
         private readonly jupyterConnection: JupyterConnection,
         private readonly fs: IFileSystem,
@@ -168,18 +164,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             this,
             this.disposables
         );
-
-        this.extensions.onDidChange(
-            () => {
-                // If we just installed the Python extension and we fetched the controllers, then fetch it again.
-                if (!this.wasPythonInstalledWhenFetchingKernels && this.extensionChecker.isPythonExtensionInstalled) {
-                    this.updateCache().then(noop, noop);
-                }
-            },
-            this,
-            this.disposables
-        );
-        this.wasPythonInstalledWhenFetchingKernels = this.extensionChecker.isPythonExtensionInstalled;
     }
 
     public async refresh(): Promise<void> {
