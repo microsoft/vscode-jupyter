@@ -3,7 +3,7 @@
 
 import { ExtensionMode, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
-import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
@@ -15,6 +15,8 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
 import { JupyterAPI, IExportedKernelService, IJupyterUriProvider } from '../../api';
+import { createPublicAPIProxy } from '../../platform/common/helpers';
+import { Disposables } from '../../platform/common/utils';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -154,6 +156,18 @@ export function buildApi(
                 extension: JVSC_EXTENSION_ID
             });
             return notebookEditor.notebook;
+        },
+        createJupyterServerCollection: async (id, label) => {
+            sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
+            const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
+            const registration = serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
+            const collection = registration.createJupyterServerCollection(id, label, extensionId);
+            // Do not expose unwanted properties to the extensions.
+            return createPublicAPIProxy(collection as unknown as typeof collection & Disposables, [
+                'disposables',
+                'isDisposed',
+                'dispose'
+            ]);
         }
     };
 
