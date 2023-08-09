@@ -257,17 +257,21 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
         const serverProvider = new JupyterServerCollectionImpl(extensionId, id, label);
         this._serverProviders.set(extId, serverProvider);
         let uriRegistration: IDisposable | undefined;
-        serverProvider.onDidChangeProvider(() => {
-            if (serverProvider.serverProvider) {
-                uriRegistration?.dispose();
-                uriRegistration = this.jupyterUriProviderRegistration.registerProvider(
-                    new JupyterUriProviderAdaptor(serverProvider, extensionId),
-                    extensionId
-                );
-                this.disposables.push(uriRegistration);
-                this._onDidChangeProviders.fire();
-            }
-        });
+        serverProvider.onDidChangeProvider(
+            () => {
+                if (serverProvider.serverProvider) {
+                    uriRegistration?.dispose();
+                    uriRegistration = this.jupyterUriProviderRegistration.registerProvider(
+                        new JupyterUriProviderAdaptor(serverProvider, extensionId),
+                        extensionId
+                    );
+                    this.disposables.push(uriRegistration);
+                    this._onDidChangeProviders.fire();
+                }
+            },
+            this,
+            this.disposables
+        );
 
         serverProvider.onDidDispose(
             () => {
