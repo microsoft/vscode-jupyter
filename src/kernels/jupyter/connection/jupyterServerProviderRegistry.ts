@@ -5,6 +5,7 @@ import { CancellationTokenSource, EventEmitter, QuickPickItem, Uri, commands } f
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
+    JupyterServer,
     JupyterServerCollection,
     JupyterServerCommandProvider,
     JupyterServerProvider
@@ -120,13 +121,14 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 );
             }
             try {
-                const result: string | 'back' | undefined = await commands.executeCommand(
+                const result: JupyterServer | 'back' | undefined = await commands.executeCommand(
                     command.command,
                     ...(command.arguments || [])
                 );
-                if (result) {
+                if (result === 'back') {
                     return result;
                 }
+                return result?.id;
             } catch (ex) {
                 traceError(
                     `Failed to execute Jupyter Server Command ${item.label} in Command Provider ${this.provider.extensionId}#${this.provider.id}`,
