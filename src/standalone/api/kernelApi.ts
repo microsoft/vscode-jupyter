@@ -26,7 +26,7 @@ import {
     IKernelSocket,
     KernelConnectionMetadata,
     WebSocketData
-} from '../../api.unstable';
+} from '../../api';
 import { JupyterNotebookView, Telemetry } from '../../platform/common/constants';
 import { KernelConnector } from '../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';

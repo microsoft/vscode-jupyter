@@ -12,7 +12,7 @@ import {
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../types';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IJupyterServerUri, IJupyterUriProvider } from '../../../api.unstable';
+import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { Disposable, EventEmitter, Memento, QuickPickItem } from 'vscode';
 import { createEventHandler } from '../../../test/common';

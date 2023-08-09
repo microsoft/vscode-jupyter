@@ -5,7 +5,6 @@ import { ExtensionMode, NotebookDocument, Uri, commands, window, workspace } fro
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
 import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
-import { IExportedKernelService, IJupyterUriProvider, JupyterAPI as UnStableJupyterAPI } from '../../api.unstable';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
@@ -15,9 +14,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
-import { JupyterAPI } from '../../api';
-import { JupyterAPI as ProposedJupyterAPI } from '../../api.proposed';
-import { JupyterAPI as PythonIntegrationAPI } from '../../api.pythonIntegration';
+import { JupyterAPI, IExportedKernelService, IJupyterUriProvider } from '../../api';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -29,7 +26,7 @@ export interface IExportedKernelServiceFactory {
  * This is the public API for other extensions to interact with this extension.
  */
 
-export interface IExtensionApi extends JupyterAPI, UnStableJupyterAPI, ProposedJupyterAPI, PythonIntegrationAPI {}
+export interface IExtensionApi extends JupyterAPI {}
 
 function waitForNotebookControllersCreationForServer(
     serverId: { id: string; handle: string },

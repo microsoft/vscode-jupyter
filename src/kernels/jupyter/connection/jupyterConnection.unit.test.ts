@@ -17,7 +17,7 @@ import {
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
-import { IJupyterServerUri } from '../../../api.unstable';
+import { IJupyterServerUri } from '../../../api';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IDataScienceErrorHandler } from '../../errors/types';
 use(chaiAsPromised);
