@@ -81,8 +81,13 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
     private async validateAndCreateFinder(serverUri: IJupyterServerUriEntry) {
         const serverId = generateIdFromRemoteProvider(serverUri.provider);
         if (!this.serverFinderMapping.has(serverId)) {
-            const info = await this.jupyterPickerRegistration.getJupyterServerUri(serverUri.provider, true);
-            this.createRemoteKernelFinder(serverUri.provider, info.displayName);
+            const displayName = await this.jupyterPickerRegistration.getDisplayNameIfProviderIsLoaded(
+                serverUri.provider
+            );
+            // If display name is empty/undefined, then the extension has not yet loaded or provider not yet registered.
+            if (displayName) {
+                this.createRemoteKernelFinder(serverUri.provider, displayName);
+            }
         }
     }
 

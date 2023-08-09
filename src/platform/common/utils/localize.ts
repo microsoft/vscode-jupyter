@@ -80,9 +80,6 @@ export namespace DataScience {
     export const pythonExtensionInstalled = l10n.t(
         'Python Extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'
     );
-    export const unknownServerUri = l10n.t(
-        'Server URL cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
-    );
     export const uriProviderDescriptionFormat = (description: string, extensionId: string) =>
         l10n.t('{0} (From {1} extension)', description, extensionId);
     export const unknownPackage = l10n.t('unknown');

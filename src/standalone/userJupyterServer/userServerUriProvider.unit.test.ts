@@ -249,10 +249,16 @@ suite('User Uri Provider', () => {
         verify(serverUriStorage.add(anything(), anything())).atLeast(2);
 
         // Verify the items were added into both of the stores.
-        const serversInNewStorage = await provider.newStorage.getServers();
-
+        const [serversInNewStorage, serversInNewStorage2] = await Promise.all([
+            provider.newStorage.getServers(false),
+            provider.newStorage.getServers(true)
+        ]);
         assert.deepEqual(
             serversInNewStorage.map((s) => s.serverInfo.displayName),
+            ['Hello World', 'Foo Bar']
+        );
+        assert.deepEqual(
+            serversInNewStorage2.map((s) => s.serverInfo.displayName),
             ['Hello World', 'Foo Bar']
         );
     }
@@ -316,9 +322,16 @@ suite('User Uri Provider', () => {
         );
 
         // Verify the of the servers have the actual names in the stores.
-        const serversInNewStorage = await provider.newStorage.getServers();
+        const [serversInNewStorage, serversInNewStorage2] = await Promise.all([
+            provider.newStorage.getServers(false),
+            provider.newStorage.getServers(true)
+        ]);
         assert.deepEqual(
             serversInNewStorage.map((s) => s.serverInfo.displayName),
+            ['Azure ML', 'My Remote Server Name']
+        );
+        assert.deepEqual(
+            serversInNewStorage2.map((s) => s.serverInfo.displayName),
             ['Azure ML', 'My Remote Server Name']
         );
     });
@@ -341,9 +354,12 @@ suite('User Uri Provider', () => {
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
         assert.include(handles, handle);
 
-        const serversInNewStorage = await provider.newStorage.getServers();
-
+        const [serversInNewStorage, serversInNewStorage2] = await Promise.all([
+            provider.newStorage.getServers(false),
+            provider.newStorage.getServers(true)
+        ]);
         assert.strictEqual(serversInNewStorage.length, 3);
+        assert.strictEqual(serversInNewStorage2.length, 3);
     });
     test('When adding a HTTP url (without pwd, and without a token) prompt user to use insecure sites (in new pwd manager)', async function () {
         await testMigration();
@@ -371,9 +387,12 @@ suite('User Uri Provider', () => {
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
         assert.include(handles, handle);
 
-        const serversInNewStorage = await provider.newStorage.getServers();
-
+        const [serversInNewStorage, serversInNewStorage2] = await Promise.all([
+            provider.newStorage.getServers(false),
+            provider.newStorage.getServers(true)
+        ]);
         assert.strictEqual(serversInNewStorage.length, 3);
+        assert.strictEqual(serversInNewStorage2.length, 3);
     });
     test('When prompted to use insecure sites and ignored/cancelled, then do not add the url', async function () {
         await testMigration();
@@ -400,8 +419,12 @@ suite('User Uri Provider', () => {
         const handles = await provider.getHandles();
         assert.isAtLeast(handles.length, 2, '2 migrated urls');
 
-        const serversInNewStorage = await provider.newStorage.getServers();
+        const [serversInNewStorage, serversInNewStorage2] = await Promise.all([
+            provider.newStorage.getServers(false),
+            provider.newStorage.getServers(true)
+        ]);
         assert.strictEqual(serversInNewStorage.length, 2);
+        assert.strictEqual(serversInNewStorage2.length, 2);
     });
     test('When adding a HTTP url (with a pwd, and without a token) do not prompt user to use insecure sites (in new pwd manager)', async function () {
         await testMigration();
@@ -432,8 +455,11 @@ suite('User Uri Provider', () => {
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
         assert.include(handles, handle);
 
-        const serversInNewStorage = await provider.newStorage.getServers();
-
+        const [serversInNewStorage, serversInNewStorage2] = await Promise.all([
+            provider.newStorage.getServers(false),
+            provider.newStorage.getServers(true)
+        ]);
         assert.strictEqual(serversInNewStorage.length, 3);
+        assert.strictEqual(serversInNewStorage2.length, 3);
     });
 });

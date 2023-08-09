@@ -166,6 +166,11 @@ export interface IJupyterUriProviderRegistration {
     readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
     getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined>;
     registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
+    /**
+     * Temporary, until the new API is finalized.
+     * We need a way to get the displayName of the Server.
+     */
+    getDisplayNameIfProviderIsLoaded(providerHandle: JupyterServerProviderHandle): Promise<string | undefined>;
     getJupyterServerUri(
         serverHandle: JupyterServerProviderHandle,
         doNotPromptForAuthInfo?: boolean

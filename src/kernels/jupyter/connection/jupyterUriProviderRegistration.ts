@@ -16,7 +16,7 @@ import {
     JupyterServerProviderHandle
 } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceVerbose } from '../../../platform/logging';
 import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -103,10 +103,25 @@ export class JupyterUriProviderRegistration
         const provider = this._providers.get(id);
         if (!provider) {
             throw new Error(
-                `${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${providerHandle.handle}`
+                `Provider Id=${id} and handle=${providerHandle.handle} not registered. Did you uninstall the extension ${providerHandle.extensionId}?`
             );
         }
         return provider.getServerUri(providerHandle.handle, doNotPromptForAuthInfo);
+    }
+    public async getDisplayNameIfProviderIsLoaded(
+        providerHandle: JupyterServerProviderHandle
+    ): Promise<string | undefined> {
+        await this.loadExtension(providerHandle.extensionId, providerHandle.id);
+        const id = getProviderId(providerHandle.extensionId, providerHandle.id);
+        const provider = this._providers.get(id);
+        if (!provider) {
+            traceVerbose(
+                `Provider Id=${id} and handle=${providerHandle.handle} not registered. Extension ${providerHandle.extensionId} may not have yet loaded or provider not yet registered?`
+            );
+            return;
+        }
+        const server = await provider.getServerUri(providerHandle.handle, true);
+        return server.displayName;
     }
     private async loadExtension(extensionId: string, providerId: string) {
         if (extensionId === JVSC_EXTENSION_ID) {
