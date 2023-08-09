@@ -158,6 +158,7 @@ export function buildApi(
             return notebookEditor.notebook;
         },
         createJupyterServerCollection: async (id, label) => {
+            throw new Error('Not implemented');
             sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
             const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
             const registration = serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
