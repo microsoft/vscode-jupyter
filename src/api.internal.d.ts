@@ -36,6 +36,9 @@ declare module './api' {
          * The getServerUri could end up prompting for username/password when connecting to the remote servers.
          */
         getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
+        /**
+         * Internally used by Jupyter extension to track the extension that owns this provider.
+         */
         readonly extensionId: string;
     }
 }
