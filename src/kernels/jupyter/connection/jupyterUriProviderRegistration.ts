@@ -202,6 +202,9 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
     public get documentation() {
         return this.provider.documentation;
     }
+    public get servers() {
+        return this.provider.servers;
+    }
 
     public get onDidChangeHandles() {
         return this.provider.onDidChangeHandles;

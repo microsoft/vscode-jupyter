@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationTokenSource, EventEmitter, QuickPickItem, Uri, commands } from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter, QuickPickItem, Uri, commands } from 'vscode';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
@@ -55,6 +55,10 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     }
     public get documentation() {
         return this.provider.documentation;
+    }
+    _servers = new Set<JupyterServer>();
+    get servers(): readonly JupyterServer[] {
+        return Array.from(this._servers.values());
     }
     detail?: string | undefined;
     private _onDidChangeHandles = new EventEmitter<void>();
@@ -148,12 +152,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
-        if (!this.provider.serverProvider) {
-            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
-        }
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.provider.serverProvider.getJupyterServers(token.token);
+            const servers = await this.getServers(token.token);
             const server = servers.find((s) => s.id === handle);
             if (!server) {
                 throw new Error(
@@ -177,7 +178,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         if (this.provider.serverProvider) {
             const token = new CancellationTokenSource();
             try {
-                const servers = await this.provider.serverProvider.getJupyterServers(token.token);
+                const servers = await this.getServers(token.token);
+                servers.forEach((s) => this._servers.add(s));
                 return servers.map((s) => s.id);
             } catch (ex) {
                 traceError(`Failed to get Jupyter Servers from ${this.provider.extensionId}#${this.provider.id}`, ex);
@@ -190,12 +192,10 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
     }
     async getServerUriWithoutAuthInfoImpl(handle: string): Promise<IJupyterServerUri> {
-        if (!this.provider.serverProvider) {
-            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
-        }
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.provider.serverProvider.getJupyterServers(token.token);
+            const servers = await this.getServers(token.token);
+            servers.forEach((s) => this._servers.add(s));
             const server = servers.find((s) => s.id === handle);
             if (!server) {
                 throw new Error(
@@ -212,12 +212,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
     }
     async removeHandleImpl(handle: string): Promise<void> {
-        if (!this.provider.serverProvider) {
-            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
-        }
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.provider.serverProvider.getJupyterServers(token.token);
+            const servers = await this.getServers(token.token);
             const server = servers.find((s) => s.id === handle);
             if (server?.remove) {
                 await server.remove();
@@ -225,6 +222,14 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         } finally {
             token.dispose();
         }
+    }
+    async getServers(token: CancellationToken) {
+        if (!this.provider.serverProvider) {
+            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
+        }
+        const servers = await this.provider.serverProvider.getJupyterServers(token);
+        servers.forEach((s) => this._servers.add(s));
+        return servers;
     }
 }
 
