@@ -171,7 +171,6 @@ export interface IJupyterUriProviderRegistration {
      * We need a way to get the displayName of the Server.
      */
     getDisplayNameIfProviderIsLoaded(providerHandle: JupyterServerProviderHandle): Promise<string | undefined>;
-    isValidHandle(providerHandle: JupyterServerProviderHandle): Promise<boolean>;
     getJupyterServerUri(
         serverHandle: JupyterServerProviderHandle,
         doNotPromptForAuthInfo?: boolean
