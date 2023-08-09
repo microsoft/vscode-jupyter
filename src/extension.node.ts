@@ -136,7 +136,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             getKernelService: () => Promise.resolve(undefined),
             getSuggestedController: () => Promise.resolve(undefined),
             addRemoteJupyterServer: () => Promise.resolve(undefined),
-            openNotebook: () => Promise.reject()
+            openNotebook: () => Promise.reject(),
+            createJupyterServerCollection: () => Promise.reject()
         };
     }
 }

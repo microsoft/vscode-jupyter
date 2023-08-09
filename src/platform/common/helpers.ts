@@ -77,3 +77,24 @@ export function disposeAllDisposables(disposables: IDisposable[] = []) {
 export function format(value: string, ...args: string[]) {
     return value.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
 }
+
+export function createPublicAPIProxy<T extends object>(target: T, membersToHide: (keyof T)[]): T {
+    const membersToHideList = membersToHide as (string | symbol)[];
+    return new Proxy(target, {
+        has(target, p) {
+            if (membersToHideList.includes(p)) {
+                return false;
+            }
+            return Reflect.has(target, p);
+        },
+        ownKeys(target) {
+            return Reflect.ownKeys(target).filter((key) => !membersToHideList.includes(key));
+        },
+        getOwnPropertyDescriptor(target, p) {
+            if (membersToHideList.includes(p)) {
+                return undefined;
+            }
+            return Reflect.getOwnPropertyDescriptor(target, p);
+        }
+    });
+}
