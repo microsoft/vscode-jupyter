@@ -58,6 +58,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     onDidChangeHandles = this._onDidChangeHandles.event;
     private providerChanges: IDisposable[] = [];
     removeHandle?(handle: string): Promise<void>;
+    getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
     constructor(private readonly provider: JupyterServerCollection) {
         super();
         this.id = provider.id;
@@ -66,6 +67,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         // Only jupyter extension supports the `remoteHandle` API.
         if (this.provider.extensionId === JVSC_EXTENSION_ID) {
             this.removeHandle = this.removeHandleImpl.bind(this);
+            this.getServerUriWithoutAuthInfo = this.getServerUriWithoutAuthInfoImpl.bind(this);
         }
     }
     override dispose() {
@@ -179,6 +181,28 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             }
         } else {
             return [];
+        }
+    }
+    async getServerUriWithoutAuthInfoImpl(handle: string): Promise<IJupyterServerUri> {
+        if (!this.provider.serverProvider) {
+            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
+        }
+        const token = new CancellationTokenSource();
+        try {
+            const servers = await this.provider.serverProvider.getJupyterServers(token.token);
+            const server = servers.find((s) => s.id === handle);
+            if (!server) {
+                throw new Error(
+                    `Jupyter Server ${handle} not found in Provider ${this.provider.extensionId}#${this.provider.id}`
+                );
+            }
+            return {
+                baseUrl: '',
+                token: '',
+                displayName: server.label
+            };
+        } finally {
+            token.dispose();
         }
     }
     async removeHandleImpl(handle: string): Promise<void> {

@@ -143,7 +143,6 @@ export interface IJupyterServerProvider {
 
 export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
     readonly extensionId: string;
-    getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
 }
 export type JupyterServerProviderHandle = {
     /**

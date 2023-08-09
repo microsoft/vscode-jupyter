@@ -25,4 +25,8 @@ declare module './api' {
          */
         readonly extensionId: string;
     }
+
+    export interface IJupyterUriProvider {
+        getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
+    }
 }
