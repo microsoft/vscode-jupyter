@@ -246,21 +246,23 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
     createJupyterServerCollection(extensionId: string, id: string, label: string): JupyterServerCollection {
         const extId = `${extensionId}#${id}`;
         if (this._serverProviders.has(extId)) {
-            throw new Error(`Jupyter Server Provider with id ${extId} already exists`);
+            // When testing we might have a duplicate as we call the registration API in ctor of a test.
+            if (extensionId !== JVSC_EXTENSION_ID) {
+                throw new Error(`Jupyter Server Provider with id ${extId} already exists`);
+            }
         }
         const serverProvider = new JupyterServerCollectionImpl(extensionId, id, label);
         this._serverProviders.set(extId, serverProvider);
         let uriRegistration: IDisposable | undefined;
         serverProvider.onDidChangeProvider(() => {
             if (serverProvider.serverProvider) {
+                uriRegistration?.dispose();
                 uriRegistration = this.jupyterUriProviderRegistration.registerProvider(
                     new JupyterUriProviderAdaptor(serverProvider),
                     extensionId
                 );
                 this.disposables.push(uriRegistration);
                 this._onDidChangeProviders.fire();
-            } else {
-                uriRegistration?.dispose();
             }
         });
 
