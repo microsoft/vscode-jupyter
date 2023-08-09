@@ -62,7 +62,10 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     private providerChanges: IDisposable[] = [];
     removeHandle?(handle: string): Promise<void>;
     getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
-    constructor(private readonly provider: JupyterServerCollection) {
+    constructor(
+        private readonly provider: JupyterServerCollection,
+        public readonly extensionId: string
+    ) {
         super();
         this.id = provider.id;
         this.hookupProviders();
@@ -258,7 +261,7 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
             if (serverProvider.serverProvider) {
                 uriRegistration?.dispose();
                 uriRegistration = this.jupyterUriProviderRegistration.registerProvider(
-                    new JupyterUriProviderAdaptor(serverProvider),
+                    new JupyterUriProviderAdaptor(serverProvider, extensionId),
                     extensionId
                 );
                 this.disposables.push(uriRegistration);
