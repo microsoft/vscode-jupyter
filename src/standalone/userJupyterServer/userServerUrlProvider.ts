@@ -151,7 +151,7 @@ export class UserJupyterServerUrlProvider
     onDidChangeServers = this._onDidChangeServers.event;
     async getJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
         await this.initializeServers();
-        const servers = await this.newStorage.getServers();
+        const servers = await this.newStorage.getServers(false);
         return servers.map((s) => {
             return {
                 id: s.handle,
