@@ -8,7 +8,6 @@ import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../.
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { InvalidRemoteJupyterServerUriHandleError } from '../../errors/invalidRemoteJupyterServerUriHandleError';
 import {
     IInternalJupyterUriProvider,
     IJupyterServerUriEntry,
@@ -106,12 +105,6 @@ export class JupyterUriProviderRegistration
             throw new Error(
                 `${localize.DataScience.unknownServerUri}. Provider Id=${id} and handle=${providerHandle.handle}`
             );
-        }
-        if (provider.getHandles) {
-            const handles = await provider.getHandles();
-            if (!handles.includes(providerHandle.handle)) {
-                throw new InvalidRemoteJupyterServerUriHandleError(providerHandle);
-            }
         }
         return provider.getServerUri(providerHandle.handle, doNotPromptForAuthInfo);
     }
