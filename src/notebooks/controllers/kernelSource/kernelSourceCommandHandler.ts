@@ -180,12 +180,19 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                 provideNotebookKernelSourceActions: () => {
                     return [
                         {
-                            label:
-                                provider.displayName ??
-                                (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
-                            documentation: provider.id.startsWith('_builtin')
-                                ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
-                                : undefined,
+                            get label() {
+                                return (
+                                    provider.displayName ??
+                                    (provider.detail
+                                        ? `${provider.detail} (${provider.id}) ${Date.now()}`
+                                        : provider.id)
+                                );
+                            },
+                            get documentation() {
+                                return provider.id.startsWith('_builtin') && provider.documentation
+                                    ? provider.documentation
+                                    : undefined;
+                            },
                             command: {
                                 command: 'jupyter.kernel.selectJupyterServerKernel',
                                 arguments: [provider.extensionId, provider.id],
@@ -199,12 +206,19 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                 provideNotebookKernelSourceActions: () => {
                     return [
                         {
-                            label:
-                                provider.displayName ??
-                                (provider.detail ? `${provider.detail} (${provider.id})` : provider.id),
-                            documentation: provider.id.startsWith('_builtin')
-                                ? Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer')
-                                : undefined,
+                            get label() {
+                                return (
+                                    provider.displayName ??
+                                    (provider.detail
+                                        ? `${provider.detail} (${provider.id}) ${Date.now()}`
+                                        : provider.id)
+                                );
+                            },
+                            get documentation() {
+                                return provider.id.startsWith('_builtin') && provider.documentation
+                                    ? provider.documentation
+                                    : undefined;
+                            },
                             command: {
                                 command: 'jupyter.kernel.selectJupyterServerKernel',
                                 arguments: [provider.extensionId, provider.id],

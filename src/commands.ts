@@ -44,6 +44,7 @@ export interface ICommandNameArgumentTypeMapping {
     ['jupyter.selectJupyterInterpreter']: [];
     ['dataScience.ClearUserProviderJupyterServerCache']: [];
     ['jupyterViewVariables.focus']: [];
+    ['jupyter.selectLocalJupyterServer']: [];
     ['workbench.action.openSettings']: ['jupyter.kernels.excludePythonEnvironments'];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];

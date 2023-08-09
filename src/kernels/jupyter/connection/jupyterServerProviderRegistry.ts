@@ -13,7 +13,7 @@ import {
 import { Disposables } from '../../../platform/common/utils';
 import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../types';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
@@ -52,6 +52,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     readonly id: string;
     public get displayName() {
         return this.provider.label;
+    }
+    public get documentation() {
+        return this.provider.documentation;
     }
     detail?: string | undefined;
     private _onDidChangeHandles = new EventEmitter<void>();
@@ -221,6 +224,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
     }
 }
+
+@injectable()
 export class JupyterServerProviderRegistry extends Disposables implements IJupyterServerProviderRegistry {
     private readonly _onDidChangeProviders = new EventEmitter<void>();
     public get onDidChangeProviders() {
@@ -245,15 +250,23 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
         }
         const serverProvider = new JupyterServerCollectionImpl(extensionId, id, label);
         this._serverProviders.set(extId, serverProvider);
-        const uriRegistration = this.jupyterUriProviderRegistration.registerProvider(
-            new JupyterUriProviderAdaptor(serverProvider),
-            extensionId
-        );
+        let uriRegistration: IDisposable | undefined;
+        serverProvider.onDidChangeProvider(() => {
+            if (serverProvider.serverProvider) {
+                uriRegistration = this.jupyterUriProviderRegistration.registerProvider(
+                    new JupyterUriProviderAdaptor(serverProvider),
+                    extensionId
+                );
+                this.disposables.push(uriRegistration);
+                this._onDidChangeProviders.fire();
+            } else {
+                uriRegistration?.dispose();
+            }
+        });
 
-        this._onDidChangeProviders.fire();
         serverProvider.onDidDispose(
             () => {
-                uriRegistration.dispose();
+                uriRegistration?.dispose();
                 this._serverProviders.delete(extId);
                 this._onDidChangeProviders.fire();
             },
