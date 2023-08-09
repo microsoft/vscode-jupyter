@@ -25,7 +25,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterServerUri, IJupyterUriProvider } from '../../api';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection } from '../../api';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -289,4 +289,11 @@ export interface IJupyterRemoteCachedKernelValidator {
 export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
     kind: ContributedKernelFinderKind.Remote;
     serverProviderHandle: JupyterServerProviderHandle;
+}
+
+export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegistry');
+export interface IJupyterServerProviderRegistry {
+    onDidChangeProviders: Event<void>;
+    providers: readonly JupyterServerCollection[];
+    createJupyterServerCollection(extensionId: string, id: string, label: string): JupyterServerCollection;
 }
