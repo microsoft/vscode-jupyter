@@ -10,7 +10,7 @@ import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '..
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { computeHash } from '../../platform/common/crypto';
 import { Disposables } from '../../platform/common/utils';
-import { IJupyterServerUri } from '../../api.unstable';
+import { IJupyterServerUri } from '../../api';
 
 /**
  * Registers commands to allow the user to set the remote server URI.

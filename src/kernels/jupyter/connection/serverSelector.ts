@@ -16,7 +16,7 @@ import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { JupyterInvalidPasswordError } from '../../errors/jupyterInvalidPassword';
-import { IJupyterServerUri } from '../../../api.unstable';
+import { IJupyterServerUri } from '../../../api';
 
 export type SelectJupyterUriCommandSource =
     | 'nonUser'

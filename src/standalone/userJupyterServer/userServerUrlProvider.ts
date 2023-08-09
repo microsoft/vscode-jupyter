@@ -49,7 +49,7 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
-import { IJupyterServerUri } from '../../api.unstable';
+import { IJupyterServerUri } from '../../api';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
