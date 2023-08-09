@@ -70,14 +70,14 @@ declare module './api' {
 
     /**
      * Provider of Jupyter Servers.
-    */
-   export interface JupyterServerProvider {
-       /**
-        * Event fired when the list of servers changes.
-       */
-      onDidChangeServers: Event<void>;
-      /**
-       * Returns the list of servers.
+     */
+    export interface JupyterServerProvider {
+        /**
+         * Event fired when the list of servers changes.
+         */
+        onDidChangeServers: Event<void>;
+        /**
+         * Returns the list of servers.
          */
         getJupyterServers(token: CancellationToken): Promise<JupyterServer[]>;
     }
