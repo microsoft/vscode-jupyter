@@ -20,6 +20,9 @@ declare module './api' {
         remove?(): Promise<void>;
     }
     export interface JupyterServerCollection {
+        /**
+         * Internally used by Jupyter extension to track the extension that created this server.
+         */
         readonly extensionId: string;
     }
 }
