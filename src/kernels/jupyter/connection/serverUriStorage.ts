@@ -273,15 +273,13 @@ class NewStorage {
                     this._onDidAddUri.fire(item);
                 }
                 if (removedItems.length) {
-                    const removeJupyterUris = await Promise.all(
-                        removedItems.map(async (removedItem) => {
-                            return <IJupyterServerUriEntry>{
-                                provider: removedItem.serverHandle,
-                                time: removedItem.time,
-                                displayName: removedItem.displayName || ''
-                            };
-                        })
-                    );
+                    const removeJupyterUris = removedItems.map((removedItem) => {
+                        return <IJupyterServerUriEntry>{
+                            provider: removedItem.serverHandle,
+                            time: removedItem.time,
+                            displayName: removedItem.displayName || ''
+                        };
+                    });
                     this._onDidRemoveUris.fire(removeJupyterUris);
                 }
                 this._onDidChangeUri.fire();
@@ -348,17 +346,15 @@ class NewStorage {
         const data = await this.getAllRaw();
         const entries: IJupyterServerUriEntry[] = [];
 
-        await Promise.all(
-            data.map(async (item) => {
-                const uri = generateIdFromRemoteProvider(item.serverHandle);
-                const server: IJupyterServerUriEntry = {
-                    time: item.time,
-                    displayName: item.displayName || uri,
-                    provider: item.serverHandle
-                };
-                entries.push(server);
-            })
-        );
+        data.forEach(async (item) => {
+            const uri = generateIdFromRemoteProvider(item.serverHandle);
+            const server: IJupyterServerUriEntry = {
+                time: item.time,
+                displayName: item.displayName || uri,
+                provider: item.serverHandle
+            };
+            entries.push(server);
+        });
         return entries;
     }
     private async getAllRaw(): Promise<StorageMRUItem[]> {

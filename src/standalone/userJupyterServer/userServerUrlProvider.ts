@@ -5,6 +5,9 @@ import { inject, injectable, named, optional } from 'inversify';
 import uuid from 'uuid/v4';
 import {
     CancellationError,
+    CancellationToken,
+    CancellationTokenSource,
+    Command,
     Disposable,
     Event,
     EventEmitter,
@@ -19,10 +22,12 @@ import {
     IInternalJupyterUriProvider,
     IJupyterUriProviderRegistration,
     IJupyterRequestAgentCreator,
-    IJupyterRequestCreator
+    IJupyterRequestCreator,
+    IJupyterServerProviderRegistry
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
+    IApplicationEnvironment,
     IApplicationShell,
     IClipboard,
     ICommandManager,
@@ -49,7 +54,7 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
-import { IJupyterServerUri } from '../../api';
+import { IJupyterServerUri, JupyterServer, JupyterServerCommandProvider, JupyterServerProvider } from '../../api';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
@@ -66,10 +71,16 @@ const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnec
 
 @injectable()
 export class UserJupyterServerUrlProvider
-    implements IExtensionSyncActivationService, IDisposable, IInternalJupyterUriProvider
+    implements
+        IExtensionSyncActivationService,
+        IDisposable,
+        IInternalJupyterUriProvider,
+        JupyterServerProvider,
+        JupyterServerCommandProvider
 {
     readonly id: string = UserJupyterServerPickerProviderId;
     public readonly extensionId: string = JVSC_EXTENSION_ID;
+    readonly documentation = Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer');
     readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName;
     readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail;
     private _onDidChangeHandles = new EventEmitter<void>();
@@ -101,7 +112,10 @@ export class UserJupyterServerUrlProvider
         agentCreator: IJupyterRequestAgentCreator | undefined,
         @inject(IJupyterRequestCreator) requestCreator: IJupyterRequestCreator,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IJupyterServerProviderRegistry)
+        private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry,
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
     ) {
         this.disposables.push(this);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -119,10 +133,84 @@ export class UserJupyterServerUrlProvider
             disposables
         );
     }
-
+    selected: Command = {
+        title: DataScience.jupyterSelectURIPrompt,
+        tooltip: DataScience.jupyterSelectURINewDetail,
+        command: 'jupyter.selectLocalJupyterServer'
+    };
+    async getCommands(_token: CancellationToken): Promise<Command[]> {
+        return [
+            {
+                title: DataScience.jupyterSelectURIPrompt,
+                tooltip: DataScience.jupyterSelectURINewDetail,
+                command: 'jupyter.selectLocalJupyterServer'
+            }
+        ];
+    }
+    private _onDidChangeServers = new EventEmitter<void>();
+    onDidChangeServers = this._onDidChangeServers.event;
+    async getJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
+        await this.initializeServers();
+        const servers = await this.newStorage.getServers();
+        return servers.map((s) => {
+            return {
+                id: s.handle,
+                label: s.serverInfo.displayName,
+                resolveConnectionInformation: async (_token: CancellationToken) => {
+                    const serverInfo = await this.getServerUri(s.handle);
+                    return {
+                        baseUrl: Uri.parse(serverInfo.baseUrl),
+                        token: serverInfo.token,
+                        authorizationHeader: serverInfo.authorizationHeader,
+                        mappedRemoteNotebookDir: serverInfo.mappedRemoteNotebookDir
+                            ? Uri.file(serverInfo.mappedRemoteNotebookDir)
+                            : undefined,
+                        webSocketProtocols: serverInfo.webSocketProtocols
+                    };
+                },
+                remove: () => this.removeHandle(s.handle)
+            };
+        });
+    }
     activate() {
-        this._localDisposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
-
+        if (this.appEnv.channel === 'insiders') {
+            const collection = this.jupyterServerProviderRegistry.createJupyterServerCollection(
+                JVSC_EXTENSION_ID,
+                this.id,
+                this.displayName
+            );
+            this.disposables.push(collection);
+            collection.commandProvider = this;
+            collection.serverProvider = this;
+            collection.documentation = this.documentation;
+            this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
+            this.commands.registerCommand('jupyter.selectLocalJupyterServer', async () => {
+                const token = new CancellationTokenSource();
+                try {
+                    const handleOrBack = await this.handleQuickPick(
+                        { label: DataScience.jupyterSelectURIPrompt },
+                        true
+                    );
+                    if (!handleOrBack) {
+                        return;
+                    }
+                    if (handleOrBack === 'back') {
+                        return 'back';
+                    }
+                    const servers = await this.getJupyterServers(token.token);
+                    const server = servers.find((s) => s.id === handleOrBack);
+                    if (!server) {
+                        throw new Error(`Server ${handleOrBack} not found`);
+                    }
+                    return server;
+                } catch (ex) {
+                    traceError(`Failed to select a Jupyter Server`, ex);
+                    return;
+                }
+            });
+        } else {
+            this._localDisposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
+        }
         this._localDisposables.push(
             this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
                 await Promise.all([
