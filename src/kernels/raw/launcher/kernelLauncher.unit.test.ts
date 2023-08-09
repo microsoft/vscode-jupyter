@@ -111,8 +111,7 @@ suite('kernel Launcher', () => {
 
         for (const port of UsedPorts) {
             assert.equal(
-                portAttributeProvider.providePortAttributes(port, undefined, undefined, cancellation.token)
-                    ?.autoForwardAction,
+                portAttributeProvider.providePortAttributes({ port }, cancellation.token)?.autoForwardAction,
                 PortAutoForwardAction.Ignore,
                 'Kernel Port should not be forwarded'
             );
