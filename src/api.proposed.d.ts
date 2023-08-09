@@ -14,11 +14,12 @@ declare module './api' {
      */
     export interface JupyterServerConnectionInformation {
         /**
-         * Base Url of the Jupyter Server
+         * Base Url of the Jupyter Server.
+         * E.g. http://localhost:8888 or http://remoteServer.com/hub/user/, etc.
          */
         readonly baseUrl: Uri;
         /**
-         * Jupyter auth Token
+         * Jupyter auth Token.
          */
         readonly token: string;
         /**
@@ -58,36 +59,78 @@ declare module './api' {
          */
         readonly id: string;
         /**
-         * A human-readable string which is rendered prominent.
+         * A human-readable string representing the name of the Server. This can be read and updated by the extension.
          */
         label: string;
         /**
          * Returns the connection information for this server.
          */
         resolveConnectionInformation(token: CancellationToken): Promise<JupyterServerConnectionInformation>;
-        /**
-         * Removes this from the list of Servers.
-         */
-        dispose(): void;
     }
 
-    export interface JupyterServerProvider {
-        onDidChangeServers: Event<void>;
+    /**
+     * Provider of Jupyter Servers.
+    */
+   export interface JupyterServerProvider {
+       /**
+        * Event fired when the list of servers changes.
+       */
+      onDidChangeServers: Event<void>;
+      /**
+       * Returns the list of servers.
+         */
         getJupyterServers(token: CancellationToken): Promise<JupyterServer[]>;
     }
+    /**
+     * Provider of Jupyter Server Commands.
+     * Each command allows the user to perform an action.
+     * The return value of the command should be of the form Promise<JupyterServer | 'back' | undefined>
+     * The returned value have the following meaning:
+     * - JupyterServer  : The Jupyter Server object that was created
+     * - 'back'         : Go back to the previous screen
+     * - undefined|void : Do nothing
+     */
     export interface JupyterServerCommandProvider {
+        /**
+         * Default command to be used when there are no servers. This can be read and updated by the extension.
+         * If not set, and there are not servers, then the user will be prompted to select a command from a list of commands returned by `getCommands`.
+         */
         selected?: Command;
+        /**
+         * Returns a list of commands to be displayed to the user.
+         */
         getCommands(token: CancellationToken): Promise<Command[]>;
     }
     export interface JupyterServerCollection {
+        /**
+         * Unique identifier of the Server Collection.
+         */
         readonly id: string;
+        /**
+         * A human-readable string representing the collection of the Servers. This can be read and updated by the extension.
+         */
         label: string;
+        /**
+         * A link to a resource containing more information. This can be read and updated by the extension.
+         */
         documentation?: Uri;
+        /**
+         * Provider of Jupyter Servers. This can be read and updated by the extension.
+         */
         serverProvider?: JupyterServerProvider;
+        /**
+         * Provider of Commands. This can be read and updated by the extension.
+         */
         commandProvider?: JupyterServerCommandProvider;
+        /**
+         * Removes this Server Collection.
+         */
         dispose(): void;
     }
     export interface JupyterAPI {
+        /**
+         * Creates a Jupyter Server Collection that can be displayed in the Notebook Kernel Picker.
+         */
         createJupyterServerCollection(id: string, label: string): Promise<JupyterServerCollection>;
     }
 }
