@@ -22,6 +22,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
+import { IJupyterUriProvider } from '../../../api';
 
 @injectable()
 export class RemoteKernelFinderController implements IExtensionSyncActivationService {
@@ -43,26 +44,46 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration
     ) {}
-
+    private readonly handledProviders = new WeakSet<IJupyterUriProvider>();
     activate() {
-        // Check for when more URIs are added
         this.serverUriStorage.onDidAdd((server) => this.validateAndCreateFinder(server), this, this.disposables);
+        this.serverUriStorage.onDidChange(this.buildListOfFinders, this, this.disposables);
+        // Possible some extensions register their providers later.
+        // And also possible they load their old server later, hence we need to go through the
+        // MRU list again and try to build the finders, as the servers might now exist.
+        this.jupyterPickerRegistration.onDidChangeProviders(this.handleProviderHandleChanges, this, this.disposables);
 
         // Also check for when a URI is removed
         this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
 
         // Add in the URIs that we already know about
+        this.buildListOfFinders();
+    }
+    private buildListOfFinders() {
+        // Add in the URIs that we already know about
         this.serverUriStorage
             .getAll()
-            .then(async (currentServers) => {
-                await Promise.all(currentServers.map((server) => this.validateAndCreateFinder(server)));
-            })
+            .then((currentServers) => currentServers.map((server) => this.validateAndCreateFinder(server).catch(noop)))
             .catch(noop);
+    }
+    private handleProviderHandleChanges() {
+        this.jupyterPickerRegistration.providers.forEach((provider) => {
+            if (!this.handledProviders.has(provider)) {
+                this.handledProviders.add(provider);
+                if (provider.onDidChangeHandles) {
+                    provider.onDidChangeHandles(this.buildListOfFinders, this, this.disposables);
+                }
+            }
+        });
+        this.buildListOfFinders();
     }
     @swallowExceptions('Failed to create a Remote Kernel Finder')
     private async validateAndCreateFinder(serverUri: IJupyterServerUriEntry) {
-        const info = await this.jupyterPickerRegistration.getJupyterServerUri(serverUri.provider, true);
-        this.createRemoteKernelFinder(serverUri.provider, info.displayName);
+        const serverId = generateIdFromRemoteProvider(serverUri.provider);
+        if (!this.serverFinderMapping.has(serverId)) {
+            const info = await this.jupyterPickerRegistration.getJupyterServerUri(serverUri.provider, true);
+            this.createRemoteKernelFinder(serverUri.provider, info.displayName);
+        }
     }
 
     createRemoteKernelFinder(serverProviderHandle: JupyterServerProviderHandle, displayName: string) {

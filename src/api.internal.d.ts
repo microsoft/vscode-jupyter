@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// The following is required to make sure the types are merged correctly.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { CancellationToken } from 'vscode';
+import { Uri } from 'vscode';
 
 // These types are only used internally within the extension.
 // Never to be exposed to other extensions.
@@ -27,6 +25,20 @@ declare module './api' {
     }
 
     export interface IJupyterUriProvider {
+        /**
+         * Link to documentation for this provider.
+         * Used internally to display the link for `Existing Jupyter Servers` in the quick pick.
+         */
+        documentation?: Uri;
+        /**
+         * Ability to retrieve the displayName without having to get the auth information.
+         * Only used internally when we need the displayName.
+         * The getServerUri could end up prompting for username/password when connecting to the remote servers.
+         */
         getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
+        /**
+         * Internally used by Jupyter extension to track the extension that owns this provider.
+         */
+        readonly extensionId: string;
     }
 }

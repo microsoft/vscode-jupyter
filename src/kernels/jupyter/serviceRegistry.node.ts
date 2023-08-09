@@ -48,13 +48,15 @@ import {
     IJupyterRequestAgentCreator,
     ILiveRemoteKernelConnectionUsageTracker,
     IJupyterRemoteCachedKernelValidator,
-    IJupyterServerHelper
+    IJupyterServerHelper,
+    IJupyterServerProviderRegistry
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 import { RemoteKernelFinderController } from './finder/remoteKernelFinderController';
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
 import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessionFactory';
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
+import { JupyterServerProviderRegistry } from './connection/jupyterServerProviderRegistry';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
@@ -133,5 +135,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteKernelFinderController
+    );
+    serviceManager.addSingleton<IJupyterServerProviderRegistry>(
+        IJupyterServerProviderRegistry,
+        JupyterServerProviderRegistry
     );
 }

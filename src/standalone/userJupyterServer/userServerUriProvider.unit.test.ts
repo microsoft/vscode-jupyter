@@ -5,6 +5,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import {
     IJupyterRequestCreator,
+    IJupyterServerProviderRegistry,
     IJupyterServerUriStorage,
     IJupyterUriProviderRegistration
 } from '../../kernels/jupyter/types';
@@ -28,7 +29,8 @@ import {
     IClipboard,
     IApplicationShell,
     IEncryptedStorage,
-    ICommandManager
+    ICommandManager,
+    IApplicationEnvironment
 } from '../../platform/common/application/types';
 import { noop, sleep } from '../../test/core';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -38,6 +40,7 @@ import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { JupyterServerCollection } from '../../api';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
@@ -165,6 +168,14 @@ suite('User Uri Provider', () => {
 
         when(serverUriStorage.add(anything())).thenResolve();
         when(serverUriStorage.add(anything(), anything())).thenResolve();
+        const jupyterServerProviderRegistry = mock<IJupyterServerProviderRegistry>();
+        const collection = mock<JupyterServerCollection>();
+        when(collection.dispose()).thenReturn();
+        when(
+            jupyterServerProviderRegistry.createJupyterServerCollection(anything(), anything(), anything())
+        ).thenReturn(instance(collection));
+        const appEnv = mock<IApplicationEnvironment>();
+        when(appEnv.channel).thenReturn('stable');
         provider = new UserJupyterServerUrlProvider(
             instance(clipboard),
             instance(uriProviderRegistration),
@@ -182,7 +193,9 @@ suite('User Uri Provider', () => {
             undefined,
             instance(requestCreator),
             instance(mock<IExtensionContext>()),
-            instance(mock<IFileSystem>())
+            instance(mock<IFileSystem>()),
+            instance(jupyterServerProviderRegistry),
+            instance(appEnv)
         );
     });
     teardown(async () => {
