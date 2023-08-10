@@ -12,7 +12,7 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
-import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore.node';
+import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -96,7 +96,7 @@ export class JupyterInterpreterService {
      */
     public async selectInterpreter(): Promise<PythonEnvironment | undefined> {
         sendTelemetryEvent(Telemetry.SelectJupyterInterpreter);
-        const interpreter = await this.jupyterInterpreterSelector.selectInterpreter();
+        const interpreter = await this.jupyterInterpreterSelector.selectPythonInterpreter();
         if (!interpreter) {
             sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'notSelected' });
             return;

@@ -14,12 +14,7 @@ import { BaseError } from '../../platform/errors/types';
  * The URI entry box when picking a server. It should put up a dialog or input validation problem. If the error occurs later (like on timeout), it will be swallowed.
  */
 export class InvalidRemoteJupyterServerUriHandleError extends BaseError {
-    constructor(
-        public readonly providerId: string,
-        public readonly handle: string,
-        public readonly extensionId: string,
-        public readonly serverId: string
-    ) {
+    constructor(public readonly serverProviderHandle: { id: string; handle: string; extensionId: string }) {
         super('invalidremotejupyterserverurihandle', 'Server handle not in list of known handles');
     }
 }

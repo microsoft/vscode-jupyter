@@ -17,30 +17,60 @@ import { SysInfoReason } from '../messageTypes';
 import { DataScience } from '../platform/common/utils/localize';
 import { KernelConnectionMetadata } from '../kernels/types';
 
-export function getSysInfoMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
+export function getStartConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
     const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
-    return reason === SysInfoReason.Restart
-        ? displayName
+    if (displayName) {
+        return reason == SysInfoReason.Restart
             ? DataScience.restartingKernelCustomHeader(displayName)
-            : DataScience.restartingKernelHeader
-        : displayName
-        ? DataScience.startingNewKernelCustomHeader(displayName)
-        : DataScience.startingNewKernelHeader;
+            : DataScience.startingNewKernelCustomHeader(displayName);
+    } else {
+        return reason == SysInfoReason.Restart
+            ? DataScience.restartingKernelHeader
+            : DataScience.startingNewKernelHeader;
+    }
+}
+
+export function getFinishConnectMessage(kernelMetadata: KernelConnectionMetadata, reason: SysInfoReason) {
+    const displayName = getDisplayNameOrNameOfKernelConnection(kernelMetadata);
+    return reason == SysInfoReason.Restart
+        ? DataScience.restartedKernelHeader(displayName || '')
+        : DataScience.connectedKernelHeader(displayName || '');
+}
+
+export function isSysInfoCell(cell: NotebookCell) {
+    return (
+        cell.kind === NotebookCellKind.Markup &&
+        cell.metadata.custom?.metadata &&
+        cell.metadata.custom.metadata['isInteractiveWindowMessageCell']
+    );
 }
 
 export class SystemInfoCell {
     private sysInfoCellPromise: Promise<NotebookCell>;
     private isDeleted = false;
 
-    constructor(private readonly notebookDocument: NotebookDocument, message: string) {
-        this.sysInfoCellPromise = this.createCell(message);
+    constructor(
+        private readonly notebookDocument: NotebookDocument,
+        message: string
+    ) {
+        if (notebookDocument.cellCount) {
+            const lastCell = notebookDocument.cellAt(notebookDocument.cellCount);
+            if (isSysInfoCell(lastCell)) {
+                this.sysInfoCellPromise = Promise.resolve(lastCell);
+                this.sysInfoCellPromise = this.updateMessage(message);
+            }
+        }
+
+        if (this.sysInfoCellPromise === undefined) {
+            this.sysInfoCellPromise = this.createCell(message);
+        }
     }
 
     private async createCell(message: string) {
         let addedCellIndex: number | undefined;
         await chainWithPendingUpdates(this.notebookDocument, (edit) => {
             const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
-            markdownCell.metadata = { isInteractiveWindowMessageCell: true };
+            markdownCell.metadata = { custom: { metadata: { isInteractiveWindowMessageCell: true } } };
             addedCellIndex = this.notebookDocument.cellCount;
             const nbEdit = NotebookEdit.insertCells(addedCellIndex, [markdownCell]);
             edit.set(this.notebookDocument.uri, [nbEdit]);
@@ -53,21 +83,19 @@ export class SystemInfoCell {
         const cell = await this.sysInfoCellPromise;
         await chainWithPendingUpdates(this.notebookDocument, (edit) => {
             if (cell.index >= 0) {
-                if (
-                    !this.isDeleted &&
-                    cell.kind === NotebookCellKind.Markup &&
-                    cell.metadata.isInteractiveWindowMessageCell
-                ) {
+                if (!this.isDeleted && isSysInfoCell(cell)) {
                     edit.replace(cell.document.uri, new Range(0, 0, cell.document.lineCount, 0), newMessage);
+
                     edit.set(this.notebookDocument!.uri, [
                         NotebookEdit.updateCellMetadata(cell.index, {
-                            isInteractiveWindowMessageCell: true
+                            custom: { metadata: { isInteractiveWindowMessageCell: true } }
                         })
                     ]);
                     return;
                 }
             }
         });
+        return cell;
     }
 
     public async deleteCell() {
@@ -75,11 +103,7 @@ export class SystemInfoCell {
         const cell = await this.sysInfoCellPromise;
         await chainWithPendingUpdates(this.notebookDocument, (edit) => {
             if (cell.index >= 0) {
-                if (
-                    cell.kind === NotebookCellKind.Markup &&
-                    cell.metadata.isInteractiveWindowMessageCell &&
-                    cell.metadata.isPlaceholder
-                ) {
+                if (isSysInfoCell(cell)) {
                     const nbEdit = NotebookEdit.deleteCells(new NotebookRange(cell.index, cell.index + 1));
                     edit.set(this.notebookDocument.uri, [nbEdit]);
                     return;

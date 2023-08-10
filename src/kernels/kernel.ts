@@ -27,10 +27,10 @@ import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables, splitLines } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
-import { Resource, IDisposable, IDisplayOptions } from '../platform/common/types';
-import { createDeferred, sleep } from '../platform/common/utils/async';
+import { Resource, IDisposable, IDisplayOptions, IExperimentService, Experiments } from '../platform/common/types';
+import { createDeferred, raceTimeout, raceTimeoutError } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
-import { noop } from '../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { concatMultilineString, getResourceType } from '../platform/common/utils';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
@@ -63,6 +63,7 @@ import { SilentExecutionErrorOptions } from './helpers';
 import dedent from 'dedent';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getKernelInfo } from './kernelInfo';
+import { KernelInterruptTimeoutError } from './errors/kernelInterruptTimeoutError';
 
 const widgetVersionOutPrefix = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d:IPyWidgets:';
 /**
@@ -88,17 +89,17 @@ export function isKernelDead(k: IBaseKernel) {
         (!k.disposed &&
             !k.disposing &&
             (k.session?.status == 'unknown' || k.session?.kernel?.status == 'unknown') &&
-            (k.session.kernel?.isDisposed || k.session.disposed))
+            (k.session.kernel?.isDisposed || k.session.isDisposed))
     );
 }
 
 export function isKernelSessionDead(k: IKernelSession) {
     return (
         k.status === 'dead' ||
-        (k.status === 'terminating' && !k.disposed) ||
-        (!k.disposed &&
+        (k.status === 'terminating' && !k.isDisposed) ||
+        (!k.isDisposed &&
             (k.status == 'unknown' || k.kernel?.status == 'unknown') &&
-            (k.kernel?.isDisposed || k.disposed))
+            (k.kernel?.isDisposed || k.isDisposed))
     );
 }
 
@@ -147,7 +148,7 @@ abstract class BaseKernel implements IBaseKernel {
         return this._session?.status ?? (this.isKernelDead ? 'dead' : 'unknown');
     }
     get disposed(): boolean {
-        return this._disposed === true || this._session?.disposed === true;
+        return this._disposed === true || this._session?.isDisposed === true;
     }
     get disposing(): boolean {
         return this._disposing === true;
@@ -195,7 +196,8 @@ abstract class BaseKernel implements IBaseKernel {
         protected readonly appShell: IApplicationShell,
         protected readonly startupCodeProviders: IStartupCodeProvider[],
         public readonly _creator: KernelActionSource,
-        private readonly workspaceMemento: Memento
+        private readonly workspaceMemento: Memento,
+        private readonly experiments: IExperimentService
     ) {
         this.disposables.push(this._onStatusChanged);
         this.disposables.push(this._onRestarted);
@@ -313,7 +315,7 @@ abstract class BaseKernel implements IBaseKernel {
                 : undefined;
             this._jupyterSessionPromise = undefined;
             if (this._session) {
-                promises.push(this._session.dispose().catch(noop));
+                promises.push(this._session.disposeAsync().catch(noop));
                 this._session = undefined;
             }
             this._disposed = true;
@@ -390,7 +392,7 @@ abstract class BaseKernel implements IBaseKernel {
                     undefined,
                     ex
                 );
-                await session?.dispose().catch(noop);
+                await session?.disposeAsync().catch(noop);
                 this._ignoreJupyterSessionDisposedErrors = false;
                 throw ex;
             }
@@ -473,6 +475,7 @@ abstract class BaseKernel implements IBaseKernel {
     ): Promise<InterruptResult> {
         const restarted = createDeferred<boolean>();
         const stopWatch = new StopWatch();
+        const disposables: IDisposable[] = [];
         // Listen to status change events so we can tell if we're restarting
         const restartHandler = (e: KernelMessage.Status) => {
             if (e === 'restarting' || e === 'autorestarting') {
@@ -483,23 +486,39 @@ abstract class BaseKernel implements IBaseKernel {
                 restarted.resolve(true);
             }
         };
-        const restartHandlerToken = session.onSessionStatusChanged(restartHandler);
+        if (this.experiments.inExperiment(Experiments.NewJupyterSession)) {
+            const statusChangedHandler = (_: unknown, e: KernelMessage.Status) => restartHandler(e);
+            session.statusChanged.connect(statusChangedHandler);
+            disposables.push(
+                new Disposable(() => swallowExceptions(() => session.statusChanged.disconnect(statusChangedHandler)))
+            );
+        } else {
+            session.onSessionStatusChanged(restartHandler, this, disposables);
+        }
 
-        // Start our interrupt. If it fails, indicate a restart
-        session.interrupt().catch((exc) => {
-            traceWarning(`Error during interrupt: ${exc}`);
-            restarted.resolve(true);
-        });
+        if (session && session.kernel) {
+            traceInfo(`Interrupting kernel: ${session.kernel.name}`);
+
+            // Start our interrupt. If it fails, indicate a restart
+            await raceTimeoutError(
+                this.kernelSettings.interruptTimeout,
+                new KernelInterruptTimeoutError(this.kernelConnectionMetadata),
+                session.kernel.interrupt()
+            ).catch((exc) => {
+                traceWarning(`Error during interrupt: ${exc}`);
+                restarted.resolve(true);
+            });
+        }
 
         const promise = (async () => {
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
-                return await Promise.race([
+                return await raceTimeout(
+                    this.kernelSettings.interruptTimeout,
+                    InterruptResult.TimedOut,
                     pendingExecutions.then(() => InterruptResult.Success),
-                    restarted.promise.then(() => InterruptResult.Restarted),
-
-                    sleep(this.kernelSettings.interruptTimeout).then(() => InterruptResult.TimedOut)
-                ]);
+                    restarted.promise.then(() => InterruptResult.Restarted)
+                );
             } catch (exc) {
                 // Something failed. See if we restarted or not.
                 if (restarted.completed) {
@@ -516,7 +535,7 @@ abstract class BaseKernel implements IBaseKernel {
                 );
                 throw exc;
             } finally {
-                restartHandlerToken.dispose();
+                disposeAllDisposables(disposables);
             }
         })();
 
@@ -664,7 +683,7 @@ abstract class BaseKernel implements IBaseKernel {
             session.kernelSocket.subscribe(this._kernelSocket);
             session.onDidDispose(() => {
                 traceInfoIfCI(
-                    `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
+                    `Kernel got disposed as a result of session.onDisposed (1) ${getDisplayPath(
                         this.resourceUri || this.uri
                     )}`
                 );
@@ -687,15 +706,24 @@ abstract class BaseKernel implements IBaseKernel {
                     }
                 }
             });
-            const statusChangeHandler = (status: KernelMessage.Status) => {
-                this._onStatusChanged.fire(status);
-            };
-            this.disposables.push(session.onSessionStatusChanged(statusChangeHandler));
+            if (this.experiments.inExperiment(Experiments.NewJupyterSession)) {
+                const statusChangeHandler = (_: unknown, status: KernelMessage.Status) =>
+                    this._onStatusChanged.fire(status);
+                session.statusChanged.connect(statusChangeHandler);
+                this.disposables.push(
+                    new Disposable(() => swallowExceptions(() => session.statusChanged.disconnect(statusChangeHandler)))
+                );
+            } else {
+                const statusChangeHandler = (status: KernelMessage.Status) => {
+                    this._onStatusChanged.fire(status);
+                };
+                this.disposables.push(session.onSessionStatusChanged(statusChangeHandler));
+            }
         }
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
-        session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+        session.kernel?.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
         if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
             // As users can have IPyWidgets at any point in time, we need to determine the version of ipywidgets
@@ -771,11 +799,11 @@ abstract class BaseKernel implements IBaseKernel {
                 traceError('Failed to determine version of IPyWidgets', ex)
             );
             if (Array.isArray(version)) {
-                const isVersion8 = version.some((output) =>
-                    (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
+                const isVersion8 = version.some(
+                    (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}8.`)
                 );
-                const isVersion7 = version.some((output) =>
-                    (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}7.`)
+                const isVersion7 = version.some(
+                    (output) => (output.text || '')?.toString().includes(`${widgetVersionOutPrefix}7.`)
                 );
 
                 const newVersion = (this._ipywidgetsVersion = isVersion7 ? 7 : isVersion8 ? 8 : undefined);
@@ -919,11 +947,11 @@ abstract class BaseKernel implements IBaseKernel {
         if (code.join('').trim().length === 0) {
             return;
         }
-        if (!session) {
+        if (!session.kernel) {
             traceVerbose(`Not executing startup as there is no session, code: ${code}`);
             return;
         }
-        return executeSilently(session, code.join('\n'), errorOptions);
+        return executeSilently(session.kernel, code.join('\n'), errorOptions);
     }
 }
 
@@ -939,7 +967,8 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
         appShell: IApplicationShell,
         kernelSettings: IKernelSettings,
         startupCodeProviders: IStartupCodeProvider[],
-        workspaceMemento: Memento
+        workspaceMemento: Memento,
+        experiments: IExperimentService
     ) {
         super(
             `3rdPartyKernel_${uuid()}`,
@@ -951,7 +980,8 @@ export class ThirdPartyKernel extends BaseKernel implements IThirdPartyKernel {
             appShell,
             startupCodeProviders,
             '3rdPartyExtension',
-            workspaceMemento
+            workspaceMemento,
+            experiments
         );
     }
 }
@@ -973,7 +1003,8 @@ export class Kernel extends BaseKernel implements IKernel {
         appShell: IApplicationShell,
         public readonly controller: IKernelController,
         startupCodeProviders: IStartupCodeProvider[],
-        workspaceMemento: Memento
+        workspaceMemento: Memento,
+        experiments: IExperimentService
     ) {
         super(
             uuid(),
@@ -985,7 +1016,8 @@ export class Kernel extends BaseKernel implements IKernel {
             appShell,
             startupCodeProviders,
             'jupyterExtension',
-            workspaceMemento
+            workspaceMemento,
+            experiments
         );
     }
 }

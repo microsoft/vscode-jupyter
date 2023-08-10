@@ -105,7 +105,7 @@ export class PreferredKernelConnectionService {
         // Existing sessions for the same path would be a suggestions.
         const serverId = (
             kernelFinder.kernels.find((item) => isRemoteConnection(item)) as RemoteKernelConnectionMetadata | undefined
-        )?.serverId;
+        )?.serverProviderHandle;
         if (serverId) {
             const connection = await this.jupyterConnection.createConnectionInfo(serverId);
             const sessionOptions = getRemoteSessionOptions(connection, notebook.uri);

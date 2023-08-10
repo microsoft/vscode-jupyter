@@ -19,6 +19,8 @@ import { PythonExtensionRestartNotification } from './notification/pythonExtensi
 import { ImportTracker } from './import-export/importTracker';
 import { UserJupyterServerUrlProvider } from './userJupyterServer/userServerUrlProvider';
 import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelectorForTests';
+import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
+import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -33,6 +35,10 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ImportTracker);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        EagerlyActivateJupyterUriProviders
+    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         JupyterServerSelectorCommand
@@ -65,5 +71,10 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         UserJupyterServerUrlProvider
+    );
+
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        CodespaceCommandRegistry
     );
 }

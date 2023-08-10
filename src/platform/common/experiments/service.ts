@@ -80,17 +80,27 @@ export class ExperimentService implements IExperimentService {
         if (this.experimentationService && this.enabled) {
             traceVerbose(`Experimentation service retrieved: ${this.experimentationService}`);
             await this.experimentationService.initializePromise;
+            if (this.getFeatures().length === 0) {
+                // Only await on this if we don't have anything in cache.
+                // This means that we start the session with partial experiment info.
+                // We accept this as a compromise to avoid delaying startup.
+
+                // In the case where we don't wait on this promise. If the experiment info changes,
+                // those changes will be applied in the next session. This is controlled internally
+                // in the tas-client via `overrideInMemoryFeatures` value that is passed to
+                // `getFeaturesAsync`. At the time of writing this comment the value of
+                // `overrideInMemoryFeatures` was always passed in as `false`. So, the experiment
+                // states did not change mid way.
+                await this.experimentationService.initialFetch;
+            }
+
             this.logExperiments();
         }
     }
-    public async inExperiment(experiment: ExperimentGroups): Promise<boolean> {
-        return this.inExperimentSync(experiment);
-    }
-    public inExperimentSync(experiment: ExperimentGroups): boolean {
+    public inExperiment(experiment: ExperimentGroups): boolean {
         if (!this.experimentationService || !this.enabled) {
             return false;
         }
-
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
         if (this._optOutFrom.includes(experiment.toString())) {
@@ -104,9 +114,14 @@ export class ExperimentService implements IExperimentService {
             this.experimentationService.getTreatmentVariable(EXP_CONFIG_ID, experiment as unknown as string);
             return true;
         }
+
+        // Temporarily until we enable an experiment for all insiders.
+        if (experiment === ExperimentGroups.NewJupyterSession && this.appEnvironment.channel === 'insiders') {
+            return true;
+        }
+
         // If getTreatmentVariable returns undefined,
         // it means that the value for this experiment was not found on the server.
-
         const treatmentVariable = this.experimentationService.getTreatmentVariable(
             EXP_CONFIG_ID,
             experiment as unknown as string
@@ -126,6 +141,9 @@ export class ExperimentService implements IExperimentService {
         }
 
         return this.experimentationService.getTreatmentVariable<T>(EXP_CONFIG_ID, experiment as unknown as string);
+    }
+    private getFeatures() {
+        return this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] }).features;
     }
     private logExperiments() {
         const telemetrySettings = this.workspace.getConfiguration('telemetry');
@@ -160,33 +178,45 @@ export class ExperimentService implements IExperimentService {
             return;
         }
 
+        const optedOutOfExperiments = new Set(this._optOutFrom);
+        const optedIntoExperiments = new Set(this._optInto);
+
         // Log experiments that users manually opt out, these are experiments which are added using the exp framework.
         this._optOutFrom
-            .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
+            .filter((exp) => exp !== 'All')
             .forEach((exp) => {
                 traceInfo(Experiments.notInGroup(exp));
             });
 
         // Log experiments that users manually opt into, these are experiments which are added using the exp framework.
         this._optInto
-            .filter((exp) => exp !== 'All' && exp.toLowerCase().startsWith('python'))
+            .filter((exp) => exp !== 'All')
             .forEach((exp) => {
                 traceInfo(Experiments.inGroup(exp));
             });
 
         if (!experimentsDisabled) {
             // Log experiments that users are added to by the exp framework
-            this.globalState.get<{ features: string[] }>(EXP_MEMENTO_KEY, { features: [] }).features.forEach((exp) => {
+            this.getFeatures().forEach((exp) => {
                 // Filter out experiment groups that are not from the Python extension.
                 // Filter out experiment groups that are not already opted out or opted into.
                 if (
-                    exp.toLowerCase().startsWith('jupyter') &&
+                    (exp.toLowerCase().startsWith('jupyter') ||
+                        exp.toLowerCase() === ExperimentGroups.NewJupyterSession.toLowerCase()) &&
                     !this._optOutFrom.includes(exp) &&
                     !this._optInto.includes(exp)
                 ) {
+                    optedIntoExperiments.add(exp);
                     traceInfo(Experiments.inGroup(exp));
                 }
             });
+
+            if (
+                !optedIntoExperiments.has(ExperimentGroups.NewJupyterSession) &&
+                !optedOutOfExperiments.has(ExperimentGroups.NewJupyterSession)
+            ) {
+                traceInfo(Experiments.inGroup(ExperimentGroups.NewJupyterSession));
+            }
         }
     }
 }

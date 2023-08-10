@@ -18,7 +18,13 @@ export async function sendTelemetryForPythonKernelExecutable(
     resource: Resource,
     kernelConnection: KernelConnectionMetadata
 ) {
-    if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
+    if (
+        !kernelConnection.interpreter ||
+        !isPythonKernelConnection(kernelConnection) ||
+        !session.kernel ||
+        session.kernel.status === 'dead' ||
+        session.kernel.status === 'terminating'
+    ) {
         return;
     }
     if (
@@ -30,7 +36,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     try {
         traceVerbose('Begin sendTelemetryForPythonKernelExecutable');
         const outputs = await executeSilently(
-            session,
+            session.kernel,
             'import sys as _VSCODE_sys\nprint(_VSCODE_sys.executable); del _VSCODE_sys'
         );
         if (outputs.length === 0) {

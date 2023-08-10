@@ -4,15 +4,16 @@
 import { inject, injectable } from 'inversify';
 import {
     IJupyterServerUriStorage,
-    IJupyterUriProvider,
+    IInternalJupyterUriProvider,
     IJupyterUriProviderRegistration
 } from '../../kernels/jupyter/types';
 import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { traceError, traceWarning } from '../../platform/logging';
+import { traceWarning } from '../../platform/logging';
 import { IControllerRegistration } from './types';
+import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 
 /**
  * Tracks 3rd party IJupyterUriProviders and requests URIs from their handles. We store URI information in our
@@ -20,7 +21,7 @@ import { IControllerRegistration } from './types';
  */
 @injectable()
 export class RemoteKernelControllerWatcher implements IExtensionSyncActivationService {
-    private readonly handledProviders = new WeakSet<IJupyterUriProvider>();
+    private readonly handledProviders = new WeakSet<IInternalJupyterUriProvider>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistry: IJupyterUriProviderRegistration,
@@ -29,73 +30,56 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
     ) {}
     activate(): void {
         this.providerRegistry.onDidChangeProviders(this.addProviderHandlers, this, this.disposables);
-        this.addProviderHandlers().catch(noop);
+        this.addProviderHandlers();
     }
-    private async addProviderHandlers() {
-        const providers = await this.providerRegistry.getProviders();
-        providers.forEach((provider) => {
+    private addProviderHandlers() {
+        this.providerRegistry.providers.forEach((provider) => {
+            if (this.handledProviders.has(provider)) {
+                return;
+            }
+            this.handledProviders.add(provider);
             // clear out any old handlers
             this.onProviderHandlesChanged(provider).catch(noop);
-
-            if (provider.onDidChangeHandles && !this.handledProviders.has(provider)) {
-                provider.onDidChangeHandles(this.onProviderHandlesChanged.bind(this, provider), this, this.disposables);
+            if (provider.onDidChangeHandles) {
+                provider.onDidChangeHandles(() => this.onProviderHandlesChanged(provider), this, this.disposables);
             }
         });
     }
-    private async onProviderHandlesChanged(provider: IJupyterUriProvider) {
+    private async onProviderHandlesChanged(provider: IInternalJupyterUriProvider) {
         if (!provider.getHandles) {
             return;
         }
         const [handles, uris] = await Promise.all([provider.getHandles(), this.uriStorage.getAll()]);
-        const serverJupyterProviderMap = new Map<string, { uri: string; providerId: string; handle: string }>();
-        const registeredHandles: string[] = [];
+        const serverJupyterProviderMap = new Map<string, { providerId: string; handle: string }>();
         await Promise.all(
-            uris.map(async (item) => {
-                // Check if this url is associated with a provider.
-                if (item.provider.id !== provider.id) {
-                    return;
-                }
-                serverJupyterProviderMap.set(item.serverId, {
-                    uri: item.uri,
-                    providerId: item.provider.id,
-                    handle: item.provider.handle
-                });
+            uris
+                .filter(
+                    (item) => item.provider.extensionId === provider.extensionId && item.provider.id === provider.id
+                )
+                .map(async (item) => {
+                    serverJupyterProviderMap.set(generateIdFromRemoteProvider(item.provider), {
+                        providerId: item.provider.id,
+                        handle: item.provider.handle
+                    });
 
-                if (handles.includes(item.provider.handle)) {
-                    registeredHandles.push(item.provider.handle);
-                }
-
-                // Check if this handle is still valid.
-                // If not then remove this uri from the list.
-                if (!handles.includes(item.provider.handle)) {
-                    // Looks like the 3rd party provider has updated its handles and this server is no longer available.
-                    await this.uriStorage.remove(item.serverId);
-                } else if (!item.isValidated) {
-                    await this.uriStorage.add(item.provider).catch(noop);
-                }
-            })
+                    // Check if this handle is still valid.
+                    // If not then remove this uri from the list.
+                    if (!handles.includes(item.provider.handle)) {
+                        // Looks like the 3rd party provider has updated its handles and this server is no longer available.
+                        await this.uriStorage.remove(item.provider);
+                    }
+                })
         );
 
-        // find unregistered handles
-        const unregisteredHandles = handles.filter((h) => !registeredHandles.includes(h));
-        await Promise.all(
-            unregisteredHandles.map(async (handle) => {
-                try {
-                    await this.uriStorage.add({ id: provider.id, handle });
-                } catch (ex) {
-                    traceError(`Failed to get server uri and add it to uri Storage for handle ${handle}`, ex);
-                }
-            })
-        );
-
-        const controllers = this.controllers.registered;
-        controllers.forEach((controller) => {
+        this.controllers.registered.forEach((controller) => {
             const connection = controller.connection;
             if (isLocalConnection(connection)) {
                 return;
             }
-            const info = serverJupyterProviderMap.get(connection.serverId);
-            if (info && !handles.includes(info.handle)) {
+            if (
+                !handles.includes(connection.serverProviderHandle.handle) &&
+                connection.serverProviderHandle.id === provider.id
+            ) {
                 // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                 traceWarning(
                     `Deleting controller ${controller.id} as it is associated with a server Id that has been removed`

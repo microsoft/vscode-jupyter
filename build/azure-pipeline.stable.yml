@@ -1,12 +1,16 @@
-trigger: none
-#   branches:
-#     include:
-#       - release/*
-#   tags:
-#     include: ['*']
+trigger:
+  branches:
+    include:
+      - main
 pr: none
 # Do not change this name, it is used by gulp file to generate the build number.
 name: $(Date:yyyyMMdd)_$(Hours)_$(Minutes)_$(Rev:r)
+
+parameters:
+  - name: publishExtension
+    displayName: 🚀 Publish Extension
+    type: boolean
+    default: false
 
 resources:
   repositories:
@@ -19,7 +23,7 @@ resources:
 extends:
   template: azure-pipelines/extension/stable.yml@templates
   parameters:
-    publishExtension: true
+    publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src
     buildPlatforms:
       - name: Linux
@@ -89,3 +93,16 @@ extends:
         displayName: Build
         env:
           VSC_VSCE_TARGET: $(vsceTarget)
+
+    tsa:
+        enabled: true
+        options:
+            codebaseName: 'devdiv_$(Build.Repository.Name)'
+            serviceTreeID: '14f24efd-b502-422a-9f40-09ea7ce9cf14'
+            instanceUrl: 'https://devdiv.visualstudio.com/defaultcollection'
+            projectName: 'DevDiv'
+            areaPath: "DevDiv\\VS Code (compliance tracking only)\\Visual Studio Code Jupyter Extensions"
+            notificationAliases:
+                - 'stbatt@microsoft.com'
+                - 'lszomoru@microsoft.com'
+                - 'dojayama@microsoft.com'

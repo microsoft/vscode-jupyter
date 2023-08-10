@@ -17,8 +17,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
-    IJupyterKernelSpec,
-    IKernelSession
+    IJupyterKernelSpec
 } from './types';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
@@ -55,6 +54,21 @@ export async function createInterpreterKernelSpec(
     interpreter?: PythonEnvironment,
     rootKernelFilePath?: Uri
 ): Promise<IJupyterKernelSpec> {
+    return createInterpreterKernelSpecWithName(
+        await getInterpreterKernelSpecName(interpreter),
+        interpreter,
+        rootKernelFilePath
+    );
+}
+
+/**
+ * Create a default kernelspec with the given display name.
+ */
+export function createInterpreterKernelSpecWithName(
+    name: string,
+    interpreter?: PythonEnvironment,
+    rootKernelFilePath?: Uri
+): IJupyterKernelSpec {
     const interpreterMetadata = interpreter
         ? {
               path: getFilePath(interpreter.uri)
@@ -63,7 +77,7 @@ export async function createInterpreterKernelSpec(
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: KernelSpec.ISpecModel = {
-        name: await getInterpreterKernelSpecName(interpreter),
+        name,
         language: 'python',
         display_name: interpreter?.displayName || 'Python 3',
         metadata: {
@@ -581,15 +595,17 @@ export type SilentExecutionErrorOptions = {
 };
 
 export async function executeSilently(
-    session: IKernelSession | Kernel.IKernelConnection,
+    kernelConnection: Kernel.IKernelConnection,
     code: string,
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
-    traceVerbose(`Executing silently Code (${session.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`);
+    traceVerbose(
+        `Executing silently Code (${kernelConnection.status}) = ${splitLines(code.substring(0, 100)).join('\\n')}`
+    );
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
-    const request = session.requestExecute(
+    const request = kernelConnection.requestExecute(
         {
             code: code.replace(/\r\n/g, '\n'),
             silent: false,

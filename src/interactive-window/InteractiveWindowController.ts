@@ -8,13 +8,11 @@ import { noop } from '../platform/common/utils/misc';
 import { InteractiveWindowMode, Resource } from '../platform/common/types';
 import { IInteractiveControllerHelper } from './types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { SystemInfoCell, getSysInfoMessage } from './systemInfoCell';
+import { SystemInfoCell, getFinishConnectMessage, getStartConnectMessage } from './systemInfoCell';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import { SysInfoReason } from '../messageTypes';
-import { DataScience } from '../platform/common/utils/localize';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
-import { getDisplayNameOrNameOfKernelConnection } from '../kernels/helpers';
 
 export class InteractiveWindowController {
     public kernel: Deferred<IKernel> | undefined;
@@ -23,6 +21,7 @@ export class InteractiveWindowController {
     private disposables: Disposable[] = [];
     private systemInfoCell: SystemInfoCell | undefined;
     private fileInKernel: Uri | undefined;
+    private connectingListener: Disposable;
 
     constructor(
         private readonly controllerService: IInteractiveControllerHelper,
@@ -46,6 +45,7 @@ export class InteractiveWindowController {
     }
 
     public async startKernel(): Promise<IKernel> {
+        this.connectingListener?.dispose();
         if (this.kernel) {
             return this.kernel.promise;
         }
@@ -177,10 +177,19 @@ export class InteractiveWindowController {
 
                 // Clear cached kernel when the selected controller for this document changes
                 if (e.controller.id !== this.controller?.id) {
+                    const previouslyConnected = !!this.kernel;
                     this.disconnect();
                     this.controller = e.controller.controller;
                     this.metadata = e.controller.connection;
-                    this.startKernel().catch(noop);
+                    if (previouslyConnected) {
+                        this.startKernel().catch(noop);
+                    } else {
+                        this.connectingListener?.dispose();
+                        this.connectingListener = e.controller.onConnecting(() => {
+                            this.startKernel().catch(noop);
+                        });
+                        this.disposables.push(this.connectingListener);
+                    }
                 }
             },
             this
@@ -188,9 +197,6 @@ export class InteractiveWindowController {
     }
 
     public setInfoMessageCell(message: string) {
-        if (!this.notebook) {
-            return;
-        }
         if (!this.systemInfoCell) {
             this.systemInfoCell = new SystemInfoCell(this.notebook, message);
         } else {
@@ -203,15 +209,12 @@ export class InteractiveWindowController {
     }
 
     private setInfoMessage(metadata: KernelConnectionMetadata, reason: SysInfoReason) {
-        const message = getSysInfoMessage(metadata, reason);
+        const message = getStartConnectMessage(metadata, reason);
         this.setInfoMessageCell(message);
     }
 
     private finishSysInfoMessage(kernel: IKernel, reason: SysInfoReason) {
-        const displayName = getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata);
-        const kernelInfo = 'info' in kernel && kernel.info?.status === 'ok' ? kernel.info : undefined;
-        const banner = kernelInfo ? kernelInfo.banner.split('\n').join('  \n') : kernel.toString();
-        const message = reason == SysInfoReason.Restart ? DataScience.restartedKernelHeader(displayName || '') : banner;
+        const message = getFinishConnectMessage(kernel.kernelConnectionMetadata, reason);
         this.systemInfoCell
             ?.updateMessage(message)
             .catch((error) =>

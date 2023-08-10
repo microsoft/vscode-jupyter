@@ -89,6 +89,7 @@ export namespace Identifiers {
     export const REMOTE_URI = 'https://remote/';
     export const REMOTE_URI_ID_PARAM = 'id';
     export const REMOTE_URI_HANDLE_PARAM = 'uriHandle';
+    export const REMOTE_URI_EXTENSION_ID_PARAM = 'extensionId';
 }
 
 export namespace CodeSnippets {
@@ -182,7 +183,6 @@ export namespace Commands {
     export const CreateNewInteractive = 'jupyter.createnewinteractive';
     export const ImportNotebook = 'jupyter.importnotebook';
     export const ImportNotebookFile = 'jupyter.importnotebookfile';
-    export const SelectJupyterURI = 'jupyter.selectjupyteruri';
     export const ExportFileAsNotebook = 'jupyter.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'jupyter.exportfileandoutputasnotebook';
     export const InterruptKernel = 'jupyter.interruptkernel';
@@ -252,6 +252,7 @@ export namespace Commands {
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
+    export const ContinueEditSessionInCodespace = 'jupyter.continueEditSessionInCodespace';
 }
 
 export namespace CodeLensCommands {
@@ -287,6 +288,7 @@ export namespace EditorContexts {
     export const HasNativeNotebookOrInteractiveWindowOpen = 'jupyter.hasNativeNotebookOrInteractiveWindowOpen';
     export const ZmqAvailable = 'jupyter.zmqavailable';
     export const ReplayLogLoaded = 'jupyter.replayLogLoaded';
+    export const KernelSource = 'jupyter.kernelSource';
 }
 
 export namespace RegExpValues {
@@ -326,11 +328,9 @@ export enum Telemetry {
     RunSelectionOrLine = 'DATASCIENCE.RUN_SELECTION_OR_LINE',
     RunToLine = 'DATASCIENCE.RUN_TO_LINE',
     RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',
-    SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
     EnterJupyterURI = 'DATASCIENCE.ENTER_JUPYTER_URI',
     SelectLocalJupyterKernel = 'DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL',
     SelectRemoteJupyterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
-    SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     SetJupyterURIUIDisplayed = 'DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
     /**
@@ -389,6 +389,7 @@ export enum Telemetry {
     AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
     GetPasswordFailure = 'DS_INTERNAL.GET_PASSWORD_FAILURE',
     GetPasswordSuccess = 'DS_INTERNAL.GET_PASSWORD_SUCCESS',
+    CheckPasswordJupyterHub = 'DS_INTERNAL.JUPYTER_HUB_PASSWORD',
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
@@ -402,10 +403,8 @@ export enum Telemetry {
      */
     SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
     NumberOfSavedRemoteKernelIds = 'DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED',
-    WaitForIdleJupyter = 'DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER',
     PerceivedJupyterStartupNotebook = 'DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK',
     GetActivatedEnvironmentVariables = 'DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES',
-    WebviewStartup = 'DS_INTERNAL.WEBVIEW_STARTUP',
     VariableExplorerFetchTime = 'DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME',
     KernelSpec = 'DS_INTERNAL.JUPYTER_KERNEL_SPEC',
     FailedToUpdateKernelSpec = 'DS_INTERNAL.FAILED_TO_UPDATE_JUPYTER_KERNEL_SPEC',
@@ -433,7 +432,6 @@ export enum Telemetry {
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
     KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
     AmbiguousGlobalKernelSpec = 'GLOBAL_PYTHON_KERNELSPEC',
-    PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
     RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
     ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
@@ -469,6 +467,7 @@ export enum Telemetry {
     NativeVariableViewLoaded = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_LOADED',
     NativeVariableViewMadeVisible = 'DS_INTERNAL.NATIVE_VARIABLE_VIEW_MADE_VISIBLE',
     NotebookStart = 'DATASCIENCE.NOTEBOOK_START',
+    KernelStartFailureDueToMissingEnv = 'DATASCIENCE.KERNEL_START_FAILURE_MISSING_ENV',
     NotebookInterrupt = 'DATASCIENCE.NOTEBOOK_INTERRUPT',
     NotebookRestart = 'DATASCIENCE.NOTEBOOK_RESTART',
     SwitchKernel = 'DS_INTERNAL.SWITCH_KERNEL',
@@ -509,7 +508,8 @@ export enum Telemetry {
     DataViewerUsingInterpreter = 'DATAVIEWER.USING_INTERPRETER',
     DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL',
     DataViewerWebviewLoaded = 'DATAVIEWER.WEBVIEW_LOADED',
-    PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED'
+    PlotViewerWebviewLoaded = 'PLOTVIEWER.WEBVIEW_LOADED',
+    EnterRemoteJupyterUrl = 'DATASCIENCE.ENTER_REMOTE_JUPYTER_URL'
 }
 
 export enum JupyterCommands {

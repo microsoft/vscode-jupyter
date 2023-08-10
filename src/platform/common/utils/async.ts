@@ -10,24 +10,6 @@ export async function sleep(timeout: number): Promise<number> {
     });
 }
 
-export async function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | null> {
-    // Set a timer that will resolve with null
-    return new Promise<T | null>((resolve, reject) => {
-        const timer = setTimeout(() => resolve(null), timeout);
-        promise
-            .then((result) => {
-                // When the promise resolves, make sure to clear the timer or
-                // the timer may stick around causing tests to wait
-                clearTimeout(timer);
-                resolve(result);
-            })
-            .catch((e) => {
-                clearTimeout(timer);
-                reject(e);
-            });
-    });
-}
-
 export async function waitForCondition(
     condition: () => Promise<boolean>,
     timeout: number,
@@ -52,6 +34,34 @@ export async function waitForCondition(
             resolve(result);
         };
     });
+}
+
+export function raceTimeout<T>(timeout: number, ...promises: Promise<T>[]): Promise<T | undefined>;
+export function raceTimeout<T>(timeout: number, defaultValue: T, ...promises: Promise<T>[]): Promise<T>;
+export function raceTimeout<T>(timeout: number, defaultValue: T, ...promises: Promise<T>[]): Promise<T> {
+    const resolveValue = isPromiseLike(defaultValue) ? undefined : defaultValue;
+    if (isPromiseLike(defaultValue)) {
+        promises.push(defaultValue as unknown as Promise<T>);
+    }
+
+    let promiseResolve: ((value: T) => void) | undefined = undefined;
+
+    const timer = setTimeout(() => promiseResolve?.(resolveValue as unknown as T), timeout);
+
+    return Promise.race([
+        Promise.race(promises).finally(() => clearTimeout(timer)),
+        new Promise<T>((resolve) => (promiseResolve = resolve))
+    ]);
+}
+
+export function raceTimeoutError<T>(timeout: number, error: Error, ...promises: Promise<T>[]): Promise<T> {
+    let promiseReject: ((value: unknown) => void) | undefined = undefined;
+    const timer = setTimeout(() => promiseReject?.(error), timeout);
+
+    return Promise.race([
+        Promise.race(promises).finally(() => clearTimeout(timer)),
+        new Promise<T>((_, reject) => (promiseReject = reject))
+    ]);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

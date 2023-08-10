@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, extensions, Uri, workspace, window } from 'vscode';
 import { INotebookEditorProvider } from '../../notebooks/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { PylanceExtension } from '../../platform/common/constants';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
@@ -12,6 +12,7 @@ import { traceInfo, traceWarning } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { isInteractiveInputTab } from '../../interactive-window/helpers';
 import { isRemoteConnection } from '../../kernels/types';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -19,7 +20,7 @@ import { isRemoteConnection } from '../../kernels/types';
  * LSP-based notebooks support.
  */
 @injectable()
-export class NotebookPythonPathService implements IExtensionSingleActivationService {
+export class NotebookPythonPathService implements IExtensionSyncActivationService {
     private extensionChangeHandler: Disposable | undefined;
 
     private _isEnabled: boolean | undefined;
@@ -35,21 +36,24 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         }
     }
 
-    public async activate() {
+    public activate() {
         if (!this.isUsingPylance() || !this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
 
-        await this.apiProvider.getApi().then((api) => {
-            if (api.registerJupyterPythonPathFunction !== undefined) {
-                api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
-            }
-            if (api.registerGetNotebookUriForTextDocumentUriFunction !== undefined) {
-                api.registerGetNotebookUriForTextDocumentUriFunction((uri) =>
-                    this._getNotebookUriForTextDocumentUri(uri)
-                );
-            }
-        });
+        this.apiProvider
+            .getApi()
+            .then((api) => {
+                if (api.registerJupyterPythonPathFunction !== undefined) {
+                    api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
+                }
+                if (api.registerGetNotebookUriForTextDocumentUriFunction !== undefined) {
+                    api.registerGetNotebookUriForTextDocumentUriFunction((uri) =>
+                        this._getNotebookUriForTextDocumentUri(uri)
+                    );
+                }
+            })
+            .catch(noop);
     }
 
     private async reset() {

@@ -45,7 +45,10 @@ export class ScriptManager extends EventEmitter {
     // Hence use 60 seconds.
     private readonly timeoutWaitingForScriptToLoad = 60_000;
     // List of widgets that must always be loaded using requirejs instead of using a CDN or the like.
-    constructor(private readonly postOffice: PostOffice, cdnIsReachable = isCDNReachable()) {
+    constructor(
+        private readonly postOffice: PostOffice,
+        cdnIsReachable = isCDNReachable()
+    ) {
         super();
         this.isOnline.promise.catch(noop);
         cdnIsReachable

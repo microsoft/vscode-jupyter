@@ -7,12 +7,12 @@ import uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceVerbose, traceInfoIfCI, traceError, traceWarning } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { Telemetry } from '../../../telemetry';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
 import { IKernelProcess } from '../types';
-import { createRawKernel, RawKernel } from './rawKernel.node';
+import { OldRawKernel, createRawKernel } from './rawKernel.node';
 import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -21,7 +21,7 @@ RawSession class implements a jupyterlab ISession object
 This provides enough of the ISession interface so that our direct
 ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
-export class RawSession implements ISessionWithSocket {
+export class OldRawSession implements ISessionWithSocket {
     public isDisposed: boolean = false;
     public readonly kernelConnectionMetadata: KernelConnectionMetadata;
     private isDisposing?: boolean;
@@ -31,9 +31,10 @@ export class RawSession implements ISessionWithSocket {
     // and is also the clientID of the active kernel
     private _id: string;
     private _clientID: string;
-    private _kernel: RawKernel;
+    private _kernel: OldRawKernel;
     private readonly _statusChanged: Signal<this, KernelMessage.Status>;
     private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
+    private readonly _propertyChanged: ISignal<this, 'path' | 'name' | 'type'>;
     private readonly _terminated: Signal<this, void>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
     private readonly _unhandledMessage: Signal<this, KernelMessage.IMessage>;
@@ -57,12 +58,17 @@ export class RawSession implements ISessionWithSocket {
     }
 
     // RawSession owns the lifetime of the kernel process and will dispose it
-    constructor(public kernelProcess: IKernelProcess, public readonly resource: Resource) {
+    constructor(
+        public kernelProcess: IKernelProcess,
+        public readonly resource: Resource
+    ) {
         this.kernelConnectionMetadata = kernelProcess.kernelConnectionMetadata;
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const signaling = (this.signaling = require('@lumino/signaling') as typeof import('@lumino/signaling'));
         this._statusChanged = new signaling.Signal<this, KernelMessage.Status>(this);
+        this._propertyChanged = new signaling.Signal<this, 'path' | 'name' | 'type'>(this);
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
+        this._propertyChanged = new signaling.Signal<this, 'path' | 'name' | 'type'>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this._terminated = new signaling.Signal<this, void>(this);
         this._anyMessage = new signaling.Signal<this, Kernel.IAnyMessageArgs>(this);
@@ -157,7 +163,7 @@ export class RawSession implements ISessionWithSocket {
         traceVerbose(`Waiting for Raw session to be ready, currently ${this.connectionStatus}`);
         // When our kernel connects and gets a status message it triggers the ready promise
         const deferred = createDeferred<'connected'>();
-        const handler = (_session: RawSession, status: Kernel.ConnectionStatus) => {
+        const handler = (_session: OldRawSession, status: Kernel.ConnectionStatus) => {
             if (status == 'connected') {
                 traceVerbose('Raw session connected');
                 deferred.resolve(status);
@@ -172,7 +178,7 @@ export class RawSession implements ISessionWithSocket {
         }
 
         traceVerbose('Waiting for Raw session to be ready for 30s');
-        const result = await Promise.race([deferred.promise, sleep(30_000)]);
+        const result = await raceTimeout(30_000, deferred.promise);
         this.connectionStatusChanged.disconnect(handler);
         traceVerbose(`Waited for Raw session to be ready & got ${result}`);
 
@@ -194,7 +200,7 @@ export class RawSession implements ISessionWithSocket {
         return this._kernelChanged;
     }
     get propertyChanged(): ISignal<this, 'path' | 'name' | 'type'> {
-        throw new Error('Not yet implemented');
+        return this._propertyChanged;
     }
     get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessage;

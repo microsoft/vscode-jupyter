@@ -34,15 +34,11 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
     recommended: KernelConnectionMetadata | undefined;
     private readonly disposables: IDisposable[] = [];
     private refreshInvoked?: boolean;
-    private _finder: IContributedKernelFinder | undefined;
-    public get finder(): IContributedKernelFinder | undefined {
-        return this._finder;
-    }
     constructor(
         private readonly notebook: NotebookDocument,
         kind: ContributedKernelFinderKind,
         finderPromise: IContributedKernelFinder | Promise<IContributedKernelFinder>,
-        private readonly pythonEnvFilter: PythonEnvironmentFilter,
+        private readonly pythonEnvFilter: PythonEnvironmentFilter | undefined,
         private readonly connection: JupyterConnection
     ) {
         this.refresh = async () => {
@@ -63,7 +59,6 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         disposeAllDisposables(this.disposables);
     }
     private setupFinder(finder: IContributedKernelFinder) {
-        this._finder = finder;
         this.refresh = async () => finder.refresh();
         if (this.status !== finder.status && !this.refreshInvoked) {
             this.status = finder.status;
@@ -85,7 +80,7 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
                 this.title = DataScience.kernelPickerSelectLocalKernelSpecTitle;
                 break;
             case ContributedKernelFinderKind.LocalPythonEnvironment:
-                this.title = DataScience.kernelPickerSelectPythonEnvironmentTitle;
+                this.title = DataScience.quickPickSelectPythonEnvironmentTitle;
                 break;
             default:
                 this.title = DataScience.kernelPickerSelectKernelFromRemoteTitle(finder.displayName);
@@ -130,10 +125,12 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
         }
     }
     private filteredKernels(kernels: KernelConnectionMetadata[]) {
+        const filter = this.pythonEnvFilter;
+        if (!filter) {
+            return kernels;
+        }
         return kernels.filter(
-            (k) =>
-                k.kind !== 'startUsingPythonInterpreter' ||
-                !this.pythonEnvFilter.isPythonEnvironmentExcluded(k.interpreter)
+            (k) => k.kind !== 'startUsingPythonInterpreter' || !filter!.isPythonEnvironmentExcluded(k.interpreter)
         );
     }
     private computePreferredRemoteKernel(
@@ -159,9 +156,6 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
             if (this.recommended && !this.kernels.find((k) => k.id === this.recommended?.id)) {
                 this.recommended = undefined;
             }
-            if (this.recommended) {
-                return;
-            }
             const preferredMethod =
                 finder.kind === ContributedKernelFinderKind.LocalKernelSpec
                     ? preferred.findPreferredLocalKernelSpecConnection.bind(preferred)
@@ -169,13 +163,13 @@ export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider
 
             preferredMethod(this.notebook, finder, cancelToken)
                 .then((kernel) => {
-                    if (this.recommended) {
+                    if (this.recommended?.id === kernel?.id) {
                         return;
                     }
                     this.recommended = kernel;
                     this._onDidChangeRecommended.fire();
                 })
-                .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook.uri)}`, ex));
+                .catch((ex) => traceError(`Preferred connection failure ${getDisplayPath(this.notebook?.uri)}`, ex));
         };
         computePreferred();
         finder.onDidChangeKernels(computePreferred, this, this.disposables);

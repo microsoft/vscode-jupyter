@@ -30,9 +30,9 @@ import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../pla
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
 import {
+    IConnectionDisplayDataProvider,
     IControllerRegistration,
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController,
@@ -226,7 +226,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
     private async monitorDeletionOfConnections(finder: IContributedKernelFinder) {
         const eventHandler = finder.onDidChangeKernels(
             ({ removed: connections }) => {
-                const deletedConnections = new Set((connections || []).map((item) => item.id));
+                const deletedConnections = new Set((connections || []).map((c) => c.id));
                 this.registered
                     .filter((item) => deletedConnections.has(item.connection.id))
                     .forEach((controller) => {
@@ -255,7 +255,11 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         // Remove any connections that are no longer available.
         uriEntries.forEach((item) => {
             this.registered.forEach((c) => {
-                if (isRemoteConnection(c.connection) && c.connection.serverId === item.serverId) {
+                if (
+                    isRemoteConnection(c.connection) &&
+                    c.connection.serverProviderHandle.id === item.provider.id &&
+                    c.connection.serverProviderHandle.handle === item.provider.handle
+                ) {
                     traceWarning(
                         `Deleting controller ${c.id} as it is associated with a connection that has been removed`
                     );
@@ -381,7 +385,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                         this.serviceContainer.get<IBrowserService>(IBrowserService),
                         this.extensionChecker,
                         this.serviceContainer,
-                        this.serviceContainer.get<ConnectionDisplayDataProvider>(ConnectionDisplayDataProvider)
+                        this.serviceContainer.get<IConnectionDisplayDataProvider>(IConnectionDisplayDataProvider)
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     const controllerDisposables: IDisposable[] = [];

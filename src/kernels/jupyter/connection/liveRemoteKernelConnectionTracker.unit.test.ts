@@ -16,7 +16,7 @@ import {
     mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources
 } from '../../../kernels/jupyter/connection/liveRemoteKernelConnectionTracker';
 import { LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
-import { computeServerId } from '../../../kernels/jupyter/jupyterUtils';
+import { generateIdFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 import { waitForCondition } from '../../../test/common';
 
 use(chaiAsPromised);
@@ -26,12 +26,10 @@ suite('Live kernel Connection Tracker', async () => {
     let tracker: LiveRemoteKernelConnectionUsageTracker;
     let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
     const disposables: IDisposable[] = [];
-    const server2Uri = 'http://one:1234/hello?token=1234';
-    const server2Id = await computeServerId(server2Uri);
+    const serverProviderHandle = { handle: 'handle2', id: 'id2', extensionId: '' };
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'baseUrl',
         id: 'connectionId',
-        serverId: 'server1',
         kernelModel: {
             lastActivityTime: new Date(),
             id: 'model1',
@@ -47,12 +45,12 @@ suite('Live kernel Connection Tracker', async () => {
             },
             name: '',
             numberOfConnections: 0
-        }
+        },
+        serverProviderHandle: serverProviderHandle
     });
     const remoteLiveKernel2 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'http://one:1234/',
         id: 'connectionId2',
-        serverId: server2Id,
         kernelModel: {
             id: 'modelId2',
             lastActivityTime: new Date(),
@@ -68,12 +66,12 @@ suite('Live kernel Connection Tracker', async () => {
             },
             name: '',
             numberOfConnections: 0
-        }
+        },
+        serverProviderHandle: serverProviderHandle
     });
     const remoteLiveKernel3 = LiveRemoteKernelConnectionMetadata.create({
         baseUrl: 'http://one:1234/',
         id: 'connectionId3',
-        serverId: server2Id,
         kernelModel: {
             lastActivityTime: new Date(),
             id: 'modelId3',
@@ -89,7 +87,8 @@ suite('Live kernel Connection Tracker', async () => {
             },
             name: '',
             numberOfConnections: 0
-        }
+        },
+        serverProviderHandle: serverProviderHandle
     });
     setup(() => {
         serverUriStorage = mock<IJupyterServerUriStorage>();
@@ -120,7 +119,7 @@ suite('Live kernel Connection Tracker', async () => {
     });
     test('Kernel connection is not used if memento is not empty but does not contain the same connection info', async () => {
         const cachedItems = {
-            [remoteLiveKernel2.serverId]: {
+            [generateIdFromRemoteProvider(remoteLiveKernel2.serverProviderHandle)]: {
                 [remoteLiveKernel2.kernelModel.id!]: [Uri.file('a.ipynb').toString()]
             }
         };
@@ -134,10 +133,10 @@ suite('Live kernel Connection Tracker', async () => {
     });
     test('Kernel connection is used if connection is tracked in memento', async () => {
         const cachedItems = {
-            [remoteLiveKernel2.serverId]: {
+            [generateIdFromRemoteProvider(remoteLiveKernel2.serverProviderHandle)]: {
                 [remoteLiveKernel2.kernelModel.id!]: [Uri.file('a.ipynb').toString()]
             },
-            [remoteLiveKernel1.serverId]: {
+            [generateIdFromRemoteProvider(remoteLiveKernel1.serverProviderHandle)]: {
                 [remoteLiveKernel1.kernelModel.id!]: [Uri.file('a.ipynb').toString()]
             }
         };
@@ -162,30 +161,57 @@ suite('Live kernel Connection Tracker', async () => {
         );
 
         tracker.activate();
-        tracker.trackKernelIdAsUsed(Uri.file('a.ipynb'), remoteLiveKernel1.serverId, remoteLiveKernel1.kernelModel.id!);
+        tracker.trackKernelIdAsUsed(
+            Uri.file('a.ipynb'),
+            remoteLiveKernel1.serverProviderHandle,
+            remoteLiveKernel1.kernelModel.id!
+        );
 
-        assert.deepEqual(cachedItems[remoteLiveKernel1.serverId][remoteLiveKernel1.kernelModel.id!], [
-            Uri.file('a.ipynb').toString()
-        ]);
+        assert.deepEqual(
+            cachedItems[generateIdFromRemoteProvider(remoteLiveKernel1.serverProviderHandle)][
+                remoteLiveKernel1.kernelModel.id!
+            ],
+            [Uri.file('a.ipynb').toString()]
+        );
 
-        tracker.trackKernelIdAsUsed(Uri.file('a.ipynb'), remoteLiveKernel2.serverId, remoteLiveKernel2.kernelModel.id!);
+        tracker.trackKernelIdAsUsed(
+            Uri.file('a.ipynb'),
+            remoteLiveKernel2.serverProviderHandle,
+            remoteLiveKernel2.kernelModel.id!
+        );
 
-        assert.deepEqual(cachedItems[remoteLiveKernel2.serverId][remoteLiveKernel2.kernelModel.id!], [
-            Uri.file('a.ipynb').toString()
-        ]);
+        assert.deepEqual(
+            cachedItems[generateIdFromRemoteProvider(remoteLiveKernel2.serverProviderHandle)][
+                remoteLiveKernel2.kernelModel.id!
+            ],
+            [Uri.file('a.ipynb').toString()]
+        );
 
-        tracker.trackKernelIdAsUsed(Uri.file('a.ipynb'), remoteLiveKernel3.serverId, remoteLiveKernel3.kernelModel.id!);
+        tracker.trackKernelIdAsUsed(
+            Uri.file('a.ipynb'),
+            remoteLiveKernel3.serverProviderHandle,
+            remoteLiveKernel3.kernelModel.id!
+        );
 
-        assert.deepEqual(cachedItems[remoteLiveKernel3.serverId][remoteLiveKernel3.kernelModel.id!], [
-            Uri.file('a.ipynb').toString()
-        ]);
+        assert.deepEqual(
+            cachedItems[generateIdFromRemoteProvider(remoteLiveKernel3.serverProviderHandle)][
+                remoteLiveKernel3.kernelModel.id!
+            ],
+            [Uri.file('a.ipynb').toString()]
+        );
 
-        tracker.trackKernelIdAsUsed(Uri.file('b.ipynb'), remoteLiveKernel3.serverId, remoteLiveKernel3.kernelModel.id!);
+        tracker.trackKernelIdAsUsed(
+            Uri.file('b.ipynb'),
+            remoteLiveKernel3.serverProviderHandle,
+            remoteLiveKernel3.kernelModel.id!
+        );
 
-        assert.deepEqual(cachedItems[remoteLiveKernel3.serverId][remoteLiveKernel3.kernelModel.id!], [
-            Uri.file('a.ipynb').toString(),
-            Uri.file('b.ipynb').toString()
-        ]);
+        assert.deepEqual(
+            cachedItems[generateIdFromRemoteProvider(remoteLiveKernel3.serverProviderHandle)][
+                remoteLiveKernel3.kernelModel.id!
+            ],
+            [Uri.file('a.ipynb').toString(), Uri.file('b.ipynb').toString()]
+        );
 
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel1));
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel2));
@@ -194,7 +220,7 @@ suite('Live kernel Connection Tracker', async () => {
         // Remove a kernel connection from some other document.
         tracker.trackKernelIdAsNotUsed(
             Uri.file('xyz.ipynb'),
-            remoteLiveKernel1.serverId,
+            remoteLiveKernel1.serverProviderHandle,
             remoteLiveKernel1.kernelModel.id!
         );
 
@@ -205,7 +231,7 @@ suite('Live kernel Connection Tracker', async () => {
         // Remove a kernel connection from a tracked document.
         tracker.trackKernelIdAsNotUsed(
             Uri.file('a.ipynb'),
-            remoteLiveKernel1.serverId,
+            remoteLiveKernel1.serverProviderHandle,
             remoteLiveKernel1.kernelModel.id!
         );
 
@@ -214,7 +240,7 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Forget the Uri connection all together.
-        onDidRemoveUris.fire([{ uri: server2Uri, serverId: server2Id, time: 0, provider: { id: '1', handle: '2' } }]);
+        onDidRemoveUris.fire([{ time: 0, provider: serverProviderHandle }]);
 
         await waitForCondition(
             () => {

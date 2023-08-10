@@ -42,7 +42,9 @@ export interface ICommandNameArgumentTypeMapping {
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     ['jupyter.selectJupyterInterpreter']: [];
+    ['dataScience.ClearUserProviderJupyterServerCache']: [];
     ['jupyterViewVariables.focus']: [];
+    ['jupyter.selectLocalJupyterServer']: [];
     ['workbench.action.openSettings']: ['jupyter.kernels.excludePythonEnvironments'];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
@@ -177,7 +179,6 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];
-    [DSCommands.SelectJupyterURI]: [Uri];
     [DSCommands.RunByLine]: [NotebookCell];
     [DSCommands.RunAndDebugCell]: [NotebookCell];
     [DSCommands.RunByLineNext]: [NotebookCell];
@@ -186,4 +187,5 @@ export interface ICommandNameArgumentTypeMapping {
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
     [DSCommands.InstallPythonViaKernelPicker]: [];
+    [DSCommands.ContinueEditSessionInCodespace]: [];
 }

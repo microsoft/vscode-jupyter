@@ -7,7 +7,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import type { Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
-import { Uri, QuickPickItem } from 'vscode';
+import { Uri } from 'vscode';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
 import { IAsyncDisposable, ICell, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
@@ -25,6 +25,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection } from '../../api';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -53,23 +54,9 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
     refreshCommands(): Promise<void>;
 }
 
-export interface IJupyterPasswordConnectInfo {
-    requestHeaders?: HeadersInit;
-    remappedBaseUrl?: string;
-    remappedToken?: string;
-}
-
-export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
-export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(options: {
-        url: string;
-        isTokenEmpty: boolean;
-    }): Promise<IJupyterPasswordConnectInfo | undefined>;
-}
-
-export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
-export interface IJupyterSessionManagerFactory {
-    create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
+export const IOldJupyterSessionManagerFactory = Symbol('IOldJupyterSessionManagerFactory');
+export interface IOldJupyterSessionManagerFactory {
+    create(connInfo: IJupyterConnection): Promise<IJupyterSessionManager>;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
@@ -154,117 +141,56 @@ export interface IJupyterServerProvider {
     getOrStartServer(options: GetServerOptions): Promise<IJupyterConnection>;
 }
 
-export interface IJupyterServerUri {
-    baseUrl: string;
-    /**
-     * Jupyter auth Token
-     */
-    token: string;
-    /**
-     * Authorization header to be used when connecting to the server.
-     */
-    authorizationHeader?: Record<string, string>;
-    displayName: string;
-    /**
-     * The local directory that maps to the remote directory of the Jupyter Server.
-     * E.g. assume you start Jupyter Notebook with --notebook-dir=/foo/bar,
-     * and you have a file named /foo/bar/sample.ipynb, /foo/bar/sample2.ipynb and the like.
-     * Then assume the mapped local directory will be /users/xyz/remoteServer and the files sample.ipynb and sample2.ipynb
-     * are in the above local directory.
-     *
-     * Using this setting one can map the local directory to the remote directory.
-     * In this case the value of this property would be /users/xyz/remoteServer.
-     *
-     * Note: A side effect of providing this value is the fact that Session names are generated the way they are in Jupyter Notebook/Lab.
-     * I.e. the session names map to the relative path of the notebook file.
-     * As a result when attempting to create a new session for a notebook/file, Jupyter will
-     * first check if a session already exists for the same file and same kernel, and if so, will re-use that session.
-     */
-    mappedRemoteNotebookDir?: string;
-    /**
-     * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
-     */
-    webSocketProtocols?: string[];
+export interface IInternalJupyterUriProvider extends IJupyterUriProvider {
+    readonly extensionId: string;
 }
-
-export type JupyterServerUriHandle = string;
-
-export interface IJupyterUriProvider {
+export type JupyterServerProviderHandle = {
     /**
-     * Should be a unique string (like a guid)
+     * Jupyter Server Provider Id.
      */
-    readonly id: string;
-    readonly displayName?: string;
-    readonly detail?: string;
-    onDidChangeHandles?: Event<void>;
-    getQuickPickEntryItems?():
-        | Promise<
-              (QuickPickItem & {
-                  /**
-                   * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
-                   */
-                  default?: boolean;
-              })[]
-          >
-        | (QuickPickItem & {
-              /**
-               * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
-               */
-              default?: boolean;
-          })[];
-    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    id: string;
     /**
-     * Given the handle, returns the Jupyter Server information.
+     * Jupyter Server handle, unique for each server.
      */
-    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    handle: string;
     /**
-     * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
+     * Extension that owns this server.
      */
-    getHandles?(): Promise<JupyterServerUriHandle[]>;
-    /**
-     * Users request to remove a handle.
-     */
-    removeHandle?(handle: JupyterServerUriHandle): Promise<void>;
-}
+    extensionId: string;
+};
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 
 export interface IJupyterUriProviderRegistration {
     onDidChangeProviders: Event<void>;
-    getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
-    getProvider(id: string): Promise<IJupyterUriProvider | undefined>;
-    registerProvider(picker: IJupyterUriProvider): IDisposable;
-    getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    readonly providers: ReadonlyArray<IInternalJupyterUriProvider>;
+    getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined>;
+    registerProvider(provider: IJupyterUriProvider, extensionId: string): IDisposable;
+    /**
+     * Temporary, until the new API is finalized.
+     * We need a way to get the displayName of the Server.
+     */
+    getDisplayNameIfProviderIsLoaded(providerHandle: JupyterServerProviderHandle): Promise<string | undefined>;
+    getJupyterServerUri(
+        serverHandle: JupyterServerProviderHandle,
+        doNotPromptForAuthInfo?: boolean
+    ): Promise<IJupyterServerUri>;
 }
 
 /**
  * Entry into our list of saved servers
  */
 export interface IJupyterServerUriEntry {
-    /**
-     * Uri of the server to connect to
-     */
-    uri: string;
-    provider: {
-        id: string;
-        handle: JupyterServerUriHandle;
-    };
-    /**
-     * Unique ID using a hash of the full uri
-     */
-    serverId: string;
+    provider: JupyterServerProviderHandle;
     /**
      * The most recent time that we connected to this server
      */
     time: number;
     /**
      * An optional display name to show for this server as opposed to just the Uri
+     * @deprecated Used only for migration of display names into the User Provided Server list. Else other providers will have the Display Names.
      */
     displayName?: string;
-    /**
-     * Whether the server is validated by its provider or not
-     */
-    isValidated?: boolean;
 }
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
@@ -275,12 +201,11 @@ export interface IJupyterServerUriStorage {
     /**
      * Updates MRU list marking this server as the most recently used.
      */
-    update(serverId: string): Promise<void>;
+    update(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     getAll(): Promise<IJupyterServerUriEntry[]>;
-    remove(serverId: string): Promise<void>;
+    remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
-    get(serverId: string): Promise<IJupyterServerUriEntry | undefined>;
-    add(jupyterHandle: { id: string; handle: JupyterServerUriHandle }): Promise<void>;
+    add(serverProviderHandle: JupyterServerProviderHandle, options?: { time: number }): Promise<void>;
 }
 
 export interface IBackupFile {
@@ -353,11 +278,11 @@ export interface ILiveRemoteKernelConnectionUsageTracker {
     /**
      * Tracks the fact that the provided remote kernel for a given server was used by a notebook defined by the uri.
      */
-    trackKernelIdAsUsed(resource: Uri, serverId: string, kernelId: string): void;
+    trackKernelIdAsUsed(resource: Uri, serverId: JupyterServerProviderHandle, kernelId: string): void;
     /**
      * Tracks the fact that the provided remote kernel for a given server is no longer used by a notebook defined by the uri.
      */
-    trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string): void;
+    trackKernelIdAsNotUsed(resource: Uri, serverId: JupyterServerProviderHandle, kernelId: string): void;
 }
 
 export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedKernelValidator');
@@ -367,5 +292,12 @@ export interface IJupyterRemoteCachedKernelValidator {
 
 export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
     kind: ContributedKernelFinderKind.Remote;
-    serverUri: IJupyterServerUriEntry;
+    serverProviderHandle: JupyterServerProviderHandle;
+}
+
+export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegistry');
+export interface IJupyterServerProviderRegistry {
+    onDidChangeProviders: Event<void>;
+    providers: readonly JupyterServerCollection[];
+    createJupyterServerCollection(extensionId: string, id: string, label: string): JupyterServerCollection;
 }

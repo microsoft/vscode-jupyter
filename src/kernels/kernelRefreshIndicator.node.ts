@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { notebooks } from 'vscode';
+import { notebooks, window, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
@@ -11,6 +11,8 @@ import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { traceInfo } from '../platform/logging';
 import { IKernelFinder } from './types';
+import { Disposables, isJupyterNotebook } from '../platform/common/utils';
+import { noop } from '../platform/common/utils/misc';
 
 /**
  * Ensures we refresh the list of Python environments upon opening a Notebook.
@@ -96,31 +98,63 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
             return;
         }
         this.refreshedOnceBefore = true;
-        const id = Date.now().toString();
-        traceInfo(`Start refreshing Interpreter Kernel Picker (${id})`);
-        const taskNb = notebooks.createNotebookControllerDetectionTask(JupyterNotebookView);
-        const taskIW = notebooks.createNotebookControllerDetectionTask(InteractiveWindowView);
-        this.disposables.push(taskNb);
-        this.disposables.push(taskIW);
+        let refreshedInterpreters = false;
+        window.onDidChangeActiveNotebookEditor(
+            (e) => {
+                if (!refreshedInterpreters && e && isJupyterNotebook(e.notebook)) {
+                    refreshedInterpreters = true;
+                    traceInfo(`Start refreshing Interpreter Kernel Picker`);
+                    this.interpreterService.refreshInterpreters().catch(noop);
+                }
+            },
+            this,
+            this.disposables
+        );
+        workspace.onDidOpenNotebookDocument(
+            (e) => {
+                if (!refreshedInterpreters && isJupyterNotebook(e)) {
+                    refreshedInterpreters = true;
+                    traceInfo(`Start refreshing Interpreter Kernel Picker`);
+                    this.interpreterService.refreshInterpreters().catch(noop);
+                }
+            },
+            this,
+            this.disposables
+        );
 
-        this.interpreterService.refreshInterpreters().finally(() => {
-            if (this.kernelFinder.status === 'idle') {
-                traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
-                taskNb.dispose();
-                taskIW.dispose();
-                return;
+        let kernelProgress: Disposables | undefined;
+        let id: string = '';
+        const createProgressIndicator = () => {
+            if (kernelProgress && !kernelProgress.isDisposed) {
+                return kernelProgress;
             }
-            this.kernelFinder.onDidChangeStatus(
-                () => {
-                    if (this.kernelFinder.status === 'idle') {
-                        traceInfo(`End refreshing Interpreter Kernel Picker (${id})`);
-                        taskNb.dispose();
-                        taskIW.dispose();
-                    }
-                },
-                this,
-                this.disposables
+            id = Date.now().toString();
+            traceInfo(`Start refreshing Kernel Picker (${id})`);
+            kernelProgress = new Disposables(
+                notebooks.createNotebookControllerDetectionTask(JupyterNotebookView),
+                notebooks.createNotebookControllerDetectionTask(InteractiveWindowView)
             );
-        });
+            this.disposables.push(kernelProgress);
+            return kernelProgress;
+        };
+
+        if (this.kernelFinder.status === 'idle') {
+            traceInfo(`End refreshing Kernel Picker (${id})`);
+            kernelProgress?.dispose();
+        } else {
+            createProgressIndicator();
+        }
+        this.kernelFinder.onDidChangeStatus(
+            () => {
+                if (this.kernelFinder.status === 'idle') {
+                    traceInfo(`End refreshing Kernel Picker (${id})`);
+                    kernelProgress?.dispose();
+                } else {
+                    createProgressIndicator();
+                }
+            },
+            this,
+            this.disposables
+        );
     }
 }

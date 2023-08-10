@@ -28,16 +28,17 @@ import {
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { TestNotebookDocument } from '../../test/datascience/notebook/executionHelper';
 import { KernelConnector } from './kernelConnector';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { IConnectionDisplayDataProvider } from './types';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
 
 suite(`Notebook Controller`, function () {
     let controller: NotebookController;
@@ -52,7 +53,7 @@ suite(`Notebook Controller`, function () {
     let appShell: IApplicationShell;
     let browser: IBrowserService;
     let serviceContainer: IServiceContainer;
-    let jupyterUriStorage: IJupyterServerUriStorage;
+    let providerRegistry: IJupyterUriProviderRegistration;
     let platform: IPlatformService;
     let kernelProvider: IKernelProvider;
     let extensionChecker: IPythonExtensionChecker;
@@ -67,7 +68,7 @@ suite(`Notebook Controller`, function () {
     let clock: fakeTimers.InstalledClock;
     let jupyterSettings: IWatchableJupyterSettings;
     let trustedPaths: ITrustedKernelPaths;
-    let displayDataProvider: ConnectionDisplayDataProvider;
+    let displayDataProvider: IConnectionDisplayDataProvider;
     let interpreterService: IInterpreterService;
     setup(async function () {
         kernelConnection = mock<KernelConnectionMetadata>();
@@ -81,7 +82,7 @@ suite(`Notebook Controller`, function () {
         appShell = mock<IApplicationShell>();
         browser = mock<IBrowserService>();
         serviceContainer = mock<IServiceContainer>();
-        jupyterUriStorage = mock<IJupyterServerUriStorage>();
+        providerRegistry = mock<IJupyterUriProviderRegistration>();
         platform = mock<IPlatformService>();
         kernelProvider = mock<IKernelProvider>();
         extensionChecker = mock<IPythonExtensionChecker>();
@@ -140,7 +141,7 @@ suite(`Notebook Controller`, function () {
         displayDataProvider = new ConnectionDisplayDataProvider(
             instance(workspace),
             instance(platform),
-            instance(jupyterUriStorage),
+            instance(providerRegistry),
             disposables,
             instance(interpreterService)
         );

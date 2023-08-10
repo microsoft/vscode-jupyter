@@ -1,25 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { ExtensionMode, NotebookController, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
-import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { ExtensionMode, NotebookDocument, Uri, commands, window, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
-import {
-    IJupyterUriProvider,
-    IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
-} from '../../kernels/jupyter/types';
+import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
-import { IExportedKernelService } from './extension';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
 import { isTestExecution, JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
-import { IExtensionContext, IExtensions } from '../../platform/common/types';
+import { IDisposable, IExtensionContext, IExtensions } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
+import { JupyterAPI, IExportedKernelService, IJupyterUriProvider } from '../../api';
+import { createPublicAPIProxy } from '../../platform/common/helpers';
+import { Disposables } from '../../platform/common/utils';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -31,62 +28,20 @@ export interface IExportedKernelServiceFactory {
  * This is the public API for other extensions to interact with this extension.
  */
 
-export interface IExtensionApi {
-    /**
-     * Promise indicating whether all parts of the extension have completed loading or not.
-     * @type {Promise<void>}
-     * @memberof IExtensionApi
-     */
-    ready: Promise<void>;
-    /**
-     * Launches Data Viewer component.
-     * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-     * @param {string} title Data Viewer title
-     */
-    showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-    /**
-     * Registers a remote server provider component that's used to pick remote jupyter server URIs
-     * @param serverProvider object called back when picking jupyter server URI
-     */
-    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
-    registerPythonApi(pythonApi: PythonApi): void;
-    /**
-     * Gets the service that provides access to kernels.
-     * Returns `undefined` if the calling extension is not allowed to access this API. This could
-     * happen either when user doesn't allow this or the extension doesn't allow this.
-     * There are a specific set of extensions that are currently allowed to access this API.
-     */
-    getKernelService(): Promise<IExportedKernelService | undefined>;
-    /**
-     * Returns the suggested controller for a give Jupyter server and notebook.
-     */
-    getSuggestedController(
-        providerId: string,
-        handle: JupyterServerUriHandle,
-        notebook: NotebookDocument
-    ): Promise<NotebookController | undefined>;
-    /**
-     * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
-     * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
-     */
-    addRemoteJupyterServer(providerId: string, handle: JupyterServerUriHandle): Promise<void>;
-    /**
-     * Opens a notebook with a specific kernel as the active kernel.
-     * @param {Uri} uri Uri of the notebook to open.
-     * @param {String} kernelId Id of the kernel, retrieved from getKernelService().getKernelSpecifications()
-     * @returns {Promise<NotebookDocument>} Promise that resolves to the notebook document.
-     */
-    openNotebook(uri: Uri, kernelId: string): Promise<NotebookDocument>;
-}
+export interface IExtensionApi extends JupyterAPI {}
 
 function waitForNotebookControllersCreationForServer(
-    serverId: string,
+    serverId: { id: string; handle: string },
     controllerRegistration: IControllerRegistration
 ) {
     return new Promise<void>((resolve) => {
         controllerRegistration.onDidChange((e) => {
             for (let controller of e.added) {
-                if (isRemoteConnection(controller.connection) && controller.connection.serverId === serverId) {
+                if (
+                    isRemoteConnection(controller.connection) &&
+                    controller.connection.serverProviderHandle.id === serverId.id &&
+                    controller.connection.serverProviderHandle.handle === serverId.handle
+                ) {
                     resolve();
                 }
             }
@@ -133,10 +88,24 @@ export function buildApi(
             const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
             await dataViewerProviderService.create(dataProvider, title);
         },
-        registerRemoteServerProvider(picker: IJupyterUriProvider): void {
+        registerRemoteServerProvider(provider: IJupyterUriProvider): IDisposable {
             sendApiUsageTelemetry(extensions, 'registerRemoteServerProvider');
             const container = serviceContainer.get<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration);
-            container.registerProvider(picker);
+            let disposeHook = noop;
+            const register = async () => {
+                const extensions = serviceContainer.get<IExtensions>(IExtensions);
+                const extensionId = provider.id.startsWith('_builtin')
+                    ? JVSC_EXTENSION_ID
+                    : (await extensions.determineExtensionFromCallStack()).extensionId;
+                const disposable = container.registerProvider(provider, extensionId);
+                disposeHook = () => disposable.dispose();
+            };
+            register().catch(noop);
+            return {
+                dispose: () => {
+                    disposeHook();
+                }
+            };
         },
         getKernelService: async () => {
             sendApiUsageTelemetry(extensions, 'getKernelService');
@@ -144,11 +113,7 @@ export function buildApi(
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
         },
-        getSuggestedController: async (
-            _providerId: string,
-            _handle: JupyterServerUriHandle,
-            _notebook: NotebookDocument
-        ) => {
+        getSuggestedController: async (_providerId: string, _handle: string, _notebook: NotebookDocument) => {
             traceError('The API getSuggestedController is being deprecated.');
             if (context.extensionMode === ExtensionMode.Development || context.extensionMode === ExtensionMode.Test) {
                 window.showErrorMessage('The Jupyter API getSuggestedController is being deprecated.').then(noop, noop);
@@ -157,20 +122,19 @@ export function buildApi(
             sendApiUsageTelemetry(extensions, 'getSuggestedController');
             return undefined;
         },
-        addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {
+        addRemoteJupyterServer: async (providerId: string, handle: string) => {
             sendApiUsageTelemetry(extensions, 'addRemoteJupyterServer');
             await new Promise<void>(async (resolve) => {
                 const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-                const uri = generateUriFromRemoteProvider(providerId, handle);
-                const serverId = await computeServerId(uri);
 
                 const controllerRegistration = serviceContainer.get<IControllerRegistration>(IControllerRegistration);
                 const controllerCreatedPromise = waitForNotebookControllersCreationForServer(
-                    serverId,
+                    { id: providerId, handle },
                     controllerRegistration
                 );
+                const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
 
-                await selector.addJupyterServer({ id: providerId, handle });
+                await selector.addJupyterServer({ id: providerId, handle, extensionId });
                 await controllerCreatedPromise;
                 resolve();
             });
@@ -192,6 +156,19 @@ export function buildApi(
                 extension: JVSC_EXTENSION_ID
             });
             return notebookEditor.notebook;
+        },
+        createJupyterServerCollection: async (id, label) => {
+            throw new Error('Not implemented');
+            sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
+            const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
+            const registration = serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
+            const collection = registration.createJupyterServerCollection(id, label, extensionId);
+            // Do not expose unwanted properties to the extensions.
+            return createPublicAPIProxy(collection as unknown as typeof collection & Disposables, [
+                'disposables',
+                'isDisposed',
+                'dispose'
+            ]);
         }
     };
 

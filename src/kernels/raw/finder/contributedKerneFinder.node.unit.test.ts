@@ -7,7 +7,6 @@ import { assert } from 'chai';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
-import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -42,7 +41,7 @@ import {
 import { JupyterPaths } from './jupyterPaths.node';
 import { loadKernelSpec } from './localKernelSpecFinderBase.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../kernelFinder';
@@ -53,7 +52,6 @@ import { noop } from '../../../platform/common/utils/misc';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { ContributedLocalKernelSpecFinder } from './contributedLocalKernelSpecFinder.node';
-import { ContributedLocalPythonEnvFinder } from './contributedLocalPythonEnvFinder.node';
 import { ITrustedKernelPaths } from './types';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platform/interpreter/types.node';
@@ -97,8 +95,6 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
         async function initialize(testData: TestData, activeInterpreter?: PythonEnvironment) {
             disposables.push(cancelToken);
             cancelToken = new CancellationTokenSource();
-            const getRealPathStub = sinon.stub(fsExtra, 'realpath');
-            getRealPathStub.returnsArg(0);
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
@@ -256,7 +252,7 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
             const serviceContainer = mock<ServiceContainer>();
             const iocStub = sinon.stub(ServiceContainer, 'instance').get(() => instance(serviceContainer));
             disposables.push(new Disposable(() => iocStub.restore()));
-            const pythonKernelFinderWrapper = new LocalPythonAndRelatedNonPythonKernelSpecFinder(
+            const pythonKernelFinderWrapper = new OldLocalPythonAndRelatedNonPythonKernelSpecFinder(
                 instance(interpreterService),
                 instance(fs),
                 instance(workspaceService),
@@ -278,17 +274,8 @@ import { IPythonExecutionService, IPythonExecutionFactory } from '../../../platf
                 instance(interpreterService),
                 instance(extensions)
             );
-            const pythonEnvKernelFinder = new ContributedLocalPythonEnvFinder(
-                pythonKernelFinderWrapper,
-                kernelFinder,
-                [],
-                instance(extensionChecker),
-                instance(interpreterService),
-                instance(extensions)
-            );
             changeEventFired = createEventHandler(kernelFinder, 'onDidChangeKernels', disposables);
             localKernelSpecFinder.activate();
-            pythonEnvKernelFinder.activate();
             nonPythonKernelSpecFinder.activate();
             pythonKernelFinderWrapper.activate();
         }

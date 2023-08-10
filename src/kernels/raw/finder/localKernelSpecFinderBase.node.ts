@@ -108,11 +108,13 @@ export class LocalKernelSpecFinder implements IDisposable {
                 return undefined;
             });
             this.pathToKernelSpec.set(key, promise);
-            promise.finally(() => {
-                if (cancelToken.isCancellationRequested && this.pathToKernelSpec.get(key) === promise) {
-                    this.pathToKernelSpec.delete(key);
-                }
-            });
+            promise
+                .finally(() => {
+                    if (cancelToken.isCancellationRequested && this.pathToKernelSpec.get(key) === promise) {
+                        this.pathToKernelSpec.delete(key);
+                    }
+                })
+                .catch(noop);
         }
         // ! as the has and set above verify that we have a return here
         return this.pathToKernelSpec.get(key)!;
@@ -164,12 +166,14 @@ export class LocalKernelSpecFinder implements IDisposable {
                 this.findKernelSpecsInPathCache.delete(cacheKey);
             }
         });
-        promise.finally(() => {
-            if (cancelToken.isCancellationRequested && this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
-                this.findKernelSpecsInPathCache.delete(cacheKey);
-            }
-            disposable.dispose();
-        });
+        promise
+            .finally(() => {
+                if (cancelToken.isCancellationRequested && this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
+                    this.findKernelSpecsInPathCache.delete(cacheKey);
+                }
+                disposable.dispose();
+            })
+            .catch(noop);
         promise.catch((ex) => {
             if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
                 this.findKernelSpecsInPathCache.delete(cacheKey);
@@ -190,8 +194,9 @@ export interface ILocalKernelFinder<T extends LocalKernelSpecConnectionMetadata 
  * Base class for searching for local kernels that are based on a kernel spec file.
  */
 export abstract class LocalKernelSpecFinderBase<
-    T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-> implements IDisposable, ILocalKernelFinder<T>
+        T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+    >
+    implements IDisposable, ILocalKernelFinder<T>
 {
     protected readonly disposables: IDisposable[] = [];
 

@@ -132,8 +132,8 @@ suite('ipywidget - Widget Script Source Provider', () => {
                         RemoteKernelSpecConnectionMetadata.create({
                             baseUrl: '',
                             id: '',
-                            serverId: '',
-                            kernelSpec: {} as any
+                            kernelSpec: {} as any,
+                            serverProviderHandle: { handle: '', id: '', extensionId: '' }
                         })
                     );
                 }

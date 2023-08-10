@@ -32,17 +32,18 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from './nbExt
             sysPrefix: __dirname
         } as any
     });
+    const serverProviderHandle = { handle: 'handle', id: 'id', extensionId: '' };
     const remoteKernelSpec = RemoteKernelSpecConnectionMetadata.create({
         id: '',
-        serverId: '',
         baseUrl: 'http://bogus.com',
-        kernelSpec: instance(mock<IJupyterKernelSpec>())
+        kernelSpec: instance(mock<IJupyterKernelSpec>()),
+        serverProviderHandle
     });
     const remoteLiveKernel = LiveRemoteKernelConnectionMetadata.create({
         id: '',
-        serverId: '',
         baseUrl: 'http://bogus.com',
-        kernelModel: instance(mock<LiveKernelModel>())
+        kernelModel: instance(mock<LiveKernelModel>()),
+        serverProviderHandle
     });
     suite(`NBExtension Path Provider for ${isWeb ? 'Web' : 'Node'}`, () => {
         let provider: INbExtensionsPathProvider;

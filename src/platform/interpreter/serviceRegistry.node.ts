@@ -28,12 +28,14 @@ import {
     ProductType
 } from './installer/types';
 import { InterpreterPackages } from './interpreterPackages.node';
+import { PythonEnvironmentQuickPickItemProvider } from './pythonEnvironmentQuickPickProvider.node';
 import { PythonExecutionFactory } from './pythonExecutionFactory.node';
 import { ReservedNamedProvider } from './reservedNamedProvider.node';
-import { IInterpreterPackages, IReservedPythonNamedProvider } from './types';
+import { IInterpreterPackages, IReservedPythonNamedProvider, IWorkspaceInterpreterTracker } from './types';
 import { IPythonExecutionFactory } from './types.node';
 import { VariableScriptGenerator } from './variableScriptGenerator';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
+import { DesktopWorkspaceInterpreterTracker } from './workspaceInterpreterTracker.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
@@ -46,6 +48,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker
+    );
+    serviceManager.addSingleton<IWorkspaceInterpreterTracker>(
+        IWorkspaceInterpreterTracker,
+        DesktopWorkspaceInterpreterTracker
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -75,4 +81,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         DataScienceProductPathService,
         ProductType.DataScience
     );
+    serviceManager.addSingleton<PythonEnvironmentQuickPickItemProvider>(
+        PythonEnvironmentQuickPickItemProvider,
+        PythonEnvironmentQuickPickItemProvider
+    );
+    serviceManager.addBinding(PythonEnvironmentQuickPickItemProvider, IExtensionSyncActivationService);
 }

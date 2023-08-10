@@ -60,7 +60,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
-        @inject(IJupyterServerHelper) private jupyterServerHelper: IJupyterServerHelper,
+        @inject(IJupyterServerHelper) @optional() private jupyterServerHelper: IJupyterServerHelper | undefined,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -664,6 +664,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
             filePath &&
             filePath.length > 0 &&
             this.jupyterExporter &&
+            this.jupyterServerHelper &&
             (await this.jupyterServerHelper.isJupyterServerSupported())
         ) {
             // If the current file is the active editor, then generate cells from the document.
@@ -701,7 +702,7 @@ export class CommandRegistry implements IDisposable, IExtensionSyncActivationSer
                     return uri;
                 }
             }
-        } else {
+        } else if (this.jupyterServerHelper) {
             await this.dataScienceErrorHandler.handleError(
                 new JupyterInstallError(
                     DataScience.jupyterNotSupported(await this.jupyterServerHelper.getJupyterServerError())

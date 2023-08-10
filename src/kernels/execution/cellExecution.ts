@@ -168,7 +168,7 @@ export class CellExecution implements IDisposable {
             return;
         }
         if (session.kind === 'remoteJupyter' && session.status === 'unknown') {
-            if (!session.kernel || session.kernel.isDisposed || session.disposed) {
+            if (!session.kernel || session.kernel.isDisposed || session.isDisposed) {
                 this.execution?.start();
                 this.execution?.clearOutput().then(noop, noop);
                 this.completedWithErrors(new SessionDisposedError());
@@ -196,6 +196,9 @@ export class CellExecution implements IDisposable {
             traceCellMessage(this.cell, 'Not resuming as it was cancelled');
             return;
         }
+        if (!session.kernel) {
+            throw new Error('Kernel not available to resume execution');
+        }
         traceCellMessage(this.cell, 'Start resuming execution');
         traceInfoIfCI(`Cell Exec (resuming) contents ${this.cell.document.getText().substring(0, 50)}...`);
         if (!this.canExecuteCell()) {
@@ -218,7 +221,7 @@ export class CellExecution implements IDisposable {
         NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Executing);
 
         this.cellExecutionHandler = this.requestListener.registerListenerForResumingExecution(this.cell, {
-            kernel: session.kernel!,
+            kernel: session.kernel,
             cellExecution: this.execution!,
             msg_id: info.msg_id
         });
@@ -232,7 +235,7 @@ export class CellExecution implements IDisposable {
             this.disposables
         );
 
-        this.cellExecutionHandler.completed.finally(() => this.completedSuccessfully());
+        this.cellExecutionHandler.completed.finally(() => this.completedSuccessfully()).catch(noop);
     }
 
     /**
@@ -393,6 +396,9 @@ export class CellExecution implements IDisposable {
     }
 
     private async execute(code: string, session: IKernelSession) {
+        if (!session.kernel) {
+            throw new Error('No kernel available to execute code');
+        }
         traceCellMessage(this.cell, 'Send code for execution');
         // Skip if no code to execute
         if (code.trim().length === 0 || this.cell.document.isClosed) {
@@ -411,13 +417,14 @@ export class CellExecution implements IDisposable {
             ...(this.cell.metadata?.custom?.metadata || {}) // Send the Cell Metadata
         };
 
+        const kernelConnection = session.kernel;
         try {
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
             traceVerbose(`Execution Request Sent to Kernel for cell ${this.cell.index}`);
             // For Jupyter requests, silent === don't output, while store_history === don't update execution count
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
-            this.request = session.requestExecute(
+            this.request = kernelConnection.requestExecute(
                 {
                     code,
                     silent: false,
@@ -433,7 +440,7 @@ export class CellExecution implements IDisposable {
             return this.completedWithErrors(ex);
         }
         this.cellExecutionHandler = this.requestListener.registerListenerForExecution(this.cell, {
-            kernel: session.kernel!,
+            kernel: kernelConnection,
             cellExecution: this.execution!,
             request: this.request
         });

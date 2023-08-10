@@ -21,8 +21,6 @@ import { IFileSystem } from '../platform/common/platform/types';
 
 import {
     GLOBAL_MEMENTO,
-    IAsyncDisposable,
-    IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
     IMemento,
@@ -61,9 +59,7 @@ export const InteractiveWindowCacheKey = 'ds_interactive_window_cache';
  * Factory for InteractiveWindow
  */
 @injectable()
-export class InteractiveWindowProvider
-    implements IInteractiveWindowProvider, IEmbedNotebookEditorProvider, IAsyncDisposable
-{
+export class InteractiveWindowProvider implements IInteractiveWindowProvider, IEmbedNotebookEditorProvider {
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
@@ -81,7 +77,6 @@ export class InteractiveWindowProvider
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
@@ -92,8 +87,6 @@ export class InteractiveWindowProvider
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveControllerHelper) private readonly controllerHelper: IInteractiveControllerHelper
     ) {
-        asyncRegistry.push(this);
-
         this.notebookEditorProvider.registerEmbedNotebookProvider(this);
         this.restoreWindows();
     }
@@ -124,11 +117,12 @@ export class InteractiveWindowProvider
 
             const result = new InteractiveWindow(
                 this.serviceContainer,
-                iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
+                Uri.parse(iw.owner),
                 new InteractiveControllerFactory(this.controllerHelper, mode),
                 tab,
                 Uri.parse(iw.inputBoxUriString)
             );
+            result.notifyConnectionReset();
 
             this._windows.push(result);
             sendTelemetryEvent(
@@ -186,10 +180,6 @@ export class InteractiveWindowProvider
         return this.getExisting(owner, mode);
     }
 
-    public async dispose(): Promise<void> {
-        return noop();
-    }
-
     private async create(resource: Resource, mode: InteractiveWindowMode, connection?: KernelConnectionMetadata) {
         // track when a creation is pending, so consumers can wait before checking for an existing one.
         const creationInProgress = createDeferred<void>();
@@ -199,9 +189,9 @@ export class InteractiveWindowProvider
             let initialController = await this.controllerHelper.getInitialController(resource, connection);
 
             traceInfo(
-                `Starting interactive window for resource '${getDisplayPath(resource)}' with controller '${
-                    initialController?.id
-                }'`
+                `Starting interactive window for resource '${getDisplayPath(
+                    resource
+                )}' with controller '${initialController?.id}'`
             );
 
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
@@ -330,10 +320,10 @@ export class InteractiveWindowProvider
         const windowCache = this._windows.map(
             (iw) =>
                 ({
-                    owner: iw.owner,
+                    owner: iw.owner?.toString(),
                     uriString: iw.notebookUri.toString(),
                     inputBoxUriString: iw.inputUri.toString()
-                } as IInteractiveWindowCache)
+                }) as IInteractiveWindowCache
         );
         this.workspaceMemento.update(InteractiveWindowCacheKey, windowCache).then(noop, noop);
     }

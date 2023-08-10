@@ -9,7 +9,7 @@ import { ObservableExecutionResult, Output } from '../../../platform/common/proc
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { RegExpValues } from '../../../platform/common/constants';
+import { JVSC_EXTENSION_ID, RegExpValues } from '../../../platform/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
@@ -134,8 +134,12 @@ export class JupyterConnectionWaiter implements IDisposable {
         if (!this.startPromise.rejected) {
             const connection: IJupyterConnection = {
                 localLaunch: true,
-                serverId: 'bogus',
                 providerId: '_builtin.jupyterServerLauncher',
+                serverProviderHandle: {
+                    handle: '',
+                    id: '_builtin.jupyterServerLauncher',
+                    extensionId: JVSC_EXTENSION_ID
+                },
                 baseUrl,
                 token,
                 hostName,

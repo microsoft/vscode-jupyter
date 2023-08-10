@@ -38,7 +38,7 @@ import {
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../../platform/common/process/types.node';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async';
+import { createDeferred, raceTimeout } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../errors/kernelDiedError';
@@ -319,10 +319,10 @@ export class KernelProcess implements IKernelProcess {
         const pid = this._process?.pid;
         traceInfo(`Dispose Kernel process ${pid}.`);
         this._disposingPromise = (async () => {
-            await Promise.race([
-                sleep(1_000), // Wait for a max of 1s, we don't want to delay killing the kernel process.
+            await raceTimeout(
+                1_000, // Wait for a max of 1s, we don't want to delay killing the kernel process.
                 this.killChildProcesses(this._process?.pid).catch(noop)
-            ]);
+            );
             try {
                 this.interrupter?.dispose().catch(noop);
                 this._process?.kill(); // NOSONAR

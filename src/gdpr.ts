@@ -236,6 +236,18 @@
      ]
    }
  */
+//Telemetry.EnterRemoteJupyterUrl
+/* __GDPR__
+   "DATASCIENCE.ENTER_REMOTE_JUPYTER_URL" : {
+     "baseUrlHash": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Has of the origin/base Url.","owner":"donjayamanne"},
+     "isLocalHost": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether user is connecting to the local host.","owner":"donjayamanne"},
+     "reason": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Failure reason.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.ExecuteCell
 /* __GDPR__
    "DATASCIENCE.EXECUTE_CELL" : {
@@ -496,6 +508,36 @@
      "kind": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether this is a local or remote kernel.","owner":"donjayamanne"},
      "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the kernelSpec.","owner":"donjayamanne"},
      "usesShell": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether shell is used to start the kernel. E.g. `\"/bin/sh\"` is used in the argv of the kernelSpec. OCaml is one such kernel.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
+//Telemetry.KernelStartFailureDueToMissingEnv
+/* __GDPR__
+   "DATASCIENCE.KERNEL_START_FAILURE_MISSING_ENV" : {
+     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
+     "actionSource": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "disableUI": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "userExecutedCell": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "resourceHash": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvironmentVersion": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvironmentType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvironmentPath": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvironmentPackages": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelSessionId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelLanguage": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
+     "kernelId": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "kernelConnectionType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "isUsingActiveInterpreter": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "envMissingReason": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "isEmptyCondaEnv": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "pythonEnvType": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
+     "fileExists": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -881,15 +923,6 @@
      ]
    }
  */
-//Telemetry.SelectJupyterURI
-/* __GDPR__
-   "DATASCIENCE.SELECT_JUPYTER_URI" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.SelectLocalJupyterKernel
 /* __GDPR__
    "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL" : {
@@ -964,16 +997,6 @@
 /* __GDPR__
    "DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED" : {
      "commandSource": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"This telemetry tracks the source of this UI. nonUser - Invoked internally by our code. toolbar - Invoked by user from Native or Interactive window toolbar. commandPalette - Invoked from command palette by the user. nativeNotebookStatusBar - Invoked from Native notebook statusbar. nativeNotebookToolbar - Invoked from Native notebook toolbar.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.SetJupyterURIToUserSpecified
-/* __GDPR__
-   "DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED" : {
-     "azure": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Was the URI set to an Azure uri.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1386,6 +1409,16 @@
      ]
    }
  */
+//Telemetry.CheckPasswordJupyterHub
+/* __GDPR__
+   "DS_INTERNAL.JUPYTER_HUB_PASSWORD" : {
+     "info": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.JupyterInstalledButNotKernelSpecModule
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE" : {
@@ -1576,19 +1609,6 @@
      "capturedEnvVars": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether we managed to capture the environment variables or not. In the case of conda environments, `false` would be an error condition, as we must have env variables for conda to work. Common to most of the events.","owner":"donjayamanne"},
      "newKernelPicker": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether using the new kernel picker or not. This will be obsolete once we ship the new kernel picker.","owner":"donjayamanne"},
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.PreferredKernel
-/* __GDPR__
-   "DS_INTERNAL.PREFERRED_KERNEL" : {
-     "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "hasActiveInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If we have an active interpreter or not.","owner":"donjayamanne"},
-     "language": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the target notebook or interactive window","owner":"donjayamanne"},
-     "result": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Note if we did or did not find a preferred kernel.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1935,24 +1955,6 @@
 /* __GDPR__
    "DS_INTERNAL.VSCNOTEBOOK_CELL_TRANSLATION_FAILED" : {
      "outputType": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Type of the output received from the Jupyter kernel. This is required to identify output types that we're not mapping correctly.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.WaitForIdleJupyter
-/* __GDPR__
-   "DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.WebviewStartup
-/* __GDPR__
-   "DS_INTERNAL.WEBVIEW_STARTUP" : {
      "${include}": [
        "${F1}"
 

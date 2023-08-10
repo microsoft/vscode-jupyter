@@ -4,13 +4,15 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import * as path from '../vscode-path/resources';
-import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
+import { EnvironmentType } from '../pythonEnvironments/info';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { ResourceMap } from '../common/resourceMap';
 import { swallowExceptions } from '../common/utils/decorators';
 import { IProcessServiceFactory } from '../common/process/types.node';
 import { traceVerbose } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
+import { Environment } from '../api/pythonApiTypes';
+import { getEnvironmentType } from './helpers';
 
 @injectable()
 export class GlobalPythonExecutablePathService {
@@ -25,21 +27,22 @@ export class GlobalPythonExecutablePathService {
      * Gets the path where executables are installed for the given Global Python interpreter.
      */
     @swallowExceptions()
-    public async getExecutablesPath(interpreter: PythonEnvironment): Promise<Uri | undefined> {
-        if (interpreter.envType !== EnvironmentType.Unknown) {
+    public async getExecutablesPath(environment: Environment): Promise<Uri | undefined> {
+        const executable = environment.executable.uri;
+        if (getEnvironmentType(environment) !== EnvironmentType.Unknown || !executable) {
             return;
         }
 
-        if (!this.userSitePaths.has(interpreter.uri)) {
-            const promise = this.getUserSitePathImpl(interpreter);
+        if (!this.userSitePaths.has(executable)) {
+            const promise = this.getUserSitePathImpl(executable);
             promise.catch(() => {
-                if (this.userSitePaths.get(interpreter.uri) === promise) {
-                    this.userSitePaths.delete(interpreter.uri);
+                if (this.userSitePaths.get(executable) === promise) {
+                    this.userSitePaths.delete(executable);
                 }
             });
-            this.userSitePaths.set(interpreter.uri, promise);
+            this.userSitePaths.set(executable, promise);
         }
-        return this.userSitePaths.get(interpreter.uri);
+        return this.userSitePaths.get(executable);
     }
     /**
      * Tested the following scenarios:
@@ -65,12 +68,12 @@ export class GlobalPythonExecutablePathService {
      * On Unix it is USER_BASE/bin
      *
      */
-    private async getUserSitePathImpl(interpreter: PythonEnvironment): Promise<Uri | undefined> {
+    private async getUserSitePathImpl(executable: Uri): Promise<Uri | undefined> {
         const processService = await this.processFactory.create(undefined);
         const delimiter = 'USER_BASE_VALUE';
         const valueToUse = this.platform.isWindows ? 'USER_SITE' : 'USER_BASE';
         // Add delimiters as sometimes, the python runtime can spit out warning/information messages as well.
-        const { stdout } = await processService.exec(interpreter.uri.fsPath, [
+        const { stdout } = await processService.exec(executable.fsPath, [
             '-c',
             `import site;print("${delimiter}");print(site.${valueToUse});print("${delimiter}");`
         ]);
@@ -87,17 +90,13 @@ export class GlobalPythonExecutablePathService {
             }
             if (!sitePath || !this.fs.exists(sitePath)) {
                 throw new Error(
-                    `USER_SITE ${sitePath.fsPath} dir does not exist for the interpreter ${getDisplayPath(
-                        interpreter.uri
-                    )}`
+                    `USER_SITE ${sitePath.fsPath} dir does not exist for the interpreter ${getDisplayPath(executable)}`
                 );
             }
-            traceVerbose(`USER_SITE for ${getDisplayPath(interpreter.uri)} is ${sitePath.fsPath}`);
+            traceVerbose(`USER_SITE for ${getDisplayPath(executable)} is ${sitePath.fsPath}`);
             return sitePath;
         } else {
-            throw new Error(
-                `USER_SITE not found for the interpreter ${getDisplayPath(interpreter.uri)}. Stdout: ${stdout}`
-            );
+            throw new Error(`USER_SITE not found for the interpreter ${getDisplayPath(executable)}. Stdout: ${stdout}`);
         }
     }
 }

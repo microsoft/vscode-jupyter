@@ -3,7 +3,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
-import { IKernel, IKernelProvider } from '../../kernels/types';
+import { IKernel, IKernelProvider, isRemoteConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -15,6 +15,7 @@ import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactiv
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IControllerRegistration } from '../../notebooks/controllers/types';
+import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 
 /**
  * Tracks a lot of the context keys needed in the extension.
@@ -37,6 +38,7 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
     private isPythonNotebook: ContextKey;
     private isJupyterKernelSelected: ContextKey;
     private hasNativeNotebookOrInteractiveWindowOpen: ContextKey;
+    private kernelSourceContext: ContextKey<string>;
     constructor(
         @inject(IInteractiveWindowProvider)
         @optional()
@@ -46,7 +48,9 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
+        @inject(IJupyterUriProviderRegistration)
+        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -87,6 +91,7 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             EditorContexts.HasNativeNotebookOrInteractiveWindowOpen,
             this.commandManager
         );
+        this.kernelSourceContext = new ContextKey(EditorContexts.KernelSource, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -181,7 +186,26 @@ export class ActiveEditorContextService implements IExtensionSyncActivationServi
             this.canRestartNotebookKernelContext.set(false).catch(noop);
             this.canInterruptNotebookKernelContext.set(false).catch(noop);
         }
+        this.updateKernelSourceContext(kernel).catch(noop);
         this.updateSelectedKernelContext();
+    }
+    private async updateKernelSourceContext(kernel: IKernel | undefined) {
+        if (!kernel || !isRemoteConnection(kernel.kernelConnectionMetadata)) {
+            this.kernelSourceContext.set('').catch(noop);
+            return;
+        }
+
+        const connection = kernel.kernelConnectionMetadata;
+        const provider = await this.jupyterUriProviderRegistration
+            .getProvider(connection.serverProviderHandle.extensionId, connection.serverProviderHandle.id)
+            .catch(noop);
+
+        if (!provider) {
+            this.kernelSourceContext.set('').catch(noop);
+            return;
+        }
+
+        this.kernelSourceContext.set(provider.id).catch(noop);
     }
     private updateSelectedKernelContext() {
         const document =

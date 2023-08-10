@@ -26,20 +26,23 @@ import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { KernelDiedError } from './kernelDiedError';
 import {
+    IInternalJupyterUriProvider,
     IJupyterInterpreterDependencyManager,
     IJupyterServerUriStorage,
     IJupyterUriProviderRegistration,
-    JupyterInterpreterDependencyResponse
+    JupyterInterpreterDependencyResponse,
+    JupyterServerProviderHandle
 } from '../jupyter/types';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
-import { computeServerId, generateUriFromRemoteProvider } from '../jupyter/jupyterUtils';
+import { generateIdFromRemoteProvider } from '../jupyter/jupyterUtils';
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from './kernelErrorHandler.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { resolvableInstance } from '../../test/datascience/helpers';
 
 suite('Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -151,11 +154,12 @@ suite('Error Handler Unit Tests', () => {
 
     suite('Kernel startup errors', () => {
         let kernelConnection: KernelConnectionMetadata;
-        const uri = generateUriFromRemoteProvider('1', 'a');
-        let serverId: string;
-        suiteSetup(async () => {
-            serverId = await computeServerId(uri);
-        });
+        const uri = generateIdFromRemoteProvider({ id: '1', handle: 'a', extensionId: '' });
+        const serverProviderHandle: JupyterServerProviderHandle = {
+            handle: '1',
+            id: 'a',
+            extensionId: ''
+        };
         setup(() => {
             when(applicationShell.showErrorMessage(anything(), Common.learnMore)).thenResolve(Common.learnMore as any);
             kernelConnection = PythonKernelConnectionMetadata.create({
@@ -181,19 +185,19 @@ suite('Error Handler Unit Tests', () => {
                     return _run_code(code, main_globals, None,
                 File "/home/xyz/.pyenv/versions/3.8.12/lib/python3.8/runpy.py", line 87, in _run_code
                     exec(code, run_globals)
-                File "/home/xyz/samples/pySamples/crap/.venvNoIPythonGenUtils/lib/python3.8/site-packages/ipykernel_launcher.py", line 15, in <module>
+                File "/home/xyz/samples/pySamples/sample/.venvNoIPythonGenUtils/lib/python3.8/site-packages/ipykernel_launcher.py", line 15, in <module>
                     from ipykernel import kernelapp as app
-                File "/home/xyz/samples/pySamples/crap/.venvNoIPythonGenUtils/lib/python3.8/site-packages/ipykernel/__init__.py", line 2, in <module>
+                File "/home/xyz/samples/pySamples/sample/.venvNoIPythonGenUtils/lib/python3.8/site-packages/ipykernel/__init__.py", line 2, in <module>
                     from .connect import *
-                File "/home/xyz/samples/pySamples/crap/.venvNoIPythonGenUtils/lib/python3.8/site-packages/ipykernel/connect.py", line 10, in <module>
+                File "/home/xyz/samples/pySamples/sample/.venvNoIPythonGenUtils/lib/python3.8/site-packages/ipykernel/connect.py", line 10, in <module>
                     import jupyter_client
-                File "/home/xyz/samples/pySamples/crap/.venvNoIPythonGenUtils/lib/python3.8/site-packages/jupyter_client/__init__.py", line 6, in <module>
+                File "/home/xyz/samples/pySamples/sample/.venvNoIPythonGenUtils/lib/python3.8/site-packages/jupyter_client/__init__.py", line 6, in <module>
                     from .asynchronous import AsyncKernelClient  # noqa
-                File "/home/xyz/samples/pySamples/crap/.venvNoIPythonGenUtils/lib/python3.8/site-packages/jupyter_client/asynchronous/__init__.py", line 1, in <module>
+                File "/home/xyz/samples/pySamples/sample/.venvNoIPythonGenUtils/lib/python3.8/site-packages/jupyter_client/asynchronous/__init__.py", line 1, in <module>
                     from .client import AsyncKernelClient  # noqa
-                File "/home/xyz/samples/pySamples/crap/.venvNoIPythonGenUtils/lib/python3.8/site-packages/jupyter_client/asynchronous/client.py", line 6, in <module>
+                File "/home/xyz/samples/pySamples/sample/.venvNoIPythonGenUtils/lib/python3.8/site-packages/jupyter_client/asynchronous/client.py", line 6, in <module>
                     from jupyter_client.channels import HBChannel
-                File "/home/xyz/samples/pySamples/crap/.venvNoIPythonGenUtils/lib/python3.8/site-packages/jupyter_client/channels.py", line 4, in <module>
+                File "/home/xyz/samples/pySamples/sample/.venvNoIPythonGenUtils/lib/python3.8/site-packages/jupyter_client/channels.py", line 4, in <module>
                     import asyncio
                 File "/home/xyz/.pyenv/versions/3.8.12/lib/python3.8/asyncio/__init__.py", line 8, in <module>
                     from .base_events import *
@@ -205,7 +209,7 @@ suite('Error Handler Unit Tests', () => {
                     import logging
                 File "/home/xyz/.pyenv/versions/3.8.12/lib/python3.8/logging/__init__.py", line 28, in <module>
                     from string import Template
-                ImportError: cannot import name 'Template' from 'string' (/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py)
+                ImportError: cannot import name 'Template' from 'string' (/home/xyz/samples/pySamples/sample/kernel_crash/no_start/string.py)
                 `,
             userOverridingRandomPyFile_Windows: `
                 Info 14:16:26: Cancel pending cells
@@ -245,31 +249,31 @@ suite('Error Handler Unit Tests', () => {
                 '    return _run_code(code, main_globals, None,\n' +
                 '  File "/opt/homebrew/Cellar/python@3.9/3.9.13_1/Frameworks/Python.framework/Versions/3.9/lib/python3.9/runpy.py", line 87, in _run_code\n' +
                 '    exec(code, run_globals)\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/ipykernel_launcher.py", line 15, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/ipykernel_launcher.py", line 15, in <module>\n' +
                 '    from ipykernel import kernelapp as app\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/ipykernel/kernelapp.py", line 18, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/ipykernel/kernelapp.py", line 18, in <module>\n' +
                 '    from IPython.core.application import (\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/IPython/__init__.py", line 53, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/IPython/__init__.py", line 53, in <module>\n' +
                 '    from .terminal.embed import embed\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/IPython/terminal/embed.py", line 16, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/IPython/terminal/embed.py", line 16, in <module>\n' +
                 '    from IPython.terminal.interactiveshell import TerminalInteractiveShell\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/IPython/terminal/interactiveshell.py", line 29, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/IPython/terminal/interactiveshell.py", line 29, in <module>\n' +
                 '    from prompt_toolkit.auto_suggest import AutoSuggestFromHistory\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/__init__.py", line 16, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/__init__.py", line 16, in <module>\n' +
                 '    from .application import Application\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/application/__init__.py", line 1, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/application/__init__.py", line 1, in <module>\n' +
                 '    from .application import Application\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/application/application.py", line 41, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/application/application.py", line 41, in <module>\n' +
                 '    from prompt_toolkit.buffer import Buffer\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/buffer.py", line 36, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/buffer.py", line 36, in <module>\n' +
                 '    from .completion import (\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/completion/__init__.py", line 1, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/completion/__init__.py", line 1, in <module>\n' +
                 '    from .base import (\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/completion/base.py", line 9, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/completion/base.py", line 9, in <module>\n' +
                 '    from prompt_toolkit.formatted_text import AnyFormattedText, StyleAndTextTuples\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/formatted_text/__init__.py", line 23, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/formatted_text/__init__.py", line 23, in <module>\n' +
                 '    from .html import HTML\n' +
-                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/formatted_text/html.py", line 1, in <module>\n' +
+                '  File "/Users/MyUserName/sample/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/formatted_text/html.py", line 1, in <module>\n' +
                 '    import xml.dom.minidom as minidom\n' +
                 "ModuleNotFoundError: No module named 'xml.dom'; 'xml' is not a package\n"
                 `,
@@ -280,7 +284,7 @@ suite('Error Handler Unit Tests', () => {
                     take_action(action, args, option_string)
                 File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 1930, in take_action
                     action(self, namespace, argument_values, option_string)
-                File "/home/don/samples/pySamples/crap/.venvJupyter/lib/python3.9/site-packages/traitlets/config/loader.py", line 913, in __call__
+                File "/home/don/samples/pySamples/sample/.venvJupyter/lib/python3.9/site-packages/traitlets/config/loader.py", line 913, in __call__
                     raise NotImplementedError("subclasses must implement __call__")
                 NotImplementedError: subclasses must implement __call__`,
             failureToStartJupyterDueToOutdatedTraitlets: `namespace, args = self._parse_known_args(args, namespace)
@@ -290,7 +294,7 @@ suite('Error Handler Unit Tests', () => {
                     take_action(action, args, option_string)
                 File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 1930, in take_action
                     action(self, namespace, argument_values, option_string)
-                File "/home/don/samples/pySamples/crap/.venvJupyter/lib/python3.9/site-packages/traitlets/config/loader.py", line 913, in __call__
+                File "/home/don/samples/pySamples/sample/.venvJupyter/lib/python3.9/site-packages/traitlets/config/loader.py", line 913, in __call__
                     raise NotImplementedError("subclasses must implement __call__")
                 AttributeError: 'Namespace' object has no attribute '_flags'`
         };
@@ -351,12 +355,12 @@ suite('Error Handler Unit Tests', () => {
                 {
                     index: 0,
                     name: '',
-                    uri: Uri.file('/Users/donjayamanne/crap/kernel_issues')
+                    uri: Uri.file('/Users/MyUserName/sample/kernel_issues')
                 }
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             when(reservedPythonNames.getUriOverridingReservedPythonNames(anything())).thenResolve([
-                { uri: Uri.file('/Users/donjayamanne/crap/kernel_issues/xml.py'), type: 'file' }
+                { uri: Uri.file('/Users/MyUserName/sample/kernel_issues/xml.py'), type: 'file' }
             ]);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
@@ -367,7 +371,7 @@ suite('Error Handler Unit Tests', () => {
                 ),
                 'start',
                 kernelConnection,
-                Uri.file('/Users/donjayamanne/crap/kernel_issues'),
+                Uri.file('/Users/MyUserName/sample/kernel_issues'),
                 'jupyterExtension'
             );
 
@@ -380,12 +384,12 @@ suite('Error Handler Unit Tests', () => {
                 {
                     index: 0,
                     name: '',
-                    uri: Uri.file('/Users/donjayamanne/crap/kernel_issues')
+                    uri: Uri.file('/Users/MyUserName/sample/kernel_issues')
                 }
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             when(reservedPythonNames.getUriOverridingReservedPythonNames(anything())).thenResolve([
-                { uri: Uri.file('/Users/donjayamanne/crap/kernel_issues/xml/__init__.py'), type: '__init__' }
+                { uri: Uri.file('/Users/MyUserName/sample/kernel_issues/xml/__init__.py'), type: '__init__' }
             ]);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
@@ -396,7 +400,7 @@ suite('Error Handler Unit Tests', () => {
                 ),
                 'start',
                 kernelConnection,
-                Uri.file('/Users/donjayamanne/crap/kernel_issues'),
+                Uri.file('/Users/MyUserName/sample/kernel_issues'),
                 'jupyterExtension'
             );
 
@@ -409,7 +413,7 @@ suite('Error Handler Unit Tests', () => {
                 {
                     index: 0,
                     name: '',
-                    uri: Uri.file('/Users/donjayamanne/crap/kernel_issues')
+                    uri: Uri.file('/Users/MyUserName/sample/kernel_issues')
                 }
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
@@ -425,7 +429,7 @@ suite('Error Handler Unit Tests', () => {
                 ),
                 'start',
                 kernelConnection,
-                Uri.file('/Users/donjayamanne/crap/kernel_issues'),
+                Uri.file('/Users/MyUserName/sample/kernel_issues'),
                 'jupyterExtension'
             );
 
@@ -449,7 +453,7 @@ suite('Error Handler Unit Tests', () => {
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile(
                 'Template',
-                '/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py' // Not using getDisplayPath under the covers
+                '/home/xyz/samples/pySamples/sample/kernel_crash/no_start/string.py' // Not using getDisplayPath under the covers
             );
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
@@ -463,7 +467,7 @@ suite('Error Handler Unit Tests', () => {
                 {
                     index: 0,
                     name: '',
-                    uri: Uri.file('/home/xyz/samples/pySamples/crap/')
+                    uri: Uri.file('/home/xyz/samples/pySamples/sample/')
                 }
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
@@ -482,7 +486,7 @@ suite('Error Handler Unit Tests', () => {
 
             const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup(
                 getDisplayPath(
-                    Uri.file('/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py'),
+                    Uri.file('/home/xyz/samples/pySamples/sample/kernel_crash/no_start/string.py'),
                     workspaceFolders
                 )
             );
@@ -603,7 +607,7 @@ ImportError: No module named 'xyz'
         test('Failure to start Jupyter Server', async () => {
             const stdError = `${stdErrorMessages.failureToStartJupyter}
 
-Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/crap" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
+Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/sample" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
             const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = 'NotImplementedError: subclasses must implement __call__';
             const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo(envDisplayName, pythonError);
@@ -619,7 +623,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         test('Failure to start Jupyter Server due to outdated traitlets', async () => {
             const stdError = `${stdErrorMessages.failureToStartJupyterDueToOutdatedTraitlets}
 
-Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/crap" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
+Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/sample" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
             const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = "AttributeError: 'Namespace' object has no attribute '_flags'";
             const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets(envDisplayName, pythonError);
@@ -785,7 +789,11 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             );
         });
         test('Display error when connection to remote jupyter server fails', async () => {
-            const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
+            const error = new RemoteJupyterServerConnectionError(
+                uri,
+                serverProviderHandle,
+                new Error('ECONNRESET error')
+            );
             const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
@@ -795,12 +803,21 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve();
-
+            const provider = mock<IInternalJupyterUriProvider>();
+            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
+            when(provider.getServerUri(anything())).thenResolve({
+                baseUrl: error.baseUrl,
+                displayName: 'Server Display Name',
+                token: ''
+            });
+            when(
+                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
+            ).thenResolve(resolvableInstance(provider));
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -811,17 +828,21 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
             verify(
                 applicationShell.showErrorMessage(
-                    DataScience.remoteJupyterConnectionFailedWithServer(error.baseUrl),
+                    DataScience.remoteJupyterConnectionFailedWithServer('Server Display Name'),
                     deepEqual({ detail: error.originalError.message || '', modal: true }),
                     DataScience.removeRemoteJupyterConnectionButtonText,
                     DataScience.changeRemoteJupyterConnectionButtonText,
                     DataScience.selectDifferentKernel
                 )
             ).once();
-            verify(uriStorage.remove(serverId)).never();
+            verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
         });
-        test('Display error when connection to remote jupyter server fails due to 3rd party extension', async () => {
-            const error = new RemoteJupyterServerUriProviderError('1', 'a', new Error('invalid handle'), serverId);
+        test('Select another kernel when connection to remote jupyter server fails and provider does not exist', async () => {
+            const error = new RemoteJupyterServerConnectionError(
+                uri,
+                serverProviderHandle,
+                new Error('ECONNRESET error')
+            );
             const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
@@ -831,18 +852,59 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId
-            });
-            when(uriStorage.get(serverId)).thenResolve({
-                time: 1,
-                uri,
-                serverId,
-                displayName: 'Hello Server',
-                provider: { id: '1', handle: 'a' }
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve();
+            when(
+                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
+            ).thenReject(new Error('Not Found'));
+            const result = await dataScienceErrorHandler.handleKernelError(
+                error,
+                'start',
+                connection,
+                undefined,
+                'jupyterExtension'
+            );
+            assert.strictEqual(result, KernelInterpreterDependencyResponse.selectDifferentKernel);
+            verify(
+                applicationShell.showErrorMessage(
+                    DataScience.remoteJupyterConnectionFailedWithServer(error.baseUrl),
+                    deepEqual({ detail: error.originalError.message || '', modal: true }),
+                    DataScience.removeRemoteJupyterConnectionButtonText,
+                    DataScience.changeRemoteJupyterConnectionButtonText,
+                    DataScience.selectDifferentKernel
+                )
+            ).never();
+            verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
+        });
+        test('Display error when connection to remote jupyter server fails due to 3rd party extension', async () => {
+            const error = new RemoteJupyterServerUriProviderError(serverProviderHandle, new Error('invalid handle'));
+            const connection = RemoteKernelSpecConnectionMetadata.create({
+                baseUrl: 'http://hello:1234/',
+                id: '1',
+                kernelSpec: {
+                    argv: [],
+                    display_name: '',
+                    name: '',
+                    executable: ''
+                },
+                serverProviderHandle
+            });
+            when(
+                applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
+            ).thenResolve();
+            const provider = mock<IInternalJupyterUriProvider>();
+            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
+            when(provider.getServerUri(anything())).thenResolve({
+                baseUrl: 'http://localhost:1234/',
+                displayName: 'Hello Server',
+                token: ''
+            });
+            when(
+                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
+            ).thenResolve(resolvableInstance(provider));
 
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
@@ -861,11 +923,14 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     DataScience.selectDifferentKernel
                 )
             ).once();
-            verify(uriStorage.remove(serverId)).never();
-            verify(uriStorage.get(serverId)).atLeast(1);
+            verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
         });
         test('Remove remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
-            const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
+            const error = new RemoteJupyterServerConnectionError(
+                uri,
+                serverProviderHandle,
+                new Error('ECONNRESET error')
+            );
             const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
@@ -875,13 +940,23 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: '' // Send nothing for argv[0]
                 },
-                serverId
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText as any);
             when(uriStorage.remove(anything())).thenResolve();
-            when(uriStorage.get(serverId)).thenResolve({ uri, serverId, time: 2, provider: { id: '1', handle: 'a' } });
+            const provider = mock<IInternalJupyterUriProvider>();
+            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
+            when(provider.getServerUri(anything())).thenResolve({
+                baseUrl: 'http://localhost:1234/',
+                displayName: 'Hello Server',
+                token: ''
+            });
+            when(
+                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
+            ).thenResolve(resolvableInstance(provider));
+
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -890,11 +965,14 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
-            verify(uriStorage.remove(serverId)).once();
-            verify(uriStorage.get(serverId)).atLeast(1);
+            verify(uriStorage.remove(deepEqual(serverProviderHandle))).once();
         });
         test('Change remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
-            const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
+            const error = new RemoteJupyterServerConnectionError(
+                uri,
+                serverProviderHandle,
+                new Error('ECONNRESET error')
+            );
             const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
@@ -904,12 +982,23 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.changeRemoteJupyterConnectionButtonText as any);
             when(cmdManager.executeCommand(anything(), anything(), anything(), anything())).thenResolve();
+            const provider = mock<IInternalJupyterUriProvider>();
+            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
+            when(provider.getServerUri(anything())).thenResolve({
+                baseUrl: 'http://localhost:1234/',
+                displayName: 'Hello Server',
+                token: ''
+            });
+            when(
+                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
+            ).thenResolve(resolvableInstance(provider));
+
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -918,10 +1007,14 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
-            verify(uriStorage.remove(serverId)).never();
+            verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
         });
         test('Select different kernel user choses to do so, when connection to remote jupyter server fails', async () => {
-            const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
+            const error = new RemoteJupyterServerConnectionError(
+                uri,
+                serverProviderHandle,
+                new Error('ECONNRESET error')
+            );
             const connection = RemoteKernelSpecConnectionMetadata.create({
                 baseUrl: 'http://hello:1234/',
                 id: '1',
@@ -931,11 +1024,21 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     name: '',
                     executable: ''
                 },
-                serverId
+                serverProviderHandle
             });
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve(DataScience.selectDifferentKernel as any);
+            const provider = mock<IInternalJupyterUriProvider>();
+            when(provider.getServerUriWithoutAuthInfo).thenReturn(undefined);
+            when(provider.getServerUri(anything())).thenResolve({
+                baseUrl: 'http://localhost:1234/',
+                displayName: 'Hello Server',
+                token: ''
+            });
+            when(
+                jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
+            ).thenResolve(resolvableInstance(provider));
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -944,7 +1047,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'jupyterExtension'
             );
             assert.strictEqual(result, KernelInterpreterDependencyResponse.selectDifferentKernel);
-            verify(uriStorage.remove(serverId)).never();
+            verify(uriStorage.remove(deepEqual(serverProviderHandle))).never();
         });
         function verifyErrorMessage(message: string, linkInfo?: string) {
             message = message.includes('command:jupyter.viewOutput')

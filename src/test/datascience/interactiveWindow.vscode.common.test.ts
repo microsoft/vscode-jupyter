@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
@@ -55,6 +54,7 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { format } from 'util';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 import { getNotebookUriFromInputBoxUri } from '../../standalone/intellisense/notebookPythonPathService.node';
+import { isSysInfoCell } from '../../interactive-window/systemInfoCell';
 
 suite(`Interactive window execution @iw`, async function () {
     this.timeout(120_000);
@@ -76,7 +76,6 @@ suite(`Interactive window execution @iw`, async function () {
             // For a flaky interrupt test.
             await captureScreenShot(this);
         }
-        sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
         // restore the default value
         const settings = vscode.workspace.getConfiguration('jupyter', null);
@@ -111,15 +110,17 @@ suite(`Interactive window execution @iw`, async function () {
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
                 `Controller does not match active interpreter for ${getDisplayPath(
                     notebookDocument?.uri
-                )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
-                    controller?.id
-                } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
+                )}, active interpreter is ${getDisplayPath(
+                    activeInterpreter?.uri
+                )} and controller is ${controller?.id} with interpreter ${getDisplayPath(
+                    controller?.connection?.interpreter?.uri
+                )}`
             );
         }
         async function verifyCells() {
             // Verify sys info cell
             const firstCell = notebookDocument.cellAt(0);
-            assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
+            assert.ok(isSysInfoCell(firstCell), 'First cell should be sys info cell');
             assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
 
             // Verify executed cell input and output
@@ -369,15 +370,18 @@ ${actualCode}
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
                 `Controller does not match active interpreter for ${getDisplayPath(
                     notebookDocument?.uri
-                )}, active interpreter is ${getDisplayPath(activeInterpreter?.uri)} and controller is ${
-                    controller?.id
-                } with interpreter ${getDisplayPath(controller?.connection?.interpreter?.uri)}`
+                )}, active interpreter is ${getDisplayPath(
+                    activeInterpreter?.uri
+                )} and controller is ${controller?.id} with interpreter ${getDisplayPath(
+                    controller?.connection?.interpreter?.uri
+                )}`
             );
         }
 
         // Verify sys info cell
         const firstCell = notebookDocument?.cellAt(0);
-        assert.ok(firstCell?.metadata.isInteractiveWindowMessageCell, 'First cell should be sys info cell');
+        assert.ok(firstCell, 'cell not added');
+        assert.ok(isSysInfoCell(firstCell!), 'First cell should be sys info cell');
         assert.equal(firstCell?.kind, vscode.NotebookCellKind.Markup, 'First cell should be markdown cell');
 
         // Verify executed cell input and output
@@ -566,8 +570,8 @@ ${actualCode}
         await runFilePromise;
         await waitForLastCellToComplete(interactiveWindow, 5, false);
 
-        const cells = interactiveWindow.notebookDocument
-            .getCells()
+        const cells = interactiveWindow
+            .notebookDocument!.getCells()
             .filter((c) => c.kind === vscode.NotebookCellKind.Code);
         const printCell = cells[cells.length - 2];
 

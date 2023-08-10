@@ -47,13 +47,13 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
             if (selected) {
                 this.liveKernelTracker.trackKernelIdAsUsed(
                     notebook.uri,
-                    controller.connection.serverId,
+                    controller.connection.serverProviderHandle,
                     controller.connection.kernelModel.id
                 );
             } else {
                 this.liveKernelTracker.trackKernelIdAsNotUsed(
                     notebook.uri,
-                    controller.connection.serverId,
+                    controller.connection.serverProviderHandle,
                     controller.connection.kernelModel.id
                 );
             }
@@ -68,7 +68,7 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
         }
         const resource = kernel.resourceUri;
         if (kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec') {
-            const serverId = kernel.kernelConnectionMetadata.serverId;
+            const serverId = kernel.kernelConnectionMetadata.serverProviderHandle;
             const subscription = kernel.kernelSocket.subscribe((info) => {
                 const kernelId = info?.options.id;
                 if (!kernel.disposed && !kernel.disposing && kernelId) {

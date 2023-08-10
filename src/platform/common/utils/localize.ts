@@ -26,7 +26,6 @@ export namespace Common {
     export const doNotShowAgain = l10n.t('Do not show again');
     export const reload = l10n.t('Reload');
     export const moreInfo = l10n.t('More Info');
-    export const documentation = l10n.t('Documentation');
     export const learnMore = l10n.t('Learn more');
     export const and = l10n.t('and');
     export const reportThisIssue = l10n.t('Report this issue');
@@ -80,9 +79,6 @@ export namespace DataScience {
 
     export const pythonExtensionInstalled = l10n.t(
         'Python Extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'
-    );
-    export const unknownServerUri = l10n.t(
-        'Server URL cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
     );
     export const uriProviderDescriptionFormat = (description: string, extensionId: string) =>
         l10n.t('{0} (From {1} extension)', description, extensionId);
@@ -150,9 +146,6 @@ export namespace DataScience {
         pythonEnvName: string,
         pythonModuleName: string
     ) => l10n.t("Running cells with '{0}' requires the {1} package.", pythonEnvName, pythonModuleName);
-    export const pythonRequiredToLaunchJupyterNotInstalledInConda = (pythonEnvName: string, pythonModuleName: string) =>
-        l10n.t("Running cells with '{0}' requires Python and the {0} package.", pythonEnvName, pythonModuleName);
-
     export const installPackageInstructions = (pythonModuleName: string, commandId: string) =>
         l10n.t(
             "Run the following command to install '{0}' into the Python environment. \nCommand: '{1}'",
@@ -166,7 +159,7 @@ export namespace DataScience {
     export const selectJupyterInterpreter = l10n.t('Select an Interpreter to start Jupyter');
     export const jupyterInstall = l10n.t('Install');
     export const currentlySelectedJupyterInterpreterForPlaceholder = (pythonEnvPath: string) =>
-        l10n.t('current: {0}', pythonEnvPath);
+        l10n.t('Selected Environment {0}', pythonEnvPath);
     export const jupyterNotSupported = (errorMessage: string) =>
         l10n.t('Jupyter cannot be started. Error attempting to locate Jupyter: {0}', errorMessage);
     export const jupyterNotebookNotInstalledOrNotFound = (interpreter: PythonEnvironment | undefined) => {
@@ -349,20 +342,19 @@ export namespace DataScience {
     export const restartKernel = l10n.t('Restart Kernel');
     export const reloadRequired = l10n.t('Please reload the window for new settings to take effect.');
     export const restartedKernelHeader = (kernelName: string) => l10n.t('Restarted {0}', kernelName);
+    export const connectedKernelHeader = (kernelName: string) => l10n.t('Connected to {0}', kernelName);
     export const restartingKernelCustomHeader = (kernelName: string) => l10n.t('_Restarting {0}..._', kernelName);
     export const restartingKernelHeader = l10n.t('_Restarting kernel..._');
     export const startingNewKernelHeader = l10n.t('_Connecting to kernel..._');
     export const startingNewKernelCustomHeader = (kernelName: string) => l10n.t('_Connecting to {0}..._', kernelName);
+    export const noKernelConnected = l10n.t('No kernel connected');
     export const jupyterSelectURIPrompt = l10n.t('Enter the URL of the running Jupyter server');
-    export const jupyterSelectURIQuickPickTitleOld = l10n.t('Pick how to connect to Jupyter');
-    export const jupyterSelectURIQuickPickPlaceholder = l10n.t('Choose an option');
-    export const jupyterSelectURIQuickPickCurrent = (uri: string) => l10n.t('Current: {0}', uri);
-    export const jupyterSelectURINoneLabel = l10n.t('None');
-    export const jupyterSelectURINoneDetail = l10n.t('Do not connect to any remote Jupyter server');
     export const jupyterSelectURIMRUDetail = (date: Date) => l10n.t('Last Connection: {0}', date.toLocaleString());
-    export const jupyterSelectURINewLabel = l10n.t('Existing');
     export const jupyterSelectURINewDetail = l10n.t('Specify the URL of an existing server');
     export const jupyterSelectURIInvalidURI = l10n.t('Invalid URL specified');
+    export const jupyterSelectURIMustBeHttpOrHttps = l10n.t(
+        'Invalid protocol in URL specified, only HTTP or HTTPS are supported.'
+    );
     export const jupyterSelectURIRunningDetailFormat = (time: Date, numberOfConnections: number) =>
         l10n.t('Last connection {0}. {1} existing connections.', time.toLocaleString(), numberOfConnections.toString());
     export const jupyterSelectUserAndPasswordTitle = l10n.t(
@@ -439,7 +431,8 @@ export namespace DataScience {
     export const selectKernel = l10n.t('Change Kernel');
     export const selectDifferentKernel = l10n.t('Select a different Kernel');
     export const kernelFilterPlaceholder = l10n.t('Choose the kernels that are available in the kernel picker.');
-    export const recommendedKernelCategoryInQuickPick = l10n.t('Recommended');
+    export const recommendedItemCategoryInQuickPick = l10n.t('Recommended');
+    export const selectedKernelCategoryInQuickPick = l10n.t('Selected');
     export const createPythonEnvironmentInQuickPick = l10n.t('Create Python Environment');
     export const createPythonEnvironmentInQuickPickTooltip = l10n.t(
         'Create an isolated Python Environment per workspace folder'
@@ -498,7 +491,6 @@ export namespace DataScience {
         l10n.t('Go to [{0}]', executionCount.toString());
     export const instructionComments = (cellMarker: string) =>
         l10n.t(`# To add a new cell, type '{0}'\n# To add a new markdown cell, type '{0} [markdown]'\n`, cellMarker);
-    export const untitledNotebookFileName = l10n.t('Untitled');
     export const exportButtonTitle = l10n.t('Export');
     export const exportAsQuickPickPlaceholder = l10n.t('Export As...');
     export const openExportedFileMessage = l10n.t('Would you like to open the exported file?');
@@ -517,7 +509,6 @@ export namespace DataScience {
     export const startingJupyterLogMessage = (pythonExec: string, cliArgs: string) =>
         l10n.t('Starting Jupyter from {0} with arguments {1}', pythonExec, cliArgs);
     export const waitingForJupyterSessionToBeIdle = l10n.t('Waiting for Jupyter Session to be idle');
-    export const gettingListOfKernelsForLocalConnection = l10n.t('Fetching Kernels');
     export const gettingListOfKernelsForRemoteConnection = l10n.t('Fetching Kernels');
     export const gettingListOfKernelSpecs = l10n.t('Fetching Kernel specs');
     export const startingJupyterNotebook = l10n.t('Starting Jupyter Notebook');
@@ -532,9 +523,6 @@ export namespace DataScience {
     export const kernelInvalid = (kernelName: string) =>
         l10n.t('Kernel {0} is not usable. Check the Jupyter output tab for more information.', kernelName);
 
-    export const jupyterSelectURIRemoteLabel = l10n.t('Existing');
-    export const jupyterSelectURIQuickPickTitleRemoteOnly = l10n.t('Pick an already running Jupyter server');
-    export const jupyterSelectURIRemoteDetail = l10n.t('Specify the URL of an existing server');
     export const removeRemoteJupyterServerEntryInQuickPick = l10n.t('Remove');
 
     export const loadClassFailedWithNoInternet = (widgetName: string, version: string) =>
@@ -592,7 +580,6 @@ export namespace DataScience {
     export const importingIpynb = l10n.t('Importing notebook file');
     export const exportingToFormat = (format: string) => l10n.t('Exporting to {0}', format);
     export const kernelCategoryForJupyterSession = (serverName: string) => l10n.t('({0}) Jupyter Session', serverName);
-    export const kernelPrefixForRemote = l10n.t('(Remote)');
     export const kernelDefaultRemoteDisplayName = l10n.t('Remote');
     export const kernelCategoryForJupyterKernel = l10n.t('Jupyter Kernel');
     export const kernelCategoryForRemoteJupyterKernel = (kernelSpecName: string) =>
@@ -686,9 +673,6 @@ export namespace DataScience {
 
     export const kernelConsoleOutputChannel = (kernelName: string) => l10n.t(`{0} Kernel Console Output`, kernelName);
     export const webNotSupported = l10n.t(`Operation not supported in web version of Jupyter Extension.`);
-    export const validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps = l10n.t('Has to be http(s)');
-    export const pickRemoteKernelTitle = l10n.t('Select a Remote Kernel');
-    export const pickRemoteKernelPlaceholder = l10n.t(`type to filter`);
     export const failedToInstallPythonExtension = l10n.t(`Failed to install the Python Extension.`);
     export const filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting = (files: string) =>
         l10n.t(
@@ -704,10 +688,9 @@ export namespace DataScience {
     export const localPythonEnvironments = l10n.t('Python Environments...');
     export const UserJupyterServerUrlProviderDisplayName = l10n.t('Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = l10n.t('Connect to an existing Jupyter Server');
-    export const UserJupyterServerUrlAlreadyExistError = l10n.t('A Jupyter Server with this URL already exists');
     export const kernelPickerSelectKernelTitle = l10n.t('Select Kernel');
     export const kernelPickerSelectLocalKernelSpecTitle = l10n.t('Select a Jupyter Kernel');
-    export const kernelPickerSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
+    export const quickPickSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = (kernelProvider: string) =>
         l10n.t('Select a Kernel from {0}', kernelProvider);
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');
@@ -724,9 +707,6 @@ export namespace DataScience {
     });
     export const failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail = l10n.t(
         'Ensure the server is running and reachable.'
-    );
-    export const enterRemoteJupyterUrlsThroughTheKernelPicker = l10n.t(
-        "Entering Remote Jupyter Urls through the command palette has been deprecated. Please use the option 'Select Another Kernel -> Existing Jupyter Server' in the Kernel Picker."
     );
 }
 export namespace WebViews {

@@ -10,7 +10,7 @@ import { sleep } from '../platform/common/utils/async';
 
 type CachedKernelInfo = {
     id: string;
-    info: KernelMessage.IInfoReply;
+    info: KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInfoReply | undefined;
     // Time when this was stored in mememto.
     age: number;
 };
@@ -35,10 +35,21 @@ export async function getKernelInfo(
         protocol_version: '',
         status: 'ok'
     };
+    if (!session.kernel) {
+        return;
+    }
+    if (session.kernel?.info) {
+        promises.push(session.kernel.info);
+        session.kernel.info
+            .then((content) => cacheKernelInfo(workspaceMemento, kernelConnectionMetadata, content))
+            .catch(noop);
+    }
+    // KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInfoReply | undefined
+
     // Even if we might have a cached response to the kernel info, make this request.
     // We rely on this being sent always, to detect whether cells completed execution or the like
     // after reloading VS Code.
-    const kernelInfoPromise = session.requestKernelInfo().then((item) => item?.content);
+    const kernelInfoPromise = session.kernel.requestKernelInfo().then((item) => item?.content);
     promises.push(kernelInfoPromise);
     kernelInfoPromise
         .then((content) =>
@@ -66,7 +77,7 @@ export async function getKernelInfo(
 async function cacheKernelInfo(
     storage: Memento,
     kernelConnection: KernelConnectionMetadata,
-    info: KernelMessage.IInfoReply | undefined
+    info: KernelMessage.IReplyErrorContent | KernelMessage.IReplyAbortContent | KernelMessage.IInfoReply | undefined
 ) {
     if (!info || !isRemoteConnection(kernelConnection)) {
         return;

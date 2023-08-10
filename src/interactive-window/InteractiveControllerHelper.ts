@@ -1,20 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { Disposable, Memento, NotebookController, NotebookDocument, Event } from 'vscode';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
-import { IKernel, KernelAction, KernelConnectionMetadata } from '../kernels/types';
-import { createActiveInterpreterController, isActiveInterpreter } from '../notebooks/controllers/helpers';
+import { IKernel, KernelAction, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../kernels/types';
 import { KernelConnector } from '../notebooks/controllers/kernelConnector';
 import { IControllerRegistration, IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { InteractiveWindowView } from '../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
 import { IDisposableRegistry, IMemento, Resource, WORKSPACE_MEMENTO } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { IServiceContainer } from '../platform/ioc/types';
 import { traceInfoIfCI, traceWarning } from '../platform/logging';
 import { IInteractiveControllerHelper } from './types';
+import { createInterpreterKernelSpec, getKernelId } from '../kernels/helpers';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
 const MostRecentKernelSelectedKey = 'LastInteractiveKernelSelected';
 
@@ -22,7 +23,7 @@ const MostRecentKernelSelectedKey = 'LastInteractiveKernelSelected';
 export class InteractiveControllerHelper implements IInteractiveControllerHelper {
     constructor(
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
@@ -52,7 +53,9 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
                 return controller;
             }
         }
-
+        if (!this.interpreterService) {
+            return;
+        }
         // Just use the active interpreter
         return await createActiveInterpreterController(
             InteractiveWindowView,
@@ -107,18 +110,59 @@ export class InteractiveControllerHelper implements IInteractiveControllerHelper
         }
         const actualController = found.controller;
 
-        // save the kernel info if not the active interpreter
-        isActiveInterpreter(kernel.kernelConnectionMetadata, resource, this.interpreterService)
-            .then(async (isActiveInterpreter) => {
-                await this.workspaceMemento.update(
-                    MostRecentKernelSelectedKey,
-                    isActiveInterpreter ? undefined : kernel.kernelConnectionMetadata
-                );
-            })
-            .catch((reason) => {
-                traceWarning('Failed to store kernel connection metadata', reason);
-            });
+        if (this.interpreterService) {
+            // save the kernel info if not the active interpreter
+            isActiveInterpreter(kernel.kernelConnectionMetadata, resource, this.interpreterService)
+                .then(async (isActiveInterpreter) => {
+                    await this.workspaceMemento.update(
+                        MostRecentKernelSelectedKey,
+                        isActiveInterpreter ? undefined : kernel.kernelConnectionMetadata
+                    );
+                })
+                .catch((reason) => {
+                    traceWarning('Failed to store kernel connection metadata', reason);
+                });
+        }
 
         return { kernel, actualController };
     }
+}
+
+// This is here so the default service and the loader service can both use it without having
+// a circular reference with each other
+async function createActiveInterpreterController(
+    viewType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+    resource: Resource,
+    interpreters: IInterpreterService,
+    registration: IControllerRegistration
+): Promise<IVSCodeNotebookController | undefined> {
+    const pythonInterpreter = await interpreters.getActiveInterpreter(resource);
+    if (pythonInterpreter) {
+        // Ensure that the controller corresponding to the active interpreter
+        // has been successfully created
+        const spec = await createInterpreterKernelSpec(pythonInterpreter);
+        const metadata = PythonKernelConnectionMetadata.create({
+            kernelSpec: spec,
+            interpreter: pythonInterpreter,
+            id: getKernelId(spec, pythonInterpreter)
+        });
+        const controllers = registration.addOrUpdate(metadata, [viewType]);
+        const controller = controllers[0]; // Should only create one because only one view type
+        registration.trackActiveInterpreterControllers(controllers);
+        traceInfoIfCI(
+            `Active Interpreter Controller ${controller.connection.kind}:${
+                controller.id
+            } created for View ${viewType} with resource ${getDisplayPath(resource)}`
+        );
+        return controller;
+    }
+}
+
+async function isActiveInterpreter(
+    metadata: KernelConnectionMetadata,
+    resource: Resource,
+    interpreters: IInterpreterService
+) {
+    const activeInterpreter = await interpreters.getActiveInterpreter(resource);
+    return activeInterpreter?.id === metadata.interpreter?.id;
 }

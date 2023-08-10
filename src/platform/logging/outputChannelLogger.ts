@@ -10,9 +10,13 @@ const format = require('format-util') as typeof import('format-util');
 export class OutputChannelLogger implements ILogger {
     private readonly homeReplaceRegEx?: RegExp;
     private readonly userNameReplaceRegEx?: RegExp;
-    constructor(private readonly channel: OutputChannel, home?: string, userName?: string) {
-        this.homeReplaceRegEx = home ? new RegExp(home, 'ig') : undefined;
-        this.userNameReplaceRegEx = userName ? new RegExp(userName, 'ig') : undefined;
+    constructor(
+        private readonly channel: OutputChannel,
+        homeRegEx?: RegExp,
+        userNameRegEx?: RegExp
+    ) {
+        this.homeReplaceRegEx = homeRegEx;
+        this.userNameReplaceRegEx = userNameRegEx;
     }
     private format(level: string | undefined, message: string, ...data: Arguments) {
         let logMessage = level

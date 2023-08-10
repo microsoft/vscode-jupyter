@@ -65,7 +65,7 @@ import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
-import { IVSCodeNotebookController } from './types';
+import { IConnectionDisplayData, IConnectionDisplayDataProvider, IVSCodeNotebookController } from './types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreator';
 import {
@@ -79,7 +79,6 @@ import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { ITrustedKernelPaths } from '../../kernels/raw/finder/types';
 import { KernelController } from '../../kernels/kernelController';
-import { ConnectionDisplayDataProvider, IConnectionDisplayData } from './connectionDisplayData';
 import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
 import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecutionTracker';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
@@ -98,6 +97,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         selected: boolean;
         notebook: NotebookDocument;
     }>();
+    private readonly _onConnecting = new EventEmitter<void>();
     private pendingCellAdditions = new Map<NotebookDocument, Promise<void>>();
     private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
@@ -131,6 +131,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
     }
+    get onConnecting() {
+        return this._onConnecting.event;
+    }
     get onDidReceiveMessage() {
         return this.controller.onDidReceiveMessage;
     }
@@ -160,7 +163,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         browser: IBrowserService,
         extensionChecker: IPythonExtensionChecker,
         serviceContainer: IServiceContainer,
-        displayDataProvider: ConnectionDisplayDataProvider
+        displayDataProvider: IConnectionDisplayDataProvider
     ): IVSCodeNotebookController {
         return new VSCodeNotebookController(
             kernelConnection,
@@ -199,7 +202,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
         private serviceContainer: IServiceContainer,
-        private readonly displayDataProvider: ConnectionDisplayDataProvider
+        private readonly displayDataProvider: IConnectionDisplayDataProvider
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -253,7 +256,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         const kernelExecution = this.kernelProvider.getKernelExecution(kernel);
         const lastCellExecutionTracker = this.serviceContainer.get<LastCellExecutionTracker>(LastCellExecutionTracker);
-        const info = lastCellExecutionTracker.getLastTrackedCellExecution(notebook, kernel);
+        const info = await lastCellExecutionTracker.getLastTrackedCellExecution(notebook, kernel);
 
         if (
             !kernel.session?.kernel ||
@@ -350,6 +353,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.isDisposed = true;
         this._onNotebookControllerSelected.dispose();
         this._onNotebookControllerSelectionChanged.dispose();
+        this._onConnecting.dispose();
         this.controller.dispose();
         this._onDidDispose.fire();
         this._onDidDispose.dispose();
@@ -628,6 +632,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions): Promise<IKernel> {
+        this._onConnecting.fire();
         return KernelConnector.connectToNotebookKernel(
             this.kernelConnection,
             this.serviceContainer,

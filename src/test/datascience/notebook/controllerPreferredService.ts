@@ -29,7 +29,7 @@ import {
 } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IDisposable, IDisposableRegistry, IsWebExtension, Resource } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -60,7 +60,7 @@ export class ControllerPreferredService {
     constructor(
         private readonly registration: IControllerRegistration,
         private readonly defaultService: ControllerDefaultService,
-        private readonly interpreters: IInterpreterService,
+        private readonly interpreters: IInterpreterService | undefined,
         private readonly notebook: IVSCodeNotebook,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly kernelRankHelper: KernelRankingHelper,
@@ -72,7 +72,9 @@ export class ControllerPreferredService {
             ControllerPreferredService.instance = new ControllerPreferredService(
                 serviceContainer.get<IControllerRegistration>(IControllerRegistration),
                 ControllerDefaultService.create(serviceContainer),
-                serviceContainer.get<IInterpreterService>(IInterpreterService),
+                serviceContainer.get<boolean>(IsWebExtension)
+                    ? undefined
+                    : serviceContainer.get<IInterpreterService>(IInterpreterService),
                 serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
                 serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
                 new KernelRankingHelper(
@@ -116,7 +118,6 @@ export class ControllerPreferredService {
     @traceDecoratorVerbose('Compute Preferred Controller')
     public async computePreferred(
         @logValue<NotebookDocument>('uri') document: NotebookDocument,
-        serverId?: string | undefined,
         cancelToken?: CancellationToken
     ): Promise<{
         preferredConnection?: KernelConnectionMetadata | undefined;
@@ -176,20 +177,6 @@ export class ControllerPreferredService {
                 return {};
             }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
-                const preferredInterpreter =
-                    !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
-                        ? await this.interpreters.getActiveInterpreter(document.uri)
-                        : undefined;
-                traceInfoIfCI(
-                    `Fetching TargetController document  ${getDisplayPath(document.uri)}  with preferred Interpreter ${
-                        preferredInterpreter ? getDisplayPath(preferredInterpreter?.uri) : '<undefined>'
-                    } for condition ${
-                        !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
-                    } (${serverId} && ${isPythonNbOrInteractiveWindow} && ${
-                        this.extensionChecker.isPythonExtensionInstalled
-                    }).`
-                );
-
                 if (preferredSearchToken.token.isCancellationRequested) {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
@@ -200,8 +187,7 @@ export class ControllerPreferredService {
                     document,
                     notebookMetadata,
                     preferredSearchToken.token,
-                    preferredInterpreter,
-                    serverId
+                    undefined
                 );
                 if (preferredConnection) {
                     traceInfoIfCI(
@@ -221,8 +207,7 @@ export class ControllerPreferredService {
                         document,
                         notebookMetadata,
                         preferredSearchToken.token,
-                        preferredInterpreter,
-                        serverId
+                        undefined
                     );
                     if (preferredConnection) {
                         traceInfoIfCI(
@@ -236,14 +221,6 @@ export class ControllerPreferredService {
                     traceInfoIfCI(`Fetching TargetController document ${getDisplayPath(document.uri)} cancelled.`);
                     return {};
                 }
-
-                // Send telemetry on looking for preferred don't await for sending it
-                this.sendPreferredKernelTelemetry(
-                    document.uri,
-                    notebookMetadata,
-                    preferredConnection,
-                    preferredInterpreter
-                );
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
@@ -259,9 +236,8 @@ export class ControllerPreferredService {
                         // & now that we have more controllers, we know more about what needs to be matched
                         // & since we no longer have a preferred, we should probably unset the previous preferred
                         traceVerbose(
-                            `Resetting the previous preferred controller ${
-                                this.preferredControllers.get(document)?.id
-                            } to default affinity for document ${getDisplayPath(document.uri)}`
+                            `Resetting the previous preferred controller ${this.preferredControllers.get(document)
+                                ?.id} to default affinity for document ${getDisplayPath(document.uri)}`
                         );
                         await this.preferredControllers
                             .get(document)
@@ -351,9 +327,8 @@ export class ControllerPreferredService {
                 // & now that we have more controllers, we know more about what needs to be matched
                 // & since we no longer have a preferred, we should probably unset the previous preferred
                 traceVerbose(
-                    `Resetting the previous preferred controller ${
-                        this.preferredControllers.get(document)?.id
-                    } to default affinity for document ${getDisplayPath(document.uri)}`
+                    `Resetting the previous preferred controller ${this.preferredControllers.get(document)
+                        ?.id} to default affinity for document ${getDisplayPath(document.uri)}`
                 );
                 await this.preferredControllers
                     .get(document)
@@ -383,11 +358,9 @@ export class ControllerPreferredService {
                 }
             }
             traceInfoIfCI(
-                `TargetController found ID: ${preferredConnection?.id} type ${
-                    preferredConnection?.kind
-                } for document ${getDisplayPath(document.uri)} & associated controller id ${
-                    targetController?.connection?.kind
-                }:${targetController?.id}`
+                `TargetController found ID: ${preferredConnection?.id} type ${preferredConnection?.kind} for document ${getDisplayPath(
+                    document.uri
+                )} & associated controller id ${targetController?.connection?.kind}:${targetController?.id}`
             );
 
             return { preferredConnection, controller: targetController };
@@ -434,7 +407,7 @@ export class ControllerPreferredService {
                 cancellationToken.dispose();
             })
         );
-        this.computePreferred(document, undefined, cancellationToken.token).catch(noop);
+        this.computePreferred(document, cancellationToken.token).catch(noop);
     }
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match
@@ -442,8 +415,7 @@ export class ControllerPreferredService {
         notebook: NotebookDocument,
         notebookMetadata: INotebookMetadata | undefined,
         cancelToken: CancellationToken,
-        preferredInterpreter: PythonEnvironment | undefined,
-        serverId: string | undefined
+        preferredInterpreter: PythonEnvironment | undefined
     ): Promise<KernelConnectionMetadata | undefined> {
         const uri = notebook.uri;
         let preferredConnection: KernelConnectionMetadata | undefined;
@@ -452,8 +424,7 @@ export class ControllerPreferredService {
             this.registration.all,
             notebookMetadata,
             preferredInterpreter,
-            cancelToken,
-            serverId
+            cancelToken
         );
         if (cancelToken.isCancellationRequested) {
             return;
@@ -483,7 +454,8 @@ export class ControllerPreferredService {
                     isPythonNotebook(notebookMetadata)) &&
                 !isExactMatch &&
                 this.extensionChecker.isPythonExtensionActive &&
-                !this.isWebExtension
+                !this.isWebExtension &&
+                this.interpreters
             ) {
                 // If we're looking for local kernel connections then wait for all interpreters have been loaded
                 // & then fallback to the old approach of providing a best match.
@@ -537,23 +509,5 @@ export class ControllerPreferredService {
         }
 
         return preferredConnection;
-    }
-    private sendPreferredKernelTelemetry(
-        resource: Resource,
-        notebookMetadata?: INotebookMetadata,
-        preferredConnection?: KernelConnectionMetadata,
-        preferredInterpreter?: PythonEnvironment
-    ) {
-        // Send telemetry on searching for a preferred connection
-        const resourceType = getResourceType(resource);
-        const language =
-            resourceType === 'interactive' ? PYTHON_LANGUAGE : getLanguageInNotebookMetadata(notebookMetadata) || '';
-
-        sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
-            result: preferredConnection ? 'found' : 'notfound',
-            resourceType,
-            language: language,
-            hasActiveInterpreter: !!preferredInterpreter
-        });
     }
 }

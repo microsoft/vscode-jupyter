@@ -9,7 +9,7 @@ import { GLOBAL_MEMENTO, IExtensionContext, IExtensions, IMemento } from '../../
 import { PromiseChain } from '../../platform/common/utils/async';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { traceError } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 
 type ApiExtensionInfo = {
@@ -20,10 +20,16 @@ type ApiExtensionInfo = {
 const API_ACCESS_GLOBAL_KEY = 'JUPYTER_API_ACCESS_INFORMATION';
 
 // Some publishers like our own `ms-tolsai` will always be allowed to access the API.
-export const TrustedExtensionPublishers = new Set([JVSC_EXTENSION_ID.split('.')[0], 'rchiodo', 'donjayamanne']);
+export const TrustedExtensionPublishers = new Set([
+    JVSC_EXTENSION_ID.split('.')[0],
+    'rchiodo',
+    'donjayamanne',
+    'SynapseVSCode'
+]);
+
 // We dont want to expose this API to everyone, else we'll keep track of who has access to this.
 // However, the user will still be prompted to grant these extensions access to the kernels..
-export const PublishersAllowedWithPrompts = new Set([JVSC_EXTENSION_ID.split('.')[0], 'rchiodo']);
+export const PublishersAllowedWithPrompts = new Set(['rchiodo', 'nuant']);
 
 /**
  * Responisble for controlling what extensions can access the IExtensionApi
@@ -46,8 +52,8 @@ export class ApiAccessService {
         const publisherId =
             !info.extensionId || info.extensionId === unknownExtensionId ? '' : info.extensionId.split('.')[0] || '';
         if (this.context.extensionMode === ExtensionMode.Test || !publisherId || this.env.channel === 'insiders') {
-            traceError(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
-            if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
+            if (!TrustedExtensionPublishers.has(publisherId) && !PublishersAllowedWithPrompts.has(publisherId)) {
+                traceWarning(`Publisher ${publisherId} is allowed to access the Kernel API with a message.`);
                 const displayName = this.extensions.getExtension(info.extensionId)?.packageJSON?.displayName || '';
                 const extensionDisplay =
                     displayName && info.extensionId
@@ -57,7 +63,13 @@ export class ApiAccessService {
                     .showErrorMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs(extensionDisplay))
                     .then(noop, noop);
             }
-            return { extensionId: info.extensionId, accessAllowed: true };
+            if (
+                !PublishersAllowedWithPrompts.has(publisherId) ||
+                !publisherId ||
+                this.context.extensionMode === ExtensionMode.Test
+            ) {
+                return { extensionId: info.extensionId, accessAllowed: true };
+            }
         }
         // Some extensions like our own (stuff we publish for exploration) are always allowed to access the API.
         if (TrustedExtensionPublishers.has(publisherId)) {

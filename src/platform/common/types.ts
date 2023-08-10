@@ -294,7 +294,9 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
 }
 
-export enum Experiments {}
+export enum Experiments {
+    NewJupyterSession = 'NewJupyterSession'
+}
 
 /**
  * Experiment service leveraging VS Code's experiment framework.
@@ -302,8 +304,7 @@ export enum Experiments {}
 export const IExperimentService = Symbol('IExperimentService');
 export interface IExperimentService {
     activate(): Promise<void>;
-    inExperiment(experimentName: Experiments): Promise<boolean>;
-    inExperimentSync(experimentName: Experiments): boolean;
+    inExperiment(experimentName: Experiments): boolean;
     getExperimentValue<T extends boolean | number | string>(experimentName: Experiments): Promise<T | undefined>;
 }
 

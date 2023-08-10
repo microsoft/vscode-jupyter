@@ -6,15 +6,16 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
-import { IJupyterServerUri, JupyterServerUriHandle } from './types';
 import { getJupyterConnectionDisplayName } from './helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../../platform/common/constants';
+import { Identifiers, JVSC_EXTENSION_ID, Telemetry, isBuiltInJupyterProvider } from '../../platform/common/constants';
 import { computeHash } from '../../platform/common/crypto';
-import { traceError } from '../../platform/logging';
+import { IJupyterServerUri } from '../../api';
+import { traceWarning } from '../../platform/logging';
+import { JupyterServerProviderHandle } from './types';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -90,10 +91,9 @@ export async function handleExpiredCertsError(
 }
 
 export async function createRemoteConnectionInfo(
-    jupyterHandle: { id: string; handle: JupyterServerUriHandle },
+    jupyterHandle: JupyterServerProviderHandle,
     serverUri: IJupyterServerUri
 ): Promise<IJupyterConnection> {
-    const serverId = await computeServerId(generateUriFromRemoteProvider(jupyterHandle.id, jupyterHandle.handle));
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
     const hostName = new URL(serverUri.baseUrl).hostname;
@@ -103,9 +103,9 @@ export async function createRemoteConnectionInfo(
             ? serverUri.authorizationHeader
             : undefined;
     return {
-        serverId,
         baseUrl,
         providerId: jupyterHandle.id,
+        serverProviderHandle: jupyterHandle,
         token,
         hostName,
         localLaunch: false,
@@ -129,26 +129,81 @@ export async function computeServerId(uri: string) {
     return computeHash(uri, 'SHA-256');
 }
 
-export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
-    // eslint-disable-next-line
-    return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
-        Identifiers.REMOTE_URI_HANDLE_PARAM
-    }=${encodeURI(result)}`;
+const ExtensionsWithKnownProviderIds = new Set(
+    [JVSC_EXTENSION_ID, 'ms-toolsai.vscode-ai', 'GitHub.codespaces'].map((e) => e.toLowerCase())
+);
+
+export function generateIdFromRemoteProvider(provider: JupyterServerProviderHandle) {
+    if (ExtensionsWithKnownProviderIds.has(provider.extensionId.toLowerCase())) {
+        // For extensions that we support migration, like AzML and Jupyter extension and the like,
+        // we can ignore storing the extension id in the url.
+        // eslint-disable-next-line
+        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${provider.id}&${
+            Identifiers.REMOTE_URI_HANDLE_PARAM
+        }=${encodeURI(provider.handle)}`;
+    } else {
+        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${provider.id}&${
+            Identifiers.REMOTE_URI_HANDLE_PARAM
+        }=${encodeURI(provider.handle)}&${Identifiers.REMOTE_URI_EXTENSION_ID_PARAM}=${encodeURI(
+            provider.extensionId
+        )}`;
+    }
 }
 
-export function extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } {
+class FailedToDetermineExtensionId extends Error {}
+export function extractJupyterServerHandleAndId(uri: string): JupyterServerProviderHandle {
     try {
         const url: URL = new URL(uri);
 
         // Id has to be there too.
         const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
         const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
+        const extensionId =
+            url.searchParams.get(Identifiers.REMOTE_URI_EXTENSION_ID_PARAM) ||
+            getOwnerExtensionOfProviderHandle(id || '');
         if (id && uriHandle) {
-            return { handle: uriHandle, id };
+            if (!extensionId) {
+                throw new FailedToDetermineExtensionId(
+                    `Unable to determine the extension id for the remote server handle', { ${id}, ${uriHandle} }`
+                );
+            }
+            return { handle: uriHandle, id, extensionId };
         }
         throw new Error('Invalid remote URI');
     } catch (ex) {
-        traceError('Failed to parse remote URI', uri, ex);
-        throw new Error(`'Failed to parse remote URI ${uri}`);
+        if (ex instanceof FailedToDetermineExtensionId) {
+            throw ex;
+        }
+        throw new Error(`'Failed to parse remote URI ${getSafeUrlForLogging(uri)}`);
     }
+}
+
+function getSafeUrlForLogging(uri: string) {
+    if ((uri || '').trim().toLowerCase().startsWith(Identifiers.REMOTE_URI.toLowerCase())) {
+        return uri;
+    } else {
+        try {
+            const url: URL = new URL(uri);
+            const isLocalHost = url.hostname.toLocaleLowerCase() === 'localhost' || url.hostname === '127.0.0.1';
+            return `${url.protocol}//${isLocalHost ? url.hostname : '<REMOTE SERVER>'}:${url.port}`;
+        } catch {
+            return uri;
+        }
+    }
+}
+
+export function getOwnerExtensionOfProviderHandle(id: string) {
+    if (!id) {
+        return;
+    }
+    if (isBuiltInJupyterProvider(id)) {
+        return JVSC_EXTENSION_ID;
+    }
+    if (id.startsWith('azureml_compute_instances') || id.startsWith('azureml_connected_compute_instances')) {
+        return 'ms-toolsai.vscode-ai';
+    }
+    if (id === 'github-codespaces') {
+        return 'GitHub.codespaces';
+    }
+    traceWarning(`Extension Id not found for server Id ${id}`);
 }

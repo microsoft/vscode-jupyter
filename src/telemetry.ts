@@ -15,13 +15,12 @@ import {
     KernelInterpreterDependencyResponse
 } from './kernels/types';
 // eslint-disable-next-line
-import { IExportedKernelService } from './standalone/api/extension';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
 import { IExtensionApi } from './standalone/api/api';
-import { IJupyterServerUri } from './kernels/jupyter/types';
+import { IExportedKernelService, IJupyterServerUri } from './api';
 
 export * from './platform/telemetry/index';
 export type DurationMeasurement = {
@@ -1011,6 +1010,57 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
+     * Sent when user enters a Remote Jupyter Url
+     */
+    [Telemetry.EnterRemoteJupyterUrl]: TelemetryEventInfo<{
+        /**
+         * Has of the origin/base Url.
+         */
+        baseUrlHash: string;
+        /**
+         * Whether user is connecting to the local host.
+         */
+        isLocalHost: boolean;
+        /**
+         * Whether the Url was successfully validated or not.
+         */
+        failed?: boolean;
+        /**
+         * Failure reason.
+         */
+        reason?:
+            | 'InvalidUrl'
+            | 'NonHttpUrl'
+            | 'ConnectionFailure'
+            | 'InsecureHTTP'
+            | 'SelfCert'
+            | 'ExpiredCert'
+            | 'AuthFailure';
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        tags: ['KernelStartup'],
+        properties: {
+            baseUrlHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            failed: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            isLocalHost: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            reason: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
+    };
+    /**
      * Disables using Shift+Enter to run code in IW (this is in response to the prompt recommending users to enable this to use the IW)
      */
     [Telemetry.DisableInteractiveShiftEnter]: TelemetryEventInfo<never | undefined> = {
@@ -1199,6 +1249,33 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A'
+    };
+    /**
+     * Sent when checking for passwords for Jupyter Hub
+     */
+    [Telemetry.CheckPasswordJupyterHub]: TelemetryEventInfo<{
+        failed: boolean;
+        info:
+            | 'passwordNotRequired'
+            | 'emptyResponseFromLogin'
+            | 'gotResponseFromLogin'
+            | 'emptyResponseFromApi'
+            | 'gotResponseFromApi'
+            | 'failure';
+    }> = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            failed: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            info: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            }
+        }
     };
     /**
      * User tried to open the data viewer and Pandas package was not installed.
@@ -1500,16 +1577,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A'
     };
     /**
-     * User has triggered selection of a Jupyter URI for a remote connection.
-     * Note: Might not come from a direct user action.
-     */
-    [Telemetry.SelectJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        source: 'N/A',
-        feature: ['KernelPicker'],
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * A URI has been selected and is being checked for validity.
      */
     [Telemetry.EnterJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
@@ -1739,25 +1806,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         properties: {
             commandSource: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
-     * Jupyter URI was valid and set to a remote setting.
-     */
-    [Telemetry.SetJupyterURIToUserSpecified]: TelemetryEventInfo<{
-        /**
-         * Was the URI set to an Azure uri.
-         */
-        azure: boolean;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['KernelPicker'],
-        source: 'N/A',
-        properties: {
-            azure: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
@@ -2112,25 +2160,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Sent to measure the time taken to wait for a Jupyter kernel to be idle.
-     */
-    [Telemetry.WaitForIdleJupyter]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * We started up a webview.
-     */
-    [Telemetry.WebviewStartup]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'IanMatthewHuff',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
      * Sent to measure the time taken to register an interpreter as a Jupyter kernel.
      */
     [Telemetry.RegisterInterpreterAsKernel]: TelemetryEventInfo<DurationMeasurement> = {
@@ -2349,44 +2378,6 @@ export class IEventNamePropertyMapping {
         feature: ['KernelPicker'],
         source: 'N/A',
         measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Telemetry sent when we have attempted to find the preferred kernel.
-     */
-    [Telemetry.PreferredKernel]: TelemetryEventInfo<
-        {
-            /**
-             * Note if we did or did not find a preferred kernel.
-             */
-            result: 'found' | 'notfound' | 'failed';
-            /**
-             * Language of the target notebook or interactive window
-             */
-            language: string;
-            /**
-             * If we have an active interpreter or not.
-             */
-            hasActiveInterpreter?: boolean;
-        } & ResourceTypeTelemetryProperty
-    > = {
-        owner: 'donjayamanne',
-        feature: ['InteractiveWindow', 'Notebook', 'KernelPicker'],
-        source: 'N/A',
-        properties: {
-            ...commonClassificationForResourceType(),
-            hasActiveInterpreter: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            language: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            result: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
     };
     /**
      * Telemetry event sent to when user customizes the jupyter command line
@@ -2904,6 +2895,43 @@ export class IEventNamePropertyMapping {
             ...commonClassificationForResourceSpecificTelemetryProperties().properties
         },
         measures: commonClassificationForDurationProperties()
+    };
+    /**
+     * Telemetry sent when user Kernel startup fails due to a missing python env.
+     */
+    [Telemetry.KernelStartFailureDueToMissingEnv]: TelemetryEventInfo<
+        ResourceTypeTelemetryProperty &
+            TelemetryErrorProperties & {
+                envMissingReason: 'Unknown' | 'EmptyEnvDetailsFromPython' | 'FailedToGetEnvDetailsFromPython';
+                isEmptyCondaEnv: boolean;
+                pythonEnvType: string;
+                fileExists: boolean;
+            }
+    > = {
+        owner: 'donjayamanne',
+        feature: ['Notebook', 'InteractiveWindow'],
+        source: 'User Action',
+        properties: {
+            ...commonClassificationForResourceType(),
+            ...commonClassificationForErrorProperties(),
+            ...commonClassificationForResourceSpecificTelemetryProperties().properties,
+            envMissingReason: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            isEmptyCondaEnv: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            pythonEnvType: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            },
+            fileExists: {
+                classification: 'SystemMetaData',
+                purpose: 'PerformanceAndHealth'
+            }
+        }
     };
     /**
      * Telemetry event sent when raw kernel startup fails due to missing ipykernel dependency.

@@ -99,7 +99,10 @@ export namespace vscMockExtHostedTypes {
             return NotebookCellOutputItem.text(rawStr, mime);
         }
 
-        constructor(public data: Uint8Array, public mime: string) {
+        constructor(
+            public data: Uint8Array,
+            public mime: string
+        ) {
             this.mime = mime;
         }
     }
@@ -950,7 +953,7 @@ export namespace vscMockExtHostedTypes {
                 this._tabstop = nested._tabstop;
                 defaultValue = nested.value;
             } else if (typeof defaultValue === 'string') {
-                defaultValue = defaultValue.replace(/\$|}/g, '\\$&');
+                defaultValue = defaultValue.replace(/\$|}/g, '\\$&'); // CodeQL [SM02383] This code is not used in production, only used for mocks in testing.
             }
 
             this.value += '${';
@@ -2370,7 +2373,10 @@ export namespace vscMockExtHostedTypes {
     }
     export class NotebookRendererScript {
         public readonly provides: string[];
-        constructor(public uri: vscode.Uri, provides: string | string[] = []) {
+        constructor(
+            public uri: vscode.Uri,
+            provides: string | string[] = []
+        ) {
             this.provides = typeof provides === 'string' ? [provides] : provides;
         }
     }
@@ -2389,12 +2395,26 @@ export namespace vscMockExtHostedTypes {
     // https://github.com/microsoft/vscode/issues/115616 @alexr00
 
     export enum PortAutoForwardAction {
+        /**
+         * Notify the user that the port is being forwarded. This is the default action.
+         */
         Notify = 1,
+        /**
+         * Once the port is forwarded, open the user's web browser to the forwarded port.
+         */
         OpenBrowser = 2,
+        /**
+         * Once the port is forwarded, open the preview browser to the forwarded port.
+         */
         OpenPreview = 3,
+        /**
+         * Forward the port silently.
+         */
         Silent = 4,
-        Ignore = 5,
-        OpenBrowserOnce = 6
+        /**
+         * Do not forward the port.
+         */
+        Ignore = 5
     }
 
     export class PortAttributes {
@@ -2431,7 +2451,10 @@ export namespace vscMockExtHostedTypes {
          * @param start start index
          * @param end end index.
          */
-        constructor(public readonly start: number, public readonly end: number) {}
+        constructor(
+            public readonly start: number,
+            public readonly end: number
+        ) {}
 
         /**
          * Derive a new range for this range.
@@ -2503,7 +2526,10 @@ export namespace vscMockExtHostedTypes {
          */
         newNotebookMetadata?: { [key: string]: any };
 
-        constructor(public readonly range: NotebookRange, public readonly newCells: vscode.NotebookCellData[]) {}
+        constructor(
+            public readonly range: NotebookRange,
+            public readonly newCells: vscode.NotebookCellData[]
+        ) {}
     }
 
     /**

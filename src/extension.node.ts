@@ -131,12 +131,13 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         return {
             ready: Promise.resolve(),
             registerPythonApi: noop,
-            registerRemoteServerProvider: noop,
+            registerRemoteServerProvider: () => ({ dispose: noop }),
             showDataViewer: () => Promise.resolve(),
             getKernelService: () => Promise.resolve(undefined),
             getSuggestedController: () => Promise.resolve(undefined),
             addRemoteJupyterServer: () => Promise.resolve(undefined),
-            openNotebook: () => Promise.reject()
+            openNotebook: () => Promise.reject(),
+            createJupyterServerCollection: () => Promise.reject()
         };
     }
 }
@@ -243,9 +244,35 @@ function addConsoleLogger() {
     }
 }
 
+function escapeRegExp(text: string) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
+function tryGetUsername() {
+    try {
+        const username = escapeRegExp(userInfo().username);
+        return new RegExp(username, 'ig');
+    } catch (e) {
+        console.info(
+            `jupyter extension failed to get username info with ${e}\n username will not be obfuscated in local logs`
+        );
+    }
+}
+
+function tryGetHomePath() {
+    try {
+        const homeDir = escapeRegExp(getUserHomeDir().fsPath);
+        return new RegExp(homeDir, 'ig');
+    } catch (e) {
+        console.info(
+            `jupyter extension failed to get home directory path with ${e}\n home Path will not be obfuscated in local logs`
+        );
+    }
+}
+
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel, getUserHomeDir().fsPath, userInfo().username));
+    registerLogger(new OutputChannelLogger(standardOutputChannel, tryGetHomePath(), tryGetUsername()));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
@@ -352,16 +379,11 @@ async function activateLegacy(
     cmdManager.executeCommand('setContext', 'jupyter.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     // "activate" everything else
-    const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
-    context.subscriptions.push(manager);
-    manager.activateSync();
-    const activationPromise = manager.activate();
+    serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager).activate();
 
     const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
     featureManager.initialize();
     context.subscriptions.push(featureManager);
-
-    return activationPromise;
 }
 
 function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {

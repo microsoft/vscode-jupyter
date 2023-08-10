@@ -39,6 +39,7 @@ import {
     isShortNamePath,
     shortNameMatchesLongName
 } from './helper';
+import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 
 /**
  * For info on the custom requests implemented by jupyter see:
@@ -213,7 +214,10 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     public continueDirect(threadId: number): void {
-        this.jupyterSession.requestDebug({
+        if (!this.jupyterSession.kernel) {
+            throw new SessionDisposedError();
+        }
+        this.jupyterSession.kernel.requestDebug({
             seq: 0,
             type: 'request',
             command: 'continue',
@@ -283,7 +287,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     protected async sendMessageToJupyterSession(message: DebugProtocol.ProtocolMessage) {
-        if (this.jupyterSession.disposed || this.jupyterSession.status === 'dead') {
+        if (this.jupyterSession.isDisposed || this.jupyterSession.status === 'dead' || !this.jupyterSession.kernel) {
             traceInfo(`Skipping sending message ${message.type} because session is disposed`);
             return;
         }
@@ -298,7 +302,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             getMessageSourceAndHookIt(message, this.translateRealLocationToDebuggerLocation.bind(this));
             // responses of reverse requests
             const response = message as DebugProtocol.Response;
-            const control = this.jupyterSession.requestDebug(
+            const control = this.jupyterSession.kernel.requestDebug(
                 {
                     seq: response.seq,
                     type: 'request',
@@ -317,10 +321,13 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         message: DebugProtocol.ProtocolMessage
     ): Promise<DebugProtocol.Response> {
         getMessageSourceAndHookIt(message, this.translateRealLocationToDebuggerLocation.bind(this));
+        if (!this.jupyterSession.kernel) {
+            throw new SessionDisposedError();
+        }
 
         this.trace('to kernel, mapped', JSON.stringify(message));
         const request = message as DebugProtocol.Request;
-        const control = this.jupyterSession.requestDebug(
+        const control = this.jupyterSession.kernel.requestDebug(
             {
                 seq: request.seq,
                 type: 'request',
@@ -372,7 +379,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     private async deleteDumpedFiles(): Promise<void> {
         const fileValues = this.getDumpFilesForDeletion();
         // Need to have our Jupyter Session and some dumpCell files to delete
-        if (this.jupyterSession && fileValues.length) {
+        if (this.jupyterSession.kernel && fileValues.length) {
             // Create our python string of file names
             const fileListString = fileValues
                 .map((filePath) => {
@@ -392,7 +399,7 @@ for file in _VSCODE_fileList:
 del _VSCODE_fileList
 del _VSCODE_os`;
 
-            await executeSilently(this.jupyterSession, deleteFilesCode, {
+            await executeSilently(this.jupyterSession.kernel, deleteFilesCode, {
                 traceErrors: true,
                 traceErrorsMessage: 'Error deleting temporary debugging files'
             });

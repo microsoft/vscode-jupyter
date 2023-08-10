@@ -51,8 +51,6 @@ if (ssExports && ssExports.createStylesheet) {
     };
 }
 
-import { configure } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
 import { DOMWindow, JSDOM } from 'jsdom';
 
 import { noop } from '../../platform/common/utils/misc';
@@ -401,7 +399,7 @@ export function setUpDomEnvironment() {
 
     // For Jupyter server to load correctly. It expects the window object to not be defined
     // eslint-disable-next-line no-eval, @typescript-eslint/no-explicit-any
-    const fetchMod = eval('require')('node-fetch');
+    const fetchMod = eval('require')('node-fetch'); // CodeQL [SM01632] Use of eval here is safe as this is non-production code and only used in tests.
     // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['fetch'] = fetchMod;
     // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
@@ -409,11 +407,9 @@ export function setUpDomEnvironment() {
     // eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-explicit-any
     (global as any)['Headers'] = fetchMod.Headers;
     // eslint-disable-next-line @typescript-eslint/dot-notation, no-eval, @typescript-eslint/no-explicit-any
-    (global as any)['WebSocket'] = eval('require')('ws');
+    (global as any)['WebSocket'] = eval('require')('ws'); // CodeQL [SM01632] Use of eval here is safe as this is non-production code and only used in tests.
     (global as any)['DOMParser'] = dom.window.DOMParser;
     (global as any)['Blob'] = dom.window.Blob;
-
-    configure({ adapter: new Adapter() });
 
     // Special case for the node_modules\monaco-editor\esm\vs\editor\browser\config\configuration.js. It doesn't
     // export the function we need to dispose of the timer it's set. So force it to.

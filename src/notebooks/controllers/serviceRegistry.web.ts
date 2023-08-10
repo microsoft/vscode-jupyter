@@ -3,23 +3,23 @@
 
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
-import { ConnectionDisplayDataProvider } from './connectionDisplayData';
+import { ConnectionDisplayDataProvider } from './connectionDisplayData.web';
 import { ControllerRegistration } from './controllerRegistration';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.web';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
-import { NotebookKernelSourceSelector } from './kernelSource/notebookKernelSourceSelector';
-import { IControllerRegistration, INotebookKernelSourceSelector } from './types';
+import { RemoteNotebookKernelSourceSelector } from './kernelSource/remoteNotebookKernelSourceSelector';
+import { IConnectionDisplayDataProvider, IControllerRegistration, IRemoteNotebookKernelSourceSelector } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IControllerRegistration>(IControllerRegistration, ControllerRegistration);
     serviceManager.addBinding(IControllerRegistration, IExtensionSyncActivationService);
-    serviceManager.addSingleton<ConnectionDisplayDataProvider>(
-        ConnectionDisplayDataProvider,
+    serviceManager.addSingleton<IConnectionDisplayDataProvider>(
+        IConnectionDisplayDataProvider,
         ConnectionDisplayDataProvider
     );
-    serviceManager.addSingleton<INotebookKernelSourceSelector>(
-        INotebookKernelSourceSelector,
-        NotebookKernelSourceSelector
+    serviceManager.addSingleton<IRemoteNotebookKernelSourceSelector>(
+        IRemoteNotebookKernelSourceSelector,
+        RemoteNotebookKernelSourceSelector
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

@@ -68,7 +68,19 @@ export class Extensions implements IExtensions {
                             const json = JSON.parse(text);
                             // Possible we have another package.json file. Make sure it has an extension id
                             if (json.publisher && json.name && json.displayName) {
-                                return { extensionId: `${json.publisher}.${json.name}`, displayName: json.displayName };
+                                const extensionId = `${json.publisher}.${json.name}`;
+                                const matchingExt = this.getExtension(extensionId);
+                                if (
+                                    matchingExt &&
+                                    matchingExt.id === extensionId &&
+                                    (frame.startsWith(matchingExt.extensionUri.toString()) ||
+                                        frame.startsWith(matchingExt.extensionUri.fsPath.toString()))
+                                ) {
+                                    return {
+                                        extensionId: matchingExt.id,
+                                        displayName: matchingExt.packageJSON.displayName
+                                    };
+                                }
                             }
                         } catch {
                             // If parse fails, then not the extension

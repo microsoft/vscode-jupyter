@@ -17,6 +17,7 @@ import { EOL } from 'os';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { splitLines } from '../../common/helpers';
 import { IPythonExecutionFactory } from '../types.node';
+import { Environment } from '../../api/pythonApiTypes';
 
 export type ExecutionInstallArgs = {
     args: string[];
@@ -38,7 +39,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
     public async installModule(
         productOrModuleName: Product | string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
         flags?: ModuleInstallFlags
     ): Promise<void> {
@@ -114,16 +115,16 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             }
             let lastStdErr: string | undefined;
             let couldNotInstallErr: string | undefined;
-            const ticker = ['', '.', '..', '...'];
+            const ticker = ['.', '..', '...'];
             let counter = 0;
             if (observable) {
                 observable.out.subscribe({
                     next: (output) => {
-                        const suffix = ticker[counter % 4];
+                        const suffix = ticker[counter % 3];
                         const trimmedOutput = output.out.trim();
                         counter += 1;
                         const message =
-                            trimmedOutput.length > 30 ? `${trimmedOutput.substring(0, 30)}${suffix}` : trimmedOutput;
+                            trimmedOutput.length > 28 ? `${trimmedOutput.substring(0, 28)}${suffix}` : trimmedOutput;
                         progress.report({ message });
                         traceVerbose(output.out);
                         if (output.source === 'stderr') {
@@ -193,10 +194,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         };
         await shell.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
     }
-    public abstract isSupported(interpreter: PythonEnvironment): Promise<boolean>;
+    public abstract isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean>;
     protected abstract getExecutionArgs(
         moduleName: string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         flags?: ModuleInstallFlags
     ): Promise<ExecutionInstallArgs>;
 }

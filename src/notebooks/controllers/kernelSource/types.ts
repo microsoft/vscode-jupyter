@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, NotebookDocument, QuickPickItem } from 'vscode';
-import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
+import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IDisposable } from '../../../platform/common/types';
 export interface ConnectionQuickPickItem extends QuickPickItem {
@@ -19,10 +19,9 @@ export interface CommandQuickPickItem extends QuickPickItem {
     command: () => Promise<PythonKernelConnectionMetadata | undefined>;
 }
 
-export type MultiStepResult = {
+export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
     notebook: NotebookDocument;
-    source?: IContributedKernelFinder;
-    selection?: { type: 'connection'; connection: KernelConnectionMetadata } | { type: 'userPerformedSomeOtherAction' };
+    selection?: { type: 'connection'; connection: T } | { type: 'userPerformedSomeOtherAction' };
     disposables: IDisposable[];
 };
 export interface IQuickPickKernelItemProvider {
@@ -36,5 +35,4 @@ export interface IQuickPickKernelItemProvider {
     status: 'discovering' | 'idle';
     refresh: () => Promise<void>;
     recommended: KernelConnectionMetadata | undefined;
-    finder?: IContributedKernelFinder;
 }

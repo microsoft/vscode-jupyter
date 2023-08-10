@@ -79,9 +79,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 Commands.RestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
+                        return this.restartKernel(context?.notebookEditor?.notebookUri).catch(noop);
                     } else {
-                        this.restartKernel(context).catch(noop);
+                        return this.restartKernel(context).catch(noop);
                     }
                 }
             )
@@ -207,7 +207,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
-            traceVerbose(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
+            traceVerbose(`Restart kernel command handler for ${getDisplayPath(document.uri)}`);
             if (await this.shouldAskForRestart(document.uri)) {
                 // Ask the user if they want us to restart or not.
                 const message = DataScience.restartKernelMessage;
@@ -271,11 +271,13 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 }
             }
         })();
-        promise.finally(() => {
-            if (this.pendingRestartInterrupt.get(kernel) === promise) {
-                this.pendingRestartInterrupt.delete(kernel);
-            }
-        });
+        promise
+            .finally(() => {
+                if (this.pendingRestartInterrupt.get(kernel) === promise) {
+                    this.pendingRestartInterrupt.delete(kernel);
+                }
+            })
+            .catch(noop);
         this.pendingRestartInterrupt.set(kernel, promise);
         return promise;
     }

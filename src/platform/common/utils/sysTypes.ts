@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-/* eslint-disable @typescript-eslint/no-explicit-any, jsdoc/check-alignment, jsdoc/check-indentation, jsdoc/newline-after-description, no-restricted-syntax, prefer-const */
+/* eslint-disable @typescript-eslint/no-explicit-any, jsdoc/check-alignment, jsdoc/check-indentation, no-restricted-syntax, prefer-const */
 
 const _typeof = {
     number: 'number',

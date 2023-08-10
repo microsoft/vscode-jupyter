@@ -25,15 +25,16 @@ import { KernelStartupTelemetry } from './kernelStartupTelemetry.node';
 import { KernelStatusProvider } from './kernelStatusProvider';
 import { PortAttributesProviders } from './portAttributeProvider.node';
 import { ContributedLocalKernelSpecFinder } from './raw/finder/contributedLocalKernelSpecFinder.node';
-import { ContributedLocalPythonEnvFinder } from './raw/finder/contributedLocalPythonEnvFinder.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
-import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
+import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { PythonKernelInterruptDaemon } from './raw/finder/pythonKernelInterruptDaemon.node';
 import { TrustedKernelPaths } from './raw/finder/trustedKernelPaths.node';
 import { ITrustedKernelPaths } from './raw/finder/types';
 import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsService.node';
 import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
+import { OldRawKernelSessionFactory } from './raw/session/oldRawKernelSessionFactory.node';
+import { IOldRawKernelSessionFactory } from './raw/types';
 import { RawKernelSessionFactory } from './raw/session/rawKernelSessionFactory.node';
 import { RawNotebookSupportedService } from './raw/session/rawNotebookSupportedService.node';
 import { IKernelLauncher, IRawKernelSessionFactory, IRawNotebookSupportedService } from './raw/types';
@@ -67,6 +68,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PreferredRemoteKernelIdProvider,
         PreferredRemoteKernelIdProvider
     );
+    serviceManager.addSingleton<IOldRawKernelSessionFactory>(IOldRawKernelSessionFactory, OldRawKernelSessionFactory);
     serviceManager.addSingleton<IRawKernelSessionFactory>(IRawKernelSessionFactory, RawKernelSessionFactory);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
     serviceManager.addSingleton<KernelEnvironmentVariablesService>(
@@ -77,10 +79,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ContributedLocalKernelSpecFinder
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        ContributedLocalPythonEnvFinder
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -95,9 +93,9 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addBinding(LocalKnownPathKernelSpecFinder, IExtensionSyncActivationService);
 
-    serviceManager.addSingleton<LocalPythonAndRelatedNonPythonKernelSpecFinder>(
-        LocalPythonAndRelatedNonPythonKernelSpecFinder,
-        LocalPythonAndRelatedNonPythonKernelSpecFinder
+    serviceManager.addSingleton<OldLocalPythonAndRelatedNonPythonKernelSpecFinder>(
+        OldLocalPythonAndRelatedNonPythonKernelSpecFinder,
+        OldLocalPythonAndRelatedNonPythonKernelSpecFinder
     );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelStatusProvider);

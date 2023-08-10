@@ -69,7 +69,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private isUsingIPyWidgets = false;
     private readonly deserialize: (data: string | ArrayBuffer) => KernelMessage.IMessage<KernelMessage.MessageType>;
 
-    constructor(private readonly kernelProvider: IKernelProvider, public readonly document: NotebookDocument) {
+    constructor(
+        private readonly kernelProvider: IKernelProvider,
+        public readonly document: NotebookDocument
+    ) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
         // been registered, in which case kaboom. As we know this is always required, pre-register this.
@@ -390,7 +393,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // inside the kernel on startup. However we
             // still need to track it here.
             if (targetName !== Identifiers.DefaultCommTarget) {
-                kernel.session?.registerCommTarget(targetName, noop);
+                kernel.session?.kernel?.registerCommTarget(targetName, noop);
             }
         }
     }
@@ -426,11 +429,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private registerMessageHook(msgId: string) {
         try {
-            if (this.kernel?.session && !this.messageHooks.has(msgId)) {
+            if (this.kernel?.session?.kernel && !this.messageHooks.has(msgId)) {
                 this.hookCount += 1;
                 const callback = this.messageHookCallback.bind(this);
                 this.messageHooks.set(msgId, callback);
-                this.kernel?.session.registerMessageHook(msgId, callback);
+                this.kernel.session.kernel.registerMessageHook(msgId, callback);
             }
         } finally {
             // Regardless of if we registered successfully or not, send back a message to the UI
@@ -461,10 +464,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private removeMessageHook(msgId: string) {
-        if (this.kernel?.session && this.messageHooks.has(msgId)) {
+        if (this.kernel?.session?.kernel && this.messageHooks.has(msgId)) {
             const callback = this.messageHooks.get(msgId);
             this.messageHooks.delete(msgId);
-            this.kernel?.session.removeMessageHook(msgId, callback!);
+            this.kernel.session.kernel.removeMessageHook(msgId, callback!);
         }
     }
 

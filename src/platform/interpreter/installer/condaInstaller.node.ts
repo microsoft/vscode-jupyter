@@ -11,9 +11,11 @@ import * as path from '../../vscode-path/path';
 import { translateProductToModule } from './utils';
 import { fileToCommandArgument, toCommandArgument } from '../../common/helpers';
 import { getPinnedPackages } from './pinnedPackages';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IInterpreterService } from '../contracts';
+import { Environment } from '../../api/pythonApiTypes';
+import { getEnvironmentType, isCondaEnvironmentWithoutPython } from '../helpers';
 
 /**
  * A Python module installer for a conda environment.
@@ -53,7 +55,7 @@ export class CondaInstaller extends ModuleInstaller {
      * @param {InterpreterUri} [resource=] Resource used to identify the workspace.
      * @returns {Promise<boolean>} Whether conda is supported as a module installer or not.
      */
-    public async isSupported(interpreter: PythonEnvironment): Promise<boolean> {
+    public async isSupported(interpreter: PythonEnvironment | Environment): Promise<boolean> {
         if (this._isCondaAvailable === false) {
             return false;
         }
@@ -63,12 +65,15 @@ export class CondaInstaller extends ModuleInstaller {
             return false;
         }
         // Now we need to check if the current environment is a conda environment or not.
-        return interpreter.envType === EnvironmentType.Conda;
+        return (
+            ('executable' in interpreter ? getEnvironmentType(interpreter) : interpreter.envType) ===
+            EnvironmentType.Conda
+        );
     }
 
     public override async installModule(
         productOrModuleName: Product | string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         cancelTokenSource: CancellationTokenSource,
         flags?: ModuleInstallFlags
     ): Promise<void> {
@@ -76,7 +81,14 @@ export class CondaInstaller extends ModuleInstaller {
 
         // If we just installed a package into a conda env without python init, then Python may have gotten installed
         // We now need to ensure the conda env gets updated as a result of this.
-        if (interpreter.envType === EnvironmentType.Conda && interpreter.isCondaEnvWithoutPython) {
+        if (
+            ('executable' in interpreter
+                ? getEnvironmentType(interpreter)
+                : interpreter.envType === EnvironmentType.Conda) &&
+            ('executable' in interpreter
+                ? isCondaEnvironmentWithoutPython(interpreter)
+                : interpreter.isCondaEnvWithoutPython)
+        ) {
             const pythonExt = this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
             if (!pythonExt.isPythonExtensionActive) {
                 return;
@@ -94,12 +106,12 @@ export class CondaInstaller extends ModuleInstaller {
      */
     protected async getExecutionArgs(
         moduleName: string,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | Environment,
         flags: ModuleInstallFlags = ModuleInstallFlags.None
     ): Promise<ExecutionInstallArgs> {
         const condaService = this.serviceContainer.get<CondaService>(CondaService);
         const condaFile = await condaService.getCondaFile();
-        const name = interpreter.envName;
+        const name = 'executable' in interpreter ? interpreter.environment?.name : interpreter.envName;
         const envPath = this.getEnvironmentPath(interpreter);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
@@ -137,8 +149,17 @@ export class CondaInstaller extends ModuleInstaller {
         };
     }
 
-    private getEnvironmentPath(interpreter: PythonEnvironment) {
-        const dir = path.dirname(interpreter.uri.fsPath);
+    private getEnvironmentPath(interpreter: PythonEnvironment | Environment) {
+        let exeuctablePath: Uri;
+        if ('executable' in interpreter) {
+            if (interpreter.environment?.folderUri) {
+                return interpreter.environment.folderUri.fsPath;
+            }
+            exeuctablePath = interpreter.executable.uri || Uri.file(interpreter.path);
+        } else {
+            exeuctablePath = interpreter.uri;
+        }
+        const dir = path.dirname(exeuctablePath.fsPath);
 
         // If interpreter is in bin or Scripts, then go up one level
         const subDirName = path.basename(dir);

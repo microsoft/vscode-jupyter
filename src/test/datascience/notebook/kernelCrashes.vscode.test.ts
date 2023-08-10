@@ -55,11 +55,11 @@ import { TestNotebookDocument, createKernelController } from './executionHelper'
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { NotebookCellLanguageService } from '../../../notebooks/languages/cellLanguageService';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
+import { IJupyterUriProviderRegistration } from '../../../kernels/jupyter/types';
 import { instance, mock, when } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { ConnectionDisplayDataProvider } from '../../../notebooks/controllers/connectionDisplayData.node';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -104,7 +104,9 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const configuration = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
             const extensionChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-            const uriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
+            const providerRegitry = api.serviceContainer.get<IJupyterUriProviderRegistration>(
+                IJupyterUriProviderRegistration
+            );
             const browser = api.serviceContainer.get<IBrowserService>(IBrowserService);
             const platform = api.serviceContainer.get<IPlatformService>(IPlatformService);
             const interpreters = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -112,7 +114,7 @@ suite('VSCode Notebook Kernel Error Handling - @kernelCore', function () {
             const displayDataProvider = new ConnectionDisplayDataProvider(
                 workspaceService,
                 platform,
-                uriStorage,
+                providerRegitry,
                 disposables,
                 interpreters
             );

@@ -7,11 +7,12 @@ import * as vscode from 'vscode';
 import {
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
+    PythonKernelConnectionMetadata,
     RemoteKernelConnectionMetadata
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
 import { IDisposable } from '../../platform/common/types';
-import { ContributedKernelFinderKind } from '../../kernels/internalTypes';
+import { IInternalJupyterUriProvider } from '../../kernels/jupyter/types';
 
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
@@ -29,6 +30,7 @@ export interface IVSCodeNotebookController extends IDisposable {
         selected: boolean;
         notebook: vscode.NotebookDocument;
     }>;
+    readonly onConnecting: vscode.Event<void>;
     readonly onDidDispose: vscode.Event<void>;
     readonly onDidReceiveMessage: vscode.Event<{ editor: vscode.NotebookEditor; message: any }>;
     restoreConnection(notebook: vscode.NotebookDocument): Promise<void>;
@@ -108,15 +110,33 @@ export enum PreferredKernelExactMatchReason {
     IsNonPythonKernelLanguageMatch = 1 << 3
 }
 
-// Provides the UI to select a kernel source for a notebook document
-export const INotebookKernelSourceSelector = Symbol('INotebookKernelSourceSelector');
-export interface INotebookKernelSourceSelector {
-    selectLocalKernel(
-        notebook: vscode.NotebookDocument,
-        kind: ContributedKernelFinderKind.LocalKernelSpec | ContributedKernelFinderKind.LocalPythonEnvironment
-    ): Promise<LocalKernelConnectionMetadata | undefined>;
+export const IRemoteNotebookKernelSourceSelector = Symbol('IRemoteNotebookKernelSourceSelector');
+export interface IRemoteNotebookKernelSourceSelector {
     selectRemoteKernel(
         notebook: vscode.NotebookDocument,
-        providerId: string
+        provider: IInternalJupyterUriProvider
     ): Promise<RemoteKernelConnectionMetadata | undefined>;
+}
+export const ILocalNotebookKernelSourceSelector = Symbol('ILocalNotebookKernelSourceSelector');
+export interface ILocalNotebookKernelSourceSelector {
+    selectLocalKernel(notebook: vscode.NotebookDocument): Promise<LocalKernelConnectionMetadata | undefined>;
+}
+export const ILocalPythonNotebookKernelSourceSelector = Symbol('ILocalPythonNotebookKernelSourceSelector');
+export interface ILocalPythonNotebookKernelSourceSelector {
+    selectLocalKernel(notebook: vscode.NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined>;
+}
+
+export interface IConnectionDisplayData extends IDisposable {
+    readonly onDidChange: vscode.Event<IConnectionDisplayData>;
+    readonly connectionId: string;
+    readonly label: string;
+    readonly description: string | undefined;
+    readonly detail: string;
+    readonly category: string;
+    readonly serverDisplayName?: string;
+}
+
+export const IConnectionDisplayDataProvider = Symbol('IConnectionDisplayData');
+export interface IConnectionDisplayDataProvider {
+    getDisplayData(connection: KernelConnectionMetadata): IConnectionDisplayData;
 }

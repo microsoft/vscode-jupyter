@@ -136,12 +136,13 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         return {
             ready: Promise.resolve(),
             registerPythonApi: noop,
-            registerRemoteServerProvider: noop,
+            registerRemoteServerProvider: () => ({ dispose: noop }),
             showDataViewer: () => Promise.resolve(),
             getKernelService: () => Promise.resolve(undefined),
             getSuggestedController: () => Promise.resolve(undefined),
             addRemoteJupyterServer: () => Promise.resolve(undefined),
-            openNotebook: () => Promise.reject()
+            openNotebook: () => Promise.reject(),
+            createJupyterServerCollection: () => Promise.reject()
         };
     }
 }
@@ -245,7 +246,7 @@ function addConsoleLogger() {
 
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter, 'log');
-    registerLogger(new OutputChannelLogger(standardOutputChannel, ''));
+    registerLogger(new OutputChannelLogger(standardOutputChannel));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
@@ -333,14 +334,10 @@ async function activateLegacy(
     cmdManager.executeCommand('setContext', 'jupyter.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     // "activate" everything else
-    const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
-    context.subscriptions.push(manager);
-    manager.activateSync();
-    const activationPromise = manager.activate();
+    serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager).activate();
     const featureManager = serviceContainer.get<IFeaturesManager>(IFeaturesManager);
     featureManager.initialize();
     context.subscriptions.push(featureManager);
-    return activationPromise;
 }
 
 function initializeGlobals(context: IExtensionContext): [IServiceManager, IServiceContainer] {

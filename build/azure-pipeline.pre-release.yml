@@ -7,7 +7,6 @@ name: $(Date:yyyyMMdd)_$(Hours)_$(Minutes)_$(Rev:r)
 schedules:
   - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
     displayName: Nightly Release Schedule
-    always: true
     branches:
       include:
         - main
@@ -20,10 +19,16 @@ resources:
       ref: main
       endpoint: Monaco
 
+parameters:
+  - name: publishExtension
+    displayName: 🚀 Publish Extension
+    type: boolean
+    default: false
 
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
+    ghCreateTag: false
     l10nSourcePaths: ./src
     buildPlatforms:
       - name: Linux
@@ -93,3 +98,5 @@ extends:
         displayName: Build
         env:
           VSC_VSCE_TARGET: $(vsceTarget)
+
+    publishExtension: ${{ parameters.publishExtension }}

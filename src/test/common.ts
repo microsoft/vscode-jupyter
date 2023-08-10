@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { NotebookDocument, Uri, Event } from 'vscode';
+import type { Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
@@ -53,21 +53,9 @@ export async function waitForCondition<T>(
 ): Promise<NonNullable<T>> {
     return new Promise<NonNullable<T>>(async (resolve, reject) => {
         const disposables: IDisposable[] = [];
-        const timeout = setTimeout(() => {
-            clearTimeout(timeout);
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            clearTimeout(timer);
-            errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
-            if (!cancelToken?.isCancellationRequested) {
-                console.log(`Test failing --- ${errorMessage}`);
-            }
-            reject(new Error(errorMessage));
-        }, timeoutMs);
         let timer: NodeJS.Timer;
         const timerFunc = async () => {
             if (cancelToken?.isCancellationRequested) {
-                clearTimeout(timer);
-                clearTimeout(timeout);
                 disposeAllDisposables(disposables);
                 reject(new Error('Cancelled Wait Condition via cancellation token'));
                 return;
@@ -78,8 +66,6 @@ export async function waitForCondition<T>(
                 success = isPromise(promise) ? await promise : promise;
             } catch (exc) {
                 if (throwOnError) {
-                    clearTimeout(timer);
-                    clearTimeout(timeout);
                     disposeAllDisposables(disposables);
                     reject(exc);
                 }
@@ -88,19 +74,17 @@ export async function waitForCondition<T>(
                 // Start up a timer again, but don't do it until after
                 // the condition is false.
                 timer = setTimeout(timerFunc, intervalTimeoutMs);
+                disposables.push({ dispose: () => clearTimeout(timer) });
             } else {
-                clearTimeout(timer);
-                clearTimeout(timeout);
                 disposeAllDisposables(disposables);
                 resolve(success as NonNullable<T>);
             }
         };
+        disposables.push({ dispose: () => clearTimeout(timer) });
         timer = setTimeout(timerFunc, 0);
         if (cancelToken) {
             cancelToken.onCancellationRequested(
                 () => {
-                    clearTimeout(timer);
-                    clearTimeout(timeout);
                     disposeAllDisposables(disposables);
                     reject(new Error('Cancelled Wait Condition via cancellation token'));
                     return;
@@ -109,6 +93,15 @@ export async function waitForCondition<T>(
                 disposables
             );
         }
+        const timeout = setTimeout(() => {
+            disposeAllDisposables(disposables);
+            errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
+            if (!cancelToken?.isCancellationRequested) {
+                console.log(`Test failing --- ${errorMessage}`);
+            }
+            reject(new Error(errorMessage));
+        }, timeoutMs);
+        disposables.push({ dispose: () => clearTimeout(timeout) });
 
         pendingTimers.push(timer);
         pendingTimers.push(timeout);
@@ -152,7 +145,11 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly handledEvents: any[] = [];
     private readonly cancellationHandlers = new Set<Function>();
-    constructor(event: Event<T>, private readonly eventNameForErrorMessages: string, disposables: IDisposable[] = []) {
+    constructor(
+        event: Event<T>,
+        private readonly eventNameForErrorMessages: string,
+        disposables: IDisposable[] = []
+    ) {
         disposables.push(this);
         this.cancellationToken = {
             isCancellationRequested: false,
@@ -179,7 +176,7 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
         await waitForCondition(
             async () => this.count === numberOfTimesFired,
             waitPeriod,
-            () => `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`,
+            () => `${this.eventNameForErrorMessages} event fired ${this.count} time(s), expected ${numberOfTimesFired}`,
             undefined,
             undefined,
             this.cancellationToken
@@ -224,7 +221,15 @@ export function createEventHandler<T, K extends keyof T>(
  */
 export type CommonApi = {
     createTemporaryFile(options: { extension: string; contents?: string }): Promise<{ file: Uri } & IDisposable>;
-    startJupyterServer(notebook?: NotebookDocument, useCert?: boolean): Promise<void>;
+    startJupyterServer(options?: {
+        token?: string;
+        port?: number;
+        useCert?: boolean;
+        jupyterLab?: boolean;
+        password?: string;
+        detached?: boolean;
+        standalone?: boolean;
+    }): Promise<{ url: string } & IDisposable>;
     stopJupyterServer?(): Promise<void>;
     captureScreenShot?(contextOrFileName: string | Mocha.Context): Promise<void>;
     initialize(): Promise<IExtensionTestApi>;
@@ -243,8 +248,16 @@ export async function createTemporaryFile(options: {
     return API.createTemporaryFile(options);
 }
 
-export async function startJupyterServer(notebook?: NotebookDocument, useCert: boolean = false): Promise<void> {
-    return API.startJupyterServer(notebook, useCert);
+export async function startJupyterServer(options?: {
+    token?: string;
+    port?: number;
+    useCert?: boolean;
+    jupyterLab?: boolean;
+    password?: string;
+    detached?: boolean;
+    standalone?: boolean;
+}): Promise<{ url: string } & IDisposable> {
+    return API.startJupyterServer(options);
 }
 
 export async function stopJupyterServer() {

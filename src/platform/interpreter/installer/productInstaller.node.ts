@@ -33,11 +33,12 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { InterpreterPackages } from '../interpreterPackages.node';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { sleep } from '../../common/utils/async';
+import { raceTimeout } from '../../common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';
 import { translateProductToModule } from './utils';
 import { IInterpreterPackages } from '../types';
 import { IPythonExecutionFactory } from '../types.node';
+import { Environment } from '../../api/pythonApiTypes';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${await getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
@@ -56,7 +57,7 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
         : Promise.resolve(undefined);
     try {
         // Dont wait for too long we don't want to delay installation prompt.
-        const version = await Promise.race([sleep(500).then(() => undefined), packageVersionPromise]);
+        const version = await raceTimeout(500, packageVersionPromise);
         if (typeof version === 'string') {
             return version === 'found';
         }
@@ -79,7 +80,10 @@ export class DataScienceInstaller {
 
     protected readonly persistentStateFactory: IPersistentStateFactory;
 
-    constructor(protected serviceContainer: IServiceContainer, _outputChannel: IOutputChannel) {
+    constructor(
+        protected serviceContainer: IServiceContainer,
+        _outputChannel: IOutputChannel
+    ) {
         this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -122,7 +126,10 @@ export class DataScienceInstaller {
     }
 
     @traceDecoratorVerbose('Checking if product is installed')
-    public async isInstalled(product: Product, @logValue('path') interpreter: PythonEnvironment): Promise<boolean> {
+    public async isInstalled(
+        product: Product,
+        @logValue('path') interpreter: PythonEnvironment | Environment
+    ): Promise<boolean> {
         const executableName = this.getExecutableNameFromSettings(product, undefined);
         const isModule = this.isExecutableAModule(product, undefined);
         if (isModule) {
@@ -232,7 +239,7 @@ export class ProductInstaller implements IInstaller {
         }
     }
 
-    public async isInstalled(product: Product, interpreter: PythonEnvironment): Promise<boolean> {
+    public async isInstalled(product: Product, interpreter: PythonEnvironment | Environment): Promise<boolean> {
         return this.createInstaller(product).isInstalled(product, interpreter);
     }
 

@@ -41,7 +41,7 @@ export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<P
             const cli = await getPythonCli(pythonPath);
             const processService = new ProcessService();
             const argv = [...cli, fileToCommandArgument(path.join(SCRIPTS_DIR, 'interpreterInfo.py'))];
-            const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
+            const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), ''); // CodeQL [SM02383] Replace just the first occurrence of \\ as this could be a UNC path.
             const result = await processService.shellExec(cmd, {
                 timeout: executionTimeout,
                 env: process.env,
@@ -81,7 +81,7 @@ export async function getActivatedEnvVariables(pythonPath: Uri): Promise<NodeJS.
         const processService = new ProcessService();
         const separator = 'e976ee50-99ed-4aba-9b6b-9dcd5634d07d';
         const argv = [...cli, path.join(SCRIPTS_DIR, 'printEnvVariables.py')];
-        const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), '');
+        const cmd = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '/')}"`), ''); // CodeQL [SM02383] Replace just the first occurrence of \\ as this could be a UNC path.
         const result = await processService.shellExec(cmd, {
             timeout: executionTimeout,
             maxBuffer: 1000 * 1000,

@@ -168,9 +168,8 @@ export function traceCellMessage(cell: NotebookCell, message: string) {
     traceInfoIfCI(
         `Cell Index:${cell.index}, of document ${uriPath.basename(
             cell.notebook.uri
-        )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${
-            cell.executionSummary?.executionOrder
-        }. ${message}.`
+        )} with state:${NotebookCellStateTracker.getCellStatus(cell)}, exec: ${cell.executionSummary
+            ?.executionOrder}. ${message}.`
     );
 }
 

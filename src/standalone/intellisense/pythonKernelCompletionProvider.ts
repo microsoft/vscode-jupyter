@@ -17,7 +17,6 @@ import { raceCancellation } from '../../platform/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
-import { waitForPromise } from '../../platform/common/utils/async';
 import { isNotebookCell } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IKernelSession, IKernelProvider } from '../../kernels/types';
@@ -26,6 +25,7 @@ import { mapJupyterKind } from './conversion';
 import { isTestExecution, Settings } from '../../platform/common/constants';
 import { INotebookCompletion } from './types';
 import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
+import { raceTimeout } from '../../platform/common/utils/async';
 
 let IntellisenseTimeout = Settings.IntellisenseTimeout;
 export function setIntellisenseTimeout(timeoutMs: number) {
@@ -83,18 +83,18 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         }
 
         const kernel = this.kernelProvider.get(notebookDocument);
-        if (!kernel || !kernel.session) {
+        if (!kernel || !kernel.session || !kernel.session.kernel) {
             traceVerbose(`Live Notebook not available for ${getDisplayPath(notebookDocument.uri)}`);
             return [];
         }
         // Allow slower timeouts for CI (testing).
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const [result, pylanceResults] = await Promise.all([
-            waitForPromise(
-                this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token),
-                IntellisenseTimeout
+            raceTimeout(
+                IntellisenseTimeout,
+                this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token)
             ),
-            waitForPromise(this.getPylanceCompletions(document, position, context, token), IntellisenseTimeout)
+            raceTimeout(IntellisenseTimeout, this.getPylanceCompletions(document, position, context, token))
         ]);
         if (!result) {
             traceInfoIfCI(`Notebook completions not found.`);
@@ -162,6 +162,13 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion> {
         const stopWatch = new StopWatch();
+        if (!session.kernel) {
+            return {
+                matches: [],
+                cursor: { start: 0, end: 0 },
+                metadata: {}
+            };
+        }
         // If server is busy, then don't send code completions. Otherwise
         // they can stack up and slow down the server significantly.
         // However during testing we'll just wait.
@@ -174,7 +181,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         }
         const result = await raceCancellation(
             cancelToken,
-            session.requestComplete({
+            session.kernel.requestComplete({
                 code: cellCode,
                 cursor_pos: offsetInCode
             })

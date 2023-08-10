@@ -56,7 +56,7 @@ import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpda
 import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,
-    IJupyterSessionManagerFactory
+    IOldJupyterSessionManagerFactory
 } from '../../../kernels/jupyter/types';
 import {
     IKernelFinder,
@@ -119,7 +119,9 @@ export async function getServices() {
         ) as IControllerRegistration,
         controllerPreferred: ControllerPreferredService.create(api.serviceContainer),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
-        interpreterService: api.serviceContainer.get<IInterpreterService>(IInterpreterService),
+        interpreterService: api.serviceContainer.get<boolean>(IsWebExtension)
+            ? undefined
+            : api.serviceContainer.get<IInterpreterService>(IInterpreterService),
         kernelFinder: api.serviceContainer.get<IKernelFinder>(IKernelFinder),
         serviceContainer: api.serviceContainer
     };
@@ -338,12 +340,13 @@ async function shutdownRemoteKernels() {
     const api = await initialize();
     const serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
     const jupyterConnection = api.serviceContainer.get<JupyterConnection>(JupyterConnection);
-    const jupyterSessionManagerFactory =
-        api.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
+    const jupyterSessionManagerFactory = api.serviceContainer.get<IOldJupyterSessionManagerFactory>(
+        IOldJupyterSessionManagerFactory
+    );
     const cancelToken = new CancellationTokenSource();
     let sessionManager: IJupyterSessionManager | undefined;
     try {
-        const connection = await jupyterConnection.createConnectionInfo((await serverUriStorage.getAll())[0].serverId);
+        const connection = await jupyterConnection.createConnectionInfo((await serverUriStorage.getAll())[0].provider);
         const sessionManager = await jupyterSessionManagerFactory.create(connection);
         const liveKernels = await sessionManager.getRunningKernels();
         await Promise.all(
@@ -515,9 +518,8 @@ async function waitForKernelToChangeImpl(
                     const criteria = typeof searchCriteria === 'function' ? await searchCriteria() : searchCriteria;
                     lastCriteria = JSON.stringify(lastCriteria);
                     traceInfoIfCI(
-                        `Notebook select.kernel command switching to kernel id ${controller?.connection.kind}${
-                            controller?.id
-                        }: Try ${tryCount} for ${JSON.stringify(criteria)}`
+                        `Notebook select.kernel command switching to kernel id ${controller?.connection
+                            .kind}${controller?.id}: Try ${tryCount} for ${JSON.stringify(criteria)}`
                     );
                     // Send a select kernel on the active notebook editor. Keep sending it if it fails.
                     await commands.executeCommand('notebook.selectKernel', {
@@ -566,7 +568,7 @@ async function waitForActiveNotebookEditor(notebookEditor?: NotebookEditor): Pro
 async function getActiveInterpreterKernelConnection() {
     const { interpreterService, kernelFinder } = await getServices();
     const interpreter = await waitForCondition(
-        () => interpreterService.getActiveInterpreter(),
+        () => interpreterService?.getActiveInterpreter(),
         defaultNotebookTestTimeout,
         'Active Interpreter is undefined.2'
     );
@@ -581,10 +583,10 @@ async function getActiveInterpreterKernelConnection() {
         () =>
             `Kernel Connection pointing to active interpreter not found.0, active interpreter
         ${interpreter?.id} (${getDisplayPath(interpreter?.uri)}) for kernels (${
-                kernelFinder.kernels.length
-            }) ${kernelFinder.kernels
-                .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
-                .join(', ')}`,
+            kernelFinder.kernels.length
+        }) ${kernelFinder.kernels
+            .map((item) => `${item.id}=> ${item.kind} (${getDisplayPath(item.interpreter?.uri)})`)
+            .join(', ')}`,
         500
     );
 }
@@ -593,7 +595,7 @@ async function getDefaultPythonRemoteKernelConnectionForActiveInterpreter() {
     const interpreter = isWeb()
         ? undefined
         : await waitForCondition(
-              () => interpreterService.getActiveInterpreter(),
+              () => interpreterService?.getActiveInterpreter(),
               defaultNotebookTestTimeout,
               'Active Interpreter is undefined.3'
           );
@@ -625,7 +627,7 @@ async function selectActiveInterpreterController(notebookEditor: NotebookEditor,
     const { controllerRegistration, interpreterService } = await getServices();
 
     // Get the list of NotebookControllers for this document
-    const interpreter = await interpreterService.getActiveInterpreter(notebookEditor.notebook.uri);
+    const interpreter = await interpreterService?.getActiveInterpreter(notebookEditor.notebook.uri);
 
     // Find the kernel id that matches the name we want
     const controller = await waitForCondition(
@@ -653,9 +655,11 @@ async function selectActiveInterpreterController(notebookEditor: NotebookEditor,
             controllerRegistration.getSelected(notebookEditor.notebook)?.viewType ===
                 notebookEditor.notebook.notebookType,
         timeout,
-        `Controller ${controller.id} not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${
-            controllerRegistration.getSelected(notebookEditor.notebook)?.id
-        } (1)`
+        `Controller ${
+            controller.id
+        } not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${controllerRegistration.getSelected(
+            notebookEditor.notebook
+        )?.id} (1)`
     );
 }
 async function selectPythonRemoteKernelConnectionForActiveInterpreter(
@@ -687,9 +691,11 @@ async function selectPythonRemoteKernelConnectionForActiveInterpreter(
     await waitForCondition(
         () => controllerRegistration.getSelected(notebookEditor.notebook)?.id === controller.id,
         timeout,
-        `Controller ${controller.id} not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${
-            controllerRegistration.getSelected(notebookEditor.notebook)?.id
-        } (2)`
+        `Controller ${
+            controller.id
+        } not selected for ${notebookEditor.notebook.uri.toString()}, currently selected ${controllerRegistration.getSelected(
+            notebookEditor.notebook
+        )?.id} (2)`
     );
 }
 export async function waitForKernelToGetAutoSelected(
@@ -791,7 +797,7 @@ export async function waitForKernelToGetAutoSelectedImpl(
                     (!useRemoteKernelSpec || d.connection.kind.includes('Remote'))
             );
 
-            const activeInterpreter = await interpreterService.getActiveInterpreter(notebookEditor!.notebook.uri);
+            const activeInterpreter = await interpreterService?.getActiveInterpreter(notebookEditor!.notebook.uri);
             traceInfoIfCI(
                 `Attempt to find a kernel that matches the active interpreter ${activeInterpreter?.uri.path}`
             );
@@ -1279,7 +1285,7 @@ export async function runAllCellsInActiveNotebook(
 }
 
 export type WindowPromptStub = {
-    dispose: Function;
+    dispose: () => void;
     displayed: Promise<boolean>;
     /**
      * Gets the messages that were displayed. Access this once the promise `displayed` has resolved to get latest stuff.
@@ -1299,7 +1305,7 @@ export type WindowPromptStubButtonClickOptions = {
  * We can confirm prompt was displayed & invoke a button click.
  */
 export async function hijackPrompt(
-    promptType: 'showErrorMessage' | 'showInformationMessage',
+    promptType: 'showErrorMessage' | 'showInformationMessage' | 'showWarningMessage',
     message: { exactMatch: string } | { endsWith: string } | { contains: string },
     buttonToClick?: WindowPromptStubButtonClickOptions,
     disposables: IDisposable[] = []
