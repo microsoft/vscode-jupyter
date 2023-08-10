@@ -6,7 +6,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IKernel, IKernelProvider, IKernelSession, isRemoteConnection } from '../../kernels/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
-import { traceError, traceWarning } from '../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { CancellationTokenSource } from 'vscode';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
@@ -83,6 +83,13 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                     }
                 );
                 token.dispose();
+                if (duration > 1_000) {
+                    traceVerbose(
+                        `Kernel Startup hook for ${generateIdFromRemoteProvider(
+                            connection.serverProviderHandle
+                        )} took ${duration}ms`
+                    );
+                }
             }
         });
     }
