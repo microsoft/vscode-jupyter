@@ -158,11 +158,17 @@ export function buildApi(
             return notebookEditor.notebook;
         },
         createJupyterServerCollection: async (id, label) => {
-            throw new Error('Not implemented');
             sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
             const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
+            if (
+                ![JVSC_EXTENSION_ID.split('.')[0], 'SynapseVSCode']
+                    .map((s) => s.toLowerCase())
+                    .includes(extensionId.toLowerCase())
+            ) {
+                throw new Error(`Access to Proposed API not allowed, as it is subject to change.`);
+            }
             const registration = serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
-            const collection = registration.createJupyterServerCollection(id, label, extensionId);
+            const collection = registration.createJupyterServerCollection(extensionId, id, label);
             // Do not expose unwanted properties to the extensions.
             return createPublicAPIProxy(collection as unknown as typeof collection & Disposables, [
                 'disposables',

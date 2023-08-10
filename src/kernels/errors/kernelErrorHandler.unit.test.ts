@@ -818,6 +818,9 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(
                 jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
             ).thenResolve(resolvableInstance(provider));
+            when(jupyterUriProviderRegistration.getDisplayNameIfProviderIsLoaded(serverProviderHandle)).thenResolve(
+                'Server Display Name'
+            );
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
                 'start',
@@ -905,6 +908,9 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             when(
                 jupyterUriProviderRegistration.getProvider(serverProviderHandle.extensionId, serverProviderHandle.id)
             ).thenResolve(resolvableInstance(provider));
+            when(jupyterUriProviderRegistration.getDisplayNameIfProviderIsLoaded(serverProviderHandle)).thenResolve(
+                'Hello Server'
+            );
 
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,

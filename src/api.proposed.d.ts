@@ -74,6 +74,7 @@ declare module './api' {
     export interface JupyterServerProvider {
         /**
          * Event fired when the list of servers changes.
+         * Note: the getJupyterServers method will not be called unless changes are detected.
          */
         onDidChangeServers: Event<void>;
         /**

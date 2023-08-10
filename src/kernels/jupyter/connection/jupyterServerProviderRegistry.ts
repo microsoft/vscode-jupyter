@@ -88,7 +88,10 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         disposeAllDisposables(this.providerChanges);
         if (this.provider.serverProvider) {
             this.provider.serverProvider.onDidChangeServers(
-                () => this._onDidChangeHandles.fire(),
+                () => {
+                    this._servers.clear();
+                    this._onDidChangeHandles.fire();
+                },
                 this,
                 this.providerChanges
             );
@@ -154,13 +157,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.getServers(token.token);
-            const server = servers.find((s) => s.id === handle);
-            if (!server) {
-                throw new Error(
-                    `Jupyter Server ${handle} not found in Provider ${this.provider.extensionId}#${this.provider.id}`
-                );
-            }
+            const server = await this.getServer(handle, token.token);
             const info = await server.resolveConnectionInformation(token.token);
             return {
                 baseUrl: info.baseUrl.toString(),
@@ -193,13 +190,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     async getServerUriWithoutAuthInfoImpl(handle: string): Promise<IJupyterServerUri> {
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.getServers(token.token);
-            const server = servers.find((s) => s.id === handle);
-            if (!server) {
-                throw new Error(
-                    `Jupyter Server ${handle} not found in Provider ${this.provider.extensionId}#${this.provider.id}`
-                );
-            }
+            const server = await this.getServer(handle, token.token);
             return {
                 baseUrl: '',
                 token: '',
@@ -212,20 +203,37 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     async removeHandleImpl(handle: string): Promise<void> {
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.getServers(token.token);
-            const server = servers.find((s) => s.id === handle);
-            if (server?.remove) {
+            const server = await this.getServer(handle, token.token);
+            if (server.remove) {
                 await server.remove();
             }
+        } catch {
+            //
         } finally {
             token.dispose();
         }
     }
+    async getServer(handle: string, token: CancellationToken): Promise<JupyterServer> {
+        const server =
+            this._servers.get(handle) ||
+            (await this.getServers(token).then((servers) => servers.find((s) => s.id === handle)));
+        if (server) {
+            return server;
+        }
+        throw new Error(
+            `Jupyter Server ${handle} not found in Provider ${this.provider.extensionId}#${this.provider.id}`
+        );
+    }
     async getServers(token: CancellationToken) {
+        // Return the cache, this cache is cleared when the provider notifies of changes.
+        if (this._servers.size) {
+            return Array.from(this._servers.values());
+        }
         if (!this.provider.serverProvider) {
             throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
         }
         const servers = await this.provider.serverProvider.getJupyterServers(token);
+        this._servers.clear();
         servers.forEach((s) => this._servers.set(s.id, s));
         return servers;
     }
