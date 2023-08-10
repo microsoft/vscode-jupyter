@@ -231,15 +231,10 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         Promise.resolve(selectedSource.kernelFinderInfo),
                         token
                     ).catch((ex) => traceError(`Failed to select a kernel`, ex));
-
-                    if (result && result instanceof InputFlowAction) {
-                        if (result === InputFlowAction.back) {
-                            return this.getRemoteServersFromProvider(provider, token, multiStep, state);
-                        } else {
-                            throw new CancellationError();
-                        }
+                    if (result && result === InputFlowAction.back) {
+                        return this.getRemoteServersFromProvider(provider, token, multiStep, state);
                     }
-                    if (!result) {
+                    if (!result || result instanceof InputFlowAction) {
                         throw new CancellationError();
                     }
                     state.selection = { type: 'connection', connection: result };
@@ -329,22 +324,13 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             });
         })();
 
-        const result = await this.selectRemoteKernelFromPicker(state.notebook, finderPromise, token).catch((ex) => {
-            if (ex instanceof CancellationError) {
-                return;
-            }
-            traceError(`Failed to select a kernel`, ex);
-            return;
-        });
-
-        if (result && result instanceof InputFlowAction) {
-            if (result === InputFlowAction.back) {
-                return this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
-            } else {
-                throw new CancellationError();
-            }
+        const result = await this.selectRemoteKernelFromPicker(state.notebook, finderPromise, token).catch((ex) =>
+            traceError(`Failed to select a kernel`, ex)
+        );
+        if (result && result === InputFlowAction.back) {
+            return this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
         }
-        if (!result) {
+        if (!result || result instanceof InputFlowAction) {
             throw new CancellationError();
         }
         state.selection = { type: 'connection', connection: result };
@@ -387,15 +373,11 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         const remoteKernelPicker = new BaseProviderBasedQuickPick(provider, quickPickFactory, getCategory, {
             supportsBack: true
         });
+        const preferred = new PreferredKernelConnectionService(this.jupyterConnection);
         source
-            .then((source) => {
-                const preferred = new PreferredKernelConnectionService(this.jupyterConnection);
-                preferred
-                    .findPreferredRemoteKernelConnection(notebook, source, token)
-                    .then((item) => (remoteKernelPicker.selected = item))
-                    .catch((ex) => traceError(`Failed to determine preferred remote kernel`, ex));
-            })
-            .catch(noop);
+            .then((source) => preferred.findPreferredRemoteKernelConnection(notebook, source, token))
+            .then((item) => (remoteKernelPicker.selected = item))
+            .catch((ex) => traceError(`Failed to determine preferred remote kernel`, ex));
         return remoteKernelPicker.selectItem(token);
     }
 }
