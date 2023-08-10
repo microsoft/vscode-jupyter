@@ -68,7 +68,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
     private previouslyEnteredValue: string = '';
     private previouslySelectedItem?: CommandQuickPickItem<T>;
     constructor(
-        private readonly provider: IQuickPickItemProvider<T>,
+        private readonly provider: Promise<IQuickPickItemProvider<T>>,
         private readonly createQuickPickItem: (item: T, provider: BaseProviderBasedQuickPick<T>) => QuickPickItem,
         private readonly getCategory: (
             item: T,
@@ -120,56 +120,62 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         const quickPick = (this.quickPick = window.createQuickPick());
         disposables.push(quickPick);
         this.quickPickItems = [];
-        quickPick.title = this.provider.title;
         quickPick.placeholder = this.placeholder;
         quickPick.buttons = this.options.supportsBack ? [QuickInputButtons.Back, refreshButton] : [refreshButton];
         quickPick.ignoreFocusOut = true;
-        quickPick.busy = this.provider.status === 'discovering';
+        quickPick.busy = true;
         quickPick.value = this.previouslyEnteredValue;
         quickPick.onDidChangeValue((e) => (this.previouslyEnteredValue = e), this, disposables);
         quickPick.onDidHide(() => disposeAllDisposables(disposables), this, disposables);
-        this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, disposables);
-        quickPick.onDidTriggerButton(
-            async (e) => {
-                if (e === refreshButton) {
-                    quickPick.busy = true;
-                    await this.provider.refresh().catch(noop);
-                    quickPick.busy = false;
-                }
-            },
-            this,
-            disposables
-        );
-        let timeout: NodeJS.Timer | undefined;
-        this.provider.onDidChangeStatus(
-            () => {
-                timeout && clearTimeout(timeout);
-                switch (this.provider.status) {
-                    case 'discovering':
-                        quickPick.busy = true;
-                        break;
-                    case 'idle':
-                        timeout = setTimeout(() => (quickPick.busy = false), 500);
-                        disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
-                        break;
-                }
-            },
-            this,
-            disposables
-        );
+        quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitleWithoutName;
+        this.provider
+            .then((provider) => {
+                quickPick.title = provider.title;
+                quickPick.busy = provider.status === 'discovering';
+                provider.onDidChange(() => this.updateQuickPickItems(quickPick, provider), this, disposables);
+                quickPick.onDidTriggerButton(
+                    async (e) => {
+                        if (e === refreshButton) {
+                            quickPick.busy = true;
+                            await provider.refresh().catch(noop);
+                            quickPick.busy = false;
+                        }
+                    },
+                    this,
+                    disposables
+                );
+                let timeout: NodeJS.Timer | undefined;
+                provider.onDidChangeStatus(
+                    () => {
+                        timeout && clearTimeout(timeout);
+                        switch (provider.status) {
+                            case 'discovering':
+                                quickPick.busy = true;
+                                break;
+                            case 'idle':
+                                timeout = setTimeout(() => (quickPick.busy = false), 500);
+                                disposables.push(new Disposable(() => timeout && clearTimeout(timeout)));
+                                break;
+                        }
+                    },
+                    this,
+                    disposables
+                );
 
-        groupBy(
-            this.provider.items.map((item) => this.toQuickPickItem(item)),
-            (a, b) => compareIgnoreCase(this.getCategory(a.item, this), this.getCategory(b.item, this))
-        ).forEach((items) => {
-            const item = this.connectionToCategory(items[0].item);
-            this.quickPickItems.push(item);
-            items.sort((a, b) => a.label.localeCompare(b.label));
-            this.quickPickItems.push(...items);
-            this.categories.set(item, new Set(items));
-        });
+                groupBy(
+                    provider.items.map((item) => this.toQuickPickItem(item)),
+                    (a, b) => compareIgnoreCase(this.getCategory(a.item, this), this.getCategory(b.item, this))
+                ).forEach((items) => {
+                    const item = this.connectionToCategory(items[0].item);
+                    this.quickPickItems.push(item);
+                    items.sort((a, b) => a.label.localeCompare(b.label));
+                    this.quickPickItems.push(...items);
+                    this.categories.set(item, new Set(items));
+                });
 
-        this.updateQuickPickItems(this.quickPick);
+                this.updateQuickPickItems(quickPick, provider);
+            })
+            .catch(noop);
 
         this.disposables.push(...disposables);
         return { quickPick, disposables };
@@ -254,7 +260,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         }
     }
 
-    private updateQuickPickItems(quickPick: QuickPick<QuickPickItem>) {
+    private updateQuickPickItems(quickPick: QuickPick<QuickPickItem>, provider: IQuickPickItemProvider<T>) {
         const currentItems = new Map(
             quickPick.items
                 .filter((item) => this.isSelectorQuickPickItem(item))
@@ -273,11 +279,11 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
             return item;
         });
 
-        const newQuickPickItems = this.provider.items
+        const newQuickPickItems = provider.items
             .filter((item) => !currentItems.has(item.id))
             .map((item) => this.toQuickPickItem(item));
 
-        this.removeOutdatedQuickPickItems(quickPick);
+        this.removeOutdatedQuickPickItems(quickPick, provider);
 
         groupBy(newQuickPickItems, (a, b) =>
             compareIgnoreCase(this.getCategory(a.item, this), this.getCategory(b.item, this))
@@ -409,12 +415,12 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         this.quickPickItemMap.add(quickPickItem);
         return quickPickItem;
     }
-    private removeOutdatedQuickPickItems(quickPick: QuickPick<QuickPickItem>) {
+    private removeOutdatedQuickPickItems(quickPick: QuickPick<QuickPickItem>, provider: IQuickPickItemProvider<T>) {
         const currentConnections = quickPick.items
             .filter((item) => this.isSelectorQuickPickItem(item))
             .map((item) => item as SelectorQuickPickItem<T>)
             .map((item) => item.item.id);
-        const items = new Map<string, T>(this.provider.items.map((item) => [item.id, item]));
+        const items = new Map<string, T>(provider.items.map((item) => [item.id, item]));
         const removedIds = currentConnections.filter((id) => !items.has(id));
         if (removedIds.length) {
             const itemsRemoved: QuickPickItem[] = [];
