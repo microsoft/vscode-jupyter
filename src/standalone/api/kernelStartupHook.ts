@@ -30,70 +30,75 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
         if (!isRemoteConnection(connection) || connection.serverProviderHandle.extensionId === JVSC_EXTENSION_ID) {
             return;
         }
-        kernel.addHook('didStart', async (session: IKernelSession | undefined) => {
-            if (!session) {
-                return;
-            }
-            const provider = this.jupyterUrisRegistration.providers.find(
-                (p) =>
-                    p.extensionId === connection.serverProviderHandle.extensionId &&
-                    p.id === connection.serverProviderHandle.id
-            );
-            if (!provider) {
-                // This is not possible
-                traceError(
-                    `Unable to find kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
-                );
-                return;
-            }
-            const servers = provider.servers;
-            if (!servers) {
-                // This is not possible
-                traceError(
-                    `Unable to find servers for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
-                );
-                return;
-            }
-            const server = servers.find((s) => s.id === connection.serverProviderHandle.handle);
-            if (!server) {
-                // This is not possible
-                traceError(
-                    `Unable to find server for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id} and handle ${connection.serverProviderHandle.id}}`
-                );
-                return;
-            }
-            if (!server.onStartKernel) {
-                return;
-            }
-            const token = new CancellationTokenSource();
-            const time = Date.now();
-            try {
-                await server.onStartKernel(kernel.uri, session, token.token);
-            } catch (ex) {
-                // We do not care about the errors from 3rd party extensions.
-                traceWarning(
-                    `Startup hook for ${generateIdFromRemoteProvider(connection.serverProviderHandle)} failed`,
-                    ex
-                );
-            } finally {
-                const duration = Date.now() - time;
-                sendTelemetryEvent(
-                    Telemetry.JupyterKernelStartupHook,
-                    { duration },
-                    {
-                        extensionId: connection.serverProviderHandle.extensionId,
-                        providerId: connection.serverProviderHandle.id
-                    }
-                );
-                token.dispose();
-                if (duration > 1_000) {
-                    traceVerbose(
-                        `Kernel Startup hook for ${generateIdFromRemoteProvider(
-                            connection.serverProviderHandle
-                        )} took ${duration}ms`
-                    );
+        kernel.addHook(
+            'didStart',
+            async (session: IKernelSession | undefined) => {
+                if (!session) {
+                    return;
                 }
-            }
-        });
+                const provider = this.jupyterUrisRegistration.providers.find(
+                    (p) =>
+                        p.extensionId === connection.serverProviderHandle.extensionId &&
+                        p.id === connection.serverProviderHandle.id
+                );
+                if (!provider) {
+                    // This is not possible
+                    traceError(
+                        `Unable to find kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
+                    );
+                    return;
+                }
+                const servers = provider.servers;
+                if (!servers) {
+                    // This is not possible
+                    traceError(
+                        `Unable to find servers for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
+                    );
+                    return;
+                }
+                const server = servers.find((s) => s.id === connection.serverProviderHandle.handle);
+                if (!server) {
+                    // This is not possible
+                    traceError(
+                        `Unable to find server for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id} and handle ${connection.serverProviderHandle.id}}`
+                    );
+                    return;
+                }
+                if (!server.onStartKernel) {
+                    return;
+                }
+                const token = new CancellationTokenSource();
+                const time = Date.now();
+                try {
+                    await server.onStartKernel(kernel.uri, session, token.token);
+                } catch (ex) {
+                    // We do not care about the errors from 3rd party extensions.
+                    traceWarning(
+                        `Startup hook for ${generateIdFromRemoteProvider(connection.serverProviderHandle)} failed`,
+                        ex
+                    );
+                } finally {
+                    const duration = Date.now() - time;
+                    sendTelemetryEvent(
+                        Telemetry.JupyterKernelStartupHook,
+                        { duration },
+                        {
+                            extensionId: connection.serverProviderHandle.extensionId,
+                            providerId: connection.serverProviderHandle.id
+                        }
+                    );
+                    token.dispose();
+                    if (duration > 1_000) {
+                        traceVerbose(
+                            `Kernel Startup hook for ${generateIdFromRemoteProvider(
+                                connection.serverProviderHandle
+                            )} took ${duration}ms`
+                        );
+                    }
+                }
+            },
+            this,
+            this.disposables
+        );
     }
 }
