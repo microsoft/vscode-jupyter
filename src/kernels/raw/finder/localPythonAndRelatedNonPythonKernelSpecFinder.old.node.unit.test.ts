@@ -18,7 +18,7 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { assert } from 'chai';
 import { createEventHandler } from '../../../test/common';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
+import { KernelSpecLoader } from './localKernelSpecFinderBase.node';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
@@ -212,11 +212,11 @@ suite(`Local Python and related kernels`, async () => {
             instance(trustedKernels)
         );
 
-        const findStub = sinon.stub(LocalKernelSpecFinder.prototype, 'findKernelSpecsInPaths');
+        const findStub = sinon.stub(KernelSpecLoader.prototype, 'findKernelSpecsInPaths');
         findStub.callsFake(async (searchPath) => findKernelSpecsInPathsReturnValue.get(searchPath) || []);
         disposables.push(new Disposable(() => findStub.restore()));
 
-        const loadKernelSpecStub = sinon.stub(LocalKernelSpecFinder.prototype, 'loadKernelSpec');
+        const loadKernelSpecStub = sinon.stub(KernelSpecLoader.prototype, 'loadKernelSpec');
         loadKernelSpecStub.callsFake(async (file, _, interpreter) => {
             return (
                 loadKernelSpecReturnValue.get(file) || {

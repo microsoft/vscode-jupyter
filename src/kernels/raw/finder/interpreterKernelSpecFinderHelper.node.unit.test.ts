@@ -12,7 +12,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { GlobalPythonKernelSpecFinder, findKernelSpecsInInterpreter } from './interpreterKernelSpecFinderHelper.node';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
-import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
+import { KernelSpecLoader } from './localKernelSpecFinderBase.node';
 import { ITrustedKernelPaths } from './types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { IJupyterKernelSpec } from '../../types';
@@ -24,7 +24,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
     let helper: GlobalPythonKernelSpecFinder;
     const disposables: IDisposable[] = [];
     let jupyterPaths: JupyterPaths;
-    let kernelSpecFinder: LocalKernelSpecFinder;
+    let kernelSpecFinder: KernelSpecLoader;
     let interpreterService: IInterpreterService;
     let extensionChecker: IPythonExtensionChecker;
     let trustedKernels: ITrustedKernelPaths;
@@ -43,7 +43,7 @@ suite('Interpreter Kernel Spec Finder Helper', () => {
         jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecRootPath()).thenResolve();
         when(jupyterPaths.getKernelSpecRootPaths(anything())).thenResolve([]);
-        kernelSpecFinder = mock<LocalKernelSpecFinder>();
+        kernelSpecFinder = mock<KernelSpecLoader>();
         interpreterService = mock<IInterpreterService>();
         extensionChecker = mock<IPythonExtensionChecker>();
         trustedKernels = mock<ITrustedKernelPaths>();
