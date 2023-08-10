@@ -230,13 +230,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         state.notebook,
                         Promise.resolve(selectedSource.kernelFinderInfo),
                         token
-                    ).catch((ex) => {
-                        if (ex instanceof CancellationError) {
-                            return;
-                        }
-                        traceError(`Failed to select a kernel`, ex);
-                        return;
-                    });
+                    ).catch((ex) => traceError(`Failed to select a kernel`, ex));
 
                     if (result && result instanceof InputFlowAction) {
                         if (result === InputFlowAction.back) {
@@ -398,9 +392,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 const preferred = new PreferredKernelConnectionService(this.jupyterConnection);
                 preferred
                     .findPreferredRemoteKernelConnection(notebook, source, token)
-                    .then((item) => {
-                        remoteKernelPicker.selected = item;
-                    })
+                    .then((item) => (remoteKernelPicker.selected = item))
                     .catch((ex) => traceError(`Failed to determine preferred remote kernel`, ex));
             })
             .catch(noop);
