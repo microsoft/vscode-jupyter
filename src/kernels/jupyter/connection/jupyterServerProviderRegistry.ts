@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationTokenSource, EventEmitter, QuickPickItem, Uri, commands } from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter, QuickPickItem, Uri, commands } from 'vscode';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
@@ -56,6 +56,10 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     public get documentation() {
         return this.provider.documentation;
     }
+    _servers = new Map<string, JupyterServer>();
+    get servers(): readonly JupyterServer[] {
+        return Array.from(this._servers.values());
+    }
     detail?: string | undefined;
     private _onDidChangeHandles = new EventEmitter<void>();
     onDidChangeHandles = this._onDidChangeHandles.event;
@@ -84,7 +88,10 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         disposeAllDisposables(this.providerChanges);
         if (this.provider.serverProvider) {
             this.provider.serverProvider.onDidChangeServers(
-                () => this._onDidChangeHandles.fire(),
+                () => {
+                    this._servers.clear();
+                    this._onDidChangeHandles.fire();
+                },
                 this,
                 this.providerChanges
             );
@@ -148,18 +155,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
-        if (!this.provider.serverProvider) {
-            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
-        }
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.provider.serverProvider.getJupyterServers(token.token);
-            const server = servers.find((s) => s.id === handle);
-            if (!server) {
-                throw new Error(
-                    `Jupyter Server ${handle} not found in Provider ${this.provider.extensionId}#${this.provider.id}`
-                );
-            }
+            const server = await this.getServer(handle, token.token);
             const info = await server.resolveConnectionInformation(token.token);
             return {
                 baseUrl: info.baseUrl.toString(),
@@ -177,7 +175,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         if (this.provider.serverProvider) {
             const token = new CancellationTokenSource();
             try {
-                const servers = await this.provider.serverProvider.getJupyterServers(token.token);
+                const servers = await this.getServers(token.token);
                 return servers.map((s) => s.id);
             } catch (ex) {
                 traceError(`Failed to get Jupyter Servers from ${this.provider.extensionId}#${this.provider.id}`, ex);
@@ -190,18 +188,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
     }
     async getServerUriWithoutAuthInfoImpl(handle: string): Promise<IJupyterServerUri> {
-        if (!this.provider.serverProvider) {
-            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
-        }
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.provider.serverProvider.getJupyterServers(token.token);
-            const server = servers.find((s) => s.id === handle);
-            if (!server) {
-                throw new Error(
-                    `Jupyter Server ${handle} not found in Provider ${this.provider.extensionId}#${this.provider.id}`
-                );
-            }
+            const server = await this.getServer(handle, token.token);
             return {
                 baseUrl: '',
                 token: '',
@@ -212,19 +201,41 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
     }
     async removeHandleImpl(handle: string): Promise<void> {
-        if (!this.provider.serverProvider) {
-            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
-        }
         const token = new CancellationTokenSource();
         try {
-            const servers = await this.provider.serverProvider.getJupyterServers(token.token);
-            const server = servers.find((s) => s.id === handle);
-            if (server?.remove) {
+            const server = await this.getServer(handle, token.token);
+            if (server.remove) {
                 await server.remove();
             }
+        } catch {
+            //
         } finally {
             token.dispose();
         }
+    }
+    async getServer(handle: string, token: CancellationToken): Promise<JupyterServer> {
+        const server =
+            this._servers.get(handle) ||
+            (await this.getServers(token).then((servers) => servers.find((s) => s.id === handle)));
+        if (server) {
+            return server;
+        }
+        throw new Error(
+            `Jupyter Server ${handle} not found in Provider ${this.provider.extensionId}#${this.provider.id}`
+        );
+    }
+    async getServers(token: CancellationToken) {
+        // Return the cache, this cache is cleared when the provider notifies of changes.
+        if (this._servers.size) {
+            return Array.from(this._servers.values());
+        }
+        if (!this.provider.serverProvider) {
+            throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
+        }
+        const servers = await this.provider.serverProvider.getJupyterServers(token);
+        this._servers.clear();
+        servers.forEach((s) => this._servers.set(s.id, s));
+        return servers;
     }
 }
 

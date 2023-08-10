@@ -413,6 +413,7 @@ export enum Telemetry {
     JupyterServerProviderResponseApi = 'DATASCIENCE.JUPYTER_SERVER_PROVIDER_RESPONSE_API',
     JupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_KERNEL_API_USAGE',
     JupyterKernelApiAccess = 'DATASCIENCE.JUPYTER_KERNEL_API_ACCESS',
+    JupyterKernelStartupHook = 'DATASCIENCE.JUPYTER_KERNEL_STARTUP_HOOK',
     JupyterKernelSpecEnumeration = 'DATASCIENCE.JUPYTER_KERNEL_SPEC_FETCH_FAILURE',
     JupyterKernelHiddenViaFilter = 'DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER',
     JupyterKernelFilterUsed = 'DATASCIENCE.JUPYTER_KERNEL_FILTER_USED',

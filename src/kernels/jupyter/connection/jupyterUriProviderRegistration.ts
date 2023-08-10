@@ -21,6 +21,7 @@ import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { generateIdFromRemoteProvider } from '../jupyterUtils';
 
 export const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 function getProviderId(extensionId: string, id: string) {
@@ -38,6 +39,7 @@ export class JupyterUriProviderRegistration
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
     private _providers = new Map<string, JupyterUriProviderWrapper>();
     private extensionIdsThatHaveProviders = new Set<string>();
+    private readonly cachedDisplayNames = new Map<string, string>();
     public readonly onDidChangeProviders = this._onProvidersChanged.event;
     public get providers() {
         this.loadOtherExtensions().catch(noop);
@@ -106,11 +108,20 @@ export class JupyterUriProviderRegistration
                 `Provider Id=${id} and handle=${providerHandle.handle} not registered. Did you uninstall the extension ${providerHandle.extensionId}?`
             );
         }
-        return provider.getServerUri(providerHandle.handle, doNotPromptForAuthInfo);
+        const server = await provider.getServerUri(providerHandle.handle, doNotPromptForAuthInfo);
+        this.cachedDisplayNames.set(generateIdFromRemoteProvider(providerHandle), server.displayName);
+        return server;
     }
+    /**
+     * Temporary, until the new API is finalized.
+     * We need a way to get the displayName of the Server.
+     */
     public async getDisplayNameIfProviderIsLoaded(
         providerHandle: JupyterServerProviderHandle
     ): Promise<string | undefined> {
+        if (this.cachedDisplayNames.has(generateIdFromRemoteProvider(providerHandle))) {
+            return this.cachedDisplayNames.get(generateIdFromRemoteProvider(providerHandle))!;
+        }
         await this.loadExtension(providerHandle.extensionId, providerHandle.id);
         const id = getProviderId(providerHandle.extensionId, providerHandle.id);
         const provider = this._providers.get(id);
@@ -121,6 +132,7 @@ export class JupyterUriProviderRegistration
             return;
         }
         const server = await provider.getServerUri(providerHandle.handle, true);
+        this.cachedDisplayNames.set(generateIdFromRemoteProvider(providerHandle), server.displayName);
         return server.displayName;
     }
     private async loadExtension(extensionId: string, providerId: string) {
@@ -201,6 +213,9 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
     }
     public get documentation() {
         return this.provider.documentation;
+    }
+    public get servers() {
+        return this.provider.servers;
     }
 
     public get onDidChangeHandles() {
@@ -285,16 +300,6 @@ export async function getJupyterDisplayName(
     jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
     defaultValue?: string
 ) {
-    let displayName: string | undefined = '';
-    const provider = await jupyterUriProviderRegistration
-        .getProvider(serverHandle.extensionId, serverHandle.id)
-        .catch(noop);
-    if (provider) {
-        const server = provider.getServerUriWithoutAuthInfo
-            ? await provider.getServerUriWithoutAuthInfo(serverHandle.handle)
-            : await provider.getServerUri(serverHandle.handle);
-        displayName = server.displayName;
-    }
-    defaultValue = defaultValue || `${serverHandle.id}:${serverHandle.handle}`;
-    return displayName || defaultValue;
+    const displayName = await jupyterUriProviderRegistration.getDisplayNameIfProviderIsLoaded(serverHandle);
+    return displayName || defaultValue || `${serverHandle.id}:${serverHandle.handle}`;
 }
