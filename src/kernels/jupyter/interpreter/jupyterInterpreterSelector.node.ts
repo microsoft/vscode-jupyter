@@ -73,7 +73,7 @@ export class JupyterInterpreterSelector {
         const disposables: IDisposable[] = [];
 
         const selector = new BaseProviderBasedQuickPick(
-            provider,
+            Promise.resolve(provider),
             pythonEnvironmentQuickPick,
             getPythonEnvironmentCategory,
             { supportsBack: false }

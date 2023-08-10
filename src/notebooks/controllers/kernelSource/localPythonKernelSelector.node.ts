@@ -40,7 +40,7 @@ export class LocalPythonKernelSelector extends Disposables {
             .get<PythonEnvironmentQuickPickItemProvider>(PythonEnvironmentQuickPickItemProvider)
             .withFilter((item) => !filter.isPythonEnvironmentExcluded(item));
         this.pythonEnvPicker = new BaseProviderBasedQuickPick(
-            this.provider,
+            Promise.resolve(this.provider),
             pythonEnvironmentQuickPick,
             getPythonEnvironmentCategory,
             { supportsBack: true }

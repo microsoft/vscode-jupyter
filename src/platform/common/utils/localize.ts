@@ -693,6 +693,7 @@ export namespace DataScience {
     export const quickPickSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = (kernelProvider: string) =>
         l10n.t('Select a Kernel from {0}', kernelProvider);
+    export const kernelPickerSelectKernelFromRemoteTitleWithoutName = l10n.t('Select a Kernel');
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');
     export const installPythonExtensionViaKernelPickerToolTip = l10n.t(
         'Python Extension is required to detect and use Python environments for the execution of code cells.'
