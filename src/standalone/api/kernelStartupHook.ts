@@ -9,7 +9,8 @@ import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { traceError, traceWarning } from '../../platform/logging';
 import { CancellationTokenSource } from 'vscode';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
+import { sendTelemetryEvent } from '../../telemetry';
 
 @injectable()
 export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActivationService {
@@ -63,6 +64,7 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                 return;
             }
             const token = new CancellationTokenSource();
+            const time = Date.now();
             try {
                 await server.onStartKernel(kernel.uri, session, token.token);
             } catch (ex) {
@@ -71,6 +73,15 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                     ex
                 );
             } finally {
+                const duration = Date.now() - time;
+                sendTelemetryEvent(
+                    Telemetry.JupyterKernelStartupHook,
+                    { duration },
+                    {
+                        extensionId: connection.serverProviderHandle.extensionId,
+                        providerId: connection.serverProviderHandle.id
+                    }
+                );
                 token.dispose();
             }
         });
