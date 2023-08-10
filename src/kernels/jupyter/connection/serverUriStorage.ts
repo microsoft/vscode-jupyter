@@ -341,7 +341,7 @@ class NewStorage {
     public async remove(server: JupyterServerProviderHandle) {
         await (this.updatePromise = this.updatePromise
             .then(async () => {
-                const all = await this.getAll();
+                const all = this.getAll();
                 if (all.length === 0) {
                     return;
                 }
