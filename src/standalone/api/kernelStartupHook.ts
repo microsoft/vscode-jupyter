@@ -34,13 +34,13 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
             if (!session) {
                 return;
             }
-            // This is not possible
             const provider = this.jupyterUrisRegistration.providers.find(
                 (p) =>
                     p.extensionId === connection.serverProviderHandle.extensionId &&
                     p.id === connection.serverProviderHandle.id
             );
             if (!provider) {
+                // This is not possible
                 traceError(
                     `Unable to find kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
                 );
@@ -48,14 +48,16 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
             }
             const servers = provider.servers;
             if (!servers) {
-                traceWarning(
+                // This is not possible
+                traceError(
                     `Unable to find servers for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
                 );
                 return;
             }
             const server = servers.find((s) => s.id === connection.serverProviderHandle.handle);
             if (!server) {
-                traceWarning(
+                // This is not possible
+                traceError(
                     `Unable to find server for kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id} and handle ${connection.serverProviderHandle.id}}`
                 );
                 return;
@@ -68,6 +70,7 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
             try {
                 await server.onStartKernel(kernel.uri, session, token.token);
             } catch (ex) {
+                // We do not care about the errors from 3rd party extensions.
                 traceWarning(
                     `Startup hook for ${generateIdFromRemoteProvider(connection.serverProviderHandle)} failed`,
                     ex
