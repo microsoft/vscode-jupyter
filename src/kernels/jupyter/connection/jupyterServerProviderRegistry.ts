@@ -56,7 +56,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     public get documentation() {
         return this.provider.documentation;
     }
-    _servers = new Set<JupyterServer>();
+    _servers = new Map<string, JupyterServer>();
     get servers(): readonly JupyterServer[] {
         return Array.from(this._servers.values());
     }
@@ -179,7 +179,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             const token = new CancellationTokenSource();
             try {
                 const servers = await this.getServers(token.token);
-                servers.forEach((s) => this._servers.add(s));
                 return servers.map((s) => s.id);
             } catch (ex) {
                 traceError(`Failed to get Jupyter Servers from ${this.provider.extensionId}#${this.provider.id}`, ex);
@@ -195,7 +194,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         const token = new CancellationTokenSource();
         try {
             const servers = await this.getServers(token.token);
-            servers.forEach((s) => this._servers.add(s));
             const server = servers.find((s) => s.id === handle);
             if (!server) {
                 throw new Error(
@@ -228,7 +226,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
         }
         const servers = await this.provider.serverProvider.getJupyterServers(token);
-        servers.forEach((s) => this._servers.add(s));
+        servers.forEach((s) => this._servers.set(s.id, s));
         return servers;
     }
 }
