@@ -24,13 +24,11 @@ export class PortAttributesProviders implements PortAttributesProvider, IExtensi
         }
     }
     providePortAttributes(
-        port: number,
-        _pid: number | undefined,
-        _commandLine: string | undefined,
+        attributes: { port: number; pid?: number; commandLine?: string },
         _token: CancellationToken
     ): PortAttributes | undefined {
         try {
-            if (UsedPorts.has(port)) {
+            if (UsedPorts.has(attributes.port)) {
                 return new PortAttributes(PortAutoForwardAction.Ignore);
             }
         } catch (ex) {

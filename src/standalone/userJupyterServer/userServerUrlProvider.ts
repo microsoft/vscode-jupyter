@@ -151,7 +151,7 @@ export class UserJupyterServerUrlProvider
     onDidChangeServers = this._onDidChangeServers.event;
     async getJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
         await this.initializeServers();
-        const servers = await this.newStorage.getServers();
+        const servers = await this.newStorage.getServers(false);
         return servers.map((s) => {
             return {
                 id: s.handle,
@@ -549,7 +549,7 @@ export class UserJupyterServerUrlProvider
     }
     async getServerUriWithoutAuthInfo(handle: string): Promise<IJupyterServerUri> {
         await this.initializeServers();
-        const servers = await this.newStorage.getServers();
+        const servers = await this.newStorage.getServers(false);
         const server = servers.find((s) => s.handle === handle);
         if (!server) {
             throw new Error('Server not found');
@@ -565,7 +565,7 @@ export class UserJupyterServerUrlProvider
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         await this.initializeServers();
-        const servers = await this.newStorage.getServers();
+        const servers = await this.newStorage.getServers(false);
         const server = servers.find((s) => s.handle === handle);
         if (!server) {
             throw new Error('Server not found');
@@ -590,7 +590,7 @@ export class UserJupyterServerUrlProvider
     }
     async getHandles(): Promise<string[]> {
         await this.initializeServers();
-        const servers = await this.newStorage.getServers();
+        const servers = await this.newStorage.getServers(false);
         return servers.map((s) => s.handle);
     }
 
@@ -732,6 +732,7 @@ function storageFormatToServers(items: StorageItem[]) {
 export class NewStorage {
     private readonly _migrationDone: Deferred<void>;
     private updatePromise = Promise.resolve();
+    private servers?: { handle: string; uri: string; serverInfo: IJupyterServerUri }[];
     public get migrationDone(): Promise<void> {
         return this._migrationDone.promise;
     }
@@ -815,7 +816,12 @@ export class NewStorage {
             JSON.stringify(serverToStorageFormat(userServers))
         );
     }
-    public async getServers(): Promise<{ handle: string; uri: string; serverInfo: IJupyterServerUri }[]> {
+    public async getServers(
+        ignoreCache: boolean
+    ): Promise<{ handle: string; uri: string; serverInfo: IJupyterServerUri }[]> {
+        if (this.servers && !ignoreCache) {
+            return this.servers;
+        }
         const data = await this.encryptedStorage.retrieve(
             Settings.JupyterServerRemoteLaunchService,
             UserJupyterServerUriListKeyV2
@@ -824,16 +830,20 @@ export class NewStorage {
             return [];
         }
         try {
-            return storageFormatToServers(JSON.parse(data));
+            return (this.servers = storageFormatToServers(JSON.parse(data)));
         } catch {
             return [];
         }
     }
 
     public async add(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
+        if (this.servers) {
+            this.servers = this.servers.filter((s) => s.handle !== server.handle).concat(server);
+        }
         await (this.updatePromise = this.updatePromise
             .then(async () => {
-                const servers = (await this.getServers()).concat(server);
+                const servers = (await this.getServers(true)).concat(server);
+                this.servers = servers;
                 await this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
                     UserJupyterServerUriListKeyV2,
@@ -843,9 +853,13 @@ export class NewStorage {
             .catch(noop));
     }
     public async remove(handle: string) {
+        if (this.servers) {
+            this.servers = this.servers.filter((s) => s.handle !== handle);
+        }
         await (this.updatePromise = this.updatePromise
             .then(async () => {
-                const servers = (await this.getServers()).filter((s) => s.handle !== handle);
+                const servers = (await this.getServers(true)).filter((s) => s.handle !== handle);
+                this.servers = servers;
                 return this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
                     UserJupyterServerUriListKeyV2,
@@ -855,8 +869,10 @@ export class NewStorage {
             .catch(noop));
     }
     public async clear() {
+        this.servers = [];
         await (this.updatePromise = this.updatePromise
             .then(async () => {
+                this.servers = [];
                 await this.encryptedStorage.store(
                     Settings.JupyterServerRemoteLaunchService,
                     UserJupyterServerUriListKeyV2,
