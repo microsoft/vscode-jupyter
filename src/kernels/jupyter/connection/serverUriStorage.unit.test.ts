@@ -22,6 +22,7 @@ import { TestEventHandler, createEventHandler } from '../../../test/common';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { resolvableInstance, uriEquals } from '../../../test/datascience/helpers';
 import { sleep } from '../../../test/core';
+import { mockedVSCodeNamespaces } from '../../../test/vscode-mock';
 
 suite('Server Uri Storage', async () => {
     let serverUriStorage: IJupyterServerUriStorage;
@@ -37,7 +38,8 @@ suite('Server Uri Storage', async () => {
     let onDidRemoveEvent: TestEventHandler<IJupyterServerUriEntry[]>;
     let onDidChangeEvent: TestEventHandler<void>;
     let onDidAddEvent: TestEventHandler<IJupyterServerUriEntry>;
-
+    const machineId = 'SomeMachineId';
+    const mementoKeyForStoringUsedJupyterProviders = `MEMENTO_KEY_FOR_STORING_USED_JUPYTER_PROVIDERS_${machineId}`;
     setup(() => {
         memento = mock<Memento>();
         encryptedStorage = mock<IEncryptedStorage>();
@@ -46,11 +48,21 @@ suite('Server Uri Storage', async () => {
         context = mock<IExtensionContext>();
         onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
         disposables.push(onDidRemoveUris);
+        when(mockedVSCodeNamespaces.env.machineId).thenReturn(machineId);
         when(fs.delete(anything())).thenResolve();
         when(context.globalStorageUri).thenReturn(globalStorageUri);
         when(jupyterPickerRegistration.getJupyterServerUri(anything(), anything())).thenResolve(
             resolvableInstance(mock<IJupyterServerUri>())
         );
+        let dataInMemento: StorageMRUItem[] | undefined = undefined;
+        when(memento.get(mementoKeyForStoringUsedJupyterProviders)).thenReturn(dataInMemento);
+        when(memento.get(mementoKeyForStoringUsedJupyterProviders, anything())).thenCall(
+            (_, defaultValue) => dataInMemento || defaultValue
+        );
+        when(memento.update(mementoKeyForStoringUsedJupyterProviders, anything())).thenCall((_, data) => {
+            dataInMemento = data;
+            return Promise.resolve();
+        });
 
         serverUriStorage = new JupyterServerUriStorage(
             instance(encryptedStorage),
@@ -71,8 +83,8 @@ suite('Server Uri Storage', async () => {
         generateDummyData(2);
         when(fs.exists(anything())).thenResolve(false);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
-        when(memento.update(Settings.JupyterServerUriList, anything())).thenResolve();
         when(encryptedStorage.store(anything(), anything(), anything())).thenResolve();
+        when(memento.update(Settings.JupyterServerUriList, anything())).thenResolve();
         const itemsInNewStorage: StorageMRUItem[] = [];
         when(fs.writeFile(anything(), anything())).thenCall((_, data) => {
             itemsInNewStorage.push(...JSON.parse(data.toString()));
@@ -80,11 +92,12 @@ suite('Server Uri Storage', async () => {
             return Promise.resolve();
         });
         when(fs.readFile(anything())).thenCall(() => JSON.stringify(itemsInNewStorage));
-
         const all = await serverUriStorage.getAll();
 
         assert.strictEqual(all.length, 2, 'Should have 2 items');
         verify(fs.writeFile(uriEquals(storageFile), JSON.stringify(itemsInNewStorage))).once();
+        verify(fs.delete(uriEquals(storageFile))).once();
+        verify(memento.update(mementoKeyForStoringUsedJupyterProviders, deepEqual(itemsInNewStorage))).once();
         assert.deepEqual(
             all
                 .map((a) => {
@@ -164,12 +177,11 @@ suite('Server Uri Storage', async () => {
         assert.equal(onDidRemoveEvent.count, 0, 'Event should not be fired');
     });
     test('Get All (after migration was done previously)', async () => {
-        const itemsInNewStorage = generateDummyData(2, true);
+        const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
 
         const all = await serverUriStorage.getAll();
-
         verify(fs.writeFile(anything(), anything())).never();
         assert.strictEqual(all.length, 2, 'Should have 2 items');
         assert.deepEqual(
@@ -195,7 +207,7 @@ suite('Server Uri Storage', async () => {
     });
 
     test('Add new entry', async () => {
-        const itemsInNewStorage = generateDummyData(2, true);
+        const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
         when(
@@ -212,7 +224,6 @@ suite('Server Uri Storage', async () => {
         await serverUriStorage.add({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID });
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).once();
         assert.deepEqual(
             all
                 .sort((a, b) => a.time - b.time)
@@ -261,11 +272,10 @@ suite('Server Uri Storage', async () => {
         );
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).once();
         assert.strictEqual(all.find((a) => a.provider.handle === 'NewHandle1')?.time, 1234, 'Incorrect time');
     });
     test('Add three new entries', async () => {
-        const itemsInNewStorage = generateDummyData(2, true);
+        const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
         when(
@@ -303,7 +313,6 @@ suite('Server Uri Storage', async () => {
         await serverUriStorage.add({ handle: 'NewHandle3', id: 'NewId3', extensionId: JVSC_EXTENSION_ID });
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).atLeast(1);
         assert.deepEqual(
             all
                 .map((a) => {
@@ -347,7 +356,7 @@ suite('Server Uri Storage', async () => {
         assert.equal(onDidChangeEvent.count, 3, 'Event should be fired 3 times');
     });
     test('Add three new entries (without waiting)', async function () {
-        const itemsInNewStorage = generateDummyData(2, true);
+        const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
         when(
@@ -387,7 +396,6 @@ suite('Server Uri Storage', async () => {
         ]);
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).atLeast(1);
         assert.deepEqual(
             all
                 .map((a) => {
@@ -431,7 +439,7 @@ suite('Server Uri Storage', async () => {
         assert.equal(onDidChangeEvent.count, 3, 'Event should be fired 3 times');
     });
     test('Add three new entries (without waiting) & then remove one', async function () {
-        const itemsInNewStorage = generateDummyData(2, true);
+        const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
         when(
@@ -472,7 +480,6 @@ suite('Server Uri Storage', async () => {
         await serverUriStorage.remove({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID });
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).atLeast(1);
         assert.deepEqual(
             all
                 .map((a) => {
@@ -509,7 +516,7 @@ suite('Server Uri Storage', async () => {
         assert.equal(onDidChangeEvent.count, 3, 'Event should be fired 4 times (3 for add, one for remove)');
     });
     test('Add three new entries & then remove one', async function () {
-        const itemsInNewStorage = generateDummyData(2, true);
+        const itemsInNewStorage = generateDummyData(2, true).slice();
         when(fs.exists(anything())).thenResolve(true);
         when(fs.exists(uriEquals(globalStorageUri))).thenResolve(true);
         when(
@@ -548,7 +555,6 @@ suite('Server Uri Storage', async () => {
         await serverUriStorage.remove({ id: 'NewId2', handle: 'NewHandle2', extensionId: JVSC_EXTENSION_ID });
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).atLeast(1);
         assert.deepEqual(
             all
                 .map((a) => {
@@ -639,7 +645,6 @@ suite('Server Uri Storage', async () => {
         });
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).atLeast(1);
         assert.strictEqual(all.length, 0);
         assert.equal(onDidRemoveEvent.count, 5, 'Event should be fired 5 times');
         assert.equal(onDidAddEvent.count, 3, 'Event should be fired 3 times');
@@ -701,7 +706,6 @@ suite('Server Uri Storage', async () => {
         ]);
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).atLeast(1);
         assert.strictEqual(all.length, 0);
     });
     test('Add three new entries & then update one and remove one', async function () {
@@ -760,7 +764,6 @@ suite('Server Uri Storage', async () => {
         await serverUriStorage.remove({ handle: 'NewHandle1', id: 'NewId1', extensionId: JVSC_EXTENSION_ID });
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).atLeast(1);
         assert.strictEqual(all.length, 4);
         assert.equal(onDidRemoveEvent.count, 1, 'Event should be fired once');
         assert.equal(onDidAddEvent.count, 3, 'Event should be fired 3 times');
@@ -818,7 +821,6 @@ suite('Server Uri Storage', async () => {
         });
         const all = await serverUriStorage.getAll();
 
-        verify(fs.writeFile(anything(), anything())).atLeast(1);
         assert.strictEqual(all.length, 0);
     });
     test('Add 10 new entries & add 11th, and add more and remove', async function () {

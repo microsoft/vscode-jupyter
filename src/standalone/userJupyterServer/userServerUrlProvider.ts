@@ -14,7 +14,8 @@ import {
     Memento,
     QuickInputButtons,
     QuickPickItem,
-    Uri
+    Uri,
+    env
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
@@ -223,7 +224,7 @@ export class UserJupyterServerUrlProvider
                 this._onDidChangeHandles.fire();
             })
         );
-        this.migrateOldServers().catch(noop);
+        this.initializeServers().catch(noop);
     }
     private migrateOldServers() {
         if (!this.migratedOldServers) {
@@ -304,16 +305,27 @@ export class UserJupyterServerUrlProvider
         }
         return this.migratedOldServers;
     }
-    private async initializeServers(): Promise<void> {
+    private initializeServers(): Promise<void> {
         if (this._cachedServerInfoInitialized) {
             return this._cachedServerInfoInitialized;
         }
+        const deferred = createDeferred<void>();
+        this._cachedServerInfoInitialized = deferred.promise;
 
-        this._cachedServerInfoInitialized = new Promise<void>(async (resolve) => {
-            await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
-            resolve();
-        });
-
+        (async () => {
+            const NEW_STORAGE_MIGRATION_DONE_KEY = 'NewUserUriMigrationCompleted';
+            if (this.globalMemento.get<string>(NEW_STORAGE_MIGRATION_DONE_KEY) !== env.machineId) {
+                await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
+                await this.globalMemento.update(NEW_STORAGE_MIGRATION_DONE_KEY, env.machineId);
+            }
+            this.getHandles().catch(noop);
+            deferred.resolve();
+        })()
+            .then(
+                () => deferred.resolve(),
+                (ex) => deferred.reject(ex)
+            )
+            .catch(noop);
         return this._cachedServerInfoInitialized;
     }
 
