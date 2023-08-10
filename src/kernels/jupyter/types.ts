@@ -21,11 +21,13 @@ import {
     IKernelSocket,
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
-    RemoteKernelConnectionMetadata
+    RemoteKernelConnectionMetadata,
+    PythonKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection } from '../../api';
+import { Environment } from '../../platform/api/pythonApiTypes';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -293,6 +295,11 @@ export interface IJupyterRemoteCachedKernelValidator {
 export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
     kind: ContributedKernelFinderKind.Remote;
     serverProviderHandle: JupyterServerProviderHandle;
+}
+
+export const IPythonKernelFinder = Symbol('IPythonKernelFinder');
+export interface IPythonKernelFinder extends IContributedKernelFinder<PythonKernelConnectionMetadata> {
+    getOrCreateKernelConnection(env: Environment): Promise<PythonKernelConnectionMetadata>;
 }
 
 export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegistry');

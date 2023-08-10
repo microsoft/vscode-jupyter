@@ -6,16 +6,17 @@ import { injectable, inject } from 'inversify';
 import { IQuickPickItemProvider } from '../common/providerBasedQuickPick';
 import { Environment, ProposedExtensionAPI } from '../api/pythonApiTypes';
 import { IExtensionSyncActivationService } from '../activation/types';
-import { IDisposable, IDisposableRegistry } from '../common/types';
+import { IDisposableRegistry } from '../common/types';
 import { PromiseMonitor } from '../common/utils/promises';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import { traceError } from '../logging';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { disposeAllDisposables } from '../common/helpers';
+import { Disposables } from '../common/utils';
 
 @injectable()
 export class PythonEnvironmentQuickPickItemProvider
+    extends Disposables
     implements IQuickPickItemProvider<Environment>, IExtensionSyncActivationService
 {
     title: string = DataScience.quickPickSelectPythonEnvironmentTitle;
@@ -25,7 +26,6 @@ export class PythonEnvironmentQuickPickItemProvider
     onDidChangeStatus = this._onDidChangeStatus.event;
     private refreshedOnceBefore = false;
     private api?: ProposedExtensionAPI;
-    private readonly disposables: IDisposable[] = [];
     private readonly promiseMonitor = new PromiseMonitor();
     public get items(): readonly Environment[] {
         if (!this.api) {
@@ -50,13 +50,22 @@ export class PythonEnvironmentQuickPickItemProvider
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
+        super();
         disposables.push(this);
+        this.disposables.push(this._onDidChange);
+        this.disposables.push(this._onDidChangeStatus);
+        this.disposables.push(this.promiseMonitor);
         this.promiseMonitor.onStateChange(
             () => (this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering'),
             this,
             this.disposables
         );
+        let initialized = false;
         const initializeApi = () => {
+            if (initialized || !extensionChecker.isPythonExtensionInstalled) {
+                return;
+            }
+            initialized = true;
             const apiPromise = api.getNewApi();
             this.promiseMonitor.push(apiPromise);
             apiPromise
@@ -72,27 +81,13 @@ export class PythonEnvironmentQuickPickItemProvider
                 })
                 .catch((ex) => traceError('Failed to get python api', ex));
         };
-        if (extensionChecker.isPythonExtensionInstalled) {
-            initializeApi();
-        } else {
-            extensionChecker.onPythonExtensionInstallationStatusChanged(
-                () => {
-                    if (extensionChecker.isPythonExtensionInstalled) {
-                        initializeApi();
-                    }
-                },
-                this,
-                this.disposables
-            );
-        }
+        initializeApi();
+        extensionChecker.onPythonExtensionInstallationStatusChanged(initializeApi, this, this.disposables);
     }
     activate(): void {
         // Ensure we resolve the Python API ASAP.
         // This makes the api.environments.known available soon, hence improving over all
         // perceived performance for the user.
-    }
-    dispose() {
-        disposeAllDisposables(this.disposables);
     }
     async refresh() {
         // very unlikely that we have been unable to get the Python extension api, hence no need to wait on the promise.
