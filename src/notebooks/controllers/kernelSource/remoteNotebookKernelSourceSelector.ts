@@ -42,7 +42,6 @@ import { generateIdFromRemoteProvider } from '../../../kernels/jupyter/jupyterUt
 import { BaseProviderBasedQuickPick, IQuickPickItemProvider } from '../../../platform/common/providerBasedQuickPick';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { traceError } from '../../../platform/logging';
-import { noop } from '../../../platform/common/utils/misc';
 
 enum KernelFinderEntityQuickPickType {
     KernelFinder = 'finder',
