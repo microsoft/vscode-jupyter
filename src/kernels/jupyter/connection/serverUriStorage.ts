@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { EventEmitter, Memento, Uri } from 'vscode';
+import { EventEmitter, Memento, Uri, env } from 'vscode';
 import { inject, injectable, named } from 'inversify';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
 import { Identifiers, Settings } from '../../../platform/common/constants';
@@ -73,7 +73,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.oldStorage = new OldStorage(encryptedStorage, globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.newStorage = new NewStorage(fs, storageFile, this.oldStorage);
+        this.newStorage = new NewStorage(fs, storageFile, this.oldStorage, globalMemento);
         this.disposables.push(this._onDidAddUri);
         this.disposables.push(this._onDidChangeUri);
         this.disposables.push(this._onDidRemoveUris);
@@ -202,11 +202,17 @@ class NewStorage {
 
     private migration: Promise<void> | undefined;
     private updatePromise = Promise.resolve();
+    private readonly mementoKey: string;
     constructor(
         private readonly fs: IFileSystem,
         private readonly storageFile: Uri,
-        private readonly oldStorage: OldStorage
-    ) {}
+        private readonly oldStorage: OldStorage,
+        private readonly memento: Memento
+    ) {
+        // Ensure the key is unique per machine,
+        // this way when memento is transferred across machines it will not corrupt the memento on that machine.
+        this.mementoKey = `MEMENTO_KEY_FOR_STORING_USED_JUPYTER_PROVIDERS_${env.machineId}`;
+    }
     dispose() {
         this._onDidAddUri.dispose();
         this._onDidChangeUri.dispose();
@@ -214,44 +220,67 @@ class NewStorage {
     }
     async migrateMRU() {
         if (!this.migration) {
-            this.migration = (async () => {
-                // Do not store the fact that we migrated in memento,
-                // we do not want such state to be transferred across machines.
-                if (await this.fs.exists(this.storageFile)) {
-                    return;
-                }
-                const items = await this.oldStorage.getAllRaw();
-                const dir = path.dirname(this.storageFile);
-                if (!(await this.fs.exists(dir))) {
-                    await this.fs.createDirectory(dir);
-                }
-                const storageItems = items.map((item) => {
-                    return <StorageMRUItem>{
-                        serverHandle: item.provider,
-                        displayName: item.displayName || '',
-                        time: item.time
-                    };
-                });
-                await this.fs.writeFile(this.storageFile, JSON.stringify(storageItems));
-            })();
+            if (this.memento.get(this.mementoKey)) {
+                this.migration = Promise.resolve();
+                return;
+            }
+            this.migration = this.migrateToStorageFile().then(() => this.migrateToMemento());
         }
         return this.migration;
+    }
+    async migrateToStorageFile() {
+        // Do not store the fact that we migrated in memento,
+        // we do not want such state to be transferred across machines.
+        if (await this.fs.exists(this.storageFile)) {
+            return;
+        }
+        const items = await this.oldStorage.getAllRaw();
+        const dir = path.dirname(this.storageFile);
+        if (!(await this.fs.exists(dir))) {
+            await this.fs.createDirectory(dir);
+        }
+        const storageItems = items.map((item) => {
+            return <StorageMRUItem>{
+                serverHandle: item.provider,
+                displayName: item.displayName || '',
+                time: item.time
+            };
+        });
+        await this.fs.writeFile(this.storageFile, JSON.stringify(storageItems));
+    }
+    async migrateToMemento() {
+        if (this.memento.get(this.mementoKey)) {
+            return;
+        }
+        // Do not store the fact that we migrated in memento,
+        // we do not want such state to be transferred across machines.
+        if (!(await this.fs.exists(this.storageFile))) {
+            await this.memento.update(this.mementoKey, []);
+            return;
+        }
+        const json = await this.fs.readFile(this.storageFile);
+        const items: StorageMRUItem[] = [];
+        (JSON.parse(json) as StorageMRUItem[]).map((item) => {
+            item.serverHandle.extensionId =
+                item.serverHandle.extensionId || getOwnerExtensionOfProviderHandle(item.serverHandle.id) || '';
+            if (item.serverHandle.extensionId) {
+                items.push(item);
+            }
+        });
+        await Promise.all([this.fs.delete(this.storageFile).catch(noop), this.memento.update(this.mementoKey, items)]);
     }
     public async add(item: IJupyterServerUriEntry) {
         return (this.updatePromise = this.updatePromise
             .then(async () => {
-                const all = await this.getAllRaw();
+                const all = this.getAll();
                 const existingEntry = all.find(
                     (entry) =>
-                        `${entry.serverHandle.id}#${entry.serverHandle.handle}` ===
-                        `${item.provider.id}#${item.provider.handle}`
+                        generateIdFromRemoteProvider(entry.provider) === generateIdFromRemoteProvider(item.provider)
                 );
                 // Check if we have already found a display name for this server
-                item.displayName =
-                    item.displayName || existingEntry?.displayName || generateIdFromRemoteProvider(item.provider);
-
                 const newItem: StorageMRUItem = {
-                    displayName: item.displayName || '',
+                    displayName:
+                        item.displayName || existingEntry?.displayName || generateIdFromRemoteProvider(item.provider),
                     serverHandle: item.provider,
                     time: item.time
                 };
@@ -261,13 +290,20 @@ class NewStorage {
                         .sort((a, b) => b.time - a.time) // Also sort by time
                         .filter(
                             (entry) =>
-                                `${entry.serverHandle.extensionId}#${entry.serverHandle.id}#${entry.serverHandle.handle}` !==
-                                `${item.provider.extensionId}#${item.provider.id}#${item.provider.handle}`
+                                generateIdFromRemoteProvider(entry.provider) !==
+                                generateIdFromRemoteProvider(item.provider)
                         )
+                        .map((item) => {
+                            return <StorageMRUItem>{
+                                displayName: item.displayName,
+                                serverHandle: item.provider,
+                                time: item.time
+                            };
+                        })
                 );
                 const removedItems = newList.splice(Settings.JupyterServerUriListMax);
 
-                await this.fs.writeFile(this.storageFile, JSON.stringify(newList));
+                await this.memento.update(this.mementoKey, newList);
 
                 if (!existingEntry) {
                     this._onDidAddUri.fire(item);
@@ -287,7 +323,7 @@ class NewStorage {
             .catch(noop));
     }
     public async update(server: JupyterServerProviderHandle) {
-        const uriList = await this.getAllImpl();
+        const uriList = this.getAll();
 
         const existingEntry = uriList.find(
             (entry) => entry.provider.id === server.id && entry.provider.handle === server.handle
@@ -305,7 +341,7 @@ class NewStorage {
     public async remove(server: JupyterServerProviderHandle) {
         await (this.updatePromise = this.updatePromise
             .then(async () => {
-                const all = await this.getAllImpl();
+                const all = await this.getAll();
                 if (all.length === 0) {
                     return;
                 }
@@ -326,24 +362,14 @@ class NewStorage {
                             time: item.time
                         };
                     });
-                    await this.fs.writeFile(this.storageFile, JSON.stringify(items));
+                    await this.memento.update(this.mementoKey, items);
                     this._onDidRemoveUris.fire(removedItems);
                 }
             })
             .catch(noop));
     }
-    public async getAll(): Promise<IJupyterServerUriEntry[]> {
-        return this.getAllImpl().then((items) => items.sort((a, b) => b.time - a.time));
-    }
-    public async clear(): Promise<void> {
-        const all = await this.getAllImpl();
-        await this.fs.delete(this.storageFile);
-        if (all.length) {
-            this._onDidRemoveUris.fire(all);
-        }
-    }
-    private async getAllImpl(): Promise<IJupyterServerUriEntry[]> {
-        const data = await this.getAllRaw();
+    public getAll(): IJupyterServerUriEntry[] {
+        const data = this.memento.get<StorageMRUItem[]>(this.mementoKey, []);
         const entries: IJupyterServerUriEntry[] = [];
 
         data.forEach(async (item) => {
@@ -357,19 +383,11 @@ class NewStorage {
         });
         return entries;
     }
-    private async getAllRaw(): Promise<StorageMRUItem[]> {
-        if (!(await this.fs.exists(this.storageFile))) {
-            return [];
+    public async clear(): Promise<void> {
+        const all = this.getAll();
+        await this.memento.update(this.mementoKey, []);
+        if (all.length) {
+            this._onDidRemoveUris.fire(all);
         }
-        const json = await this.fs.readFile(this.storageFile);
-        const items: StorageMRUItem[] = [];
-        (JSON.parse(json) as StorageMRUItem[]).map((item) => {
-            item.serverHandle.extensionId =
-                item.serverHandle.extensionId || getOwnerExtensionOfProviderHandle(item.serverHandle.id) || '';
-            if (item.serverHandle.extensionId) {
-                items.push(item);
-            }
-        });
-        return items;
     }
 }
