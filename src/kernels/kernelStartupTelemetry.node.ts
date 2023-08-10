@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IDisposableRegistry } from '../platform/common/types';
 import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
-import { IKernel, IKernelProvider } from './types';
+import { IKernel, IKernelProvider, IKernelSession } from './types';
 
 @injectable()
 export class KernelStartupTelemetry implements IExtensionSyncActivationService {
@@ -20,10 +20,10 @@ export class KernelStartupTelemetry implements IExtensionSyncActivationService {
     private addOnStartHooks(kernel: IKernel) {
         kernel.addHook(
             'didStart',
-            async () => {
-                if (kernel.session) {
+            async (session: IKernelSession | undefined) => {
+                if (session) {
                     await sendTelemetryForPythonKernelExecutable(
-                        kernel.session,
+                        session,
                         kernel.resourceUri,
                         kernel.kernelConnectionMetadata
                     );

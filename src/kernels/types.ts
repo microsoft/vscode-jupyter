@@ -379,6 +379,12 @@ export interface IBaseKernel extends IAsyncDisposable {
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     addHook(
+        event: 'didStart',
+        hook: (session: IKernelSession | undefined) => Promise<void>,
+        thisArgs?: unknown,
+        disposables?: IDisposable[]
+    ): IDisposable;
+    addHook(
         event: 'willRestart',
         hook: (sessionPromise?: Promise<IKernelSession>) => Promise<void>,
         thisArgs?: unknown,

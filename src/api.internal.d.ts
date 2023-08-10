@@ -26,6 +26,11 @@ declare module './api' {
 
     export interface IJupyterUriProvider {
         /**
+         * Internal cache of the Jupyter Servers, providing sync access to the servers.
+         * Avoids the need to call the `getServers` when we have already retrieved a server in the past.
+         */
+        servers?: readonly JupyterServer[];
+        /**
          * Link to documentation for this provider.
          * Used internally to display the link for `Existing Jupyter Servers` in the quick pick.
          */

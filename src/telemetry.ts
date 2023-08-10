@@ -3636,6 +3636,37 @@ export class IEventNamePropertyMapping {
             }
         }
     };
+    /**
+     * Telemetry sent when startup hooks for Jupyter Kernels are handled by 3rd party extensions.
+     * Note: This only applies to kernels belonging to Jupyter Servers contributed by the same extension.
+     */
+    [Telemetry.JupyterKernelStartupHook]: TelemetryEventInfo<
+        {
+            /**
+             * Extension Id that's attempting to use the API.
+             */
+            extensionId: string;
+            /**
+             * Id of the Jupyter Server Provider.
+             */
+            providerId: string;
+        } & DurationMeasurement
+    > = {
+        owner: 'donjayamanne',
+        feature: 'N/A',
+        source: 'N/A',
+        properties: {
+            extensionId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
+            providerId: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            }
+        },
+        measures: commonClassificationForDurationProperties()
+    };
 
     /**
      * The Python code that we ran to fetch variables had a failure.
