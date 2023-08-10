@@ -79,6 +79,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         removed?: { id: string }[];
     }>();
     onDidChangeKernels = this._onDidChangeKernels.event;
+    private readonly _onDidChange = new EventEmitter<void>();
+    onDidChange = this._onDidChange.event;
 
     private readonly disposables: IDisposable[] = [];
 
@@ -87,6 +89,20 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
 
     private readonly cacheKey: string;
     private readonly cacheFile: Uri;
+
+    /**
+     *
+     * Remote kernel finder is resource agnostic.
+     */
+    public get kernels(): RemoteKernelConnectionMetadata[] {
+        return this.cache;
+    }
+    get items(): RemoteKernelConnectionMetadata[] {
+        return this.kernels;
+    }
+    get title(): string {
+        return this.displayName;
+    }
     constructor(
         readonly id: string,
         readonly displayName: string,
@@ -106,7 +122,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         // Unlike the Local kernel finder universal remote kernel finders will be added on the fly
         this.disposables.push(kernelFinder.registerKernelFinder(this));
 
+        this._onDidChangeKernels.event(() => this._onDidChange.fire(), this, this.disposables);
         this.disposables.push(this._onDidChangeKernels);
+        this.disposables.push(this._onDidChange);
         this.disposables.push(this._onDidChangeStatus);
         this.disposables.push(this.promiseMonitor);
     }
@@ -244,14 +262,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         })();
         this.promiseMonitor.push(promise);
         await promise;
-    }
-
-    /**
-     *
-     * Remote kernel finder is resource agnostic.
-     */
-    public get kernels(): RemoteKernelConnectionMetadata[] {
-        return this.cache;
     }
 
     private async getRemoteConnectionInfo(displayProgress: boolean = true): Promise<IJupyterConnection | undefined> {

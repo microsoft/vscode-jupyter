@@ -39,7 +39,7 @@ import { IConnectionDisplayDataProvider, IRemoteNotebookKernelSourceSelector } f
 import { MultiStepResult } from './types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { generateIdFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
-import { BaseProviderBasedQuickPick, IQuickPickItemProvider } from '../../../platform/common/providerBasedQuickPick';
+import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { traceError } from '../../../platform/logging';
 
@@ -227,7 +227,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 case KernelFinderEntityQuickPickType.KernelFinder:
                     const result = await this.selectRemoteKernelFromPicker(
                         state.notebook,
-                        Promise.resolve(selectedSource.kernelFinderInfo),
+                        Promise.resolve(selectedSource.kernelFinderInfo as IRemoteKernelFinder),
                         token
                     ).catch((ex) => traceError(`Failed to select a kernel`, ex));
                     if (result && result === InputFlowAction.back) {
@@ -295,7 +295,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 throw new CancellationError();
             }
             // Wait for the remote provider to be registered.
-            return new Promise<IContributedKernelFinder>((resolve) => {
+            return new Promise<IRemoteKernelFinder>((resolve) => {
                 const found = this.kernelFinder.registered.find(
                     (f) =>
                         f.kind === 'remote' &&
@@ -303,7 +303,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         (f as IRemoteKernelFinder).serverProviderHandle.handle === serverId.handle
                 );
                 if (found) {
-                    return resolve(found);
+                    return resolve(found as IRemoteKernelFinder);
                 }
                 this.kernelFinder.onDidChangeRegistrations(
                     (e) => {
@@ -314,7 +314,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                                 (f as IRemoteKernelFinder).serverProviderHandle.handle === serverId.handle
                         );
                         if (found) {
-                            return resolve(found);
+                            return resolve(found as IRemoteKernelFinder);
                         }
                     },
                     this,
@@ -337,25 +337,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
     }
     private async selectRemoteKernelFromPicker(
         notebook: NotebookDocument,
-        source: Promise<IContributedKernelFinder<KernelConnectionMetadata>>,
+        source: Promise<IRemoteKernelFinder>,
         token: CancellationToken
     ) {
-        const provider = source.then((source) => {
-            const onDidChangeEvent = new EventEmitter<void>();
-            source.onDidChangeKernels(() => onDidChangeEvent.fire());
-            return <IQuickPickItemProvider<KernelConnectionMetadata>>{
-                title: DataScience.kernelPickerSelectKernelFromRemoteTitle(source.displayName),
-                get items() {
-                    return source.kernels;
-                },
-                get status() {
-                    return source.status;
-                },
-                onDidChange: onDidChangeEvent.event,
-                onDidChangeStatus: source.onDidChangeStatus,
-                refresh: () => source.refresh()
-            };
-        });
         const quickPickFactory = (item: KernelConnectionMetadata) => {
             const displayData = this.displayDataProvider.getDisplayData(item);
             return <QuickPickItem>{
@@ -369,7 +353,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 label: this.displayDataProvider.getDisplayData(item).category || 'Other'
             };
         };
-        const remoteKernelPicker = new BaseProviderBasedQuickPick(provider, quickPickFactory, getCategory, {
+        const remoteKernelPicker = new BaseProviderBasedQuickPick(source, quickPickFactory, getCategory, {
             supportsBack: true
         });
         const preferred = new PreferredKernelConnectionService(this.jupyterConnection);

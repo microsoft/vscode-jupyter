@@ -28,6 +28,7 @@ import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection } from '../../api';
 import { Environment } from '../../platform/api/pythonApiTypes';
+import { IQuickPickItemProvider } from '../../platform/common/providerBasedQuickPick';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -292,7 +293,9 @@ export interface IJupyterRemoteCachedKernelValidator {
     isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
 }
 
-export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
+export interface IRemoteKernelFinder
+    extends IContributedKernelFinder<RemoteKernelConnectionMetadata>,
+        IQuickPickItemProvider<RemoteKernelConnectionMetadata> {
     kind: ContributedKernelFinderKind.Remote;
     serverProviderHandle: JupyterServerProviderHandle;
 }
