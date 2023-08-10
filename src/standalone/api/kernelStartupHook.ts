@@ -74,7 +74,7 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                 } catch (ex) {
                     // We do not care about the errors from 3rd party extensions.
                     traceWarning(
-                        `Startup hook for ${generateIdFromRemoteProvider(connection.serverProviderHandle)} failed`,
+                        `Startup hook for ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id} failed`,
                         ex
                     );
                 } finally {
