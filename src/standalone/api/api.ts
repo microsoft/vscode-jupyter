@@ -161,7 +161,7 @@ export function buildApi(
             sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
             const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
             if (
-                ![JVSC_EXTENSION_ID.split('.')[0], 'SynapseVSCode']
+                ![JVSC_EXTENSION_ID.split('.')[0], 'SynapseVSCode', 'GitHub']
                     .map((s) => s.toLowerCase())
                     .includes(extensionId.toLowerCase())
             ) {

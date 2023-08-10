@@ -112,6 +112,10 @@ export class JupyterUriProviderRegistration
         this.cachedDisplayNames.set(generateIdFromRemoteProvider(providerHandle), server.displayName);
         return server;
     }
+    /**
+     * Temporary, until the new API is finalized.
+     * We need a way to get the displayName of the Server.
+     */
     public async getDisplayNameIfProviderIsLoaded(
         providerHandle: JupyterServerProviderHandle
     ): Promise<string | undefined> {
