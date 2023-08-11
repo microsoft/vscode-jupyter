@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter, Memento } from 'vscode';
 import { getKernelId } from '../../../kernels/helpers';
 import { IKernelFinder, LocalKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { KernelSpecLoader } from './localKernelSpecFinderBase.node';
@@ -41,7 +41,7 @@ export class LocalKnownPathKernelSpecFinderV2
     private _onDidChange = new EventEmitter<void>();
     onDidChange = this._onDidChange.event;
     private _onDidChangeStatus = new EventEmitter<void>();
-    onDidChangeStatus = this._onDidChangeStatus.event
+    onDidChangeStatus = this._onDidChangeStatus.event;
     lastError?: Error | undefined;
     id: string = ContributedKernelFinderKind.LocalKernelSpec;
     displayName: string = DataScience.localKernelSpecs;
