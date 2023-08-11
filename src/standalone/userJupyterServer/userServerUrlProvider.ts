@@ -7,7 +7,6 @@ import {
     CancellationError,
     CancellationToken,
     CancellationTokenSource,
-    Command,
     Disposable,
     Event,
     EventEmitter,
@@ -55,7 +54,13 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
-import { IJupyterServerUri, JupyterServer, JupyterServerCommandProvider, JupyterServerProvider } from '../../api';
+import {
+    IJupyterServerUri,
+    JupyterServer,
+    JupyterServerCommand,
+    JupyterServerCommandProvider,
+    JupyterServerProvider
+} from '../../api';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
@@ -134,12 +139,12 @@ export class UserJupyterServerUrlProvider
             disposables
         );
     }
-    selected: Command = {
+    selected: JupyterServerCommand = {
         title: DataScience.jupyterSelectURIPrompt,
         tooltip: DataScience.jupyterSelectURINewDetail,
         command: 'jupyter.selectLocalJupyterServer'
     };
-    async getCommands(_token: CancellationToken): Promise<Command[]> {
+    async getCommands(_token: CancellationToken): Promise<JupyterServerCommand[]> {
         return [
             {
                 title: DataScience.jupyterSelectURIPrompt,
