@@ -242,8 +242,8 @@ suite('Uri Provider Registration', () => {
             },
             { label: 'Item Y' }
         ];
-        when(mockProvider1.getQuickPickEntryItems!()).thenResolve(quickPickItemsForHandle1 as any);
-        when(mockProvider2.getQuickPickEntryItems!()).thenResolve(quickPickItemsForHandle2 as any);
+        when(mockProvider1.getQuickPickEntryItems!(anything())).thenResolve(quickPickItemsForHandle1 as any);
+        when(mockProvider2.getQuickPickEntryItems!(anything())).thenResolve(quickPickItemsForHandle2 as any);
 
         const provider1 = await registration.getProvider('a', '1');
         const provider2 = await registration.getProvider('ext2', 'b');
