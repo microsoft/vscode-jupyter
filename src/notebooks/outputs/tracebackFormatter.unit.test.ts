@@ -7,7 +7,7 @@ import { NotebookCell, NotebookDocument, TextDocument, Uri } from 'vscode';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { NotebookTracebackFormatter } from './tracebackFormatter';
 
-suite.only(`Notebook trace formatter`, function () {
+suite(`Notebook trace formatter`, function () {
     let notebook: NotebookDocument;
     let cell: NotebookCell;
     let document: TextDocument;
