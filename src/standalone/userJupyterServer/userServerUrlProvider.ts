@@ -633,20 +633,12 @@ export class UserJupyterServerUrlProvider
         );
 
         input.onDidAccept(async () => {
-            // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
-            const uri = input.value.trim().replace(/\/(lab|tree)(\??)$/, '');
-            const jupyterServerUri = parseUri(uri, '');
-            if (!jupyterServerUri) {
-                input.validationMessage = DataScience.jupyterSelectURIInvalidURI;
-                // sendTelemetryEventForRemoteUrl(uri, 'InvalidUrl').catch(noop);
+            const result = this.parseUserUriAndGetValidationError(input.value);
+            if (typeof result.validationError === 'string') {
+                input.validationMessage = result.validationError;
                 return;
             }
-            if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
-                input.validationMessage = DataScience.jupyterSelectURIMustBeHttpOrHttps;
-                // sendTelemetryEventForRemoteUrl(uri, 'NonHttpUrl').catch(noop);
-                return;
-            }
-            deferred.resolve({ jupyterServerUri, url: uri });
+            deferred.resolve(result);
         });
         return deferred.promise;
     }
