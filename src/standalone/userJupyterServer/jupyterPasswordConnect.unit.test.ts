@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as sinon from 'sinon';
 import { assert } from 'chai';
 import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
@@ -15,6 +16,8 @@ import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInpu
 import { MockInputBox } from '../../test/datascience/mockInputBox';
 import { MockQuickPick } from '../../test/datascience/mockQuickPick';
 import { JupyterPasswordConnect } from './jupyterPasswordConnect';
+import { Disposable, InputBox } from 'vscode';
+import { noop } from '../../test/core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterPasswordConnect', () => {
@@ -26,10 +29,40 @@ suite('JupyterPasswordConnect', () => {
     const xsrfValue: string = '12341234';
     const sessionName: string = 'sessionName';
     const sessionValue: string = 'sessionValue';
-
+    let inputBox: InputBox;
     setup(() => {
+        inputBox = {
+            show: noop,
+            onDidAccept: noop as any,
+            onDidHide: noop as any,
+            hide: noop,
+            dispose: noop as any,
+            onDidChangeValue: noop as any,
+            onDidTriggerButton: noop as any,
+            valueSelection: undefined,
+            totalSteps: undefined,
+            validationMessage: '',
+            busy: false,
+            buttons: [],
+            enabled: true,
+            ignoreFocusOut: false,
+            password: false,
+            step: undefined,
+            title: '',
+            value: '',
+            prompt: '',
+            placeholder: ''
+        };
+        sinon.stub(inputBox, 'show').callsFake(noop);
+        sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
+        sinon.stub(inputBox, 'onDidAccept').callsFake((cb) => {
+            (cb as Function)();
+            return new Disposable(noop);
+        });
+
         appShell = mock(ApplicationShell);
         when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        when(appShell.createInputBox()).thenReturn(inputBox);
         const multiStepFactory = new MultiStepInputFactory(instance(appShell));
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
@@ -114,6 +147,7 @@ suite('JupyterPasswordConnect', () => {
     }
 
     test('With Password', async () => {
+        inputBox.value = 'Python';
         when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
 
@@ -365,6 +399,7 @@ suite('JupyterPasswordConnect', () => {
 
     test('Bad password followed by good password.', async () => {
         // Reconfigure our app shell to first give a bad password
+        inputBox.value = 'JUNK';
         when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('JUNK'));
 
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
