@@ -23,7 +23,7 @@ import {
     UserJupyterServerUriListMementoKey,
     UserJupyterServerUrlProvider
 } from './userServerUrlProvider';
-import { Disposable, InputBox, Memento } from 'vscode';
+import { Disposable, InputBox, Memento, QuickPick, QuickPickItem } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
     IClipboard,
@@ -79,7 +79,7 @@ suite('User Uri Provider', () => {
         ],
         Promise<IJupyterPasswordConnectInfo>
     >;
-
+    let quickPick: QuickPick<QuickPickItem>;
     setup(() => {
         inputBox = {
             show: noop,
@@ -109,7 +109,7 @@ suite('User Uri Provider', () => {
             return new Disposable(noop);
         });
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
-
+        quickPick = mock<QuickPick<QuickPickItem>>();
         clipboard = mock<IClipboard>();
         uriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         applicationShell = mock<IApplicationShell>();
@@ -123,6 +123,7 @@ suite('User Uri Provider', () => {
         requestCreator = mock<IJupyterRequestCreator>();
         when(serverUriStorage.getAll()).thenResolve([]);
         when(applicationShell.createInputBox()).thenReturn(inputBox);
+        when(applicationShell.createQuickPick()).thenReturn(instance(quickPick));
         when(jupyterConnection.validateRemoteUri(anything())).thenResolve();
         when(globalMemento.get(UserJupyterServerUriListKey)).thenReturn([]);
         when(globalMemento.update(UserJupyterServerUriListKey, anything())).thenCall((_, v) => {
@@ -342,13 +343,6 @@ suite('User Uri Provider', () => {
 
         const handle = await provider.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, false);
 
-        verify(
-            applicationShell.showWarningMessage(
-                DataScience.insecureSessionMessage,
-                Common.bannerLabelYes,
-                Common.bannerLabelNo
-            )
-        ).never();
         assert.ok(handle);
         const handles = await provider.getHandles();
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
@@ -365,23 +359,12 @@ suite('User Uri Provider', () => {
         await testMigration();
         when(clipboard.readText()).thenResolve('http://localhost:3333');
         when(applicationShell.showInputBox(anything())).thenResolve('Foo Bar' as any);
-        when(
-            applicationShell.showWarningMessage(
-                DataScience.insecureSessionMessage,
-                Common.bannerLabelYes,
-                Common.bannerLabelNo
-            )
-        ).thenResolve(Common.bannerLabelYes as any);
-
+        when(quickPick.onDidAccept(anything(), anything(), anything())).thenCall((cb) => {
+            when(quickPick.selectedItems).thenReturn([{ label: Common.bannerLabelYes }]);
+            cb();
+        });
         const handle = await provider.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, false);
 
-        verify(
-            applicationShell.showWarningMessage(
-                DataScience.insecureSessionMessage,
-                Common.bannerLabelYes,
-                Common.bannerLabelNo
-            )
-        ).once();
         assert.ok(handle);
         const handles = await provider.getHandles();
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
@@ -398,23 +381,13 @@ suite('User Uri Provider', () => {
         await testMigration();
         when(clipboard.readText()).thenResolve('http://localhost:3333');
         when(applicationShell.showInputBox(anything())).thenResolve('Foo Bar' as any);
-        when(
-            applicationShell.showWarningMessage(
-                DataScience.insecureSessionMessage,
-                Common.bannerLabelYes,
-                Common.bannerLabelNo
-            )
-        ).thenResolve();
+        when(quickPick.onDidAccept(anything(), anything(), anything())).thenCall((cb) => {
+            when(quickPick.selectedItems).thenReturn([]);
+            cb();
+        });
 
         const handle = await provider.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, false);
 
-        verify(
-            applicationShell.showWarningMessage(
-                DataScience.insecureSessionMessage,
-                Common.bannerLabelYes,
-                Common.bannerLabelNo
-            )
-        ).once();
         assert.isUndefined(handle);
         const handles = await provider.getHandles();
         assert.isAtLeast(handles.length, 2, '2 migrated urls');
@@ -433,23 +406,9 @@ suite('User Uri Provider', () => {
         sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: true });
         when(clipboard.readText()).thenResolve('http://localhost:3333');
         when(applicationShell.showInputBox(anything())).thenResolve('Foo Bar' as any);
-        when(
-            applicationShell.showWarningMessage(
-                DataScience.insecureSessionMessage,
-                Common.bannerLabelYes,
-                Common.bannerLabelNo
-            )
-        ).thenResolve(Common.bannerLabelYes as any);
 
         const handle = await provider.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, false);
 
-        verify(
-            applicationShell.showWarningMessage(
-                DataScience.insecureSessionMessage,
-                Common.bannerLabelYes,
-                Common.bannerLabelNo
-            )
-        ).never();
         assert.ok(handle);
         const handles = await provider.getHandles();
         assert.isAtLeast(handles.length, 3, '2 migrated urls and one entered');
