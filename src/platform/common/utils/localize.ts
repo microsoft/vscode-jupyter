@@ -351,7 +351,7 @@ export namespace DataScience {
     export const startingNewKernelCustomHeader = (kernelName: string) => l10n.t('_Connecting to {0}..._', kernelName);
     export const noKernelConnected = l10n.t('No kernel connected');
     export const jupyterSelectURIPrompt = l10n.t('Enter the URL of the running Jupyter server');
-    export const connectToToTheJupyterServer = (url: string) => l10n.t('Connect to the Jupyter server', url);
+    export const connectToToTheJupyterServer = (url: string) => l10n.t('Connect to the Jupyter server {0}', url);
     export const jupyterSelectURIMRUDetail = (date: Date) => l10n.t('Last Connection: {0}', date.toLocaleString());
     export const jupyterSelectURINewDetail = l10n.t('Specify the URL of an existing server');
     export const jupyterSelectURIInvalidURI = l10n.t('Invalid URL specified');
