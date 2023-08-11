@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import {
+    CancellationError,
     CancellationTokenSource,
     commands,
     EventEmitter,
@@ -46,6 +47,7 @@ import {
     IRemoteNotebookKernelSourceSelector,
     IVSCodeNotebookController
 } from '../types';
+import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 
 @injectable()
 export class KernelSourceCommandHandler implements IExtensionSyncActivationService {
@@ -247,18 +249,34 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         if (!notebook) {
             return;
         }
-        if (kind === ContributedKernelFinderKind.LocalPythonEnvironment) {
-            const selector = ServiceContainer.instance.get<ILocalPythonNotebookKernelSourceSelector>(
-                ILocalPythonNotebookKernelSourceSelector
-            );
-            const kernel = await selector.selectLocalKernel(notebook);
-            return this.getSelectedController(notebook, kernel);
-        } else {
-            const selector = ServiceContainer.instance.get<ILocalNotebookKernelSourceSelector>(
-                ILocalNotebookKernelSourceSelector
-            );
-            const kernel = await selector.selectLocalKernel(notebook);
-            return this.getSelectedController(notebook, kernel);
+        const token = new CancellationTokenSource();
+        try {
+            if (kind === ContributedKernelFinderKind.LocalPythonEnvironment) {
+                const selector = ServiceContainer.instance.get<ILocalPythonNotebookKernelSourceSelector>(
+                    ILocalPythonNotebookKernelSourceSelector
+                );
+                const kernel = await selector.selectKernel(notebook, token.token);
+                if (kernel === InputFlowAction.back) {
+                    return;
+                }
+                if (kernel instanceof InputFlowAction) {
+                    throw new CancellationError();
+                }
+                return this.getSelectedController(notebook, kernel);
+            } else {
+                const selector = ServiceContainer.instance.get<ILocalNotebookKernelSourceSelector>(
+                    ILocalNotebookKernelSourceSelector
+                );
+                const kernel = await selector.selectLocalKernel(notebook);
+                return this.getSelectedController(notebook, kernel);
+            }
+        } catch (ex) {
+            if (!(ex instanceof CancellationError)) {
+                traceError(`Failed to select local kernel for ${notebook.uri.toString()}`, ex);
+            }
+            throw ex;
+        } finally {
+            token.dispose();
         }
     }
     private async onSelectRemoteKernel(extensionId: string, providerId: string, notebook?: NotebookDocument) {

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { IPythonKernelFinder } from '../../kernels/jupyter/types';
+import { LocalPythonKernelFinder } from '../../kernels/raw/finder/localPythonKernelFinder.node';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { ConnectionDisplayDataProvider } from './connectionDisplayData.node';
@@ -8,7 +10,7 @@ import { ControllerRegistration } from './controllerRegistration';
 import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
 import { KernelSourceCommandHandler } from './kernelSource/kernelSourceCommandHandler';
 import { LocalNotebookKernelSourceSelector } from './kernelSource/localNotebookKernelSourceSelector.node';
-import { LocalPythonEnvNotebookKernelSourceSelector } from './kernelSource/localPythonEnvKernelSourceSelector.node';
+import { LocalPythonKernelSelector } from './kernelSource/localPythonKernelSelector.node';
 import { RemoteNotebookKernelSourceSelector } from './kernelSource/remoteNotebookKernelSourceSelector';
 import {
     IConnectionDisplayDataProvider,
@@ -33,14 +35,15 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         ILocalNotebookKernelSourceSelector,
         LocalNotebookKernelSourceSelector
     );
-    serviceManager.addSingleton<ILocalPythonNotebookKernelSourceSelector>(
-        ILocalPythonNotebookKernelSourceSelector,
-        LocalPythonEnvNotebookKernelSourceSelector
-    );
-    serviceManager.addBinding(ILocalPythonNotebookKernelSourceSelector, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelSourceCommandHandler
     );
+    serviceManager.addSingleton<ILocalPythonNotebookKernelSourceSelector>(
+        ILocalPythonNotebookKernelSourceSelector,
+        LocalPythonKernelSelector
+    );
+    serviceManager.addSingleton<IPythonKernelFinder>(IPythonKernelFinder, LocalPythonKernelFinder);
+    serviceManager.addBinding(IPythonKernelFinder, IExtensionSyncActivationService);
     registerWidgetTypes(serviceManager, isDevMode);
 }
