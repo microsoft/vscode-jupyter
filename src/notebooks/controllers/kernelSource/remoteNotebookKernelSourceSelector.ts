@@ -23,10 +23,10 @@ import {
 } from '../../../kernels/jupyter/types';
 import { IKernelFinder, KernelConnectionMetadata, RemoteKernelConnectionMetadata } from '../../../kernels/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
+import { InteractiveWindowView, JVSC_EXTENSION_ID, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInput,
     InputFlowAction,
@@ -124,7 +124,16 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         state: MultiStepResult
     ): Promise<InputStep<MultiStepResult> | void> {
         const servers = this.kernelFinder.registered.filter((info) => info.kind === 'remote') as IRemoteKernelFinder[];
-        const items: (ContributedKernelFinderQuickPickItem | KernelProviderItemsQuickPickItem | QuickPickItem)[] = [];
+        const quickPickServerItems: (
+            | ContributedKernelFinderQuickPickItem
+            | KernelProviderItemsQuickPickItem
+            | QuickPickItem
+        )[] = [];
+        const quickPickCommandItems: (
+            | ContributedKernelFinderQuickPickItem
+            | KernelProviderItemsQuickPickItem
+            | QuickPickItem
+        )[] = [];
 
         await Promise.all(
             servers
@@ -139,7 +148,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     if (token.isCancellationRequested || !lastUsedTime) {
                         return;
                     }
-                    items.push({
+                    quickPickServerItems.push({
                         type: KernelFinderEntityQuickPickType.KernelFinder,
                         kernelFinderInfo: server,
                         idAndHandle: server.serverProviderHandle,
@@ -158,8 +167,11 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         );
 
         if (provider.getQuickPickEntryItems && provider.handleQuickPick) {
-            if (items.length > 0) {
-                items.push({ label: 'More', kind: QuickPickItemKind.Separator });
+            if (quickPickServerItems.length > 0) {
+                quickPickCommandItems.push({
+                    label: Common.labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems,
+                    kind: QuickPickItemKind.Separator
+                });
             }
 
             const newProviderItems: KernelProviderItemsQuickPickItem[] = (await provider.getQuickPickEntryItems()).map(
@@ -173,9 +185,10 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     };
                 }
             );
-            items.push(...newProviderItems);
+            quickPickCommandItems.push(...newProviderItems);
         }
 
+        const items = quickPickServerItems.concat(quickPickCommandItems);
         const onDidChangeItems = new EventEmitter<typeof items>();
         const defaultSelection = items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
         let lazyQuickPick:
@@ -197,7 +210,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             >({
                 items: items,
                 placeholder: '',
-                title: 'Select a Jupyter Server',
+                title: DataScience.quickPickTitleForSelectionOfJupyterServer,
                 supportBackInFirstStep: true,
                 onDidTriggerItemButton: async (e) => {
                     if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
@@ -213,7 +226,32 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 },
                 onDidChangeItems: onDidChangeItems.event
             });
+            if (provider.extensionId === JVSC_EXTENSION_ID) {
+                quickPick.onDidChangeValue(async (e) => {
+                    if (!provider.getQuickPickEntryItems) {
+                        return;
+                    }
+                    const quickPickCommandItems = [];
+                    if (quickPickServerItems.length > 0) {
+                        quickPickCommandItems.push({
+                            label: Common.labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems,
+                            kind: QuickPickItemKind.Separator
+                        });
+                    }
 
+                    const commands = await provider.getQuickPickEntryItems(e);
+                    const newProviderItems: KernelProviderItemsQuickPickItem[] = commands.map((i) => {
+                        return {
+                            ...i,
+                            provider: provider,
+                            type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
+                            description: undefined,
+                            originalItem: i
+                        };
+                    });
+                    quickPick.items = quickPickServerItems.concat(quickPickCommandItems).concat(newProviderItems);
+                }, this);
+            }
             lazyQuickPick = quickPick;
             selectedSource = await selection;
         }
