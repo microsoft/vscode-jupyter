@@ -425,6 +425,10 @@ export class Disposables implements IDisposable {
     constructor(...disposables: IDisposable[]) {
         this.disposables.push(...disposables);
     }
+    protected registerDisposable<T extends IDisposable>(disposable: T): T {
+        this.disposables.push(disposable);
+        return disposable;
+    }
     public dispose(): void {
         if (this._isDisposed) {
             return;
