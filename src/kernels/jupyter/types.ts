@@ -21,11 +21,15 @@ import {
     IKernelSocket,
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
-    RemoteKernelConnectionMetadata
+    RemoteKernelConnectionMetadata,
+    PythonKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection } from '../../api';
+import { Environment } from '../../platform/api/pythonApiTypes';
+import { IQuickPickItemProvider } from '../../platform/common/providerBasedQuickPick';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -290,10 +294,19 @@ export interface IJupyterRemoteCachedKernelValidator {
     isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
 }
 
-export interface IRemoteKernelFinder extends IContributedKernelFinder<RemoteKernelConnectionMetadata> {
+export interface IRemoteKernelFinder
+    extends IContributedKernelFinder<RemoteKernelConnectionMetadata>,
+        IQuickPickItemProvider<RemoteKernelConnectionMetadata> {
     kind: ContributedKernelFinderKind.Remote;
     serverProviderHandle: JupyterServerProviderHandle;
 }
+
+export const IPythonKernelFinder = Symbol('IPythonKernelFinder');
+export interface IPythonKernelFinder extends IContributedKernelFinder<PythonKernelConnectionMetadata> {
+    getOrCreateKernelConnection(env: Environment): Promise<PythonKernelConnectionMetadata>;
+}
+export const ILocalNonPythonKernelSpecFinder = Symbol('ILocalNonPythonKernelSpecFinder');
+export interface ILocalNonPythonKernelSpecFinder extends IContributedKernelFinder<LocalKernelSpecConnectionMetadata> {}
 
 export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegistry');
 export interface IJupyterServerProviderRegistry {

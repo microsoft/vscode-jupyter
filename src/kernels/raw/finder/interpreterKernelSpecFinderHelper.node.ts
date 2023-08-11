@@ -17,7 +17,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
-import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
+import { KernelSpecLoader } from './localKernelSpecFinderBase.node';
 import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
@@ -33,9 +33,9 @@ import { raceCancellation } from '../../../platform/common/cancellation';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
-import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IWorkspaceService } from '../../../platform/common/application/types';
+import { LocalKnownPathKernelSpecFinderV2 } from './localKnownPathKernelSpecFinder.v2.node';
 
 export function localPythonKernelsCacheKey() {
     const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2023_3';
@@ -46,7 +46,7 @@ export async function findKernelSpecsInInterpreter(
     interpreter: PythonEnvironment,
     cancelToken: CancellationToken,
     jupyterPaths: JupyterPaths,
-    kernelSpecFinder: LocalKernelSpecFinder
+    kernelSpecFinder: KernelSpecLoader
 ): Promise<IJupyterKernelSpec[]> {
     // Find all the possible places to look for this resource
     const kernelSearchPath = Uri.file(path.join(interpreter.sysPrefix, baseKernelPath));
@@ -131,7 +131,7 @@ export class InterpreterSpecificKernelSpecsFinder implements IDisposable {
         private readonly interpreterService: IInterpreterService,
         private readonly jupyterPaths: JupyterPaths,
         private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly kernelSpecFinder: LocalKernelSpecFinder
+        private readonly kernelSpecFinder: KernelSpecLoader
     ) {
         this.interpreterService.onDidChangeInterpreter(this.clearCacheWhenInterpretersChange, this, this.disposables);
         this.interpreterService.onDidChangeInterpreters(this.clearCacheWhenInterpretersChange, this, this.disposables);
@@ -263,7 +263,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
     constructor(
         private readonly interpreterService: IInterpreterService,
         private readonly workspaceService: IWorkspaceService,
-        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
+        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinderV2,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly trustedKernels: ITrustedKernelPaths
     ) {

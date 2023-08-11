@@ -864,6 +864,7 @@ export interface IKernelFinder {
      */
     registered: IContributedKernelFinder[];
     onDidChangeRegistrations: Event<{ added: IContributedKernelFinder[]; removed: IContributedKernelFinder[] }>;
+    registerKernelFinder(finder: IContributedKernelFinder<KernelConnectionMetadata>): IDisposable;
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';

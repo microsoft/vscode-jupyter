@@ -32,9 +32,9 @@ export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
 export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
 /**
- * Base class for searching for local kernels that are based on a kernel spec file.
+ * Loads and creates a KernelSpec Object from a given kernelSpec file.
  */
-export class LocalKernelSpecFinder implements IDisposable {
+export class KernelSpecLoader implements IDisposable {
     private _oldKernelSpecsFolder?: string;
     private findKernelSpecsInPathCache = new Map<string, Promise<Uri[]>>();
 
@@ -193,9 +193,7 @@ export interface ILocalKernelFinder<T extends LocalKernelSpecConnectionMetadata 
 /**
  * Base class for searching for local kernels that are based on a kernel spec file.
  */
-export abstract class LocalKernelSpecFinderBase<
-        T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-    >
+export abstract class LocalKernelSpecFinderBase<T extends LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>
     implements IDisposable, ILocalKernelFinder<T>
 {
     protected readonly disposables: IDisposable[] = [];
@@ -216,7 +214,7 @@ export abstract class LocalKernelSpecFinderBase<
     public readonly onDidChangeStatus = this._onDidChangeStatus.event;
     protected readonly _onDidChangeKernels = new EventEmitter<void>();
     public readonly onDidChangeKernels = this._onDidChangeKernels.event;
-    protected readonly kernelSpecFinder: LocalKernelSpecFinder;
+    protected readonly kernelSpecFinder: KernelSpecLoader;
     constructor(
         protected readonly fs: IFileSystemNode,
         protected readonly workspaceService: IWorkspaceService,
@@ -231,7 +229,7 @@ export abstract class LocalKernelSpecFinderBase<
         this.promiseMonitor.onStateChange(() => {
             this.status = this.promiseMonitor.isComplete ? 'idle' : 'discovering';
         });
-        this.kernelSpecFinder = new LocalKernelSpecFinder(fs, memento, jupyterPaths);
+        this.kernelSpecFinder = new KernelSpecLoader(fs, memento, jupyterPaths);
         this.disposables.push(this.kernelSpecFinder);
     }
     public clearCache() {

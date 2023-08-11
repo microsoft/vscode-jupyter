@@ -54,21 +54,7 @@ export async function createInterpreterKernelSpec(
     interpreter?: PythonEnvironment,
     rootKernelFilePath?: Uri
 ): Promise<IJupyterKernelSpec> {
-    return createInterpreterKernelSpecWithName(
-        await getInterpreterKernelSpecName(interpreter),
-        interpreter,
-        rootKernelFilePath
-    );
-}
-
-/**
- * Create a default kernelspec with the given display name.
- */
-export function createInterpreterKernelSpecWithName(
-    name: string,
-    interpreter?: PythonEnvironment,
-    rootKernelFilePath?: Uri
-): IJupyterKernelSpec {
+    const name = await getInterpreterKernelSpecName(interpreter);
     const interpreterMetadata = interpreter
         ? {
               path: getFilePath(interpreter.uri)
@@ -89,10 +75,9 @@ export function createInterpreterKernelSpecWithName(
     };
 
     // Generate spec file path if we know where kernel files will go
-    const specFile =
-        rootKernelFilePath && defaultSpec.name
-            ? uriPath.joinPath(rootKernelFilePath, defaultSpec.name, 'kernel.json')
-            : undefined;
+    const specFile = rootKernelFilePath
+        ? uriPath.joinPath(rootKernelFilePath, name, 'kernel.json')
+        : undefined;
 
     return new JupyterKernelSpec(
         defaultSpec,

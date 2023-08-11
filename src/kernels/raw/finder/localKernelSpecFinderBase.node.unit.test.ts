@@ -10,10 +10,10 @@ import { IDisposable } from '../../../platform/common/types';
 import { uriEquals } from '../../../test/datascience/helpers';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterPaths } from './jupyterPaths.node';
-import { LocalKernelSpecFinder } from './localKernelSpecFinderBase.node';
+import { KernelSpecLoader } from './localKernelSpecFinderBase.node';
 
 suite('Local Kernel Spec Finder', () => {
-    let finder: LocalKernelSpecFinder;
+    let finder: KernelSpecLoader;
     const disposables: IDisposable[] = [];
     let fs: IFileSystemNode;
     let globalState: Memento;
@@ -25,7 +25,7 @@ suite('Local Kernel Spec Finder', () => {
         disposables.push(cancellation);
         const jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecRootPath()).thenResolve();
-        finder = new LocalKernelSpecFinder(instance(fs), instance(globalState), instance(jupyterPaths));
+        finder = new KernelSpecLoader(instance(fs), instance(globalState), instance(jupyterPaths));
         disposables.push(finder);
     });
     teardown(() => disposeAllDisposables(disposables));
