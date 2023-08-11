@@ -26,7 +26,6 @@ import {
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection } from '../../api';
-import { Environment } from '../../platform/api/pythonApiTypes';
 import { IQuickPickItemProvider } from '../../platform/common/providerBasedQuickPick';
 
 export type JupyterServerInfo = {
