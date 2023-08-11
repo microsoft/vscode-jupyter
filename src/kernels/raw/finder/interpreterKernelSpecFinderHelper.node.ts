@@ -33,9 +33,9 @@ import { raceCancellation } from '../../../platform/common/cancellation';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { isKernelLaunchedViaLocalPythonIPyKernel } from '../../helpers.node';
-import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
 import { IWorkspaceService } from '../../../platform/common/application/types';
+import { LocalKnownPathKernelSpecFinderV2 } from './localKnownPathKernelSpecFinder.v2.node';
 
 export function localPythonKernelsCacheKey() {
     const LocalPythonKernelsCacheKey = 'LOCAL_KERNEL_PYTHON_AND_RELATED_SPECS_CACHE_KEY_V_2023_3';
@@ -263,7 +263,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
     constructor(
         private readonly interpreterService: IInterpreterService,
         private readonly workspaceService: IWorkspaceService,
-        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
+        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinderV2,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly trustedKernels: ITrustedKernelPaths
     ) {

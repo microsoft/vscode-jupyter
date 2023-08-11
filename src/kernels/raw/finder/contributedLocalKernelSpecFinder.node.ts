@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, EventEmitter } from 'vscode';
 import { IKernelFinder, LocalKernelConnectionMetadata } from '../../types';
-import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, traceDecoratorError, traceError, traceVerbose } from '../../../platform/logging';
 import { IDisposableRegistry, IExtensions } from '../../../platform/common/types';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
@@ -21,6 +20,7 @@ import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { ILocalKernelFinder } from './localKernelSpecFinderBase.node';
 import { OldLocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.old.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { LocalKnownPathKernelSpecFinderV2 } from './localKnownPathKernelSpecFinder.v2.node';
 
 // This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -58,16 +58,16 @@ export class ContributedLocalKernelSpecFinder
     private cache: LocalKernelConnectionMetadata[] = [];
     private cacheLoggingTimeout?: NodeJS.Timer | number;
     constructor(
-        @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
+        @inject(LocalKnownPathKernelSpecFinderV2) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinderV2,
         @inject(OldLocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: ILocalKernelFinder<LocalKernelConnectionMetadata>,
-        @inject(IKernelFinder) kernelFinder: KernelFinder,
+        @inject(IKernelFinder) _kernelFinder: KernelFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IExtensions) private readonly extensions: IExtensions
     ) {
-        kernelFinder.registerKernelFinder(this);
+        // kernelFinder.registerKernelFinder(this);
         this.disposables.push(this._onDidChangeStatus);
         this.disposables.push(this._onDidChangeKernels);
         this.disposables.push(this.promiseMonitor);

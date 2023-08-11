@@ -7,7 +7,6 @@ import { getKernelRegistrationInfo } from '../../helpers';
 import { isLocalConnection, LocalKernelConnectionMetadata, LocalKernelSpecConnectionMetadata } from '../../types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
-import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -25,6 +24,7 @@ import {
 } from './interpreterKernelSpecFinderHelper.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { raceCancellation } from '../../../platform/common/cancellation';
+import { LocalKnownPathKernelSpecFinderV2 } from './localKnownPathKernelSpecFinder.v2.node';
 
 type InterpreterId = string;
 
@@ -63,8 +63,8 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
-        @inject(LocalKnownPathKernelSpecFinder)
-        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinder,
+        @inject(LocalKnownPathKernelSpecFinderV2)
+        private readonly kernelSpecsFromKnownLocations: LocalKnownPathKernelSpecFinderV2,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) memento: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IApplicationEnvironment) env: IApplicationEnvironment,

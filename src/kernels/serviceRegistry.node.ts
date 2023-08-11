@@ -52,6 +52,7 @@ import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { LastCellExecutionTracker } from './execution/lastCellExecutionTracker';
 import { ClearJupyterServersCommand } from './jupyter/clearJupyterServersCommand';
+import { LocalKnownPathKernelSpecFinderV2 } from './raw/finder/localKnownPathKernelSpecFinder.v2.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, Activation);
@@ -80,6 +81,11 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         ContributedLocalKernelSpecFinder
     );
+    serviceManager.addSingleton<LocalKnownPathKernelSpecFinderV2>(
+        LocalKnownPathKernelSpecFinderV2,
+        LocalKnownPathKernelSpecFinderV2
+    );
+    serviceManager.addBinding(LocalKnownPathKernelSpecFinderV2, IExtensionSyncActivationService)
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteJupyterServerMruUpdate

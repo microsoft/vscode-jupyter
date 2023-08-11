@@ -22,7 +22,8 @@ import {
     KernelActionSource,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelConnectionMetadata,
-    PythonKernelConnectionMetadata
+    PythonKernelConnectionMetadata,
+    LocalKernelSpecConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
@@ -304,6 +305,8 @@ export const IPythonKernelFinder = Symbol('IPythonKernelFinder');
 export interface IPythonKernelFinder extends IContributedKernelFinder<PythonKernelConnectionMetadata> {
     getOrCreateKernelConnection(env: Environment): Promise<PythonKernelConnectionMetadata>;
 }
+export const ILocalNonPythonKernelSpecFinder = Symbol('ILocalNonPythonKernelSpecFinder');
+export interface ILocalNonPythonKernelSpecFinder extends IContributedKernelFinder<LocalKernelSpecConnectionMetadata> {}
 
 export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegistry');
 export interface IJupyterServerProviderRegistry {
