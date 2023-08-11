@@ -58,7 +58,7 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
 
             // Then replace the input line with our uri for this cell: '<cell line: 2>[0;34m()[0m\n'
             const cellAt = DataScience.cellAtFormat(getFilePath(cell.document.uri), cell.index + 1);
-            return afterLineReplace.replace(/.*?\n/, `\u001b[1;32m${cellAt}\u001b[0m in \u001b[0;36m${line}\n`);
+            return afterLineReplace.replace(/.*?\n/, `\u001b[1;32m${cellAt}\u001b[0m line \u001b[0;36m${line}\n`);
         };
 
         const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
@@ -66,7 +66,7 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
             return tracebackLinkify(traceFrame, inputMatch[2]);
         }
 
-        const cellMatch = /Cell.*?\[.*32mIn\s+\[(\d+)\]\,\s+line\s+([(\d+)])(.*?)\n.*/gm.exec(traceFrame);
+        const cellMatch = /Cell.*?\[.*32mIn\s?\[(\d+)\]\,\s+line\s+([(\d+)])(.*?)\n.*/gm.exec(traceFrame);
         if (cellMatch && cellMatch.length > 1) {
             return tracebackLinkify(traceFrame, cellMatch[2]);
         }
