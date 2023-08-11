@@ -144,7 +144,28 @@ export class UserJupyterServerUrlProvider
         tooltip: DataScience.jupyterSelectURINewDetail,
         command: 'jupyter.selectLocalJupyterServer'
     };
-    async getCommands(_token: CancellationToken): Promise<JupyterServerCommand[]> {
+    /**
+     * @param value Value entered by the user in the quick pick
+     */
+    async getCommands(_token: CancellationToken, value?: string): Promise<JupyterServerCommand[]> {
+        let url = '';
+        try {
+            value = (value || '').trim();
+            if (['http:', 'https:'].includes(new URL(value.trim()).protocol.toLowerCase())) {
+                url = value;
+            }
+        } catch {
+            //
+        }
+        if (value) {
+            return [
+                {
+                    title: DataScience.connectToToTheJupyterServer(value),
+                    command: 'jupyter.selectLocalJupyterServer',
+                    arguments: [url]
+                }
+            ];
+        }
         return [
             {
                 title: DataScience.jupyterSelectURIPrompt,
@@ -190,7 +211,7 @@ export class UserJupyterServerUrlProvider
             collection.serverProvider = this;
             collection.documentation = this.documentation;
             this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
-            this.commands.registerCommand('jupyter.selectLocalJupyterServer', async () => {
+            this.commands.registerCommand('jupyter.selectLocalJupyterServer', async (_url?: string) => {
                 const token = new CancellationTokenSource();
                 try {
                     const handleOrBack = await this.handleQuickPick(
@@ -344,20 +365,25 @@ export class UserJupyterServerUrlProvider
         ];
     }
 
-    async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
+    async handleQuickPick(
+        item: QuickPickItem,
+        backEnabled: boolean,
+        initialValue: string = ''
+    ): Promise<string | undefined> {
         await this.initializeServers();
         if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
         }
 
-        let initialValue = '';
-        try {
-            const text = await this.clipboard.readText().catch(() => '');
-            const parsedUri = Uri.parse(text.trim(), true);
-            // Only display http/https uris.
-            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
-        } catch {
-            // We can ignore errors.
+        if (!initialValue) {
+            try {
+                const text = await this.clipboard.readText().catch(() => '');
+                const parsedUri = Uri.parse(text.trim(), true);
+                // Only display http/https uris.
+                initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
+            } catch {
+                // We can ignore errors.
+            }
         }
 
         const disposables: Disposable[] = [];

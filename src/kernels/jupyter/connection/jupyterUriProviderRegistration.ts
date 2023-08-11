@@ -239,11 +239,11 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
             this.removeHandle = (handle: string) => provider.removeHandle!(handle);
         }
     }
-    public async getQuickPickEntryItems(): Promise<QuickPickItem[]> {
+    public async getQuickPickEntryItems(value?: string): Promise<QuickPickItem[]> {
         if (!this.provider.getQuickPickEntryItems) {
             return [];
         }
-        return (await this.provider.getQuickPickEntryItems()).map((q) => {
+        return (await this.provider.getQuickPickEntryItems(value)).map((q) => {
             return {
                 ...q,
                 // Add the package name onto the description

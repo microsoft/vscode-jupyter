@@ -1,7 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, CancellationTokenSource, EventEmitter, QuickPickItem, Uri, commands } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    Command,
+    EventEmitter,
+    QuickPickItem,
+    Uri,
+    commands
+} from 'vscode';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
@@ -97,13 +105,21 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             );
         }
     }
-    async getQuickPickEntryItems(): Promise<(QuickPickItem & { default?: boolean | undefined })[]> {
+    private commands = new Map<string, Command>();
+    async getQuickPickEntryItems(value?: string): Promise<(QuickPickItem & { default?: boolean | undefined })[]> {
         if (!this.provider.commandProvider) {
             throw new Error(`No Jupyter Server Command Provider for ${this.provider.extensionId}#${this.provider.id}`);
         }
         const token = new CancellationTokenSource();
         try {
-            const items = await this.provider.commandProvider.getCommands(token.token);
+            value = this.provider.extensionId === JVSC_EXTENSION_ID ? value : undefined;
+            const items = await this.provider.commandProvider.getCommands(token.token, value || '');
+            if (this.provider.extensionId === JVSC_EXTENSION_ID) {
+                if (!value) {
+                    this.commands.clear();
+                }
+                items.forEach((c) => this.commands.set(c.title, c));
+            }
             const selectedCommand = items.find((c) => c.title === this.provider.commandProvider?.selected?.title);
             return items.map((c) => {
                 return {
@@ -129,7 +145,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         const token = new CancellationTokenSource();
         try {
             const items = await this.provider.commandProvider.getCommands(token.token);
-            const command = items.find((c) => c.title === item.label);
+            const command = items.find((c) => c.title === item.label) || this.commands.get(item.label);
             if (!command) {
                 throw new Error(
                     `Jupyter Server Command ${item.label} not found in Command Provider ${this.provider.extensionId}#${this.provider.id}`

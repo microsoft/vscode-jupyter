@@ -27,6 +27,7 @@ export namespace Common {
     export const reload = l10n.t('Reload');
     export const moreInfo = l10n.t('More Info');
     export const learnMore = l10n.t('Learn more');
+    export const labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems = l10n.t('More');
     export const and = l10n.t('and');
     export const reportThisIssue = l10n.t('Report this issue');
     export const clickHereForMoreInfoWithHtml = (link: string) =>
@@ -349,6 +350,7 @@ export namespace DataScience {
     export const startingNewKernelCustomHeader = (kernelName: string) => l10n.t('_Connecting to {0}..._', kernelName);
     export const noKernelConnected = l10n.t('No kernel connected');
     export const jupyterSelectURIPrompt = l10n.t('Enter the URL of the running Jupyter server');
+    export const connectToToTheJupyterServer = (url: string) => l10n.t('Connect to the Jupyter server', url);
     export const jupyterSelectURIMRUDetail = (date: Date) => l10n.t('Last Connection: {0}', date.toLocaleString());
     export const jupyterSelectURINewDetail = l10n.t('Specify the URL of an existing server');
     export const jupyterSelectURIInvalidURI = l10n.t('Invalid URL specified');
@@ -686,6 +688,7 @@ export namespace DataScience {
     export const localKernelSpecs = l10n.t('Jupyter Kernel...');
 
     export const localPythonEnvironments = l10n.t('Python Environments...');
+    export const quickPickTitleForSelectionOfJupyterServer = l10n.t('Select a Jupyter Server');
     export const UserJupyterServerUrlProviderDisplayName = l10n.t('Existing Jupyter Server...');
     export const UserJupyterServerUrlProviderDetail = l10n.t('Connect to an existing Jupyter Server');
     export const kernelPickerSelectKernelTitle = l10n.t('Select Kernel');
