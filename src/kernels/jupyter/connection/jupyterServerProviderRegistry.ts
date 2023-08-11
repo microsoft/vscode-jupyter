@@ -162,7 +162,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             return {
                 baseUrl: info.baseUrl.toString(),
                 displayName: server.label,
-                token: info.token,
+                token: info.token || '',
                 authorizationHeader: info.authorizationHeader,
                 mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
                 webSocketProtocols: info.webSocketProtocols
