@@ -6,7 +6,7 @@
 // Or please wait for these to be finalized and released.
 
 import { CancellationToken } from 'vscode';
-import { Command, Event, Uri } from 'vscode';
+import { Event, Uri } from 'vscode';
 
 declare module './api' {
     /**
