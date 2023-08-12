@@ -3,7 +3,6 @@
 
 import { CancellationToken, NotebookDocument, workspace, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../kernels/internalTypes';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/connection/preferredRemoteKernelIdProvider';
 import {
     IKernelFinder,
     KernelConnectionMetadata,
@@ -23,7 +22,7 @@ import { getLanguageOfNotebookDocument } from '../languages/helpers';
 import * as path from '../../platform/vscode-path/resources';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
-import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
+import { PreferredRemoteKernelIdProvider, JupyterConnection } from '../../kernels/jupyter/connection';
 import { getRemoteSessionOptions } from '../../kernels/jupyter/session/jupyterSession';
 
 /**

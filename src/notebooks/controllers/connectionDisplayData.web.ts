@@ -19,7 +19,7 @@ import {
     getKernelConnectionCategory,
     getKernelConnectionCategorySync
 } from './connectionDisplayData';
-import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterUriProviderRegistration';
+import { getJupyterDisplayName } from '../../kernels/jupyter/connection';
 import { DataScience } from '../../platform/common/utils/localize';
 
 @injectable()

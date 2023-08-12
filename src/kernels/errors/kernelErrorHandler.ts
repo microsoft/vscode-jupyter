@@ -67,7 +67,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../platform/errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { JupyterNotebookNotInstalled } from '../../platform/errors/jupyterNotebookNotInstalled';
 import { fileToCommandArgument } from '../../platform/common/helpers';
-import { getJupyterDisplayName } from '../jupyter/connection/jupyterUriProviderRegistration';
+import { getJupyterDisplayName } from '../jupyter/connection';
 import { getPythonEnvDisplayName } from '../../platform/interpreter/helpers';
 
 /***

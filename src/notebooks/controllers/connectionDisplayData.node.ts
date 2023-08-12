@@ -22,7 +22,7 @@ import {
     getKernelConnectionCategorySync
 } from './connectionDisplayData';
 import { DataScience } from '../../platform/common/utils/localize';
-import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterUriProviderRegistration';
+import { getJupyterDisplayName } from '../../kernels/jupyter/connection';
 
 @injectable()
 export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProvider {

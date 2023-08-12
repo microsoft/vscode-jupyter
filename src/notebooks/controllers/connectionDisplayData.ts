@@ -9,7 +9,7 @@ import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { IConnectionDisplayData } from './types';
-import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterUriProviderRegistration';
+import { getJupyterDisplayName } from '../../kernels/jupyter/connection';
 
 export class ConnectionDisplayData implements IDisposable, IConnectionDisplayData {
     private readonly _onDidChange = new EventEmitter<ConnectionDisplayData>();

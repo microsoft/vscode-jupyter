@@ -6,14 +6,17 @@ import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandlerWeb } from '../errors/kernelErrorHandler.web';
 import { IDataScienceErrorHandler } from '../errors/types';
 import { IKernelSessionFactory } from '../types';
-import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterKernelService } from './session/jupyterKernelService.web';
-import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
-import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
+import {
+    JupyterServerProviderRegistry,
+    JupyterConnection,
+    JupyterRemoteCachedKernelValidator,
+    JupyterUriProviderRegistration,
+    JupyterServerUriStorage,
+    LiveRemoteKernelConnectionUsageTracker,
+    JupyterServerSelector
+} from './connection';
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.web';
-import { JupyterServerUriStorage } from './connection/serverUriStorage';
-import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
-import { JupyterServerSelector } from './connection/serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.web';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
@@ -33,7 +36,6 @@ import { RemoteKernelFinderController } from './finder/remoteKernelFinderControl
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
 import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessionFactory';
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
-import { JupyterServerProviderRegistry } from './connection/jupyterServerProviderRegistry';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IOldJupyterSessionManagerFactory>(

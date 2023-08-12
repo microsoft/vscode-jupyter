@@ -15,7 +15,6 @@ import {
     notebooks
 } from 'vscode';
 import { IContributedKernelFinder } from '../../../kernels/internalTypes';
-import { JupyterServerSelector } from '../../../kernels/jupyter/connection/serverSelector';
 import {
     IJupyterServerUriStorage,
     IInternalJupyterUriProvider,
@@ -37,7 +36,7 @@ import {
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { IConnectionDisplayDataProvider, IRemoteNotebookKernelSourceSelector } from '../types';
 import { MultiStepResult } from './types';
-import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
+import { JupyterServerSelector, JupyterConnection } from '../../../kernels/jupyter/connection';
 import { generateIdFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
 import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';

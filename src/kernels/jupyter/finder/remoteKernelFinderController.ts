@@ -17,7 +17,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
 import { KernelFinder } from '../../kernelFinder';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { RemoteKernelFinder } from './remoteKernelFinder';
-import { JupyterConnection } from '../connection/jupyterConnection';
+import { JupyterConnection } from '../connection';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { ContributedKernelFinderKind } from '../../internalTypes';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';

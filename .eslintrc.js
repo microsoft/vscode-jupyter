@@ -190,6 +190,11 @@ module.exports = {
                         target: './src/platform/**/*[!.unit].ts',
                         from: './src/**[!platform]**/**/*.ts',
                         message: 'Importing non-platform modules into platform files is not allowed.'
+                    },
+                    {
+                        target: ['./src/!(test)/**/*[!.unit].ts'],
+                        from: './src/kernels/jupyter/connection/[!index]*.ts',
+                        message: 'Only index can be imported from Jupyter/Connection.'
                     }
                 ]
             }
@@ -221,6 +226,23 @@ module.exports = {
             files: ['**/*.test.ts'],
             rules: {
                 '@typescript-eslint/no-explicit-any': 'off'
+            }
+        },
+        {
+            files: ['./src/kernels/jupyter/connection/*.ts'],
+            rules: {
+                'import/no-restricted-paths': [
+                    'off',
+                    {
+                        zones: [
+                            {
+                                target: './src/kernels/jupyter/connection/*.ts',
+                                from: './src/kernels/jupyter/connection/*.ts',
+                                message: 'Make it ok.'
+                            }
+                        ]
+                    }
+                ]
             }
         }
     ],

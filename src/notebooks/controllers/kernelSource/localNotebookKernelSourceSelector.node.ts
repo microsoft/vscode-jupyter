@@ -19,7 +19,7 @@ import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/fi
 import { ILocalNotebookKernelSourceSelector } from '../types';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
-import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
+import { JupyterConnection } from '../../../kernels/jupyter/connection';
 import { LocalKernelSelector } from './localKernelSelector.node';
 import { CreateAndSelectItemFromQuickPick } from './baseKernelSelector';
 

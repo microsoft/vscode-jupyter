@@ -25,7 +25,7 @@ import { LocalJupyterServerConnectionError } from '../../../platform/errors/loca
 import { BaseError } from '../../../platform/errors/types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
-import { JupyterConnection } from '../connection/jupyterConnection';
+import { JupyterConnection } from '../connection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
 

@@ -16,7 +16,7 @@ import {
     Uri,
     env
 } from 'vscode';
-import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
+import { JupyterConnection } from '../../kernels/jupyter/connection';
 import {
     IJupyterServerUriStorage,
     IInternalJupyterUriProvider,

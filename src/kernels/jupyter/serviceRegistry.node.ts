@@ -16,19 +16,22 @@ import { JupyterInterpreterStateStore } from './interpreter/jupyterInterpreterSt
 import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupyterInterpreterSubCommandExecutionService.node';
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
-import { JupyterConnection } from './connection/jupyterConnection';
 import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
 import { JupyterKernelService } from './session/jupyterKernelService.node';
-import { JupyterRemoteCachedKernelValidator } from './connection/jupyterRemoteCachedKernelValidator';
-import { JupyterUriProviderRegistration } from './connection/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector.node';
 import { JupyterServerHelper } from './launcher/jupyterServerHelper.node';
 import { JupyterServerConnector } from './launcher/jupyterServerConnector.node';
 import { JupyterServerProvider } from './launcher/jupyterServerProvider.node';
 import { JupyterServerStarter } from './launcher/jupyterServerStarter.node';
-import { JupyterServerUriStorage } from './connection/serverUriStorage';
-import { LiveRemoteKernelConnectionUsageTracker } from './connection/liveRemoteKernelConnectionTracker';
-import { JupyterServerSelector } from './connection/serverSelector';
+import {
+    JupyterServerProviderRegistry,
+    JupyterRemoteCachedKernelValidator,
+    JupyterUriProviderRegistration,
+    JupyterServerUriStorage,
+    JupyterConnection,
+    LiveRemoteKernelConnectionUsageTracker,
+    JupyterServerSelector
+} from './connection';
 import { BackingFileCreator } from './session/backingFileCreator.node';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
@@ -56,7 +59,6 @@ import { RemoteKernelFinderController } from './finder/remoteKernelFinderControl
 import { KernelSessionFactory } from '../common/kernelSessionFactory';
 import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessionFactory';
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
-import { JupyterServerProviderRegistry } from './connection/jupyterServerProviderRegistry';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);

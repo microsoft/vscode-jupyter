@@ -27,7 +27,7 @@ import { SessionDisposedError } from '../../platform/errors/sessionDisposedError
 import { IBackupFile, IJupyterBackingFileCreator } from '../../kernels/jupyter/types';
 import { Resource } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
+import { JupyterConnection } from '../../kernels/jupyter/connection';
 
 /**
  * Base class for exporting on web. Uses the kernel to perform the export and then translates the blob sent back to a file.

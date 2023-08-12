@@ -13,7 +13,7 @@ import { traceError } from '../../../platform/logging';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { PreferredKernelConnectionService } from '../preferredKernelConnectionService';
 import { IQuickPickKernelItemProvider } from './types';
-import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
+import { JupyterConnection } from '../../../kernels/jupyter/connection';
 
 export class QuickPickKernelItemProvider implements IQuickPickKernelItemProvider {
     private readonly _onDidRefresh = new EventEmitter<void>();

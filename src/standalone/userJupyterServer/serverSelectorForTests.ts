@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri, commands } from 'vscode';
 import { JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../platform/common/constants';
 import { traceInfo } from '../../platform/logging';
-import { JupyterServerSelector } from '../../kernels/jupyter/connection/serverSelector';
+import { JupyterServerSelector } from '../../kernels/jupyter/connection';
 import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { computeHash } from '../../platform/common/crypto';

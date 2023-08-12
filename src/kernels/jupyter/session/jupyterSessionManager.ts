@@ -36,7 +36,7 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
-import { JupyterConnection } from '../connection/jupyterConnection';
+import { JupyterConnection } from '../connection';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

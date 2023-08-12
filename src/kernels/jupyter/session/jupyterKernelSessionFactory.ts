@@ -43,7 +43,7 @@ import {
     IDisposable,
     Resource
 } from '../../../platform/common/types';
-import { JupyterConnection } from '../connection/jupyterConnection';
+import { JupyterConnection } from '../connection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
 import type { KernelSpecManager, SessionManager, KernelManager, ContentsManager, Session } from '@jupyterlab/services';

@@ -13,7 +13,7 @@ import {
     IJupyterKernelService,
     IJupyterRequestCreator
 } from '../types';
-import { JupyterConnection } from '../connection/jupyterConnection';
+import { JupyterConnection } from '../connection';
 import { IServiceContainer } from '../../../platform/ioc/types';
 
 @injectable()
