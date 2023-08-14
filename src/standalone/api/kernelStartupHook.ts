@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+// Comments
+
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IKernel, IKernelProvider, IKernelSession, isRemoteConnection } from '../../kernels/types';
