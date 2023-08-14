@@ -7,14 +7,14 @@ import {
     CancellationError,
     CancellationToken,
     CancellationTokenSource,
-    Command,
     Disposable,
     Event,
     EventEmitter,
     Memento,
     QuickInputButtons,
     QuickPickItem,
-    Uri
+    Uri,
+    env
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
@@ -54,7 +54,13 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { traceError, traceWarning } from '../../platform/logging';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
-import { IJupyterServerUri, JupyterServer, JupyterServerCommandProvider, JupyterServerProvider } from '../../api';
+import {
+    IJupyterServerUri,
+    JupyterServer,
+    JupyterServerCommand,
+    JupyterServerCommandProvider,
+    JupyterServerProvider
+} from '../../api';
 import { IMultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
@@ -133,12 +139,33 @@ export class UserJupyterServerUrlProvider
             disposables
         );
     }
-    selected: Command = {
+    selected: JupyterServerCommand = {
         title: DataScience.jupyterSelectURIPrompt,
         tooltip: DataScience.jupyterSelectURINewDetail,
         command: 'jupyter.selectLocalJupyterServer'
     };
-    async getCommands(_token: CancellationToken): Promise<Command[]> {
+    /**
+     * @param value Value entered by the user in the quick pick
+     */
+    async getCommands(_token: CancellationToken, value?: string): Promise<JupyterServerCommand[]> {
+        let url = '';
+        try {
+            value = (value || '').trim();
+            if (['http:', 'https:'].includes(new URL(value.trim()).protocol.toLowerCase())) {
+                url = value;
+            }
+        } catch {
+            //
+        }
+        if (value) {
+            return [
+                {
+                    title: DataScience.connectToToTheJupyterServer(value),
+                    command: 'jupyter.selectLocalJupyterServer',
+                    arguments: [url]
+                }
+            ];
+        }
         return [
             {
                 title: DataScience.jupyterSelectURIPrompt,
@@ -184,7 +211,7 @@ export class UserJupyterServerUrlProvider
             collection.serverProvider = this;
             collection.documentation = this.documentation;
             this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
-            this.commands.registerCommand('jupyter.selectLocalJupyterServer', async () => {
+            this.commands.registerCommand('jupyter.selectLocalJupyterServer', async (_url?: string) => {
                 const token = new CancellationTokenSource();
                 try {
                     const handleOrBack = await this.handleQuickPick(
@@ -223,7 +250,7 @@ export class UserJupyterServerUrlProvider
                 this._onDidChangeHandles.fire();
             })
         );
-        this.migrateOldServers().catch(noop);
+        this.initializeServers().catch(noop);
     }
     private migrateOldServers() {
         if (!this.migratedOldServers) {
@@ -304,16 +331,27 @@ export class UserJupyterServerUrlProvider
         }
         return this.migratedOldServers;
     }
-    private async initializeServers(): Promise<void> {
+    private initializeServers(): Promise<void> {
         if (this._cachedServerInfoInitialized) {
             return this._cachedServerInfoInitialized;
         }
+        const deferred = createDeferred<void>();
+        this._cachedServerInfoInitialized = deferred.promise;
 
-        this._cachedServerInfoInitialized = new Promise<void>(async (resolve) => {
-            await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
-            resolve();
-        });
-
+        (async () => {
+            const NEW_STORAGE_MIGRATION_DONE_KEY = 'NewUserUriMigrationCompleted';
+            if (this.globalMemento.get<string>(NEW_STORAGE_MIGRATION_DONE_KEY) !== env.machineId) {
+                await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
+                await this.globalMemento.update(NEW_STORAGE_MIGRATION_DONE_KEY, env.machineId);
+            }
+            this.getHandles().catch(noop);
+            deferred.resolve();
+        })()
+            .then(
+                () => deferred.resolve(),
+                (ex) => deferred.reject(ex)
+            )
+            .catch(noop);
         return this._cachedServerInfoInitialized;
     }
 
@@ -327,20 +365,25 @@ export class UserJupyterServerUrlProvider
         ];
     }
 
-    async handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<string | undefined> {
+    async handleQuickPick(
+        item: QuickPickItem,
+        backEnabled: boolean,
+        initialValue: string = ''
+    ): Promise<string | undefined> {
         await this.initializeServers();
         if (item.label !== DataScience.jupyterSelectURIPrompt) {
             return undefined;
         }
 
-        let initialValue = '';
-        try {
-            const text = await this.clipboard.readText().catch(() => '');
-            const parsedUri = Uri.parse(text.trim(), true);
-            // Only display http/https uris.
-            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
-        } catch {
-            // We can ignore errors.
+        if (!initialValue) {
+            try {
+                const text = await this.clipboard.readText().catch(() => '');
+                const parsedUri = Uri.parse(text.trim(), true);
+                // Only display http/https uris.
+                initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : '';
+            } catch {
+                // We can ignore errors.
+            }
         }
 
         const disposables: Disposable[] = [];

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import { CancellationToken, Command, QuickPickItem, Uri } from 'vscode';
 
 // These types are only used internally within the extension.
 // Never to be exposed to other extensions.
@@ -23,8 +23,20 @@ declare module './api' {
          */
         readonly extensionId: string;
     }
+    export interface JupyterServerCommandProvider {
+        /**
+         * Returns a list of commands to be displayed to the user.
+         * @param value The value entered by the user in the quick pick.
+         */
+        getCommands(token: CancellationToken, value: string): Promise<Command[]>;
+    }
 
     export interface IJupyterUriProvider {
+        /**
+         * Internal cache of the Jupyter Servers, providing sync access to the servers.
+         * Avoids the need to call the `getServers` when we have already retrieved a server in the past.
+         */
+        servers?: readonly JupyterServer[];
         /**
          * Link to documentation for this provider.
          * Used internally to display the link for `Existing Jupyter Servers` in the quick pick.
@@ -40,5 +52,25 @@ declare module './api' {
          * Internally used by Jupyter extension to track the extension that owns this provider.
          */
         readonly extensionId: string;
+        /**
+         * Added to support JupyterServerCommandProvider.getCommands.
+         * This is temporary, until the API is finalized and till the adapter (making new API work with old) is removed
+         * @param value The value entered by the user in the quick pick.
+         */
+        getQuickPickEntryItems?(value?: string):
+            | Promise<
+                  (QuickPickItem & {
+                      /**
+                       * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+                       */
+                      default?: boolean;
+                  })[]
+              >
+            | (QuickPickItem & {
+                  /**
+                   * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
+                   */
+                  default?: boolean;
+              })[];
     }
 }

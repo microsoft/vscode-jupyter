@@ -6,7 +6,7 @@
 // Or please wait for these to be finalized and released.
 
 import { CancellationToken } from 'vscode';
-import { Command, Event, Uri } from 'vscode';
+import { Event, Uri } from 'vscode';
 
 declare module './api' {
     /**
@@ -21,7 +21,7 @@ declare module './api' {
         /**
          * Jupyter auth Token.
          */
-        readonly token: string;
+        readonly token?: string;
         /**
          * Authorization header to be used when connecting to the server.
          */
@@ -74,12 +74,43 @@ declare module './api' {
     export interface JupyterServerProvider {
         /**
          * Event fired when the list of servers changes.
+         * Note: the getJupyterServers method will not be called unless changes are detected.
          */
         onDidChangeServers: Event<void>;
         /**
          * Returns the list of servers.
          */
         getJupyterServers(token: CancellationToken): Promise<JupyterServer[]>;
+    }
+    /**
+     * Represents a reference to a Jupyter Server command. Provides a title which
+     * will be used to represent a command in the UI and, optionally,
+     * an array of arguments which will be passed to the command handler
+     * function when invoked.
+     */
+    export interface JupyterServerCommand {
+        /**
+         * Title of the command, like `save`.
+         */
+        title: string;
+        /**
+         * A human-readable string which is rendered less prominent in a separate line.
+         */
+        detail?: string;
+        /**
+         * The identifier of the actual command handler.
+         * @see {@link commands.registerCommand}
+         */
+        command: string;
+        /**
+         * A tooltip for the command, when represented in the UI.
+         */
+        tooltip?: string;
+        /**
+         * Arguments that the command handler should be
+         * invoked with.
+         */
+        arguments?: unknown[];
     }
     /**
      * Provider of Jupyter Server Commands.
@@ -95,11 +126,11 @@ declare module './api' {
          * Default command to be used when there are no servers. This can be read and updated by the extension.
          * If not set, and there are not servers, then the user will be prompted to select a command from a list of commands returned by `getCommands`.
          */
-        selected?: Command;
+        selected?: JupyterServerCommand;
         /**
          * Returns a list of commands to be displayed to the user.
          */
-        getCommands(token: CancellationToken): Promise<Command[]>;
+        getCommands(token: CancellationToken): Promise<JupyterServerCommand[]>;
     }
     export interface JupyterServerCollection {
         /**

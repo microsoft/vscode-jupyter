@@ -11,7 +11,7 @@ export enum ContributedKernelFinderKind {
 }
 
 export interface IContributedKernelFinder<T extends KernelConnectionMetadata = KernelConnectionMetadata> {
-    status: 'discovering' | 'idle';
+    readonly status: 'discovering' | 'idle';
     onDidChangeStatus: Event<void>;
     /**
      * Last error thrown when listing the kernels.

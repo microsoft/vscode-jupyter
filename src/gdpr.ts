@@ -455,6 +455,17 @@
      ]
    }
  */
+//Telemetry.JupyterKernelStartupHook
+/* __GDPR__
+   "DATASCIENCE.JUPYTER_KERNEL_STARTUP_HOOK" : {
+     "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
+     "providerId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Id of the Jupyter Server Provider.","owner":"donjayamanne"},
+     "${include}": [
+       "${F1}"
+
+     ]
+   }
+ */
 //Telemetry.JupyterNotInstalledErrorShown
 /* __GDPR__
    "DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN" : {

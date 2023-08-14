@@ -672,7 +672,7 @@ abstract class BaseKernel implements IBaseKernel {
     }
 
     protected async initializeAfterStart(session: IKernelSession | undefined) {
-        await Promise.all(Array.from(this.hooks.get('didStart') || new Set<Hook>()).map((h) => h()));
+        await Promise.all(Array.from(this.hooks.get('didStart') || new Set<Hook>()).map((h) => h(session).catch(noop)));
         traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
         if (!session) {
             traceVerbose('Not running kernel initialization');
