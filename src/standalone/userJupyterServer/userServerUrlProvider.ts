@@ -85,7 +85,6 @@ export class UserJupyterServerUrlProvider
     private _onDidChangeHandles = this._register(new EventEmitter<void>());
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
     private _cachedServerInfoInitialized: Promise<void> | undefined;
-    private _localDisposables: Disposable[] = [];
     private readonly passwordConnect: JupyterPasswordConnect;
     public readonly oldStorage: OldStorage;
     public readonly newStorage: NewStorage;
@@ -161,7 +160,7 @@ export class UserJupyterServerUrlProvider
         const token = new CancellationTokenSource();
         const url = this.commandUrls.get(command.title) || '';
         try {
-            const handleOrBack = await this.handleQuickPick(token.token, url);
+            const handleOrBack = await this.captureRemoteJupyterUrl(token.token, url);
             if (!handleOrBack) {
                 return;
             }
@@ -180,6 +179,7 @@ export class UserJupyterServerUrlProvider
         }
     }
     activate() {
+        // Register this ASAP.
         const collection = this.jupyterServerProviderRegistry.createJupyterServerCollection(
             JVSC_EXTENSION_ID,
             this.id,
@@ -197,7 +197,7 @@ export class UserJupyterServerUrlProvider
             this.disposables.push(new Disposable(() => previousToken?.cancel()));
             this.disposables.push(previousToken);
             try {
-                await this.handleQuickPick(previousToken.token, url || '');
+                await this.captureRemoteJupyterUrl(previousToken.token, url || '');
             } catch (ex) {
                 traceError(`Failed to select a Jupyter Server`, ex);
             } finally {
@@ -205,7 +205,7 @@ export class UserJupyterServerUrlProvider
                 previousToken.dispose();
             }
         });
-        this._localDisposables.push(
+        this.disposables.push(
             this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
                 await Promise.all([
                     this.oldStorage.clear().catch(noop),
@@ -362,7 +362,10 @@ export class UserJupyterServerUrlProvider
             .catch(noop);
         return this._cachedServerInfoInitialized;
     }
-    async handleQuickPick(token: CancellationToken, initialUrl: string = ''): Promise<string | undefined> {
+    async captureRemoteJupyterUrl(
+        token: CancellationToken,
+        initialUrl: string = ''
+    ): Promise<string | InputFlowAction> {
         await this.initializeServers();
         type Steps =
             | 'Get Url'
@@ -410,7 +413,7 @@ export class UserJupyterServerUrlProvider
                         url = result.url;
                     }
                     if (token.isCancellationRequested) {
-                        return;
+                        return InputFlowAction.cancel;
                     }
                     if (nextStep === 'Check Passwords') {
                         nextStep = 'Check Insecure Connections';
@@ -461,7 +464,7 @@ export class UserJupyterServerUrlProvider
                         }
                     }
                     if (token.isCancellationRequested) {
-                        return;
+                        return InputFlowAction.cancel;
                     }
 
                     if (nextStep === 'Check Insecure Connections') {
@@ -479,12 +482,12 @@ export class UserJupyterServerUrlProvider
                             isInsecureConnection = true;
                             const proceed = await this.secureConnectionValidator.promptToUseInsecureConnections();
                             if (!proceed) {
-                                return;
+                                return InputFlowAction.cancel;
                             }
                         }
                     }
                     if (token.isCancellationRequested) {
-                        return;
+                        return InputFlowAction.cancel;
                     }
 
                     if (nextStep === 'Verify Connection') {
@@ -535,7 +538,7 @@ export class UserJupyterServerUrlProvider
                     }
 
                     if (token.isCancellationRequested) {
-                        return;
+                        return InputFlowAction.cancel;
                     }
 
                     if (nextStep === 'Get Display Name') {
@@ -553,12 +556,12 @@ export class UserJupyterServerUrlProvider
                 } catch (ex) {
                     if (ex instanceof CancellationError || ex === InputFlowAction.cancel) {
                         // This means exit all of this, & do not event go back
-                        return;
+                        return InputFlowAction.cancel;
                     }
                     if (ex === InputFlowAction.back) {
                         if (!previousStep) {
                             // Go back to the beginning of this workflow, ie. back to calling code.
-                            return 'back';
+                            return InputFlowAction.back;
                         }
                         nextStep = previousStep;
                         continue;
@@ -568,7 +571,7 @@ export class UserJupyterServerUrlProvider
                 }
             }
             if (token.isCancellationRequested) {
-                return;
+                return InputFlowAction.cancel;
             }
             await this.addNewServer({
                 handle,
@@ -576,6 +579,11 @@ export class UserJupyterServerUrlProvider
                 serverInfo: jupyterServerUri
             });
             return handle;
+        } catch (ex) {
+            if (ex instanceof CancellationError) {
+                return InputFlowAction.cancel;
+            }
+            throw ex;
         } finally {
             disposeAllDisposables(disposables);
         }
