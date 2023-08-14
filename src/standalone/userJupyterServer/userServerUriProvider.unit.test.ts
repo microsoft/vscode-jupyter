@@ -6,8 +6,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import {
     IJupyterRequestCreator,
     IJupyterServerProviderRegistry,
-    IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration
+    IJupyterServerUriStorage
 } from '../../kernels/jupyter/types';
 import {
     IAsyncDisposable,
@@ -46,7 +45,6 @@ import { JupyterServerCollection } from '../../api';
 suite('User Uri Provider', () => {
     let provider: UserJupyterServerUrlProvider;
     let clipboard: IClipboard;
-    let uriProviderRegistration: IJupyterUriProviderRegistration;
     let applicationShell: IApplicationShell;
     let configService: IConfigurationService;
     let jupyterConnection: JupyterConnection;
@@ -111,7 +109,6 @@ suite('User Uri Provider', () => {
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
         quickPick = mock<QuickPick<QuickPickItem>>();
         clipboard = mock<IClipboard>();
-        uriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         applicationShell = mock<IApplicationShell>();
         configService = mock<IConfigurationService>();
         jupyterConnection = mock<JupyterConnection>();
@@ -179,7 +176,6 @@ suite('User Uri Provider', () => {
         when(appEnv.channel).thenReturn('stable');
         provider = new UserJupyterServerUrlProvider(
             instance(clipboard),
-            instance(uriProviderRegistration),
             instance(applicationShell),
             instance(configService),
             instance(jupyterConnection),
@@ -195,8 +191,7 @@ suite('User Uri Provider', () => {
             instance(requestCreator),
             instance(mock<IExtensionContext>()),
             instance(mock<IFileSystem>()),
-            instance(jupyterServerProviderRegistry),
-            instance(appEnv)
+            instance(jupyterServerProviderRegistry)
         );
     });
     teardown(async () => {

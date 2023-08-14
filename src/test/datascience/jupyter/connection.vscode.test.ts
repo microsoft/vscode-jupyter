@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import {
-    IApplicationEnvironment,
     IApplicationShell,
     IClipboard,
     ICommandManager,
@@ -24,8 +23,7 @@ import {
     IJupyterRequestCreator,
     IJupyterServerProviderRegistry,
     IJupyterServerUriEntry,
-    IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration
+    IJupyterServerUriStorage
 } from '../../../kernels/jupyter/types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -100,7 +98,6 @@ suite('Connect to Remote Jupyter Servers', function () {
         ]);
     });
     let clipboard: IClipboard;
-    let uriProviderRegistration: IJupyterUriProviderRegistration;
     let appShell: IApplicationShell;
     let encryptedStorage: IEncryptedStorage;
     let memento: Memento;
@@ -144,12 +141,10 @@ suite('Connect to Remote Jupyter Servers', function () {
         });
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
         clipboard = mock<IClipboard>();
-        uriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         encryptedStorage = mock<IEncryptedStorage>();
         memento = mock<Memento>();
         commands = mock<ICommandManager>();
-        when(uriProviderRegistration.registerProvider(anything(), anything())).thenReturn(new Disposable(noop));
         when(commands.registerCommand(anything(), anything())).thenReturn(new Disposable(noop));
         when(memento.get(anything())).thenReturn(undefined);
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
@@ -173,7 +168,6 @@ suite('Connect to Remote Jupyter Servers', function () {
 
         userUriProvider = new UserJupyterServerUrlProvider(
             instance(clipboard),
-            instance(uriProviderRegistration),
             appShell,
             api.serviceContainer.get<IConfigurationService>(IConfigurationService),
             api.serviceContainer.get<JupyterConnection>(JupyterConnection),
@@ -189,8 +183,7 @@ suite('Connect to Remote Jupyter Servers', function () {
             api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator),
             api.serviceContainer.get<IExtensionContext>(IExtensionContext),
             api.serviceContainer.get<IFileSystem>(IFileSystem),
-            api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry),
-            api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment)
+            api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry)
         );
         userUriProvider.activate();
 
