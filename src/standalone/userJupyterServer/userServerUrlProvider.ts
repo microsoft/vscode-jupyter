@@ -13,14 +13,12 @@ import {
     EventEmitter,
     Memento,
     QuickInputButtons,
-    QuickPickItem,
     Uri,
     env
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
     IJupyterServerUriStorage,
-    IInternalJupyterUriProvider,
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
     IJupyterServerProviderRegistry
@@ -66,27 +64,25 @@ import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
+import { Disposables } from '../../platform/common/utils';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
 export const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
+export const EnterJupyterServerUriCommand = 'jupyter.selectLocalJupyterServer';
 
 @injectable()
 export class UserJupyterServerUrlProvider
-    implements
-        IExtensionSyncActivationService,
-        IDisposable,
-        IInternalJupyterUriProvider,
-        JupyterServerProvider,
-        JupyterServerCommandProvider
+    extends Disposables
+    implements IExtensionSyncActivationService, IDisposable, JupyterServerProvider, JupyterServerCommandProvider
 {
     readonly id: string = UserJupyterServerPickerProviderId;
     public readonly extensionId: string = JVSC_EXTENSION_ID;
     readonly documentation = Uri.parse('https://aka.ms/vscodeJuptyerExtKernelPickerExistingServer');
     readonly displayName: string = DataScience.UserJupyterServerUrlProviderDisplayName;
     readonly detail: string = DataScience.UserJupyterServerUrlProviderDetail;
-    private _onDidChangeHandles = new EventEmitter<void>();
+    private _onDidChangeHandles = this._register(new EventEmitter<void>());
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
     private _cachedServerInfoInitialized: Promise<void> | undefined;
     private _localDisposables: Disposable[] = [];
@@ -94,17 +90,21 @@ export class UserJupyterServerUrlProvider
     public readonly oldStorage: OldStorage;
     public readonly newStorage: NewStorage;
     private migratedOldServers?: Promise<unknown>;
-    private displayNamesOfHandles = new Map<string, string>();
+    private _onDidChangeServers = this._register(new EventEmitter<void>());
+    onDidChangeServers = this._onDidChangeServers.event;
+    private secureConnectionValidator: SecureConnectionValidator;
+    private jupyterServerUriInput: UserJupyterServerUriInput;
+    private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
     constructor(
-        @inject(IClipboard) private readonly clipboard: IClipboard,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IClipboard) clipboard: IClipboard,
+        @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMultiStepInputFactory) multiStepFactory: IMultiStepInputFactory,
         @inject(IAsyncDisposableRegistry) asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(ICommandManager) private readonly commands: ICommandManager,
@@ -117,11 +117,18 @@ export class UserJupyterServerUrlProvider
         @inject(IJupyterServerProviderRegistry)
         private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry
     ) {
-        this.disposables.push(this);
+        super();
+        disposables.push(this);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.oldStorage = new OldStorage(encryptedStorage, globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.newStorage = new NewStorage(encryptedStorage);
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        this.secureConnectionValidator = new SecureConnectionValidator(applicationShell, globalMemento);
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        this.jupyterServerUriInput = new UserJupyterServerUriInput(clipboard, applicationShell);
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        this.jupyterServerUriDisplayName = new UserJupyterServerDisplayName(applicationShell);
         this.passwordConnect = new JupyterPasswordConnect(
             applicationShell,
             multiStepFactory,
@@ -138,44 +145,6 @@ export class UserJupyterServerUrlProvider
         tooltip: DataScience.jupyterSelectURINewDetail
     };
     private commandUrls = new Map<string, string>();
-    /**
-     * @param value Value entered by the user in the quick pick
-     */
-    async getCommands(value: string, _token: CancellationToken): Promise<JupyterServerCommand[]> {
-        let url = '';
-        try {
-            value = (value || '').trim();
-            if (['http:', 'https:'].includes(new URL(value.trim()).protocol.toLowerCase())) {
-                url = value;
-            }
-        } catch {
-            //
-        }
-        if (url) {
-            this.commandUrls.clear();
-            this.commandUrls.set(DataScience.connectToToTheJupyterServer(url), url);
-            return [{ title: DataScience.connectToToTheJupyterServer(url) }];
-        }
-        return [
-            {
-                title: DataScience.jupyterSelectURIPrompt,
-                tooltip: DataScience.jupyterSelectURINewDetail
-            }
-        ];
-    }
-    private _onDidChangeServers = new EventEmitter<void>();
-    onDidChangeServers = this._onDidChangeServers.event;
-    async getJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
-        await this.initializeServers();
-        const servers = await this.newStorage.getServers(false);
-        return servers.map((s) => {
-            return {
-                id: s.handle,
-                label: s.serverInfo.displayName,
-                remove: () => this.removeHandle(s.handle)
-            };
-        });
-    }
     public async resolveConnectionInformation(server: JupyterServer, _token: CancellationToken) {
         const serverInfo = await this.getServerUri(server.id);
         return {
@@ -192,7 +161,7 @@ export class UserJupyterServerUrlProvider
         const token = new CancellationTokenSource();
         const url = this.commandUrls.get(command.title) || '';
         try {
-            const handleOrBack = await this.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, true, url);
+            const handleOrBack = await this.handleQuickPick(url);
             if (!handleOrBack) {
                 return;
             }
@@ -223,7 +192,7 @@ export class UserJupyterServerUrlProvider
         this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
         this.commands.registerCommand('jupyter.selectLocalJupyterServer', async (url?: string) => {
             try {
-                await this.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, true, url);
+                await this.handleQuickPick(url);
             } catch (ex) {
                 traceError(`Failed to select a Jupyter Server`, ex);
             }
@@ -241,6 +210,47 @@ export class UserJupyterServerUrlProvider
             })
         );
         this.initializeServers().catch(noop);
+    }
+    /**
+     * @param value Value entered by the user in the quick pick
+     */
+    async getCommands(value: string, _token: CancellationToken): Promise<JupyterServerCommand[]> {
+        let url = '';
+        try {
+            value = (value || '').trim();
+            if (['http:', 'https:'].includes(new URL(value.trim()).protocol.toLowerCase())) {
+                url = value;
+            }
+        } catch {
+            //
+        }
+        if (url) {
+            this.commandUrls.clear();
+            this.commandUrls.set(DataScience.connectToToTheJupyterServer(url), url);
+            return [{ title: DataScience.connectToToTheJupyterServer(url) }];
+        }
+        return [
+            {
+                title: DataScience.jupyterSelectURIPrompt,
+                tooltip: DataScience.jupyterSelectURINewDetail,
+                picked: true
+            }
+        ];
+    }
+    async getJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
+        await this.initializeServers();
+        const servers = await this.newStorage.getServers(false);
+        return servers.map((s) => {
+            return {
+                id: s.handle,
+                label: s.serverInfo.displayName,
+                remove: async () => {
+                    await this.initializeServers();
+                    await this.newStorage.remove(s.handle);
+                    this._onDidChangeHandles.fire();
+                }
+            };
+        });
     }
     private migrateOldServers() {
         if (!this.migratedOldServers) {
@@ -334,7 +344,7 @@ export class UserJupyterServerUrlProvider
                 await Promise.all([this.migrateOldServers().catch(noop), this.newStorage.migrationDone]);
                 await this.globalMemento.update(NEW_STORAGE_MIGRATION_DONE_KEY, env.machineId);
             }
-            this.getHandles().catch(noop);
+            this.newStorage.getServers(false).catch(noop);
             deferred.resolve();
         })()
             .then(
@@ -344,17 +354,7 @@ export class UserJupyterServerUrlProvider
             .catch(noop);
         return this._cachedServerInfoInitialized;
     }
-
-    getQuickPickEntryItems(): (QuickPickItem & { default?: boolean })[] {
-        return [
-            {
-                default: true,
-                label: DataScience.jupyterSelectURIPrompt,
-                detail: DataScience.jupyterSelectURINewDetail
-            }
-        ];
-    }
-    async handleQuickPick(_item: QuickPickItem, _backEnabled: boolean, url: string = ''): Promise<string | undefined> {
+    async handleQuickPick(url: string = ''): Promise<string | undefined> {
         await this.initializeServers();
         type Steps =
             | 'Get Url'
@@ -373,7 +373,7 @@ export class UserJupyterServerUrlProvider
         let previousStep: Steps | undefined = 'Get Url';
         if (url) {
             // Validate the URI first, which would otherwise be validated when user enters the Uri into the input box.
-            const initialVerification = this.parseUserUriAndGetValidationError(url);
+            const initialVerification = this.jupyterServerUriInput.parseUserUriAndGetValidationError(url);
             if (typeof initialVerification.validationError === 'string') {
                 // Uri has an error, show the error message by displaying the input box and pre-populating the url.
                 validationErrorMessage = initialVerification.validationError;
@@ -392,7 +392,7 @@ export class UserJupyterServerUrlProvider
                         previousStep = undefined;
                         const errorMessage = validationErrorMessage;
                         validationErrorMessage = ''; // Never display this validation message again.
-                        const result = await this.getUrl(url, errorMessage, disposables);
+                        const result = await this.jupyterServerUriInput.getUrlFromUser(url, errorMessage, disposables);
                         jupyterServerUri = result.jupyterServerUri;
                         url = result.url;
                     }
@@ -459,7 +459,7 @@ export class UserJupyterServerUrlProvider
                             new URL(jupyterServerUri.baseUrl).protocol.toLowerCase() === 'http:'
                         ) {
                             isInsecureConnection = true;
-                            const proceed = await this.secureConnectionCheck(disposables);
+                            const proceed = await this.secureConnectionValidator.promptToUseInsecureConnections();
                             if (!proceed) {
                                 return;
                             }
@@ -519,10 +519,9 @@ export class UserJupyterServerUrlProvider
                             : requiresPassword && jupyterServerUri.token.length === 0
                             ? 'Check Passwords'
                             : 'Get Url';
-                        jupyterServerUri.displayName = await this.getDisplayName(
+                        jupyterServerUri.displayName = await this.jupyterServerUriDisplayName.getDisplayName(
                             handle,
-                            jupyterServerUri.displayName || new URL(jupyterServerUri.baseUrl).hostname,
-                            disposables
+                            jupyterServerUri.displayName || new URL(jupyterServerUri.baseUrl).hostname
                         );
                         break;
                     }
@@ -554,37 +553,43 @@ export class UserJupyterServerUrlProvider
             disposeAllDisposables(disposables);
         }
     }
-    private async getDisplayName(handle: string, defaultValue: string, disposables: IDisposable[]): Promise<string> {
-        const input = this.applicationShell.createInputBox();
-        disposables.push(input);
-        input.ignoreFocusOut = true;
-        input.title = DataScience.jupyterRenameServer;
-        input.value = defaultValue;
-        input.buttons = [QuickInputButtons.Back];
-        input.show();
-        const deferred = createDeferred<string>();
-        disposables.push(input.onDidHide(() => deferred.reject(InputFlowAction.cancel)));
-        input.onDidTriggerButton(
-            (e) => {
-                if (e === QuickInputButtons.Back) {
-                    deferred.reject(InputFlowAction.back);
-                }
-            },
-            this,
-            disposables
-        );
-        input.onDidAccept(
-            () => {
-                const displayName = input.value.trim() || defaultValue;
-                this.displayNamesOfHandles.set(handle, displayName);
-                deferred.resolve(displayName);
-            },
-            this,
-            disposables
-        );
-        return deferred.promise;
+    private async addNewServer(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
+        await this.newStorage.add(server);
+        this._onDidChangeHandles.fire();
     }
-    async getUrl(
+    async getServerUri(handle: string): Promise<IJupyterServerUri> {
+        const servers = await this.newStorage.getServers(false);
+        const server = servers.find((s) => s.handle === handle);
+        if (!server) {
+            throw new Error('Server not found');
+        }
+        const serverInfo = server.serverInfo;
+        // Hacky due to the way display names are stored in uri storage.
+        // Should be cleaned up later.
+        const displayName = this.jupyterServerUriDisplayName.displayNamesOfHandles.get(handle);
+        if (displayName) {
+            serverInfo.displayName = displayName;
+        }
+
+        const passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
+            url: serverInfo.baseUrl,
+            isTokenEmpty: serverInfo.token.length === 0,
+            displayName: serverInfo.displayName,
+            handle
+        });
+        return Object.assign({}, serverInfo, {
+            authorizationHeader: passwordResult.requestHeaders || serverInfo.authorizationHeader
+        });
+    }
+}
+
+export class UserJupyterServerUriInput {
+    constructor(
+        @inject(IClipboard) private readonly clipboard: IClipboard,
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
+    ) {}
+
+    async getUrlFromUser(
         initialValue: string,
         initialErrorMessage: string = '',
         disposables: Disposable[]
@@ -634,7 +639,7 @@ export class UserJupyterServerUrlProvider
         return deferred.promise;
     }
 
-    private parseUserUriAndGetValidationError(
+    public parseUserUriAndGetValidationError(
         value: string
     ): { validationError: string } | { jupyterServerUri: IJupyterServerUri; url: string; validationError: undefined } {
         // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
@@ -648,102 +653,90 @@ export class UserJupyterServerUrlProvider
         }
         return { jupyterServerUri, url: uri, validationError: undefined };
     }
+}
 
-    /**
-     * Check if our server connection is considered secure. If it is not, ask the user if they want to connect
-     */
-    private async secureConnectionCheck(disposables: IDisposable[]): Promise<boolean> {
+export class UserJupyterServerDisplayName {
+    constructor(@inject(IApplicationShell) private readonly applicationShell: IApplicationShell) {}
+    public displayNamesOfHandles = new Map<string, string>();
+    public async getDisplayName(handle: string, defaultValue: string): Promise<string> {
+        const disposables: Disposable[] = [];
+        try {
+            const input = this.applicationShell.createInputBox();
+            disposables.push(input);
+            input.ignoreFocusOut = true;
+            input.title = DataScience.jupyterRenameServer;
+            input.value = defaultValue;
+            input.buttons = [QuickInputButtons.Back];
+            input.show();
+            const deferred = createDeferred<string>();
+            disposables.push(input.onDidHide(() => deferred.reject(InputFlowAction.cancel)));
+            input.onDidTriggerButton(
+                (e) => {
+                    if (e === QuickInputButtons.Back) {
+                        deferred.reject(InputFlowAction.back);
+                    }
+                },
+                this,
+                disposables
+            );
+            input.onDidAccept(
+                () => {
+                    const displayName = input.value.trim() || defaultValue;
+                    this.displayNamesOfHandles.set(handle, displayName);
+                    deferred.resolve(displayName);
+                },
+                this,
+                disposables
+            );
+            return deferred.promise;
+        } finally {
+            disposeAllDisposables(disposables);
+        }
+    }
+}
+export class SecureConnectionValidator {
+    constructor(
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
+    ) {}
+
+    public async promptToUseInsecureConnections(): Promise<boolean> {
         if (this.globalMemento.get(GlobalStateUserAllowsInsecureConnections, false)) {
             return true;
         }
 
-        const input = this.applicationShell.createQuickPick();
-        disposables.push(input);
-        input.canSelectMany = false;
-        input.ignoreFocusOut = true;
-        input.title = DataScience.insecureSessionMessage;
-        input.buttons = [QuickInputButtons.Back];
-        input.items = [{ label: Common.bannerLabelYes }, { label: Common.bannerLabelNo }];
-        input.show();
+        const disposables: Disposable[] = [];
         const deferred = createDeferred<boolean>();
-        disposables.push(input.onDidHide(() => deferred.reject(InputFlowAction.cancel)));
-        input.onDidTriggerButton(
-            (e) => {
-                if (e === QuickInputButtons.Back) {
-                    deferred.reject(InputFlowAction.back);
-                }
-            },
-            this,
-            disposables
-        );
-        input.onDidAccept(
-            () => deferred.resolve(input.selectedItems.some((e) => e.label === Common.bannerLabelYes)),
-            this,
-            disposables
-        );
+        try {
+            const input = this.applicationShell.createQuickPick();
+            disposables.push(input);
+            input.canSelectMany = false;
+            input.ignoreFocusOut = true;
+            input.title = DataScience.insecureSessionMessage;
+            input.buttons = [QuickInputButtons.Back];
+            input.items = [{ label: Common.bannerLabelYes }, { label: Common.bannerLabelNo }];
+            input.show();
+            disposables.push(input.onDidHide(() => deferred.reject(InputFlowAction.cancel)));
+            input.onDidTriggerButton(
+                (e) => {
+                    if (e === QuickInputButtons.Back) {
+                        deferred.reject(InputFlowAction.back);
+                    }
+                },
+                this,
+                disposables
+            );
+            input.onDidAccept(
+                () => deferred.resolve(input.selectedItems.some((e) => e.label === Common.bannerLabelYes)),
+                this,
+                disposables
+            );
+        } finally {
+            disposeAllDisposables(disposables);
+        }
         return deferred.promise;
     }
-    private async addNewServer(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
-        await this.newStorage.add(server);
-        this._onDidChangeHandles.fire();
-    }
-    async getServerUriWithoutAuthInfo(handle: string): Promise<IJupyterServerUri> {
-        await this.initializeServers();
-        const servers = await this.newStorage.getServers(false);
-        const server = servers.find((s) => s.handle === handle);
-        if (!server) {
-            throw new Error('Server not found');
-        }
-
-        // Hacky due to the way display names are stored in uri storage.
-        // Should be cleaned up later.
-        const displayName = this.displayNamesOfHandles.get(handle);
-        if (displayName) {
-            server.serverInfo.displayName = displayName;
-        }
-        return server.serverInfo;
-    }
-    async getServerUri(handle: string): Promise<IJupyterServerUri> {
-        await this.initializeServers();
-        const servers = await this.newStorage.getServers(false);
-        const server = servers.find((s) => s.handle === handle);
-        if (!server) {
-            throw new Error('Server not found');
-        }
-
-        // Hacky due to the way display names are stored in uri storage.
-        // Should be cleaned up later.
-        const displayName = this.displayNamesOfHandles.get(handle);
-        if (displayName) {
-            server.serverInfo.displayName = displayName;
-        }
-
-        const passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
-            url: server.serverInfo.baseUrl,
-            isTokenEmpty: server.serverInfo.token.length === 0,
-            displayName: server.serverInfo.displayName,
-            handle
-        });
-        return Object.assign({}, server.serverInfo, {
-            authorizationHeader: passwordResult.requestHeaders || server.serverInfo.authorizationHeader
-        });
-    }
-    async getHandles(): Promise<string[]> {
-        await this.initializeServers();
-        const servers = await this.newStorage.getServers(false);
-        return servers.map((s) => s.handle);
-    }
-
-    async removeHandle(handle: string): Promise<void> {
-        await this.initializeServers();
-        await this.newStorage.remove(handle);
-        this._onDidChangeHandles.fire();
-    }
-    dispose(): void {
-        this._localDisposables.forEach((d) => d.dispose());
-    }
 }
-
 function parseUri(uri: string, displayName?: string): IJupyterServerUri | undefined {
     // This is a url that we crafted. It's not a valid Jupyter Server Url.
     if (uri.startsWith(Identifiers.REMOTE_URI)) {
