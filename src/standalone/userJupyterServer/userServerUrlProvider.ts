@@ -161,7 +161,7 @@ export class UserJupyterServerUrlProvider
         const token = new CancellationTokenSource();
         const url = this.commandUrls.get(command.title) || '';
         try {
-            const handleOrBack = await this.handleQuickPick(url);
+            const handleOrBack = await this.handleQuickPick(token.token, url);
             if (!handleOrBack) {
                 return;
             }
@@ -190,11 +190,19 @@ export class UserJupyterServerUrlProvider
         collection.serverProvider = this;
         collection.documentation = this.documentation;
         this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
-        this.commands.registerCommand('jupyter.selectLocalJupyterServer', async (url?: string) => {
+        let previousToken: CancellationTokenSource | undefined;
+        this.commands.registerCommand(EnterJupyterServerUriCommand, async (url?: string) => {
+            previousToken?.cancel();
+            previousToken = new CancellationTokenSource();
+            this.disposables.push(new Disposable(() => previousToken?.cancel()));
+            this.disposables.push(previousToken);
             try {
-                await this.handleQuickPick(url);
+                await this.handleQuickPick(previousToken.token, url || '');
             } catch (ex) {
                 traceError(`Failed to select a Jupyter Server`, ex);
+            } finally {
+                previousToken.cancel();
+                previousToken.dispose();
             }
         });
         this._localDisposables.push(
@@ -354,7 +362,7 @@ export class UserJupyterServerUrlProvider
             .catch(noop);
         return this._cachedServerInfoInitialized;
     }
-    async handleQuickPick(url: string = ''): Promise<string | undefined> {
+    async handleQuickPick(token: CancellationToken, initialUrl: string = ''): Promise<string | undefined> {
         await this.initializeServers();
         type Steps =
             | 'Get Url'
@@ -371,9 +379,10 @@ export class UserJupyterServerUrlProvider
         let handle: string;
         let nextStep: Steps = 'Get Url';
         let previousStep: Steps | undefined = 'Get Url';
-        if (url) {
+        let url = initialUrl;
+        if (initialUrl) {
             // Validate the URI first, which would otherwise be validated when user enters the Uri into the input box.
-            const initialVerification = this.jupyterServerUriInput.parseUserUriAndGetValidationError(url);
+            const initialVerification = this.jupyterServerUriInput.parseUserUriAndGetValidationError(initialUrl);
             if (typeof initialVerification.validationError === 'string') {
                 // Uri has an error, show the error message by displaying the input box and pre-populating the url.
                 validationErrorMessage = initialVerification.validationError;
@@ -392,11 +401,17 @@ export class UserJupyterServerUrlProvider
                         previousStep = undefined;
                         const errorMessage = validationErrorMessage;
                         validationErrorMessage = ''; // Never display this validation message again.
-                        const result = await this.jupyterServerUriInput.getUrlFromUser(url, errorMessage, disposables);
+                        const result = await this.jupyterServerUriInput.getUrlFromUser(
+                            initialUrl,
+                            errorMessage,
+                            disposables
+                        );
                         jupyterServerUri = result.jupyterServerUri;
                         url = result.url;
                     }
-
+                    if (token.isCancellationRequested) {
+                        return;
+                    }
                     if (nextStep === 'Check Passwords') {
                         nextStep = 'Check Insecure Connections';
                         previousStep = 'Get Url';
@@ -445,6 +460,9 @@ export class UserJupyterServerUrlProvider
                             }
                         }
                     }
+                    if (token.isCancellationRequested) {
+                        return;
+                    }
 
                     if (nextStep === 'Check Insecure Connections') {
                         // If we do not have any auth header information & there is no token & no password,
@@ -464,6 +482,9 @@ export class UserJupyterServerUrlProvider
                                 return;
                             }
                         }
+                    }
+                    if (token.isCancellationRequested) {
+                        return;
                     }
 
                     if (nextStep === 'Verify Connection') {
@@ -513,6 +534,10 @@ export class UserJupyterServerUrlProvider
                         }
                     }
 
+                    if (token.isCancellationRequested) {
+                        return;
+                    }
+
                     if (nextStep === 'Get Display Name') {
                         previousStep = isInsecureConnection
                             ? 'Check Insecure Connections'
@@ -542,7 +567,9 @@ export class UserJupyterServerUrlProvider
                     throw ex;
                 }
             }
-
+            if (token.isCancellationRequested) {
+                return;
+            }
             await this.addNewServer({
                 handle,
                 uri: url,

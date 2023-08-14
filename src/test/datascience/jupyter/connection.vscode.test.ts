@@ -19,6 +19,7 @@ import { startJupyterServer, closeNotebooksAndCleanUpAfterTests } from '../noteb
 import { hijackPrompt } from '../notebook/helper';
 import {
     EnterJupyterServerUriCommand,
+    SecureConnectionValidator,
     UserJupyterServerDisplayName,
     UserJupyterServerUriInput,
     UserJupyterServerUrlProvider,
@@ -225,10 +226,11 @@ suite('Connect to Remote Jupyter Servers', function () {
             url: userUri,
             jupyterServerUri: parseUri(userUri, '')!
         });
+        sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections').resolves(true);
         sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName').resolves(displayName);
         const errorMessageDisplayed = createDeferred<string>();
         inputBox.value = password || '';
-        sinon.stub(inputBox, 'validationMessage').set((msg) => errorMessageDisplayed.resolve(msg));
+        sinon.stub(inputBox, 'validationMessage').set((msg) => (msg ? errorMessageDisplayed.resolve(msg) : undefined));
         const handlePromise = createDeferredFromPromise(addNewJupyterUriCommandHandler(userUri));
         await Promise.race([handlePromise.promise, errorMessageDisplayed.promise]);
 
@@ -236,7 +238,7 @@ suite('Connect to Remote Jupyter Servers', function () {
             assert.strictEqual(errorMessageDisplayed.value, DataScience.passwordFailure);
             assert.ok(!handlePromise.completed);
         } else {
-            assert.equal(errorMessageDisplayed.value || '', '', 'Should not have displayed an error message');
+            assert.equal(errorMessageDisplayed.value || '', '', `Password should be valid, ${errorMessageDisplayed}`);
             assert.ok(handlePromise.completed, 'Did not complete');
             const value = handlePromise.value;
             if (!value || value === 'back' || value instanceof InputFlowAction) {
@@ -265,7 +267,6 @@ suite('Connect to Remote Jupyter Servers', function () {
             // assert.strictEqual(serverInfo.displayName, `Title of Server`, 'Invalid Title');
         }
     }
-
     test('Connect to server with Token in URL', () =>
         testConnection({ userUri: jupyterNotebookWithHelloToken.url, password: undefined }));
     test('Connect to server with Password and Token in URL', () =>
@@ -286,7 +287,7 @@ suite('Connect to Remote Jupyter Servers', function () {
             password: 'Bogus',
             failWithInvalidPassword: true
         }));
-    test('Connect to Lab server with Password & Token in URL', () =>
+    test('Connect to Lab server with Password & Token in URL', async () =>
         testConnection({ userUri: jupyterLabWithHelloPasswordAndWorldToken.url, password: 'Hello' }));
     test('Connect to server with empty Password & empty Token in URL', () =>
         testConnection({ userUri: jupyterNotebookWithEmptyPasswordToken.url, password: '' }));
