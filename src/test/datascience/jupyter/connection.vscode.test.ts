@@ -226,15 +226,6 @@ suite('Connect to Remote Jupyter Servers', function () {
             jupyterServerUri: parseUri(userUri, '')!
         });
         sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName').resolves(displayName);
-        sinon.stub(appShell, 'showInputBox').callsFake((opts) => {
-            console.error(opts);
-            if (opts?.prompt === DataScience.jupyterSelectPasswordPrompt) {
-                return Promise.resolve(password);
-            } else if (opts?.title === DataScience.jupyterRenameServer) {
-                return Promise.resolve('Title of Server');
-            }
-            return Promise.resolve(undefined);
-        });
         const errorMessageDisplayed = createDeferred<string>();
         inputBox.value = password || '';
         sinon.stub(inputBox, 'validationMessage').set((msg) => errorMessageDisplayed.resolve(msg));
