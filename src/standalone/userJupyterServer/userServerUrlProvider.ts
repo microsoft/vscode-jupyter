@@ -415,6 +415,7 @@ export class UserJupyterServerUrlProvider
                     if (token.isCancellationRequested) {
                         return InputFlowAction.cancel;
                     }
+                    const passwordDisposables: Disposable[] = [];
                     if (nextStep === 'Check Passwords') {
                         nextStep = 'Check Insecure Connections';
                         previousStep = 'Get Url';
@@ -428,7 +429,7 @@ export class UserJupyterServerUrlProvider
                                 handle,
                                 displayName: jupyterServerUri.displayName,
                                 validationErrorMessage: errorMessage,
-                                disposables
+                                disposables: passwordDisposables
                             });
                             requiresPassword = result.requiresPassword;
                             jupyterServerUri.authorizationHeader = result.requestHeaders;
@@ -461,6 +462,8 @@ export class UserJupyterServerUrlProvider
                                 nextStep = 'Get Url';
                                 continue;
                             }
+                        } finally {
+                            this.disposables.push(...passwordDisposables);
                         }
                     }
                     if (token.isCancellationRequested) {
@@ -480,6 +483,7 @@ export class UserJupyterServerUrlProvider
                             new URL(jupyterServerUri.baseUrl).protocol.toLowerCase() === 'http:'
                         ) {
                             isInsecureConnection = true;
+                            disposeAllDisposables(passwordDisposables);
                             const proceed = await this.secureConnectionValidator.promptToUseInsecureConnections();
                             if (!proceed) {
                                 return InputFlowAction.cancel;
@@ -534,6 +538,8 @@ export class UserJupyterServerUrlProvider
                                 nextStep = 'Get Url';
                                 continue;
                             }
+                        } finally {
+                            disposeAllDisposables(passwordDisposables);
                         }
                     }
 
@@ -542,6 +548,7 @@ export class UserJupyterServerUrlProvider
                     }
 
                     if (nextStep === 'Get Display Name') {
+                        disposeAllDisposables(passwordDisposables);
                         previousStep = isInsecureConnection
                             ? 'Check Insecure Connections'
                             : requiresPassword && jupyterServerUri.token.length === 0
@@ -723,7 +730,7 @@ export class UserJupyterServerDisplayName {
                 this,
                 disposables
             );
-            return deferred.promise;
+            return await deferred.promise;
         } finally {
             disposeAllDisposables(disposables);
         }
