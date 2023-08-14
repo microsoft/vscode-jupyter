@@ -66,7 +66,7 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
             return tracebackLinkify(traceFrame, inputMatch[2]);
         }
 
-        const cellMatch = /Cell.*?\[.*32mIn\s?\[(\d+)\]\,\s+line\s+([(\d+)])(.*?)\n.*/gm.exec(traceFrame);
+        const cellMatch = /Cell.*?\[.*32mIn\s*\[(\d+)\]\,\s+line\s+([(\d+)])(.*?)\n.*/gm.exec(traceFrame);
         if (cellMatch && cellMatch.length > 1) {
             return tracebackLinkify(traceFrame, cellMatch[2]);
         }
