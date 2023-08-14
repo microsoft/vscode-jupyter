@@ -415,6 +415,12 @@ export class UserJupyterServerUrlProvider
                     if (token.isCancellationRequested) {
                         return InputFlowAction.cancel;
                     }
+
+                    // Capture the password disposable objects into a separate array.
+                    // We want to keep this Quick Pick UI open, as the validation happens outside that class.
+                    // The UI gets closed when we dispose the disposables.
+                    // After the validation, we dispose the UI, and optionally display a new UI.
+                    // This way there is no flicker in the UI.
                     const passwordDisposables: Disposable[] = [];
                     if (nextStep === 'Check Passwords') {
                         nextStep = 'Check Insecure Connections';
