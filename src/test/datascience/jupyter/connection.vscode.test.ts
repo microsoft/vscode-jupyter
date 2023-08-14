@@ -219,12 +219,13 @@ suite('Connect to Remote Jupyter Servers', function () {
         userUri: string;
         failWithInvalidPassword?: boolean;
     }) {
+        const displayName = 'Test Remove Server Name';
         when(clipboard.readText()).thenResolve(userUri);
         sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser').resolves({
             url: userUri,
             jupyterServerUri: parseUri(userUri, '')!
         });
-        sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName').resolves('Test Remove Server Name');
+        sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName').resolves(displayName);
         sinon.stub(appShell, 'showInputBox').callsFake((opts) => {
             console.error(opts);
             if (opts?.prompt === DataScience.jupyterSelectPasswordPrompt) {
@@ -251,6 +252,7 @@ suite('Connect to Remote Jupyter Servers', function () {
                 throw new Error(`Jupyter Server URI not entered, ${value}`);
             }
             assert.ok(value.id, 'Invalid Handle');
+            assert.ok(value.label, displayName);
 
             // Once storage has been refactored, then enable these tests.
             // const { serverHandle, serverInfo } = JSON.parse(
