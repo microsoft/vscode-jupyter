@@ -21,14 +21,12 @@ import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConne
 import {
     IJupyterServerUriStorage,
     IInternalJupyterUriProvider,
-    IJupyterUriProviderRegistration,
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
     IJupyterServerProviderRegistry
 } from '../../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
-    IApplicationEnvironment,
     IApplicationShell,
     IClipboard,
     ICommandManager,
@@ -99,8 +97,6 @@ export class UserJupyterServerUrlProvider
     private displayNamesOfHandles = new Map<string, string>();
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
-        @inject(IJupyterUriProviderRegistration)
-        private readonly uriProviderRegistration: IJupyterUriProviderRegistration,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
@@ -119,8 +115,7 @@ export class UserJupyterServerUrlProvider
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterServerProviderRegistry)
-        private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry,
-        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment
+        private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry
     ) {
         this.disposables.push(this);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -216,27 +211,23 @@ export class UserJupyterServerUrlProvider
         }
     }
     activate() {
-        if (this.appEnv.channel === 'insiders') {
-            const collection = this.jupyterServerProviderRegistry.createJupyterServerCollection(
-                JVSC_EXTENSION_ID,
-                this.id,
-                this.displayName
-            );
-            this.disposables.push(collection);
-            collection.commandProvider = this;
-            collection.serverProvider = this;
-            collection.documentation = this.documentation;
-            this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
-            this.commands.registerCommand('jupyter.selectLocalJupyterServer', async (url?: string) => {
-                try {
-                    await this.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, true, url);
-                } catch (ex) {
-                    traceError(`Failed to select a Jupyter Server`, ex);
-                }
-            });
-        } else {
-            this._localDisposables.push(this.uriProviderRegistration.registerProvider(this, JVSC_EXTENSION_ID));
-        }
+        const collection = this.jupyterServerProviderRegistry.createJupyterServerCollection(
+            JVSC_EXTENSION_ID,
+            this.id,
+            this.displayName
+        );
+        this.disposables.push(collection);
+        collection.commandProvider = this;
+        collection.serverProvider = this;
+        collection.documentation = this.documentation;
+        this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
+        this.commands.registerCommand('jupyter.selectLocalJupyterServer', async (url?: string) => {
+            try {
+                await this.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, true, url);
+            } catch (ex) {
+                traceError(`Failed to select a Jupyter Server`, ex);
+            }
+        });
         this._localDisposables.push(
             this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
                 await Promise.all([
