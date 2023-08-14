@@ -737,7 +737,7 @@ export class SecureConnectionValidator {
         return deferred.promise;
     }
 }
-function parseUri(uri: string, displayName?: string): IJupyterServerUri | undefined {
+export function parseUri(uri: string, displayName?: string): IJupyterServerUri | undefined {
     // This is a url that we crafted. It's not a valid Jupyter Server Url.
     if (uri.startsWith(Identifiers.REMOTE_URI)) {
         return;

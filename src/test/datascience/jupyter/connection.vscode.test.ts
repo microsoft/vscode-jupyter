@@ -19,7 +19,10 @@ import { startJupyterServer, closeNotebooksAndCleanUpAfterTests } from '../noteb
 import { hijackPrompt } from '../notebook/helper';
 import {
     EnterJupyterServerUriCommand,
-    UserJupyterServerUrlProvider
+    UserJupyterServerDisplayName,
+    UserJupyterServerUriInput,
+    UserJupyterServerUrlProvider,
+    parseUri
 } from '../../../standalone/userJupyterServer/userServerUrlProvider';
 import {
     IJupyterRequestAgentCreator,
@@ -217,6 +220,11 @@ suite('Connect to Remote Jupyter Servers', function () {
         failWithInvalidPassword?: boolean;
     }) {
         when(clipboard.readText()).thenResolve(userUri);
+        sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser').resolves({
+            url: userUri,
+            jupyterServerUri: parseUri(userUri, '')!
+        });
+        sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName').resolves('Test Remove Server Name');
         sinon.stub(appShell, 'showInputBox').callsFake((opts) => {
             console.error(opts);
             if (opts?.prompt === DataScience.jupyterSelectPasswordPrompt) {
@@ -227,6 +235,7 @@ suite('Connect to Remote Jupyter Servers', function () {
             return Promise.resolve(undefined);
         });
         const errorMessageDisplayed = createDeferred<string>();
+        inputBox.value = password || '';
         sinon.stub(inputBox, 'validationMessage').set((msg) => errorMessageDisplayed.resolve(msg));
         const handlePromise = createDeferredFromPromise(addNewJupyterUriCommandHandler(userUri));
         await Promise.race([handlePromise.promise, errorMessageDisplayed.promise]);
