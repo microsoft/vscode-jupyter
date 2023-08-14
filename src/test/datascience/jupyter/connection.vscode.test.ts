@@ -17,7 +17,10 @@ import {
 import { IS_REMOTE_NATIVE_TEST, initialize } from '../../initialize.node';
 import { startJupyterServer, closeNotebooksAndCleanUpAfterTests } from '../notebook/helper.node';
 import { hijackPrompt } from '../notebook/helper';
-import { UserJupyterServerUrlProvider } from '../../../standalone/userJupyterServer/userServerUrlProvider';
+import {
+    EnterJupyterServerUriCommand,
+    UserJupyterServerUrlProvider
+} from '../../../standalone/userJupyterServer/userServerUrlProvider';
 import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
@@ -28,14 +31,15 @@ import {
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { Disposable, EventEmitter, InputBox, Memento, QuickPickItem } from 'vscode';
+import { Disposable, EventEmitter, InputBox, Memento } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
 import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
-import { IMultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
+import { IMultiStepInputFactory, InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { IFileSystem } from '../../../platform/common/platform/types';
+import { JupyterServer } from '../../../api';
 
 suite('Connect to Remote Jupyter Servers', function () {
     // On conda these take longer for some reason.
@@ -105,7 +109,7 @@ suite('Connect to Remote Jupyter Servers', function () {
     let userUriProvider: UserJupyterServerUrlProvider;
     let commands: ICommandManager;
     let inputBox: InputBox;
-
+    let addNewJupyterUriCommandHandler: (url?: string) => Promise<JupyterServer | 'back' | undefined>;
     setup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
@@ -146,6 +150,11 @@ suite('Connect to Remote Jupyter Servers', function () {
         memento = mock<Memento>();
         commands = mock<ICommandManager>();
         when(commands.registerCommand(anything(), anything())).thenReturn(new Disposable(noop));
+        when(commands.registerCommand(EnterJupyterServerUriCommand, anything())).thenCall((_, cb) => {
+            addNewJupyterUriCommandHandler = cb;
+            return new Disposable(noop);
+        });
+
         when(memento.get(anything())).thenReturn(undefined);
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
         when(memento.update(anything(), anything())).thenResolve();
@@ -219,10 +228,7 @@ suite('Connect to Remote Jupyter Servers', function () {
         });
         const errorMessageDisplayed = createDeferred<string>();
         sinon.stub(inputBox, 'validationMessage').set((msg) => errorMessageDisplayed.resolve(msg));
-        const quickPick: QuickPickItem = {
-            label: DataScience.jupyterSelectURIPrompt
-        };
-        const handlePromise = createDeferredFromPromise(userUriProvider.handleQuickPick(quickPick, false));
+        const handlePromise = createDeferredFromPromise(addNewJupyterUriCommandHandler(userUri));
         await Promise.race([handlePromise.promise, errorMessageDisplayed.promise]);
 
         if (failWithInvalidPassword) {
@@ -231,7 +237,11 @@ suite('Connect to Remote Jupyter Servers', function () {
         } else {
             assert.equal(errorMessageDisplayed.value || '', '', 'Should not have displayed an error message');
             assert.ok(handlePromise.completed, 'Did not complete');
-            assert.ok(handlePromise.value, 'Invalid Handle');
+            const value = handlePromise.value;
+            if (!value || value === 'back' || value instanceof InputFlowAction) {
+                throw new Error(`Jupyter Server URI not entered, ${value}`);
+            }
+            assert.ok(value.id, 'Invalid Handle');
 
             // Once storage has been refactored, then enable these tests.
             // const { serverHandle, serverInfo } = JSON.parse(
