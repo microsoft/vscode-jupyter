@@ -17,7 +17,6 @@ import {
 } from '../../platform/common/types';
 import { IMultiStepInputFactory, InputFlowAction } from '../../platform/common/utils/multiStepInput';
 import {
-    EnterJupyterServerUriCommand,
     SecureConnectionValidator,
     UserJupyterServerDisplayName,
     UserJupyterServerUriInput,
@@ -43,7 +42,7 @@ import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { JupyterServer, JupyterServerCollection } from '../../api';
+import { JupyterServerCollection } from '../../api';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
@@ -83,7 +82,6 @@ suite('User Uri Provider', () => {
     >;
     let token: CancellationToken;
     let tokenSource: CancellationTokenSource;
-    let addNewJupyterUriCommandHandler: (url?: string) => Promise<JupyterServer | 'back' | undefined>;
     setup(() => {
         inputBox = {
             show: noop,
@@ -127,9 +125,6 @@ suite('User Uri Provider', () => {
         tokenSource = new CancellationTokenSource();
         token = tokenSource.token;
         disposables.push(tokenSource);
-        when(commands.registerCommand(EnterJupyterServerUriCommand, anything())).thenCall(
-            (_, cb) => (addNewJupyterUriCommandHandler = cb)
-        );
         when(serverUriStorage.getAll()).thenResolve([]);
         when(applicationShell.createInputBox()).thenReturn(inputBox);
         when(jupyterConnection.validateRemoteUri(anything())).thenResolve();
@@ -236,7 +231,7 @@ suite('User Uri Provider', () => {
         const servers = await provider.getJupyterServers(token);
         assert.strictEqual(servers.length, 2);
 
-        const serverUris = await Promise.all(servers.map((s) => s.resolveConnectionInformation(token)));
+        const serverUris = await Promise.all(servers.map((s) => provider.resolveConnectionInformation(s, token)));
         serverUris.sort((a, b) => a.baseUrl.toString().localeCompare(b.baseUrl.toString()));
         assert.deepEqual(
             serverUris.map((s) => s.baseUrl.toString()),
@@ -303,7 +298,7 @@ suite('User Uri Provider', () => {
             ['1', '3']
         );
 
-        const serverUris = await Promise.all(servers.map((h) => h.resolveConnectionInformation(token)));
+        const serverUris = await Promise.all(servers.map((h) => provider.resolveConnectionInformation(h, token)));
         assert.strictEqual(servers.length, 2);
         serverUris.sort((a, b) => a.baseUrl.toString().localeCompare(b.baseUrl.toString()));
         assert.deepEqual(serverUris.map((s) => s.baseUrl.toString()).sort(), [
@@ -328,13 +323,13 @@ suite('User Uri Provider', () => {
     });
     test('Add the provided Url and verify it is in the storage', async () => {
         await testMigration();
-        assert.isOk(addNewJupyterUriCommandHandler);
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const server = await addNewJupyterUriCommandHandler('https://localhost:3333?token=ABCD');
+        const [cmd] = await provider.getCommands('https://localhost:3333?token=ABCD', token);
+        const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
             throw new Error('Server not returned');
@@ -347,7 +342,7 @@ suite('User Uri Provider', () => {
         assert.strictEqual(server.label, 'Foo Bar');
         assert.ok(displayNameStub.called, 'We should have prompted the user for a display name');
         assert.isFalse(getUriFromUserStub.called, 'Should not prompt for a Url, as one was provided');
-        const authInfo = await server.resolveConnectionInformation(token);
+        const authInfo = await provider.resolveConnectionInformation(server, token);
         assert.strictEqual(authInfo.baseUrl.toString(), 'https://localhost:3333/');
 
         const servers = await provider.getJupyterServers(token);
@@ -366,12 +361,12 @@ suite('User Uri Provider', () => {
     });
     test('Prompt user for a Url and use what is in clipboard, then verify it is in the storage', async () => {
         await testMigration();
-        assert.isOk(addNewJupyterUriCommandHandler);
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
         when(clipboard.readText()).thenResolve('https://localhost:3333?token=ABCD');
 
-        const server = await addNewJupyterUriCommandHandler();
+        const [cmd] = await provider.getCommands('', token);
+        const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
             throw new Error('Server not returned');
@@ -407,7 +402,8 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
 
-        const server = await addNewJupyterUriCommandHandler();
+        const [cmd] = await provider.getCommands('', token);
+        const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
             throw new Error('Server not returned');
@@ -442,7 +438,8 @@ suite('User Uri Provider', () => {
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const server = await addNewJupyterUriCommandHandler('http://localhost:3333');
+        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
             throw new Error('Server not returned');
@@ -476,7 +473,8 @@ suite('User Uri Provider', () => {
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const server = await addNewJupyterUriCommandHandler('http://localhost:3333');
+        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const server = await provider.handleCommand(cmd, token);
 
         assert.ok(secureConnectionStub.called);
         assert.isUndefined(server);
@@ -500,7 +498,8 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
 
-        const server = await addNewJupyterUriCommandHandler('http://localhost:3333');
+        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
             throw new Error('Server not returned');

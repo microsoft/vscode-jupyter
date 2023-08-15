@@ -18,7 +18,6 @@ import { IS_REMOTE_NATIVE_TEST, initialize } from '../../initialize.node';
 import { startJupyterServer, closeNotebooksAndCleanUpAfterTests } from '../notebook/helper.node';
 import { hijackPrompt } from '../notebook/helper';
 import {
-    EnterJupyterServerUriCommand,
     SecureConnectionValidator,
     UserJupyterServerDisplayName,
     UserJupyterServerUriInput,
@@ -35,7 +34,7 @@ import {
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { Disposable, EventEmitter, InputBox, Memento } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
@@ -43,7 +42,6 @@ import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
 import { IMultiStepInputFactory, InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { JupyterServer } from '../../../api';
 
 suite('Connect to Remote Jupyter Servers', function () {
     // On conda these take longer for some reason.
@@ -113,7 +111,7 @@ suite('Connect to Remote Jupyter Servers', function () {
     let userUriProvider: UserJupyterServerUrlProvider;
     let commands: ICommandManager;
     let inputBox: InputBox;
-    let addNewJupyterUriCommandHandler: (url?: string) => Promise<JupyterServer | 'back' | undefined>;
+    let token: CancellationTokenSource;
     setup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
@@ -148,17 +146,15 @@ suite('Connect to Remote Jupyter Servers', function () {
             return new Disposable(noop);
         });
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
+        token = new CancellationTokenSource();
+        disposables.push(new Disposable(() => token.cancel()));
+        disposables.push(token);
         clipboard = mock<IClipboard>();
         appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         encryptedStorage = mock<IEncryptedStorage>();
         memento = mock<Memento>();
         commands = mock<ICommandManager>();
         when(commands.registerCommand(anything(), anything())).thenReturn(new Disposable(noop));
-        when(commands.registerCommand(EnterJupyterServerUriCommand, anything())).thenCall((_, cb) => {
-            addNewJupyterUriCommandHandler = cb;
-            return new Disposable(noop);
-        });
-
         when(memento.get(anything())).thenReturn(undefined);
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
         when(memento.update(anything(), anything())).thenResolve();
@@ -231,7 +227,8 @@ suite('Connect to Remote Jupyter Servers', function () {
         const errorMessageDisplayed = createDeferred<string>();
         inputBox.value = password || '';
         sinon.stub(inputBox, 'validationMessage').set((msg) => (msg ? errorMessageDisplayed.resolve(msg) : undefined));
-        const handlePromise = createDeferredFromPromise(addNewJupyterUriCommandHandler(userUri));
+        const [cmd] = await userUriProvider.getCommands(userUri, token.token);
+        const handlePromise = createDeferredFromPromise(userUriProvider.handleCommand(cmd, token.token));
         await Promise.race([handlePromise.promise, errorMessageDisplayed.promise]);
 
         if (failWithInvalidPassword) {

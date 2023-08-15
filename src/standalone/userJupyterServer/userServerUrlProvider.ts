@@ -70,7 +70,6 @@ export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
 export const UserJupyterServerUriListMementoKey = '_builtin.jupyterServerUrlProvider.uriList';
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
-export const EnterJupyterServerUriCommand = 'jupyter.selectLocalJupyterServer';
 
 @injectable()
 export class UserJupyterServerUrlProvider
@@ -94,6 +93,7 @@ export class UserJupyterServerUrlProvider
     private secureConnectionValidator: SecureConnectionValidator;
     private jupyterServerUriInput: UserJupyterServerUriInput;
     private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
+    private lastEnteredUrl?: string;
     constructor(
         @inject(IClipboard) clipboard: IClipboard,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
@@ -139,11 +139,32 @@ export class UserJupyterServerUrlProvider
             disposables
         );
     }
-    selected: JupyterServerCommand = {
-        title: DataScience.jupyterSelectURIPrompt,
-        tooltip: DataScience.jupyterSelectURINewDetail
-    };
-    private commandUrls = new Map<string, string>();
+    activate() {
+        // Register this ASAP.
+        const collection = this.jupyterServerProviderRegistry.createJupyterServerCollection(
+            JVSC_EXTENSION_ID,
+            this.id,
+            this.displayName
+        );
+        this.disposables.push(collection);
+        collection.commandProvider = this;
+        collection.serverProvider = this;
+        collection.documentation = this.documentation;
+        this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
+        this.disposables.push(
+            this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
+                await Promise.all([
+                    this.oldStorage.clear().catch(noop),
+                    this.newStorage.clear().catch(noop),
+                    this.fs
+                        .delete(Uri.joinPath(this.context.globalStorageUri, RemoteKernelSpecCacheFileName))
+                        .catch(noop)
+                ]);
+                this._onDidChangeHandles.fire();
+            })
+        );
+        this.initializeServers().catch(noop);
+    }
     public async resolveConnectionInformation(server: JupyterServer, _token: CancellationToken) {
         const serverInfo = await this.getServerUri(server.id);
         return {
@@ -156,11 +177,15 @@ export class UserJupyterServerUrlProvider
             webSocketProtocols: serverInfo.webSocketProtocols
         };
     }
-    public async handleCommand(command: JupyterServerCommand): Promise<void | JupyterServer | 'back' | undefined> {
+    public async handleCommand(
+        _command: JupyterServerCommand,
+        _token: CancellationToken
+    ): Promise<void | JupyterServer | 'back' | undefined> {
         const token = new CancellationTokenSource();
-        const url = this.commandUrls.get(command.title) || '';
+        this.disposables.push(token);
+        this.disposables.push(new Disposable(() => token.cancel()));
         try {
-            const handleOrBack = await this.captureRemoteJupyterUrl(token.token, url);
+            const handleOrBack = await this.captureRemoteJupyterUrl(token.token, this.lastEnteredUrl);
             if (!handleOrBack) {
                 return;
             }
@@ -176,66 +201,26 @@ export class UserJupyterServerUrlProvider
         } catch (ex) {
             traceError(`Failed to select a Jupyter Server`, ex);
             return;
+        } finally {
+            token.cancel();
+            token.dispose();
         }
-    }
-    activate() {
-        // Register this ASAP.
-        const collection = this.jupyterServerProviderRegistry.createJupyterServerCollection(
-            JVSC_EXTENSION_ID,
-            this.id,
-            this.displayName
-        );
-        this.disposables.push(collection);
-        collection.commandProvider = this;
-        collection.serverProvider = this;
-        collection.documentation = this.documentation;
-        this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
-        let previousToken: CancellationTokenSource | undefined;
-        this.commands.registerCommand(EnterJupyterServerUriCommand, async (url?: string) => {
-            previousToken?.cancel();
-            previousToken = new CancellationTokenSource();
-            this.disposables.push(new Disposable(() => previousToken?.cancel()));
-            this.disposables.push(previousToken);
-            try {
-                await this.captureRemoteJupyterUrl(previousToken.token, url || '');
-            } catch (ex) {
-                traceError(`Failed to select a Jupyter Server`, ex);
-            } finally {
-                previousToken.cancel();
-                previousToken.dispose();
-            }
-        });
-        this.disposables.push(
-            this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
-                await Promise.all([
-                    this.oldStorage.clear().catch(noop),
-                    this.newStorage.clear().catch(noop),
-                    this.fs
-                        .delete(Uri.joinPath(this.context.globalStorageUri, RemoteKernelSpecCacheFileName))
-                        .catch(noop)
-                ]);
-                this._onDidChangeHandles.fire();
-            })
-        );
-        this.initializeServers().catch(noop);
     }
     /**
      * @param value Value entered by the user in the quick pick
      */
     async getCommands(value: string, _token: CancellationToken): Promise<JupyterServerCommand[]> {
-        let url = '';
+        this.lastEnteredUrl = undefined;
         try {
             value = (value || '').trim();
             if (['http:', 'https:'].includes(new URL(value.trim()).protocol.toLowerCase())) {
-                url = value;
+                this.lastEnteredUrl = value;
             }
         } catch {
             //
         }
-        if (url) {
-            this.commandUrls.clear();
-            this.commandUrls.set(DataScience.connectToToTheJupyterServer(url), url);
-            return [{ title: DataScience.connectToToTheJupyterServer(url) }];
+        if (this.lastEnteredUrl) {
+            return [{ title: DataScience.connectToToTheJupyterServer(this.lastEnteredUrl) }];
         }
         return [
             {
@@ -605,16 +590,16 @@ export class UserJupyterServerUrlProvider
         await this.newStorage.add(server);
         this._onDidChangeHandles.fire();
     }
-    async getServerUri(handle: string): Promise<IJupyterServerUri> {
+    async getServerUri(id: string): Promise<IJupyterServerUri> {
         const servers = await this.newStorage.getServers(false);
-        const server = servers.find((s) => s.handle === handle);
+        const server = servers.find((s) => s.handle === id);
         if (!server) {
             throw new Error('Server not found');
         }
         const serverInfo = server.serverInfo;
         // Hacky due to the way display names are stored in uri storage.
         // Should be cleaned up later.
-        const displayName = this.jupyterServerUriDisplayName.displayNamesOfHandles.get(handle);
+        const displayName = this.jupyterServerUriDisplayName.displayNamesOfHandles.get(id);
         if (displayName) {
             serverInfo.displayName = displayName;
         }
@@ -623,7 +608,7 @@ export class UserJupyterServerUrlProvider
             url: serverInfo.baseUrl,
             isTokenEmpty: serverInfo.token.length === 0,
             displayName: serverInfo.displayName,
-            handle
+            handle: id
         });
         return Object.assign({}, serverInfo, {
             authorizationHeader: passwordResult.requestHeaders || serverInfo.authorizationHeader
