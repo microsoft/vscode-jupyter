@@ -127,7 +127,10 @@ declare module './api' {
          * - 'back'         : Go back to the previous UI in the workflow
          * - undefined|void : Do nothing
          */
-        handleCommand(command: JupyterServerCommand): Promise<JupyterServer | 'back' | undefined | void>;
+        handleCommand(
+            command: JupyterServerCommand,
+            token: CancellationToken
+        ): Promise<JupyterServer | 'back' | undefined | void>;
     }
     export interface JupyterServerCollection {
         /**
