@@ -17,7 +17,7 @@ export interface IContributedKernelFinder<T extends KernelConnectionMetadata = K
      * Last error thrown when listing the kernels.
      * Use this property to determine if there was an error fetching kernels when there are no kernels listed.
      */
-    lastError?: Error;
+    readonly lastError?: Error;
     id: string;
     displayName: string;
     kind: ContributedKernelFinderKind;
