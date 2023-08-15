@@ -70,7 +70,7 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                 const token = new CancellationTokenSource();
                 const time = Date.now();
                 try {
-                    await server.onStartKernel(kernel.uri, session, token.token);
+                    await server.onStartKernel(kernel.uri, server, session, token.token);
                 } catch (ex) {
                     // We do not care about the errors from 3rd party extensions.
                     traceWarning(
