@@ -65,6 +65,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         this.jupyterServerProviderRegistry.onDidChangeProviders(this.handleProviderChanges, this, this.disposables);
         // Add in the URIs that we already know about
         this.buildListOfFinders();
+        this.handleProviderChanges().catch(noop);
     }
     private buildListOfFinders() {
         // Add in the URIs that we already know about
@@ -102,6 +103,7 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
                 if (this.mappedProviders.has(serverProvider)) {
                     return;
                 }
+                this.mappedProviders.add(serverProvider);
                 if (collection.serverProvider?.onDidChangeServers) {
                     collection.serverProvider?.onDidChangeServers(
                         () => this.lookForServersInCollection(collection),
