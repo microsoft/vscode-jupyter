@@ -95,10 +95,14 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         if (!this.features.features.enableProposedJupyterServerProviderApi) {
             return;
         }
+        if (!this.serverUriStorage.all.length) {
+            // We do not have any of the previously used servers, or the data has not yet loaded.
+            return;
+        }
         const token = new CancellationTokenSource();
         this.disposables.push(token);
         await Promise.all(
-            this.jupyterServerProviderRegistry.providers.map(async (collection) => {
+            this.jupyterServerProviderRegistry.providers.map((collection) => {
                 const serverProvider = collection.serverProvider;
                 if (!serverProvider || this.mappedProviders.has(serverProvider)) {
                     return;
@@ -111,13 +115,22 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                         this.disposables
                     );
                 }
-                await this.lookForServersInCollection(collection).catch(noop);
+                this.serverUriStorage.onDidLoad(
+                    () => this.lookForServersInCollection(collection),
+                    this,
+                    this.disposables
+                );
+                return this.lookForServersInCollection(collection).catch(noop);
             })
         );
         token.dispose();
     }
     @swallowExceptions('Check Servers in Jupyter Server Provider')
     private async lookForServersInCollection(collection: JupyterServerCollection) {
+        if (!this.serverUriStorage.all.length) {
+            // We do not have any of the previously used servers, or the data has not yet loaded.
+            return;
+        }
         const usedServers = new Set(this.serverUriStorage.all.map((s) => generateIdFromRemoteProvider(s.provider)));
         const serverProvider = collection.serverProvider;
         if (!serverProvider) {
@@ -127,18 +140,18 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         try {
             const servers = await serverProvider.getJupyterServers(token.token);
             servers.forEach((server) => {
-                const serverId = `${collection.extensionId}#${collection.id}#${server.id}`;
+                const serverProviderHandle = {
+                    extensionId: collection.extensionId,
+                    handle: server.id,
+                    id: collection.id
+                };
+                const serverId = generateIdFromRemoteProvider(serverProviderHandle);
                 // If this sever was never used in the past, then no need to create a finder for this.
                 if (this.mappedServers.has(serverId) || !usedServers.has(serverId)) {
                     return;
                 }
                 this.mappedServers.add(serverId);
-                const info = {
-                    extensionId: collection.extensionId,
-                    handle: server.id,
-                    id: collection.id
-                };
-                this.createRemoteKernelFinder(info, server.label);
+                this.createRemoteKernelFinder(serverProviderHandle, server.label);
             });
         } catch (ex) {
             traceError(`Failed to get servers for Collection ${collection.id} in ${collection.extensionId}`, ex);

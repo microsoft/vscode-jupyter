@@ -100,8 +100,11 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
+        const previous = this._all;
         this._all = await this.newStorage.getAll();
-        this._onDidLoad.fire();
+        if (previous.length !== this._all.length || JSON.stringify(this._all) !== JSON.stringify(previous)) {
+            this._onDidLoad.fire();
+        }
         return this._all;
     }
     public async clear(): Promise<void> {
