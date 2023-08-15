@@ -53,6 +53,10 @@ export interface IQuickPickItemProvider<T extends { id: string }> {
     readonly title: string;
     onDidChange: Event<void>;
     onDidChangeStatus: Event<void>;
+    /**
+     * Last error thrown when listing the items.
+     */
+    readonly lastError?: Error;
     readonly items: readonly T[];
     readonly status: 'discovering' | 'idle';
     refresh(): Promise<void>;
@@ -67,6 +71,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
     private quickPick?: QuickPick<QuickPickItem>;
     private previouslyEnteredValue: string = '';
     private previouslySelectedItem?: CommandQuickPickItem<T>;
+    private resolvedProvider?: IQuickPickItemProvider<T>;
     constructor(
         private readonly provider: Promise<IQuickPickItemProvider<T>>,
         private readonly createQuickPickItem: (item: T, provider: BaseProviderBasedQuickPick<T>) => QuickPickItem,
@@ -76,7 +81,11 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         ) => { label: string; sortKey?: string },
         private readonly options: {
             supportsBack: boolean;
-        }
+        },
+        private readonly createErrorQuickPickItem?: (
+            error: Error,
+            provider: BaseProviderBasedQuickPick<T>
+        ) => QuickPickItem
     ) {
         super();
     }
@@ -114,6 +123,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         return this._selected;
     }
     private readonly quickPickItemMap = new WeakSet<SelectorQuickPickItem<T>>();
+    private readonly errorQuickPickItemMap = new WeakSet<QuickPickItem>();
     private createQuickPick() {
         const disposables: IDisposable[] = [];
         const refreshButton: QuickInputButton = { iconPath: new ThemeIcon('refresh'), tooltip: Common.refresh };
@@ -130,6 +140,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitleWithoutName;
         this.provider
             .then((provider) => {
+                this.resolvedProvider = provider;
                 quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitle(provider.title);
                 quickPick.busy = provider.status === 'discovering';
                 provider.onDidChange(() => this.updateQuickPickItems(quickPick, provider), this, disposables);
@@ -213,6 +224,8 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                                     resolve(selection.item);
                                 } else if (this.isCommandQuickPickItem(selection)) {
                                     resolve(selection);
+                                } else if (this.isErrorQuickPickItem(selection)) {
+                                    resolve(InputFlowAction.cancel);
                                 }
                             }
                         });
@@ -374,10 +387,15 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 selectedQuickPickItem = undefined;
             }
         }
+        const errorItem = this.resolvedProvider?.lastError
+            ? this.toErrorQuickPickItem(this.resolvedProvider.lastError)
+            : undefined;
+
         const items = (<QuickPickItem[]>[])
             .concat(Array.from(this.commands.values()))
             .concat(recommendedItems)
-            .concat(connections);
+            .concat(connections)
+            .concat(errorItem ? [errorItem] : []);
         const activeItems = selectedQuickPickItem
             ? [selectedQuickPickItem]
             : quickPick.activeItems.length
@@ -405,6 +423,17 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         ) {
             quickPick.activeItems = [this.previouslySelectedItem];
         }
+    }
+    private isErrorQuickPickItem(item: QuickPickItem): item is QuickPickItem {
+        return this.errorQuickPickItemMap.has(item as unknown as QuickPickItem);
+    }
+    private toErrorQuickPickItem(error: Error): QuickPickItem | undefined {
+        if (!this.createErrorQuickPickItem) {
+            return;
+        }
+        const quickPickItem = this.createErrorQuickPickItem(error, this);
+        this.errorQuickPickItemMap.add(quickPickItem);
+        return quickPickItem;
     }
     private isSelectorQuickPickItem(item: QuickPickItem): item is SelectorQuickPickItem<T> {
         return this.quickPickItemMap.has(item as unknown as SelectorQuickPickItem<T>);

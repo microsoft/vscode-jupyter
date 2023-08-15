@@ -381,9 +381,17 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 label: this.displayDataProvider.getDisplayData(item).category || 'Other'
             };
         };
-        const remoteKernelPicker = new BaseProviderBasedQuickPick(source, quickPickFactory, getCategory, {
-            supportsBack: true
+        const errorToQuickPickItem = (_error: Error) => ({
+            label: DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPickLabel,
+            detail: DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail
         });
+        const remoteKernelPicker = new BaseProviderBasedQuickPick(
+            source,
+            quickPickFactory,
+            getCategory,
+            { supportsBack: true },
+            errorToQuickPickItem
+        );
         const preferred = new PreferredKernelConnectionService(this.jupyterConnection);
         source
             .then((source) => preferred.findPreferredRemoteKernelConnection(notebook, source, token))

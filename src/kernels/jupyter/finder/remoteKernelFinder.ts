@@ -220,6 +220,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                     if (!(ex instanceof CancellationError)) {
                         traceError('UniversalRemoteKernelFinder: Failed to get kernels without cache', ex);
                         this._lastError = ex;
+                        this._onDidChange.fire();
                     }
                 }
             }
