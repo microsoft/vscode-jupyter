@@ -158,7 +158,7 @@ declare module './api' {
     export interface JupyterAPI {
         /**
          * Creates a Jupyter Server Collection that can be displayed in the Notebook Kernel Picker.
-         * 
+         *
          * The ideal time to invoke this method would be when a Notebook Document has been opened.
          * Calling this during activation of the extension might not be ideal, as this would result in
          * unnecessarily activating the Jupyter extension as well.
