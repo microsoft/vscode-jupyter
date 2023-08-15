@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Command, QuickPickItem, Uri } from 'vscode';
+import { CancellationToken, QuickPickItem, Uri } from 'vscode';
 
 // These types are only used internally within the extension.
 // Never to be exposed to other extensions.
@@ -28,7 +28,7 @@ declare module './api' {
          * Returns a list of commands to be displayed to the user.
          * @param value The value entered by the user in the quick pick.
          */
-        getCommands(token: CancellationToken, value: string): Promise<Command[]>;
+        getCommands(value: string, token: CancellationToken): Promise<JupyterServerCommand[]>;
     }
 
     export interface IJupyterUriProvider {

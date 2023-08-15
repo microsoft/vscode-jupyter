@@ -19,6 +19,11 @@ declare module './api' {
          * In the case of Jupyter Notebooks and Interactive Window, this is the Uri of the Notebook.
          * @session The Session Connection for the Kernel. Use this to communicate with the backend kernel.
          */
-        onStartKernel?(uri: Uri, session: Session.ISessionConnection, token: CancellationToken): Promise<void>;
+        onStartKernel?(
+            uri: Uri,
+            server: JupyterServer,
+            session: Session.ISessionConnection,
+            token: CancellationToken
+        ): Promise<void>;
     }
 }

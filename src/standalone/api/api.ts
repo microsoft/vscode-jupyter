@@ -14,9 +14,14 @@ import { IControllerRegistration } from '../../notebooks/controllers/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
-import { JupyterAPI, IExportedKernelService, IJupyterUriProvider } from '../../api';
-import { createPublicAPIProxy } from '../../platform/common/helpers';
-import { Disposables } from '../../platform/common/utils';
+import {
+    JupyterAPI,
+    IExportedKernelService,
+    IJupyterUriProvider,
+    JupyterServerCollection,
+    JupyterServerProvider,
+    JupyterServerCommandProvider
+} from '../../api';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -157,24 +162,88 @@ export function buildApi(
             });
             return notebookEditor.notebook;
         },
-        createJupyterServerCollection: async (id, label) => {
-            sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
-            const extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
-            if (
-                ![JVSC_EXTENSION_ID.split('.')[0], 'SynapseVSCode', 'GitHub']
-                    .map((s) => s.toLowerCase())
-                    .includes(extensionId.split('.')[0].toLowerCase())
-            ) {
-                throw new Error(`Access to Proposed API not allowed, as it is subject to change.`);
-            }
-            const registration = serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
-            const collection = registration.createJupyterServerCollection(extensionId, id, label);
-            // Do not expose unwanted properties to the extensions.
-            return createPublicAPIProxy(collection as unknown as typeof collection & Disposables, [
-                'disposables',
-                'isDisposed',
-                'dispose'
-            ]);
+        createJupyterServerCollection: (id, label) => {
+            let documentation: Uri | undefined;
+            let serverProvider: JupyterServerProvider | undefined;
+            let commandProvider: JupyterServerCommandProvider | undefined;
+            let disposeHandler = noop;
+            let isDisposed = false;
+            let proxy: JupyterServerCollection | undefined;
+            const collection: JupyterServerCollection = {
+                dispose: () => {
+                    isDisposed = true;
+                    disposeHandler();
+                },
+                extensionId: '',
+                get id() {
+                    return id;
+                },
+                set label(value: string) {
+                    label = value;
+                    if (proxy) {
+                        proxy.label = value;
+                    }
+                },
+                get label() {
+                    return label;
+                },
+                set documentation(value: Uri | undefined) {
+                    documentation = value;
+                    if (proxy) {
+                        proxy.documentation = value;
+                    }
+                },
+                get documentation() {
+                    return documentation;
+                },
+                set commandProvider(value: JupyterServerCommandProvider | undefined) {
+                    commandProvider = value;
+                    if (proxy) {
+                        proxy.commandProvider = value;
+                    }
+                },
+                get commandProvider() {
+                    return commandProvider;
+                },
+                set serverProvider(value: JupyterServerProvider | undefined) {
+                    serverProvider = value;
+                    if (proxy) {
+                        proxy.serverProvider = value;
+                    }
+                },
+                get serverProvider() {
+                    return serverProvider;
+                }
+            };
+            let extensionId = '';
+            (async () => {
+                sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
+                extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
+                if (
+                    ![JVSC_EXTENSION_ID.split('.')[0], 'SynapseVSCode', 'GitHub']
+                        .map((s) => s.toLowerCase())
+                        .includes(extensionId.split('.')[0].toLowerCase())
+                ) {
+                    throw new Error(`Access to Proposed API not allowed, as it is subject to change.`);
+                }
+                const registration =
+                    serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
+                const proxy = registration.createJupyterServerCollection(extensionId, id, label);
+                proxy.label = label;
+                proxy.documentation = documentation;
+                proxy.commandProvider = commandProvider;
+                proxy.serverProvider = serverProvider;
+                if (isDisposed) {
+                    proxy.dispose();
+                }
+                disposeHandler = proxy.dispose.bind(proxy);
+            })().catch((ex) =>
+                traceError(
+                    `Failed to create Jupyter Server Collection for ${id}:${label} & extension ${extensionId}`,
+                    ex
+                )
+            );
+            return collection;
         }
     };
 

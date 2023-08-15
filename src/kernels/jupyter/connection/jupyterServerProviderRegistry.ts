@@ -1,20 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import {
-    CancellationToken,
-    CancellationTokenSource,
-    Command,
-    EventEmitter,
-    QuickPickItem,
-    Uri,
-    commands
-} from 'vscode';
+import { CancellationToken, CancellationTokenSource, EventEmitter, QuickPickItem, Uri } from 'vscode';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
     JupyterServer,
     JupyterServerCollection,
+    JupyterServerCommand,
     JupyterServerCommandProvider,
     JupyterServerProvider
 } from '../../../api';
@@ -94,7 +87,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     }
     private hookupProviders() {
         disposeAllDisposables(this.providerChanges);
-        if (this.provider.serverProvider) {
+        if (this.provider.serverProvider?.onDidChangeServers) {
             this.provider.serverProvider.onDidChangeServers(
                 () => {
                     this._servers.clear();
@@ -105,7 +98,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             );
         }
     }
-    private commands = new Map<string, Command>();
+    private commands = new Map<string, JupyterServerCommand>();
     async getQuickPickEntryItems(value?: string): Promise<(QuickPickItem & { default?: boolean | undefined })[]> {
         if (!this.provider.commandProvider) {
             throw new Error(`No Jupyter Server Command Provider for ${this.provider.extensionId}#${this.provider.id}`);
@@ -113,19 +106,18 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         const token = new CancellationTokenSource();
         try {
             value = this.provider.extensionId === JVSC_EXTENSION_ID ? value : undefined;
-            const items = await this.provider.commandProvider.getCommands(token.token, value || '');
+            const items = await this.provider.commandProvider.getCommands(value || '', token.token);
             if (this.provider.extensionId === JVSC_EXTENSION_ID) {
                 if (!value) {
                     this.commands.clear();
                 }
                 items.forEach((c) => this.commands.set(c.title, c));
             }
-            const selectedCommand = items.find((c) => c.title === this.provider.commandProvider?.selected?.title);
             return items.map((c) => {
                 return {
                     label: c.title,
                     tooltip: c.tooltip,
-                    default: c === selectedCommand
+                    default: c.picked === true
                 };
             });
         } catch (ex) {
@@ -144,7 +136,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
         const token = new CancellationTokenSource();
         try {
-            const items = await this.provider.commandProvider.getCommands(token.token);
+            const items = await this.provider.commandProvider.getCommands('', token.token);
             const command = items.find((c) => c.title === item.label) || this.commands.get(item.label);
             if (!command) {
                 throw new Error(
@@ -152,10 +144,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 );
             }
             try {
-                const result: JupyterServer | 'back' | undefined = await commands.executeCommand(
-                    command.command,
-                    ...(command.arguments || [])
-                );
+                const result = await this.provider.commandProvider.handleCommand(command, token.token);
                 if (result === 'back') {
                     return result;
                 }
@@ -172,14 +161,19 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     }
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
         const token = new CancellationTokenSource();
+        if (!this.provider.serverProvider) {
+            throw new Error(
+                `Server Provider not initialized, Extension: ${this.extensionId}:${this.id}, Server ${handle}`
+            );
+        }
         try {
             const server = await this.getServer(handle, token.token);
-            const info = await server.resolveConnectionInformation(token.token);
+            const info = await this.provider.serverProvider?.resolveConnectionInformation(server, token.token);
             return {
                 baseUrl: info.baseUrl.toString(),
                 displayName: server.label,
                 token: info.token || '',
-                authorizationHeader: info.authorizationHeader,
+                authorizationHeader: info.headers,
                 mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
                 webSocketProtocols: info.webSocketProtocols
             };
