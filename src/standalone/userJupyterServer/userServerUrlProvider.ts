@@ -141,13 +141,13 @@ export class UserJupyterServerUrlProvider
     }
     selected: JupyterServerCommand = {
         title: DataScience.jupyterSelectURIPrompt,
-        tooltip: DataScience.jupyterSelectURINewDetail,
-        command: 'jupyter.selectLocalJupyterServer'
+        tooltip: DataScience.jupyterSelectURINewDetail
     };
+    private commandUrls = new Map<string, string>();
     /**
      * @param value Value entered by the user in the quick pick
      */
-    async getCommands(_token: CancellationToken, value?: string): Promise<JupyterServerCommand[]> {
+    async getCommands(value: string, _token: CancellationToken): Promise<JupyterServerCommand[]> {
         let url = '';
         try {
             value = (value || '').trim();
@@ -157,20 +157,15 @@ export class UserJupyterServerUrlProvider
         } catch {
             //
         }
-        if (value) {
-            return [
-                {
-                    title: DataScience.connectToToTheJupyterServer(value),
-                    command: 'jupyter.selectLocalJupyterServer',
-                    arguments: [url]
-                }
-            ];
+        if (url) {
+            this.commandUrls.clear();
+            this.commandUrls.set(DataScience.connectToToTheJupyterServer(url), url);
+            return [{ title: DataScience.connectToToTheJupyterServer(url) }];
         }
         return [
             {
                 title: DataScience.jupyterSelectURIPrompt,
-                tooltip: DataScience.jupyterSelectURINewDetail,
-                command: 'jupyter.selectLocalJupyterServer'
+                tooltip: DataScience.jupyterSelectURINewDetail
             }
         ];
     }
@@ -183,21 +178,43 @@ export class UserJupyterServerUrlProvider
             return {
                 id: s.handle,
                 label: s.serverInfo.displayName,
-                resolveConnectionInformation: async (_token: CancellationToken) => {
-                    const serverInfo = await this.getServerUri(s.handle);
-                    return {
-                        baseUrl: Uri.parse(serverInfo.baseUrl),
-                        token: serverInfo.token,
-                        authorizationHeader: serverInfo.authorizationHeader,
-                        mappedRemoteNotebookDir: serverInfo.mappedRemoteNotebookDir
-                            ? Uri.file(serverInfo.mappedRemoteNotebookDir)
-                            : undefined,
-                        webSocketProtocols: serverInfo.webSocketProtocols
-                    };
-                },
                 remove: () => this.removeHandle(s.handle)
             };
         });
+    }
+    public async resolveConnectionInformation(server: JupyterServer, _token: CancellationToken) {
+        const serverInfo = await this.getServerUri(server.id);
+        return {
+            baseUrl: Uri.parse(serverInfo.baseUrl),
+            token: serverInfo.token,
+            authorizationHeader: serverInfo.authorizationHeader,
+            mappedRemoteNotebookDir: serverInfo.mappedRemoteNotebookDir
+                ? Uri.file(serverInfo.mappedRemoteNotebookDir)
+                : undefined,
+            webSocketProtocols: serverInfo.webSocketProtocols
+        };
+    }
+    public async handleCommand(command: JupyterServerCommand): Promise<void | JupyterServer | 'back' | undefined> {
+        const token = new CancellationTokenSource();
+        const url = this.commandUrls.get(command.title) || '';
+        try {
+            const handleOrBack = await this.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, true, url);
+            if (!handleOrBack) {
+                return;
+            }
+            if (handleOrBack === 'back') {
+                return 'back';
+            }
+            const servers = await this.getJupyterServers(token.token);
+            const server = servers.find((s) => s.id === handleOrBack);
+            if (!server) {
+                throw new Error(`Server ${handleOrBack} not found`);
+            }
+            return server;
+        } catch (ex) {
+            traceError(`Failed to select a Jupyter Server`, ex);
+            return;
+        }
     }
     activate() {
         if (this.appEnv.channel === 'insiders') {
@@ -211,28 +228,11 @@ export class UserJupyterServerUrlProvider
             collection.serverProvider = this;
             collection.documentation = this.documentation;
             this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
-            this.commands.registerCommand('jupyter.selectLocalJupyterServer', async (_url?: string) => {
-                const token = new CancellationTokenSource();
+            this.commands.registerCommand('jupyter.selectLocalJupyterServer', async (url?: string) => {
                 try {
-                    const handleOrBack = await this.handleQuickPick(
-                        { label: DataScience.jupyterSelectURIPrompt },
-                        true
-                    );
-                    if (!handleOrBack) {
-                        return;
-                    }
-                    if (handleOrBack === 'back') {
-                        return 'back';
-                    }
-                    const servers = await this.getJupyterServers(token.token);
-                    const server = servers.find((s) => s.id === handleOrBack);
-                    if (!server) {
-                        throw new Error(`Server ${handleOrBack} not found`);
-                    }
-                    return server;
+                    await this.handleQuickPick({ label: DataScience.jupyterSelectURIPrompt }, true, url);
                 } catch (ex) {
                     traceError(`Failed to select a Jupyter Server`, ex);
-                    return;
                 }
             });
         } else {

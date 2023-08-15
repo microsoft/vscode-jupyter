@@ -23,9 +23,9 @@ declare module './api' {
          */
         readonly token?: string;
         /**
-         * Authorization header to be used when connecting to the server.
+         * HTTP header to be used when connecting to the server.
          */
-        readonly authorizationHeader?: Record<string, string>;
+        readonly headers?: Record<string, string>;
         /**
          * The local directory that maps to the remote directory of the Jupyter Server.
          * E.g. assume you start Jupyter Notebook with --notebook-dir=/foo/bar,
@@ -62,10 +62,6 @@ declare module './api' {
          * A human-readable string representing the name of the Server. This can be read and updated by the extension.
          */
         label: string;
-        /**
-         * Returns the connection information for this server.
-         */
-        resolveConnectionInformation(token: CancellationToken): Promise<JupyterServerConnectionInformation>;
     }
 
     /**
@@ -81,12 +77,16 @@ declare module './api' {
          * Returns the list of servers.
          */
         getJupyterServers(token: CancellationToken): Promise<JupyterServer[]>;
+        /**
+         * Returns the connection information for the Jupyter server.
+         */
+        resolveConnectionInformation(
+            server: JupyterServer,
+            token: CancellationToken
+        ): Promise<JupyterServerConnectionInformation>;
     }
     /**
-     * Represents a reference to a Jupyter Server command. Provides a title which
-     * will be used to represent a command in the UI and, optionally,
-     * an array of arguments which will be passed to the command handler
-     * function when invoked.
+     * Represents a reference to a Jupyter Server command.
      */
     export interface JupyterServerCommand {
         /**
@@ -98,39 +98,36 @@ declare module './api' {
          */
         detail?: string;
         /**
-         * The identifier of the actual command handler.
-         * @see {@link commands.registerCommand}
-         */
-        command: string;
-        /**
          * A tooltip for the command, when represented in the UI.
          */
         tooltip?: string;
         /**
-         * Arguments that the command handler should be
-         * invoked with.
+         * Default command to be used when there are no servers.
+         * If not set, and there are not servers, then the user will be prompted to select a command from a list of commands returned by `getCommands`.
          */
-        arguments?: unknown[];
+        picked?: boolean;
     }
     /**
      * Provider of Jupyter Server Commands.
      * Each command allows the user to perform an action.
-     * The return value of the command should be of the form Promise<JupyterServer | 'back' | undefined>
-     * The returned value have the following meaning:
-     * - JupyterServer  : The Jupyter Server object that was created
-     * - 'back'         : Go back to the previous screen
-     * - undefined|void : Do nothing
      */
     export interface JupyterServerCommandProvider {
         /**
-         * Default command to be used when there are no servers. This can be read and updated by the extension.
-         * If not set, and there are not servers, then the user will be prompted to select a command from a list of commands returned by `getCommands`.
-         */
-        selected?: JupyterServerCommand;
-        /**
          * Returns a list of commands to be displayed to the user.
+         * If there are no JupyterServers and one of the returned commands has `picked = true`,
+         * then the `handleCommand` method will be invoked with that command.
+         * @param options Reserved for future use. Extensions can ignore this argument for now.
          */
-        getCommands(token: CancellationToken): Promise<JupyterServerCommand[]>;
+        getCommands(options: unknown, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        /**
+         * Invoked when a command has been selected.
+         * @param command The command selected by the user.
+         * @returns
+         * - JupyterServer  : The Jupyter Server object that was created
+         * - 'back'         : Go back to the previous UI in the workflow
+         * - undefined|void : Do nothing
+         */
+        handleCommand(command: JupyterServerCommand): Promise<JupyterServer | 'back' | undefined | void>;
     }
     export interface JupyterServerCollection {
         /**
@@ -161,7 +158,11 @@ declare module './api' {
     export interface JupyterAPI {
         /**
          * Creates a Jupyter Server Collection that can be displayed in the Notebook Kernel Picker.
+         * 
+         * The ideal time to invoke this method would be when a Notebook Document has been opened.
+         * Calling this during activation of the extension might not be ideal, as this would result in
+         * unnecessarily activating the Jupyter extension as well.
          */
-        createJupyterServerCollection(id: string, label: string): Promise<JupyterServerCollection>;
+        createJupyterServerCollection(id: string, label: string): JupyterServerCollection;
     }
 }
