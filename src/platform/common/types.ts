@@ -52,6 +52,7 @@ export interface IJupyterSettings {
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
     readonly allowUnauthorizedRemoteConnection: boolean;
+    readonly enableProposedJupyterServerProviderApi?: boolean;
     readonly jupyterInterruptTimeout: number;
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
@@ -257,7 +258,9 @@ export type DeprecatedFeatureInfo = {
     setting?: DeprecatedSettingAndValue;
 };
 
-export interface IFeatureSet {}
+export interface IFeatureSet {
+    enableProposedJupyterServerProviderApi: boolean;
+}
 
 export const IFeaturesManager = Symbol('IFeaturesManager');
 
