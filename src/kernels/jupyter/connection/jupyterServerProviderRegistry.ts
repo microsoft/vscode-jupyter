@@ -144,7 +144,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 );
             }
             try {
-                const result = await this.provider.commandProvider.handleCommand(command);
+                const result = await this.provider.commandProvider.handleCommand(command, token.token);
                 if (result === 'back') {
                     return result;
                 }
