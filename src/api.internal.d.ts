@@ -8,20 +8,18 @@ import { CancellationToken, QuickPickItem, Uri } from 'vscode';
 // Could also contain proposed API that is used internally and not exposed to other extensions.
 
 declare module './api' {
-    export interface JupyterServer {
+    export interface JupyterServerCollection {
+        /**
+         * Internally used by Jupyter extension to track the extension that created this server.
+         */
+        readonly extensionId: string;
         /**
          * Display a `trash` icon next to each server in the quick pick.
          * Allowing the user to remove this server.
          * Currently used only by the Jupyter Extension.
          * A better more generic way to deal with this would be via commands.
          */
-        remove?(): Promise<void>;
-    }
-    export interface JupyterServerCollection {
-        /**
-         * Internally used by Jupyter extension to track the extension that created this server.
-         */
-        readonly extensionId: string;
+        remove?(server: JupyterServer): Promise<void>;
     }
     export interface JupyterServerCommandProvider {
         /**

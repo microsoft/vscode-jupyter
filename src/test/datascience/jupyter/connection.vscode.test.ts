@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import {
-    IApplicationEnvironment,
     IApplicationShell,
     IClipboard,
     ICommandManager,
@@ -18,25 +17,30 @@ import {
 import { IS_REMOTE_NATIVE_TEST, initialize } from '../../initialize.node';
 import { startJupyterServer, closeNotebooksAndCleanUpAfterTests } from '../notebook/helper.node';
 import { hijackPrompt } from '../notebook/helper';
-import { UserJupyterServerUrlProvider } from '../../../standalone/userJupyterServer/userServerUrlProvider';
+import {
+    SecureConnectionValidator,
+    UserJupyterServerDisplayName,
+    UserJupyterServerUriInput,
+    UserJupyterServerUrlProvider,
+    parseUri
+} from '../../../standalone/userJupyterServer/userServerUrlProvider';
 import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
     IJupyterServerProviderRegistry,
     IJupyterServerUriEntry,
-    IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration
+    IJupyterServerUriStorage
 } from '../../../kernels/jupyter/types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { Disposable, EventEmitter, InputBox, Memento, QuickPickItem } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
 import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
-import { IMultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
+import { IMultiStepInputFactory, InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { IFileSystem } from '../../../platform/common/platform/types';
 
 suite('Connect to Remote Jupyter Servers', function () {
@@ -100,7 +104,6 @@ suite('Connect to Remote Jupyter Servers', function () {
         ]);
     });
     let clipboard: IClipboard;
-    let uriProviderRegistration: IJupyterUriProviderRegistration;
     let appShell: IApplicationShell;
     let encryptedStorage: IEncryptedStorage;
     let memento: Memento;
@@ -108,7 +111,7 @@ suite('Connect to Remote Jupyter Servers', function () {
     let userUriProvider: UserJupyterServerUrlProvider;
     let commands: ICommandManager;
     let inputBox: InputBox;
-
+    let token: CancellationTokenSource;
     setup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
@@ -143,13 +146,14 @@ suite('Connect to Remote Jupyter Servers', function () {
             return new Disposable(noop);
         });
         sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
+        token = new CancellationTokenSource();
+        disposables.push(new Disposable(() => token.cancel()));
+        disposables.push(token);
         clipboard = mock<IClipboard>();
-        uriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
         encryptedStorage = mock<IEncryptedStorage>();
         memento = mock<Memento>();
         commands = mock<ICommandManager>();
-        when(uriProviderRegistration.registerProvider(anything(), anything())).thenReturn(new Disposable(noop));
         when(commands.registerCommand(anything(), anything())).thenReturn(new Disposable(noop));
         when(memento.get(anything())).thenReturn(undefined);
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
@@ -173,7 +177,6 @@ suite('Connect to Remote Jupyter Servers', function () {
 
         userUriProvider = new UserJupyterServerUrlProvider(
             instance(clipboard),
-            instance(uriProviderRegistration),
             appShell,
             api.serviceContainer.get<IConfigurationService>(IConfigurationService),
             api.serviceContainer.get<JupyterConnection>(JupyterConnection),
@@ -189,8 +192,7 @@ suite('Connect to Remote Jupyter Servers', function () {
             api.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator),
             api.serviceContainer.get<IExtensionContext>(IExtensionContext),
             api.serviceContainer.get<IFileSystem>(IFileSystem),
-            api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry),
-            api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment)
+            api.serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry)
         );
         userUriProvider.activate();
 
@@ -214,31 +216,33 @@ suite('Connect to Remote Jupyter Servers', function () {
         userUri: string;
         failWithInvalidPassword?: boolean;
     }) {
+        const displayName = 'Test Remove Server Name';
         when(clipboard.readText()).thenResolve(userUri);
-        sinon.stub(appShell, 'showInputBox').callsFake((opts) => {
-            console.error(opts);
-            if (opts?.prompt === DataScience.jupyterSelectPasswordPrompt) {
-                return Promise.resolve(password);
-            } else if (opts?.title === DataScience.jupyterRenameServer) {
-                return Promise.resolve('Title of Server');
-            }
-            return Promise.resolve(undefined);
+        sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser').resolves({
+            url: userUri,
+            jupyterServerUri: parseUri(userUri, '')!
         });
+        sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections').resolves(true);
+        sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName').resolves(displayName);
         const errorMessageDisplayed = createDeferred<string>();
-        sinon.stub(inputBox, 'validationMessage').set((msg) => errorMessageDisplayed.resolve(msg));
-        const quickPick: QuickPickItem = {
-            label: DataScience.jupyterSelectURIPrompt
-        };
-        const handlePromise = createDeferredFromPromise(userUriProvider.handleQuickPick(quickPick, false));
+        inputBox.value = password || '';
+        sinon.stub(inputBox, 'validationMessage').set((msg) => (msg ? errorMessageDisplayed.resolve(msg) : undefined));
+        const [cmd] = await userUriProvider.getCommands(userUri, token.token);
+        const handlePromise = createDeferredFromPromise(userUriProvider.handleCommand(cmd, token.token));
         await Promise.race([handlePromise.promise, errorMessageDisplayed.promise]);
 
         if (failWithInvalidPassword) {
             assert.strictEqual(errorMessageDisplayed.value, DataScience.passwordFailure);
             assert.ok(!handlePromise.completed);
         } else {
-            assert.equal(errorMessageDisplayed.value || '', '', 'Should not have displayed an error message');
+            assert.equal(errorMessageDisplayed.value || '', '', `Password should be valid, ${errorMessageDisplayed}`);
             assert.ok(handlePromise.completed, 'Did not complete');
-            assert.ok(handlePromise.value, 'Invalid Handle');
+            const value = handlePromise.value;
+            if (!value || value === 'back' || value instanceof InputFlowAction) {
+                throw new Error(`Jupyter Server URI not entered, ${value}`);
+            }
+            assert.ok(value.id, 'Invalid Handle');
+            assert.ok(value.label, displayName);
 
             // Once storage has been refactored, then enable these tests.
             // const { serverHandle, serverInfo } = JSON.parse(
@@ -260,7 +264,6 @@ suite('Connect to Remote Jupyter Servers', function () {
             // assert.strictEqual(serverInfo.displayName, `Title of Server`, 'Invalid Title');
         }
     }
-
     test('Connect to server with Token in URL', () =>
         testConnection({ userUri: jupyterNotebookWithHelloToken.url, password: undefined }));
     test('Connect to server with Password and Token in URL', () =>
@@ -281,7 +284,7 @@ suite('Connect to Remote Jupyter Servers', function () {
             password: 'Bogus',
             failWithInvalidPassword: true
         }));
-    test('Connect to Lab server with Password & Token in URL', () =>
+    test('Connect to Lab server with Password & Token in URL', async () =>
         testConnection({ userUri: jupyterLabWithHelloPasswordAndWorldToken.url, password: 'Hello' }));
     test('Connect to server with empty Password & empty Token in URL', () =>
         testConnection({ userUri: jupyterNotebookWithEmptyPasswordToken.url, password: '' }));
