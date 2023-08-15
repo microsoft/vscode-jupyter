@@ -87,7 +87,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     }
     private hookupProviders() {
         disposeAllDisposables(this.providerChanges);
-        if (this.provider.serverProvider) {
+        if (this.provider.serverProvider?.onDidChangeServers) {
             this.provider.serverProvider.onDidChangeServers(
                 () => {
                     this._servers.clear();
