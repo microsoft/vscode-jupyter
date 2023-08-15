@@ -196,13 +196,23 @@ export interface IJupyterServerUriEntry {
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
+    /**
+     * Temporary event, the old API was async, the new API is sync.
+     * However until we migrate everything we will never know whether
+     * the data has been successfully loaded into memory.
+     */
+    readonly onDidLoad: Event<void>;
     readonly onDidChange: Event<void>;
     readonly onDidRemove: Event<IJupyterServerUriEntry[]>;
     readonly onDidAdd: Event<IJupyterServerUriEntry>;
+    readonly all: readonly IJupyterServerUriEntry[];
     /**
      * Updates MRU list marking this server as the most recently used.
      */
     update(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
+    /**
+     * @deprecated Use `all` and `onDidLoad` instead.
+     */
     getAll(): Promise<IJupyterServerUriEntry[]>;
     remove(serverProviderHandle: JupyterServerProviderHandle): Promise<void>;
     clear(): Promise<void>;
@@ -301,6 +311,6 @@ export interface IRemoteKernelFinder
 export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegistry');
 export interface IJupyterServerProviderRegistry {
     onDidChangeProviders: Event<void>;
-    providers: readonly JupyterServerCollection[];
+    readonly providers: readonly JupyterServerCollection[];
     createJupyterServerCollection(extensionId: string, id: string, label: string): JupyterServerCollection;
 }
