@@ -212,11 +212,13 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     }
     async removeHandleImpl(handle: string): Promise<void> {
         const token = new CancellationTokenSource();
+        if (!this.provider.remove) {
+            traceError(`Cannot remote server with id ${handle} as Provider does not support the 'remove' method.`);
+            return;
+        }
         try {
             const server = await this.getServer(handle, token.token);
-            if (server.remove) {
-                await server.remove();
-            }
+            await this.provider.remove(server);
         } catch {
             //
         } finally {
