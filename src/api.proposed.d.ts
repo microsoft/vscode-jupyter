@@ -72,7 +72,7 @@ declare module './api' {
          * Event fired when the list of servers changes.
          * Note: the getJupyterServers method will not be called unless changes are detected.
          */
-        onDidChangeServers: Event<void>;
+        onDidChangeServers?: Event<void>;
         /**
          * Returns the list of servers.
          */
