@@ -97,21 +97,18 @@ export class RemoteKernelFinderController implements IExtensionSyncActivationSer
         await Promise.all(
             this.jupyterServerProviderRegistry.providers.map(async (collection) => {
                 const serverProvider = collection.serverProvider;
-                if (!serverProvider) {
-                    return;
-                }
-                if (this.mappedProviders.has(serverProvider)) {
+                if (!serverProvider || this.mappedProviders.has(serverProvider)) {
                     return;
                 }
                 this.mappedProviders.add(serverProvider);
-                if (collection.serverProvider?.onDidChangeServers) {
-                    collection.serverProvider?.onDidChangeServers(
+                if (serverProvider?.onDidChangeServers) {
+                    serverProvider?.onDidChangeServers(
                         () => this.lookForServersInCollection(collection),
                         this,
                         this.disposables
                     );
                 }
-                await this.lookForServersInCollection(collection);
+                await this.lookForServersInCollection(collection).catch(noop);
             })
         );
         token.dispose();
