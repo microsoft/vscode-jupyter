@@ -45,7 +45,9 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
 export class FeatureManager implements IFeaturesManager {
     private _onDidChangeFeatures = new Emitter<void>();
     readonly onDidChangeFeatures = this._onDidChangeFeatures.event;
-    private _features: IFeatureSet = {};
+    private _features: IFeatureSet = {
+        enableProposedJupyterServerProviderApi: false
+    };
     get features(): IFeatureSet {
         return this._features;
     }
@@ -72,8 +74,11 @@ export class FeatureManager implements IFeaturesManager {
     }
 
     private _updateFeatures() {
+        const enabled = this.workspace
+            .getConfiguration('jupyter')
+            .get<boolean>('enableProposedJupyterServerProviderApi', false);
         this.features = {
-            kernelPickerType: 'Insiders'
+            enableProposedJupyterServerProviderApi: enabled === true
         };
     }
 

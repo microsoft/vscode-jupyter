@@ -137,7 +137,9 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             getSuggestedController: () => Promise.resolve(undefined),
             addRemoteJupyterServer: () => Promise.resolve(undefined),
             openNotebook: () => Promise.reject(),
-            createJupyterServerCollection: () => Promise.reject()
+            createJupyterServerCollection: () => {
+                throw new Error('Not Implemented');
+            }
         };
     }
 }

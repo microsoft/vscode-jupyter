@@ -25,7 +25,7 @@ import { IKernelFinder, KernelConnectionMetadata, RemoteKernelConnectionMetadata
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JVSC_EXTENSION_ID, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable } from '../../../platform/common/types';
+import { IDisposable, IFeaturesManager } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInput,
@@ -76,7 +76,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
-        @inject(IConnectionDisplayDataProvider) private readonly displayDataProvider: IConnectionDisplayDataProvider
+        @inject(IConnectionDisplayDataProvider) private readonly displayDataProvider: IConnectionDisplayDataProvider,
+        @inject(IFeaturesManager)
+        private readonly features: IFeaturesManager
     ) {}
     public async selectRemoteKernel(
         notebook: NotebookDocument,
@@ -135,6 +137,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             | QuickPickItem
         )[] = [];
 
+        const displayLastUsedTime = !this.features.features.enableProposedJupyterServerProviderApi;
         await Promise.all(
             servers
                 .filter((s) => s.serverProviderHandle.id === provider.id)
@@ -145,7 +148,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                             generateIdFromRemoteProvider(item.provider) ===
                             generateIdFromRemoteProvider(server.serverProviderHandle)
                     );
-                    if (token.isCancellationRequested || !lastUsedTime) {
+                    if ((token.isCancellationRequested || !lastUsedTime) && displayLastUsedTime) {
                         return;
                     }
                     quickPickServerItems.push({
@@ -153,7 +156,10 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         kernelFinderInfo: server,
                         idAndHandle: server.serverProviderHandle,
                         label: server.displayName,
-                        detail: DataScience.jupyterSelectURIMRUDetail(new Date(lastUsedTime.time)),
+                        detail:
+                            displayLastUsedTime && lastUsedTime?.time
+                                ? DataScience.jupyterSelectURIMRUDetail(new Date(lastUsedTime.time))
+                                : undefined,
                         buttons: provider.removeHandle
                             ? [
                                   {
