@@ -130,7 +130,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitleWithoutName;
         this.provider
             .then((provider) => {
-                quickPick.title = provider.title;
+                quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitle(provider.title);
                 quickPick.busy = provider.status === 'discovering';
                 provider.onDidChange(() => this.updateQuickPickItems(quickPick, provider), this, disposables);
                 quickPick.onDidTriggerButton(

@@ -42,6 +42,10 @@ export type StorageMRUItem = {
  */
 @injectable()
 export class JupyterServerUriStorage extends Disposables implements IJupyterServerUriStorage {
+    private _onDidLoad = new EventEmitter<void>();
+    public get onDidLoad() {
+        return this._onDidLoad.event;
+    }
     private _onDidChangeUri = new EventEmitter<void>();
     public get onDidChange() {
         return this._onDidChangeUri.event;
@@ -57,6 +61,10 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     private readonly oldStorage: OldStorage;
     private readonly newStorage: NewStorage;
     private storageEventsHooked?: boolean;
+    private _all: IJupyterServerUriEntry[] = [];
+    public get all() {
+        return this._all;
+    }
     constructor(
         @inject(IEncryptedStorage) encryptedStorage: IEncryptedStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalMemento: Memento,
@@ -74,6 +82,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.oldStorage = new OldStorage(encryptedStorage, globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.newStorage = new NewStorage(fs, storageFile, this.oldStorage, globalMemento);
+        this.disposables.push(this._onDidLoad);
         this.disposables.push(this._onDidAddUri);
         this.disposables.push(this._onDidChangeUri);
         this.disposables.push(this._onDidRemoveUris);
@@ -91,12 +100,19 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     public async getAll(): Promise<IJupyterServerUriEntry[]> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
-        return this.newStorage.getAll();
+        const previous = this._all;
+        this._all = await this.newStorage.getAll();
+        if (previous.length !== this._all.length || JSON.stringify(this._all) !== JSON.stringify(previous)) {
+            this._onDidLoad.fire();
+        }
+        return this._all;
     }
     public async clear(): Promise<void> {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         await Promise.all([this.oldStorage.clear(), this.newStorage.clear()]);
+        this._all = [];
+        this._onDidLoad.fire();
     }
     public async add(jupyterHandle: JupyterServerProviderHandle, options?: { time: number }): Promise<void> {
         this.hookupStorageEvents();
@@ -109,16 +125,19 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         };
 
         await this.newStorage.add(entry);
+        this.getAll().catch(noop);
     }
     public async update(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         await this.newStorage.update(server);
+        this.getAll().catch(noop);
     }
     public async remove(server: JupyterServerProviderHandle) {
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         await this.newStorage.remove(server);
+        this.getAll().catch(noop);
     }
 }
 

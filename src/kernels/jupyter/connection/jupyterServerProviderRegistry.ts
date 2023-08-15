@@ -67,6 +67,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     private providerChanges: IDisposable[] = [];
     removeHandle?(handle: string): Promise<void>;
     getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
+    private commands = new Map<string, JupyterServerCommand>();
     constructor(
         private readonly provider: JupyterServerCollection,
         public readonly extensionId: string
@@ -98,7 +99,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             );
         }
     }
-    private commands = new Map<string, JupyterServerCommand>();
     async getQuickPickEntryItems(value?: string): Promise<(QuickPickItem & { default?: boolean | undefined })[]> {
         if (!this.provider.commandProvider) {
             throw new Error(`No Jupyter Server Command Provider for ${this.provider.extensionId}#${this.provider.id}`);
@@ -280,14 +280,14 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
         const serverProvider = new JupyterServerCollectionImpl(extensionId, id, label);
         this._serverProviders.set(extId, serverProvider);
         let uriRegistration: IDisposable | undefined;
+        let adapter: JupyterUriProviderAdaptor | undefined;
         serverProvider.onDidChangeProvider(
             () => {
                 if (serverProvider.serverProvider) {
+                    adapter?.dispose();
                     uriRegistration?.dispose();
-                    uriRegistration = this.jupyterUriProviderRegistration.registerProvider(
-                        new JupyterUriProviderAdaptor(serverProvider, extensionId),
-                        extensionId
-                    );
+                    adapter = new JupyterUriProviderAdaptor(serverProvider, extensionId);
+                    uriRegistration = this.jupyterUriProviderRegistration.registerProvider(adapter, extensionId);
                     this.disposables.push(uriRegistration);
                     this._onDidChangeProviders.fire();
                 }
@@ -298,6 +298,7 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
 
         serverProvider.onDidDispose(
             () => {
+                adapter?.dispose();
                 uriRegistration?.dispose();
                 this._serverProviders.delete(extId);
                 this._onDidChangeProviders.fire();

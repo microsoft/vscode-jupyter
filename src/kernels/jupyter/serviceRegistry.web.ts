@@ -34,6 +34,7 @@ import { KernelSessionFactory } from '../common/kernelSessionFactory';
 import { OldJupyterKernelSessionFactory } from './session/oldJupyterKernelSessionFactory';
 import { JupyterKernelSessionFactory } from './session/jupyterKernelSessionFactory';
 import { JupyterServerProviderRegistry } from './connection/jupyterServerProviderRegistry';
+import { IRemoteKernelFinderController } from './finder/types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IOldJupyterSessionManagerFactory>(
@@ -68,10 +69,11 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterRemoteCachedKernelValidator
     );
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandlerWeb);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
+    serviceManager.addSingleton<IRemoteKernelFinderController>(
+        IRemoteKernelFinderController,
         RemoteKernelFinderController
     );
+    serviceManager.addBinding(IRemoteKernelFinderController, IExtensionSyncActivationService);
     serviceManager.addSingleton<IJupyterServerProviderRegistry>(
         IJupyterServerProviderRegistry,
         JupyterServerProviderRegistry
