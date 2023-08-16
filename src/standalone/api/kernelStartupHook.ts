@@ -4,13 +4,16 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IKernel, IKernelProvider, IKernelSession, isRemoteConnection } from '../../kernels/types';
-import { IDisposableRegistry } from '../../platform/common/types';
-import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
+import { IDisposableRegistry, IExtensions } from '../../platform/common/types';
+import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationError, CancellationToken } from 'vscode';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../platform/common/constants';
 import { sendTelemetryEvent } from '../../telemetry';
+import { raceCancellation } from '../../platform/common/cancellation';
+import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
+import { DataScience } from '../../platform/common/utils/localize';
 
 @injectable()
 export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActivationService {
@@ -18,7 +21,11 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUrisRegistration: IJupyterUriProviderRegistration
+        private readonly jupyterUrisRegistration: IJupyterUriProviderRegistration,
+        @inject(IExtensions)
+        private readonly extensions: IExtensions,
+        @inject(IJupyterServerProviderRegistry)
+        private readonly serverProviders: IJupyterServerProviderRegistry
     ) {}
     activate(): void {
         this.kernelProvider.onDidCreateKernel((kernel) => this.addOnStartHooks(kernel), this, this.disposables);
@@ -26,16 +33,37 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
 
     private addOnStartHooks(kernel: IKernel) {
         const connection = kernel.kernelConnectionMetadata;
-        // Startup hooks only apply to remote kernels
-        if (!isRemoteConnection(connection) || connection.serverProviderHandle.extensionId === JVSC_EXTENSION_ID) {
+        // Startup hooks only apply to remote kernels specs
+        if (
+            !isRemoteConnection(connection) ||
+            connection.serverProviderHandle.extensionId === JVSC_EXTENSION_ID ||
+            connection.kind !== 'startUsingRemoteKernelSpec'
+        ) {
             return;
         }
         kernel.addHook(
             'didStart',
-            async (session: IKernelSession | undefined) => {
+            async (session: IKernelSession | undefined, token: CancellationToken) => {
                 if (!session) {
                     return;
                 }
+                const serverProvider = this.serverProviders.providers.find(
+                    (provider) =>
+                        provider.extensionId === connection.serverProviderHandle.extensionId &&
+                        provider.id === connection.serverProviderHandle.id
+                );
+                if (!serverProvider) {
+                    // This is not possible
+                    traceError(
+                        `Unable to find Jupyter Server Provider for ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
+                    );
+                    return;
+                }
+                if (!serverProvider.serverProvider?.onStartKernel) {
+                    // No hooks
+                    return;
+                }
+                const onStartKernel = serverProvider.serverProvider.onStartKernel.bind(serverProvider.serverProvider);
                 const provider = this.jupyterUrisRegistration.providers.find(
                     (p) =>
                         p.extensionId === connection.serverProviderHandle.extensionId &&
@@ -44,7 +72,7 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                 if (!provider) {
                     // This is not possible
                     traceError(
-                        `Unable to find kernel ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
+                        `Unable to find Provider for ${connection.id} with provider ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id}`
                     );
                     return;
                 }
@@ -64,14 +92,19 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                     );
                     return;
                 }
-                if (!server.onStartKernel) {
-                    return;
-                }
-                const token = new CancellationTokenSource();
                 const time = Date.now();
                 try {
-                    await server.onStartKernel(kernel.uri, server, session, token.token);
+                    const extension = this.extensions.getExtension(provider.extensionId);
+                    const message = DataScience.runningKernelStartupHooksFor(
+                        extension?.packageJSON?.displayName || provider.extensionId
+                    );
+                    await KernelProgressReporter.wrapAndReportProgress(kernel.resourceUri, message, () =>
+                        raceCancellation(token, onStartKernel({ uri: kernel.uri, server, session }, token))
+                    );
                 } catch (ex) {
+                    if (ex instanceof CancellationError) {
+                        return;
+                    }
                     // We do not care about the errors from 3rd party extensions.
                     traceWarning(
                         `Startup hook for ${connection.serverProviderHandle.extensionId}$${connection.serverProviderHandle.id} failed`,
@@ -87,7 +120,6 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                             providerId: connection.serverProviderHandle.id
                         }
                     );
-                    token.dispose();
                     if (duration > 1_000) {
                         traceVerbose(
                             `Kernel Startup hook for ${generateIdFromRemoteProvider(
