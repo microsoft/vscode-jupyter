@@ -113,7 +113,6 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                     );
                 } finally {
                     const duration = Date.now() - time;
-                    await sleep(10_000);
                     sendTelemetryEvent(
                         Telemetry.JupyterKernelStartupHook,
                         { duration },
