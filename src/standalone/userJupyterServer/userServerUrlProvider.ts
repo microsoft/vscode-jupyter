@@ -93,7 +93,6 @@ export class UserJupyterServerUrlProvider
     private secureConnectionValidator: SecureConnectionValidator;
     private jupyterServerUriInput: UserJupyterServerUriInput;
     private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
-    private lastEnteredUrl?: string;
     constructor(
         @inject(IClipboard) clipboard: IClipboard,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
@@ -170,7 +169,7 @@ export class UserJupyterServerUrlProvider
         return {
             baseUrl: Uri.parse(serverInfo.baseUrl),
             token: serverInfo.token,
-            authorizationHeader: serverInfo.authorizationHeader,
+            headers: serverInfo.authorizationHeader,
             mappedRemoteNotebookDir: serverInfo.mappedRemoteNotebookDir
                 ? Uri.file(serverInfo.mappedRemoteNotebookDir)
                 : undefined,
@@ -178,18 +177,19 @@ export class UserJupyterServerUrlProvider
         };
     }
     public async handleCommand(
-        _command: JupyterServerCommand,
+        command: JupyterServerCommand & { url?: string },
         _token: CancellationToken
     ): Promise<void | JupyterServer | 'back' | undefined> {
         const token = new CancellationTokenSource();
         this.disposables.push(token);
         this.disposables.push(new Disposable(() => token.cancel()));
         try {
-            const handleOrBack = await this.captureRemoteJupyterUrl(token.token, this.lastEnteredUrl);
-            if (!handleOrBack) {
+            const url = 'url' in command ? command.url : undefined;
+            const handleOrBack = await this.captureRemoteJupyterUrl(token.token, url);
+            if (!handleOrBack || handleOrBack === InputFlowAction.cancel) {
                 return;
             }
-            if (handleOrBack === 'back') {
+            if (handleOrBack && handleOrBack instanceof InputFlowAction) {
                 return 'back';
             }
             const servers = await this.getJupyterServers(token.token);
@@ -210,22 +210,23 @@ export class UserJupyterServerUrlProvider
      * @param value Value entered by the user in the quick pick
      */
     async getCommands(value: string, _token: CancellationToken): Promise<JupyterServerCommand[]> {
-        this.lastEnteredUrl = undefined;
+        let url = '';
         try {
             value = (value || '').trim();
             if (['http:', 'https:'].includes(new URL(value.trim()).protocol.toLowerCase())) {
-                this.lastEnteredUrl = value;
+                url = value;
             }
         } catch {
             //
         }
-        if (this.lastEnteredUrl) {
-            return [{ title: DataScience.connectToToTheJupyterServer(this.lastEnteredUrl) }];
+        if (url) {
+            const title = DataScience.connectToToTheJupyterServer(url);
+            return [{ title, url } as JupyterServerCommand];
         }
         return [
             {
                 title: DataScience.jupyterSelectURIPrompt,
-                tooltip: DataScience.jupyterSelectURINewDetail,
+                detail: DataScience.jupyterSelectURINewDetail,
                 picked: true
             }
         ];
@@ -368,6 +369,7 @@ export class UserJupyterServerUrlProvider
         let nextStep: Steps = 'Get Url';
         let previousStep: Steps | undefined = 'Get Url';
         let url = initialUrl;
+        let initialUrlWasValid = false;
         if (initialUrl) {
             // Validate the URI first, which would otherwise be validated when user enters the Uri into the input box.
             const initialVerification = this.jupyterServerUriInput.parseUserUriAndGetValidationError(initialUrl);
@@ -376,6 +378,7 @@ export class UserJupyterServerUrlProvider
                 validationErrorMessage = initialVerification.validationError;
                 nextStep = 'Get Url';
             } else {
+                initialUrlWasValid = true;
                 jupyterServerUri = initialVerification.jupyterServerUri;
                 nextStep = 'Check Passwords';
             }
@@ -385,12 +388,13 @@ export class UserJupyterServerUrlProvider
                 try {
                     handle = uuid();
                     if (nextStep === 'Get Url') {
+                        initialUrlWasValid = false;
                         nextStep = 'Check Passwords';
                         previousStep = undefined;
                         const errorMessage = validationErrorMessage;
                         validationErrorMessage = ''; // Never display this validation message again.
                         const result = await this.jupyterServerUriInput.getUrlFromUser(
-                            initialUrl,
+                            url || initialUrl,
                             errorMessage,
                             disposables
                         );
@@ -409,7 +413,8 @@ export class UserJupyterServerUrlProvider
                     const passwordDisposables: Disposable[] = [];
                     if (nextStep === 'Check Passwords') {
                         nextStep = 'Check Insecure Connections';
-                        previousStep = 'Get Url';
+                        // If we were given a Url, then back should get out of this flow.
+                        previousStep = initialUrlWasValid && initialUrl ? undefined : 'Get Url';
 
                         try {
                             const errorMessage = validationErrorMessage;
@@ -468,6 +473,10 @@ export class UserJupyterServerUrlProvider
                         nextStep = 'Verify Connection';
                         previousStep =
                             requiresPassword && jupyterServerUri.token.length === 0 ? 'Check Passwords' : 'Get Url';
+                        if (previousStep === 'Get Url') {
+                            // If we were given a Url, then back should get out of this flow.
+                            previousStep = initialUrlWasValid && initialUrl ? undefined : 'Get Url';
+                        }
                         if (
                             !requiresPassword &&
                             jupyterServerUri.token.length === 0 &&
@@ -545,6 +554,11 @@ export class UserJupyterServerUrlProvider
                             : requiresPassword && jupyterServerUri.token.length === 0
                             ? 'Check Passwords'
                             : 'Get Url';
+                        if (previousStep === 'Get Url') {
+                            // If we were given a Url, then back should get out of this flow.
+                            previousStep = initialUrlWasValid && initialUrl ? undefined : 'Get Url';
+                        }
+
                         jupyterServerUri.displayName = await this.jupyterServerUriDisplayName.getDisplayName(
                             handle,
                             jupyterServerUri.displayName || new URL(jupyterServerUri.baseUrl).hostname

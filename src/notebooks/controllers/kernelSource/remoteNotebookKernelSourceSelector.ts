@@ -26,7 +26,7 @@ import { IKernelFinder, KernelConnectionMetadata, RemoteKernelConnectionMetadata
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JVSC_EXTENSION_ID, JupyterNotebookView } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable, IFeaturesManager } from '../../../platform/common/types';
+import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInput,
@@ -80,8 +80,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IConnectionDisplayDataProvider) private readonly displayDataProvider: IConnectionDisplayDataProvider,
-        @inject(IFeaturesManager)
-        private readonly features: IFeaturesManager,
         @inject(IRemoteKernelFinderController)
         private readonly kernelFinderController: IRemoteKernelFinderController,
         @inject(IJupyterUriProviderRegistration)
@@ -144,42 +142,52 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             | QuickPickItem
         )[] = [];
 
-        const displayLastUsedTime = !this.features.features.enableProposedJupyterServerProviderApi;
+        const serversAndTimes: { server: IRemoteKernelFinder; time?: number }[] = [];
         await Promise.all(
             servers
                 .filter((s) => s.serverProviderHandle.id === provider.id)
                 .map(async (server) => {
                     // remote server
-                    const lastUsedTime = displayLastUsedTime
-                        ? (await this.serverUriStorage.getAll()).find(
-                              (item) =>
-                                  generateIdFromRemoteProvider(item.provider) ===
-                                  generateIdFromRemoteProvider(server.serverProviderHandle)
-                          )
-                        : undefined;
-                    if ((token.isCancellationRequested || !lastUsedTime) && displayLastUsedTime) {
+                    const lastUsedTime = (await this.serverUriStorage.getAll()).find(
+                        (item) =>
+                            generateIdFromRemoteProvider(item.provider) ===
+                            generateIdFromRemoteProvider(server.serverProviderHandle)
+                    );
+                    if (token.isCancellationRequested) {
                         return;
                     }
-                    quickPickServerItems.push({
-                        type: KernelFinderEntityQuickPickType.KernelFinder,
-                        kernelFinderInfo: server,
-                        idAndHandle: server.serverProviderHandle,
-                        label: server.displayName,
-                        detail:
-                            displayLastUsedTime && lastUsedTime?.time
-                                ? DataScience.jupyterSelectURIMRUDetail(new Date(lastUsedTime.time))
-                                : undefined,
-                        buttons: provider.removeHandle
-                            ? [
-                                  {
-                                      iconPath: new ThemeIcon('trash'),
-                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
-                                  }
-                              ]
-                            : []
-                    });
+                    serversAndTimes.push({ server, time: lastUsedTime?.time });
                 })
         );
+        serversAndTimes.sort((a, b) => {
+            if (!a.time && !b.time) {
+                return a.server.displayName.localeCompare(b.server.displayName);
+            }
+            if (!a.time && b.time) {
+                return 1;
+            }
+            if (a.time && !b.time) {
+                return -1;
+            }
+            return (a.time || 0) > (b.time || 0) ? -1 : 1;
+        });
+        serversAndTimes.forEach(({ server, time }) => {
+            quickPickServerItems.push({
+                type: KernelFinderEntityQuickPickType.KernelFinder,
+                kernelFinderInfo: server,
+                idAndHandle: server.serverProviderHandle,
+                label: server.displayName,
+                detail: time ? DataScience.jupyterSelectURIMRUDetail(new Date(time)) : undefined,
+                buttons: provider.removeHandle
+                    ? [
+                          {
+                              iconPath: new ThemeIcon('close'),
+                              tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                          }
+                      ]
+                    : []
+            });
+        });
 
         if (provider.getQuickPickEntryItems && provider.handleQuickPick) {
             if (quickPickServerItems.length > 0) {
