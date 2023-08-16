@@ -152,9 +152,9 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
                     // If we have previous messages, display the last item.
                     if (progressInfo.progressList.length > 0) {
                         const message = progressInfo.progressList[progressInfo.progressList.length - 1];
-                        if (message !== progressInfo.title && progressInfo.reporter) {
+                        if (progressInfo.reporter) {
                             progressInfo.reporter.report({
-                                message
+                                message: message === progressInfo.title && progressInfo.reporter ? '' : message
                             });
                         }
                     } else {

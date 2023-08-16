@@ -669,6 +669,8 @@ export namespace DataScience {
         );
     export const activatingPythonEnvironment = (pythonEnvName: string) =>
         l10n.t("Activating Python Environment '{0}'", pythonEnvName);
+    export const runningKernelStartupHooksFor = (extensionIdOrName: string) =>
+        l10n.t("Running Kernel startup hooks in '{0}'", extensionIdOrName);
 
     export const cellAtFormat = (filePath: string, lineNumber: number) => l10n.t('{0} Cell {1}', filePath, lineNumber);
 
