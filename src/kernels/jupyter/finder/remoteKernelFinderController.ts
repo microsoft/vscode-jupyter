@@ -3,7 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { IKernelFinder, IKernelProvider } from '../../types';
-import { IDisposableRegistry, IExtensionContext, IFeaturesManager } from '../../../platform/common/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import {
     IOldJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
@@ -49,9 +49,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterServerProviderRegistry)
-        private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry,
-        @inject(IFeaturesManager)
-        private readonly features: IFeaturesManager
+        private readonly jupyterServerProviderRegistry: IJupyterServerProviderRegistry
     ) {}
     private readonly handledProviders = new WeakSet<IJupyterUriProvider>();
     activate() {
@@ -92,9 +90,6 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
     private mappedServers = new Set<string>();
     @swallowExceptions('Handle Jupyter Provider Changes')
     private async handleProviderChanges() {
-        if (!this.features.features.enableProposedJupyterServerProviderApi) {
-            return;
-        }
         if (!this.serverUriStorage.all.length) {
             // We do not have any of the previously used servers, or the data has not yet loaded.
             return;
