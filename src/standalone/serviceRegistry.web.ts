@@ -22,6 +22,7 @@ import { JupyterServerSelectorCommand } from './userJupyterServer/serverSelector
 import { CommandRegistry as CodespaceCommandRegistry } from './codespace/commandRegistry';
 import { EagerlyActivateJupyterUriProviders } from './api/activateJupyterProviderExtensions';
 import { KernelStartupHooksForJupyterProviders } from './api/kernelStartupHook';
+import { ExposeUsedAzMLServerHandles } from './api/usedAzMLServerHandles';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, GlobalActivation);
@@ -81,5 +82,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelStartupHooksForJupyterProviders
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ExposeUsedAzMLServerHandles
     );
 }

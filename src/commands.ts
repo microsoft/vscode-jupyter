@@ -46,6 +46,7 @@ export interface ICommandNameArgumentTypeMapping {
     ['jupyterViewVariables.focus']: [];
     ['jupyter.selectLocalJupyterServer']: [] | [undefined | string];
     ['workbench.action.openSettings']: ['jupyter.kernels.excludePythonEnvironments'];
+    ['jupyter.getUsedAzMLServerHandles']: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.CreateNewInteractive]: [];
