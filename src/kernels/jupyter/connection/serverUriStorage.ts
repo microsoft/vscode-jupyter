@@ -461,9 +461,7 @@ class NewStorage {
 
                 await this.fs.writeFile(this.storageFile, JSON.stringify(newList));
 
-                if (!existingEntry) {
-                    this._onDidAddUri.fire(item);
-                }
+                this._onDidAddUri.fire(item);
                 if (removedItems.length) {
                     const removeJupyterUris = await Promise.all(
                         removedItems.map(async (removedItem) => {
