@@ -23,13 +23,9 @@ export class PortAttributesProviders implements PortAttributesProvider, IExtensi
             traceError('Failure in registering port attributes', ex);
         }
     }
-    providePortAttributes(
-        port: number,
-        _pid: number | undefined,
-        _commandLine: string | undefined,
-        _token: CancellationToken
-    ): PortAttributes | undefined {
+    providePortAttributes(options: number | { port: number }, _token: CancellationToken): PortAttributes | undefined {
         try {
+            const port = typeof options === 'number' ? options : options.port;
             if (UsedPorts.has(port)) {
                 return new PortAttributes(PortAutoForwardAction.Ignore);
             }
