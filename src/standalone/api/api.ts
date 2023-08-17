@@ -228,7 +228,7 @@ export function buildApi(
                 }
                 const registration =
                     serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
-                const proxy = registration.createJupyterServerCollection(extensionId, id, label);
+                proxy = registration.createJupyterServerCollection(extensionId, id, label);
                 proxy.label = label;
                 proxy.documentation = documentation;
                 proxy.commandProvider = commandProvider;
