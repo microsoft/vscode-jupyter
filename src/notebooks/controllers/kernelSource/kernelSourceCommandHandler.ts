@@ -183,9 +183,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                             get label() {
                                 return (
                                     provider.displayName ??
-                                    (provider.detail
-                                        ? `${provider.detail} (${provider.id}) ${Date.now()}`
-                                        : provider.id)
+                                    (provider.detail ? `${provider.detail} (${provider.id})` : provider.id)
                                 );
                             },
                             get documentation() {
