@@ -542,7 +542,6 @@ export class UserJupyterServerUrlProvider
                             disposeAllDisposables(passwordDisposables);
                         }
                     }
-
                     if (token.isCancellationRequested) {
                         return InputFlowAction.cancel;
                     }
