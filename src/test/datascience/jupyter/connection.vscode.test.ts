@@ -16,7 +16,6 @@ import {
 } from '../../../platform/common/types';
 import { IS_REMOTE_NATIVE_TEST, initialize } from '../../initialize.node';
 import { startJupyterServer, closeNotebooksAndCleanUpAfterTests } from '../notebook/helper.node';
-import { hijackPrompt } from '../notebook/helper';
 import {
     SecureConnectionValidator,
     UserJupyterServerDisplayName,
@@ -36,7 +35,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
-import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
 import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
@@ -166,14 +165,6 @@ suite('Connect to Remote Jupyter Servers', function () {
         const onDidRemoveUriStorage = new EventEmitter<IJupyterServerUriEntry[]>();
         disposables.push(onDidRemoveUriStorage);
         when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveUriStorage.event);
-
-        const prompt = await hijackPrompt(
-            'showWarningMessage',
-            { contains: DataScience.insecureSessionMessage },
-            { clickImmediately: true, result: Common.bannerLabelYes },
-            disposables
-        );
-        disposables.push(prompt);
 
         userUriProvider = new UserJupyterServerUrlProvider(
             instance(clipboard),

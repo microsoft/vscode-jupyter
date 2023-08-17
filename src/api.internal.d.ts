@@ -62,6 +62,10 @@ declare module './api' {
                        * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
                        */
                       default?: boolean;
+                      /**
+                       * The Jupyter Server command associated with this quick pick item.
+                       */
+                      command?: JupyterServerCommand;
                   })[]
               >
             | (QuickPickItem & {
@@ -69,6 +73,10 @@ declare module './api' {
                    * If this is the only quick pick item in the list and this is true, then this item will be selected by default.
                    */
                   default?: boolean;
+                  /**
+                   * The Jupyter Server command associated with this quick pick item.
+                   */
+                  command?: JupyterServerCommand;
               })[];
     }
 }

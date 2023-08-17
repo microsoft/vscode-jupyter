@@ -17,7 +17,7 @@ import {
 } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError, traceVerbose } from '../../../platform/logging';
-import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCommand } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
@@ -252,14 +252,15 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
             };
         });
     }
-    public async handleQuickPick(item: QuickPickItem, back: boolean): Promise<string | 'back' | undefined> {
+    public async handleQuickPick(
+        item: QuickPickItem & { original: QuickPickItem & { command?: JupyterServerCommand } },
+        back: boolean
+    ): Promise<string | 'back' | undefined> {
         if (!this.provider.handleQuickPick) {
             return;
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((item as any).original) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return this.provider.handleQuickPick((item as any).original, back);
+        if ('original' in item && item.original) {
+            return this.provider.handleQuickPick(item.original, back);
         }
         return this.provider.handleQuickPick(item, back);
     }

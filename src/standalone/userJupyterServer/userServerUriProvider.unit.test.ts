@@ -39,10 +39,9 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { JVSC_EXTENSION_ID, Settings, UserJupyterServerPickerProviderId } from '../../platform/common/constants';
 import { assert } from 'chai';
 import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
-import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { JupyterServerCollection } from '../../api';
+import { IJupyterServerUri, JupyterServerCollection } from '../../api';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
@@ -507,13 +506,6 @@ suite('User Uri Provider', () => {
         if (server instanceof InputFlowAction || server === 'back') {
             throw new Error('Server not returned');
         }
-        verify(
-            applicationShell.showWarningMessage(
-                DataScience.insecureSessionMessage,
-                Common.bannerLabelYes,
-                Common.bannerLabelNo
-            )
-        ).never();
         assert.isFalse(secureConnectionStub.called);
         const servers = await provider.getJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
@@ -528,5 +520,103 @@ suite('User Uri Provider', () => {
         ]);
         assert.strictEqual(serversInNewStorage.length, 3);
         assert.strictEqual(serversInNewStorage2.length, 3);
+    });
+    test('When pre-populating with https url and without password auth, the next step should be the displayName & back from displayName should get out of this UI flow (without displaying the Url picker)', async () => {
+        await testMigration();
+        getPasswordConnectionInfoStub.restore();
+        getPasswordConnectionInfoStub.reset();
+        const urlInputStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
+        urlInputStub.resolves();
+        sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: false });
+        const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
+        secureConnectionStub.resolves(false);
+        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
+        displayNameStub.rejects(InputFlowAction.back);
+
+        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const server = await provider.handleCommand(cmd, token);
+
+        assert.strictEqual(server, 'back');
+        assert.strictEqual(displayNameStub.callCount, 1);
+        assert.strictEqual(urlInputStub.callCount, 0); // Since a url was provided we should never prompt for this, even when clicking back in display name.
+    });
+    test('When pre-populating with https url and without password auth, the next step should be the displayName & cancel from displayName should get out of this UI flow (without displaying the Url picker)', async () => {
+        await testMigration();
+        getPasswordConnectionInfoStub.restore();
+        getPasswordConnectionInfoStub.reset();
+        const urlInputStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
+        urlInputStub.resolves();
+        sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: false });
+        const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
+        secureConnectionStub.resolves(false);
+        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
+        displayNameStub.rejects(InputFlowAction.cancel);
+
+        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const server = await provider.handleCommand(cmd, token);
+
+        assert.isUndefined(server);
+        assert.strictEqual(displayNameStub.callCount, 1);
+        assert.strictEqual(urlInputStub.callCount, 0); // Since a url was provided we should never prompt for this, even when clicking back in display name.
+    });
+    test('When pre-populating with https url and without password auth, and the server is invalid the next step should be the url display', async () => {
+        await testMigration();
+        getPasswordConnectionInfoStub.restore();
+        getPasswordConnectionInfoStub.reset();
+        const urlInputStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
+        let getUrlFromUserCallCount = 0;
+        urlInputStub.callsFake(async (_initialValue, errorMessage, _) => {
+            switch (getUrlFromUserCallCount++) {
+                case 0: {
+                    // Originally we should be called with an error message.
+                    assert.isOk(errorMessage, 'Error Message should not be empty');
+                    return {
+                        jupyterServerUri: {
+                            baseUrl: 'https://localhost:9999/',
+                            displayName: 'ABCD',
+                            token: ''
+                        },
+                        url: 'https://localhost:9999/?token=ABCD'
+                    };
+                }
+                case 1: {
+                    // There should be no error message displayed,
+                    // We should have come here from the back button of the display name.
+                    assert.isEmpty(errorMessage, 'Error Message should be empty');
+                    // Lets get out of here.
+                    throw InputFlowAction.back;
+                }
+                default:
+                    throw new Error('Method should not be called again');
+            }
+        });
+        sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: false });
+        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
+        displayNameStub.rejects(InputFlowAction.back);
+        when(jupyterConnection.validateRemoteUri(anything(), anything(), true)).thenCall(
+            (_, uri: IJupyterServerUri) => {
+                if (!uri) {
+                    return;
+                }
+                if (uri.baseUrl.startsWith('https://localhost:9999')) {
+                    return;
+                }
+                throw new Error('Remote Connection Failure');
+            }
+        );
+
+        // Steps
+        // 1. First provide a url https://localhost:3333 to a server that is non-existent
+        // 2. Verify the error message is displayed and user is prompted to enter the Url again.
+        // 3. Next verify the user is prompted for a display name
+        // 4. When we click back button on display name ui, ensure we go back to Url ui.
+        // 5. Hitting back button on Url ui should exit out completely
+
+        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const server = await provider.handleCommand(cmd, token);
+
+        assert.strictEqual(server, 'back');
+        assert.strictEqual(displayNameStub.callCount, 1);
+        assert.strictEqual(urlInputStub.callCount, 2); // Displayed twice, first time for error message, second time when hit back button from display UI.
     });
 });

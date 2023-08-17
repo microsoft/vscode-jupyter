@@ -115,6 +115,9 @@ declare module './api' {
                    */
                   default?: boolean;
               })[];
+        /**
+         * @param item The original quick Pick returned by getQuickPickEntryItems will be passed into this method.
+         */
         handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<string | 'back' | undefined>;
         /**
          * Given the handle, returns the Jupyter Server information.
