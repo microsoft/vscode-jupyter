@@ -103,7 +103,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         value?: string
     ): Promise<(QuickPickItem & { default?: boolean | undefined; command?: JupyterServerCommand })[]> {
         if (!this.provider.commandProvider) {
-            throw new Error(`No Jupyter Server Command Provider for ${this.provider.extensionId}#${this.provider.id}`);
+            return [];
         }
         const token = new CancellationTokenSource();
         try {
