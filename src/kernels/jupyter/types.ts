@@ -310,7 +310,7 @@ export interface IRemoteKernelFinder
 
 export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegistry');
 export interface IJupyterServerProviderRegistry {
-    onDidChangeProviders: Event<void>;
-    readonly providers: readonly JupyterServerCollection[];
+    onDidChangeCollections: Event<{ added: JupyterServerCollection[]; removed: JupyterServerCollection[] }>;
+    readonly jupyterCollections: readonly JupyterServerCollection[];
     createJupyterServerCollection(extensionId: string, id: string, label: string): JupyterServerCollection;
 }

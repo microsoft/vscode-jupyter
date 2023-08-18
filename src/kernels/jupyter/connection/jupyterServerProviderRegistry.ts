@@ -19,7 +19,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
-class JupyterServerCollectionImpl extends Disposables implements JupyterServerCollection {
+export class JupyterServerCollectionImpl extends Disposables implements JupyterServerCollection {
     private _serverProvider?: JupyterServerProvider;
     private _commandProvider?: JupyterServerCommandProvider;
     documentation?: Uri | undefined;
@@ -264,13 +264,16 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
 
 @injectable()
 export class JupyterServerProviderRegistry extends Disposables implements IJupyterServerProviderRegistry {
-    private readonly _onDidChangeProviders = new EventEmitter<void>();
-    public get onDidChangeProviders() {
-        return this._onDidChangeProviders.event;
+    private readonly _onDidChangeCollections = new EventEmitter<{
+        added: JupyterServerCollection[];
+        removed: JupyterServerCollection[];
+    }>();
+    public get onDidChangeCollections() {
+        return this._onDidChangeCollections.event;
     }
-    private readonly _serverProviders = new Map<string, JupyterServerCollection>();
-    public get providers(): readonly JupyterServerCollection[] {
-        return Array.from(this._serverProviders.values());
+    private readonly _collections = new Map<string, JupyterServerCollection>();
+    public get jupyterCollections(): readonly JupyterServerCollection[] {
+        return Array.from(this._collections.values());
     }
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -282,42 +285,42 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
     }
     createJupyterServerCollection(extensionId: string, id: string, label: string): JupyterServerCollection {
         const extId = `${extensionId}#${id}`;
-        if (this._serverProviders.has(extId)) {
+        if (this._collections.has(extId)) {
             // When testing we might have a duplicate as we call the registration API in ctor of a test.
             if (extensionId !== JVSC_EXTENSION_ID) {
                 throw new Error(`Jupyter Server Provider with id ${extId} already exists`);
             }
         }
-        const serverProvider = new JupyterServerCollectionImpl(extensionId, id, label);
-        this._serverProviders.set(extId, serverProvider);
+        const collection = new JupyterServerCollectionImpl(extensionId, id, label);
+        this._collections.set(extId, collection);
         let uriRegistration: IDisposable | undefined;
         let adapter: JupyterUriProviderAdaptor | undefined;
-        serverProvider.onDidChangeProvider(
+        collection.onDidChangeProvider(
             () => {
-                if (serverProvider.serverProvider) {
+                if (collection.serverProvider) {
                     adapter?.dispose();
                     uriRegistration?.dispose();
-                    adapter = new JupyterUriProviderAdaptor(serverProvider, extensionId);
+                    adapter = new JupyterUriProviderAdaptor(collection, extensionId);
                     uriRegistration = this.jupyterUriProviderRegistration.registerProvider(adapter, extensionId);
                     this.disposables.push(uriRegistration);
-                    this._onDidChangeProviders.fire();
+                    this._onDidChangeCollections.fire({ added: [collection], removed: [] });
                 }
             },
             this,
             this.disposables
         );
 
-        serverProvider.onDidDispose(
+        collection.onDidDispose(
             () => {
                 adapter?.dispose();
                 uriRegistration?.dispose();
-                this._serverProviders.delete(extId);
-                this._onDidChangeProviders.fire();
+                this._collections.delete(extId);
+                this._onDidChangeCollections.fire({ removed: [collection], added: [] });
             },
             this,
             this.disposables
         );
 
-        return serverProvider;
+        return collection;
     }
 }

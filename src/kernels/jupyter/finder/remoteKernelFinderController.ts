@@ -63,7 +63,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
 
         // Also check for when a URI is removed
         this.serverUriStorage.onDidRemove(this.urisRemoved, this, this.disposables);
-        this.jupyterServerProviderRegistry.onDidChangeProviders(this.handleProviderChanges, this, this.disposables);
+        this.jupyterServerProviderRegistry.onDidChangeCollections(this.handleProviderChanges, this, this.disposables);
         // Add in the URIs that we already know about
         this.buildListOfFinders();
         this.handleProviderChanges().catch(noop);
@@ -97,7 +97,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         const token = new CancellationTokenSource();
         this.disposables.push(token);
         await Promise.all(
-            this.jupyterServerProviderRegistry.providers.map((collection) => {
+            this.jupyterServerProviderRegistry.jupyterCollections.map((collection) => {
                 const serverProvider = collection.serverProvider;
                 if (!serverProvider || this.mappedProviders.has(serverProvider)) {
                     return;
