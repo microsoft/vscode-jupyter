@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationError, ConfigurationTarget, QuickInputButtons } from 'vscode';
+import { CancellationError, ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -16,6 +16,7 @@ import {
     IJupyterServerUriStorage
 } from '../../kernels/jupyter/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
+import { WorkflowInputValueProvider } from '../../platform/common/utils/inputValueProvider';
 
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;
@@ -123,29 +124,23 @@ export class JupyterPasswordConnect {
             friendlyUrl = `${uri.protocol}//${uri.hostname}`;
             friendlyUrl = options.displayName ? `${options.displayName} (${friendlyUrl})` : friendlyUrl;
             if (requiresPassword && options.isTokenEmpty) {
-                const input = this.appShell.createInputBox();
-                options.disposables.push(input);
-                input.title = DataScience.jupyterSelectPasswordTitle(friendlyUrl);
-                input.prompt = DataScience.jupyterSelectPasswordPrompt;
-                input.ignoreFocusOut = true;
-                input.password = true;
-                input.validationMessage = options.validationErrorMessage || '';
-                input.show();
-                input.buttons = [QuickInputButtons.Back];
-                userPassword = await new Promise<string>((resolve, reject) => {
-                    input.onDidTriggerButton(
-                        (e) => {
-                            if (e === QuickInputButtons.Back) {
-                                reject(InputFlowAction.back);
-                            }
-                        },
-                        this,
-                        options.disposables
-                    );
-                    input.onDidChangeValue(() => (input.validationMessage = ''), this, options.disposables);
-                    input.onDidAccept(() => resolve(input.value), this, options.disposables);
-                    input.onDidHide(() => reject(InputFlowAction.cancel), this, options.disposables);
+                const inputProvider = new WorkflowInputValueProvider();
+                options.disposables.push(inputProvider);
+                const result = await inputProvider.getValue({
+                    title: DataScience.jupyterSelectPasswordTitle(friendlyUrl),
+                    prompt: DataScience.jupyterSelectPasswordPrompt,
+                    ignoreFocusOut: true,
+                    password: true,
+                    validationMessage: options.validationErrorMessage || ''
                 });
+                if (result.navigation) {
+                    if (result.navigation === 'back') {
+                        throw InputFlowAction.back;
+                    }
+                    throw InputFlowAction.cancel;
+                } else {
+                    userPassword = result.value;
+                }
             }
 
             if (typeof userPassword === undefined && !userPassword && options.isTokenEmpty) {

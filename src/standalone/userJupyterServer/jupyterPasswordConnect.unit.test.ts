@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as sinon from 'sinon';
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -10,10 +10,10 @@ import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequ
 import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
-import { IDisposableRegistry } from '../../platform/common/types';
+import { IDisposable } from '../../platform/common/types';
 import { JupyterPasswordConnect } from './jupyterPasswordConnect';
-import { Disposable, InputBox } from 'vscode';
-import { noop } from '../../test/core';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { WorkflowInputValueProvider } from '../../platform/common/utils/inputValueProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterServer Password Connect', () => {
@@ -25,44 +25,12 @@ suite('JupyterServer Password Connect', () => {
     const xsrfValue: string = '12341234';
     const sessionName: string = 'sessionName';
     const sessionValue: string = 'sessionValue';
-    let inputBox: InputBox;
+    const disposables: IDisposable[] = [];
     setup(() => {
-        inputBox = {
-            show: noop,
-            onDidAccept: noop as any,
-            onDidHide: noop as any,
-            hide: noop,
-            dispose: noop as any,
-            onDidChangeValue: noop as any,
-            onDidTriggerButton: noop as any,
-            valueSelection: undefined,
-            totalSteps: undefined,
-            validationMessage: '',
-            busy: false,
-            buttons: [],
-            enabled: true,
-            ignoreFocusOut: false,
-            password: false,
-            step: undefined,
-            title: '',
-            value: '',
-            prompt: '',
-            placeholder: ''
-        };
-        sinon.stub(inputBox, 'show').callsFake(noop);
-        sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
-        sinon.stub(inputBox, 'onDidAccept').callsFake((cb) => {
-            (cb as Function)();
-            return new Disposable(noop);
-        });
-
         appShell = mock(ApplicationShell);
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
-        when(appShell.createInputBox()).thenReturn(inputBox);
         configService = mock(ConfigurationService);
         requestCreator = mock(JupyterRequestCreator);
         const serverUriStorage = mock<IJupyterServerUriStorage>();
-        const disposables = mock<IDisposableRegistry>();
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
             instance(appShell),
@@ -70,8 +38,12 @@ suite('JupyterServer Password Connect', () => {
             undefined,
             instance(requestCreator),
             instance(serverUriStorage),
-            instance(disposables)
+            disposables
         );
+    });
+    teardown(() => {
+        sinon.restore();
+        disposeAllDisposables(disposables);
     });
 
     function createMockSetup(secure: boolean, ok: boolean, xsrfReponseStatusCode: 200 | 302 | 401 = 302) {
@@ -139,8 +111,7 @@ suite('JupyterServer Password Connect', () => {
     }
 
     test('With Password', async () => {
-        inputBox.value = 'Python';
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').resolves({ value: 'Python' });
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
 
         // Mock our second call to get session cookie
@@ -198,7 +169,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock.verifyAll();
     });
     test('Empty Password and empty token', async () => {
-        when(appShell.showInputBox(anything())).thenReject(new Error('Should not be called'));
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').rejects(new Error('Should not be called'));
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true, 200);
 
         // Mock our second call to get session cookie
@@ -256,7 +227,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock.verifyAll();
     });
     test('Password required and non-empty token', async () => {
-        when(appShell.showInputBox(anything())).thenReject(new Error('Should not be called'));
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').rejects(new Error('Should not be called'));
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true, 401);
 
         // Mock our second call to get session cookie
@@ -318,6 +289,7 @@ suite('JupyterServer Password Connect', () => {
     });
 
     test('Without a Password and allowUnauthorized', async () => {
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').resolves({ value: '' });
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(true, true);
 
         // Mock our second call to get session cookie
@@ -371,6 +343,7 @@ suite('JupyterServer Password Connect', () => {
     });
 
     test('Failure', async () => {
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').resolves({ value: '' });
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, false);
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
@@ -391,8 +364,7 @@ suite('JupyterServer Password Connect', () => {
 
     test('Bad password followed by good password.', async () => {
         // Reconfigure our app shell to first give a bad password
-        inputBox.value = 'JUNK';
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('JUNK'));
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').resolves({ value: 'JUNK' });
 
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
 

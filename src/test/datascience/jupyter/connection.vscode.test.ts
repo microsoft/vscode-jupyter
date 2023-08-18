@@ -18,7 +18,6 @@ import { IS_REMOTE_NATIVE_TEST, initialize } from '../../initialize.node';
 import { startJupyterServer, closeNotebooksAndCleanUpAfterTests } from '../notebook/helper.node';
 import {
     SecureConnectionValidator,
-    UserJupyterServerDisplayName,
     UserJupyterServerUriInput,
     UserJupyterServerUrlProvider,
     parseUri
@@ -39,8 +38,9 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
 import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
-import { IMultiStepInputFactory, InputFlowAction } from '../../../platform/common/utils/multiStepInput';
+import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
 import { IFileSystem } from '../../../platform/common/platform/types';
+import { WorkflowInputValueProvider } from '../../../platform/common/utils/inputValueProvider';
 
 suite('Connect to Remote Jupyter Servers', function () {
     // On conda these take longer for some reason.
@@ -176,7 +176,6 @@ suite('Connect to Remote Jupyter Servers', function () {
             instance(serverUriStorage),
             instance(memento),
             disposables,
-            api.serviceContainer.get<IMultiStepInputFactory>(IMultiStepInputFactory),
             api.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry),
             instance(commands),
             api.serviceContainer.get<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator),
@@ -214,7 +213,12 @@ suite('Connect to Remote Jupyter Servers', function () {
             jupyterServerUri: parseUri(userUri, '')!
         });
         sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections').resolves(true);
-        sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName').resolves(displayName);
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                return Promise.resolve({ value: displayName });
+            }
+            return Promise.resolve({ value: '' });
+        });
         const errorMessageDisplayed = createDeferred<string>();
         inputBox.value = password || '';
         sinon.stub(inputBox, 'validationMessage').set((msg) => (msg ? errorMessageDisplayed.resolve(msg) : undefined));
