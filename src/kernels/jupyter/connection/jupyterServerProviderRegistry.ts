@@ -120,7 +120,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     label: c.title,
                     detail: c.detail,
                     tooltip: c.tooltip,
-                    default: c.picked === true,
                     command: c
                 };
             });

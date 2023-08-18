@@ -226,8 +226,7 @@ export class UserJupyterServerUrlProvider
         return [
             {
                 title: DataScience.jupyterSelectURIPrompt,
-                detail: DataScience.jupyterSelectURINewDetail,
-                picked: true
+                detail: DataScience.jupyterSelectURINewDetail
             }
         ];
     }
