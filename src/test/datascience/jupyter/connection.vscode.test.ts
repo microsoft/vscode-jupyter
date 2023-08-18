@@ -218,7 +218,7 @@ suite('Connect to Remote Jupyter Servers', function () {
         const errorMessageDisplayed = createDeferred<string>();
         inputBox.value = password || '';
         sinon.stub(inputBox, 'validationMessage').set((msg) => (msg ? errorMessageDisplayed.resolve(msg) : undefined));
-        const [cmd] = await userUriProvider.getCommands(userUri, token.token);
+        const [cmd] = await userUriProvider.provideCommands(userUri, token.token);
         const handlePromise = createDeferredFromPromise(userUriProvider.handleCommand(cmd, token.token));
         await Promise.race([handlePromise.promise, errorMessageDisplayed.promise]);
 

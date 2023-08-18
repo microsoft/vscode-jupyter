@@ -23,14 +23,38 @@ declare module './api' {
          * Currently used only by the Jupyter Extension.
          * A better more generic way to deal with this would be via commands.
          */
-        remove?(server: JupyterServer): Promise<void>;
+        removeJupyterServer?(server: JupyterServer): Promise<void>;
+    }
+    export interface JupyterServerProvider {
+        /**
+         * Returns the list of servers.
+         * @deprecated Implement `provideJupyterServers` instead.
+         * TODO: Remove soon, left for Synapse and AzML.
+         * @deprecated
+         */
+        getJupyterServers?(token: CancellationToken): Promise<JupyterServer[]>;
+        /**
+         * Returns the connection information for the Jupyter server.
+         * TODO: Remove soon, left for Synapse and AzML.
+         * @deprecated
+         */
+        resolveConnectionInformation?(
+            server: JupyterServer,
+            token: CancellationToken
+        ): Promise<JupyterServerConnectionInformation>;
     }
     export interface JupyterServerCommandProvider {
         /**
          * Returns a list of commands to be displayed to the user.
          * @param value The value entered by the user in the quick pick.
+         * @deprecated
          */
-        getCommands(value: string, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        getCommands?(value: string, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        /**
+         * Returns a list of commands to be displayed to the user.
+         * @param value The value entered by the user in the quick pick.
+         */
+        provideCommands(value: string, token: CancellationToken): Promise<JupyterServerCommand[]>;
     }
 
     export interface IJupyterUriProvider {

@@ -227,10 +227,12 @@ suite('User Uri Provider', () => {
         ).thenResolve(oldUrls.join(Settings.JupyterServerRemoteLaunchUriSeparator));
 
         provider.activate();
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.strictEqual(servers.length, 2);
 
-        const serverUris = await Promise.all(servers.map((s) => provider.resolveConnectionInformation(s, token)));
+        const serverUris = await Promise.all(
+            servers.map((s) => provider.resolveJupyterServer(s, token).then((j) => j.connectionInformation))
+        );
         serverUris.sort((a, b) => a.baseUrl.toString().localeCompare(b.baseUrl.toString()));
         assert.deepEqual(
             serverUris.map((s) => s.baseUrl.toString()),
@@ -290,14 +292,16 @@ suite('User Uri Provider', () => {
             }
         ]);
         provider.activate();
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
 
         assert.deepEqual(
             servers.map((s) => s.id),
             ['1', '3']
         );
 
-        const serverUris = await Promise.all(servers.map((h) => provider.resolveConnectionInformation(h, token)));
+        const serverUris = await Promise.all(
+            servers.map((h) => provider.resolveJupyterServer(h, token).then((j) => j.connectionInformation))
+        );
         assert.strictEqual(servers.length, 2);
         serverUris.sort((a, b) => a.baseUrl.toString().localeCompare(b.baseUrl.toString()));
         assert.deepEqual(serverUris.map((s) => s.baseUrl.toString()).sort(), [
@@ -327,7 +331,7 @@ suite('User Uri Provider', () => {
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const [cmd] = await provider.getCommands('https://localhost:3333?token=ABCD', token);
+        const [cmd] = await provider.provideCommands('https://localhost:3333?token=ABCD', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -341,10 +345,10 @@ suite('User Uri Provider', () => {
         assert.strictEqual(server.label, 'Foo Bar');
         assert.ok(displayNameStub.called, 'We should have prompted the user for a display name');
         assert.isFalse(getUriFromUserStub.called, 'Should not prompt for a Url, as one was provided');
-        const authInfo = await provider.resolveConnectionInformation(server, token);
-        assert.strictEqual(authInfo.baseUrl.toString(), 'https://localhost:3333/');
+        const authInfo = await provider.resolveJupyterServer(server, token);
+        assert.strictEqual(authInfo.connectionInformation.baseUrl.toString(), 'https://localhost:3333/');
 
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -364,7 +368,7 @@ suite('User Uri Provider', () => {
         displayNameStub.resolves('Foo Bar');
         when(clipboard.readText()).thenResolve('https://localhost:3333?token=ABCD');
 
-        const [cmd] = await provider.getCommands('', token);
+        const [cmd] = await provider.provideCommands('', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -379,7 +383,7 @@ suite('User Uri Provider', () => {
         assert.ok(displayNameStub.called, 'We should have prompted the user for a display name');
         verify(clipboard.readText()).once();
 
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -401,7 +405,7 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
 
-        const [cmd] = await provider.getCommands('', token);
+        const [cmd] = await provider.provideCommands('', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -414,7 +418,7 @@ suite('User Uri Provider', () => {
         assert.ok(server.id);
         assert.strictEqual(server.label, 'Foo Bar');
         assert.isFalse(secureConnectionStub.called);
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -437,7 +441,7 @@ suite('User Uri Provider', () => {
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('http://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -449,7 +453,7 @@ suite('User Uri Provider', () => {
 
         assert.ok(secureConnectionStub.called);
         assert.ok(server);
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -472,12 +476,12 @@ suite('User Uri Provider', () => {
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('http://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.ok(secureConnectionStub.called);
         assert.isUndefined(server);
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 2, '2 migrated urls');
 
         const [serversInNewStorage, serversInNewStorage2] = await Promise.all([
@@ -497,7 +501,7 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
 
-        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('http://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -507,7 +511,7 @@ suite('User Uri Provider', () => {
             throw new Error('Server not returned');
         }
         assert.isFalse(secureConnectionStub.called);
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -533,7 +537,7 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.rejects(InputFlowAction.back);
 
-        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.strictEqual(server, 'back');
@@ -552,7 +556,7 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.rejects(InputFlowAction.cancel);
 
-        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.isUndefined(server);
@@ -612,7 +616,7 @@ suite('User Uri Provider', () => {
         // 4. When we click back button on display name ui, ensure we go back to Url ui.
         // 5. Hitting back button on Url ui should exit out completely
 
-        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.strictEqual(server, 'back');
