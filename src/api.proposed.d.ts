@@ -59,9 +59,30 @@ declare module './api' {
          */
         readonly id: string;
         /**
-         * A human-readable string representing the name of the Server. This can be read and updated by the extension.
+         * A human-readable string representing the name of the Server.
          */
-        label: string;
+        readonly label: string;
+        /**
+         * Information required to Connect to the Jupyter Server.
+         */
+        readonly connectionInformation?: JupyterServerConnectionInformation;
+    }
+    /**
+     * Represents a Jupyter Server with certain information that cannot be `undefined`.
+     */
+    export interface ResolvedJupyterServer {
+        /**
+         * Unique identifier for this server.
+         */
+        readonly id: string;
+        /**
+         * A human-readable string representing the name of the Server.
+         */
+        readonly label: string;
+        /**
+         * Information required to Connect to the Jupyter Server.
+         */
+        readonly connectionInformation: JupyterServerConnectionInformation;
     }
 
     /**
@@ -70,20 +91,17 @@ declare module './api' {
     export interface JupyterServerProvider {
         /**
          * Event fired when the list of servers changes.
-         * Note: the getJupyterServers method will not be called unless changes are detected.
+         * Note: the provideJupyterServers method will not be called unless changes are detected.
          */
         onDidChangeServers?: Event<void>;
         /**
          * Returns the list of servers.
          */
-        getJupyterServers(token: CancellationToken): Promise<JupyterServer[]>;
+        provideJupyterServers(token: CancellationToken): Promise<JupyterServer[]>;
         /**
          * Returns the connection information for the Jupyter server.
          */
-        resolveConnectionInformation(
-            server: JupyterServer,
-            token: CancellationToken
-        ): Promise<JupyterServerConnectionInformation>;
+        resolveJupyterServer(server: JupyterServer, token: CancellationToken): Promise<ResolvedJupyterServer>;
     }
     /**
      * Represents a reference to a Jupyter Server command.
@@ -101,11 +119,6 @@ declare module './api' {
          * A tooltip for the command, when represented in the UI.
          */
         tooltip?: string;
-        /**
-         * Default command to be used when there are no servers.
-         * If not set, and there are not servers, then the user will be prompted to select a command from a list of commands returned by `getCommands`.
-         */
-        picked?: boolean;
     }
     /**
      * Provider of Jupyter Server Commands.
@@ -114,11 +127,8 @@ declare module './api' {
     export interface JupyterServerCommandProvider {
         /**
          * Returns a list of commands to be displayed to the user.
-         * If there are no JupyterServers and one of the returned commands has `picked = true`,
-         * then the `handleCommand` method will be invoked with that command.
-         * @param options Reserved for future use. Extensions can ignore this argument for now.
          */
-        getCommands(options: unknown, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        commands: JupyterServerCommand[];
         /**
          * Invoked when a command has been selected.
          * @param command The command selected by the user.
