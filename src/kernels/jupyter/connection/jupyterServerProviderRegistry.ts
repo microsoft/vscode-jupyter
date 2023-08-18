@@ -116,7 +116,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             } else if (this.provider.commandProvider.getCommands) {
                 items = await (
                     this.provider.commandProvider.provideCommands || this.provider.commandProvider.getCommands
-                )('', token.token);
+                ).bind(this.provider.commandProvider)('', token.token);
             }
             if (this.provider.extensionId === JVSC_EXTENSION_ID) {
                 if (!value) {
@@ -295,7 +295,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
         const servers = await (
             this.provider.serverProvider.provideJupyterServers || this.provider.serverProvider.getJupyterServers
-        )(token);
+        ).bind(this.provider.serverProvider)(token);
         this._servers.clear();
         servers.forEach((s) => this._servers.set(s.id, s));
         return servers;

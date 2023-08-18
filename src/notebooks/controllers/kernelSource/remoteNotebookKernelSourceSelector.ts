@@ -158,10 +158,8 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         const serverProvider = this.jupyterServerRegistry.jupyterCollections.find(
             (p) => p.extensionId === provider.extensionId && p.id === provider.id
         )?.serverProvider;
-        const serversPromise =
-            serverProvider?.provideJupyterServers || serverProvider?.getJupyterServers
-                ? (serverProvider?.provideJupyterServers || serverProvider?.getJupyterServers)(token)
-                : Promise.resolve([]);
+        const fn = serverProvider?.provideJupyterServers || serverProvider?.getJupyterServers;
+        const serversPromise = fn ? fn.bind(serverProvider)(token) : Promise.resolve([]);
         const handledServerIds = new Set<string>();
         const [jupyterServers] = await Promise.all([
             serversPromise,
@@ -234,13 +232,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
 
         // Add the commands
         if (provider.getQuickPickEntryItems && provider.handleQuickPick) {
-            if (quickPickServerItems.length > 0) {
-                quickPickCommandItems.push({
-                    label: Common.labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems,
-                    kind: QuickPickItemKind.Separator
-                });
-            }
-
             const newProviderItems: KernelProviderItemsQuickPickItem[] = (await provider.getQuickPickEntryItems()).map(
                 (i) => {
                     return {
@@ -252,12 +243,23 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     };
                 }
             );
-            quickPickCommandItems.push(...newProviderItems);
+            if (quickPickServerItems.length > 0 && newProviderItems.length) {
+                quickPickCommandItems.push({
+                    label: Common.labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems,
+                    kind: QuickPickItemKind.Separator
+                });
+                quickPickCommandItems.push(...newProviderItems);
+            }
         }
 
         const items = quickPickServerItems.concat(quickPickCommandItems);
         const onDidChangeItems = new EventEmitter<typeof items>();
-        const defaultSelection = items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
+        debugger;
+        let defaultSelection: (typeof items)[0] | undefined =
+            items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
+        if (serverProvider && items.length === 1) {
+            defaultSelection = items[0];
+        }
         let lazyQuickPick:
             | QuickPick<
                   | ContributedKernelFinderQuickPickItem
