@@ -132,11 +132,8 @@ declare module './api' {
     export interface JupyterServerCommandProvider {
         /**
          * Returns a list of commands to be displayed to the user.
-         * If there are no JupyterServers and one of the returned commands has `picked = true`,
-         * then the `handleCommand` method will be invoked with that command.
-         * @param options Reserved for future use. Extensions can ignore this argument for now.
          */
-        provideCommands(options: unknown, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        commands: JupyterServerCommand[];
         /**
          * Invoked when a command has been selected.
          * @param command The command selected by the user.
