@@ -47,7 +47,7 @@ export class KernelStartupHooksForJupyterProviders implements IExtensionSyncActi
                 if (!session) {
                     return;
                 }
-                const serverProvider = this.serverProviders.providers.find(
+                const serverProvider = this.serverProviders.jupyterCollections.find(
                     (provider) =>
                         provider.extensionId === connection.serverProviderHandle.extensionId &&
                         provider.id === connection.serverProviderHandle.id

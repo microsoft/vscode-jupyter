@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, QuickPickItem, Uri } from 'vscode';
+import { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
 
 // These types are only used internally within the extension.
 // Never to be exposed to other extensions.
@@ -13,6 +13,10 @@ declare module './api' {
          * Internally used by Jupyter extension to track the extension that created this server.
          */
         readonly extensionId: string;
+        /**
+         * Used internally by Jupyter Extension to detect changes to the JupyterServerProvider.
+         */
+        onDidChangeProvider: Event<void>;
         /**
          * Display a `trash` icon next to each server in the quick pick.
          * Allowing the user to remove this server.

@@ -174,6 +174,11 @@ export function buildApi(
                     isDisposed = true;
                     disposeHandler();
                 },
+                get onDidChangeProvider() {
+                    // This event is not used by 3rd party extensions, hence returning a bogus event,
+                    // 3rd party extensions will not see this, only required by TS compiler.
+                    return () => ({ dispose: noop });
+                },
                 extensionId: '',
                 get id() {
                     return id;
