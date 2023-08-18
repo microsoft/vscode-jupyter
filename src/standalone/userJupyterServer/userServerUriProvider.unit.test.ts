@@ -331,7 +331,7 @@ suite('User Uri Provider', () => {
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const [cmd] = await provider.getCommands('https://localhost:3333?token=ABCD', token);
+        const [cmd] = await provider.provideCommands('https://localhost:3333?token=ABCD', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -368,7 +368,7 @@ suite('User Uri Provider', () => {
         displayNameStub.resolves('Foo Bar');
         when(clipboard.readText()).thenResolve('https://localhost:3333?token=ABCD');
 
-        const [cmd] = await provider.getCommands('', token);
+        const [cmd] = await provider.provideCommands('', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -405,7 +405,7 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
 
-        const [cmd] = await provider.getCommands('', token);
+        const [cmd] = await provider.provideCommands('', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -441,7 +441,7 @@ suite('User Uri Provider', () => {
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('http://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -476,7 +476,7 @@ suite('User Uri Provider', () => {
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
-        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('http://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.ok(secureConnectionStub.called);
@@ -501,7 +501,7 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.resolves('Foo Bar');
 
-        const [cmd] = await provider.getCommands('http://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('http://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
@@ -537,7 +537,7 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.rejects(InputFlowAction.back);
 
-        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.strictEqual(server, 'back');
@@ -556,7 +556,7 @@ suite('User Uri Provider', () => {
         const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
         displayNameStub.rejects(InputFlowAction.cancel);
 
-        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.isUndefined(server);
@@ -616,7 +616,7 @@ suite('User Uri Provider', () => {
         // 4. When we click back button on display name ui, ensure we go back to Url ui.
         // 5. Hitting back button on Url ui should exit out completely
 
-        const [cmd] = await provider.getCommands('https://localhost:3333', token);
+        const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.strictEqual(server, 'back');

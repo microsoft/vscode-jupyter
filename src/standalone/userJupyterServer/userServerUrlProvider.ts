@@ -214,7 +214,7 @@ export class UserJupyterServerUrlProvider
     /**
      * @param value Value entered by the user in the quick pick
      */
-    async getCommands(value: string, _token: CancellationToken): Promise<JupyterServerCommand[]> {
+    async provideCommands(value: string, _token: CancellationToken): Promise<JupyterServerCommand[]> {
         let url = '';
         try {
             value = (value || '').trim();

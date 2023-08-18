@@ -108,7 +108,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         const token = new CancellationTokenSource();
         try {
             value = this.provider.extensionId === JVSC_EXTENSION_ID ? value : undefined;
-            const items = await this.provider.commandProvider.getCommands(value || '', token.token);
+            const items = await (
+                this.provider.commandProvider.provideCommands || this.provider.commandProvider.getCommands
+            )(value || '', token.token);
             if (this.provider.extensionId === JVSC_EXTENSION_ID) {
                 if (!value) {
                     this.commands.clear();
@@ -146,7 +148,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             let command: JupyterServerCommand | undefined =
                 'command' in item ? (item.command as JupyterServerCommand) : undefined;
             if (!command) {
-                const items = await this.provider.commandProvider.getCommands('', token.token);
+                const items = await (
+                    this.provider.commandProvider.provideCommands || this.provider.commandProvider.getCommands
+                )('', token.token);
                 command = items.find((c) => c.title === item.label) || this.commands.get(item.label);
             }
             if (!command) {
@@ -251,13 +255,13 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     }
     async removeHandleImpl(handle: string): Promise<void> {
         const token = new CancellationTokenSource();
-        if (!this.provider.remove) {
+        if (!this.provider.removeJupyterServer) {
             traceError(`Cannot remote server with id ${handle} as Provider does not support the 'remove' method.`);
             return;
         }
         try {
             const server = await this.getServer(handle, token.token);
-            await this.provider.remove(server);
+            await this.provider.removeJupyterServer(server);
         } catch {
             //
         } finally {

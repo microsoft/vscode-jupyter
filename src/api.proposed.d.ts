@@ -136,7 +136,7 @@ declare module './api' {
          * then the `handleCommand` method will be invoked with that command.
          * @param options Reserved for future use. Extensions can ignore this argument for now.
          */
-        getCommands(options: unknown, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        provideCommands(options: unknown, token: CancellationToken): Promise<JupyterServerCommand[]>;
         /**
          * Invoked when a command has been selected.
          * @param command The command selected by the user.

@@ -19,7 +19,7 @@ declare module './api' {
          * Currently used only by the Jupyter Extension.
          * A better more generic way to deal with this would be via commands.
          */
-        remove?(server: JupyterServer): Promise<void>;
+        removeJupyterServer?(server: JupyterServer): Promise<void>;
     }
     export interface JupyterServerProvider {
         /**
@@ -43,8 +43,14 @@ declare module './api' {
         /**
          * Returns a list of commands to be displayed to the user.
          * @param value The value entered by the user in the quick pick.
+         * @deprecated
          */
-        getCommands(value: string, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        getCommands?(value: string, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        /**
+         * Returns a list of commands to be displayed to the user.
+         * @param value The value entered by the user in the quick pick.
+         */
+        provideCommands(value: string, token: CancellationToken): Promise<JupyterServerCommand[]>;
     }
 
     export interface IJupyterUriProvider {
