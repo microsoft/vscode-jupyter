@@ -65,6 +65,7 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { Disposables } from '../../platform/common/utils';
+import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -84,7 +85,8 @@ export class UserJupyterServerUrlProvider
     private _onDidChangeHandles = this._register(new EventEmitter<void>());
     onDidChangeHandles: Event<void> = this._onDidChangeHandles.event;
     private _cachedServerInfoInitialized: Promise<void> | undefined;
-    private readonly passwordConnect: JupyterPasswordConnect;
+    private readonly jupyterHubPasswordConnect: JupyterHubPasswordConnect;
+    private readonly jupyterPasswordConnect: JupyterPasswordConnect;
     public readonly oldStorage: OldStorage;
     public readonly newStorage: NewStorage;
     private migratedOldServers?: Promise<unknown>;
@@ -127,7 +129,15 @@ export class UserJupyterServerUrlProvider
         this.jupyterServerUriInput = new UserJupyterServerUriInput(clipboard, applicationShell);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.jupyterServerUriDisplayName = new UserJupyterServerDisplayName(applicationShell);
-        this.passwordConnect = new JupyterPasswordConnect(
+        this.jupyterPasswordConnect = new JupyterPasswordConnect(
+            applicationShell,
+            configService,
+            agentCreator,
+            requestCreator,
+            serverUriStorage,
+            disposables
+        );
+        this.jupyterHubPasswordConnect = new JupyterHubPasswordConnect(
             applicationShell,
             multiStepFactory,
             asyncDisposableRegistry,
@@ -419,14 +429,22 @@ export class UserJupyterServerUrlProvider
                         try {
                             const errorMessage = validationErrorMessage;
                             validationErrorMessage = ''; // Never display this validation message again.
-                            const result = await this.passwordConnect.getPasswordConnectionInfo({
-                                url: jupyterServerUri.baseUrl,
-                                isTokenEmpty: jupyterServerUri.token.length === 0,
-                                handle,
-                                displayName: jupyterServerUri.displayName,
-                                validationErrorMessage: errorMessage,
-                                disposables: passwordDisposables
-                            });
+                            const result = (await this.jupyterHubPasswordConnect.isJupyterHub(jupyterServerUri.baseUrl))
+                                ? await this.jupyterHubPasswordConnect.getPasswordConnectionInfo({
+                                      url: jupyterServerUri.baseUrl,
+                                      handle,
+                                      displayName: jupyterServerUri.displayName,
+                                      validationErrorMessage: errorMessage,
+                                      disposables: passwordDisposables
+                                  })
+                                : await this.jupyterPasswordConnect.getPasswordConnectionInfo({
+                                      url: jupyterServerUri.baseUrl,
+                                      isTokenEmpty: jupyterServerUri.token.length === 0,
+                                      handle,
+                                      displayName: jupyterServerUri.displayName,
+                                      validationErrorMessage: errorMessage,
+                                      disposables: passwordDisposables
+                                  });
                             requiresPassword = result.requiresPassword;
                             jupyterServerUri.authorizationHeader = result.requestHeaders;
                         } catch (err) {
@@ -617,7 +635,7 @@ export class UserJupyterServerUrlProvider
             serverInfo.displayName = displayName;
         }
 
-        const passwordResult = await this.passwordConnect.getPasswordConnectionInfo({
+        const passwordResult = await this.jupyterPasswordConnect.getPasswordConnectionInfo({
             url: serverInfo.baseUrl,
             isTokenEmpty: serverInfo.token.length === 0,
             displayName: serverInfo.displayName,
