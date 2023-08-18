@@ -179,6 +179,34 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
         try {
             const server = await this.getServer(handle, token.token);
+            if (server.connectionInformation) {
+                const info = server.connectionInformation;
+                return {
+                    baseUrl: info.baseUrl.toString(),
+                    displayName: server.label,
+                    token: info.token || '',
+                    authorizationHeader: info.headers,
+                    mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
+                    webSocketProtocols: info.webSocketProtocols
+                };
+            }
+            if (this.provider.serverProvider?.resolveJupyterServer) {
+                const { connectionInformation: info } = await this.provider.serverProvider?.resolveJupyterServer(
+                    server,
+                    token.token
+                );
+                return {
+                    baseUrl: info.baseUrl.toString(),
+                    displayName: server.label,
+                    token: info.token || '',
+                    authorizationHeader: info.headers,
+                    mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
+                    webSocketProtocols: info.webSocketProtocols
+                };
+            }
+            if (!this.provider.serverProvider?.resolveConnectionInformation) {
+                throw new Error('Jupyter Provider does not implement the method resolveJupyterServer');
+            }
             const info = await this.provider.serverProvider?.resolveConnectionInformation(server, token.token);
             return {
                 baseUrl: info.baseUrl.toString(),
@@ -255,7 +283,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         if (!this.provider.serverProvider) {
             throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
         }
-        const servers = await this.provider.serverProvider.getJupyterServers(token);
+        const servers = await (
+            this.provider.serverProvider.provideJupyterServers || this.provider.serverProvider.getJupyterServers
+        )(token);
         this._servers.clear();
         servers.forEach((s) => this._servers.set(s.id, s));
         return servers;

@@ -227,10 +227,12 @@ suite('User Uri Provider', () => {
         ).thenResolve(oldUrls.join(Settings.JupyterServerRemoteLaunchUriSeparator));
 
         provider.activate();
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.strictEqual(servers.length, 2);
 
-        const serverUris = await Promise.all(servers.map((s) => provider.resolveConnectionInformation(s, token)));
+        const serverUris = await Promise.all(
+            servers.map((s) => provider.resolveJupyterServer(s, token).then((j) => j.connectionInformation))
+        );
         serverUris.sort((a, b) => a.baseUrl.toString().localeCompare(b.baseUrl.toString()));
         assert.deepEqual(
             serverUris.map((s) => s.baseUrl.toString()),
@@ -290,14 +292,16 @@ suite('User Uri Provider', () => {
             }
         ]);
         provider.activate();
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
 
         assert.deepEqual(
             servers.map((s) => s.id),
             ['1', '3']
         );
 
-        const serverUris = await Promise.all(servers.map((h) => provider.resolveConnectionInformation(h, token)));
+        const serverUris = await Promise.all(
+            servers.map((h) => provider.resolveJupyterServer(h, token).then((j) => j.connectionInformation))
+        );
         assert.strictEqual(servers.length, 2);
         serverUris.sort((a, b) => a.baseUrl.toString().localeCompare(b.baseUrl.toString()));
         assert.deepEqual(serverUris.map((s) => s.baseUrl.toString()).sort(), [
@@ -341,10 +345,10 @@ suite('User Uri Provider', () => {
         assert.strictEqual(server.label, 'Foo Bar');
         assert.ok(displayNameStub.called, 'We should have prompted the user for a display name');
         assert.isFalse(getUriFromUserStub.called, 'Should not prompt for a Url, as one was provided');
-        const authInfo = await provider.resolveConnectionInformation(server, token);
-        assert.strictEqual(authInfo.baseUrl.toString(), 'https://localhost:3333/');
+        const authInfo = await provider.resolveJupyterServer(server, token);
+        assert.strictEqual(authInfo.connectionInformation.baseUrl.toString(), 'https://localhost:3333/');
 
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -379,7 +383,7 @@ suite('User Uri Provider', () => {
         assert.ok(displayNameStub.called, 'We should have prompted the user for a display name');
         verify(clipboard.readText()).once();
 
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -414,7 +418,7 @@ suite('User Uri Provider', () => {
         assert.ok(server.id);
         assert.strictEqual(server.label, 'Foo Bar');
         assert.isFalse(secureConnectionStub.called);
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -449,7 +453,7 @@ suite('User Uri Provider', () => {
 
         assert.ok(secureConnectionStub.called);
         assert.ok(server);
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),
@@ -477,7 +481,7 @@ suite('User Uri Provider', () => {
 
         assert.ok(secureConnectionStub.called);
         assert.isUndefined(server);
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 2, '2 migrated urls');
 
         const [serversInNewStorage, serversInNewStorage2] = await Promise.all([
@@ -507,7 +511,7 @@ suite('User Uri Provider', () => {
             throw new Error('Server not returned');
         }
         assert.isFalse(secureConnectionStub.called);
-        const servers = await provider.getJupyterServers(token);
+        const servers = await provider.provideJupyterServers(token);
         assert.isAtLeast(servers.length, 3, '2 migrated urls and one entered');
         assert.include(
             servers.map((s) => s.id),

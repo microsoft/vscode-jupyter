@@ -164,16 +164,21 @@ export class UserJupyterServerUrlProvider
         );
         this.initializeServers().catch(noop);
     }
-    public async resolveConnectionInformation(server: JupyterServer, _token: CancellationToken) {
+    public async resolveJupyterServer(server: JupyterServer, _token: CancellationToken) {
         const serverInfo = await this.getServerUri(server.id);
         return {
-            baseUrl: Uri.parse(serverInfo.baseUrl),
-            token: serverInfo.token,
-            headers: serverInfo.authorizationHeader,
-            mappedRemoteNotebookDir: serverInfo.mappedRemoteNotebookDir
-                ? Uri.file(serverInfo.mappedRemoteNotebookDir)
-                : undefined,
-            webSocketProtocols: serverInfo.webSocketProtocols
+            ...server,
+            connectionInformation: {
+                id: server.id,
+                label: server.label,
+                baseUrl: Uri.parse(serverInfo.baseUrl),
+                token: serverInfo.token,
+                headers: serverInfo.authorizationHeader,
+                mappedRemoteNotebookDir: serverInfo.mappedRemoteNotebookDir
+                    ? Uri.file(serverInfo.mappedRemoteNotebookDir)
+                    : undefined,
+                webSocketProtocols: serverInfo.webSocketProtocols
+            }
         };
     }
     public async handleCommand(
@@ -192,7 +197,7 @@ export class UserJupyterServerUrlProvider
             if (handleOrBack && handleOrBack instanceof InputFlowAction) {
                 return 'back';
             }
-            const servers = await this.getJupyterServers(token.token);
+            const servers = await this.provideJupyterServers(token.token);
             const server = servers.find((s) => s.id === handleOrBack);
             if (!server) {
                 throw new Error(`Server ${handleOrBack} not found`);
@@ -231,7 +236,7 @@ export class UserJupyterServerUrlProvider
             }
         ];
     }
-    async getJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
+    async provideJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
         await this.initializeServers();
         const servers = await this.newStorage.getServers(false);
         return servers.map((s) => {
