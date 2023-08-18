@@ -42,6 +42,7 @@ import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IJupyterServerUri, JupyterServerCollection } from '../../api';
+import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('User Uri Provider', () => {
@@ -166,6 +167,7 @@ suite('User Uri Provider', () => {
             ).thenReturn(v);
             return Promise.resolve();
         });
+        sinon.stub(JupyterHubPasswordConnect.prototype, 'isJupyterHub').resolves(false);
         getPasswordConnectionInfoStub = sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo');
         getPasswordConnectionInfoStub.resolves({ requiresPassword: false });
 
