@@ -256,7 +256,14 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
 
         const items = quickPickServerItems.concat(quickPickCommandItems);
         const onDidChangeItems = new EventEmitter<typeof items>();
-        const defaultSelection = items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
+        let defaultSelection: (typeof items)[0] | undefined =
+            items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
+        // For extensions implementing the new API, if they have only one server and 0 commands or only one command and 0 servers,
+        // then automatically select that item
+        if (serverProvider && items.length === 1) {
+            defaultSelection = items[0];
+        }
+
         let lazyQuickPick:
             | QuickPick<
                   | ContributedKernelFinderQuickPickItem

@@ -119,11 +119,6 @@ declare module './api' {
          * A tooltip for the command, when represented in the UI.
          */
         tooltip?: string;
-        /**
-         * Default command to be used when there are no servers.
-         * If not set, and there are not servers, then the user will be prompted to select a command from a list of commands returned by `getCommands`.
-         */
-        picked?: boolean;
     }
     /**
      * Provider of Jupyter Server Commands.
@@ -132,8 +127,6 @@ declare module './api' {
     export interface JupyterServerCommandProvider {
         /**
          * Returns a list of commands to be displayed to the user.
-         * If there are no JupyterServers and one of the returned commands has `picked = true`,
-         * then the `handleCommand` method will be invoked with that command.
          * @param options Reserved for future use. Extensions can ignore this argument for now.
          */
         provideCommands(options: unknown, token: CancellationToken): Promise<JupyterServerCommand[]>;
