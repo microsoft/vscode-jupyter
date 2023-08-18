@@ -91,7 +91,9 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         const tokenSource = new CancellationTokenSource();
         this.disposables.push(tokenSource);
         try {
-            const currentServers = await serverProvider.getJupyterServers(tokenSource.token);
+            const currentServers = await (
+                serverProvider.provideJupyterServers || serverProvider.getJupyterServers
+            ).bind(serverProvider)(tokenSource.token);
             await this.removeControllersAndUriStorageBelongingToInvalidServers(
                 collection.extensionId,
                 collection.id,

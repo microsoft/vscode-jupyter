@@ -304,8 +304,8 @@ suite('RemoteKernelControllerWatcher', () => {
             onDidChangeProvider: onDidChangeProviders.event,
             serverProvider: {
                 onDidChangeServers: onDidChangeServers.event,
-                getJupyterServers: async () => validServersInCollection1OfExt1,
-                resolveConnectionInformation: () => Promise.reject(new Error('Not Supported'))
+                provideJupyterServers: async () => validServersInCollection1OfExt1,
+                resolveJupyterServer: () => Promise.reject(new Error('Not Supported'))
             }
         };
         when(jupyterServerProviderRegistry.jupyterCollections).thenReturn([collection1OfExt1]);

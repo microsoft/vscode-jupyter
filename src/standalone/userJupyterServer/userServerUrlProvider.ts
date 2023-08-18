@@ -90,6 +90,9 @@ export class UserJupyterServerUrlProvider
     private migratedOldServers?: Promise<unknown>;
     private _onDidChangeServers = this._register(new EventEmitter<void>());
     onDidChangeServers = this._onDidChangeServers.event;
+    public get commands() {
+        return [];
+    }
     private secureConnectionValidator: SecureConnectionValidator;
     private jupyterServerUriInput: UserJupyterServerUriInput;
     private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
@@ -105,7 +108,7 @@ export class UserJupyterServerUrlProvider
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMultiStepInputFactory) multiStepFactory: IMultiStepInputFactory,
         @inject(IAsyncDisposableRegistry) asyncDisposableRegistry: IAsyncDisposableRegistry,
-        @inject(ICommandManager) private readonly commands: ICommandManager,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterRequestAgentCreator)
         @optional()
         agentCreator: IJupyterRequestAgentCreator | undefined,
@@ -151,7 +154,7 @@ export class UserJupyterServerUrlProvider
         collection.documentation = this.documentation;
         this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
         this.disposables.push(
-            this.commands.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
+            this.commandManager.registerCommand('dataScience.ClearUserProviderJupyterServerCache', async () => {
                 await Promise.all([
                     this.oldStorage.clear().catch(noop),
                     this.newStorage.clear().catch(noop),
@@ -231,8 +234,7 @@ export class UserJupyterServerUrlProvider
         return [
             {
                 title: DataScience.jupyterSelectURIPrompt,
-                detail: DataScience.jupyterSelectURINewDetail,
-                picked: true
+                detail: DataScience.jupyterSelectURINewDetail
             }
         ];
     }

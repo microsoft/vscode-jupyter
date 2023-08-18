@@ -108,9 +108,16 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         const token = new CancellationTokenSource();
         try {
             value = this.provider.extensionId === JVSC_EXTENSION_ID ? value : undefined;
-            const items = await (
-                this.provider.commandProvider.provideCommands || this.provider.commandProvider.getCommands
-            )(value || '', token.token);
+            let items: JupyterServerCommand[] = [];
+            if (this.provider.extensionId === JVSC_EXTENSION_ID) {
+                items = await this.provider.commandProvider.provideCommands(value || '', token.token);
+            } else if (Array.isArray(this.provider.commandProvider.commands)) {
+                items = this.provider.commandProvider.commands;
+            } else if (this.provider.commandProvider.getCommands) {
+                items = await (
+                    this.provider.commandProvider.provideCommands || this.provider.commandProvider.getCommands
+                ).bind(this.provider.commandProvider)('', token.token);
+            }
             if (this.provider.extensionId === JVSC_EXTENSION_ID) {
                 if (!value) {
                     this.commands.clear();
@@ -122,7 +129,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     label: c.title,
                     detail: c.detail,
                     tooltip: c.tooltip,
-                    default: c.picked === true,
                     command: c
                 };
             });
@@ -289,7 +295,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
         const servers = await (
             this.provider.serverProvider.provideJupyterServers || this.provider.serverProvider.getJupyterServers
-        )(token);
+        ).bind(this.provider.serverProvider)(token);
         this._servers.clear();
         servers.forEach((s) => this._servers.set(s.id, s));
         return servers;
