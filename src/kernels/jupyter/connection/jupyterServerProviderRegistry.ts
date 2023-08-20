@@ -111,12 +111,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             let items: JupyterServerCommand[] = [];
             if (this.provider.extensionId === JVSC_EXTENSION_ID) {
                 items = await this.provider.commandProvider.provideCommands(value || '', token.token);
-            } else if (Array.isArray(this.provider.commandProvider.commands)) {
+            } else {
                 items = this.provider.commandProvider.commands;
-            } else if (this.provider.commandProvider.getCommands) {
-                items = await (
-                    this.provider.commandProvider.provideCommands || this.provider.commandProvider.getCommands
-                ).bind(this.provider.commandProvider)('', token.token);
             }
             if (this.provider.extensionId === JVSC_EXTENSION_ID) {
                 if (!value) {
@@ -154,10 +150,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             let command: JupyterServerCommand | undefined =
                 'command' in item ? (item.command as JupyterServerCommand) : undefined;
             if (!command) {
-                const items = await (
-                    this.provider.commandProvider.provideCommands || this.provider.commandProvider.getCommands
-                )('', token.token);
-                command = items.find((c) => c.title === item.label) || this.commands.get(item.label);
+                command =
+                    this.provider.commandProvider.commands.find((c) => c.title === item.label) ||
+                    this.commands.get(item.label);
             }
             if (!command) {
                 throw new Error(
@@ -214,18 +209,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     webSocketProtocols: info.webSocketProtocols
                 };
             }
-            if (!this.provider.serverProvider?.resolveConnectionInformation) {
-                throw new Error('Jupyter Provider does not implement the method resolveJupyterServer');
-            }
-            const info = await this.provider.serverProvider?.resolveConnectionInformation(server, token.token);
-            return {
-                baseUrl: info.baseUrl.toString(),
-                displayName: server.label,
-                token: info.token || '',
-                authorizationHeader: info.headers,
-                mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
-                webSocketProtocols: info.webSocketProtocols
-            };
+            throw new Error('Jupyter Provider does not implement the method resolveJupyterServer');
         } finally {
             token.dispose();
         }
@@ -293,9 +277,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         if (!this.provider.serverProvider) {
             throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
         }
-        const servers = await (
-            this.provider.serverProvider.provideJupyterServers || this.provider.serverProvider.getJupyterServers
-        ).bind(this.provider.serverProvider)(token);
+        const servers = await this.provider.serverProvider.provideJupyterServers(token);
         this._servers.clear();
         servers.forEach((s) => this._servers.set(s.id, s));
         return servers;

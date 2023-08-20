@@ -158,8 +158,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         const serverProvider = this.jupyterServerRegistry.jupyterCollections.find(
             (p) => p.extensionId === provider.extensionId && p.id === provider.id
         )?.serverProvider;
-        const fn = serverProvider?.provideJupyterServers || serverProvider?.getJupyterServers;
-        const serversPromise = fn ? fn.bind(serverProvider)(token) : Promise.resolve([]);
+        const serversPromise = serverProvider?.provideJupyterServers
+            ? serverProvider.provideJupyterServers.bind(serverProvider)(token)
+            : Promise.resolve([]);
         const handledServerIds = new Set<string>();
         const [jupyterServers] = await Promise.all([
             serversPromise,
