@@ -9,8 +9,9 @@ import { DataScience } from '../utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants.node';
 import { IFileSystem } from '../platform/types';
 import { parseStack } from '../../errors';
-import { unknownExtensionId } from '../constants';
+import { JVSC_EXTENSION_ID, Telemetry, unknownExtensionId } from '../constants';
 import { traceError } from '../../logging';
+import { sendTelemetryEvent } from '../../telemetry';
 
 /**
  * Provides functions for tracking the list of extensions that VS code has installed (besides our own)
@@ -33,6 +34,7 @@ export class Extensions implements IExtensions {
     }
     public async determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
         const stack = new Error().stack;
+        const syncId = this.determineExtensionFromCallStackSync(stack || '');
         if (stack) {
             const jupyterExtRoot = path.join(EXTENSION_ROOT_DIR.toLowerCase(), path.sep);
             const frames = stack
@@ -76,6 +78,23 @@ export class Extensions implements IExtensions {
                                     (frame.startsWith(matchingExt.extensionUri.toString()) ||
                                         frame.startsWith(matchingExt.extensionUri.fsPath.toString()))
                                 ) {
+                                    if (
+                                        syncId.extensionId === unknownExtensionId &&
+                                        matchingExt.id !== unknownExtensionId
+                                    ) {
+                                        sendTelemetryEvent(Telemetry.ExtensionCallerIdentification, undefined, {
+                                            extensionId: matchingExt.id,
+                                            result: 'WorkedOnlyInAsync'
+                                        });
+                                    } else if (
+                                        syncId.extensionId === unknownExtensionId &&
+                                        syncId.extensionId === matchingExt.id
+                                    ) {
+                                        sendTelemetryEvent(Telemetry.ExtensionCallerIdentification, undefined, {
+                                            extensionId: matchingExt.id,
+                                            result: 'WorkedInBoth'
+                                        });
+                                    }
                                     return {
                                         extensionId: matchingExt.id,
                                         displayName: matchingExt.packageJSON.displayName
@@ -90,8 +109,50 @@ export class Extensions implements IExtensions {
                     dirName = path.dirname(dirName);
                 }
             }
+            if (syncId.extensionId !== unknownExtensionId) {
+                sendTelemetryEvent(Telemetry.ExtensionCallerIdentification, undefined, {
+                    extensionId: syncId.extensionId,
+                    result: 'WorkedOnlyInSync'
+                });
+            }
             traceError(`Unable to determine the caller of the extension API for trace stack.`, stack);
         }
         return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
+    }
+    private determineExtensionFromCallStackSync(stack: string): { extensionId: string; displayName: string } {
+        try {
+            if (stack) {
+                const jupyterExtRoot = this.getExtension(JVSC_EXTENSION_ID)!.extensionUri.toString().toLowerCase();
+                const frames = stack
+                    .split('\n')
+                    .map((f) => {
+                        const result = /\((.*)\)/.exec(f);
+                        if (result) {
+                            return result[1];
+                        }
+                    })
+                    // Since this is web, look for paths that start with http (which also includes https).
+                    .filter((item) => item && item.toLowerCase().startsWith('http'))
+                    .filter((item) => item && !item.toLowerCase().startsWith(jupyterExtRoot)) as string[];
+                parseStack(new Error('Ex')).forEach((item) => {
+                    const fileName = item.getFileName();
+                    if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
+                        frames.push(fileName);
+                    }
+                });
+                for (const frame of frames) {
+                    const matchingExt = this.all.find(
+                        (ext) => ext.id !== JVSC_EXTENSION_ID && frame.startsWith(ext.extensionUri.toString())
+                    );
+                    if (matchingExt) {
+                        return { extensionId: matchingExt.id, displayName: matchingExt.packageJSON.displayName };
+                    }
+                }
+            }
+            return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
+        } catch {
+            return { extensionId: unknownExtensionId, displayName: DataScience.unknownPackage };
+            //
+        }
     }
 }
