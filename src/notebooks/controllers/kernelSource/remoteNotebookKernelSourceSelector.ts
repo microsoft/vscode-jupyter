@@ -257,8 +257,8 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     label: Common.labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems,
                     kind: QuickPickItemKind.Separator
                 });
-                quickPickCommandItems.push(...newProviderItems);
             }
+            quickPickCommandItems.push(...newProviderItems);
         }
 
         const items = quickPickServerItems.concat(quickPickCommandItems);
