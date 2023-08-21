@@ -32,7 +32,7 @@ import { MultiStepInput } from '../../platform/common/utils/multiStepInput';
 
 suite('Jupyter Provider Tests', function () {
     // On conda these take longer for some reason.
-    this.timeout(1200_000);
+    this.timeout(120_000);
     let api: IExtensionTestApi;
     let jupyterServerUrl = { url: '', dispose: noop };
     const disposables: IDisposable[] = [];
