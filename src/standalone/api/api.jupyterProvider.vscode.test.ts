@@ -37,7 +37,7 @@ import {
 } from '../../kernels/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 
-suite.only('Jupyter Provider Tests', function () {
+suite('Jupyter Provider Tests', function () {
     // On conda these take longer for some reason.
     this.timeout(1200_000);
     let api: IExtensionTestApi;
