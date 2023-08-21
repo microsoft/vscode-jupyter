@@ -63,7 +63,6 @@ interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
 }
 interface JupyterServerQuickPickItem extends QuickPickItem {
     type: KernelFinderEntityQuickPickType.JupyterServer;
-    serverUri: string;
     idAndHandle: { id: string; handle: string; extensionId: string };
     server: JupyterServer;
 }
@@ -224,10 +223,20 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 if (handledServerIds.has(id)) {
                     return;
                 }
+                const buttons = provider.removeHandle
+                    ? [
+                          {
+                              iconPath: new ThemeIcon('close'),
+                              tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                          }
+                      ]
+                    : [];
                 quickPickServerItems.push(<JupyterServerQuickPickItem>{
                     type: KernelFinderEntityQuickPickType.JupyterServer,
                     label: server.label,
-                    server
+                    idAndHandle: { extensionId: provider.extensionId, id: provider.id, handle: server.id },
+                    server,
+                    buttons
                 });
             });
 
