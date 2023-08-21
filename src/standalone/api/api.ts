@@ -166,13 +166,12 @@ export function buildApi(
             let documentation: Uri | undefined;
             let serverProvider: JupyterServerProvider | undefined;
             let commandProvider: JupyterServerCommandProvider | undefined;
-            let disposeHandler = noop;
             let isDisposed = false;
             let proxy: JupyterServerCollection | undefined;
             const collection: JupyterServerCollection = {
                 dispose: () => {
                     isDisposed = true;
-                    disposeHandler();
+                    proxy?.dispose();
                 },
                 get onDidChangeProvider() {
                     // This event is not used by 3rd party extensions, hence returning a bogus event,
@@ -241,7 +240,6 @@ export function buildApi(
                 if (isDisposed) {
                     proxy.dispose();
                 }
-                disposeHandler = proxy.dispose.bind(proxy);
             })().catch((ex) =>
                 traceError(
                     `Failed to create Jupyter Server Collection for ${id}:${label} & extension ${extensionId}`,

@@ -63,7 +63,6 @@ interface ContributedKernelFinderQuickPickItem extends QuickPickItem {
 }
 interface JupyterServerQuickPickItem extends QuickPickItem {
     type: KernelFinderEntityQuickPickType.JupyterServer;
-    serverUri: string;
     idAndHandle: { id: string; handle: string; extensionId: string };
     server: JupyterServer;
 }
@@ -224,10 +223,19 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 if (handledServerIds.has(id)) {
                     return;
                 }
-                quickPickCommandItems.push(<JupyterServerQuickPickItem>{
+                quickPickServerItems.push(<JupyterServerQuickPickItem>{
                     type: KernelFinderEntityQuickPickType.JupyterServer,
                     label: server.label,
-                    server
+                    idAndHandle: { extensionId: provider.extensionId, id: provider.id, handle: server.id },
+                    server,
+                    buttons: provider.removeHandle
+                        ? [
+                              {
+                                  iconPath: new ThemeIcon('close'),
+                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                              }
+                          ]
+                        : []
                 });
             });
 
@@ -249,13 +257,12 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     label: Common.labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems,
                     kind: QuickPickItemKind.Separator
                 });
-                quickPickCommandItems.push(...newProviderItems);
             }
+            quickPickCommandItems.push(...newProviderItems);
         }
 
         const items = quickPickServerItems.concat(quickPickCommandItems);
         const onDidChangeItems = new EventEmitter<typeof items>();
-        debugger;
         let defaultSelection: (typeof items)[0] | undefined =
             items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
         if (serverProvider && items.length === 1) {
