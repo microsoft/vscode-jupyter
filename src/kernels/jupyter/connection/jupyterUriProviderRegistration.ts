@@ -63,6 +63,10 @@ export class JupyterUriProviderRegistration
     }
     public async getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined> {
         this.loadOtherExtensions().catch(noop);
+        const provider = this._providers.get(getProviderId(extensionId, id));
+        if (provider) {
+            return provider;
+        }
         try {
             await this.loadExtension(extensionId, id);
         } catch (ex) {
@@ -100,8 +104,10 @@ export class JupyterUriProviderRegistration
         providerHandle: JupyterServerProviderHandle,
         doNotPromptForAuthInfo?: boolean
     ): Promise<IJupyterServerUri> {
-        await this.loadExtension(providerHandle.extensionId, providerHandle.id);
         const id = getProviderId(providerHandle.extensionId, providerHandle.id);
+        if (!this._providers.get(id)) {
+            await this.loadExtension(providerHandle.extensionId, providerHandle.id);
+        }
         const provider = this._providers.get(id);
         if (!provider) {
             throw new Error(
@@ -122,8 +128,10 @@ export class JupyterUriProviderRegistration
         if (this.cachedDisplayNames.has(generateIdFromRemoteProvider(providerHandle))) {
             return this.cachedDisplayNames.get(generateIdFromRemoteProvider(providerHandle))!;
         }
-        await this.loadExtension(providerHandle.extensionId, providerHandle.id);
         const id = getProviderId(providerHandle.extensionId, providerHandle.id);
+        if (!this._providers.get(id)) {
+            await this.loadExtension(providerHandle.extensionId, providerHandle.id);
+        }
         const provider = this._providers.get(id);
         if (!provider) {
             traceVerbose(
