@@ -223,20 +223,19 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 if (handledServerIds.has(id)) {
                     return;
                 }
-                const buttons = provider.removeHandle
-                    ? [
-                          {
-                              iconPath: new ThemeIcon('close'),
-                              tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
-                          }
-                      ]
-                    : [];
                 quickPickServerItems.push(<JupyterServerQuickPickItem>{
                     type: KernelFinderEntityQuickPickType.JupyterServer,
                     label: server.label,
                     idAndHandle: { extensionId: provider.extensionId, id: provider.id, handle: server.id },
                     server,
-                    buttons
+                    buttons: provider.removeHandle
+                        ? [
+                              {
+                                  iconPath: new ThemeIcon('close'),
+                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                              }
+                          ]
+                        : []
                 });
             });
 
