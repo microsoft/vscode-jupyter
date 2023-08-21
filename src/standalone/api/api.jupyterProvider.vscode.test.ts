@@ -16,6 +16,7 @@ import {
     Command,
     EventEmitter,
     NotebookKernelSourceActionProvider,
+    QuickPick,
     QuickPickItem,
     QuickPickItemKind,
     Uri,
@@ -36,6 +37,7 @@ import {
     isRemoteConnection
 } from '../../kernels/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { MultiStepInput } from '../../platform/common/utils/multiStepInput';
 
 suite('Jupyter Provider Tests', function () {
     // On conda these take longer for some reason.
@@ -246,5 +248,157 @@ suite('Jupyter Provider Tests', function () {
         assert.strictEqual(remoteConnection.serverProviderHandle.id, 'sampleServerProvider1');
         assert.strictEqual(remoteConnection.serverProviderHandle.handle, 'Server1ForTesting');
         assert.strictEqual(remoteConnection.id, selectedItem!.id);
+    });
+    test('When there are 2 or more servers, then user is prompted to select a server', async () => {
+        const collection = api.createJupyterServerCollection(
+            'sampleServerProvider2',
+            'First Collection For Third Test'
+        );
+        disposables.push(collection);
+        collection.serverProvider = {
+            provideJupyterServers: () => Promise.resolve([]),
+            resolveJupyterServer: () => Promise.reject(new Error('Not Implemented'))
+        };
+        const server1: JupyterServer = {
+            id: 'Server1ForTesting',
+            label: 'Server 1',
+            connectionInformation: {
+                baseUrl: Uri.parse(new URL(jupyterServerUrl.url).origin),
+                token: tokenForJupyterServer
+            }
+        };
+        const server2: JupyterServer = {
+            id: 'Server2ForTesting',
+            label: 'Server 2',
+            connectionInformation: {
+                baseUrl: Uri.parse(new URL(jupyterServerUrl.url).origin),
+                token: tokenForJupyterServer
+            }
+        };
+        const server3: JupyterServer = {
+            id: 'Server3ForTesting',
+            label: 'Server 3',
+            connectionInformation: {
+                baseUrl: Uri.parse(new URL(jupyterServerUrl.url).origin),
+                token: tokenForJupyterServer
+            }
+        };
+        const servers = [server1, server2, server3];
+        const onDidChangeServers = new EventEmitter<void>();
+        disposables.push(onDidChangeServers);
+        collection.serverProvider = {
+            onDidChangeServers: onDidChangeServers.event,
+            provideJupyterServers: () => Promise.resolve(servers),
+            resolveJupyterServer: () => Promise.reject(new Error('Not Implemented'))
+        };
+
+        let matchingProvider: NotebookKernelSourceActionProvider | undefined;
+        await waitForCondition(
+            async () => {
+                for (const { provider } of nbProviders) {
+                    // We could have other providers being registered in the test env, such as github code spaces, azml, etc
+                    const actions = await provider.provideNotebookKernelSourceActions(token);
+                    assert.strictEqual(actions?.length, 1);
+                    if (actions![0].label === 'First Collection For Third Test') {
+                        matchingProvider = provider;
+                        return true;
+                    }
+                }
+                return false;
+            },
+            120_000,
+            'Providers not registered for IW and Notebook'
+        );
+        if (!matchingProvider) {
+            throw new Error('Provider not registered');
+        }
+
+        // Ensure we have a notebook document opened for testing.
+        const nbFile = await createTemporaryNotebook([], disposables);
+        // Open a python notebook and use this for all tests in this test suite.
+        await openAndShowNotebook(nbFile);
+
+        // When the source is selected, we should display a list of kernels,
+        const multiStepStub = sinon.stub(MultiStepInput.prototype, 'showLazyLoadQuickPick').callsFake(function (
+            this: any,
+            options
+        ) {
+            const result: { quickPick: QuickPick<QuickPickItem>; selection: Promise<unknown> } =
+                multiStepStub.wrappedMethod.bind(this)(options);
+            result.quickPick.hide();
+            const selection = Promise.resolve(undefined); // Do not select anything.
+            return { quickPick: result.quickPick, selection } as any;
+        });
+        const actions = await matchingProvider.provideNotebookKernelSourceActions(token);
+        const actionCommand: Command = actions![0].command as unknown as Command;
+        const controllerId = await commands.executeCommand(actionCommand.command, ...(actionCommand.arguments || []));
+
+        // Verify a controller is not selected
+        assert.isUndefined(controllerId);
+        // Verify quick pick was displayed with three items.
+        assert.strictEqual(multiStepStub.callCount, 1);
+        assert.strictEqual(multiStepStub.args[0][0].items.length, 3);
+        assert.deepEqual(
+            multiStepStub.args[0][0].items.map((e) => e.label).sort(),
+            ['Server 1', 'Server 2', 'Server 3'],
+            'Jupyter Servers not displayed in quick picks'
+        );
+
+        // Ok, now remove one server and verify the quick pick now displays 2 items.
+        servers.splice(1, 1);
+        onDidChangeServers.fire();
+        const controllerId2 = await commands.executeCommand(actionCommand.command, ...(actionCommand.arguments || []));
+        // Verify a controller is not selected
+        assert.isUndefined(controllerId2);
+        assert.strictEqual(multiStepStub.callCount, 2);
+        assert.strictEqual(multiStepStub.args[1][0].items.length, 2);
+        assert.deepEqual(
+            multiStepStub.args[1][0].items.map((e) => e.label).sort(),
+            ['Server 1', 'Server 3'],
+            'Jupyter Servers not displayed in quick picks'
+        );
+
+        // Add a command and that command should be displayed along with the 2 servers.
+        collection.commandProvider = {
+            commands: [
+                {
+                    title: 'Sample Command'
+                }
+            ],
+            provideCommands: () => Promise.resolve([]),
+            handleCommand: () => Promise.resolve(undefined)
+        };
+        // await sleep(100);
+
+        const controllerId3 = await commands.executeCommand(actionCommand.command, ...(actionCommand.arguments || []));
+        // Verify a controller is not selected
+        assert.isUndefined(controllerId3);
+        assert.strictEqual(multiStepStub.callCount, 3);
+        assert.strictEqual(multiStepStub.args[2][0].items.length, 4); // One separator and one item
+        assert.deepEqual(
+            multiStepStub.args[2][0].items
+                .filter((e) => e.kind !== QuickPickItemKind.Separator)
+                .map((e) => e.label)
+                .sort(),
+            ['Server 1', 'Server 3', 'Sample Command'].sort(),
+            'Jupyter Servers not displayed in quick picks'
+        );
+
+        // Remove the command and try again.
+        collection.commandProvider.commands = [];
+
+        const controllerId4 = await commands.executeCommand(actionCommand.command, ...(actionCommand.arguments || []));
+        // Verify a controller is not selected
+        assert.isUndefined(controllerId4);
+        assert.strictEqual(multiStepStub.callCount, 4);
+        assert.strictEqual(multiStepStub.args[3][0].items.length, 2);
+        assert.deepEqual(
+            multiStepStub.args[3][0].items
+                .filter((e) => e.kind !== QuickPickItemKind.Separator)
+                .map((e) => e.label)
+                .sort(),
+            ['Server 1', 'Server 3'].sort(),
+            'Jupyter Servers not displayed in quick picks'
+        );
     });
 });
