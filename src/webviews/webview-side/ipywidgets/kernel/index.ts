@@ -93,7 +93,7 @@ class WidgetManagerComponent {
 }
 
 const outputDisposables = new Map<string, { dispose(): void }>();
-const renderedWidgets = new Map<string, { container: HTMLElement; widget?: { dispose: Function } }>();
+const renderedWidgets = new Map<string, { container: HTMLElement; widget?: { dispose: Function }; modelId?: string }>();
 /**
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
@@ -143,13 +143,28 @@ function renderIPyWidget(
     container: HTMLElement,
     logger: (message: string, category?: 'info' | 'error') => void
 ) {
-    logger(`Rendering IPyWidget ${outputId} with model ${model.model_id}`);
-    if (renderedWidgets.has(outputId) && renderedWidgets.get(outputId)?.container === container) {
+    logger(`Rendering IPyWidget ${outputId} with model ${model.model_id} in ${container.id}`);
+    if (
+        renderedWidgets.has(outputId) &&
+        renderedWidgets.get(outputId)?.container === container &&
+        renderedWidgets.get(outputId)?.modelId === model.model_id
+    ) {
         return logger('already rendering');
     }
     if (renderedWidgets.has(outputId)) {
         logger('Widget was already rendering for another container, dispose that widget so we can re-render it');
-        renderedWidgets.get(outputId)?.widget?.dispose();
+        try {
+            renderedWidgets.get(outputId)?.widget?.dispose();
+        } catch {
+            //
+        }
+    }
+    if (container.firstChild) {
+        try {
+            container.removeChild(container.firstChild);
+        } catch {
+            //
+        }
     }
     const output = document.createElement('div');
     output.className = 'cell-output cell-output';
@@ -160,7 +175,7 @@ function renderIPyWidget(
     ele.className = 'cell-output-ipywidget-background';
     container.appendChild(ele);
     ele.appendChild(output);
-    renderedWidgets.set(outputId, { container });
+    renderedWidgets.set(outputId, { container, modelId: model.model_id });
     createWidgetView(model, ele)
         .then((w) => {
             if (renderedWidgets.get(outputId)?.container !== container) {
