@@ -151,7 +151,14 @@ function renderIPyWidget(
     ) {
         return logger('already rendering');
     }
+    let timeout = 0;
     if (renderedWidgets.has(outputId)) {
+        // If we're rendering another widget in the same output,
+        // then disposing the previous widget and its related state takes a few ms.
+        // Unfortunately the `dispose` method in IPYWidgets is sync.
+        // Without this, running a cell multiple times with the same widget will result
+        // in the widget not getting rendered.
+        timeout = 100;
         logger('Widget was already rendering for another container, dispose that widget so we can re-render it');
         try {
             renderedWidgets.get(outputId)?.widget?.dispose();
@@ -166,39 +173,46 @@ function renderIPyWidget(
             //
         }
     }
-    const output = document.createElement('div');
-    output.className = 'cell-output cell-output';
-    if (typeof model._vsc_test_cellIndex === 'number') {
-        container.className += ` vsc-test-cell-index-${model._vsc_test_cellIndex}`;
-    }
-    const ele = document.createElement('div');
-    ele.className = 'cell-output-ipywidget-background';
-    container.appendChild(ele);
-    ele.appendChild(output);
-    renderedWidgets.set(outputId, { container, modelId: model.model_id });
-    createWidgetView(model, ele)
-        .then((w) => {
-            if (renderedWidgets.get(outputId)?.container !== container) {
-                logger('Widget container changed, hence disposing the widget');
-                w?.dispose();
-                return;
+    // See comments in previous section as to why timeout > 0.
+    new Promise((resolve) => setTimeout(resolve, timeout))
+        .then(() => {
+            const output = document.createElement('div');
+            output.className = 'cell-output cell-output';
+            if (typeof model._vsc_test_cellIndex === 'number') {
+                container.className += ` vsc-test-cell-index-${model._vsc_test_cellIndex}`;
             }
-            if (renderedWidgets.has(outputId)) {
-                renderedWidgets.get(outputId)!.widget = w;
-            }
-            const disposable = {
-                dispose: () => {
-                    // What if we render the same model in two cells.
-                    renderedWidgets.delete(outputId);
-                    w?.dispose();
-                }
-            };
-            outputDisposables.set(outputId, disposable);
-            // Keep track of the fact that we have successfully rendered a widget for this outputId.
-            const statusInfo = stackOfWidgetsRenderStatusByOutputId.find((item) => item.outputId === outputId);
-            if (statusInfo) {
-                statusInfo.success = true;
-            }
+            const ele = document.createElement('div');
+            ele.className = 'cell-output-ipywidget-background';
+            container.appendChild(ele);
+            ele.appendChild(output);
+            renderedWidgets.set(outputId, { container, modelId: model.model_id });
+            createWidgetView(model, ele)
+                .then((w) => {
+                    if (renderedWidgets.get(outputId)?.container !== container) {
+                        logger('Widget container changed, hence disposing the widget');
+                        w?.dispose();
+                        return;
+                    }
+                    if (renderedWidgets.has(outputId)) {
+                        renderedWidgets.get(outputId)!.widget = w;
+                    }
+                    const disposable = {
+                        dispose: () => {
+                            // What if we render the same model in two cells.
+                            renderedWidgets.delete(outputId);
+                            w?.dispose();
+                        }
+                    };
+                    outputDisposables.set(outputId, disposable);
+                    // Keep track of the fact that we have successfully rendered a widget for this outputId.
+                    const statusInfo = stackOfWidgetsRenderStatusByOutputId.find((item) => item.outputId === outputId);
+                    if (statusInfo) {
+                        statusInfo.success = true;
+                    }
+                })
+                .catch((ex) => {
+                    logger(`Error: Failed to render ${outputId}, ${ex.toString()}`, 'error');
+                });
         })
         .catch((ex) => {
             logger(`Error: Failed to render ${outputId}, ${ex.toString()}`, 'error');
