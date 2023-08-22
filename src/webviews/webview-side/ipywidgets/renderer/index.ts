@@ -166,6 +166,14 @@ export const activate: ActivationFunction = (context) => {
         return deferred.promise;
     }
     return {
+        /**
+         * It is possible for another Widget to get rendered in the same OutputItem.
+         * Basically we have an existing widget, then change the code in the cell,
+         * Now the previous output gets cleared and new output is added to the cell.
+         * Since both operations happen at the same time, we do not clear the output,
+         * instead the renderOutputItem is called with the new data for the same output element and same output item Id.
+         * See https://github.com/microsoft/vscode-jupyter/issues/14161
+         */
         async renderOutputItem(outputItem: OutputItem, element: HTMLElement, _signal: AbortController) {
             logger(`Got item for Rendering ${outputItem.id}}`);
             try {

@@ -1968,6 +1968,7 @@
         "notebookMessaging",
         "notebookMime",
         "notebookCellExecutionState",
+        "contribNotebookStaticPreloads",
         "portsAttributes",
         "quickPickSortByLabel",
         "notebookKernelSource",
