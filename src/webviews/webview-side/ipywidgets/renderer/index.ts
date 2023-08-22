@@ -84,6 +84,7 @@ export const activate: ActivationFunction = (context) => {
         context.onDidReceiveMessage(async (e: any) => {
             if (e.command === 'query-widget-state' && e.model_id) {
                 modelAvailabilityResponse.get(e.model_id)?.resolve(e);
+                modelAvailabilityResponse.delete(e.model_id);
             }
             if (e.command === 'ipywidget-renderer-init') {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -160,7 +161,9 @@ export const activate: ActivationFunction = (context) => {
         if (!context.postMessage) {
             return { hasWidgetState: false, kernelSelected: false };
         }
-        const deferred = createDeferred<{ hasWidgetState: boolean; kernelSelected: boolean }>();
+        const deferred =
+            modelAvailabilityResponse.get(model_id) ||
+            createDeferred<{ hasWidgetState: boolean; kernelSelected: boolean }>();
         modelAvailabilityResponse.set(model_id, deferred);
         context.postMessage({ command: 'query-widget-state', model_id });
         return deferred.promise;
