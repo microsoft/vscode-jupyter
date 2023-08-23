@@ -11,7 +11,6 @@ import {
 } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { IMultiStepInputFactory, IMultiStepInput } from '../../platform/common/utils/multiStepInput';
 import { traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import {
@@ -21,6 +20,7 @@ import {
     IJupyterServerUriStorage
 } from '../../kernels/jupyter/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
+import { WorkflowInputValueProvider } from '../../platform/common/utils/inputValueProvider';
 
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;
@@ -37,7 +37,6 @@ export class JupyterHubPasswordConnect {
     constructor(
         private appShell: IApplicationShell,
 
-        private readonly multiStepFactory: IMultiStepInputFactory,
         private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         private readonly configService: IConfigurationService,
         private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
@@ -305,47 +304,39 @@ export class JupyterHubPasswordConnect {
     }
 
     private async getUserNameAndPassword(validationMessage?: string): Promise<{ username: string; password: string }> {
-        const multistep = this.multiStepFactory.create<{
-            username: string;
-            password: string;
-            validationMessage?: string;
-        }>();
-        const state = { username: '', password: '', validationMessage };
-        await multistep.run(this.getUserNameMultiStep.bind(this), state);
-        return state;
-    }
-
-    private async getUserNameMultiStep(
-        input: IMultiStepInput<{ username: string; password: string; validationErrorMessage?: string }>,
-        state: { username: string; password: string; validationMessage?: string }
-    ) {
-        state.username = await input.showInputBox({
-            title: DataScience.jupyterSelectUserAndPasswordTitle,
-            prompt: DataScience.jupyterSelectUserPrompt,
-            validate: this.validateUserNameOrPassword,
-            validationMessage: state.validationMessage,
-            value: ''
-        });
-        if (state.username) {
-            return this.getPasswordMultiStep.bind(this);
+        let username = '';
+        let password = '';
+        const inputValueCapture = new WorkflowInputValueProvider();
+        this.disposables.push(inputValueCapture);
+        type Step = 'UserName' | 'Password';
+        let nextStep: Step = 'UserName';
+        while (true) {
+            if (nextStep === 'UserName') {
+                const errorMessage = validationMessage;
+                validationMessage = '';
+                const result = await inputValueCapture.getValue({
+                    title: DataScience.jupyterSelectUserAndPasswordTitle,
+                    prompt: DataScience.jupyterSelectUserPrompt,
+                    validationMessage: errorMessage
+                });
+                if (result.value) {
+                    username = result.value;
+                    nextStep = 'Password';
+                    continue;
+                }
+                break;
+            } else {
+                const result = await inputValueCapture.getValue({
+                    title: DataScience.jupyterSelectUserAndPasswordTitle,
+                    prompt: DataScience.jupyterSelectPasswordPrompt
+                });
+                if (result.value) {
+                    password = result.value;
+                }
+                break;
+            }
         }
-    }
-
-    private async validateUserNameOrPassword(_value: string): Promise<string | undefined> {
-        return undefined;
-    }
-
-    private async getPasswordMultiStep(
-        input: IMultiStepInput<{ username: string; password: string }>,
-        state: { username: string; password: string }
-    ) {
-        state.password = await input.showInputBox({
-            title: DataScience.jupyterSelectUserAndPasswordTitle,
-            prompt: DataScience.jupyterSelectPasswordPrompt,
-            validate: this.validateUserNameOrPassword,
-            value: '',
-            password: true
-        });
+        return { username, password };
     }
 
     private async makeRequest(url: string, options: RequestInit): Promise<Response> {

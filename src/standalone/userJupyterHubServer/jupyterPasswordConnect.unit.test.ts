@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import * as sinon from 'sinon';
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import * as nodeFetch from 'node-fetch';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.web';
@@ -10,13 +10,10 @@ import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../../kernels/
 import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
-import { IDisposableRegistry } from '../../platform/common/types';
-import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
-import { MockInputBox } from '../../test/datascience/mockInputBox';
-import { MockQuickPick } from '../../test/datascience/mockQuickPick';
+import { IDisposable } from '../../platform/common/types';
 import { JupyterHubPasswordConnect } from './jupyterHubPasswordConnect';
-import { Disposable, InputBox } from 'vscode';
-import { noop } from '../../test/core';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { WorkflowInputValueProvider } from '../../platform/common/utils/inputValueProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('Jupyter Hub Password Connect', () => {
@@ -24,58 +21,27 @@ suite('Jupyter Hub Password Connect', () => {
     let appShell: ApplicationShell;
     let configService: ConfigurationService;
     let requestCreator: IJupyterRequestCreator;
-
-    let inputBox: InputBox;
+    const disposables: IDisposable[] = [];
     setup(() => {
-        inputBox = {
-            show: noop,
-            onDidAccept: noop as any,
-            onDidHide: noop as any,
-            hide: noop,
-            dispose: noop as any,
-            onDidChangeValue: noop as any,
-            onDidTriggerButton: noop as any,
-            valueSelection: undefined,
-            totalSteps: undefined,
-            validationMessage: '',
-            busy: false,
-            buttons: [],
-            enabled: true,
-            ignoreFocusOut: false,
-            password: false,
-            step: undefined,
-            title: '',
-            value: '',
-            prompt: '',
-            placeholder: ''
-        };
-        sinon.stub(inputBox, 'show').callsFake(noop);
-        sinon.stub(inputBox, 'onDidHide').callsFake(() => new Disposable(noop));
-        sinon.stub(inputBox, 'onDidAccept').callsFake((cb) => {
-            (cb as Function)();
-            return new Disposable(noop);
-        });
-
         appShell = mock(ApplicationShell);
-        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
-        when(appShell.createInputBox()).thenReturn(inputBox);
-        const multiStepFactory = new MultiStepInputFactory(instance(appShell));
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
         requestCreator = mock(JupyterRequestCreator);
         const serverUriStorage = mock<IJupyterServerUriStorage>();
-        const disposables = mock<IDisposableRegistry>();
 
         jupyterPasswordConnect = new JupyterHubPasswordConnect(
             instance(appShell),
-            multiStepFactory,
             instance(mockDisposableRegistry),
             instance(configService),
             undefined,
             instance(requestCreator),
             instance(serverUriStorage),
-            instance(disposables)
+            disposables
         );
+    });
+    teardown(() => {
+        sinon.restore();
+        disposeAllDisposables(disposables);
     });
 
     function createJupyterHubSetup() {
@@ -84,11 +50,6 @@ suite('Jupyter Hub Password Connect', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
-
-        const quickPick = new MockQuickPick('');
-        const input = new MockInputBox('test', 2); // We want the input box to enter twice for this scenario
-        when(appShell.createQuickPick()).thenReturn(quickPick!);
-        when(appShell.createInputBox()).thenReturn(input);
 
         const hubActiveResponse = mock(nodeFetch.Response);
         when(hubActiveResponse.ok).thenReturn(true);
@@ -134,6 +95,7 @@ suite('Jupyter Hub Password Connect', () => {
         };
     }
     test('Jupyter hub', async () => {
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').resolves({ value: 'test' });
         const fetch = createJupyterHubSetup();
         when(requestCreator.getFetchMethod()).thenReturn(fetch as any);
 

@@ -15,10 +15,9 @@ import {
     IDisposable,
     IExtensionContext
 } from '../../platform/common/types';
-import { IMultiStepInputFactory, InputFlowAction } from '../../platform/common/utils/multiStepInput';
+import { InputFlowAction } from '../../platform/common/utils/multiStepInput';
 import {
     SecureConnectionValidator,
-    UserJupyterServerDisplayName,
     UserJupyterServerUriInput,
     UserJupyterServerUriListKey,
     UserJupyterServerUriListKeyV2,
@@ -42,6 +41,8 @@ import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils
 import { IJupyterPasswordConnectInfo, JupyterPasswordConnect } from './jupyterPasswordConnect';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IJupyterServerUri, JupyterServerCollection } from '../../api';
+import { WorkflowInputValueProvider } from '../../platform/common/utils/inputValueProvider';
+import { DataScience } from '../../platform/common/utils/localize';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
@@ -55,7 +56,6 @@ suite('User Uri Provider', () => {
     let serverUriStorage: IJupyterServerUriStorage;
     let globalMemento: Memento;
     const disposables: IDisposable[] = [];
-    let multiStepFactory: IMultiStepInputFactory;
     let asyncDisposables: IAsyncDisposable[] = [];
     let asyncDisposableRegistry: IAsyncDisposableRegistry = {
         dispose: async function () {
@@ -119,7 +119,6 @@ suite('User Uri Provider', () => {
         encryptedStorage = mock<IEncryptedStorage>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
         globalMemento = mock<Memento>();
-        multiStepFactory = mock<IMultiStepInputFactory>();
         commands = mock<ICommandManager>();
         requestCreator = mock<IJupyterRequestCreator>();
         tokenSource = new CancellationTokenSource();
@@ -169,6 +168,7 @@ suite('User Uri Provider', () => {
         });
         sinon.stub(JupyterHubPasswordConnect.prototype, 'isJupyterHub').resolves(false);
         getPasswordConnectionInfoStub = sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo');
+        sinon.stub(JupyterHubPasswordConnect.prototype, 'isJupyterHub').resolves(false);
         getPasswordConnectionInfoStub.resolves({ requiresPassword: false });
 
         when(serverUriStorage.add(anything())).thenResolve();
@@ -191,7 +191,6 @@ suite('User Uri Provider', () => {
             instance(serverUriStorage),
             instance(globalMemento),
             disposables,
-            instance(multiStepFactory),
             asyncDisposableRegistry,
             instance(commands),
             undefined,
@@ -328,8 +327,14 @@ suite('User Uri Provider', () => {
     });
     test('Add the provided Url and verify it is in the storage', async () => {
         await testMigration();
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.resolves('Foo Bar');
+        let displayNameCaptured = false;
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                displayNameCaptured = true;
+                return Promise.resolve({ value: 'Foo Bar' });
+            }
+            return Promise.resolve({ value: '' });
+        });
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
@@ -345,7 +350,7 @@ suite('User Uri Provider', () => {
 
         assert.ok(server.id);
         assert.strictEqual(server.label, 'Foo Bar');
-        assert.ok(displayNameStub.called, 'We should have prompted the user for a display name');
+        assert.ok(displayNameCaptured, 'We should have prompted the user for a display name');
         assert.isFalse(getUriFromUserStub.called, 'Should not prompt for a Url, as one was provided');
         const authInfo = await provider.resolveJupyterServer(server, token);
         assert.strictEqual(authInfo.connectionInformation.baseUrl.toString(), 'https://localhost:3333/');
@@ -366,8 +371,14 @@ suite('User Uri Provider', () => {
     });
     test('Prompt user for a Url and use what is in clipboard, then verify it is in the storage', async () => {
         await testMigration();
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.resolves('Foo Bar');
+        let displayNameCaptured = false;
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                displayNameCaptured = true;
+                return Promise.resolve({ value: 'Foo Bar' });
+            }
+            return Promise.resolve({ value: '' });
+        });
         when(clipboard.readText()).thenResolve('https://localhost:3333?token=ABCD');
 
         const [cmd] = await provider.provideCommands('', token);
@@ -382,7 +393,7 @@ suite('User Uri Provider', () => {
 
         assert.ok(server.id);
         assert.strictEqual(server.label, 'Foo Bar');
-        assert.ok(displayNameStub.called, 'We should have prompted the user for a display name');
+        assert.ok(displayNameCaptured, 'We should have prompted the user for a display name');
         verify(clipboard.readText()).once();
 
         const servers = await provider.provideJupyterServers(token);
@@ -404,8 +415,12 @@ suite('User Uri Provider', () => {
         when(clipboard.readText()).thenResolve('https://localhost:3333');
         const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
         secureConnectionStub.resolves(true);
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.resolves('Foo Bar');
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                return Promise.resolve({ value: 'Foo Bar' });
+            }
+            return Promise.resolve({ value: '' });
+        });
 
         const [cmd] = await provider.provideCommands('', token);
         const server = await provider.handleCommand(cmd, token);
@@ -438,8 +453,12 @@ suite('User Uri Provider', () => {
         await testMigration();
         const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
         secureConnectionStub.resolves(true);
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.resolves('Foo Bar');
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                return Promise.resolve({ value: 'Foo Bar' });
+            }
+            return Promise.resolve({ value: '' });
+        });
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
@@ -473,8 +492,12 @@ suite('User Uri Provider', () => {
         await testMigration();
         const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
         secureConnectionStub.resolves(false);
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.resolves('Foo Bar');
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                return Promise.resolve({ value: 'Foo Bar' });
+            }
+            return Promise.resolve({ value: '' });
+        });
         const getUriFromUserStub = sinon.stub(UserJupyterServerUriInput.prototype, 'getUrlFromUser');
         getUriFromUserStub.resolves(undefined);
 
@@ -500,8 +523,12 @@ suite('User Uri Provider', () => {
         sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: true });
         const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
         secureConnectionStub.resolves(false);
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.resolves('Foo Bar');
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                return Promise.resolve({ value: 'Foo Bar' });
+            }
+            return Promise.resolve({ value: '' });
+        });
 
         const [cmd] = await provider.provideCommands('http://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
@@ -536,14 +563,20 @@ suite('User Uri Provider', () => {
         sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: false });
         const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
         secureConnectionStub.resolves(false);
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.rejects(InputFlowAction.back);
+        let displayNameCaptured = false;
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                displayNameCaptured = true;
+                return Promise.resolve({ navigation: 'back' });
+            }
+            return Promise.resolve({ value: '' });
+        });
 
         const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.strictEqual(server, 'back');
-        assert.strictEqual(displayNameStub.callCount, 1);
+        assert.isOk(displayNameCaptured);
         assert.strictEqual(urlInputStub.callCount, 0); // Since a url was provided we should never prompt for this, even when clicking back in display name.
     });
     test('When pre-populating with https url and without password auth, the next step should be the displayName & cancel from displayName should get out of this UI flow (without displaying the Url picker)', async () => {
@@ -555,14 +588,20 @@ suite('User Uri Provider', () => {
         sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: false });
         const secureConnectionStub = sinon.stub(SecureConnectionValidator.prototype, 'promptToUseInsecureConnections');
         secureConnectionStub.resolves(false);
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.rejects(InputFlowAction.cancel);
+        let displayNameCaptured = false;
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                displayNameCaptured = true;
+                return Promise.resolve({ navigation: 'cancel' });
+            }
+            return Promise.resolve({ value: '' });
+        });
 
         const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
         assert.isUndefined(server);
-        assert.strictEqual(displayNameStub.callCount, 1);
+        assert.isOk(displayNameCaptured);
         assert.strictEqual(urlInputStub.callCount, 0); // Since a url was provided we should never prompt for this, even when clicking back in display name.
     });
     test('When pre-populating with https url and without password auth, and the server is invalid the next step should be the url display', async () => {
@@ -597,8 +636,14 @@ suite('User Uri Provider', () => {
             }
         });
         sinon.stub(JupyterPasswordConnect.prototype, 'getPasswordConnectionInfo').resolves({ requiresPassword: false });
-        const displayNameStub = sinon.stub(UserJupyterServerDisplayName.prototype, 'getDisplayName');
-        displayNameStub.rejects(InputFlowAction.back);
+        let displayNameCaptured = false;
+        sinon.stub(WorkflowInputValueProvider.prototype, 'getValue').callsFake((options) => {
+            if (options.title === DataScience.jupyterRenameServer) {
+                displayNameCaptured = true;
+                return Promise.resolve({ navigation: 'back' });
+            }
+            return Promise.resolve({ value: '' });
+        });
         when(jupyterConnection.validateRemoteUri(anything(), anything(), true)).thenCall(
             (_, uri: IJupyterServerUri) => {
                 if (!uri) {
@@ -622,7 +667,7 @@ suite('User Uri Provider', () => {
         const server = await provider.handleCommand(cmd, token);
 
         assert.strictEqual(server, 'back');
-        assert.strictEqual(displayNameStub.callCount, 1);
+        assert.isOk(displayNameCaptured);
         assert.strictEqual(urlInputStub.callCount, 2); // Displayed twice, first time for error message, second time when hit back button from display UI.
     });
 });

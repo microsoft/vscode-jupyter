@@ -57,7 +57,7 @@ import {
     JupyterServerCommandProvider,
     JupyterServerProvider
 } from '../../api';
-import { IMultiStepInputFactory, InputFlowAction } from '../../platform/common/utils/multiStepInput';
+import { InputFlowAction } from '../../platform/common/utils/multiStepInput';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
@@ -66,6 +66,7 @@ import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { Disposables } from '../../platform/common/utils';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
+import { WorkflowInputValueProvider } from '../../platform/common/utils/inputValueProvider';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -97,7 +98,9 @@ export class UserJupyterServerUrlProvider
     }
     private secureConnectionValidator: SecureConnectionValidator;
     private jupyterServerUriInput: UserJupyterServerUriInput;
-    private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
+    // private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
+    private readonly inputProvider: WorkflowInputValueProvider;
+    private readonly displayNamesOfHandles = new Map<string, string>();
     constructor(
         @inject(IClipboard) clipboard: IClipboard,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
@@ -108,7 +111,6 @@ export class UserJupyterServerUrlProvider
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IMultiStepInputFactory) multiStepFactory: IMultiStepInputFactory,
         @inject(IAsyncDisposableRegistry) asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterRequestAgentCreator)
@@ -131,7 +133,8 @@ export class UserJupyterServerUrlProvider
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.jupyterServerUriInput = new UserJupyterServerUriInput(clipboard, applicationShell);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.jupyterServerUriDisplayName = new UserJupyterServerDisplayName(applicationShell);
+        this.inputProvider = new WorkflowInputValueProvider();
+        // this.jupyterServerUriDisplayName = new UserJupyterServerDisplayName(applicationShell);
         this.jupyterPasswordConnect = new JupyterPasswordConnect(
             applicationShell,
             configService,
@@ -142,7 +145,6 @@ export class UserJupyterServerUrlProvider
         );
         this.jupyterHubPasswordConnect = new JupyterHubPasswordConnect(
             applicationShell,
-            multiStepFactory,
             asyncDisposableRegistry,
             configService,
             agentCreator,
@@ -582,11 +584,20 @@ export class UserJupyterServerUrlProvider
                             // If we were given a Url, then back should get out of this flow.
                             previousStep = initialUrlWasValid && initialUrl ? undefined : 'Get Url';
                         }
-
-                        jupyterServerUri.displayName = await this.jupyterServerUriDisplayName.getDisplayName(
-                            handle,
-                            jupyterServerUri.displayName || new URL(jupyterServerUri.baseUrl).hostname
-                        );
+                        const result = await this.inputProvider.getValue({
+                            ignoreFocusOut: true,
+                            title: DataScience.jupyterRenameServer,
+                            value: jupyterServerUri.displayName || new URL(jupyterServerUri.baseUrl).hostname
+                        });
+                        if (result.navigation) {
+                            if (result.navigation === 'back') {
+                                throw InputFlowAction.back;
+                            }
+                            throw InputFlowAction.cancel;
+                        } else {
+                            this.displayNamesOfHandles.set(handle, result.value);
+                            jupyterServerUri.displayName = result.value;
+                        }
                         break;
                     }
                 } catch (ex) {
@@ -637,7 +648,7 @@ export class UserJupyterServerUrlProvider
         const serverInfo = server.serverInfo;
         // Hacky due to the way display names are stored in uri storage.
         // Should be cleaned up later.
-        const displayName = this.jupyterServerUriDisplayName.displayNamesOfHandles.get(id);
+        const displayName = this.displayNamesOfHandles.get(id);
         if (displayName) {
             serverInfo.displayName = displayName;
         }
@@ -726,45 +737,6 @@ export class UserJupyterServerUriInput {
     }
 }
 
-export class UserJupyterServerDisplayName {
-    constructor(@inject(IApplicationShell) private readonly applicationShell: IApplicationShell) {}
-    public displayNamesOfHandles = new Map<string, string>();
-    public async getDisplayName(handle: string, defaultValue: string): Promise<string> {
-        const disposables: Disposable[] = [];
-        try {
-            const input = this.applicationShell.createInputBox();
-            disposables.push(input);
-            input.ignoreFocusOut = true;
-            input.title = DataScience.jupyterRenameServer;
-            input.value = defaultValue;
-            input.buttons = [QuickInputButtons.Back];
-            input.show();
-            const deferred = createDeferred<string>();
-            disposables.push(input.onDidHide(() => deferred.reject(InputFlowAction.cancel)));
-            input.onDidTriggerButton(
-                (e) => {
-                    if (e === QuickInputButtons.Back) {
-                        deferred.reject(InputFlowAction.back);
-                    }
-                },
-                this,
-                disposables
-            );
-            input.onDidAccept(
-                () => {
-                    const displayName = input.value.trim() || defaultValue;
-                    this.displayNamesOfHandles.set(handle, displayName);
-                    deferred.resolve(displayName);
-                },
-                this,
-                disposables
-            );
-            return await deferred.promise;
-        } finally {
-            disposeAllDisposables(disposables);
-        }
-    }
-}
 export class SecureConnectionValidator {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
