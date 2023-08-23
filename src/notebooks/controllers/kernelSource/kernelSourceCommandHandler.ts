@@ -187,9 +187,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                 );
                             },
                             get documentation() {
-                                return provider.id.startsWith('_builtin') && provider.documentation
-                                    ? provider.documentation
-                                    : undefined;
+                                return provider.documentation;
                             },
                             command: {
                                 command: 'jupyter.kernel.selectJupyterServerKernel',
@@ -213,9 +211,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                                 );
                             },
                             get documentation() {
-                                return provider.id.startsWith('_builtin') && provider.documentation
-                                    ? provider.documentation
-                                    : undefined;
+                                return provider.documentation;
                             },
                             command: {
                                 command: 'jupyter.kernel.selectJupyterServerKernel',
