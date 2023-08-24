@@ -333,7 +333,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
                 sessionManager.getRunningKernels(),
                 sessionManager.getKernelSpecs(),
                 sessionManager.getRunningSessions(),
-                computeServerId(generateIdFromRemoteProvider(connInfo.serverProviderHandle))
+                computeServerId(connInfo.serverProviderHandle)
             ]);
 
             // Turn them both into a combined list
