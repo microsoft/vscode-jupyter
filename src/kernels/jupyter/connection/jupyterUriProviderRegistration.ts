@@ -22,6 +22,7 @@ import { Disposables } from '../../../platform/common/utils';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
+import { stripCodicons } from '../../../platform/common/helpers';
 
 export const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 function getProviderId(extensionId: string, id: string) {
@@ -214,10 +215,10 @@ const handlesForWhichWeHaveSentTelemetry = new Set<string>();
 class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterUriProvider {
     public readonly id: string;
     public get displayName() {
-        return this.provider.displayName;
+        return stripCodicons(this.provider.displayName);
     }
     public get detail() {
-        return this.provider.detail;
+        return stripCodicons(this.provider.detail);
     }
     public get documentation() {
         return this.provider.documentation;
@@ -252,6 +253,8 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
             return [];
         }
         return (await this.provider.getQuickPickEntryItems(value)).map((q) => {
+            q.label = stripCodicons(q.label);
+            q.detail = stripCodicons(q.detail);
             return {
                 ...q,
                 // Add the package name onto the description
