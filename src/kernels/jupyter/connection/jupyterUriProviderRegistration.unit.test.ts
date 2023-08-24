@@ -44,12 +44,7 @@ suite('Uri Provider Registration', () => {
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
 
-        registration = new JupyterUriProviderRegistration(
-            instance(extensions),
-            disposables,
-            instance(globalMemento),
-            instance(serviceContainer)
-        );
+        registration = new JupyterUriProviderRegistration(instance(extensions), disposables, instance(globalMemento));
         registration.activate();
         await clock.runAllAsync();
     });
@@ -177,26 +172,6 @@ suite('Uri Provider Registration', () => {
         const server2 = await registration.getJupyterServerUri({ id: 'b', handle: 'handleb', extensionId: 'ext' });
         assert.strictEqual(server2.displayName, 'Server B');
         assert.strictEqual(server2, instance(serverForHandleB));
-    });
-    test('Notify the provider when a server is deleted', async () => {
-        const { provider: provider1 } = createAndRegisterJupyterUriProvider('ext', 'a');
-        const { provider: provider2 } = createAndRegisterJupyterUriProvider('ext', 'b');
-        when(provider1.getHandles!()).thenResolve(['handle1', 'handle2']);
-        when(provider2.getHandles!()).thenResolve(['handlea', 'handleb']);
-        when(provider1.removeHandle!(anything())).thenResolve();
-        when(provider2.removeHandle!(anything())).thenResolve();
-
-        const removedServer: IJupyterServerUriEntry = {
-            provider: { handle: 'handle2', id: 'a', extensionId: 'ext' },
-            time: Date.now(),
-            displayName: 'Server for Handle2'
-        };
-        onDidRemoveServer.fire([removedServer]);
-        await clock.runAllAsync();
-
-        verify(provider1.removeHandle!('handle1')).never();
-        verify(provider1.removeHandle!('handle2')).once();
-        verify(provider2.removeHandle!(anything())).never();
     });
     test('Verify the handles', async () => {
         const { provider: mockProvider } = createAndRegisterJupyterUriProvider('a', '1');

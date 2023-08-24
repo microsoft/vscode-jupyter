@@ -17,7 +17,7 @@ import { IDisposable, IDisposableRegistry } from '../../../platform/common/types
 import { inject, injectable } from 'inversify';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
-import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
 export class JupyterServerCollectionImpl extends Disposables implements JupyterServerCollection {
     private _serverProvider?: JupyterServerProvider;
@@ -65,7 +65,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     private _onDidChangeHandles = new EventEmitter<void>();
     onDidChangeHandles = this._onDidChangeHandles.event;
     private providerChanges: IDisposable[] = [];
-    removeHandle?(handle: string): Promise<void>;
     getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
     private commands = new Map<string, JupyterServerCommand>();
     constructor(
@@ -78,7 +77,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
 
         // Only jupyter extension supports the `remoteHandle` API.
         if (this.provider.extensionId === JVSC_EXTENSION_ID) {
-            this.removeHandle = this.removeHandleImpl.bind(this);
             this.getServerUriWithoutAuthInfo = this.getServerUriWithoutAuthInfoImpl.bind(this);
         }
     }
@@ -106,15 +104,17 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             return [];
         }
         const token = new CancellationTokenSource();
+        const isProposedApiAllowed =
+            this.provider.extensionId === JVSC_EXTENSION_ID || this.provider.extensionId === JUPYTER_HUB_EXTENSION_ID;
         try {
-            value = this.provider.extensionId === JVSC_EXTENSION_ID ? value : undefined;
+            value = isProposedApiAllowed ? value : undefined;
             let items: JupyterServerCommand[] = [];
-            if (this.provider.extensionId === JVSC_EXTENSION_ID) {
+            if (isProposedApiAllowed) {
                 items = await this.provider.commandProvider.provideCommands(value || '', token.token);
             } else {
                 items = this.provider.commandProvider.commands;
             }
-            if (this.provider.extensionId === JVSC_EXTENSION_ID) {
+            if (isProposedApiAllowed) {
                 if (!value) {
                     this.commands.clear();
                 }
@@ -239,21 +239,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 token: '',
                 displayName: server.label
             };
-        } finally {
-            token.dispose();
-        }
-    }
-    async removeHandleImpl(handle: string): Promise<void> {
-        const token = new CancellationTokenSource();
-        if (!this.provider.removeJupyterServer) {
-            traceError(`Cannot remote server with id ${handle} as Provider does not support the 'remove' method.`);
-            return;
-        }
-        try {
-            const server = await this.getServer(handle, token.token);
-            await this.provider.removeJupyterServer(server);
-        } catch {
-            //
         } finally {
             token.dispose();
         }

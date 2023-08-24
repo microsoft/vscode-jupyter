@@ -127,10 +127,6 @@ declare module './api' {
          * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
          */
         getHandles?(): Promise<string[]>;
-        /**
-         * Users request to remove a handle.
-         */
-        removeHandle?(handle: string): Promise<void>;
     }
     //#endregion
 

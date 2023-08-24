@@ -225,7 +225,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                                 } else if (this.isCommandQuickPickItem(selection)) {
                                     resolve(selection);
                                 } else if (this.isErrorQuickPickItem(selection)) {
-                                    resolve(InputFlowAction.cancel);
+                                    // No point selecting error message.
                                 }
                             }
                         });
