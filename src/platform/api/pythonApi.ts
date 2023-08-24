@@ -871,7 +871,8 @@ export class InterpreterService implements IInterpreterService {
                 if (!this.eventHandlerAdded && api) {
                     this.eventHandlerAdded = true;
                     api.environments.onDidEnvironmentVariablesChange(
-                        () => {
+                        (e) => {
+                            traceVerbose(`Detected changes to env file ${e.resource?.uri?.path} in PythonApi`);
                             this._onDidEnvironmentVariablesChange.fire();
                         },
                         this,
