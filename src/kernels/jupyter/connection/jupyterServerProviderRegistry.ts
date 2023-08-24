@@ -15,7 +15,7 @@ import { Disposables } from '../../../platform/common/utils';
 import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../types';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { inject, injectable } from 'inversify';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { disposeAllDisposables, stripCodicons } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
 import { JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
@@ -122,8 +122,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             }
             return items.map((c) => {
                 return {
-                    label: c.title,
-                    detail: c.detail,
+                    label: stripCodicons(c.title),
+                    detail: stripCodicons(c.detail),
                     tooltip: c.tooltip,
                     command: c
                 };

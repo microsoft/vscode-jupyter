@@ -98,3 +98,10 @@ export function createPublicAPIProxy<T extends object>(target: T, membersToHide:
         }
     });
 }
+
+export function stripCodicons(text: string | undefined) {
+    if (!text) {
+        return text || '';
+    }
+    return text.replace(/\$\([a-z0-9\-]+?\)/gi, '').trim();
+}

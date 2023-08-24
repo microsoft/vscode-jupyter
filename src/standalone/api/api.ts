@@ -22,6 +22,7 @@ import {
     JupyterServerProvider,
     JupyterServerCommandProvider
 } from '../../api';
+import { stripCodicons } from '../../platform/common/helpers';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -163,6 +164,7 @@ export function buildApi(
             return notebookEditor.notebook;
         },
         createJupyterServerCollection: (id, label) => {
+            label = stripCodicons(label);
             let documentation: Uri | undefined;
             let serverProvider: JupyterServerProvider | undefined;
             let commandProvider: JupyterServerCommandProvider | undefined;
@@ -183,6 +185,7 @@ export function buildApi(
                     return id;
                 },
                 set label(value: string) {
+                    label = stripCodicons(value);
                     label = value;
                     if (proxy) {
                         proxy.label = value;
