@@ -8,18 +8,11 @@ import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../.
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import {
-    IInternalJupyterUriProvider,
-    IJupyterServerUriEntry,
-    IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration,
-    JupyterServerProviderHandle
-} from '../types';
+import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration, JupyterServerProviderHandle } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { traceError, traceVerbose } from '../../../platform/logging';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCommand } from '../../../api';
 import { Disposables } from '../../../platform/common/utils';
-import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 
@@ -48,8 +41,7 @@ export class JupyterUriProviderRegistration
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {
         super();
         disposables.push(this);
@@ -58,8 +50,7 @@ export class JupyterUriProviderRegistration
     }
 
     public activate(): void {
-        const serverStorage = this.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
-        this.disposables.push(serverStorage.onDidRemove(this.onDidRemoveServer, this));
+        //
     }
     public async getProvider(extensionId: string, id: string): Promise<IInternalJupyterUriProvider | undefined> {
         this.loadOtherExtensions().catch(noop);
@@ -156,17 +147,6 @@ export class JupyterUriProviderRegistration
             await ext.activate().then(noop, noop);
         }
     }
-    private onDidRemoveServer(e: IJupyterServerUriEntry[]) {
-        Promise.all(
-            e.map(async (s) => {
-                const provider = await this.getProvider(s.provider.extensionId, s.provider.id).catch(noop);
-                if (!provider || !provider.removeHandle) {
-                    return;
-                }
-                await provider.removeHandle(s.provider.handle).catch(noop);
-            })
-        ).catch(noop);
-    }
     private loadOtherExtensions(): Promise<void> {
         if (!this.loadedOtherExtensionsPromise) {
             this.loadedOtherExtensionsPromise = this.loadOtherExtensionsImpl();
@@ -230,7 +210,6 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         return this.provider.onDidChangeHandles;
     }
     public readonly getHandles?: () => Promise<string[]>;
-    public readonly removeHandle?: (handle: string) => Promise<void>;
 
     constructor(
         private readonly provider: IJupyterUriProvider,
@@ -241,10 +220,6 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
 
         if (provider.getHandles) {
             this.getHandles = async () => provider.getHandles!();
-        }
-
-        if (provider.removeHandle) {
-            this.removeHandle = (handle: string) => provider.removeHandle!(handle);
         }
     }
     public async getQuickPickEntryItems(value?: string): Promise<QuickPickItem[]> {

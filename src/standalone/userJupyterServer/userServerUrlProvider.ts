@@ -254,14 +254,14 @@ export class UserJupyterServerUrlProvider
         return servers.map((s) => {
             return {
                 id: s.handle,
-                label: s.serverInfo.displayName,
-                remove: async () => {
-                    await this.initializeServers();
-                    await this.newStorage.remove(s.handle);
-                    this._onDidChangeHandles.fire();
-                }
+                label: s.serverInfo.displayName
             };
         });
+    }
+    public async removeJupyterServer(server: JupyterServer): Promise<void> {
+        await this.initializeServers();
+        await this.newStorage.remove(server.id);
+        this._onDidChangeHandles.fire();
     }
     private migrateOldServers() {
         if (!this.migratedOldServers) {

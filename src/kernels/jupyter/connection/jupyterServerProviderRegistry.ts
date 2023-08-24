@@ -65,7 +65,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     private _onDidChangeHandles = new EventEmitter<void>();
     onDidChangeHandles = this._onDidChangeHandles.event;
     private providerChanges: IDisposable[] = [];
-    removeHandle?(handle: string): Promise<void>;
     getServerUriWithoutAuthInfo?(handle: string): Promise<IJupyterServerUri>;
     private commands = new Map<string, JupyterServerCommand>();
     constructor(
@@ -78,7 +77,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
 
         // Only jupyter extension supports the `remoteHandle` API.
         if (this.provider.extensionId === JVSC_EXTENSION_ID) {
-            this.removeHandle = this.removeHandleImpl.bind(this);
             this.getServerUriWithoutAuthInfo = this.getServerUriWithoutAuthInfoImpl.bind(this);
         }
     }
@@ -239,21 +237,6 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 token: '',
                 displayName: server.label
             };
-        } finally {
-            token.dispose();
-        }
-    }
-    async removeHandleImpl(handle: string): Promise<void> {
-        const token = new CancellationTokenSource();
-        if (!this.provider.removeJupyterServer) {
-            traceError(`Cannot remote server with id ${handle} as Provider does not support the 'remove' method.`);
-            return;
-        }
-        try {
-            const server = await this.getServer(handle, token.token);
-            await this.provider.removeJupyterServer(server);
-        } catch {
-            //
         } finally {
             token.dispose();
         }

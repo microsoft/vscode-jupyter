@@ -25,7 +25,12 @@ import {
 } from '../../../kernels/jupyter/types';
 import { IKernelFinder, KernelConnectionMetadata, RemoteKernelConnectionMetadata } from '../../../kernels/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { InteractiveWindowView, JVSC_EXTENSION_ID, JupyterNotebookView } from '../../../platform/common/constants';
+import {
+    InteractiveWindowView,
+    JUPYTER_HUB_EXTENSION_ID,
+    JVSC_EXTENSION_ID,
+    JupyterNotebookView
+} from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
@@ -200,14 +205,16 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 idAndHandle: server.serverProviderHandle,
                 label: server.displayName,
                 detail: time ? DataScience.jupyterSelectURIMRUDetail(new Date(time)) : undefined,
-                buttons: provider.removeHandle
-                    ? [
-                          {
-                              iconPath: new ThemeIcon('close'),
-                              tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
-                          }
-                      ]
-                    : []
+                buttons:
+                    serverProvider?.removeJupyterServer &&
+                    (provider.extensionId === JVSC_EXTENSION_ID || provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                        ? [
+                              {
+                                  iconPath: new ThemeIcon('close'),
+                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                              }
+                          ]
+                        : []
             });
         });
 
@@ -228,14 +235,17 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     label: server.label,
                     idAndHandle: { extensionId: provider.extensionId, id: provider.id, handle: server.id },
                     server,
-                    buttons: provider.removeHandle
-                        ? [
-                              {
-                                  iconPath: new ThemeIcon('close'),
-                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
-                              }
-                          ]
-                        : []
+                    buttons:
+                        serverProvider?.removeJupyterServer &&
+                        (provider.extensionId === JVSC_EXTENSION_ID ||
+                            provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                            ? [
+                                  {
+                                      iconPath: new ThemeIcon('close'),
+                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                                  }
+                              ]
+                            : []
                 });
             });
 
@@ -303,9 +313,16 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 supportBackInFirstStep: true,
                 onDidTriggerItemButton: async (e) => {
                     if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
-                        if (provider.removeHandle) {
+                        const serverId = e.item.idAndHandle.handle;
+                        const serverToRemove = jupyterServers.find((s) => s.id === serverId);
+                        if (
+                            serverProvider?.removeJupyterServer &&
+                            serverToRemove &&
+                            (provider.extensionId === JVSC_EXTENSION_ID ||
+                                provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                        ) {
                             quickPick.busy = true;
-                            await provider.removeHandle(e.item.idAndHandle.handle);
+                            await serverProvider.removeJupyterServer(serverToRemove);
                             quickPick.busy = false;
                             // the serverUriStorage should be refreshed after the handle removal
                             items.splice(items.indexOf(e.item), 1);

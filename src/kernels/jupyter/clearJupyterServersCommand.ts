@@ -3,11 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import { ICommandManager } from '../../platform/common/application/types';
-import { Commands } from '../../platform/common/constants';
+import { Commands, JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './types';
+import { IJupyterServerProviderRegistry, IJupyterServerUriStorage } from './types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { noop } from '../../platform/common/utils/misc';
+import { CancellationTokenSource } from 'vscode';
 
 /**
  * Registers commands to allow the user to set the remote server URI.
@@ -17,7 +18,7 @@ export class ClearJupyterServersCommand implements IExtensionSyncActivationServi
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IJupyterUriProviderRegistration) private readonly registrations: IJupyterUriProviderRegistration,
+        @inject(IJupyterServerProviderRegistry) private readonly registrations: IJupyterServerProviderRegistry,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {}
     public activate() {
@@ -27,15 +28,19 @@ export class ClearJupyterServersCommand implements IExtensionSyncActivationServi
                 async () => {
                     await this.serverUriStorage.clear().catch(noop);
                     await Promise.all(
-                        this.registrations.providers
-                            .filter((p) => p.id.startsWith('_builtin'))
+                        this.registrations.jupyterCollections
+                            .filter((p) => p.id.startsWith('_builtin') || p.extensionId === JVSC_EXTENSION_ID)
                             .map(async (provider) => {
-                                if (provider.getHandles && provider.removeHandle) {
-                                    const handles = await provider.getHandles().catch(() => []);
-                                    for (const handle of handles) {
-                                        await provider.removeHandle(handle).catch(noop);
-                                    }
+                                if (!provider.serverProvider || !provider.serverProvider.removeJupyterServer) {
+                                    return;
                                 }
+                                const token = new CancellationTokenSource();
+                                const servers = await provider.serverProvider.provideJupyterServers(token.token);
+                                await Promise.all(
+                                    servers.map((server) =>
+                                        provider.serverProvider!.removeJupyterServer!(server).catch(noop)
+                                    )
+                                );
                             })
                     ).catch(noop);
                     await this.commandManager

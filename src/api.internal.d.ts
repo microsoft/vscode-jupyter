@@ -17,6 +17,8 @@ declare module './api' {
          * Used internally by Jupyter Extension to detect changes to the JupyterServerProvider.
          */
         onDidChangeProvider: Event<void>;
+    }
+    export interface JupyterServerProvider {
         /**
          * Display a `trash` icon next to each server in the quick pick.
          * Allowing the user to remove this server.
