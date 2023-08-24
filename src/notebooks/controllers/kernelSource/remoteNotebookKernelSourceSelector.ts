@@ -312,7 +312,11 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 title: DataScience.quickPickTitleForSelectionOfJupyterServer,
                 supportBackInFirstStep: true,
                 onDidTriggerItemButton: async (e) => {
-                    if ('type' in e.item && e.item.type === KernelFinderEntityQuickPickType.KernelFinder) {
+                    if (
+                        'type' in e.item &&
+                        (e.item.type === KernelFinderEntityQuickPickType.KernelFinder ||
+                            e.item.type === KernelFinderEntityQuickPickType.JupyterServer)
+                    ) {
                         const serverId = e.item.idAndHandle.handle;
                         const serverToRemove = jupyterServers.find((s) => s.id === serverId);
                         if (
@@ -332,7 +336,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 },
                 onDidChangeItems: onDidChangeItems.event
             });
-            if (provider.extensionId === JVSC_EXTENSION_ID) {
+            if (provider.extensionId === JVSC_EXTENSION_ID || provider.extensionId === JUPYTER_HUB_EXTENSION_ID) {
                 quickPick.onDidChangeValue(async (e) => {
                     if (!provider.getQuickPickEntryItems) {
                         return;

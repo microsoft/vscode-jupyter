@@ -17,7 +17,7 @@ import { IDisposable, IDisposableRegistry } from '../../../platform/common/types
 import { inject, injectable } from 'inversify';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
-import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
 export class JupyterServerCollectionImpl extends Disposables implements JupyterServerCollection {
     private _serverProvider?: JupyterServerProvider;
@@ -104,15 +104,17 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             return [];
         }
         const token = new CancellationTokenSource();
+        const isProposedApiAllowed =
+            this.provider.extensionId === JVSC_EXTENSION_ID || this.provider.extensionId === JUPYTER_HUB_EXTENSION_ID;
         try {
-            value = this.provider.extensionId === JVSC_EXTENSION_ID ? value : undefined;
+            value = isProposedApiAllowed ? value : undefined;
             let items: JupyterServerCommand[] = [];
-            if (this.provider.extensionId === JVSC_EXTENSION_ID) {
+            if (isProposedApiAllowed) {
                 items = await this.provider.commandProvider.provideCommands(value || '', token.token);
             } else {
                 items = this.provider.commandProvider.commands;
             }
-            if (this.provider.extensionId === JVSC_EXTENSION_ID) {
+            if (isProposedApiAllowed) {
                 if (!value) {
                     this.commands.clear();
                 }
