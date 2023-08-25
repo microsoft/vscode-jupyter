@@ -102,7 +102,11 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
                 if (!this.pythonEnvVarChangeEventHooked) {
                     this.pythonEnvVarChangeEventHooked = true;
                     api.environments.onDidEnvironmentVariablesChange(
-                        (e) => this.changeEventEmitter.fire(e.resource?.uri),
+                        (e) => {
+                            traceVerbose(`Python env vars changed ${e.resource?.uri?.path}`);
+                            this.onEnvironmentFileChanged(e.resource?.uri);
+                            this.changeEventEmitter.fire(e.resource?.uri);
+                        },
                         this,
                         this.disposables
                     );
