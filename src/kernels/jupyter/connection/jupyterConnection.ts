@@ -22,23 +22,12 @@ import { IDataScienceErrorHandler } from '../../errors/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
-import { IJupyterConnection } from '../../types';
-import type { ServerConnection } from '@jupyterlab/services';
 
 /**
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.
  */
 @injectable()
 export class JupyterConnection {
-    private _jupyterlab?: typeof import('@jupyterlab/services');
-    private get jupyterlab(): typeof import('@jupyterlab/services') {
-        if (!this._jupyterlab) {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            this._jupyterlab = require('@jupyterlab/services');
-        }
-        return this._jupyterlab!;
-    }
-
     constructor(
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
@@ -57,7 +46,13 @@ export class JupyterConnection {
 
     public async createConnectionInfo(serverId: JupyterServerProviderHandle) {
         const serverUri = await this.getJupyterServerUri(serverId);
-        return createRemoteConnectionInfo(serverId, serverUri);
+        return createRemoteConnectionInfo(
+            serverId,
+            serverUri,
+            this.configService,
+            this.requestAgentCreator,
+            this.requestCreator
+        );
     }
 
     public async validateRemoteUri(
@@ -67,7 +62,13 @@ export class JupyterConnection {
     ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
         serverUri = serverUri || (await this.getJupyterServerUri(provider));
-        const connection = await createRemoteConnectionInfo(provider, serverUri);
+        const connection = createRemoteConnectionInfo(
+            provider,
+            serverUri,
+            this.configService,
+            this.requestAgentCreator,
+            this.requestCreator
+        );
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
@@ -113,51 +114,5 @@ export class JupyterConnection {
             }
             throw new RemoteJupyterServerUriProviderError(provider, ex);
         }
-    }
-
-    public async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
-        let serverSettings: Partial<ServerConnection.ISettings> = {
-            baseUrl: connInfo.baseUrl,
-            appUrl: '',
-            // A web socket is required to allow token authentication
-            wsUrl: connInfo.baseUrl.replace('http', 'ws')
-        };
-
-        // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let requestInit: any = this.requestCreator.getRequestInit();
-
-        const isTokenEmpty = connInfo.token === '' || connInfo.token === 'null';
-        if (!isTokenEmpty || connInfo.getAuthHeader) {
-            serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
-        }
-
-        const allowUnauthorized = this.configService.getSettings(undefined).allowUnauthorizedRemoteConnection;
-        // If this is an https connection and we want to allow unauthorized connections set that option on our agent
-        // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
-        if (connInfo.baseUrl.startsWith('https') && allowUnauthorized && this.requestAgentCreator) {
-            const requestAgent = this.requestAgentCreator.createHttpRequestAgent();
-            requestInit = { ...requestInit, agent: requestAgent };
-        }
-
-        // This replaces the WebSocket constructor in jupyter lab services with our own implementation
-        // See _createSocket here:
-        // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
-        serverSettings = {
-            ...serverSettings,
-            init: requestInit,
-            WebSocket: this.requestCreator.getWebsocketCtor(
-                undefined,
-                allowUnauthorized,
-                connInfo.getAuthHeader,
-                connInfo.getWebsocketProtocols?.bind(connInfo)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ) as any,
-            fetch: this.requestCreator.getFetchMethod(),
-            Request: this.requestCreator.getRequestCtor(undefined, allowUnauthorized, connInfo.getAuthHeader),
-            Headers: this.requestCreator.getHeadersCtor()
-        };
-
-        return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
     }
 }

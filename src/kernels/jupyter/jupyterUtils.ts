@@ -15,7 +15,8 @@ import { Identifiers, JVSC_EXTENSION_ID, Telemetry, isBuiltInJupyterProvider } f
 import { computeHash } from '../../platform/common/crypto';
 import { IJupyterServerUri } from '../../api';
 import { traceWarning } from '../../platform/logging';
-import { JupyterServerProviderHandle } from './types';
+import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerProviderHandle } from './types';
+import { ServerConnection } from '@jupyterlab/services';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -90,10 +91,68 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export async function createRemoteConnectionInfo(
+function createServerConnectSettings(
+    connInfo: {
+        baseUrl: string;
+        token: string | undefined;
+        getAuthHeader?(): Record<string, string>;
+        getWebsocketProtocols?(): string[];
+    },
+    configService: IConfigurationService,
+    requestAgentCreator: IJupyterRequestAgentCreator | undefined,
+    requestCreator: IJupyterRequestCreator
+): ServerConnection.ISettings {
+    let serverSettings: Partial<ServerConnection.ISettings> = {
+        baseUrl: connInfo.baseUrl,
+        appUrl: '',
+        // A web socket is required to allow token authentication
+        wsUrl: connInfo.baseUrl.replace('http', 'ws')
+    };
+
+    // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let requestInit: any = requestCreator.getRequestInit();
+
+    const isTokenEmpty = connInfo.token === '' || connInfo.token === 'null';
+    if (!isTokenEmpty || connInfo.getAuthHeader) {
+        serverSettings = { ...serverSettings, token: connInfo.token, appendToken: true };
+    }
+
+    const allowUnauthorized = configService.getSettings(undefined).allowUnauthorizedRemoteConnection;
+    // If this is an https connection and we want to allow unauthorized connections set that option on our agent
+    // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
+    if (connInfo.baseUrl.startsWith('https') && allowUnauthorized && requestAgentCreator) {
+        const requestAgent = requestAgentCreator.createHttpRequestAgent();
+        requestInit = { ...requestInit, agent: requestAgent };
+    }
+
+    // This replaces the WebSocket constructor in jupyter lab services with our own implementation
+    // See _createSocket here:
+    // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
+    serverSettings = {
+        ...serverSettings,
+        init: requestInit,
+        WebSocket: requestCreator.getWebsocketCtor(
+            undefined,
+            allowUnauthorized,
+            connInfo.getAuthHeader,
+            connInfo.getWebsocketProtocols?.bind(connInfo)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ) as any,
+        fetch: requestCreator.getFetchMethod(),
+        Request: requestCreator.getRequestCtor(undefined, allowUnauthorized, connInfo.getAuthHeader),
+        Headers: requestCreator.getHeadersCtor()
+    };
+
+    return ServerConnection.makeSettings(serverSettings);
+}
+export function createRemoteConnectionInfo(
     jupyterHandle: JupyterServerProviderHandle,
-    serverUri: IJupyterServerUri
-): Promise<IJupyterConnection> {
+    serverUri: IJupyterServerUri,
+    configService: IConfigurationService,
+    requestAgentCreator: IJupyterRequestAgentCreator | undefined,
+    requestCreator: IJupyterRequestCreator
+): IJupyterConnection {
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
     const hostName = new URL(serverUri.baseUrl).hostname;
@@ -121,7 +180,18 @@ export async function createRemoteConnectionInfo(
         // For remote jupyter servers that are managed by us, we can provide the auth header.
         // Its crucial this is set to undefined, else password retrieval will not be attempted.
         getAuthHeader: authHeader ? () => authHeader : undefined,
-        getWebsocketProtocols: webSocketProtocols ? () => webSocketProtocols : () => []
+        getWebsocketProtocols: webSocketProtocols ? () => webSocketProtocols : () => [],
+        serverSettings: createServerConnectSettings(
+            {
+                baseUrl,
+                token,
+                getAuthHeader: authHeader ? () => authHeader : undefined,
+                getWebsocketProtocols: webSocketProtocols ? () => webSocketProtocols : () => []
+            },
+            configService,
+            requestAgentCreator,
+            requestCreator
+        )
     };
 }
 
