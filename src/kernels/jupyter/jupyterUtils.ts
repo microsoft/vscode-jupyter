@@ -125,7 +125,8 @@ export async function createRemoteConnectionInfo(
     };
 }
 
-export async function computeServerId(uri: string) {
+export async function computeServerId(provider: JupyterServerProviderHandle) {
+    const uri = generateIdFromRemoteProvider(provider);
     return computeHash(uri, 'SHA-256');
 }
 
