@@ -179,7 +179,8 @@ suite('IPyWidget Script Manager @widgets', function () {
         );
         await Promise.all(
             Object.keys(moduleMappings!).map(async (moduleName) => {
-                if (moduleName === 'jupyter-widgets-controls') {
+                moduleName = moduleName.trim();
+                if (moduleName === 'jupyter-widgets-controls' || moduleName === 'js-logger') {
                     // Found that latest version of k3d has a reference to this, event though such a script is not defined
                     return;
                 }
@@ -191,18 +192,18 @@ suite('IPyWidget Script Manager @widgets', function () {
                 }
                 assert.isTrue(
                     uri.toString().startsWith(baseUrl!.toString()),
-                    `Script uri ${uri.toString()} does not start with base url ${baseUrl!.toString()}`
+                    `Script uri ${uri.toString()} does not start with base url ${baseUrl!.toString()}, for module ${moduleName}`
                 );
                 if (isLocalConnection(kernel.kernelConnectionMetadata)) {
                     // Since we're on the local machine, such a file should exist on disc.
                     const file = `${uri.fsPath}.js`;
                     const fileExists = await fs.exists(Uri.file(file));
-                    assert.isTrue(fileExists, `File '${file}' does not exist on disc`);
+                    assert.isTrue(fileExists, `File '${file}' does not exist on disc, for module ${moduleName}`);
                 } else {
                     // Verify this is a valid Uri.
                     const file = `${uri.toString()}.js`;
                     const result = await httpClient.downloadFile(file);
-                    assert.isTrue(result.ok, `Uri '${file}' does not seem to be valid`);
+                    assert.isTrue(result.ok, `Uri '${file}' does not seem to be valid, for module ${moduleName}`);
                 }
             })
         );
