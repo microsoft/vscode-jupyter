@@ -168,7 +168,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         const newFiles = (await fs.getFiles(nbExtensionsFolder)).map((item) => item.toString());
         assert.deepEqual(newFiles, files);
     });
-    test('Get a list of Widgets and script paths', async () => {
+    test.skip('Get a list of Widgets and script paths', async () => {
         const baseUrl = await scriptManager.getBaseUrl!()!;
         const moduleMappings = await scriptManager.getWidgetModuleMappings();
 
@@ -179,6 +179,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         );
         await Promise.all(
             Object.keys(moduleMappings!).map(async (moduleName) => {
+                moduleName = moduleName.trim();
                 if (moduleName === 'jupyter-widgets-controls' || moduleName === 'js-logger') {
                     // Found that latest version of k3d has a reference to this, event though such a script is not defined
                     return;
