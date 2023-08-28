@@ -241,7 +241,7 @@ export class JupyterPasswordConnect {
 
     private async needPassword(url: string): Promise<boolean> {
         // A jupyter server will redirect if you ask for the tree when a login is required
-        const response = await this.makeRequest(`${url}tree?`, {
+        const response = await this.makeRequest(new URL('tree?', url).toString(), {
             method: 'get',
             redirect: 'manual',
             headers: { Connection: 'keep-alive' }
@@ -305,7 +305,7 @@ export class JupyterPasswordConnect {
         postParams.append('_xsrf', xsrfCookie);
         postParams.append('password', password);
 
-        const response = await this.makeRequest(`${url}login?`, {
+        const response = await this.makeRequest(new URL('login?', url).toString(), {
             method: 'post',
             headers: {
                 Cookie: `_xsrf=${xsrfCookie}`,
