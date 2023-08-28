@@ -404,8 +404,8 @@ export class UserJupyterServerUrlProvider
             }
         }
         try {
+            let isJupyterHub: boolean = false;
             while (true) {
-                let isJupyterHub: boolean = false;
                 try {
                     handle = uuid();
                     if (nextStep === 'Get Url') {
@@ -533,7 +533,6 @@ export class UserJupyterServerUrlProvider
                                 jupyterServerUri,
                                 true
                             );
-                            sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub);
                         } catch (err) {
                             traceWarning('Uri verification error', err);
                             if (
@@ -625,6 +624,7 @@ export class UserJupyterServerUrlProvider
                 uri: url,
                 serverInfo: jupyterServerUri
             });
+            sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub);
             return handle;
         } catch (ex) {
             if (ex instanceof CancellationError) {
