@@ -16,7 +16,7 @@ jobs:
         id: lock
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          issue-lock-inactive-days: '7'
+          issue-inactive-days: '45'
           issue-lock-reason: 'resolved'
           process-only: 'issues'
 
