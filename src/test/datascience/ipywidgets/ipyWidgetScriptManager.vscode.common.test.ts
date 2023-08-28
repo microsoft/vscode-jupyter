@@ -168,8 +168,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         const newFiles = (await fs.getFiles(nbExtensionsFolder)).map((item) => item.toString());
         assert.deepEqual(newFiles, files);
     });
-    // eslint-disable-next-line no-only-tests/no-only-tests
-    test.only('Get a list of Widgets and script paths', async () => {
+    test('Get a list of Widgets and script paths', async () => {
         const baseUrl = await scriptManager.getBaseUrl!()!;
         const moduleMappings = await scriptManager.getWidgetModuleMappings();
 
@@ -178,8 +177,6 @@ suite('IPyWidget Script Manager @widgets', function () {
             Object.keys(moduleMappings!).length,
             'Should contain at least one Widget (on CI we have widgets installed in Python Env)'
         );
-        console.error('moduleMappings');
-        console.error(moduleMappings);
         await Promise.all(
             Object.keys(moduleMappings!).map(async (moduleName) => {
                 if (moduleName === 'jupyter-widgets-controls' || moduleName === 'js-logger') {
