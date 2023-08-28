@@ -179,9 +179,9 @@ suite('IPyWidget Script Manager @widgets', function () {
         );
         await Promise.all(
             Object.keys(moduleMappings!).map(async (moduleName) => {
-                moduleName = moduleName.trim();
                 if (moduleName === 'jupyter-widgets-controls' || moduleName === 'js-logger') {
                     // Found that latest version of k3d has a reference to this, event though such a script is not defined
+                    // js-logger is not distributed as a widget, hence we don't have a script for it (also its not crucial)
                     return;
                 }
                 // Verify the Url is valid.
