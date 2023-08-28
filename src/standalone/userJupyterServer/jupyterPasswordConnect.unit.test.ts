@@ -83,7 +83,7 @@ suite('JupyterServer Password Connect', () => {
 
         // Set up our fake node fetch
         const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
-        const rootUrl = secure ? 'https://TESTNAME:8888/' : 'http://TESTNAME:8888/';
+        const rootUrl = secure ? 'https://testname:8888/' : 'http://testname:8888/';
 
         // Mock our first call to get xsrf cookie
         const mockXsrfResponse = typemoq.Mock.ofType(nodeFetch.Response);
@@ -104,7 +104,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    `${rootUrl}login?`,
+                    new URL('login?', rootUrl).toString(),
                     typemoq.It.isObjectWith({
                         method: 'get',
                         headers: { Connection: 'keep-alive' }
@@ -115,7 +115,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    `${rootUrl}tree?`,
+                    new URL('tree?', rootUrl).toString(),
                     typemoq.It.isObjectWith({
                         method: 'get',
                         headers: { Connection: 'keep-alive' }
@@ -126,7 +126,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    `${rootUrl}hub/api`,
+                    new URL('hub/api?', rootUrl).toString(),
                     typemoq.It.isObjectWith({
                         method: 'get',
                         headers: { Connection: 'keep-alive' }
@@ -164,7 +164,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    'http://TESTNAME:8888/login?',
+                    'http://testname:8888/login?',
                     typemoq.It.isObjectWith({
                         method: 'post',
                         headers: {
@@ -180,7 +180,7 @@ suite('JupyterServer Password Connect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
-            url: 'http://TESTNAME:8888/',
+            url: 'http://testname:8888/',
             isTokenEmpty: true,
             handle: '1234'
         });
@@ -222,7 +222,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    'http://TESTNAME:8888/login?',
+                    'http://testname:8888/login?',
                     typemoq.It.isObjectWith({
                         method: 'post',
                         headers: {
@@ -238,7 +238,7 @@ suite('JupyterServer Password Connect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
-            url: 'http://TESTNAME:8888/',
+            url: 'http://testname:8888/',
             isTokenEmpty: true,
             handle: '1234'
         });
@@ -280,7 +280,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    'http://TESTNAME:8888/login?',
+                    'http://testname:8888/login?',
                     typemoq.It.isObjectWith({
                         method: 'post',
                         headers: {
@@ -296,7 +296,7 @@ suite('JupyterServer Password Connect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
-            url: 'http://TESTNAME:8888/',
+            url: 'http://testname:8888/',
             isTokenEmpty: false,
             handle: '1234'
         });
@@ -337,7 +337,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    'https://TESTNAME:8888/login?',
+                    'https://testname:8888/login?',
                     typemoq.It.isObjectWith({
                         method: 'post',
                         headers: {
@@ -352,7 +352,7 @@ suite('JupyterServer Password Connect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
-            url: 'https://TESTNAME:8888/',
+            url: 'https://testname:8888/',
             isTokenEmpty: true,
             handle: '1234'
         });
@@ -375,7 +375,7 @@ suite('JupyterServer Password Connect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo({
-            url: 'http://TESTNAME:8888/',
+            url: 'http://testname:8888/',
             isTokenEmpty: true,
             handle: '1234'
         });
@@ -416,7 +416,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    'http://TESTNAME:8888/login?',
+                    'http://testname:8888/login?',
                     typemoq.It.isObjectWith({
                         method: 'post',
                         headers: {
@@ -432,7 +432,7 @@ suite('JupyterServer Password Connect', () => {
         when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         let result = await jupyterPasswordConnect.getPasswordConnectionInfo({
-            url: 'http://TESTNAME:8888/',
+            url: 'http://testname:8888/',
             isTokenEmpty: true,
             handle: '1234'
         });
@@ -464,7 +464,7 @@ suite('JupyterServer Password Connect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    'http://TESTNAME:8888/login?',
+                    'http://testname:8888/login?',
                     typemoq.It.isObjectWith({
                         method: 'post',
                         headers: {
@@ -481,7 +481,7 @@ suite('JupyterServer Password Connect', () => {
 
         // Retry the password
         result = await jupyterPasswordConnect.getPasswordConnectionInfo({
-            url: 'http://TESTNAME:8888/',
+            url: 'http://testname:8888/',
             isTokenEmpty: true,
             handle: '1234'
         });
