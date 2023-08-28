@@ -178,15 +178,17 @@ suite('IPyWidget Script Manager @widgets', function () {
             Object.keys(moduleMappings!).length,
             'Should contain at least one Widget (on CI we have widgets installed in Python Env)'
         );
+        console.error('moduleMappings');
+        console.error(moduleMappings);
         await Promise.all(
             Object.keys(moduleMappings!).map(async (moduleName) => {
+                const uri = moduleMappings![moduleName] || moduleMappings![moduleName.toLowerCase()];
                 moduleName = moduleName.trim();
                 if (moduleName === 'jupyter-widgets-controls' || moduleName === 'js-logger') {
                     // Found that latest version of k3d has a reference to this, event though such a script is not defined
                     return;
                 }
                 // Verify the Url is valid.
-                const uri = moduleMappings![moduleName];
                 assert.isOk(uri, `Script Uri not defined for widget ${moduleName}`);
                 if (!uri) {
                     return;
