@@ -209,10 +209,10 @@ export class JupyterPasswordConnect {
     private async getXSRFToken(url: string, sessionCookie: string): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
         let headers;
-        let tokenUrl = new URL('login?', url).toString();
+        let tokenUrl = new URL('login?', addTrailingSlash(url)).toString();
 
         if (sessionCookie != '') {
-            tokenUrl = new URL('tree', url).toString();
+            tokenUrl = new URL('tree', addTrailingSlash(url)).toString();
             headers = {
                 Connection: 'keep-alive',
                 Cookie: sessionCookie
@@ -241,7 +241,7 @@ export class JupyterPasswordConnect {
 
     private async needPassword(url: string): Promise<boolean> {
         // A jupyter server will redirect if you ask for the tree when a login is required
-        const response = await this.makeRequest(new URL('tree?', url).toString(), {
+        const response = await this.makeRequest(new URL('tree?', addTrailingSlash(url)).toString(), {
             method: 'get',
             redirect: 'manual',
             headers: { Connection: 'keep-alive' }
@@ -305,7 +305,7 @@ export class JupyterPasswordConnect {
         postParams.append('_xsrf', xsrfCookie);
         postParams.append('password', password);
 
-        const response = await this.makeRequest(new URL('login?', url).toString(), {
+        const response = await this.makeRequest(new URL('login?', addTrailingSlash(url)).toString(), {
             method: 'post',
             headers: {
                 Cookie: `_xsrf=${xsrfCookie}`,
@@ -361,7 +361,7 @@ export class JupyterPasswordConnect {
     }
 }
 
-function addTrailingSlash(url: string): string {
+export function addTrailingSlash(url: string): string {
     let newUrl = url;
     if (newUrl[newUrl.length - 1] !== '/') {
         newUrl = `${newUrl}/`;

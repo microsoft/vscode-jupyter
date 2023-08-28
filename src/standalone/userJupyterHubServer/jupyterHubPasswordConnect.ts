@@ -103,7 +103,7 @@ export class JupyterHubPasswordConnect {
 
         // Otherwise request hub/api. This should return the json with the hub version
         // if this is a hub url
-        const response = await this.makeRequest(new URL('hub/api', url).toString(), {
+        const response = await this.makeRequest(new URL('hub/api', addTrailingSlash(url)).toString(), {
             method: 'get',
             redirect: 'manual',
             headers: { Connection: 'keep-alive' }
