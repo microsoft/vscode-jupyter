@@ -179,7 +179,7 @@ suite('IPyWidget Script Manager @widgets', function () {
         );
         await Promise.all(
             Object.keys(moduleMappings!).map(async (moduleName) => {
-                if (moduleName === 'jupyter-widgets-controls') {
+                if (moduleName === 'jupyter-widgets-controls' || moduleName === 'js-logger') {
                     // Found that latest version of k3d has a reference to this, event though such a script is not defined
                     return;
                 }
