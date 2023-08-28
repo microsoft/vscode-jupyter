@@ -101,8 +101,15 @@ export async function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFo
     // Go through each and extract the key and the value.
     mappings.forEach((mapping) => {
         const parts = mapping.split(':');
-        const key = trimQuotes(parts[0].trim()).trim();
-        const value = trimQuotes(mapping.substring(mapping.indexOf(':') + 1).trim()).trim();
+        // Found in k3d scripts that \\r\\n is gets set, the require config is dynamically injected (with line breaks).
+        const key = trimQuotes(parts[0].replace(/\\r/g, '').replace(/\\n/g, '').trim()).trim();
+        const value = trimQuotes(
+            mapping
+                .substring(mapping.indexOf(':') + 1)
+                .replace(/\\r/g, '')
+                .replace(/\\n/g, '')
+                .trim()
+        ).trim();
         requireConfig[key] = value.startsWith('http') ? Uri.parse(value) : Uri.joinPath(baseUrl, value);
     });
 
