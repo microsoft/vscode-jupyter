@@ -1022,20 +1022,17 @@ export class IEventNamePropertyMapping {
          */
         isLocalHost: boolean;
         /**
+         * Whether this is Jupyter Hub or not.
+         */
+        isJupyterHub: boolean;
+        /**
          * Whether the Url was successfully validated or not.
          */
         failed?: boolean;
         /**
          * Failure reason.
          */
-        reason?:
-            | 'InvalidUrl'
-            | 'NonHttpUrl'
-            | 'ConnectionFailure'
-            | 'InsecureHTTP'
-            | 'SelfCert'
-            | 'ExpiredCert'
-            | 'AuthFailure';
+        reason?: 'ConnectionFailure' | 'InsecureHTTP' | 'SelfCert' | 'ExpiredCert' | 'AuthFailure';
     }> = {
         owner: 'donjayamanne',
         feature: 'N/A',
@@ -1051,6 +1048,10 @@ export class IEventNamePropertyMapping {
                 purpose: 'PerformanceAndHealth'
             },
             isLocalHost: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'PerformanceAndHealth'
+            },
+            isJupyterHub: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'PerformanceAndHealth'
             },
@@ -1575,15 +1576,6 @@ export class IEventNamePropertyMapping {
         owner: 'donjayamanne',
         feature: 'N/A',
         source: 'N/A'
-    };
-    /**
-     * A URI has been selected and is being checked for validity.
-     */
-    [Telemetry.EnterJupyterURI]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        source: 'N/A',
-        feature: ['KernelPicker'],
-        measures: commonClassificationForDurationProperties()
     };
     /**
      * Kernel was switched to a local kernel connection.

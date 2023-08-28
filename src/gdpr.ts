@@ -227,20 +227,12 @@
      ]
    }
  */
-//Telemetry.EnterJupyterURI
-/* __GDPR__
-   "DATASCIENCE.ENTER_JUPYTER_URI" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.EnterRemoteJupyterUrl
 /* __GDPR__
    "DATASCIENCE.ENTER_REMOTE_JUPYTER_URL" : {
      "baseUrlHash": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Has of the origin/base Url.","owner":"donjayamanne"},
      "isLocalHost": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether user is connecting to the local host.","owner":"donjayamanne"},
+     "isJupyterHub": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this is Jupyter Hub or not.","owner":"donjayamanne"},
      "reason": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Failure reason.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
