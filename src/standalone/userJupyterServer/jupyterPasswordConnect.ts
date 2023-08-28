@@ -209,10 +209,10 @@ export class JupyterPasswordConnect {
     private async getXSRFToken(url: string, sessionCookie: string): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
         let headers;
-        let tokenUrl = `${url}login?`;
+        let tokenUrl = new URL('login?', url).toString();
 
         if (sessionCookie != '') {
-            tokenUrl = `${url}tree`;
+            tokenUrl = new URL('tree', url).toString();
             headers = {
                 Connection: 'keep-alive',
                 Cookie: sessionCookie
