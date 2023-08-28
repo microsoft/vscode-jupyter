@@ -473,6 +473,7 @@ export class UserJupyterServerUrlProvider
                                 // We can skip this for now, as this will get verified again
                                 // First we need to check with user whether to allow insecure connections and untrusted certs.
                             } else {
+                                sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub, 'ConnectionFailure');
                                 // Return the general connection error to show in the validation box
                                 // Replace any Urls in the error message with markdown link.
                                 const urlRegex = /(https?:\/\/[^\s]+)/g;
