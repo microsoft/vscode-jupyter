@@ -226,13 +226,6 @@ export function buildApi(
             (async () => {
                 sendApiUsageTelemetry(extensions, 'createJupyterServerCollection');
                 extensionId = (await extensions.determineExtensionFromCallStack()).extensionId;
-                if (
-                    ![JVSC_EXTENSION_ID.split('.')[0], 'SynapseVSCode', 'GitHub']
-                        .map((s) => s.toLowerCase())
-                        .includes(extensionId.split('.')[0].toLowerCase())
-                ) {
-                    throw new Error(`Access to Proposed API not allowed, as it is subject to change.`);
-                }
                 const registration =
                     serviceContainer.get<IJupyterServerProviderRegistry>(IJupyterServerProviderRegistry);
                 proxy = registration.createJupyterServerCollection(extensionId, id, label);
