@@ -865,7 +865,9 @@ export function parseUri(uri: string, displayName?: string): IJupyterServerUri |
 
         // Special case for URI's ending with 'lab'. Remove this from the URI. This is not
         // the location for connecting to jupyterlab
-        const baseUrl = `${url.protocol}//${url.host}${url.pathname === '/lab' ? '' : url.pathname}`;
+        const baseUrl = `${url.protocol}//${url.host}${
+            url.pathname === '/lab' || url.pathname === '/tree' ? '' : url.pathname
+        }`;
 
         return {
             baseUrl: baseUrl,
