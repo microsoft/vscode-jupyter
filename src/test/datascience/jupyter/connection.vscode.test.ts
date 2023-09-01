@@ -39,7 +39,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import * as sinon from 'sinon';
 import assert from 'assert';
 import { createDeferred, createDeferredFromPromise } from '../../../platform/common/utils/async';
-import { IMultiStepInputFactory, InputFlowAction } from '../../../platform/common/utils/multiStepInput';
+import { IMultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { IFileSystem } from '../../../platform/common/platform/types';
 
 suite('Connect to Remote Jupyter Servers', function () {
@@ -229,7 +229,7 @@ suite('Connect to Remote Jupyter Servers', function () {
             assert.equal(errorMessageDisplayed.value || '', '', `Password should be valid, ${errorMessageDisplayed}`);
             assert.ok(handlePromise.completed, 'Did not complete');
             const value = handlePromise.value;
-            if (!value || value === 'back' || value instanceof InputFlowAction) {
+            if (!value) {
                 throw new Error(`Jupyter Server URI not entered, ${value}`);
             }
             assert.ok(value.id, 'Invalid Handle');

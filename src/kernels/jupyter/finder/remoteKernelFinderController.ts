@@ -133,8 +133,8 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         }
         const token = new CancellationTokenSource();
         try {
-            const servers = await serverProvider.provideJupyterServers(token.token);
-            servers.forEach((server) => {
+            const servers = await Promise.resolve(serverProvider.provideJupyterServers(token.token));
+            (servers || []).forEach((server) => {
                 const serverProviderHandle = {
                     extensionId: collection.extensionId,
                     handle: server.id,

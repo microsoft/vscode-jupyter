@@ -25,7 +25,7 @@ import {
     UserJupyterServerUriListMementoKey,
     UserJupyterServerUrlProvider
 } from './userServerUrlProvider';
-import { CancellationToken, CancellationTokenSource, Disposable, InputBox, Memento } from 'vscode';
+import { CancellationError, CancellationToken, CancellationTokenSource, Disposable, InputBox, Memento } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
     IClipboard,
@@ -339,9 +339,6 @@ suite('User Uri Provider', () => {
         if (!server) {
             throw new Error('Server not returned');
         }
-        if (server instanceof InputFlowAction || server === 'back') {
-            throw new Error('Server not returned');
-        }
 
         assert.ok(server.id);
         assert.strictEqual(server.label, 'Foo Bar');
@@ -374,9 +371,6 @@ suite('User Uri Provider', () => {
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
-            throw new Error('Server not returned');
-        }
-        if (server instanceof InputFlowAction || server === 'back') {
             throw new Error('Server not returned');
         }
 
@@ -413,9 +407,6 @@ suite('User Uri Provider', () => {
         if (!server) {
             throw new Error('Server not returned');
         }
-        if (server instanceof InputFlowAction || server === 'back') {
-            throw new Error('Server not returned');
-        }
 
         assert.ok(server.id);
         assert.strictEqual(server.label, 'Foo Bar');
@@ -449,9 +440,6 @@ suite('User Uri Provider', () => {
         if (!server) {
             throw new Error('Server not returned');
         }
-        if (server instanceof InputFlowAction || server === 'back') {
-            throw new Error('Server not returned');
-        }
 
         assert.ok(secureConnectionStub.called);
         assert.ok(server);
@@ -479,7 +467,12 @@ suite('User Uri Provider', () => {
         getUriFromUserStub.resolves(undefined);
 
         const [cmd] = await provider.provideCommands('http://localhost:3333', token);
-        const server = await provider.handleCommand(cmd, token);
+        const server = await provider.handleCommand(cmd, token).catch((ex) => {
+            if (ex instanceof CancellationError) {
+                return undefined;
+            }
+            return Promise.reject(ex);
+        });
 
         assert.ok(secureConnectionStub.called);
         assert.isUndefined(server);
@@ -507,9 +500,6 @@ suite('User Uri Provider', () => {
         const server = await provider.handleCommand(cmd, token);
 
         if (!server) {
-            throw new Error('Server not returned');
-        }
-        if (server instanceof InputFlowAction || server === 'back') {
             throw new Error('Server not returned');
         }
         assert.isFalse(secureConnectionStub.called);
@@ -542,7 +532,7 @@ suite('User Uri Provider', () => {
         const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
-        assert.strictEqual(server, 'back');
+        assert.isUndefined(server);
         assert.strictEqual(displayNameStub.callCount, 1);
         assert.strictEqual(urlInputStub.callCount, 0); // Since a url was provided we should never prompt for this, even when clicking back in display name.
     });
@@ -559,7 +549,12 @@ suite('User Uri Provider', () => {
         displayNameStub.rejects(InputFlowAction.cancel);
 
         const [cmd] = await provider.provideCommands('https://localhost:3333', token);
-        const server = await provider.handleCommand(cmd, token);
+        const server = await provider.handleCommand(cmd, token).catch((ex) => {
+            if (ex instanceof CancellationError) {
+                return undefined;
+            }
+            return Promise.reject(ex);
+        });
 
         assert.isUndefined(server);
         assert.strictEqual(displayNameStub.callCount, 1);
@@ -621,7 +616,7 @@ suite('User Uri Provider', () => {
         const [cmd] = await provider.provideCommands('https://localhost:3333', token);
         const server = await provider.handleCommand(cmd, token);
 
-        assert.strictEqual(server, 'back');
+        assert.isUndefined(server);
         assert.strictEqual(displayNameStub.callCount, 1);
         assert.strictEqual(urlInputStub.callCount, 2); // Displayed twice, first time for error message, second time when hit back button from display UI.
     });

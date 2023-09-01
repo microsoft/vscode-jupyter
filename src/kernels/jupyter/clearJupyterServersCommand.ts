@@ -35,9 +35,11 @@ export class ClearJupyterServersCommand implements IExtensionSyncActivationServi
                                     return;
                                 }
                                 const token = new CancellationTokenSource();
-                                const servers = await provider.serverProvider.provideJupyterServers(token.token);
+                                const servers = await Promise.resolve(
+                                    provider.serverProvider.provideJupyterServers(token.token)
+                                );
                                 await Promise.all(
-                                    servers.map((server) =>
+                                    (servers || []).map((server) =>
                                         provider.serverProvider!.removeJupyterServer!(server).catch(noop)
                                     )
                                 );

@@ -95,9 +95,6 @@ export class UserJupyterServerUrlProvider
     private migratedOldServers?: Promise<unknown>;
     private _onDidChangeServers = this._register(new EventEmitter<void>());
     onDidChangeServers = this._onDidChangeServers.event;
-    public get commands() {
-        return [];
-    }
     private secureConnectionValidator: SecureConnectionValidator;
     private jupyterServerUriInput: UserJupyterServerUriInput;
     private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
@@ -200,7 +197,7 @@ export class UserJupyterServerUrlProvider
     public async handleCommand(
         command: JupyterServerCommand & { url?: string },
         _token: CancellationToken
-    ): Promise<void | JupyterServer | 'back' | undefined> {
+    ): Promise<JupyterServer | undefined> {
         const token = new CancellationTokenSource();
         this.disposables.push(token);
         this.disposables.push(new Disposable(() => token.cancel()));
@@ -208,10 +205,10 @@ export class UserJupyterServerUrlProvider
             const url = 'url' in command ? command.url : undefined;
             const handleOrBack = await this.captureRemoteJupyterUrl(token.token, url);
             if (!handleOrBack || handleOrBack === InputFlowAction.cancel) {
-                return;
+                throw new CancellationError();
             }
             if (handleOrBack && handleOrBack instanceof InputFlowAction) {
-                return 'back';
+                return undefined;
             }
             const servers = await this.provideJupyterServers(token.token);
             const server = servers.find((s) => s.id === handleOrBack);
@@ -220,6 +217,9 @@ export class UserJupyterServerUrlProvider
             }
             return server;
         } catch (ex) {
+            if (ex instanceof CancellationError) {
+                throw ex;
+            }
             traceError(`Failed to select a Jupyter Server`, ex);
             return;
         } finally {
@@ -241,13 +241,13 @@ export class UserJupyterServerUrlProvider
             //
         }
         if (url) {
-            const title = DataScience.connectToToTheJupyterServer(url);
-            return [{ title, url } as JupyterServerCommand];
+            const label = DataScience.connectToToTheJupyterServer(url);
+            return [{ label, url } as JupyterServerCommand];
         }
         return [
             {
-                title: DataScience.jupyterSelectURIPrompt,
-                detail: DataScience.jupyterSelectURINewDetail
+                label: DataScience.jupyterSelectURIPrompt,
+                description: DataScience.jupyterSelectURINewDetail
             }
         ];
     }
