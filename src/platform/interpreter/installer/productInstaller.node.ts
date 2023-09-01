@@ -38,7 +38,7 @@ import { trackPackageInstalledIntoInterpreter } from './productInstaller';
 import { translateProductToModule } from './utils';
 import { IInterpreterPackages } from '../types';
 import { IPythonExecutionFactory } from '../types.node';
-import { Environment } from '../../api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${await getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;

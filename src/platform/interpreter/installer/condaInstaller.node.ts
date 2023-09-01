@@ -14,7 +14,7 @@ import { getPinnedPackages } from './pinnedPackages';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../api/types';
 import { IInterpreterService } from '../contracts';
-import { Environment } from '../../api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 import { getEnvironmentType, isCondaEnvironmentWithoutPython } from '../helpers';
 
 /**

@@ -25,7 +25,7 @@ import { noop } from '../common/utils/misc';
 import { CancellationToken } from 'vscode';
 import { raceCancellation } from '../common/cancellation';
 import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
-import { Environment } from '../api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 
 const ENV_VAR_CACHE_TIMEOUT = 60_000;
 
