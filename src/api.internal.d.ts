@@ -27,13 +27,6 @@ declare module './api' {
          */
         removeJupyterServer?(server: JupyterServer): Promise<void>;
     }
-    export interface JupyterServerCommandProvider {
-        /**
-         * Returns a list of commands to be displayed to the user.
-         * @deprecated Use `provideCommands` instead.
-         */
-        commands?: JupyterServerCommand[];
-    }
 
     export interface IJupyterUriProvider {
         /**
@@ -84,15 +77,5 @@ declare module './api' {
                    */
                   command?: JupyterServerCommand;
               })[];
-    }
-    export interface JupyterServerCommand {
-        /**
-         * @deprecated Use `label` instead.
-         */
-        title?: string;
-        /**
-         * @deprecated Use `description` instead.
-         */
-        detail?: string;
     }
 }
