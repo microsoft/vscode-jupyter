@@ -90,10 +90,10 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export async function createRemoteConnectionInfo(
+export function createRemoteConnectionInfo(
     jupyterHandle: JupyterServerProviderHandle,
     serverUri: IJupyterServerUri
-): Promise<IJupyterConnection> {
+): IJupyterConnection {
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
     const hostName = new URL(serverUri.baseUrl).hostname;

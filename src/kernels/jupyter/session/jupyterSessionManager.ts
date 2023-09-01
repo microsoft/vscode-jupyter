@@ -44,8 +44,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private sessionManager: SessionManager | undefined;
     private specsManager: KernelSpecManager | undefined;
     private kernelManager: KernelManager | undefined;
-    private contentsManager: ContentsManager | undefined;
-    private connInfo: IJupyterConnection | undefined;
+    private contentsManager: ContentsManager;
     private serverSettings: ServerConnection.ISettings | undefined;
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private disposed?: boolean;
@@ -66,8 +65,18 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private readonly kernelService: IJupyterKernelService | undefined,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestCreator: IJupyterRequestCreator,
-        private readonly jupyterConnection: JupyterConnection
-    ) {}
+        private readonly jupyterConnection: JupyterConnection,
+        private readonly connInfo: IJupyterConnection
+    ) {
+        this.serverSettings = this.jupyterConnection.getServerConnectSettings(connInfo);
+        this.specsManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
+        this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
+        this.sessionManager = new this.jupyterlab.SessionManager({
+            serverSettings: this.serverSettings,
+            kernelManager: this.kernelManager
+        });
+        this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
+    }
 
     public async dispose() {
         if (this.disposed) {
@@ -79,7 +88,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             if (this.contentsManager) {
                 traceVerbose('SessionManager - dispose contents manager');
                 this.contentsManager.dispose();
-                this.contentsManager = undefined;
             }
             if (this.sessionManager && !this.sessionManager.isDisposed) {
                 traceVerbose('ShutdownSessionAndConnection - dispose session manager');
@@ -102,18 +110,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         } finally {
             traceVerbose('Finished disposing jupyter session manager');
         }
-    }
-
-    public async initialize(connInfo: IJupyterConnection): Promise<void> {
-        this.connInfo = connInfo;
-        this.serverSettings = await this.jupyterConnection.getServerConnectSettings(connInfo);
-        this.specsManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
-        this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
-        this.sessionManager = new this.jupyterlab.SessionManager({
-            serverSettings: this.serverSettings,
-            kernelManager: this.kernelManager
-        });
-        this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
     }
 
     public async getRunningSessions(): Promise<Session.IModel[]> {

@@ -41,10 +41,10 @@ export class JupyterSessionManagerFactory implements IOldJupyterSessionManagerFa
             this.kernelService,
             this.backingFileCreator,
             this.requestCreator,
-            this.serviceContainer.get<JupyterConnection>(JupyterConnection)
+            this.serviceContainer.get<JupyterConnection>(JupyterConnection),
+            connInfo
         );
         this.asyncDisposables.push(result);
-        await result.initialize(connInfo);
         return result;
     }
 }
