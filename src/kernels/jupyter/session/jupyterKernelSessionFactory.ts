@@ -114,10 +114,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             }
 
             await raceCancellationError(options.token, this.validateLocalKernelDependencies(options));
-            const serverSettings = await raceCancellationError(
-                options.token,
-                this.jupyterConnection.getServerConnectSettings(connection)
-            );
+            const serverSettings = this.jupyterConnection.getServerConnectSettings(connection);
 
             const sessionManager = JupyterLabHelper.create(serverSettings);
             this.asyncDisposables.push(sessionManager);

@@ -159,7 +159,7 @@ suite('New Jupyter Kernel Session Factory', () => {
             kernelService.ensureKernelIsUsable(anything(), kernelConnectionMetadata, ui, token.token, false)
         ).thenResolve();
         when(jupyterConnection.createConnectionInfo(anything())).thenResolve(resolvableInstance(connection));
-        when(jupyterConnection.getServerConnectSettings(anything())).thenResolve(resolvableInstance(serverSettings));
+        when(jupyterConnection.getServerConnectSettings(anything())).thenReturn(instance(serverSettings));
         when(jupyterNotebookProvider.getOrStartServer(anything())).thenResolve(resolvableInstance(connection));
 
         when(connection.localLaunch).thenReturn(true);

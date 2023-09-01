@@ -67,7 +67,7 @@ export class JupyterConnection {
     ): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
         serverUri = serverUri || (await this.getJupyterServerUri(provider));
-        const connection = await createRemoteConnectionInfo(provider, serverUri);
+        const connection = createRemoteConnectionInfo(provider, serverUri);
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
@@ -115,7 +115,7 @@ export class JupyterConnection {
         }
     }
 
-    public async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
+    public getServerConnectSettings(connInfo: IJupyterConnection): ServerConnection.ISettings {
         let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
             appUrl: '',
