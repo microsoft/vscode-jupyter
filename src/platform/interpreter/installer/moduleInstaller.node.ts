@@ -17,7 +17,7 @@ import { EOL } from 'os';
 import { PackageNotInstalledWindowsLongPathNotEnabledError } from '../../errors/packageNotInstalledWindowsLongPathNotEnabledError';
 import { splitLines } from '../../common/helpers';
 import { IPythonExecutionFactory } from '../types.node';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../../api/pythonApiTypes';
 
 export type ExecutionInstallArgs = {
     args: string[];

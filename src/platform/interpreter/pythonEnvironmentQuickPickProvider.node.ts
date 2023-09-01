@@ -4,7 +4,7 @@
 import { EventEmitter } from 'vscode';
 import { injectable, inject } from 'inversify';
 import { IQuickPickItemProvider } from '../common/providerBasedQuickPick';
-import { Environment, PythonExtension } from '@vscode/python-extension';
+import { Environment, ProposedExtensionAPI } from '../api/pythonApiTypes';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { PromiseMonitor } from '../common/utils/promises';
@@ -24,7 +24,7 @@ export class PythonEnvironmentQuickPickItemProvider
     onDidChange = this._onDidChange.event;
     onDidChangeStatus = this._onDidChangeStatus.event;
     private refreshedOnceBefore = false;
-    private api?: PythonExtension;
+    private api?: ProposedExtensionAPI;
     private readonly disposables: IDisposable[] = [];
     private readonly promiseMonitor = new PromiseMonitor();
     public get items(): readonly Environment[] {
@@ -60,7 +60,7 @@ export class PythonEnvironmentQuickPickItemProvider
             const apiPromise = api.getNewApi();
             this.promiseMonitor.push(apiPromise);
             apiPromise
-                .then((api?: PythonExtension) => {
+                .then((api?: ProposedExtensionAPI) => {
                     this.api = api;
                     if (!api) {
                         this.status = 'idle';

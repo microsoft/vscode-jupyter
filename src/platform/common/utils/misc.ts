@@ -6,7 +6,7 @@ import { NotebookCellScheme } from '../constants';
 import { InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../../api/pythonApiTypes';
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
 export function noop() {}

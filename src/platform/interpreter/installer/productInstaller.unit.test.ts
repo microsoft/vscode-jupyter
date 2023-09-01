@@ -19,7 +19,7 @@ import {
     ModuleInstallerType
 } from '../../../platform/interpreter/installer/types';
 import { sleep } from '../../../test/core';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../../api/pythonApiTypes';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this

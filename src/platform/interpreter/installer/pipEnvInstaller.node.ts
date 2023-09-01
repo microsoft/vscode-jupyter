@@ -13,7 +13,7 @@ import { isPipenvEnvironmentRelatedToFolder } from './pipenv.node';
 import { IServiceContainer } from '../../ioc/types';
 import { getFilePath } from '../../common/platform/fs-paths';
 import { getInterpreterWorkspaceFolder } from './helpers';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../../api/pythonApiTypes';
 import { getEnvironmentType } from '../helpers';
 
 export const pipenvName = 'pipenv';

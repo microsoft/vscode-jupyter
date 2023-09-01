@@ -11,7 +11,7 @@ import { swallowExceptions } from '../common/utils/decorators';
 import { IProcessServiceFactory } from '../common/process/types.node';
 import { traceVerbose } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../api/pythonApiTypes';
 import { getEnvironmentType } from './helpers';
 
 @injectable()

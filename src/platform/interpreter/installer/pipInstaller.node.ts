@@ -12,7 +12,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { translateProductToModule } from './utils';
 import { IPythonExecutionFactory } from '../types.node';
 import { getPinnedPackages } from './pinnedPackages';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../../api/pythonApiTypes';
 import { getEnvironmentType } from '../helpers';
 
 /**
