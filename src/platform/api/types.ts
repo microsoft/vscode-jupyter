@@ -6,7 +6,7 @@ import { Resource } from '../common/types';
 import type { SemVer } from 'semver';
 import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
 import { EnvironmentType } from '../pythonEnvironments/info';
-import { ProposedExtensionAPI } from './pythonApiTypes';
+import { PythonExtension } from '@vscode/python-extension';
 
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
@@ -14,7 +14,7 @@ export interface IPythonApiProvider {
     pythonExtensionHooked: Promise<void>;
     pythonExtensionVersion: SemVer | undefined;
     getApi(): Promise<PythonApi>;
-    getNewApi(): Promise<ProposedExtensionAPI | undefined>;
+    getNewApi(): Promise<PythonExtension | undefined>;
     setApi(api: PythonApi): void;
 }
 export const IPythonExtensionChecker = Symbol('IPythonExtensionChecker');

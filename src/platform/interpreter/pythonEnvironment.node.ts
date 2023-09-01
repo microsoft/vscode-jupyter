@@ -10,7 +10,7 @@ import { getFilePath } from '../common/platform/fs-paths';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
 import { traceWarning } from '../logging';
-import { Environment } from '../api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 class PythonEnvironment {
     private readonly executable: Uri;
     private readonly pythonEnvId: string;

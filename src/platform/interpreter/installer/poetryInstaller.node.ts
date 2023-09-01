@@ -10,7 +10,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { isPoetryEnvironmentRelatedToFolder } from './poetry.node';
 import { ModuleInstallerType } from './types';
-import { Environment } from '../../api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 import { Uri } from 'vscode';
 import { getEnvironmentType } from '../helpers';
 

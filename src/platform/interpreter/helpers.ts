@@ -4,7 +4,7 @@
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { basename } from '../../platform/vscode-path/resources';
-import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes } from '../api/pythonApiTypes';
+import { Environment, KnownEnvironmentTools, KnownEnvironmentTypes } from '@vscode/python-extension';
 
 export function getPythonEnvDisplayName(interpreter: PythonEnvironment | Environment) {
     if ('executable' in interpreter) {

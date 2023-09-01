@@ -24,7 +24,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { isCondaEnvironmentWithoutPython } from '../../../platform/interpreter/helpers';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
 import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';
-import { Environment } from '../../../platform/api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 
 /**
  * Displays interpreter select and returns the selection to the user.
