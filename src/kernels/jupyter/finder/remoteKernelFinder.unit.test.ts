@@ -51,7 +51,8 @@ suite(`Remote Kernel Finder`, () => {
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
         dispose: noop,
-        serverProviderHandle: { handle: 'handle', id: 'id', extensionId: '' }
+        serverProviderHandle: { handle: 'handle', id: 'id', extensionId: '' },
+        settings: {} as any
     };
     const defaultPython3Name = 'python3';
     const python3spec: IJupyterKernelSpec = {

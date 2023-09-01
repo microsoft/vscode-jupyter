@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type {
     CancellationToken,
@@ -540,6 +540,7 @@ export interface IJupyterConnection extends Disposable {
     readonly providerId: string;
     readonly serverProviderHandle: JupyterServerProviderHandle;
     readonly hostName: string;
+    settings: ServerConnection.ISettings;
     /**
      * Directory where the notebook server was started.
      */

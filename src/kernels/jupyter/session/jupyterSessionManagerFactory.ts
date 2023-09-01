@@ -13,8 +13,6 @@ import {
     IJupyterKernelService,
     IJupyterRequestCreator
 } from '../types';
-import { JupyterConnection } from '../connection/jupyterConnection';
-import { IServiceContainer } from '../../../platform/ioc/types';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IOldJupyterSessionManagerFactory {
@@ -24,8 +22,7 @@ export class JupyterSessionManagerFactory implements IOldJupyterSessionManagerFa
         @inject(IJupyterKernelService) @optional() private readonly kernelService: IJupyterKernelService | undefined,
         @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator,
         @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator,
-        @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
+        @inject(IAsyncDisposableRegistry) private readonly asyncDisposables: IAsyncDisposableRegistry
     ) {}
 
     /**
@@ -40,7 +37,6 @@ export class JupyterSessionManagerFactory implements IOldJupyterSessionManagerFa
             this.kernelService,
             this.backingFileCreator,
             this.requestCreator,
-            this.serviceContainer.get<JupyterConnection>(JupyterConnection),
             connInfo
         );
         this.asyncDisposables.push(result);

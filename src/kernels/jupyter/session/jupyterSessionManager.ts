@@ -1,14 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type {
-    ContentsManager,
-    KernelSpecManager,
-    KernelManager,
-    ServerConnection,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
+import type { ContentsManager, KernelSpecManager, KernelManager, Session, SessionManager } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
 import { CancellationToken, Disposable, Uri } from 'vscode';
 import { traceError, traceVerbose } from '../../../platform/logging';
@@ -19,7 +12,6 @@ import {
     IDisplayOptions,
     IDisposable
 } from '../../../platform/common/types';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
@@ -36,16 +28,14 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { dispose } from '../../../platform/common/helpers';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import type { ISpecModel } from '@jupyterlab/services/lib/kernelspec/kernelspec';
-import { JupyterConnection } from '../connection/jupyterConnection';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class JupyterSessionManager implements IJupyterSessionManager {
-    private sessionManager: SessionManager | undefined;
-    private specsManager: KernelSpecManager | undefined;
-    private kernelManager: KernelManager | undefined;
+    private sessionManager: SessionManager;
+    private specsManager: KernelSpecManager;
+    private kernelManager: KernelManager;
     private contentsManager: ContentsManager;
-    private serverSettings: ServerConnection.ISettings | undefined;
     private _jupyterlab?: typeof import('@jupyterlab/services');
     private disposed?: boolean;
     public get isDisposed() {
@@ -64,17 +54,16 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private readonly kernelService: IJupyterKernelService | undefined,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
         private readonly requestCreator: IJupyterRequestCreator,
-        private readonly jupyterConnection: JupyterConnection,
         private readonly connInfo: IJupyterConnection
     ) {
-        this.serverSettings = this.jupyterConnection.getServerConnectSettings(connInfo);
-        this.specsManager = new this.jupyterlab.KernelSpecManager({ serverSettings: this.serverSettings });
-        this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings: this.serverSettings });
+        const serverSettings = connInfo.settings;
+        this.specsManager = new this.jupyterlab.KernelSpecManager({ serverSettings });
+        this.kernelManager = new this.jupyterlab.KernelManager({ serverSettings });
         this.sessionManager = new this.jupyterlab.SessionManager({
-            serverSettings: this.serverSettings,
+            serverSettings,
             kernelManager: this.kernelManager
         });
-        this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
+        this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings });
     }
 
     public async dispose() {
@@ -84,25 +73,21 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         this.disposed = true;
         traceVerbose(`Disposing session manager`);
         try {
-            if (this.contentsManager) {
-                traceVerbose('SessionManager - dispose contents manager');
-                this.contentsManager.dispose();
-            }
-            if (this.sessionManager && !this.sessionManager.isDisposed) {
+            traceVerbose('SessionManager - dispose contents manager');
+            this.contentsManager.dispose();
+            if (!this.sessionManager.isDisposed) {
                 traceVerbose('ShutdownSessionAndConnection - dispose session manager');
                 // Make sure it finishes startup.
                 await raceTimeout(10_000, this.sessionManager.ready);
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
-                this.sessionManager = undefined;
             }
-            if (!this.kernelManager?.isDisposed) {
-                this.kernelManager?.dispose();
+            if (!this.kernelManager.isDisposed) {
+                this.kernelManager.dispose();
             }
-            if (!this.specsManager?.isDisposed) {
-                this.specsManager?.dispose();
-                this.specsManager = undefined;
+            if (!this.specsManager.isDisposed) {
+                this.specsManager.dispose();
             }
         } catch (e) {
             traceError(`Exception on session manager shutdown: `, e);
@@ -112,9 +97,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async getRunningSessions(): Promise<Session.IModel[]> {
-        if (!this.sessionManager) {
-            return [];
-        }
         // Not refreshing will result in `running` returning an empty iterator.
         await this.sessionManager.refreshRunning();
 
@@ -131,7 +113,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async getRunningKernels(): Promise<IJupyterKernel[]> {
-        const models = await this.jupyterlab.KernelAPI.listRunning(this.serverSettings);
+        const models = await this.jupyterlab.KernelAPI.listRunning(this.connInfo.settings);
         // Remove duplicates.
         const dup = new Set<string>();
         return models
@@ -163,15 +145,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         cancelToken: CancellationToken,
         creator: KernelActionSource
     ): Promise<OldJupyterSession> {
-        if (
-            !this.connInfo ||
-            !this.sessionManager ||
-            !this.contentsManager ||
-            !this.serverSettings ||
-            !this.specsManager
-        ) {
-            throw new SessionDisposedError();
-        }
         // Create a new session and attempt to connect to it
         const session = new OldJupyterSession(
             resource,
@@ -199,26 +172,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
-        if (!this.connInfo || !this.sessionManager || !this.contentsManager) {
-            throw new SessionDisposedError();
-        }
         try {
             const stopWatch = new StopWatch();
             const specsManager = this.specsManager;
-            if (!specsManager) {
-                traceError(
-                    `No SessionManager to enumerate kernelspecs (no specs manager). Returning a default kernel. Specs ${JSON.stringify(
-                        this.specsManager?.specs?.kernelspecs || {}
-                    )}.`
-                );
-                sendTelemetryEvent(Telemetry.JupyterKernelSpecEnumeration, undefined, {
-                    failed: true,
-                    reason: 'NoSpecsManager'
-                });
-                // If for some reason the session manager refuses to communicate, fall
-                // back to a default. This may not exist, but it's likely.
-                return [await createInterpreterKernelSpec()];
-            }
             const telemetryProperties = {
                 wasSessionManagerReady: this.sessionManager.isReady,
                 wasSpecsManagerReady: specsManager.isReady,
@@ -244,7 +200,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             telemetryProperties.specsManagerReady = specsManager.isReady;
 
             let telemetrySent = false;
-            if (specsManager && Object.keys(specsManager.specs?.kernelspecs || {}).length === 0) {
+            if (Object.keys(specsManager.specs?.kernelspecs || {}).length === 0) {
                 // At this point wait for the specs to change
                 const disposables: IDisposable[] = [];
                 const promise = createDeferred();

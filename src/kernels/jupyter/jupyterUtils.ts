@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { ServerConnection } from '@jupyterlab/services';
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
 import { getJupyterConnectionDisplayName } from './helpers';
-import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
+import { IConfigurationService, IDisposable, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -15,7 +15,7 @@ import { Identifiers, JVSC_EXTENSION_ID, Telemetry, isBuiltInJupyterProvider } f
 import { computeHash } from '../../platform/common/crypto';
 import { IJupyterServerUri } from '../../api';
 import { traceWarning } from '../../platform/logging';
-import { JupyterServerProviderHandle } from './types';
+import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerProviderHandle } from './types';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -90,9 +90,15 @@ export async function handleExpiredCertsError(
     return false;
 }
 
-export function createRemoteConnectionInfo(
+export function createJupyterConnectionInfo(
     jupyterHandle: JupyterServerProviderHandle,
-    serverUri: IJupyterServerUri
+    serverUri: IJupyterServerUri,
+    requestCreator: IJupyterRequestCreator,
+    requestAgentCreator: IJupyterRequestAgentCreator | undefined,
+    configService: IConfigurationService,
+    localLaunch: boolean,
+    rootDirectory: Uri,
+    toDispose?: IDisposable
 ): IJupyterConnection {
     const baseUrl = serverUri.baseUrl;
     const token = serverUri.token;
@@ -102,27 +108,74 @@ export function createRemoteConnectionInfo(
         serverUri.authorizationHeader && Object.keys(serverUri?.authorizationHeader ?? {}).length > 0
             ? serverUri.authorizationHeader
             : undefined;
-    return {
+    const getAuthHeader = authHeader ? () => authHeader : undefined;
+    const getWebsocketProtocols = webSocketProtocols ? () => webSocketProtocols : () => [];
+
+    let serverSettings: Partial<ServerConnection.ISettings> = {
+        baseUrl,
+        appUrl: '',
+        // A web socket is required to allow token authentication
+        wsUrl: baseUrl.replace('http', 'ws')
+    };
+
+    // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let requestInit: any = requestCreator.getRequestInit();
+
+    const isTokenEmpty = token === '' || token === 'null';
+    if (!isTokenEmpty || getAuthHeader) {
+        serverSettings = { ...serverSettings, token, appendToken: true };
+    }
+
+    const allowUnauthorized = configService.getSettings(undefined).allowUnauthorizedRemoteConnection;
+    // If this is an https connection and we want to allow unauthorized connections set that option on our agent
+    // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
+    if (baseUrl.startsWith('https') && allowUnauthorized && requestAgentCreator) {
+        const requestAgent = requestAgentCreator.createHttpRequestAgent();
+        requestInit = { ...requestInit, agent: requestAgent };
+    }
+
+    // This replaces the WebSocket constructor in jupyter lab services with our own implementation
+    // See _createSocket here:
+    // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
+    serverSettings = {
+        ...serverSettings,
+        init: requestInit,
+        WebSocket: requestCreator.getWebsocketCtor(
+            undefined,
+            allowUnauthorized,
+            getAuthHeader,
+            getWebsocketProtocols
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ) as any,
+        fetch: requestCreator.getFetchMethod(),
+        Request: requestCreator.getRequestCtor(undefined, allowUnauthorized, getAuthHeader),
+        Headers: requestCreator.getHeadersCtor()
+    };
+
+    const connection: IJupyterConnection = {
         baseUrl,
         providerId: jupyterHandle.id,
         serverProviderHandle: jupyterHandle,
         token,
         hostName,
-        localLaunch: false,
+        localLaunch,
         displayName:
             serverUri && serverUri.displayName
                 ? serverUri.displayName
                 : getJupyterConnectionDisplayName(token, baseUrl),
-        dispose: noop,
-        rootDirectory: Uri.file(''),
+        dispose: () => toDispose?.dispose(),
+        rootDirectory,
         // Temporarily support workingDirectory as a fallback for old extensions using that (to be removed in the next release).
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mappedRemoteNotebookDir: serverUri?.mappedRemoteNotebookDir || (serverUri as any)?.workingDirectory,
         // For remote jupyter servers that are managed by us, we can provide the auth header.
         // Its crucial this is set to undefined, else password retrieval will not be attempted.
-        getAuthHeader: authHeader ? () => authHeader : undefined,
-        getWebsocketProtocols: webSocketProtocols ? () => webSocketProtocols : () => []
+        getAuthHeader,
+        getWebsocketProtocols,
+        settings: ServerConnection.makeSettings(serverSettings)
     };
+    return connection;
 }
 
 export async function computeServerId(provider: JupyterServerProviderHandle) {
