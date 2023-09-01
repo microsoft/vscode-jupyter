@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, QuickPickItem, Uri } from 'vscode';
+import { Event, QuickPickItem, Uri } from 'vscode';
 
 // These types are only used internally within the extension.
 // Never to be exposed to other extensions.
@@ -30,9 +30,9 @@ declare module './api' {
     export interface JupyterServerCommandProvider {
         /**
          * Returns a list of commands to be displayed to the user.
-         * @param value The value entered by the user in the quick pick.
+         * @deprecated Use `provideCommands` instead.
          */
-        provideCommands(value: string, token: CancellationToken): Promise<JupyterServerCommand[]>;
+        commands?: JupyterServerCommand[];
     }
 
     export interface IJupyterUriProvider {
@@ -84,5 +84,15 @@ declare module './api' {
                    */
                   command?: JupyterServerCommand;
               })[];
+    }
+    export interface JupyterServerCommand {
+        /**
+         * @deprecated Use `label` instead.
+         */
+        title?: string;
+        /**
+         * @deprecated Use `description` instead.
+         */
+        detail?: string;
     }
 }

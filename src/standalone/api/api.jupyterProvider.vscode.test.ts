@@ -348,13 +348,9 @@ suite('Jupyter Provider Tests', function () {
         );
 
         // Add a command and that command should be displayed along with the 2 servers.
+        let commandsToReturn = [{ label: 'Sample Command' }];
         collection.commandProvider = {
-            commands: [
-                {
-                    title: 'Sample Command'
-                }
-            ],
-            provideCommands: () => Promise.resolve([]),
+            provideCommands: () => Promise.resolve(commandsToReturn),
             handleCommand: () => Promise.resolve(undefined)
         };
         // await sleep(100);
@@ -374,7 +370,7 @@ suite('Jupyter Provider Tests', function () {
         );
 
         // Remove the command and try again.
-        collection.commandProvider.commands = [];
+        commandsToReturn = [];
 
         const controllerId4 = await commands.executeCommand(actionCommand.command, ...(actionCommand.arguments || []));
         // Verify a controller is not selected

@@ -5,7 +5,7 @@
 // To use these types please reach out to the Jupyter Extension team (file an issue on the Jupyter Extension GitHub repo).
 // Or please wait for these to be finalized and released.
 
-import { CancellationToken } from 'vscode';
+import { CancellationToken, ProviderResult } from 'vscode';
 import { Event, Uri } from 'vscode';
 
 declare module './api' {
@@ -97,28 +97,25 @@ declare module './api' {
         /**
          * Returns the list of servers.
          */
-        provideJupyterServers(token: CancellationToken): Promise<JupyterServer[]>;
+        provideJupyterServers(token: CancellationToken): ProviderResult<JupyterServer[]>;
         /**
          * Returns the connection information for the Jupyter server.
+         * It is OK to return the given `server`. When no result is returned, the given `server` will be used.
          */
-        resolveJupyterServer(server: JupyterServer, token: CancellationToken): Promise<ResolvedJupyterServer>;
+        resolveJupyterServer(server: JupyterServer, token: CancellationToken): ProviderResult<ResolvedJupyterServer>;
     }
     /**
      * Represents a reference to a Jupyter Server command.
      */
     export interface JupyterServerCommand {
         /**
-         * Title of the command, like `save`.
+         * A human-readable string which is rendered prominent.
          */
-        title: string;
+        label: string;
         /**
-         * A human-readable string which is rendered less prominent in a separate line.
+         * A human-readable string which is rendered less prominent on the same line.
          */
-        detail?: string;
-        /**
-         * A tooltip for the command, when represented in the UI.
-         */
-        tooltip?: string;
+        description?: string;
     }
     /**
      * Provider of Jupyter Server Commands.
@@ -127,20 +124,16 @@ declare module './api' {
     export interface JupyterServerCommandProvider {
         /**
          * Returns a list of commands to be displayed to the user.
+         * @param value The value entered by the user in the quick pick.
          */
-        commands: JupyterServerCommand[];
+        provideCommands(value: string | undefined, token: CancellationToken): Promise<JupyterServerCommand[]>;
         /**
          * Invoked when a command has been selected.
          * @param command The command selected by the user.
-         * @returns
-         * - JupyterServer  : The Jupyter Server object that was created
-         * - 'back'         : Go back to the previous UI in the workflow
-         * - undefined|void : Do nothing
+         * @returns The Jupyter Server or a thenable that resolves to such. The lack of a result can be
+         * signaled by returning `undefined` or `null`.
          */
-        handleCommand(
-            command: JupyterServerCommand,
-            token: CancellationToken
-        ): Promise<JupyterServer | 'back' | undefined | void>;
+        handleCommand(command: JupyterServerCommand, token: CancellationToken): ProviderResult<JupyterServer>;
     }
     export interface JupyterServerCollection {
         /**

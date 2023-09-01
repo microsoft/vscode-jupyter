@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, CancellationTokenSource, EventEmitter, QuickPickItem, Uri } from 'vscode';
+import {
+    CancellationError,
+    CancellationToken,
+    CancellationTokenSource,
+    EventEmitter,
+    QuickPickItem,
+    Uri
+} from 'vscode';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
@@ -17,7 +24,7 @@ import { IDisposable, IDisposableRegistry } from '../../../platform/common/types
 import { inject, injectable } from 'inversify';
 import { disposeAllDisposables, stripCodicons } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
-import { JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
 export class JupyterServerCollectionImpl extends Disposables implements JupyterServerCollection {
     private _serverProvider?: JupyterServerProvider;
@@ -99,32 +106,33 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     }
     async getQuickPickEntryItems(
         value?: string
-    ): Promise<(QuickPickItem & { default?: boolean | undefined; command?: JupyterServerCommand })[]> {
+    ): Promise<(QuickPickItem & { default?: boolean | undefined; command: JupyterServerCommand })[]> {
         if (!this.provider.commandProvider) {
             return [];
         }
         const token = new CancellationTokenSource();
-        const isProposedApiAllowed =
-            this.provider.extensionId === JVSC_EXTENSION_ID || this.provider.extensionId === JUPYTER_HUB_EXTENSION_ID;
         try {
-            value = isProposedApiAllowed ? value : undefined;
             let items: JupyterServerCommand[] = [];
-            if (isProposedApiAllowed) {
+            if (this.provider.commandProvider.provideCommands) {
                 items = await this.provider.commandProvider.provideCommands(value || '', token.token);
-            } else {
-                items = this.provider.commandProvider.commands;
-            }
-            if (isProposedApiAllowed) {
-                if (!value) {
-                    this.commands.clear();
+                if (
+                    (!items || !items.length) &&
+                    Array.isArray(this.provider.commandProvider.commands) &&
+                    this.provider.commandProvider.commands.length
+                ) {
+                    items = this.provider.commandProvider.commands;
                 }
-                items.forEach((c) => this.commands.set(c.title, c));
+            } else {
+                items = this.provider.commandProvider.commands || [];
             }
+            if (!value) {
+                this.commands.clear();
+            }
+            items.forEach((c) => this.commands.set(c.label || c.title || '', c));
             return items.map((c) => {
                 return {
-                    label: stripCodicons(c.title),
-                    detail: stripCodicons(c.detail),
-                    tooltip: c.tooltip,
+                    label: stripCodicons(c.label || c.title),
+                    detail: stripCodicons(c.description || c.detail),
                     command: c
                 };
             });
@@ -139,7 +147,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
     }
     async handleQuickPick(
-        item: QuickPickItem & { command?: JupyterServerCommand },
+        item: QuickPickItem & { command: JupyterServerCommand },
         _backEnabled: boolean
     ): Promise<string | undefined> {
         if (!this.provider.commandProvider) {
@@ -147,25 +155,22 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
         const token = new CancellationTokenSource();
         try {
-            let command: JupyterServerCommand | undefined =
-                'command' in item ? (item.command as JupyterServerCommand) : undefined;
-            if (!command) {
-                command =
-                    this.provider.commandProvider.commands.find((c) => c.title === item.label) ||
-                    this.commands.get(item.label);
-            }
+            const command = item.command;
             if (!command) {
                 throw new Error(
                     `Jupyter Server Command ${item.label} not found in Command Provider ${this.provider.extensionId}#${this.provider.id}`
                 );
             }
             try {
-                const result = await this.provider.commandProvider.handleCommand(command, token.token);
-                if (result === 'back') {
-                    return result;
+                const result = await Promise.resolve(this.provider.commandProvider.handleCommand(command, token.token));
+                if (!result) {
+                    return 'back';
                 }
-                return result?.id;
+                return result.id;
             } catch (ex) {
+                if (ex instanceof CancellationError) {
+                    return;
+                }
                 traceError(
                     `Failed to execute Jupyter Server Command ${item.label} in Command Provider ${this.provider.extensionId}#${this.provider.id}`,
                     ex
@@ -196,10 +201,15 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 };
             }
             if (this.provider.serverProvider?.resolveJupyterServer) {
-                const { connectionInformation: info } = await this.provider.serverProvider?.resolveJupyterServer(
-                    server,
-                    token.token
+                const result = await Promise.resolve(
+                    this.provider.serverProvider?.resolveJupyterServer(server, token.token)
                 );
+                const info = result?.connectionInformation || server.connectionInformation;
+                if (!info?.baseUrl) {
+                    throw new Error(
+                        `Jupyter Provider ${this.id} does not implement the method resolveJupyterServer and/or baseUrl not returned`
+                    );
+                }
                 return {
                     baseUrl: info.baseUrl.toString(),
                     displayName: server.label,
@@ -218,8 +228,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         if (this.provider.serverProvider) {
             const token = new CancellationTokenSource();
             try {
-                const servers = await this.getServers(token.token);
-                return servers.map((s) => s.id);
+                const servers = await Promise.resolve(this.getServers(token.token));
+                return (servers || []).map((s) => s.id);
             } catch (ex) {
                 traceError(`Failed to get Jupyter Servers from ${this.provider.extensionId}#${this.provider.id}`, ex);
                 return [];
@@ -246,7 +256,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     async getServer(handle: string, token: CancellationToken): Promise<JupyterServer> {
         const server =
             this._servers.get(handle) ||
-            (await this.getServers(token).then((servers) => servers.find((s) => s.id === handle)));
+            (await Promise.resolve(this.getServers(token)).then((servers) =>
+                (servers || []).find((s) => s.id === handle)
+            ));
         if (server) {
             return server;
         }
@@ -262,9 +274,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         if (!this.provider.serverProvider) {
             throw new Error(`No Jupyter Server Provider for ${this.provider.extensionId}#${this.provider.id}`);
         }
-        const servers = await this.provider.serverProvider.provideJupyterServers(token);
+        const servers = await Promise.resolve(this.provider.serverProvider.provideJupyterServers(token));
         this._servers.clear();
-        servers.forEach((s) => this._servers.set(s.id, s));
+        (servers || []).forEach((s) => this._servers.set(s.id, s));
         return servers;
     }
 }
