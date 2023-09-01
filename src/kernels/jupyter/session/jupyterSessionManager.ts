@@ -59,7 +59,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return this._jupyterlab!;
     }
     constructor(
-        _config: IConfigurationService,
         private outputChannel: IOutputChannel,
         private configService: IConfigurationService,
         private readonly kernelService: IJupyterKernelService | undefined,

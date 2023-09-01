@@ -35,7 +35,6 @@ export class JupyterSessionManagerFactory implements IOldJupyterSessionManagerFa
      */
     public async create(connInfo: IJupyterConnection): Promise<IJupyterSessionManager> {
         const result = new JupyterSessionManager(
-            this.config,
             this.jupyterOutput,
             this.config,
             this.kernelService,
