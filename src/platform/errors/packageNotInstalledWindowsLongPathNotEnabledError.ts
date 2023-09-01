@@ -4,7 +4,7 @@
 import { BaseError } from './types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { Product } from '../interpreter/installer/types';
-import { Environment } from '../api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 
 /**
  * Thrown when we fail to install a Package due to long path not being enabled on Windows. */

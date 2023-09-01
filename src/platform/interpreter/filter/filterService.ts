@@ -10,7 +10,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../common/constants';
 import { getDisplayPath } from '../../common/platform/fs-paths';
 import { traceVerbose } from '../../logging';
-import { Environment } from '../../api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 
 /**
  * Determine whether a Python environment should be excluded from the Kernel filter.

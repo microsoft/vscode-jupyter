@@ -3,7 +3,7 @@
 
 import { Event, Uri, CancellationToken } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { Environment, ResolvedEnvironment } from '../api/pythonApiTypes';
+import { Environment, ResolvedEnvironment } from '@vscode/python-extension';
 type InterpreterId = string;
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {

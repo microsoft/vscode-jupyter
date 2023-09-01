@@ -19,7 +19,12 @@ import { areInterpreterPathsSame, getInterpreterHash } from '../pythonEnvironmen
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import { areObjectsWithUrisTheSame, isUri, noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
-import { Environment, KnownEnvironmentTools, ProposedExtensionAPI, ResolvedEnvironment } from './pythonApiTypes';
+import {
+    Environment,
+    KnownEnvironmentTools,
+    PythonExtension as PythonExtensionApi,
+    ResolvedEnvironment
+} from '@vscode/python-extension';
 import { PromiseMonitor } from '../common/utils/promises';
 import { PythonExtensionActicationFailedError } from '../errors/pythonExtActivationFailedError';
 import { PythonExtensionApiNotExportedError } from '../errors/pythonExtApiNotExportedError';
@@ -230,9 +235,9 @@ export class OldPythonApiProvider implements IPythonApiProvider {
         this.init().catch(noop);
         return this.api.promise;
     }
-    public async getNewApi(): Promise<ProposedExtensionAPI | undefined> {
+    public async getNewApi(): Promise<PythonExtensionApi | undefined> {
         await this.init();
-        const extension = this.extensions.getExtension<ProposedExtensionAPI>(PythonExtension);
+        const extension = this.extensions.getExtension<PythonExtensionApi>(PythonExtension);
         if (extension?.packageJSON?.version) {
             this._pythonExtensionVersion = new SemVer(extension?.packageJSON?.version);
         }
@@ -388,8 +393,8 @@ export class InterpreterService implements IInterpreterService {
     public onDidEnvironmentVariablesChange = this._onDidEnvironmentVariablesChange.event;
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
-    private apiPromise: Promise<ProposedExtensionAPI | undefined> | undefined;
-    private api?: ProposedExtensionAPI;
+    private apiPromise: Promise<PythonExtensionApi | undefined> | undefined;
+    private api?: PythonExtensionApi;
     private _status: 'refreshing' | 'idle' = 'idle';
     public get status() {
         return this._status;
@@ -727,7 +732,7 @@ export class InterpreterService implements IInterpreterService {
         }
         this.pendingInterpretersChangeEventTriggers.clear();
     }
-    private async getApi(): Promise<ProposedExtensionAPI | undefined> {
+    private async getApi(): Promise<PythonExtensionApi | undefined> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }

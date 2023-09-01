@@ -6,11 +6,11 @@ import * as path from '../../platform/vscode-path/resources';
 import { isParentPath } from '../../platform/common/platform/fileUtils';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { getEnvironmentType } from '../../platform/interpreter/helpers';
-import { Environment, ProposedExtensionAPI } from '../../platform/api/pythonApiTypes';
+import { Environment, PythonExtension } from '@vscode/python-extension';
 
 export function findPreferredPythonEnvironment(
     notebook: NotebookDocument,
-    pythonApi: ProposedExtensionAPI
+    pythonApi: PythonExtension
 ): Environment | undefined {
     // 1. Check if we have a .conda or .venv virtual env in the local workspace folder.
     const localEnv = findPythonEnvironmentClosestToNotebook(notebook, pythonApi.environments.known);
