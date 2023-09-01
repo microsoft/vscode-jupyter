@@ -16,7 +16,7 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, IDisposableRegistry, WORKSPACE_MEMENTO } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/misc';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { ITrustedKernelPaths } from './types';
 import {
     GlobalPythonKernelSpecFinder,
@@ -157,7 +157,7 @@ export class OldLocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKern
         return Array.from(this._kernels.values());
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     private refreshCancellation?: CancellationTokenSource;
     private lastKnownGlobalPythonKernelSpecs: LocalKernelSpecConnectionMetadata[] = [];

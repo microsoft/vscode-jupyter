@@ -11,7 +11,7 @@ import { noop } from '../../../test/core';
 import { assert } from 'chai';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { IDisposable, ReadWrite } from '../../../platform/common/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 import { waitForCondition } from '../../../test/common';
 import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
@@ -183,7 +183,7 @@ suite('Raw Session & Raw Kernel Connection', () => {
     teardown(async () => {
         nonSerializingKernel.KernelConnection = OldKernelConnectionClass;
         sinon.reset();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
         await session
             .shutdown()
             .catch(noop)

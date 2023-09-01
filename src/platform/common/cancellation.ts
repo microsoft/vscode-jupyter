@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { CancellationError, CancellationToken, CancellationTokenSource } from 'vscode';
-import { disposeAllDisposables } from './helpers';
+import { dispose } from './helpers';
 import { IDisposable } from './types';
 import { isPromiseLike } from './utils/async';
 import { Common } from './utils/localize';
@@ -104,7 +104,7 @@ export function wrapCancellationTokens(...tokens: CancellationToken[]) {
     const oldDispose = wrappedCancellationToken.dispose.bind(wrappedCancellationToken);
     wrappedCancellationToken.dispose = () => {
         oldDispose();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     };
     return wrappedCancellationToken;
 }

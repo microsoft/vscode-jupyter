@@ -16,7 +16,7 @@ import { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
@@ -280,7 +280,7 @@ export class CellExecution implements IDisposable {
         }
         this.disposed = true;
         traceCellMessage(this.cell, 'Execution disposed');
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     private completedWithErrors(error: Partial<Error>) {
         if (this.cancelHandled) {

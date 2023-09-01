@@ -21,7 +21,7 @@ import { KernelProvider } from './kernelProvider.web';
 import { Kernel, ThirdPartyKernel } from './kernel';
 import { IKernelSessionFactory, IKernelController, IStartupCodeProviders, KernelConnectionMetadata } from './types';
 import { ThirdPartyKernelProvider } from './kernelProvider.node';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { noop } from '../test/core';
 
 ['New Jupyter Session', 'Old Jupyter Session'].map((sessionImplementation) => {
@@ -97,7 +97,7 @@ import { noop } from '../test/core';
             }
             teardown(async () => {
                 sinon.restore();
-                disposeAllDisposables(disposables);
+                dispose(disposables);
                 await Promise.all(asyncDisposables.map((item) => item.dispose().catch(noop)));
                 asyncDisposables.length = 0;
             });

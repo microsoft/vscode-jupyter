@@ -24,7 +24,7 @@ import {
 } from '../../../kernels/types';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable, ReadWrite } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -259,7 +259,7 @@ suite('Local Kernel Selector', () => {
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     function verifyExistenceOfConnectionsInQuickPick(
         quickPickItems: ConnectionQuickPickItem[],
         connections: KernelConnectionMetadata[]

@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { EventEmitter } from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { AsyncDisposableRegistry } from '../../../platform/common/asyncDisposableRegistry';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IAsyncDisposableRegistry } from '../../../platform/common/types';
 import { DisplayOptions } from '../../displayOptions';
 import { JupyterConnection } from '../connection/jupyterConnection';
@@ -71,7 +71,7 @@ suite('NotebookProvider', () => {
         );
     });
     teardown(async () => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
         await asyncDisposables.dispose();
     });
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {

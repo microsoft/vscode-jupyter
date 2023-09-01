@@ -5,7 +5,7 @@ import { inject } from 'inversify';
 import * as vscode from 'vscode';
 import { ErrorRendererMessageType, Localizations } from '../../../messageTypes';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { WebViews } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -39,6 +39,6 @@ export class ExtensionSideRenderer implements IDisposable, IExtensionSyncActivat
         );
     }
     dispose(): void {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
 }

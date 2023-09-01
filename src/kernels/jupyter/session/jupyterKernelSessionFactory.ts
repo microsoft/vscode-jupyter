@@ -30,7 +30,7 @@ import { inject, injectable, optional } from 'inversify';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
@@ -174,7 +174,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             this.asyncDisposables.push(disposable);
             return wrapperSession;
         } catch (ex) {
-            disposeAllDisposables(disposablesIfAnyErrors);
+            dispose(disposablesIfAnyErrors);
 
             if (isRemoteConnection(options.kernelConnection)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, ex);
@@ -203,7 +203,7 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                 }
             }
         } finally {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
         }
     }
     private async validateRemoteServer(

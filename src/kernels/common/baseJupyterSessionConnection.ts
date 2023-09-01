@@ -8,7 +8,7 @@ import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import type { IChangedArgs } from '@jupyterlab/coreutils';
 import { IDisposable } from '../../platform/common/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { IBaseKernelSession, INewSessionWithSocket, KernelSocketInformation } from '../types';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
@@ -156,7 +156,7 @@ export abstract class BaseJupyterSessionConnection<
         this.disposed.emit();
         this.previousAnyMessageHandler?.dispose();
 
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         Signal.disconnectAll(this);
     }
     abstract shutdown(): Promise<void>;

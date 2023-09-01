@@ -8,7 +8,7 @@ import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, ExtensionContext, Memento, Uri } from 'vscode';
 import { CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, JupyterPaths } from './jupyterPaths.node';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IDisposable } from '../../../platform/common/types';
 import { isWeb } from '../../../platform/common/utils/misc';
@@ -81,7 +81,7 @@ suite('Jupyter Paths', () => {
         delete process.env['ALLUSERSPROFILE'];
     });
     teardown(async () => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
     suiteTeardown(() => {
         process.env['JUPYTER_PATH'] = oldJUPYTER_PATH;

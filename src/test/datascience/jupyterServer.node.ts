@@ -15,7 +15,7 @@ import * as fs from 'fs-extra';
 import * as child_process from 'child_process';
 const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 import { sleep } from '../core';
@@ -84,7 +84,7 @@ export class JupyterServer {
         this._jupyterServerWithToken = undefined;
         this._secondJupyterServerWithToken = undefined;
         console.log(`Disposing jupyter server instance`);
-        disposeAllDisposables(this._disposables);
+        dispose(this._disposables);
         if (this.availablePort) {
             await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
         }

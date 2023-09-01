@@ -3,7 +3,7 @@
 
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { createDeferred, raceTimeout } from '../../platform/common/utils/async';
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
@@ -79,6 +79,6 @@ export async function waitForIdleOnSession(
         traceInfoIfCI(`Error waiting for idle`, ex);
         throw ex;
     } finally {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     }
 }

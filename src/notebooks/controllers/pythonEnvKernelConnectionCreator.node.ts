@@ -11,7 +11,7 @@ import {
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
 import { wrapCancellationTokens } from '../../platform/common/cancellation';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -35,7 +35,7 @@ export class PythonEnvKernelConnectionCreator {
     private readonly cancelTokeSource;
     public dispose() {
         this.cancelTokeSource.dispose();
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     constructor(
         private readonly notebook: NotebookDocument,
@@ -156,7 +156,7 @@ export class PythonEnvKernelConnectionCreator {
                         }
                         const kernel = finder.kernels.find((item) => item.interpreter.id === env.id);
                         if (kernel) {
-                            disposeAllDisposables(disposables);
+                            dispose(disposables);
                             return resolve(kernel);
                         }
                         // Keep waiting, for ever, until another controller is selected for this notebook.
@@ -168,7 +168,7 @@ export class PythonEnvKernelConnectionCreator {
 
             disposables.push(
                 this.cancelTokeSource.token.onCancellationRequested(() => {
-                    disposeAllDisposables(disposables);
+                    dispose(disposables);
                 })
             );
         }).then((kernel) => {

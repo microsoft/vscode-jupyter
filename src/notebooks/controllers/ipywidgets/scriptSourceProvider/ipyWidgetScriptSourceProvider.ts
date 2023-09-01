@@ -13,7 +13,7 @@ import {
     WidgetScriptSource
 } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
-import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/helpers';
 import { Disposable } from 'vscode';
 import type { IAnyMessageArgs, IKernelConnection } from '@jupyterlab/services/lib/kernel/kernel';
 import type { ICommOpenMsg } from '@jupyterlab/services/lib/kernel/messages';
@@ -51,7 +51,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         this.monitorKernel();
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         this.disposeScriptProviders();
     }
     public async getBaseUrl() {

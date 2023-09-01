@@ -15,7 +15,7 @@ import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage
 } from '../../kernels/jupyter/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 
 export interface IJupyterPasswordConnectInfo {
     requiresPassword: boolean;
@@ -80,7 +80,7 @@ export class JupyterPasswordConnect {
             result
                 .finally(() => {
                     if (disposeOnDone) {
-                        disposeAllDisposables(disposables);
+                        dispose(disposables);
                     }
                 })
                 .catch(noop);

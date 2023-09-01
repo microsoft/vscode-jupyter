@@ -27,7 +27,7 @@ import { IExtensionContext } from '../../../platform/common/types';
 import { createEventHandler, TestEventHandler } from '../../../test/common';
 import { CacheDataFormat, RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterConnection } from '../connection/jupyterConnection';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { uriEquals } from '../../../test/datascience/helpers';
@@ -164,7 +164,7 @@ suite(`Remote Kernel Finder`, () => {
             instance(context)
         );
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     test('Kernels found', async () => {
         remoteKernelFinder.activate().then(noop, noop);
 

@@ -27,7 +27,7 @@ import { areObjectsWithUrisTheSame, noop } from '../../../platform/common/utils/
 import { IApplicationEnvironment } from '../../../platform/common/application/types';
 import { KernelFinder } from '../../kernelFinder';
 import { ContributedKernelFinderKind } from '../../internalTypes';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { JupyterConnection } from '../connection/jupyterConnection';
@@ -134,7 +134,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             clearTimeout(this.kernelDisposeDelayTimer as any);
         }
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
 
     async activate(): Promise<void> {
@@ -272,7 +272,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
         }
         return this.jupyterConnection
             .createConnectionInfo(this.serverProviderHandle)
-            .finally(() => disposeAllDisposables(disposables));
+            .finally(() => dispose(disposables));
     }
 
     private async getFromCache(cancelToken?: CancellationToken): Promise<RemoteKernelConnectionMetadata[]> {

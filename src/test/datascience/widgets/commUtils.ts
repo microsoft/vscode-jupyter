@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { NotebookCell, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
@@ -46,7 +46,7 @@ export class Utils {
         private readonly editorPromise: Promise<NotebookEditor>
     ) {}
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     public async queryHtml(cell: NotebookCell, selector?: string) {
         // Verify the slider widget is created.

@@ -24,7 +24,7 @@ import {
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { JupyterPaths } from './jupyterPaths.node';
 
 export type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
@@ -65,7 +65,7 @@ export class LocalKernelSpecFinder implements IDisposable {
         this.findKernelSpecsInPathCache.clear();
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     /**
      * Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first

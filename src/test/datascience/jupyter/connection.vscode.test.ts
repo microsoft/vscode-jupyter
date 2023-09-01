@@ -31,7 +31,7 @@ import {
     IJupyterServerUriStorage
 } from '../../../kernels/jupyter/types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, Disposable, EventEmitter, InputBox, Memento } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
@@ -94,7 +94,7 @@ suite('Connect to Remote Jupyter Servers', function () {
         ]);
     });
     suiteTeardown(() => {
-        disposeAllDisposables([
+        dispose([
             jupyterNotebookWithHelloPassword,
             jupyterLabWithHelloPasswordAndWorldToken,
             jupyterNotebookWithHelloToken,
@@ -193,7 +193,7 @@ suite('Connect to Remote Jupyter Servers', function () {
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
         sinon.restore();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));

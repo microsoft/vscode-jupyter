@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable, IExtensions } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';
@@ -65,7 +65,7 @@ suite('Extension Recommendation', () => {
                     when(memento.get(anything(), anything())).thenReturn([]);
                     recommendation.activate();
                 }
-                teardown(() => disposeAllDisposables(disposables));
+                teardown(() => dispose(disposables));
                 function createNotebook(language: string) {
                     const notebook = mock<NotebookDocument>();
                     const kernelSpecLanguage = whereIsLanguageDefined === 'kernelspec' ? language : undefined;

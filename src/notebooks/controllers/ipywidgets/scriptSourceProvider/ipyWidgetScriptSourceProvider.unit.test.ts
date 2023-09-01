@@ -15,7 +15,7 @@ import { ApplicationShell } from '../../../../platform/common/application/applic
 import { IApplicationShell, IWorkspaceService } from '../../../../platform/common/application/types';
 import { WorkspaceService } from '../../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
-import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/helpers';
 import { HttpClient } from '../../../../platform/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../../platform/common/persistentState';
 import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
@@ -84,7 +84,7 @@ suite('ipywidget - Widget Script Source Provider', () => {
     });
     teardown(() => {
         sinon.restore();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
     function createScripSourceProvider() {
         const httpClient = mock(HttpClient);

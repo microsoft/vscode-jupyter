@@ -11,7 +11,7 @@ import { IDisposableRegistry, Resource } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '../../logging';
-import { disposeAllDisposables } from '../helpers';
+import { dispose } from '../helpers';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../api/types';
 import { noop } from '../utils/misc';
 
@@ -42,7 +42,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
 
     public dispose() {
         this.changeEventEmitter.dispose();
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
 
     @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)

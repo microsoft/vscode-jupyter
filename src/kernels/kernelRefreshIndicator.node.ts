@@ -6,7 +6,7 @@ import { notebooks, window, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { traceInfo } from '../platform/logging';
@@ -30,7 +30,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         disposables.push(this);
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     public activate() {
         if (this.extensionChecker.isPythonExtensionInstalled) {

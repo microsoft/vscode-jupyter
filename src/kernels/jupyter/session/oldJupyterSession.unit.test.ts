@@ -36,7 +36,7 @@ import * as path from '../../../platform/vscode-path/path';
 import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
 import { JupyterInvalidKernelError } from '../../../kernels/errors/jupyterInvalidKernelError';
 import { MockOutputChannel } from '../../../test/mockClasses';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { resolvableInstance } from '../../../test/datascience/helpers';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
@@ -165,7 +165,7 @@ suite('Old JupyterSession', () => {
     teardown(async () => {
         Signal.disconnectAll(instance(session));
         await jupyterSession.disposeAsync().catch(noop);
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     suite('Start', () => {

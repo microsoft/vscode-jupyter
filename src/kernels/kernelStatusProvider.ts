@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
@@ -22,7 +22,7 @@ export class KernelStatusProvider implements IExtensionSyncActivationService {
         disposables.push(this);
     }
     public dispose(): void {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     activate(): void {
         this.kernelProvider.onDidCreateKernel(this.onDidCreateKernel, this, this.disposables);

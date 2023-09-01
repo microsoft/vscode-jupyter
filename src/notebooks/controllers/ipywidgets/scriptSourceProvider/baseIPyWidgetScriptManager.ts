@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { disposeAllDisposables, splitLines, trimQuotes } from '../../../../platform/common/helpers';
+import { dispose, splitLines, trimQuotes } from '../../../../platform/common/helpers';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceWarning } from '../../../../platform/logging';
@@ -147,7 +147,7 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
         kernel.onRestarted(this.onKernelRestarted, this, this.disposables);
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     abstract getBaseUrl(): Promise<Uri | undefined>;
     protected abstract getWidgetEntryPoints(): Promise<{ uri: Uri; widgetFolderName: string }[]>;

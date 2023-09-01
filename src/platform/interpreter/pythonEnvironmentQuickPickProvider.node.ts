@@ -12,7 +12,7 @@ import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import { traceError } from '../logging';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { disposeAllDisposables } from '../common/helpers';
+import { dispose } from '../common/helpers';
 
 @injectable()
 export class PythonEnvironmentQuickPickItemProvider
@@ -92,7 +92,7 @@ export class PythonEnvironmentQuickPickItemProvider
         // perceived performance for the user.
     }
     dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     async refresh() {
         // very unlikely that we have been unable to get the Python extension api, hence no need to wait on the promise.

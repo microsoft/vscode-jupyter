@@ -7,7 +7,7 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../
 import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import {
     IMultiStepInput,
@@ -67,7 +67,7 @@ export class LocalNotebookKernelSourceSelector implements ILocalNotebookKernelSo
                 throw new CancellationError();
             }
             if (this.cancellationTokenSource.token.isCancellationRequested) {
-                disposeAllDisposables(state.disposables);
+                dispose(state.disposables);
                 return;
             }
 
@@ -76,7 +76,7 @@ export class LocalNotebookKernelSourceSelector implements ILocalNotebookKernelSo
                 return state.selection.connection as LocalKernelConnectionMetadata;
             }
         } finally {
-            disposeAllDisposables(state.disposables);
+            dispose(state.disposables);
         }
     }
     private selectKernelFromKernelFinder(

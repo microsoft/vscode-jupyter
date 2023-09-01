@@ -23,7 +23,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IDisposable, IJupyterSettings, IOutputChannel } from '../../../platform/common/types';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { noop } from '../../../test/core';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -147,7 +147,7 @@ suite('kernel Process', () => {
     });
     teardown(() => {
         rewiremock.disable();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
     test('Ensure kernelspec json file is created & the temp file disposed (to prevent file handle being left open)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -445,7 +445,7 @@ suite('Kernel Process', () => {
         rewiremock.disable();
         sinon.restore();
         traceInfo(`End Test Complete ${this.currentTest?.title}`);
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     function launchKernel(metadata: LocalKernelSpecConnectionMetadata, connectionFile: string) {

@@ -3,7 +3,7 @@
 
 import { EventEmitter, NotebookController, NotebookDocument, NotebookExecution } from 'vscode';
 import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyIndicator';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -45,7 +45,7 @@ suite('Remote Kernel Reconnect Busy Indicator', () => {
         indicator = new RemoteKernelReconnectBusyIndicator(instance(kernel), instance(controller), instance(notebook));
     });
     teardown(() => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     test('Not busy for Local Kernel Specs', async () => {

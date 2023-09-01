@@ -10,7 +10,7 @@ import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IControllerRegistration } from '../../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { WIDGET_MIMETYPE } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { traceVerbose } from '../../../platform/logging';
@@ -31,7 +31,7 @@ export class IPyWidgetRendererComms implements IExtensionSyncActivationService {
     ) {}
     private readonly widgetOutputsPerNotebook = new WeakMap<NotebookDocument, Set<string>>();
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     activate() {
         const comms = notebooks.createRendererMessaging('jupyter-ipywidget-renderer');

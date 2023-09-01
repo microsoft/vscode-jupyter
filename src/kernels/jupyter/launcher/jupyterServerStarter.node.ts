@@ -9,7 +9,7 @@ import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { Cancellation, isCancellationError, raceCancellationError } from '../../../platform/common/cancellation';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
@@ -148,11 +148,11 @@ export class JupyterServerStarter implements IJupyterServerStarter {
             } catch (ex) {
                 traceError(`Parsing failed ${connection.baseUrl}`, ex);
             }
-            disposeAllDisposables(disposables);
+            dispose(disposables);
             sendTelemetryEvent(Telemetry.StartJupyter, { duration: stopWatch.elapsedTime });
             return connection;
         } catch (err) {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
             if (
                 isCancellationError(err) ||
                 err instanceof JupyterConnectError ||

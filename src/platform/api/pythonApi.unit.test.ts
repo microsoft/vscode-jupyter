@@ -7,7 +7,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, WorkspaceFoldersChangeEvent } from 'vscode';
 import { createEventHandler } from '../../test/common';
 import { IWorkspaceService } from '../common/application/types';
-import { disposeAllDisposables } from '../common/helpers';
+import { dispose } from '../common/helpers';
 import { IDisposable, IExtensionContext } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterService } from './pythonApi';
@@ -67,7 +67,7 @@ suite(`Interpreter Service`, () => {
         clock = fakeTimers.install();
         disposables.push(new Disposable(() => clock.uninstall()));
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     function createInterpreterService() {
         interpreterService = new InterpreterService(
             instance(apiProvider),

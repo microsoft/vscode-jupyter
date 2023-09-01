@@ -15,7 +15,7 @@ import { Disposables } from '../../../platform/common/utils';
 import { IJupyterServerProviderRegistry, IJupyterUriProviderRegistration } from '../types';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { inject, injectable } from 'inversify';
-import { disposeAllDisposables, stripCodicons } from '../../../platform/common/helpers';
+import { dispose, stripCodicons } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
 import { JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
@@ -82,10 +82,10 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     }
     override dispose() {
         super.dispose();
-        disposeAllDisposables(this.providerChanges);
+        dispose(this.providerChanges);
     }
     private hookupProviders() {
-        disposeAllDisposables(this.providerChanges);
+        dispose(this.providerChanges);
         if (this.provider.serverProvider?.onDidChangeServers) {
             this.provider.serverProvider.onDidChangeServers(
                 () => {

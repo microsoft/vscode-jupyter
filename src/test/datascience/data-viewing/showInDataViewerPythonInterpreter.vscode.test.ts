@@ -13,7 +13,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { waitForCondition } from '../../common.node';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -42,7 +42,7 @@ suite('DataViewer @webview', function () {
     });
     // Cleanup after suite is finished
     suiteTeardown(() => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
     setup(async () => {
         // Close documents and stop debugging

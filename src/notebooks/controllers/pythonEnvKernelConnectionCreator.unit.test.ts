@@ -14,7 +14,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
@@ -113,7 +113,7 @@ suite('Python Environment Kernel Connection Creator', () => {
         pythonEnvKernelConnectionCreator = new PythonEnvKernelConnectionCreator(notebook, cancellation.token);
         disposables.push(pythonEnvKernelConnectionCreator);
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     test('Not does create a Python Env when Python extension fails to create it', async () => {
         when(mockedVSCodeNamespaces.commands.executeCommand('python.createEnvironment', anything())).thenResolve(
             undefined

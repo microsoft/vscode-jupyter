@@ -32,7 +32,7 @@ import {
     Telemetry,
     TestingKernelPickerProviderId
 } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -66,7 +66,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         disposables.push(this);
     }
     public dispose() {
-        disposeAllDisposables(this.localDisposables);
+        dispose(this.localDisposables);
     }
     activate(): void {
         if (!this.isWebExtension) {
@@ -228,7 +228,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
         });
         this.providerMappings.forEach(({ disposables }, id) => {
             if (!existingItems.has(id)) {
-                disposeAllDisposables(disposables);
+                dispose(disposables);
                 this.providerMappings.delete(id);
             }
         });
@@ -324,7 +324,7 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
             } catch (ex) {
                 traceError(`Failed to install missing dependencies for Conda kernel ${controller.connection.id}`, ex);
             } finally {
-                disposeAllDisposables(disposables);
+                dispose(disposables);
             }
         }
     }

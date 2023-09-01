@@ -6,7 +6,7 @@ import { use } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ILiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import {
@@ -110,7 +110,7 @@ suite('Remote kernel connection handler', async () => {
         );
     });
     teardown(() => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     test('Ensure event handler is added', () => {

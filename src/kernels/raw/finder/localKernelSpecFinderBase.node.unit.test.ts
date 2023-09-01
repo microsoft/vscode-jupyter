@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, Uri } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable } from '../../../platform/common/types';
 import { uriEquals } from '../../../test/datascience/helpers';
@@ -28,7 +28,7 @@ suite('Local Kernel Spec Finder', () => {
         finder = new LocalKernelSpecFinder(instance(fs), instance(globalState), instance(jupyterPaths));
         disposables.push(finder);
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
 
     test('Load a kernel spec file', async () => {
         const kernelSpec: IJupyterKernelSpec = {

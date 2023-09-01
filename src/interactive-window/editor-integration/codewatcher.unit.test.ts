@@ -32,7 +32,7 @@ import { DataScienceCodeLensProvider } from '../../interactive-window/editor-int
 import { CodeWatcher } from '../../interactive-window/editor-integration/codewatcher';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
 import { ICodeWatcher, IGeneratedCodeStorageFactory } from '../../interactive-window/editor-integration/types';
@@ -202,7 +202,7 @@ suite('Code Watcher Unit Tests', () => {
             codeLensFactory
         );
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
         // Use typemoqs for those things that are resolved as promises. mockito doesn't allow nesting of mocks. ES6 Proxy class
         // is the problem. We still need to make it thenable though. See this issue: https://github.com/florinn/typemoq/issues/67

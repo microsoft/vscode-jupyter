@@ -31,7 +31,7 @@ import {
     JVSC_EXTENSION_ID,
     JupyterNotebookView
 } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import {
@@ -127,7 +127,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             }
 
             if (this.cancellationTokenSource.token.isCancellationRequested) {
-                disposeAllDisposables(state.disposables);
+                dispose(state.disposables);
                 return;
             }
 
@@ -136,7 +136,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 return state.selection.connection as RemoteKernelConnectionMetadata;
             }
         } finally {
-            disposeAllDisposables(state.disposables);
+            dispose(state.disposables);
         }
     }
     private async getRemoteServersFromProvider(

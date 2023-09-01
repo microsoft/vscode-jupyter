@@ -28,7 +28,7 @@ import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/in
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ITrustedKernelPaths } from './types';
 import { IDisposable } from '../../../platform/common/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { raceCancellation } from '../../../platform/common/cancellation';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
@@ -137,7 +137,7 @@ export class InterpreterSpecificKernelSpecsFinder implements IDisposable {
         this.interpreterService.onDidChangeInterpreters(this.clearCacheWhenInterpretersChange, this, this.disposables);
     }
     dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         this.cancelToken.dispose();
     }
     public async listKernelSpecs(refresh?: boolean) {
@@ -280,7 +280,7 @@ export class GlobalPythonKernelSpecFinder implements IDisposable {
         });
     }
     dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         this.cancelToken.dispose();
     }
     public async listKernelSpecs(refresh?: boolean) {

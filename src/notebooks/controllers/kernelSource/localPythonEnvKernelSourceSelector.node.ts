@@ -15,7 +15,7 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../
 import { IKernelFinder, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import {
     IMultiStepInput,
@@ -129,7 +129,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
     }
     public async refresh() {
         this.previousCancellationTokens.forEach((t) => t.cancel());
-        disposeAllDisposables(this.previousCancellationTokens);
+        dispose(this.previousCancellationTokens);
         this.previousCancellationTokens = [];
         this._kernels.clear();
         this.pythonApi
@@ -180,7 +180,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                 throw new CancellationError();
             }
             if (this.cancellationTokenSource.token.isCancellationRequested) {
-                disposeAllDisposables(state.disposables);
+                dispose(state.disposables);
                 return;
             }
 
@@ -189,7 +189,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                 return state.selection.connection as PythonKernelConnectionMetadata;
             }
         } finally {
-            disposeAllDisposables(state.disposables);
+            dispose(state.disposables);
         }
     }
     private getKernelSpecsDir() {
