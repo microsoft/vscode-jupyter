@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Session, ContentsManager } from '@jupyterlab/services';
+import type { ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri } from 'vscode';
@@ -16,7 +16,6 @@ import {
     KernelConnectionMetadata,
     IJupyterConnection,
     IJupyterKernelSession,
-    IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
     KernelActionSource,
@@ -70,9 +69,6 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         cancelToken: CancellationToken,
         creator: KernelActionSource
     ): Promise<IJupyterKernelSession>;
-    getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
-    getRunningKernels(): Promise<IJupyterKernel[]>;
-    getRunningSessions(): Promise<Session.IModel[]>;
 }
 
 export interface IJupyterKernel {
