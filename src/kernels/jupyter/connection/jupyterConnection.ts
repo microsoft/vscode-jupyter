@@ -77,7 +77,7 @@ export class JupyterConnection {
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
-            sessionManager = await this.jupyterSessionManagerFactory.create(connection);
+            sessionManager = this.jupyterSessionManagerFactory.create(connection);
             await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
             // We should throw an exception if any of that fails.
         } catch (err) {

@@ -64,7 +64,7 @@ suite('Jupyter Connection', async () => {
 
         when(configService.getSettings(anything())).thenReturn(instance(mock<IWatchableJupyterSettings>()));
         (instance(sessionManager) as any).then = undefined;
-        when(sessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
+        when(sessionManagerFactory.create(anything())).thenReturn(instance(sessionManager));
     });
     teardown(() => {
         dispose(disposables);
