@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { QuickPickItem, workspace } from 'vscode';
-import { Environment } from '../api/pythonApiTypes';
+import { Environment } from '@vscode/python-extension';
 import { BaseProviderBasedQuickPick } from '../common/providerBasedQuickPick';
 import { getEnvironmentType, getPythonEnvDisplayName, isCondaEnvironmentWithoutPython } from './helpers';
 import { getDisplayPath } from '../common/platform/fs-paths';

@@ -13,7 +13,7 @@ import {
     pythonEnvironmentQuickPick
 } from '../../../platform/interpreter/pythonEnvironmentPicker.node';
 import { BaseProviderBasedQuickPick } from '../../../platform/common/providerBasedQuickPick';
-import { Environment, ProposedExtensionAPI } from '../../../platform/api/pythonApiTypes';
+import { Environment, PythonExtension } from '@vscode/python-extension';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PythonEnvKernelConnectionCreator } from '../pythonEnvKernelConnectionCreator.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
@@ -26,7 +26,7 @@ import { findPreferredPythonEnvironment } from '../preferredKernelConnectionServ
 export class LocalPythonKernelSelector extends Disposables {
     private readonly pythonEnvPicker: BaseProviderBasedQuickPick<Environment>;
     private readonly provider: PythonEnvironmentQuickPickItemProvider;
-    private pythonApi?: ProposedExtensionAPI;
+    private pythonApi?: PythonExtension;
     constructor(
         private readonly notebook: NotebookDocument,
         private readonly token: CancellationToken
@@ -57,7 +57,7 @@ export class LocalPythonKernelSelector extends Disposables {
             this.pythonEnvPicker.recommended = findPreferredPythonEnvironment(this.notebook, this.pythonApi);
             console.log(1234);
         };
-        const setupApi = (api?: ProposedExtensionAPI) => {
+        const setupApi = (api?: PythonExtension) => {
             if (!api) {
                 return;
             }
