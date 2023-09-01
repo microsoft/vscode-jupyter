@@ -37,7 +37,7 @@ import { IWebviewCommunication } from '../../../../platform/webviews/types';
 import { swallowExceptions } from '../../../../platform/common/utils/decorators';
 import { CDNWidgetScriptSourceProvider } from '../scriptSourceProvider/cdnWidgetScriptSourceProvider';
 import { createDeferred } from '../../../../platform/common/utils/async';
-import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/helpers';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { isPythonKernelConnection } from '../../../../kernels/helpers';
 
@@ -156,7 +156,7 @@ export class CommonMessageCoordinator {
                                         if (!deferred.completed) {
                                             deferred.resolve(kernel.ipywidgetsVersion);
                                         }
-                                        disposeAllDisposables(disposables);
+                                        dispose(disposables);
                                     }
                                 },
                                 this,

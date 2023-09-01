@@ -6,13 +6,13 @@ import chaiAsPromised from 'chai-as-promised';
 import { CancellationError, CancellationTokenSource } from 'vscode';
 import { noop, sleep } from '../../test/core';
 import { raceCancellation, raceCancellationError } from './cancellation';
-import { disposeAllDisposables } from './helpers';
+import { dispose } from './helpers';
 import { IDisposable } from './types';
 use(chaiAsPromised);
 
 suite('Cancellation', () => {
     const disposables: IDisposable[] = [];
-    suiteTeardown(() => disposeAllDisposables(disposables));
+    suiteTeardown(() => dispose(disposables));
     test('raceCancellation', async () => {
         const cts = new CancellationTokenSource();
         disposables.push(cts);

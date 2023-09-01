@@ -28,7 +28,7 @@ import {
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { JupyterNotebookView } from '../../platform/common/constants';
@@ -63,7 +63,7 @@ export class NotebookCellBangInstallDiagnosticsProvider
         disposables.push(this);
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         this.problems.dispose();
     }
     public activate(): void {

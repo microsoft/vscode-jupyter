@@ -18,7 +18,7 @@ import { IExtensionTestApi, openFile, sleep } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { initialize } from '../../initialize.node';
 import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IKernelProvider } from '../../../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
@@ -62,7 +62,7 @@ suite('Hover provider @lsp', async () => {
             dsSettings.variableTooltipFields = oldSetting;
         }
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     test('Tensor tooltips', async () => {
         // Open a Python file
         const textDocument = await openFile(file);

@@ -7,7 +7,7 @@ import { IKernel, IKernelProvider } from '../kernels/types';
 import { IControllerRegistration } from '../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveWindowView } from '../platform/common/constants';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 
@@ -27,7 +27,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         disposables.push(this);
     }
     dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     activate(): void {
         this.kernelProvider.onDidCreateKernel(this.onDidCreateKernel, this, this.disposables);

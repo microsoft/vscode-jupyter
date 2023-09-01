@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCell, NotebookCellOutput, NotebookCellOutputItem, NotebookDocument, workspace } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 
@@ -20,7 +20,7 @@ export class CellOutputDisplayIdTracker implements IExtensionSyncActivationServi
     private static cellToDisplayIdMapping = new WeakMap<NotebookCell, string>();
     private static disposables: IDisposable[] = [];
     public static dispose() {
-        disposeAllDisposables(CellOutputDisplayIdTracker.disposables);
+        dispose(CellOutputDisplayIdTracker.disposables);
     }
     constructor(@inject(IDisposableRegistry) disposables: IDisposableRegistry) {
         disposables.push({

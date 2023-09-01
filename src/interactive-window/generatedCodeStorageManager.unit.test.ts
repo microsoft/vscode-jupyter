@@ -13,7 +13,7 @@ import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { IControllerRegistration, IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { InteractiveWindowView } from '../platform/common/constants';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { mockedVSCodeNamespaces } from '../test/vscode-mock';
 
@@ -54,7 +54,7 @@ suite('GeneratedCodeStorageManager', () => {
     });
     teardown(() => {
         when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     test('Clear storage when notebook kernel changes', () => {

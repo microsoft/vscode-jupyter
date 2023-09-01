@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { notebooks } from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../platform/common/constants';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { traceInfo } from '../platform/logging';
 import { IKernelFinder } from './types';
@@ -23,7 +23,7 @@ export class KernelRefreshIndicator implements IExtensionSyncActivationService {
         disposables.push(this);
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     public activate() {
         this.startRefresh();

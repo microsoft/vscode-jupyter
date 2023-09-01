@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import { EventEmitter } from 'vscode';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
 import { IKernel, IKernelSession, IKernelProvider, LocalKernelSpecConnectionMetadata } from './types';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 
@@ -37,7 +37,7 @@ suite('Jupyter Execution', async () => {
         restartMonitor = new KernelAutoRestartMonitor(disposables, instance(kernelProvider));
     });
     teardown(() => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
     suiteTeardown(() => {
         onKernelStatusChanged.dispose();

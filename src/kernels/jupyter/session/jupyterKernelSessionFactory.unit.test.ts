@@ -26,7 +26,7 @@ import {
 } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import {
     IAsyncDisposable,
     IConfigurationService,
@@ -199,7 +199,7 @@ suite('New Jupyter Kernel Session Factory', () => {
     });
     teardown(async () => {
         sinon.restore();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
         await Promise.all(asyncDisposables.map((d) => swallowExceptions(() => d.dispose().catch(noop))));
     });
     function createSession() {

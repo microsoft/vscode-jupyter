@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IJupyterServerUriStorage } from '../types';
@@ -23,7 +23,7 @@ export class RemoteJupyterServerMruUpdate implements IExtensionSyncActivationSer
         disposables.push(this);
     }
     dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     activate(): void {
         this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this, this.disposables);

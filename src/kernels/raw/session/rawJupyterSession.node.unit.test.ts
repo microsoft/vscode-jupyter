@@ -10,7 +10,7 @@ import { RawJupyterSessionWrapper } from './rawJupyterSession.node';
 import { LocalKernelSpecConnectionMetadata } from '../../types';
 import { noop } from '../../../test/core';
 import { assert } from 'chai';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { RawSessionConnection } from './rawSessionConnection.node';
 
@@ -73,7 +73,7 @@ suite('Raw Jupyter Session Wrapper', () => {
             kernelConnectionMetadata
         );
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     test('Shutdown', async () => {
         when(session.dispose()).thenReturn();
         const statuses: (typeof sessionWrapper.status)[] = [];

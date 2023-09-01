@@ -3,7 +3,7 @@
 
 import * as sinon from 'sinon';
 import { assert } from 'chai';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable, IExtensions } from '../../platform/common/types';
 import { traceInfo } from '../../platform/logging';
 import { IExtensionTestApi, waitForCondition } from '../../test/common';
@@ -53,7 +53,7 @@ suite('Jupyter Provider Tests', function () {
         });
     });
     suiteTeardown(() => {
-        disposeAllDisposables(disposables.concat(jupyterServerUrl));
+        dispose(disposables.concat(jupyterServerUrl));
         return closeNotebooksAndCleanUpAfterTests(disposables);
     });
     setup(async function () {
@@ -74,7 +74,7 @@ suite('Jupyter Provider Tests', function () {
     teardown(async function () {
         traceInfo(`End Test ${this.currentTest?.title}`);
         sinon.restore();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     test('Verify Kernel Source Action is registered & unregistered for the 3rd party extension', async () => {

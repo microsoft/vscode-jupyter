@@ -20,7 +20,7 @@ import { Disposables } from './utils';
 import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';
 import { IDisposable } from './types';
-import { disposeAllDisposables } from './helpers';
+import { dispose } from './helpers';
 
 abstract class BaseQuickPickItem implements QuickPickItem {
     label: string;
@@ -136,7 +136,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         quickPick.busy = true;
         quickPick.value = this.previouslyEnteredValue;
         quickPick.onDidChangeValue((e) => (this.previouslyEnteredValue = e), this, disposables);
-        quickPick.onDidHide(() => disposeAllDisposables(disposables), this, disposables);
+        quickPick.onDidHide(() => dispose(disposables), this, disposables);
         quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitleWithoutName;
         this.provider
             .then((provider) => {
@@ -268,7 +268,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
                 }
                 return result ? result : undefined;
             } finally {
-                disposeAllDisposables(disposables);
+                dispose(disposables);
             }
         }
     }

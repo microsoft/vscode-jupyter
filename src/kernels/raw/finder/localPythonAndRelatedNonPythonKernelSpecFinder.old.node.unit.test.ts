@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import { Disposable, Memento, Uri, EventEmitter } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IJupyterKernelSpec, LocalKernelSpecConnectionMetadata, PythonKernelConnectionMetadata } from '../../types';
@@ -235,7 +235,7 @@ suite(`Local Python and related kernels`, async () => {
     });
     teardown(async function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
-        await disposeAllDisposables(disposables);
+        await dispose(disposables);
     });
 
     test('Nothing found in cache', async () => {

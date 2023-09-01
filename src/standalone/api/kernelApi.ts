@@ -12,7 +12,7 @@ import {
     BaseKernelConnectionMetadata,
     IKernelFinder
 } from '../../kernels/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../../platform/common/types';
 import { PromiseChain } from '../../platform/common/utils/async';
@@ -352,7 +352,7 @@ class KernelSocketWrapper implements IKernelSocket {
         this.disposables.push(new Disposable(() => subscription.unsubscribe()));
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sendToRealKernel(data: any, cb?: (err?: Error) => void): void {

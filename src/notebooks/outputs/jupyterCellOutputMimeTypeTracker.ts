@@ -6,7 +6,7 @@ import { NotebookCell, NotebookCellExecutionStateChangeEvent, NotebookCellKind, 
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { JupyterNotebookView } from '../../platform/common/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { ResourceTypeTelemetryProperty, sendTelemetryEvent, Telemetry } from '../../telemetry';
@@ -42,7 +42,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSyncActivationServic
     }
 
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     public async onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): Promise<void> {
         if (!isJupyterNotebook(e.cell.notebook) || this.isTelemetryDisabled) {

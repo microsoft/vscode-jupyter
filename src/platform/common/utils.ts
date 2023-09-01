@@ -14,7 +14,7 @@ import {
 import { traceError, traceInfo } from '../logging';
 
 import { ICell, IDisposable } from './types';
-import { disposeAllDisposables, splitLines } from './helpers';
+import { dispose, splitLines } from './helpers';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -414,7 +414,13 @@ export function parseSemVer(versionString: string): SemVer | undefined {
     }
 }
 
+/**
+ * @deprecated Use exports from lifecycle.ts instead.
+ */
 export class Disposables implements IDisposable {
+    /**
+     * @deprecated Use exports from lifecycle.ts instead.
+     */
     public readonly disposables: IDisposable[] = [];
     private _isDisposed: boolean = false;
     private onDidDisposeEmitter = new EventEmitter<void>();
@@ -425,6 +431,9 @@ export class Disposables implements IDisposable {
     constructor(...disposables: IDisposable[]) {
         this.disposables.push(...disposables);
     }
+    /**
+     *@deprecated Use exports from lifecycle.ts instead.
+     */
     protected _register<T extends IDisposable>(disposable: T): T {
         this.disposables.push(disposable);
         return disposable;
@@ -433,7 +442,7 @@ export class Disposables implements IDisposable {
         if (this._isDisposed) {
             return;
         }
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         this._isDisposed = true;
         this.onDidDisposeEmitter.fire();
         this.onDidDisposeEmitter.dispose();

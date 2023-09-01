@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable } from 'vscode';
-import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/helpers';
 import { IDisposable } from '../../../../platform/common/types';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../messageTypes';
 import { IMessageHandler, PostOffice } from '../../react-common/postOffice';
@@ -45,7 +45,7 @@ suite('IPyWidget Script Manager', () => {
         if (postOfficeCallBack?.dispose) {
             postOfficeCallBack.dispose();
         }
-        disposeAllDisposables(disposables);
+        dispose(disposables);
         scriptManager.dispose();
     });
     function createManager(isOnline: boolean) {

@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, Disposable, NotebookEditor, Uri, EventEmitter } from 'vscode';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
@@ -64,7 +64,7 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
         );
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     public get onDidReceiveMessage() {
         this.eventHandlerListening = true;
@@ -190,7 +190,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
     }
     private onDidCloseNotebookDocument(notebook: NotebookDocument) {
         const editors = this.notebookEditors.get(notebook) || [];
-        disposeAllDisposables(this.notebookDisposables.get(notebook) || []);
+        dispose(this.notebookDisposables.get(notebook) || []);
         editors.forEach((editor) => this.notebookCommunications.get(editor)?.dispose());
 
         this.messageCoordinators.get(notebook)?.dispose();

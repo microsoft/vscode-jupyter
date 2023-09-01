@@ -35,7 +35,7 @@ import {
     wrapCancellationTokens
 } from '../../../platform/common/cancellation';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
@@ -208,7 +208,7 @@ export class RawKernelConnection implements Kernel.IKernelConnection {
             }
             throw error;
         } finally {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
         }
     }
     private hookupKernelProcessExitHandler(kernelProcess: IKernelProcess) {

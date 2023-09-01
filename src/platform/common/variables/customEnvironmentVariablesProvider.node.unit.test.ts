@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../application/types';
-import { disposeAllDisposables } from '../helpers';
+import { dispose } from '../helpers';
 import { IDisposable, IHttpClient } from '../types';
 import { CustomEnvironmentVariablesProvider } from './customEnvironmentVariablesProvider.node';
 import { IEnvironmentVariablesService } from './types';
@@ -76,7 +76,7 @@ suite('Custom Environment Variables Provider', () => {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        disposeAllDisposables(disposables);
+        dispose(disposables);
         if (fs.existsSync(customPythonEnvFile.fsPath)) {
             fs.unlinkSync(customPythonEnvFile.fsPath);
         }

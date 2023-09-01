@@ -16,7 +16,7 @@ import {
     Uri
 } from 'vscode';
 import { WrappedError } from '../../platform/errors/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { createDeferred, raceTimeout } from '../../platform/common/utils/async';
@@ -387,7 +387,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
                 traceInfoIfCI(`Error waiting for idle`, ex);
                 throw ex;
             } finally {
-                disposeAllDisposables(disposables);
+                dispose(disposables);
             }
         } else {
             throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
@@ -536,7 +536,7 @@ export abstract class BaseJupyterSession<T extends 'remoteJupyter' | 'localJupyt
             this.onStatusChangedEvent.dispose();
             this.previousAnyMessageHandler?.dispose();
         }
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         traceVerbose('Shutdown session -- complete');
     }
     private canShutdownSession(

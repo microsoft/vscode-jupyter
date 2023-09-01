@@ -26,7 +26,7 @@ import {
 import type { Kernel } from '@jupyterlab/services';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { concatMultilineString, formatStreamText, isJupyterNotebook } from '../../platform/common/utils';
@@ -252,7 +252,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         this.disposed = true;
         traceCellMessage(this.cell, 'Execution Message Handler disposed');
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
         // Assume you have a long running cell, then reload vscode, next this cell continues running.

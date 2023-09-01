@@ -12,7 +12,7 @@ import { CancellationTokenSource, Uri, WorkspaceConfiguration } from 'vscode';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Product } from '../../../platform/interpreter/installer/types';
 import { IDisposable } from '../../../platform/common/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { ChildProcess } from 'child_process';
@@ -64,7 +64,7 @@ suite('Pip installer', async () => {
 
         pipInstaller = new PipInstaller(instance(serviceContainer));
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     test('Installer name is Pip', () => {
         expect(pipInstaller.name).to.equal('Pip');
     });

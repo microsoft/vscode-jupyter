@@ -5,7 +5,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellExecution, NotebookDocument, workspace } from 'vscode';
 import { IKernelController, ITracebackFormatter } from '../../kernels/types';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 
@@ -37,7 +37,7 @@ export class CellExecutionMessageHandlerService {
         );
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
         if (this.notebook) {
             this.notebook.getCells().forEach((cell) => this.messageHandlers.get(cell)?.dispose());
         }

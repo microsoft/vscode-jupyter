@@ -14,7 +14,7 @@ import {
     IOldJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration
 } from '../types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import { IJupyterServerUri } from '../../../api';
@@ -66,7 +66,7 @@ suite('Jupyter Connection', async () => {
         when(sessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
     });
     teardown(() => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
     test('Validation will result in fetching kernels and kernelSpecs (Uri info provided)', async () => {
         when(sessionManager.dispose()).thenResolve();

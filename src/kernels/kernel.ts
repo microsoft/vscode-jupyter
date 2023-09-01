@@ -24,7 +24,7 @@ import {
 } from '../platform/common/constants';
 import { IApplicationShell } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
-import { disposeAllDisposables, splitLines } from '../platform/common/helpers';
+import { dispose, splitLines } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { Resource, IDisposable, IDisplayOptions, IExperimentService, Experiments } from '../platform/common/types';
@@ -325,7 +325,7 @@ abstract class BaseKernel implements IBaseKernel {
                 await Promise.all(promises);
             } finally {
                 this.startCancellation.dispose();
-                disposeAllDisposables(this.disposables);
+                dispose(this.disposables);
             }
         };
         this.disposingPromise = disposeImpl();
@@ -535,7 +535,7 @@ abstract class BaseKernel implements IBaseKernel {
                 );
                 throw exc;
             } finally {
-                disposeAllDisposables(disposables);
+                dispose(disposables);
             }
         })();
 
@@ -614,7 +614,7 @@ abstract class BaseKernel implements IBaseKernel {
             );
             throw WrappedError.from(message + ' ' + ('message' in ex ? ex.message : ex.toString()), ex);
         } finally {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
         }
     }
     private uiWasDisabledWhenKernelStartupTelemetryWasLastSent?: boolean;

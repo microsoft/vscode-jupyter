@@ -8,7 +8,7 @@ import { assert, use } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import {
@@ -103,7 +103,7 @@ suite('Live kernel Connection Tracker', async () => {
         );
     });
     teardown(() => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     test('Ensure event handler is added', () => {

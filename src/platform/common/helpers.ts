@@ -57,7 +57,7 @@ export function trimQuotes(value: string): string {
     return value.replace(/(^['"])|(['"]$)/g, '');
 }
 
-export function disposeAllDisposables(disposables: IDisposable[] = []) {
+export function dispose(disposables: IDisposable[] = []) {
     while (disposables.length) {
         const disposable = disposables.shift();
         if (disposable) {

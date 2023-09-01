@@ -36,7 +36,7 @@ import {
     KernelConnectionMetadata,
     KernelOptions
 } from './types';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { noop } from '../test/core';
 import { AsyncDisposableRegistry } from '../platform/common/asyncDisposableRegistry';
 import { JupyterNotebookView } from '../platform/common/constants';
@@ -116,7 +116,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
             }
             teardown(async () => {
                 sinon.restore();
-                disposeAllDisposables(disposables);
+                dispose(disposables);
                 await Promise.all(asyncDisposables.map((item) => item.dispose().catch(noop)));
                 asyncDisposables.length = 0;
             });
@@ -276,7 +276,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
             teardown(async () => {
                 when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
                 CellOutputDisplayIdTracker.dispose();
-                disposeAllDisposables(disposables);
+                dispose(disposables);
                 await asyncDisposables.dispose();
             });
             test('Test creation, getting current instance and triggering of events', async () => {

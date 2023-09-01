@@ -11,7 +11,7 @@ import {
     IJupyterServerUriStorage,
     IJupyterUriProviderRegistration
 } from '../../../kernels/jupyter/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { JupyterServerUriStorage, StorageMRUItem } from './serverUriStorage';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
@@ -76,7 +76,7 @@ suite('Server Uri Storage', async () => {
         onDidAddEvent = createEventHandler(serverUriStorage, 'onDidAdd', disposables);
     });
     teardown(() => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     test('Migrate data from old storage to new & get all', async () => {

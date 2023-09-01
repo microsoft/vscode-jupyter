@@ -14,7 +14,7 @@ import {
     RemoteKernelSpecConnectionMetadata,
     isRemoteConnection
 } from '../../kernels/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { getNotebookMetadata, translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -35,7 +35,7 @@ export class PreferredKernelConnectionService {
     private readonly disposables: IDisposable[] = [];
     constructor(private readonly jupyterConnection: JupyterConnection) {}
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     public async findPreferredRemoteKernelConnection(
         notebook: NotebookDocument,
@@ -210,7 +210,7 @@ export class PreferredKernelConnectionService {
                     this,
                     this.disposables
                 )
-        ).finally(() => disposeAllDisposables(disposables));
+        ).finally(() => dispose(disposables));
     }
     public async findPreferredPythonKernelConnection(
         notebook: NotebookDocument,

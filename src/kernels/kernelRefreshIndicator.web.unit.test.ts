@@ -3,7 +3,7 @@
 
 import { instance, mock, reset, verify, when } from 'ts-mockito';
 import { EventEmitter, NotebookControllerDetectionTask } from 'vscode';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.web';
 import { IKernelFinder } from './types';
@@ -36,7 +36,7 @@ suite('Kernel Refresh Indicator (web)', () => {
     });
     teardown(() => {
         reset(mockedVSCodeNamespaces.notebooks);
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
     test('No Progress when finder is idle', async () => {
         when(kernelFinder.status).thenReturn('idle');

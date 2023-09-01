@@ -25,7 +25,7 @@ import {
     IExtensionContext,
     IWatchableJupyterSettings
 } from '../../platform/common/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
@@ -146,7 +146,7 @@ suite(`Notebook Controller`, function () {
             instance(interpreterService)
         );
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     function createController(viewType: 'jupyter-notebook' | 'interactive') {
         new VSCodeNotebookController(
             instance(kernelConnection),

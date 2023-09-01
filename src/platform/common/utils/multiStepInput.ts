@@ -15,7 +15,7 @@ import {
     QuickPickItemButtonEvent
 } from 'vscode';
 import { IApplicationShell } from '../application/types';
-import { disposeAllDisposables } from '../helpers';
+import { dispose } from '../helpers';
 import { createDeferred } from './async';
 import { noop } from './misc';
 
@@ -255,7 +255,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         }
         this.current = input;
         this.current.show();
-        deferred.promise.finally(() => disposeAllDisposables(disposables)).catch(noop);
+        deferred.promise.finally(() => dispose(disposables)).catch(noop);
         return { quickPick: input, selection: deferred.promise };
     }
 

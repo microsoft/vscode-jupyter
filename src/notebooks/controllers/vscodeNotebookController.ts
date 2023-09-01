@@ -27,7 +27,7 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { Exiting, InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
@@ -295,7 +295,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                         executionCount: info.executionCount
                     })
                     .catch(noop);
-                disposeAllDisposables(localDisposables);
+                dispose(localDisposables);
             }
         };
         // Check if we're still getting messages for the previous execution.
@@ -357,7 +357,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.dispose();
         this._onDidDispose.fire();
         this._onDidDispose.dispose();
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     private updateDisplayData() {
         this.controller.label = this.displayData.label;
@@ -652,13 +652,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.notebookApi.onDidCloseNotebookDocument(
             (e) => {
                 if (e === doc) {
-                    disposeAllDisposables(handlerDisposables);
+                    dispose(handlerDisposables);
                 }
             },
             this,
             handlerDisposables
         );
-        const kernelDisposedDisposable = kernel.onDisposed(() => disposeAllDisposables(handlerDisposables));
+        const kernelDisposedDisposable = kernel.onDisposed(() => dispose(handlerDisposables));
         const statusChangeDisposable = kernel.onStatusChanged(async () => {
             if (kernel.disposed || !kernel.info) {
                 return;
@@ -675,7 +675,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 kernel.info
             );
             if (kernel.info.status === 'ok') {
-                disposeAllDisposables(handlerDisposables);
+                dispose(handlerDisposables);
             }
         });
 

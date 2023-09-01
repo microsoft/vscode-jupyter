@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import { clearPendingChainedUpdatesForTests } from '../kernels/execution/notebookUpdater';
 import { IExtensionApi } from '../standalone/api/api';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { sleep } from '../platform/common/utils/async';
 import { clearPendingTimers, IExtensionTestApi } from './common';
@@ -36,7 +36,7 @@ export async function closeActiveWindows(disposables: IDisposable[] = []): Promi
         clearPendingChainedUpdatesForTests();
     }
     clearPendingTimers();
-    disposeAllDisposables(disposables);
+    dispose(disposables);
     await closeWindowsAndNotebooks();
 }
 async function closeWindowsAndNotebooks(): Promise<void> {

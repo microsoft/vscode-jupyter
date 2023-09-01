@@ -27,7 +27,7 @@ import {
     PYTHON_LANGUAGE,
     Telemetry
 } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisposable, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { getNotebookMetadata, getResourceType, isJupyterNotebook } from '../../../platform/common/utils';
@@ -113,7 +113,7 @@ export class ControllerPreferredService {
         );
     }
     public dispose() {
-        disposeAllDisposables(Array.from(this.disposables));
+        dispose(Array.from(this.disposables));
     }
     @traceDecoratorVerbose('Compute Preferred Controller')
     public async computePreferred(

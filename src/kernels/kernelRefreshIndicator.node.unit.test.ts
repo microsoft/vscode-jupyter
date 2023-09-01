@@ -4,7 +4,7 @@
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, NotebookControllerDetectionTask, NotebookDocument, NotebookEditor } from 'vscode';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { KernelRefreshIndicator } from './kernelRefreshIndicator.node';
 import { IKernelFinder } from './types';
@@ -58,7 +58,7 @@ suite('Kernel Refresh Indicator (node)', () => {
     });
     teardown(() => {
         reset(mockedVSCodeNamespaces.notebooks);
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
     suite('Python extension not installed', () => {
         setup(() => {

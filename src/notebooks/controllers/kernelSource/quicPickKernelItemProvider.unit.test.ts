@@ -9,7 +9,7 @@ import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../
 import { IDisposable } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
@@ -75,7 +75,7 @@ suite('Quick Pick Kernel Item Provider', () => {
                     instance(jupyterConnection)
                 );
             }
-            teardown(() => disposeAllDisposables(disposables));
+            teardown(() => dispose(disposables));
             test('Verify title and status', async () => {
                 createProvider();
 

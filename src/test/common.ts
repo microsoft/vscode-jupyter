@@ -7,7 +7,7 @@ import type { Uri, Event } from 'vscode';
 import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { isPromise } from '../platform/common/utils/async';
 import { computeHash } from '../platform/common/crypto';
 import { AsyncFunc, Func, Suite, Test } from 'mocha';
@@ -56,7 +56,7 @@ export async function waitForCondition<T>(
         let timer: NodeJS.Timer;
         const timerFunc = async () => {
             if (cancelToken?.isCancellationRequested) {
-                disposeAllDisposables(disposables);
+                dispose(disposables);
                 reject(new Error('Cancelled Wait Condition via cancellation token'));
                 return;
             }
@@ -66,7 +66,7 @@ export async function waitForCondition<T>(
                 success = isPromise(promise) ? await promise : promise;
             } catch (exc) {
                 if (throwOnError) {
-                    disposeAllDisposables(disposables);
+                    dispose(disposables);
                     reject(exc);
                 }
             }
@@ -76,7 +76,7 @@ export async function waitForCondition<T>(
                 timer = setTimeout(timerFunc, intervalTimeoutMs);
                 disposables.push({ dispose: () => clearTimeout(timer) });
             } else {
-                disposeAllDisposables(disposables);
+                dispose(disposables);
                 resolve(success as NonNullable<T>);
             }
         };
@@ -85,7 +85,7 @@ export async function waitForCondition<T>(
         if (cancelToken) {
             cancelToken.onCancellationRequested(
                 () => {
-                    disposeAllDisposables(disposables);
+                    dispose(disposables);
                     reject(new Error('Cancelled Wait Condition via cancellation token'));
                     return;
                 },
@@ -94,7 +94,7 @@ export async function waitForCondition<T>(
             );
         }
         const timeout = setTimeout(() => {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
             errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
             if (!cancelToken?.isCancellationRequested) {
                 console.log(`Test failing --- ${errorMessage}`);

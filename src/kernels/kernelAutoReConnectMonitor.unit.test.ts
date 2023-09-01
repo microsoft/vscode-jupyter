@@ -5,7 +5,7 @@
 import * as sinon from 'sinon';
 import * as fakeTimers from '@sinonjs/fake-timers';
 import { IDisposable } from '../platform/common/types';
-import { disposeAllDisposables } from '../platform/common/helpers';
+import { dispose } from '../platform/common/helpers';
 import { IApplicationShell } from '../platform/common/application/types';
 import {
     IKernel,
@@ -75,7 +75,7 @@ suite('Kernel ReConnect Progress Message', () => {
         );
         monitor.activate();
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     function createKernel() {
         const kernel = mock<IKernel>();
         const onRestarted = new EventEmitter<void>();
@@ -194,7 +194,7 @@ suite('Kernel ReConnect Failed Monitor', () => {
         );
         monitor.activate();
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     function createKernel(serverProviderHandle = { handle: '1234', id: '1234', extensionId: '' }) {
         const kernel = mock<IKernel>();
         const onPreExecute = new EventEmitter<NotebookCell>();

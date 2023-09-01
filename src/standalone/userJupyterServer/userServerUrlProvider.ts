@@ -64,7 +64,7 @@ import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfC
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { RemoteKernelSpecCacheFileName } from '../../kernels/jupyter/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { Disposables } from '../../platform/common/utils';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -514,7 +514,7 @@ export class UserJupyterServerUrlProvider
                             new URL(jupyterServerUri.baseUrl).protocol.toLowerCase() === 'http:'
                         ) {
                             isInsecureConnection = true;
-                            disposeAllDisposables(passwordDisposables);
+                            dispose(passwordDisposables);
                             const proceed = await this.secureConnectionValidator.promptToUseInsecureConnections();
                             if (!proceed) {
                                 sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub, 'InsecureHTTP');
@@ -575,7 +575,7 @@ export class UserJupyterServerUrlProvider
                                 continue;
                             }
                         } finally {
-                            disposeAllDisposables(passwordDisposables);
+                            dispose(passwordDisposables);
                         }
                     }
                     if (token.isCancellationRequested) {
@@ -583,7 +583,7 @@ export class UserJupyterServerUrlProvider
                     }
 
                     if (nextStep === 'Get Display Name') {
-                        disposeAllDisposables(passwordDisposables);
+                        dispose(passwordDisposables);
                         previousStep = isInsecureConnection
                             ? 'Check Insecure Connections'
                             : requiresPassword && jupyterServerUri.token.length === 0
@@ -633,7 +633,7 @@ export class UserJupyterServerUrlProvider
             }
             throw ex;
         } finally {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
         }
     }
     private async addNewServer(server: { handle: string; uri: string; serverInfo: IJupyterServerUri }) {
@@ -808,7 +808,7 @@ export class UserJupyterServerDisplayName {
             );
             return await deferred.promise;
         } finally {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
         }
     }
 }
@@ -850,7 +850,7 @@ export class SecureConnectionValidator {
                 disposables
             );
         } finally {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
         }
         return deferred.promise;
     }

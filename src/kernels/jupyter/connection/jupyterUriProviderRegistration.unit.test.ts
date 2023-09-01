@@ -11,7 +11,7 @@ import {
 } from './jupyterUriProviderRegistration';
 import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../types';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { Disposable, EventEmitter, Memento, QuickPickItem } from 'vscode';
@@ -48,7 +48,7 @@ suite('Uri Provider Registration', () => {
         registration.activate();
         await clock.runAllAsync();
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     test('No Providers registered', async () => {
         assert.deepEqual(registration.providers, [], 'Providers should be empty');
 

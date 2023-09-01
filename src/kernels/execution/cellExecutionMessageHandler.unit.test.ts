@@ -13,7 +13,7 @@ import {
 } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import dedent from 'dedent';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { IKernelController } from '../types';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
@@ -91,7 +91,7 @@ suite(`Cell Execution Message Handler`, () => {
         kernel = fakes.connection;
         fakeSocket = fakes.socket;
     });
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
 
     suite('Display Updates', () => {
         const display_id = 'displayIdXYZ';

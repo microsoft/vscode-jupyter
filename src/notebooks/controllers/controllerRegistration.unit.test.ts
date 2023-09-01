@@ -24,7 +24,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../platform/common/application/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IBrowserService, IConfigurationService, IDisposable, IExtensionContext } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
@@ -218,7 +218,7 @@ suite('Controller Registration', () => {
     });
     teardown(() => {
         sinon.restore();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     [true, false].forEach((web) => {

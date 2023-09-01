@@ -7,7 +7,7 @@ import { Disposables } from '../../platform/common/utils';
 import { IKernel, ResumeCellExecutionInformation, isRemoteConnection } from '../types';
 import type { KernelMessage } from '@jupyterlab/services';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { Disposable, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { swallowExceptions } from '../../platform/common/utils/misc';
 import { getParentHeaderMsgId } from './cellExecutionMessageHandler';
@@ -122,7 +122,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
                             info.executionCount = ioPub.content.execution_count;
                             this.executedCells.set(cell, info);
                             this.trackLastExecution(cell, kernel, info);
-                            disposeAllDisposables(disposables);
+                            dispose(disposables);
                         }
                     }
                 }

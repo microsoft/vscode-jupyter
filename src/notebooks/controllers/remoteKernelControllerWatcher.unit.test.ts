@@ -23,7 +23,7 @@ import {
 } from '../../kernels/types';
 import { RemoteKernelControllerWatcher } from './remoteKernelControllerWatcher';
 import { IControllerRegistration, IVSCodeNotebookController } from './types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { waitForCondition } from '../../test/common';
 import { JupyterServerCollection } from '../../api';
@@ -71,7 +71,7 @@ suite('RemoteKernelControllerWatcher', () => {
         disposables.push(new Disposable(() => clock.uninstall()));
     });
     teardown(() => {
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     test('Dispose controllers associated with an old handle', async () => {

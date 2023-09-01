@@ -18,7 +18,7 @@ import { inject, injectable } from 'inversify';
 import { noop } from '../../../platform/common/utils/misc';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
@@ -94,7 +94,7 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
             session.onDidShutdown(() => sessionManager.dispose());
             return session;
         } catch (ex) {
-            disposeAllDisposables(disposablesWhenThereAreFailures);
+            dispose(disposablesWhenThereAreFailures);
 
             if (isRemoteConnection(options.kernelConnection)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, ex);
@@ -123,7 +123,7 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
                 }
             }
         } finally {
-            disposeAllDisposables(disposables);
+            dispose(disposables);
         }
     }
     public async createSession(

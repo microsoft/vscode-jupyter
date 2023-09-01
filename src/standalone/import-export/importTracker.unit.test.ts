@@ -22,7 +22,7 @@ import {
     setTestExecution,
     setUnitTestExecution
 } from '../../platform/common/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
@@ -150,7 +150,7 @@ suite('Import Tracker', async () => {
         Reporter.eventNames = [];
         Reporter.measures = [];
         rewiremock.disable();
-        disposeAllDisposables(disposables);
+        dispose(disposables);
     });
 
     test('Open document', async () => {

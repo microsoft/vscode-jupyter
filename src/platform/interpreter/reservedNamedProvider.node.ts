@@ -7,7 +7,7 @@ import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../.
 import { BuiltInModules } from './constants';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { IReservedPythonNamedProvider } from './types';
 import minimatch from 'minimatch';
 import { IFileSystemNode } from '../common/platform/types.node';
@@ -48,7 +48,7 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
     }
 
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
 
     public async getUriOverridingReservedPythonNames(cwd: Uri): Promise<{ uri: Uri; type: 'file' | '__init__' }[]> {

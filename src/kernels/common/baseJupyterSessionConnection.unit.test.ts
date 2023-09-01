@@ -11,7 +11,7 @@ import { IDisposable } from '../../platform/common/types';
 import { IKernelSocket, INewSessionWithSocket, KernelSocketInformation } from '../types';
 import { noop } from '../../test/core';
 import { BaseJupyterSessionConnection } from './baseJupyterSessionConnection';
-import { disposeAllDisposables } from '../../platform/common/helpers';
+import { dispose } from '../../platform/common/helpers';
 import { createEventHandler } from '../../test/common';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 
@@ -105,7 +105,7 @@ suite('Base Jupyter Session Connection', () => {
         jupyterSession = new DummySessionClass(instance(session));
     });
 
-    teardown(() => disposeAllDisposables(disposables));
+    teardown(() => dispose(disposables));
     test('Events are propagated', () => {
         const eventNames: (keyof typeof jupyterSession)[] = [
             'anyMessage',

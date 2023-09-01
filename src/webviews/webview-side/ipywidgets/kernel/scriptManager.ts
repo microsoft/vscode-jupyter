@@ -12,7 +12,7 @@ import { IJupyterExtraSettings } from '../../../../platform/webviews/types';
 import { isCDNReachable } from './helper';
 import { noop } from '../../../../platform/common/utils/misc';
 import { IDisposable } from '../../../../platform/common/types';
-import { disposeAllDisposables } from '../../../../platform/common/helpers';
+import { dispose } from '../../../../platform/common/helpers';
 import { WidgetScriptSource } from '../../../../notebooks/controllers/ipywidgets/types';
 import { warnAboutWidgetVersionsThatAreNotSupported } from './incompatibleWidgetHandler';
 import { registerScripts, undefineModule } from './requirejsRegistry';
@@ -102,7 +102,7 @@ export class ScriptManager extends EventEmitter {
         });
     }
     public dispose() {
-        disposeAllDisposables(this.disposables);
+        dispose(this.disposables);
     }
     public getScriptLoader(): ScriptLoader {
         return {

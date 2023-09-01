@@ -83,7 +83,7 @@ import {
     PYTHON_LANGUAGE,
     defaultNotebookFormat
 } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { dispose } from '../../../platform/common/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';
@@ -379,7 +379,7 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     await ensureNoActiveDebuggingSession();
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
     await closeNotebooks(disposables);
-    disposeAllDisposables(disposables);
+    dispose(disposables);
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
     await shutdownRemoteKernels(); // Shutdown remote kernels, else the number of live kernels keeps growing.
@@ -406,7 +406,7 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     const notebooks = api.serviceManager.get<IVSCodeNotebook>(IVSCodeNotebook) as VSCodeNotebook;
     await notebooks.closeActiveNotebooks();
     await closeActiveWindows();
-    disposeAllDisposables(disposables);
+    dispose(disposables);
     await shutdownAllNotebooks();
     if (workspace.notebookDocuments.length) {
         traceVerbose(
