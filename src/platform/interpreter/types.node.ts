@@ -4,7 +4,7 @@
 import { Uri } from 'vscode';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types.node';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../api/pythonApiTypes';
 
 export type ExecutionFactoryCreationOptions = {
     resource?: Uri;

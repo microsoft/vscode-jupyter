@@ -4,7 +4,7 @@
 import { CancellationTokenSource, Event, Uri } from 'vscode';
 import { InterpreterUri } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../../api/pythonApiTypes';
 
 export enum InstallerResponse {
     Installed,

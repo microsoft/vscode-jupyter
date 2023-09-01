@@ -4,7 +4,7 @@
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../../api/pythonApiTypes';
 
 /**
  * Returns the workspace folder this interpreter is based in or the root if not a virtual env

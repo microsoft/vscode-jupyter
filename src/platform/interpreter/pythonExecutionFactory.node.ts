@@ -17,7 +17,7 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService
 } from './types.node';
-import { Environment } from '@vscode/python-extension';
+import { Environment } from '../api/pythonApiTypes';
 import { Uri } from 'vscode';
 
 /**
