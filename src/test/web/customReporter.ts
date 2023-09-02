@@ -3,6 +3,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/// <reference path="../../../node_modules/@types/webpack-env/index.d.ts" />
+
 import type * as mochaTypes from 'mocha';
 import { env, extensions, UIKind, Uri } from 'vscode';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../constants';
