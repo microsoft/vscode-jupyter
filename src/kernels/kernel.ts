@@ -14,7 +14,8 @@ import {
     Disposable,
     Uri,
     NotebookDocument,
-    Memento
+    Memento,
+    CancellationError
 } from 'vscode';
 import {
     CodeSnippets,
@@ -441,13 +442,21 @@ abstract class BaseKernel implements IBaseKernel {
                 this.disposables
             );
         }
+        if (this.disposing) {
+            throw new CancellationError();
+        }
+        Cancellation.throwIfCanceled(this.startCancellation.token);
+
         if (!this._jupyterSessionPromise) {
             const stopWatch = new StopWatch();
             await trackKernelResourceInformation(this.resourceUri, {
                 kernelConnection: this.kernelConnectionMetadata,
                 actionSource: this.creator
             });
-
+            if (this.disposing) {
+                throw new CancellationError();
+            }
+            Cancellation.throwIfCanceled(this.startCancellation.token);
             this._jupyterSessionPromise = this.createJupyterSession()
                 .then((session) => {
                     sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, {
@@ -553,6 +562,10 @@ abstract class BaseKernel implements IBaseKernel {
     }
 
     private async createJupyterSession(): Promise<IKernelSession> {
+        if (this.disposing) {
+            throw new CancellationError();
+        }
+        Cancellation.throwIfCanceled(this.startCancellation.token);
         let disposables: Disposable[] = [];
         try {
             // No need to block kernel startup on UI updates.
@@ -583,9 +596,14 @@ abstract class BaseKernel implements IBaseKernel {
                 token: this.startCancellation.token,
                 creator: this.creator
             });
+            if (this.disposing) {
+                throw new CancellationError();
+            }
             Cancellation.throwIfCanceled(this.startCancellation.token);
             await this.initializeAfterStart(session);
-
+            if (this.disposing) {
+                throw new CancellationError();
+            }
             this.sendKernelStartedTelemetry();
             this._session = session;
             this._onStarted.fire();
