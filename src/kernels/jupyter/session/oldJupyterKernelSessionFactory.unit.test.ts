@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import * as sinon from 'sinon';
 import { IDisposable } from '@fluentui/react';
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -16,6 +17,7 @@ import { OldJupyterKernelSessionFactory } from './oldJupyterKernelSessionFactory
 import { IJupyterServerProvider, IJupyterSessionManager, IOldJupyterSessionManagerFactory } from '../types';
 import { IJupyterKernelSession, KernelConnectionMetadata } from '../../types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
+import { JupyterLabHelper } from './jupyterLabHelper';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -62,6 +64,11 @@ suite('NotebookProvider', () => {
         asyncDisposables = new AsyncDisposableRegistry();
         const workspace = mock<IWorkspaceService>();
         when(workspace.computeWorkingDirectory(anything())).thenResolve('');
+        const jupyterLabHelper = mock<JupyterLabHelper>();
+        when(jupyterLabHelper.getKernelSpecs()).thenResolve([]);
+        when(jupyterLabHelper.getRunningKernels()).thenResolve([]);
+        when(jupyterLabHelper.getRunningSessions()).thenResolve([]);
+        sinon.stub(JupyterLabHelper, 'create').callsFake(() => instance(jupyterLabHelper));
         jupyterKernelSessionFactory = new OldJupyterKernelSessionFactory(
             instance(jupyterNotebookProvider),
             instance(sessionManagerFactory),
@@ -71,10 +78,11 @@ suite('NotebookProvider', () => {
         );
     });
     teardown(async () => {
+        sinon.restore();
         dispose(disposables);
         await asyncDisposables.dispose();
     });
-    test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
+    test('Create a new Jupyter Session', async () => {
         when(jupyterNotebookProvider.getOrStartServer(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
@@ -88,7 +96,7 @@ suite('NotebookProvider', () => {
         expect(session).to.not.equal(undefined, 'Provider should return a notebook');
     });
 
-    test('NotebookProvider getOrCreateNotebook second request should return the notebook already cached', async () => {
+    test('Return existing Jupyter Session', async () => {
         when(jupyterNotebookProvider.getOrStartServer(anything())).thenResolve({} as any);
         const doc = mock<vscode.NotebookDocument>();
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
