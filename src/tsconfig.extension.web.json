@@ -10,12 +10,8 @@
         "paths": {
             "*": ["types/*"]
         },
-        "typeRoots": [
-            "./node_modules/@types",
-        ],
-        "types": [
-            "webpack-env"
-        ],
+        "typeRoots": ["./node_modules/@types"],
+        "types": []
     },
     "include": [
         "./**/*",
@@ -24,9 +20,5 @@
         "../types/slickgrid",
         "../vscode.*"
     ],
-    "exclude": [
-        "src/test",
-        "*.node.ts",
-        "**/*.node.ts"
-    ]
+    "exclude": ["src/test", "*.node.ts", "**/*.node.ts"]
 }
