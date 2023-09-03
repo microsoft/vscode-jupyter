@@ -165,6 +165,7 @@ suite('Remote kernel connection handler', async () => {
     function verifyRemoteKernelTrackingUponKernelSelection(connection: KernelConnectionMetadata, selected: boolean) {
         const controller = mock<IVSCodeNotebookController>();
         const notebook = mock<NotebookDocument>();
+        when(notebook.isClosed).thenReturn(false);
         const nbUri = Uri.file('a.ipynb');
         when(notebook.uri).thenReturn(nbUri);
         when(controller.connection).thenReturn(connection);
