@@ -159,7 +159,7 @@ suite('New Jupyter Kernel Session Factory', () => {
             kernelService.ensureKernelIsUsable(anything(), kernelConnectionMetadata, ui, token.token, false)
         ).thenResolve();
         when(jupyterConnection.createConnectionInfo(anything())).thenResolve(resolvableInstance(connection));
-        when(jupyterConnection.getServerConnectSettings(anything())).thenReturn(instance(serverSettings));
+        when(connection.settings).thenReturn(instance(serverSettings));
         when(jupyterNotebookProvider.getOrStartServer(anything())).thenResolve(resolvableInstance(connection));
 
         when(connection.localLaunch).thenReturn(true);
@@ -276,7 +276,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(workspaceService.computeWorkingDirectory(anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).never();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
 
         when(kernel.status).thenReturn('idle');
         assert.strictEqual(wrapperSession.status, 'idle');
@@ -363,7 +362,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(sessionManager.connectTo(anything())).once();
         verify(sessionManager.startNew(anything(), anything())).never();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
         verify(
             backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
         ).never();
@@ -395,7 +393,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(workspaceService.computeWorkingDirectory(anything())).never();
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
         verify(contentsManager.delete(anything())).never();
         verify(
             backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
@@ -443,7 +440,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(workspaceService.computeWorkingDirectory(anything())).never();
         verify(sessionManager.startNew(anything(), anything())).twice();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
         verify(contentsManager.delete(anything())).once();
         verify(backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())).once();
 
@@ -476,7 +472,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(workspaceService.computeWorkingDirectory(anything())).never();
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
         verify(
             backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
         ).never();
@@ -510,7 +505,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(workspaceService.computeWorkingDirectory(anything())).never();
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
         verify(
             backingFileCreator.createBackingFile(anything(), anything(), anything(), anything(), anything())
         ).never();
@@ -545,7 +539,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(workspaceService.computeWorkingDirectory(anything())).never();
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
         assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
 
         when(kernel.status).thenReturn('idle');
@@ -582,7 +575,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(workspaceService.computeWorkingDirectory(anything())).never();
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
         assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'notebook');
 
         when(kernel.status).thenReturn('idle');
@@ -634,7 +626,6 @@ suite('New Jupyter Kernel Session Factory', () => {
         verify(workspaceService.computeWorkingDirectory(anything())).never();
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(jupyterConnection.createConnectionInfo(anything())).once();
-        verify(jupyterConnection.getServerConnectSettings(anything())).once();
         assert.strictEqual(capture(sessionManager.startNew).first()[0].type, 'console');
 
         when(kernel.status).thenReturn('idle');

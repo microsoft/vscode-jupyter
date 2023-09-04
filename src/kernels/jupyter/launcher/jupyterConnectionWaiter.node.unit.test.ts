@@ -7,7 +7,7 @@ import { assert, use } from 'chai';
 
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Uri } from 'vscode';
-import { JupyterServerInfo } from '../types';
+import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerInfo } from '../types';
 import chaiAsPromised from 'chai-as-promised';
 import events from 'events';
 import { Subject } from 'rxjs/Subject';
@@ -37,37 +37,37 @@ suite('Jupyter Connection Waiter', async () => {
     const notebookDir = Uri.file('someDir');
     const dummyServerInfos: JupyterServerInfo[] = [
         {
-            base_url: '1',
-            hostname: '111',
+            base_url: 'http://localhost1:1',
+            hostname: 'localhost1',
             notebook_dir: 'a',
             password: true,
             pid: 1,
             port: 1243,
             secure: false,
             token: 'wow',
-            url: 'url'
+            url: 'http://localhost:1'
         },
         {
-            base_url: '2',
-            hostname: '22',
+            base_url: 'http://localhost2:2',
+            hostname: 'localhost2',
             notebook_dir: notebookDir.fsPath,
             password: false,
             pid: 13,
             port: 4444,
             secure: true,
             token: 'wow2',
-            url: 'url2'
+            url: 'http://localhost2:2'
         },
         {
-            base_url: '22',
-            hostname: '33',
+            base_url: 'http://localhost3:22',
+            hostname: 'localhost3',
             notebook_dir: 'c',
             password: false,
             pid: 15,
             port: 555,
             secure: true,
             token: 'wow3',
-            url: 'url23'
+            url: 'http://localhost22:22'
         }
     ];
     const expectedServerInfo = dummyServerInfos[1];
@@ -89,6 +89,12 @@ suite('Jupyter Connection Waiter', async () => {
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(serviceContainer.get<IFileSystemNode>(IFileSystemNode)).thenReturn(instance(fs));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
+        when(serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator)).thenReturn(
+            instance(mock<IJupyterRequestCreator>())
+        );
+        when(serviceContainer.get<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator)).thenReturn(
+            instance(mock<IJupyterRequestAgentCreator>())
+        );
     });
 
     function createConnectionWaiter() {
@@ -105,7 +111,7 @@ suite('Jupyter Connection Waiter', async () => {
     test('Successfully gets connection info', async () => {
         (<any>dsSettings).jupyterLaunchTimeout = 10_000;
         const waiter = createConnectionWaiter();
-        observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://123.123.123:8888' });
+        observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://localhost2:2' });
 
         const connection = await waiter.ready;
 

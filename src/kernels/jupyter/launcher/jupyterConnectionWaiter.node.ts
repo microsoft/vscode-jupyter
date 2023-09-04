@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Subscription } from 'rxjs/Subscription';
-import { Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { traceError, traceWarning, traceVerbose } from '../../../platform/logging';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
@@ -12,13 +12,14 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { JVSC_EXTENSION_ID, RegExpValues } from '../../../platform/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
-import { JupyterServerInfo } from '../types';
+import { IJupyterRequestAgentCreator, IJupyterRequestCreator, JupyterServerInfo } from '../types';
 import { getJupyterConnectionDisplayName } from '../helpers';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { JupyterNotebookNotInstalled } from '../../../platform/errors/jupyterNotebookNotInstalled';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCannotBeLaunchedWithRootError } from '../../../platform/errors/jupyterCannotBeLaunchedWithRootError';
+import { createJupyterConnectionInfo } from '../jupyterUtils';
 
 const urlMatcher = new RegExp(RegExpValues.UrlPatternRegEx);
 
@@ -37,7 +38,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         private readonly notebookDir: Uri,
         private readonly rootDir: Uri,
         private readonly getServerInfo: () => Promise<JupyterServerInfo[] | undefined>,
-        serviceContainer: IServiceContainer,
+        private readonly serviceContainer: IServiceContainer,
         private readonly interpreter: PythonEnvironment | undefined
     ) {
         // We want to reject our Jupyter connection after a specific timeout
@@ -92,8 +93,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             if (matchInfo) {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
-                const host = matchInfo.hostname;
-                this.resolveStartPromise(url, token, host);
+                this.resolveStartPromise(url, token);
             }
         }
         // At this point we failed to get the server info or a matching server via the python code, so fall back to
@@ -119,34 +119,38 @@ export class JupyterConnectionWaiter implements IDisposable {
                 // For more recent versions of Jupyter the web pages are served from `/tree` and the api is at the root.
                 const pathName = url.pathname.endsWith('/tree') ? url.pathname.replace('/tree', '') : url.pathname;
                 // Here we parsed the URL correctly
-                this.resolveStartPromise(
-                    `${url.protocol}//${url.host}${pathName}`,
-                    `${url.searchParams.get('token')}`,
-                    url.hostname
-                );
+                this.resolveStartPromise(`${url.protocol}//${url.host}${pathName}`, `${url.searchParams.get('token')}`);
             }
         }
     }
 
-    private resolveStartPromise(baseUrl: string, token: string, hostName: string) {
+    private resolveStartPromise(baseUrl: string, token: string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.rejected) {
-            const connection: IJupyterConnection = {
-                localLaunch: true,
-                providerId: '_builtin.jupyterServerLauncher',
-                serverProviderHandle: {
+            const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const requestCreator = this.serviceContainer.get<IJupyterRequestCreator>(IJupyterRequestCreator);
+            const requestAgentCreator = this.serviceContainer.get<IJupyterRequestAgentCreator | undefined>(
+                IJupyterRequestAgentCreator
+            );
+            const connection = createJupyterConnectionInfo(
+                {
                     handle: '',
                     id: '_builtin.jupyterServerLauncher',
                     extensionId: JVSC_EXTENSION_ID
                 },
-                baseUrl,
-                token,
-                hostName,
-                rootDirectory: this.rootDir,
-                displayName: getJupyterConnectionDisplayName(token, baseUrl),
-                dispose: () => this.launchResult.dispose()
-            };
+                {
+                    baseUrl,
+                    token,
+                    displayName: getJupyterConnectionDisplayName(token, baseUrl)
+                },
+                requestCreator,
+                requestAgentCreator,
+                configService,
+                true,
+                this.rootDir,
+                new Disposable(() => this.launchResult.dispose())
+            );
             this.startPromise.resolve(connection);
         }
     }

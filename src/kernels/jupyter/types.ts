@@ -57,7 +57,7 @@ export interface IJupyterServerHelper extends IAsyncDisposable {
 
 export const IOldJupyterSessionManagerFactory = Symbol('IOldJupyterSessionManagerFactory');
 export interface IOldJupyterSessionManagerFactory {
-    create(connInfo: IJupyterConnection): Promise<IJupyterSessionManager>;
+    create(connInfo: IJupyterConnection): IJupyterSessionManager;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {

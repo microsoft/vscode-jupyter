@@ -15,7 +15,7 @@ import {
     IJupyterUriProviderRegistration
 } from '../types';
 import { dispose } from '../../../platform/common/helpers';
-import { IConfigurationService, IDisposable } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import { IJupyterServerUri } from '../../../api';
 import { IApplicationShell } from '../../../platform/common/application/types';
@@ -62,8 +62,9 @@ suite('Jupyter Connection', async () => {
             instance(requestCreator)
         );
 
+        when(configService.getSettings(anything())).thenReturn(instance(mock<IWatchableJupyterSettings>()));
         (instance(sessionManager) as any).then = undefined;
-        when(sessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
+        when(sessionManagerFactory.create(anything())).thenReturn(instance(sessionManager));
     });
     teardown(() => {
         dispose(disposables);

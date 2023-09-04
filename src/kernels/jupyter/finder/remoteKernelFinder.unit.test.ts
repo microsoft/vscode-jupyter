@@ -51,7 +51,8 @@ suite(`Remote Kernel Finder`, () => {
         hostName: 'foobar',
         rootDirectory: Uri.file('.'),
         dispose: noop,
-        serverProviderHandle: { handle: 'handle', id: 'id', extensionId: '' }
+        serverProviderHandle: { handle: 'handle', id: 'id', extensionId: '' },
+        settings: {} as any
     };
     const defaultPython3Name = 'python3';
     const python3spec: IJupyterKernelSpec = {
@@ -126,7 +127,7 @@ suite(`Remote Kernel Finder`, () => {
         jupyterSessionManager = mock(JupyterSessionManager);
         when(jupyterSessionManager.dispose()).thenResolve();
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
-        when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
+        when(jupyterSessionManagerFactory.create(anything())).thenReturn(instance(jupyterSessionManager));
         when(fs.delete(anything())).thenResolve();
         when(fs.createDirectory(uriEquals(globalStorageUri))).thenResolve();
         when(fs.exists(anything())).thenResolve(true);

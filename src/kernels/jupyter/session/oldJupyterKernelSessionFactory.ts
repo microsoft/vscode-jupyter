@@ -83,7 +83,7 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
 
             Cancellation.throwIfCanceled(options.token);
 
-            const sessionManager = await this.sessionManagerFactory.create(connection);
+            const sessionManager = this.sessionManagerFactory.create(connection);
             this.asyncDisposables.push(sessionManager);
             disposablesWhenThereAreFailures.push(new Disposable(() => sessionManager.dispose().catch(noop)));
 

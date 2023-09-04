@@ -325,7 +325,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     public async listKernelsFromConnection(connInfo: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
         const disposables: IAsyncDisposable[] = [];
         try {
-            const sessionManager = await this.jupyterSessionManagerFactory.create(connInfo);
+            const sessionManager = this.jupyterSessionManagerFactory.create(connInfo);
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
