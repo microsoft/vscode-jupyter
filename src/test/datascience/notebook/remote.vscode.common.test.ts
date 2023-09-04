@@ -8,24 +8,29 @@ import {
     NotebookEdit,
     NotebookEditor,
     NotebookRange,
+    Uri,
+    window,
     workspace,
     WorkspaceEdit
 } from 'vscode';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, startJupyterServer, suiteMandatory, testMandatory, waitForCondition } from '../../common';
-import { initialize } from '../../initialize';
+import { closeActiveWindows, initialize } from '../../initialize';
 import {
+    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     defaultNotebookTestTimeout,
     prewarmNotebooks,
     runCell,
+    saveActiveNotebook,
     selectDefaultController,
     waitForExecutionCompletedSuccessfully,
     waitForTextOutput
 } from '../notebook/helper';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { noop } from '../../../platform/common/utils/misc';
 
 suiteMandatory('Remote Tests', function () {
     const disposables: IDisposable[] = [];
@@ -79,5 +84,39 @@ suiteMandatory('Remote Tests', function () {
             waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'Cell output is empty'),
             waitForTextOutput(cell, 'Hello World', 0, false)
         ]);
+    });
+    test.only('Resume Cell Execution', async function () {
+        console.error('Step1');
+        await closeNotebooks([]);
+        console.error('Step2');
+        const nbFile = Uri.joinPath(workspace.workspaceFolders![0].uri, 'notebook', 'resumeExecution.ipynb');
+        let editor = await workspace.openNotebookDocument(nbFile).then((nb) => window.showNotebookDocument(nb));
+        console.error('Step3');
+        const cell = editor.notebook.cellAt(0)!;
+        await selectDefaultController(editor);
+        console.error('Step4');
+        runCell(cell).then(noop, noop);
+        console.error('Step5');
+        await waitForTextOutput(cell, 'Started Execution', 0, false);
+        console.error('Step6');
+        await saveActiveNotebook();
+        console.error('Step7');
+        await closeActiveWindows();
+        console.error('Step8');
+
+        // Open the above notebook and see what the last output is.
+        const buffer = await workspace.fs.readFile(nbFile);
+        console.error('Step9');
+        const contents = JSON.parse(Buffer.from(buffer).toString().trim());
+        const lastCellOutputLines = contents.cells[0].outputs[0].text as string[];
+        const lastNumber = parseInt(lastCellOutputLines[lastCellOutputLines.length - 1].trim(), 10);
+        console.error('Step10');
+        await window.showErrorMessage(`Last Number is ${lastNumber}`).then(noop, noop);
+        console.error('Step11');
+
+        // Ok, now open the same document once again and execution should resume.
+        editor = await workspace.openNotebookDocument(nbFile).then((nb) => window.showNotebookDocument(nb));
+        console.error('Step12');
+        await waitForTextOutput(cell, `${lastNumber + 1}`, 0, false);
     });
 });
