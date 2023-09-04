@@ -11,7 +11,8 @@ import {
     NotebookKernelSourceAction,
     notebooks,
     Uri,
-    window
+    window,
+    extensions
 } from 'vscode';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { isPythonKernelConnection, isUserRegisteredKernelSpecConnection } from '../../../kernels/helpers';
@@ -145,13 +146,15 @@ export class KernelSourceCommandHandler implements IExtensionSyncActivationServi
                     this
                 )
             );
-            this.localDisposables.push(
-                commands.registerCommand(
-                    'jupyter.kernel.selectLocalPythonEnvironment',
-                    this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalPythonEnvironment),
-                    this
-                )
-            );
+            if (extensions.getExtension('ms-python.python')) {
+                this.localDisposables.push(
+                    commands.registerCommand(
+                        'jupyter.kernel.selectLocalPythonEnvironment',
+                        this.onSelectLocalKernel.bind(this, ContributedKernelFinderKind.LocalPythonEnvironment),
+                        this
+                    )
+                );
+            }
         }
         this.localDisposables.push(
             commands.registerCommand('jupyter.kernel.selectJupyterServerKernel', this.onSelectRemoteKernel, this)
