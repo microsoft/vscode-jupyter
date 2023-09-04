@@ -246,6 +246,77 @@ async function downloadZmqBinaries() {
     await downloadZMQ();
 }
 
+function fixUiFabricCompilationIssues() {
+    const filesAndSourceToFix = [
+        {
+            file: 'node_modules/@uifabric/foundation/lib/createComponent.d.ts',
+            lines: [
+                'export declare function createComponent<TComponentProps extends ValidProps, TTokens, TStyleSet extends IStyleSet<TStyleSet>, TViewProps extends TComponentProps = TComponentProps, TStatics = {}>(view: IViewComponent<TViewProps>, options?: IComponentOptions<TComponentProps, TTokens, TStyleSet, TViewProps, TStatics>): React.FunctionComponent<TComponentProps> & TStatics;'
+            ]
+        },
+        {
+            file: 'node_modules/@uifabric/foundation/lib/IComponent.d.ts',
+            lines: [
+                'export declare type IStylesFunction<TViewProps, TTokens, TStyleSet extends IStyleSet<TStyleSet>> = (props: TViewProps, theme: ITheme, tokens: TTokens) => TStyleSet;',
+                'export declare type IStylesFunctionOrObject<TViewProps, TTokens, TStyleSet extends IStyleSet<TStyleSet>> = IStylesFunction<TViewProps, TTokens, TStyleSet> | TStyleSet;',
+                'export interface IStyleableComponentProps<TViewProps, TTokens, TStyleSet extends IStyleSet<TStyleSet>> {',
+                'export interface IComponentOptions<TComponentProps, TTokens, TStyleSet extends IStyleSet<TStyleSet>, TViewProps = TComponentProps, TStatics = {}> {',
+                'export declare type IComponent<TComponentProps, TTokens, TStyleSet extends IStyleSet<TStyleSet>, TViewProps = TComponentProps, TStatics = {}> = Required<IComponentOptions<TComponentProps, TTokens, TStyleSet, TViewProps, TStatics>> & {',
+                `export declare type ICustomizationProps<TViewProps, TTokens, TStyleSet extends IStyleSet<TStyleSet>> = IStyleableComponentProps<TViewProps, TTokens, TStyleSet> & Required<Pick<IStyleableComponentProps<TViewProps, TTokens, TStyleSet>, 'theme'>>;`
+            ]
+        },
+        {
+            file: 'node_modules/@uifabric/merge-styles/lib/concatStyleSetsWithProps.d.ts',
+            lines: [
+                'export declare function concatStyleSetsWithProps<TStyleProps, TStyleSet extends IStyleSet<TStyleSet>>(styleProps: TStyleProps, ...allStyles: (IStyleFunctionOrObject<TStyleProps, TStyleSet> | undefined)[]): DeepPartial<TStyleSet>;'
+            ]
+        },
+        {
+            file: 'node_modules/@uifabric/merge-styles/lib/IStyleFunction.d.ts',
+            lines: [
+                'export declare type IStyleFunction<TStylesProps, TStyleSet extends IStyleSet<TStyleSet>> = (props: TStylesProps) => DeepPartial<TStyleSet>;',
+                'export declare type IStyleFunctionOrObject<TStylesProps, TStyleSet extends IStyleSet<TStyleSet>> = IStyleFunction<TStylesProps, TStyleSet> | DeepPartial<TStyleSet>;'
+            ]
+        },
+        {
+            file: 'node_modules/@uifabric/merge-styles/lib/IStyleSet.d.ts',
+            lines: [
+                'export declare type IStyleSet<TStyleSet extends IStyleSet<TStyleSet> = {',
+                `    [P in keyof Omit<TStyleSet, 'subComponentStyles'>]: IStyle;`,
+                `        [P in keyof TStyleSet['subComponentStyles']]: IStyleFunctionOrObject<any, any>;`,
+                `export declare type IConcatenatedStyleSet<TStyleSet extends IStyleSet<TStyleSet>> = {`,
+                `export declare type IProcessedStyleSet<TStyleSet extends IStyleSet<TStyleSet>> = {`
+            ]
+        },
+        {
+            file: 'node_modules/@uifabric/utilities/lib/classNamesFunction.d.ts',
+            lines: [
+                `export declare function classNamesFunction<TStyleProps extends {}, TStyleSet extends IStyleSet<TStyleSet>>(options?: IClassNamesFunctionOptions): (getStyles: IStyleFunctionOrObject<TStyleProps, TStyleSet> | undefined, styleProps?: TStyleProps) => IProcessedStyleSet<TStyleSet>;`
+            ]
+        },
+        {
+            file: 'node_modules/@uifabric/utilities/lib/styled.d.ts',
+            lines: [
+                `export interface IPropsWithStyles<TStyleProps, TStyleSet extends IStyleSet<TStyleSet>> {`,
+                `export declare function styled<TComponentProps extends IPropsWithStyles<TStyleProps, TStyleSet>, TStyleProps, TStyleSet extends IStyleSet<TStyleSet>>(Component: React.ComponentClass<TComponentProps> | React.FunctionComponent<TComponentProps>, baseStyles: IStyleFunctionOrObject<TStyleProps, TStyleSet>, getProps?: (props: TComponentProps) => Partial<TComponentProps>, customizable?: ICustomizableProps, pure?: boolean): React.FunctionComponent<TComponentProps>;`,
+                `export declare function styled<TComponentProps extends IPropsWithStyles<TStyleProps, TStyleSet> & React.RefAttributes<TRef>, TStyleProps, TStyleSet extends IStyleSet<TStyleSet>, TRef = unknown>(Component: React.ComponentClass<TComponentProps> | React.FunctionComponent<TComponentProps>, baseStyles: IStyleFunctionOrObject<TStyleProps, TStyleSet>, getProps?: (props: TComponentProps) => Partial<TComponentProps>, customizable?: ICustomizableProps, pure?: boolean): React.ForwardRefExoticComponent<React.PropsWithoutRef<TComponentProps> & React.RefAttributes<TRef>>;`
+            ]
+        }
+    ];
+    filesAndSourceToFix.forEach(({ file, lines }) => {
+        const filePath = path.join(__dirname, '..', '..', file);
+        const source = fs.readFileSync(filePath, 'utf8');
+        const newSource = lines.reduce(
+            (source, line) => source.replace(line, `${EOL}// @ts-ignore${EOL}${line}`),
+            source
+        );
+
+        if (newSource !== source && !source.includes('// @ts-ignore')) {
+            fs.writeFileSync(filePath, newSource);
+        }
+    });
+}
+
 fixUIFabricForTS49();
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
@@ -255,6 +326,7 @@ removeUnnecessaryLoggingFromKernelDefault();
 updateJSDomTypeDefinition();
 fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
+fixUiFabricCompilationIssues();
 downloadZmqBinaries()
     .then(() => process.exit(0))
     .catch((ex) => {

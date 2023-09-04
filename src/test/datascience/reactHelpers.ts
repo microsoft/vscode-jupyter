@@ -65,6 +65,9 @@ class MockCanvas implements CanvasRenderingContext2D {
     ): void {
         throw new Error('Method not implemented.');
     }
+    reset() {
+        throw new Error('Method not implemented.');
+    }
     fontKerning: CanvasFontKerning;
     public canvas!: HTMLCanvasElement;
     public getContextAttributes(): CanvasRenderingContext2DSettings {
