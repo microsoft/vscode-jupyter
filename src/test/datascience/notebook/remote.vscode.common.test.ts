@@ -85,6 +85,7 @@ suiteMandatory('Remote Tests', function () {
             waitForTextOutput(cell, 'Hello World', 0, false)
         ]);
     });
+    // eslint-disable-next-line no-only-tests/no-only-tests
     test.only('Resume Cell Execution', async function () {
         console.error('Step1');
         await closeNotebooks([]);
