@@ -9,8 +9,6 @@ import { createJupyterConnectionInfo, handleExpiredCertsError, handleSelfCertsEr
 import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
-    IJupyterSessionManager,
-    IOldJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
     JupyterServerProviderHandle
 } from '../types';
@@ -23,6 +21,7 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { Uri } from 'vscode';
+import { JupyterLabHelper } from '../session/jupyterLabHelper';
 
 /**
  * Creates IJupyterConnection objects for URIs and 3rd party handles/ids.
@@ -32,8 +31,6 @@ export class JupyterConnection {
     constructor(
         @inject(IJupyterUriProviderRegistration)
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        @inject(IOldJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDataScienceErrorHandler)
@@ -63,7 +60,7 @@ export class JupyterConnection {
         serverUri?: IJupyterServerUri,
         doNotDisplayUnActionableMessages?: boolean
     ): Promise<void> {
-        let sessionManager: IJupyterSessionManager | undefined = undefined;
+        let sessionManager: JupyterLabHelper | undefined = undefined;
         serverUri = serverUri || (await this.getJupyterServerUri(provider));
         const connection = createJupyterConnectionInfo(
             provider,
@@ -77,7 +74,7 @@ export class JupyterConnection {
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
-            sessionManager = this.jupyterSessionManagerFactory.create(connection);
+            sessionManager = JupyterLabHelper.create(connection.settings);
             await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
             // We should throw an exception if any of that fails.
         } catch (err) {

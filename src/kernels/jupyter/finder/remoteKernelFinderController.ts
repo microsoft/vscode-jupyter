@@ -5,7 +5,6 @@ import { injectable, inject } from 'inversify';
 import { IKernelFinder, IKernelProvider } from '../../types';
 import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import {
-    IOldJupyterSessionManagerFactory,
     IJupyterServerUriStorage,
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriEntry,
@@ -34,8 +33,6 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
     private serverFinderMapping: Map<string, RemoteKernelFinder> = new Map<string, RemoteKernelFinder>();
 
     constructor(
-        @inject(IOldJupyterSessionManagerFactory)
-        private readonly jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IJupyterRemoteCachedKernelValidator)
@@ -177,7 +174,6 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
             const finder = new RemoteKernelFinder(
                 `${ContributedKernelFinderKind.Remote}-${serverId}`,
                 displayName,
-                this.jupyterSessionManagerFactory,
                 this.env,
                 this.cachedRemoteKernelValidator,
                 this.kernelFinder,

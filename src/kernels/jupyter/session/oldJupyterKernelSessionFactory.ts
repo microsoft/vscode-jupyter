@@ -28,6 +28,7 @@ import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { JupyterLabHelper } from './jupyterLabHelper';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -86,11 +87,12 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
             const sessionManager = this.sessionManagerFactory.create(connection);
             this.asyncDisposables.push(sessionManager);
             disposablesWhenThereAreFailures.push(new Disposable(() => sessionManager.dispose().catch(noop)));
-
+            const jupyterLabHelper = JupyterLabHelper.create(connection.settings);
+            disposables.push(new Disposable(() => jupyterLabHelper.dispose()));
             Cancellation.throwIfCanceled(options.token);
             // Disposing session manager will dispose all sessions that were started by that session manager.
             // Hence Session managers should be disposed only if the corresponding session is shutdown.
-            const session = await this.createSession(options, sessionManager);
+            const session = await this.createSession(options, jupyterLabHelper, sessionManager);
             session.onDidShutdown(() => sessionManager.dispose());
             return session;
         } catch (ex) {
@@ -128,6 +130,7 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
     }
     public async createSession(
         options: KernelSessionCreationOptions,
+        jupyterLabHelper: JupyterLabHelper,
         sessionManager: IJupyterSessionManager
     ): Promise<IJupyterKernelSession> {
         if (sessionManager.isDisposed) {
@@ -135,7 +138,7 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
         }
         if (isRemoteConnection(options.kernelConnection)) {
             try {
-                await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
+                await Promise.all([jupyterLabHelper.getRunningKernels(), jupyterLabHelper.getKernelSpecs()]);
             } catch (ex) {
                 traceError(
                     'Failed to fetch running kernels from remote server, connection may be outdated or remote server may be unreachable',

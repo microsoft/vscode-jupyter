@@ -4,28 +4,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { assert, use } from 'chai';
-
+import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { JupyterConnection } from './jupyterConnection';
-import {
-    IJupyterRequestAgentCreator,
-    IJupyterRequestCreator,
-    IJupyterSessionManager,
-    IOldJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration
-} from '../types';
 import { dispose } from '../../../platform/common/helpers';
+import { IJupyterRequestAgentCreator, IJupyterRequestCreator, IJupyterUriProviderRegistration } from '../types';
 import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
 import { IJupyterServerUri } from '../../../api';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IDataScienceErrorHandler } from '../../errors/types';
+import { JupyterLabHelper } from '../session/jupyterLabHelper';
+import { resolvableInstance } from '../../../test/datascience/helpers';
 use(chaiAsPromised);
 suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
     let registrationPicker: IJupyterUriProviderRegistration;
-    let sessionManagerFactory: IOldJupyterSessionManagerFactory;
-    let sessionManager: IJupyterSessionManager;
+    let sessionManager: JupyterLabHelper;
     let appShell: IApplicationShell;
     let configService: IConfigurationService;
     let errorHandler: IDataScienceErrorHandler;
@@ -45,8 +40,7 @@ suite('Jupyter Connection', async () => {
     };
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
-        sessionManagerFactory = mock<IOldJupyterSessionManagerFactory>();
-        sessionManager = mock<IJupyterSessionManager>();
+        sessionManager = mock<JupyterLabHelper>();
         appShell = mock<IApplicationShell>();
         configService = mock<IConfigurationService>();
         errorHandler = mock<IDataScienceErrorHandler>();
@@ -54,7 +48,6 @@ suite('Jupyter Connection', async () => {
         requestCreator = mock<IJupyterRequestCreator>();
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
-            instance(sessionManagerFactory),
             instance(appShell),
             instance(configService),
             instance(errorHandler),
@@ -63,10 +56,10 @@ suite('Jupyter Connection', async () => {
         );
 
         when(configService.getSettings(anything())).thenReturn(instance(mock<IWatchableJupyterSettings>()));
-        (instance(sessionManager) as any).then = undefined;
-        when(sessionManagerFactory.create(anything())).thenReturn(instance(sessionManager));
+        sinon.stub(JupyterLabHelper, 'create').callsFake(() => resolvableInstance(sessionManager));
     });
     teardown(() => {
+        sinon.restore();
         dispose(disposables);
     });
     test('Validation will result in fetching kernels and kernelSpecs (Uri info provided)', async () => {

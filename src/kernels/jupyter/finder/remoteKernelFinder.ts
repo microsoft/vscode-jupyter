@@ -14,12 +14,7 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../types';
 import { IAsyncDisposable, IDisposable, IExtensionContext } from '../../../platform/common/types';
-import {
-    IOldJupyterSessionManagerFactory,
-    IJupyterRemoteCachedKernelValidator,
-    IRemoteKernelFinder,
-    JupyterServerProviderHandle
-} from '../types';
+import { IJupyterRemoteCachedKernelValidator, IRemoteKernelFinder, JupyterServerProviderHandle } from '../types';
 import { sendKernelSpecTelemetry } from '../../raw/finder/helper';
 import { traceError, traceWarning, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import { raceCancellation } from '../../../platform/common/cancellation';
@@ -37,6 +32,7 @@ import { isUnitTestExecution } from '../../../platform/common/constants';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { computeServerId, generateIdFromRemoteProvider } from '../jupyterUtils';
 import { RemoteKernelSpecCacheFileName } from '../constants';
+import { JupyterLabHelper } from '../session/jupyterLabHelper';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -106,7 +102,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     constructor(
         readonly id: string,
         readonly displayName: string,
-        private jupyterSessionManagerFactory: IOldJupyterSessionManagerFactory,
         private readonly env: IApplicationEnvironment,
         private readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
         kernelFinder: KernelFinder,
@@ -325,7 +320,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder, IDisposable {
     public async listKernelsFromConnection(connInfo: IJupyterConnection): Promise<RemoteKernelConnectionMetadata[]> {
         const disposables: IAsyncDisposable[] = [];
         try {
-            const sessionManager = this.jupyterSessionManagerFactory.create(connInfo);
+            const sessionManager = JupyterLabHelper.create(connInfo.settings);
             disposables.push(sessionManager);
 
             // Get running and specs at the same time
