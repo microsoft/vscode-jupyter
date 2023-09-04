@@ -3,6 +3,8 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import {
+    CancellationError,
+    CancellationTokenSource,
     Disposable,
     EventEmitter,
     ExtensionMode,
@@ -16,6 +18,7 @@ import {
     NotebookEditor,
     NotebookRendererScript,
     Uri,
+    workspace,
     WorkspaceEdit
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../platform/api/types';
@@ -83,6 +86,7 @@ import { RemoteKernelReconnectBusyIndicator } from './remoteKernelReconnectBusyI
 import { LastCellExecutionTracker } from '../../kernels/execution/lastCellExecutionTracker';
 import { IAnyMessageArgs } from '@jupyterlab/services/lib/kernel/kernel';
 import { getParentHeaderMsgId } from '../../kernels/execution/cellExecutionMessageHandler';
+import { DisposableStore } from '../../platform/common/utils/lifecycle';
 
 /**
  * Our implementation of the VSCode Notebook Controller. Called by VS code to execute cells in a notebook. Also displayed
@@ -559,6 +563,10 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
 
     public async executeCell(doc: NotebookDocument, cell: NotebookCell, codeOverride?: string) {
+        const disposables = new DisposableStore();
+        const token = disposables.add(new CancellationTokenSource());
+
+        disposables.add(workspace.onDidCloseNotebookDocument((e) => (e === doc ? token.cancel() : undefined)));
         // Start execution now (from the user's point of view)
         let exec = this.createCellExecutionIfNecessary(cell, new KernelController(this.controller));
 
@@ -571,6 +579,9 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
+            if (kernel.disposing) {
+                throw new CancellationError();
+            }
             kernelStarted = true;
             // If the controller changed, then ensure to create a new cell execution object.
             if (kernel && kernel.controller.id !== controller.id) {

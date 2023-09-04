@@ -13,7 +13,7 @@ import {
     IThirdPartyKernelProvider,
     IKernelController
 } from '../../kernels/types';
-import { Memento, NotebookDocument, Uri } from 'vscode';
+import { CancellationError, Memento, NotebookDocument, Uri } from 'vscode';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
 import { traceVerbose, traceWarning } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
@@ -376,7 +376,7 @@ export class KernelConnector {
         }
     }
 
-    private static async canStartKernel(metadata: KernelConnectionMetadata, serviceContainer: IServiceContainer) {
+    private static verifyWeCanStartKernel(metadata: KernelConnectionMetadata, serviceContainer: IServiceContainer) {
         if (!isLocalConnection(metadata) || !metadata.kernelSpec.specFile) {
             return;
         }
@@ -405,9 +405,12 @@ export class KernelConnector {
         let currentContext = initialContext;
         let controller = 'controller' in notebookResource ? notebookResource.controller : undefined;
         if (initialContext === 'start') {
-            await KernelConnector.canStartKernel(metadata, serviceContainer);
+            KernelConnector.verifyWeCanStartKernel(metadata, serviceContainer);
         }
         while (kernel === undefined) {
+            if ('notebook' in notebookResource && notebookResource.notebook.isClosed) {
+                throw new CancellationError();
+            }
             // Try to create the kernel (possibly again)
             kernel =
                 'notebook' in notebookResource
@@ -435,6 +438,10 @@ export class KernelConnector {
                     onAction(currentContext, kernel);
                     await currentMethod(kernel);
 
+                    if ('notebook' in notebookResource && notebookResource.notebook.isClosed) {
+                        throw new CancellationError();
+                    }
+
                     // If the kernel is dead, ask the user if they want to restart
                     if (isKernelDead(kernel) && !options.disableUI) {
                         await KernelConnector.notifyAndRestartDeadKernel(kernel, serviceContainer);
@@ -450,6 +457,10 @@ export class KernelConnector {
                 if (options.disableUI) {
                     throw error;
                 }
+                if ('notebook' in notebookResource && notebookResource.notebook.isClosed) {
+                    throw new CancellationError();
+                }
+
                 const result = await KernelConnector.handleKernelError(
                     serviceContainer,
                     error,
