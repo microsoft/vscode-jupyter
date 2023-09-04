@@ -2,33 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    CancellationError,
-    CancellationToken,
-    CancellationTokenSource,
-    EventEmitter,
-    NotebookDocument,
-    QuickPickItem,
-    Uri
-} from 'vscode';
+import { CancellationError, CancellationTokenSource, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder, KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../../kernels/types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
-import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
-import {
-    IMultiStepInput,
-    IMultiStepInputFactory,
-    InputFlowAction
-} from '../../../platform/common/utils/multiStepInput';
 import { PythonEnvironmentFilter } from '../../../platform/interpreter/filter/filterService';
-import { ILocalPythonNotebookKernelSourceSelector } from '../types';
-import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
-import { ConnectionQuickPickItem } from './types';
-import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
-import { LocalKernelSelector } from './localKernelSelector.node';
-import { CreateAndSelectItemFromQuickPick } from './baseKernelSelector';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PromiseMonitor } from '../../../platform/common/utils/promises';
 import { Disposables } from '../../../platform/common/utils';
@@ -39,8 +18,10 @@ import { createInterpreterKernelSpec, getKernelId } from '../../../kernels/helpe
 import { Environment } from '@vscode/python-extension';
 import { noop } from '../../../platform/common/utils/misc';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { KernelFinder } from '../../../kernels/kernelFinder';
+import { LocalPythonKernelSelector } from './localPythonKernelSelector.node';
+import { InputFlowAction } from '../../../platform/common/utils/multiStepInput';
+import { ILocalPythonNotebookKernelSourceSelector } from '../types';
 
 export type MultiStepResult<T extends KernelConnectionMetadata = KernelConnectionMetadata> = {
     notebook: NotebookDocument;
@@ -57,8 +38,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
         IContributedKernelFinder<PythonKernelConnectionMetadata>,
         IExtensionSyncActivationService
 {
-    private localDisposables: IDisposable[] = [];
-    private cancellationTokenSource: CancellationTokenSource | undefined;
     kind = ContributedKernelFinderKind.LocalPythonEnvironment;
     id: string = ContributedKernelFinderKind.LocalPythonEnvironment;
     displayName: string = DataScience.localPythonEnvironments;
@@ -85,17 +64,10 @@ export class LocalPythonEnvNotebookKernelSourceSelector
     private previousCancellationTokens: CancellationTokenSource[] = [];
     private tempDirForKernelSpecs?: Promise<Uri>;
     constructor(
-        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(PythonEnvironmentFilter)
-        private readonly pythonEnvFilter: PythonEnvironmentFilter,
-
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(PythonEnvironmentFilter) private readonly filter: PythonEnvironmentFilter,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private readonly checker: IPythonExtensionChecker,
         @inject(IKernelFinder) kernelFinder: KernelFinder
     ) {
@@ -127,6 +99,37 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             );
         }
     }
+    public async selectLocalKernel(notebook: NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined> {
+        const cancellationTokenSource = new CancellationTokenSource();
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            const selector = new LocalPythonKernelSelector(notebook, cancellationTokenSource.token);
+            const kernel = await selector.selectKernel();
+            if (kernel instanceof Error) {
+                if (kernel instanceof InputFlowAction && kernel === InputFlowAction.back) {
+                    return;
+                }
+                throw new CancellationError();
+            }
+            // Ensure this is added to the list of kernels.
+            this.addUpdateKernel(kernel);
+            return kernel;
+        } finally {
+            cancellationTokenSource.dispose();
+        }
+    }
+    private addUpdateKernel(kernel: PythonKernelConnectionMetadata) {
+        const existing = this._kernels.get(kernel.id);
+        if (existing) {
+            existing.updateInterpreter(kernel.interpreter);
+            this._kernels.set(kernel.id, Object.assign(existing, kernel));
+            this._onDidChangeKernels.fire({});
+        } else {
+            this._kernels.set(kernel.id, kernel);
+            this._onDidChangeKernels.fire({});
+        }
+    }
+
     public async refresh() {
         this.previousCancellationTokens.forEach((t) => t.cancel());
         dispose(this.previousCancellationTokens);
@@ -142,55 +145,6 @@ export class LocalPythonEnvNotebookKernelSourceSelector
                 api.environments.known.forEach((e) => this.buildDummyEnvironment(e).catch(noop));
             })
             .catch(noop);
-    }
-    public async selectLocalKernel(notebook: NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined> {
-        // Reject if it's not our type
-        if (notebook.notebookType !== JupyterNotebookView && notebook.notebookType !== InteractiveWindowView) {
-            return;
-        }
-        this.pythonApi
-            .getNewApi()
-            .then((api) => {
-                if (!api) {
-                    return;
-                }
-                this.promiseMonitor.push(api.environments.refreshEnvironments().catch(noop));
-            })
-            .catch(noop);
-        this.localDisposables.forEach((d) => d.dispose());
-        this.localDisposables = [];
-        this.cancellationTokenSource?.cancel();
-        this.cancellationTokenSource?.dispose();
-
-        this.cancellationTokenSource = new CancellationTokenSource();
-        const multiStep = this.multiStepFactory.create<MultiStepResult>();
-        const state: MultiStepResult = { disposables: [], notebook };
-        try {
-            const result = await multiStep.run(
-                this.selectKernelFromKernelFinder.bind(
-                    this,
-                    this,
-                    this.cancellationTokenSource.token,
-                    multiStep,
-                    state
-                ),
-                state
-            );
-            if (result === InputFlowAction.cancel || state.selection?.type === 'userPerformedSomeOtherAction') {
-                throw new CancellationError();
-            }
-            if (this.cancellationTokenSource.token.isCancellationRequested) {
-                dispose(state.disposables);
-                return;
-            }
-
-            // If we got both parts of the equation, then perform the kernel source and kernel switch
-            if (state.selection?.type === 'connection') {
-                return state.selection.connection as PythonKernelConnectionMetadata;
-            }
-        } finally {
-            dispose(state.disposables);
-        }
     }
     private getKernelSpecsDir() {
         return this.tempDirForKernelSpecs || this.jupyterPaths.getKernelSpecTempRegistrationFolder();
@@ -239,65 +193,12 @@ export class LocalPythonEnvNotebookKernelSourceSelector
 
         const existingInterpreterInfo = this._kernels.get(e.id);
         if (existingInterpreterInfo) {
+            existingInterpreterInfo.updateInterpreter(result.interpreter);
             this._kernels.set(e.id, Object.assign(existingInterpreterInfo, result));
             this._onDidChangeKernels.fire({});
         } else {
             this._kernels.set(e.id, result);
             this._onDidChangeKernels.fire({});
-        }
-    }
-
-    private async selectKernelFromKernelFinder(
-        source: IContributedKernelFinder<KernelConnectionMetadata>,
-        token: CancellationToken,
-        multiStep: IMultiStepInput<MultiStepResult>,
-        state: MultiStepResult
-    ) {
-        if (token.isCancellationRequested) {
-            return;
-        }
-        const provider = new QuickPickKernelItemProvider(
-            state.notebook,
-            source.kind,
-            source,
-            this.pythonEnvFilter,
-            this.jupyterConnection
-        );
-        state.disposables.push(provider);
-        const selector = new LocalKernelSelector(this.workspace, state.notebook, provider, token);
-        state.disposables.push(selector);
-        const quickPickFactory: CreateAndSelectItemFromQuickPick = (options) => {
-            const { quickPick, selection } = multiStep.showLazyLoadQuickPick({
-                ...options,
-                placeholder: '',
-                matchOnDescription: true,
-                matchOnDetail: true,
-                supportBackInFirstStep: true,
-                activeItem: undefined,
-                ignoreFocusOut: false
-            });
-            return { quickPick, selection: selection as Promise<ConnectionQuickPickItem | QuickPickItem> };
-        };
-        const result = await selector.selectKernel(quickPickFactory);
-        if (result?.selection === 'controller') {
-            // Resolve the Python environment.
-            const interpreterUri = result.connection?.interpreter?.uri;
-            if (!interpreterUri) {
-                return;
-            }
-            const interpreter = await this.interpreterService.getInterpreterDetails(interpreterUri);
-            if (!interpreter || this.filter.isPythonEnvironmentExcluded(interpreter)) {
-                return;
-            }
-            const spec = await createInterpreterKernelSpec(interpreter, await this.getKernelSpecsDir());
-            const connection = PythonKernelConnectionMetadata.create({
-                kernelSpec: spec,
-                interpreter: interpreter,
-                id: getKernelId(spec, interpreter)
-            });
-            state.selection = { type: 'connection', connection };
-        } else if (result?.selection === 'userPerformedSomeOtherAction') {
-            state.selection = { type: 'userPerformedSomeOtherAction' };
         }
     }
 }
