@@ -10,7 +10,6 @@ import {
     QuickPickItemKind,
     ThemeIcon
 } from 'vscode';
-import { ContributedKernelFinderKind } from '../../../kernels/internalTypes';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { IDisposable } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
@@ -21,7 +20,6 @@ import {
     CommandQuickPickItem,
     ConnectionQuickPickItem,
     KernelListErrorQuickPickItem,
-    ConnectionSeparatorQuickPickItem,
     IQuickPickKernelItemProvider
 } from './types';
 import { IConnectionDisplayData, IConnectionDisplayDataProvider } from '../types';
@@ -30,7 +28,6 @@ export type CompoundQuickPickItem =
     | CommandQuickPickItem
     | ConnectionQuickPickItem
     | KernelListErrorQuickPickItem
-    | ConnectionSeparatorQuickPickItem
     | QuickPickItem;
 export function isKernelPickItem(item: CompoundQuickPickItem): item is ConnectionQuickPickItem {
     return 'connection' in item;
@@ -78,10 +75,10 @@ export type CreateAndSelectItemFromQuickPick = (options: {
  */
 class SomeOtherActionError extends Error {}
 
-export abstract class BaseKernelSelector extends Disposables implements IDisposable {
+export class BaseKernelSelector extends Disposables implements IDisposable {
     protected readonly displayDataProvider: IConnectionDisplayDataProvider;
     protected readonly recommendedItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
-    protected readonly categories = new Map<QuickPickItem, Set<ConnectionQuickPickItem>>();
+    protected existingItems = new Set<ConnectionQuickPickItem>();
     protected quickPickItems: (QuickPickItem | ConnectionQuickPickItem)[] = [];
     constructor(
         protected readonly provider: IQuickPickKernelItemProvider,
@@ -112,65 +109,16 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         if (this.token.isCancellationRequested) {
             return;
         }
-        const setData = (
-            info: ConnectionQuickPickItem,
-            e: IConnectionDisplayData,
-            connection: KernelConnectionMetadata
-        ) => {
-            info.label = e.label;
-            info.detail = e.detail;
-            info.description = e.description;
-
-            this.quickPickItems.forEach((q) => {
-                if ('connection' in q && q.connection.id === connection.id) {
-                    q.label = e.label;
-                    q.detail = e.detail;
-                    q.description = e.description;
-                }
-            });
-        };
-
-        const connectionToQuickPick = (connection: KernelConnectionMetadata): ConnectionQuickPickItem => {
-            const displayData = this.displayDataProvider.getDisplayData(connection);
-            const info: ConnectionQuickPickItem = {
-                label: '',
-                detail: '',
-                description: '',
-                connection: connection
-            };
-            setData(info, displayData, connection);
-            displayData.onDidChange((e) => setData(info, e, connection), this, this.disposables);
-            return info;
-        };
-
-        const connectionToCategory = (connection: KernelConnectionMetadata): QuickPickItem => {
-            const kind = this.displayDataProvider.getDisplayData(connection).category || 'Other';
-            return {
-                kind: QuickPickItemKind.Separator,
-                label: kind
-            };
-        };
-
-        const connectionPickItems = this.provider.kernels.map((connection) => connectionToQuickPick(connection));
-
-        // Insert separators into the right spots in the list
-        groupBy(connectionPickItems, (a, b) =>
-            compareIgnoreCase(
-                getCategoryForSorting(a.connection, this.displayDataProvider),
-                getCategoryForSorting(b.connection, this.displayDataProvider)
-            )
-        ).forEach((items) => {
-            const item = connectionToCategory(items[0].connection);
-            this.quickPickItems.push(item);
-            items.sort((a, b) => a.label.localeCompare(b.label));
-            this.quickPickItems.push(...items);
-            this.categories.set(item, new Set(items));
+        const items = this.provider.kernels.map((connection) => this.connectionToQuickPick(connection));
+        this.quickPickItems.push({
+            kind: QuickPickItemKind.Separator,
+            label: DataScience.kernelCategoryForJupyterKernel
         });
+        items.sort((a, b) => a.label.localeCompare(b.label));
+        this.quickPickItems.push(...items);
+        this.existingItems = new Set(items);
 
         return this.selectKernelImplInternal(quickPickFactory, quickPickToBeUpdated);
-    }
-    protected getAdditionalQuickPickItems(): CompoundQuickPickItem[] {
-        return [];
     }
     private async selectKernelImplInternal(
         quickPickFactory: CreateAndSelectItemFromQuickPick,
@@ -187,7 +135,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         };
         const { quickPick, selection } = quickPickFactory({
             title: this.provider.title,
-            items: this.getAdditionalQuickPickItems().concat(this.quickPickItems),
+            items: this.quickPickItems,
             buttons: [refreshButton],
             onDidTriggerButton: async (e) => {
                 if (e === refreshButton) {
@@ -223,11 +171,6 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         this.updateRecommended(quickPick);
         this.updateQuickPickItems(quickPick);
         this.provider.onDidChangeRecommended(() => this.updateRecommended(quickPick), this, this.disposables);
-        this.provider.onDidFailToListKernels(
-            (error) => this.rebuildQuickPickItems(quickPick, error),
-            this,
-            this.disposables
-        );
         this.provider.onDidChange(() => this.updateQuickPickItems(quickPick), this, this.disposables);
 
         const result = await selection;
@@ -262,7 +205,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
                 .map((item) => item as ConnectionQuickPickItem)
                 .map((item) => item.connection.id)
         );
-        const newQuickPickItems = this.provider.kernels
+        const items = this.provider.kernels
             .filter((kernel) => !currentConnections.has(kernel.id))
             .map((item) => this.connectionToQuickPick(item));
 
@@ -270,84 +213,27 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         this.removeMissingKernels(quickPick);
         this.updateRecommended(quickPick);
 
-        groupBy(newQuickPickItems, (a, b) =>
-            compareIgnoreCase(
-                getCategoryForSorting(a.connection, this.displayDataProvider),
-                getCategoryForSorting(b.connection, this.displayDataProvider)
-            )
-        ).forEach((items) => {
-            items.sort((a, b) => a.label.localeCompare(b.label));
-            const newCategory = this.connectionToCategory(items[0].connection);
-            // Check if we already have a item for this category in the quick pick.
-            const existingCategory = this.quickPickItems.find(
-                (item) =>
-                    item.kind === QuickPickItemKind.Separator &&
-                    item.label === newCategory.label &&
-                    (newCategory.isEmptyCondaEnvironment
-                        ? 'isEmptyCondaEnvironment' in item && item.isEmptyCondaEnvironment
-                        : true)
-            );
-            if (existingCategory) {
-                const indexOfExistingCategory = this.quickPickItems.indexOf(existingCategory);
-                const currentItemsInCategory = this.categories.get(existingCategory)!;
-                const currentItemIdsInCategory = new Map(
-                    Array.from(currentItemsInCategory).map((item) => [item.connection.id, item])
-                );
-                const oldItemCount = currentItemsInCategory.size;
-                items.forEach((item) => {
-                    const existingItem = currentItemIdsInCategory.get(item.connection.id);
-                    if (existingItem) {
-                        currentItemsInCategory.delete(existingItem);
-                    }
-                    currentItemsInCategory.add(item);
-                });
-                const newItems = Array.from(currentItemsInCategory);
-                newItems.sort((a, b) => a.label.localeCompare(b.label));
-                this.quickPickItems.splice(indexOfExistingCategory + 1, oldItemCount, ...newItems);
-            } else {
-                // Since we sort items by Env type, ensure this new item is inserted in the right place.
-                const currentCategories = this.quickPickItems
-                    .map((item, index) => [item, index])
-                    .filter(([item, _]) => (item as QuickPickItem).kind === QuickPickItemKind.Separator)
-                    .map(([item, index]) => [(item as QuickPickItem).label, index]);
-
-                currentCategories.push([newCategory.label, -1]);
-                if (!newCategory.isEmptyCondaEnvironment) {
-                    currentCategories.sort((a, b) => a[0].toString().localeCompare(b[0].toString()));
-                }
-
-                // Find where we need to insert this new category.
-                const indexOfNewCategoryInList = currentCategories.findIndex((item) => item[1] === -1);
-                let newIndex = 0;
-                if (indexOfNewCategoryInList > 0) {
-                    newIndex =
-                        currentCategories.length === indexOfNewCategoryInList + 1
-                            ? this.quickPickItems.length
-                            : (currentCategories[indexOfNewCategoryInList + 1][1] as number);
-                }
-
-                items.sort((a, b) => a.label.localeCompare(b.label));
-                this.quickPickItems.splice(newIndex, 0, newCategory, ...items);
-                this.categories.set(newCategory, new Set(items));
+        items.sort((a, b) => a.label.localeCompare(b.label));
+        const indexOfExistingCategory = 0;
+        const currentItemsInCategory = this.existingItems;
+        const currentItemIdsInCategory = new Map(
+            Array.from(currentItemsInCategory).map((item) => [item.connection.id, item])
+        );
+        const oldItemCount = currentItemsInCategory.size;
+        items.forEach((item) => {
+            const existingItem = currentItemIdsInCategory.get(item.connection.id);
+            if (existingItem) {
+                currentItemsInCategory.delete(existingItem);
             }
+            currentItemsInCategory.add(item);
         });
+        const newItems = Array.from(currentItemsInCategory);
+        newItems.sort((a, b) => a.label.localeCompare(b.label));
+        this.quickPickItems.splice(indexOfExistingCategory + 1, oldItemCount, ...newItems);
+
         this.rebuildQuickPickItems(quickPick);
     }
-    private buildErrorQuickPickItem(error?: Error): KernelListErrorQuickPickItem[] {
-        if (this.provider.kind === ContributedKernelFinderKind.Remote && error) {
-            return [
-                {
-                    error,
-                    label: DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPickLabel,
-                    detail: DataScience.failedToFetchKernelSpecsRemoteErrorMessageForQuickPickDetail
-                }
-            ];
-        }
-        // This is an unlikely scenario, and we don't want to display an messages here.
-        // The only other providers are local kernels pecs and local python environments.
-        return [];
-    }
-    private rebuildQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>, error?: Error) {
+    private rebuildQuickPickItems(quickPick: QuickPick<CompoundQuickPickItem>) {
         let recommendedItem = this.recommendedItems.find((item) => isKernelPickItem(item));
         const recommendedConnections = new Set(
             this.recommendedItems.filter(isKernelPickItem).map((item) => item.connection.id)
@@ -356,7 +242,6 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         const connections = this.quickPickItems.filter(
             (item) => !isKernelPickItem(item) || !recommendedConnections.has(item.connection.id)
         );
-        const errorItems = this.buildErrorQuickPickItem(error);
         const currentActiveItem = quickPick.activeItems.length ? quickPick.activeItems[0] : undefined;
         if (recommendedItem && isKernelPickItem(recommendedItem) && currentActiveItem) {
             if (!isKernelPickItem(currentActiveItem)) {
@@ -370,11 +255,7 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
             }
         }
 
-        updateKernelQuickPickWithNewItems(
-            quickPick,
-            this.getAdditionalQuickPickItems().concat(this.recommendedItems).concat(connections).concat(errorItems),
-            recommendedItem
-        );
+        updateKernelQuickPickWithNewItems(quickPick, this.recommendedItems.concat(connections), recommendedItem);
     }
     private removeMissingKernels(quickPick: QuickPick<CompoundQuickPickItem>) {
         const currentConnections = quickPick.items
@@ -387,16 +268,10 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         const removedIds = currentConnections.filter((id) => !kernels.has(id));
         if (removedIds.length) {
             const itemsRemoved: CompoundQuickPickItem[] = [];
-            this.categories.forEach((items, category) => {
-                items.forEach((item) => {
-                    if (removedIds.includes(item.connection.id)) {
-                        items.delete(item);
-                        itemsRemoved.push(item);
-                    }
-                });
-                if (!items.size) {
-                    itemsRemoved.push(category);
-                    this.categories.delete(category);
+            this.existingItems.forEach((item) => {
+                if (removedIds.includes(item.connection.id)) {
+                    this.existingItems.delete(item);
+                    itemsRemoved.push(item);
                 }
             });
             this.quickPickItems = this.quickPickItems.filter((item) => !itemsRemoved.includes(item));
@@ -455,61 +330,36 @@ export abstract class BaseKernelSelector extends Disposables implements IDisposa
         connection: KernelConnectionMetadata,
         recommended: boolean = false
     ): ConnectionQuickPickItem {
-        const displayData = this.displayDataProvider.getDisplayData(connection);
-
         // If the recommended item is actually the selected item, then do not display the star.
-        const icon = recommended
-            ? '$(star-full) '
-            : connection.kind === 'startUsingPythonInterpreter' && connection.interpreter.isCondaEnvWithoutPython
-            ? '$(warning) '
-            : '';
-        return {
-            label: `${icon}${displayData.label}`,
+        const icon = recommended ? '$(star-full) ' : '';
+        const setData = (
+            info: ConnectionQuickPickItem,
+            e: IConnectionDisplayData,
+            connection: KernelConnectionMetadata
+        ) => {
+            info.label = `${icon}${e.label}`;
+            info.detail = e.detail;
+            info.description = e.description;
+
+            this.quickPickItems.forEach((q) => {
+                if ('connection' in q && q.connection.id === connection.id) {
+                    q.label = e.label;
+                    q.detail = e.detail;
+                    q.description = e.description;
+                }
+            });
+        };
+
+        const displayData = this.displayDataProvider.getDisplayData(connection);
+        const info: ConnectionQuickPickItem = {
+            label: '',
+            detail: '',
+            description: '',
             isRecommended: recommended,
-            detail: displayData.detail,
-            description: displayData.description,
-            tooltip: connection.interpreter?.isCondaEnvWithoutPython ? DataScience.pythonCondaKernelsWithoutPython : '',
             connection: connection
         };
+        setData(info, displayData, connection);
+        displayData.onDidChange((e) => setData(info, e, connection), this, this.disposables);
+        return info;
     }
-
-    private connectionToCategory(connection: KernelConnectionMetadata): ConnectionSeparatorQuickPickItem {
-        const kind = this.displayDataProvider.getDisplayData(connection).category || 'Other';
-        const isEmptyCondaEnvironment =
-            connection.kind === 'startUsingPythonInterpreter' &&
-            connection.interpreter.isCondaEnvWithoutPython === true;
-        return {
-            kind: QuickPickItemKind.Separator,
-            label: kind,
-            isEmptyCondaEnvironment
-        };
-    }
-}
-
-function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
-    const result: T[][] = [];
-    let currentGroup: T[] | undefined = undefined;
-    for (const element of data.slice(0).sort(compare)) {
-        if (!currentGroup || compare(currentGroup[0], element) !== 0) {
-            currentGroup = [element];
-            result.push(currentGroup);
-        } else {
-            currentGroup.push(element);
-        }
-    }
-    return result;
-}
-
-function compareIgnoreCase(a: string, b: string) {
-    return a.localeCompare(b, undefined, { sensitivity: 'accent' });
-}
-function getCategoryForSorting(
-    connection: KernelConnectionMetadata,
-    displayDataProvider: IConnectionDisplayDataProvider
-) {
-    if (connection.kind === 'startUsingPythonInterpreter' && connection.interpreter.isCondaEnvWithoutPython) {
-        // Conda environments without Python are always at the bottom.
-        return 'zCondaWithoutPython';
-    }
-    return displayDataProvider.getDisplayData(connection).category || 'z';
 }

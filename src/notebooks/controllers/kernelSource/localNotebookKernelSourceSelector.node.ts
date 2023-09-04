@@ -5,7 +5,6 @@ import { inject, injectable } from 'inversify';
 import { CancellationError, CancellationToken, CancellationTokenSource, NotebookDocument, QuickPickItem } from 'vscode';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../../../kernels/internalTypes';
 import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
-import { IWorkspaceService } from '../../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
@@ -20,8 +19,7 @@ import { ILocalNotebookKernelSourceSelector } from '../types';
 import { QuickPickKernelItemProvider } from './quickPickKernelItemProvider';
 import { ConnectionQuickPickItem, IQuickPickKernelItemProvider, MultiStepResult } from './types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
-import { LocalKernelSelector } from './localKernelSelector.node';
-import { CreateAndSelectItemFromQuickPick } from './baseKernelSelector';
+import { BaseKernelSelector, CreateAndSelectItemFromQuickPick } from './baseKernelSelector';
 
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
@@ -33,7 +31,6 @@ export class LocalNotebookKernelSourceSelector implements ILocalNotebookKernelSo
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(PythonEnvironmentFilter)
         private readonly pythonEnvFilter: PythonEnvironmentFilter,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
     ) {}
     public async selectLocalKernel(notebook: NotebookDocument): Promise<LocalKernelConnectionMetadata | undefined> {
@@ -107,7 +104,7 @@ export class LocalNotebookKernelSourceSelector implements ILocalNotebookKernelSo
         if (token.isCancellationRequested) {
             return;
         }
-        const selector = new LocalKernelSelector(this.workspace, state.notebook, provider, token);
+        const selector = new BaseKernelSelector(provider, token);
         state.disposables.push(selector);
         const quickPickFactory: CreateAndSelectItemFromQuickPick = (options) => {
             const { quickPick, selection } = multiStep.showLazyLoadQuickPick({
