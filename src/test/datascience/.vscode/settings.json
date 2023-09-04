@@ -31,7 +31,7 @@
     "jupyter.generateSVGPlots": false,
     // See https://github.com/microsoft/vscode-jupyter/issues/10258
     "jupyter.forceIPyKernelDebugger": false,
-    "python.defaultInterpreterPath": "python",
+    "python.defaultInterpreterPath": "/Users/donjayamanne/crap/.venv/bin/python",
     "task.problemMatchers.neverPrompt": {
         "shell": true,
         "npm": true

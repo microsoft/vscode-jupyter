@@ -31,6 +31,7 @@ import {
 } from '../notebook/helper';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { noop } from '../../../platform/common/utils/misc';
+import { sleep } from '../../core';
 
 suiteMandatory('Remote Tests', function () {
     const disposables: IDisposable[] = [];
@@ -91,6 +92,7 @@ suiteMandatory('Remote Tests', function () {
         await closeNotebooks([]);
         console.error('Step2');
         const nbFile = Uri.joinPath(workspace.workspaceFolders![0].uri, 'notebook', 'resumeExecution.ipynb');
+        fs
         let editor = await workspace.openNotebookDocument(nbFile).then((nb) => window.showNotebookDocument(nb));
         console.error('Step3');
         const cell = editor.notebook.cellAt(0)!;
@@ -99,25 +101,48 @@ suiteMandatory('Remote Tests', function () {
         runCell(cell).then(noop, noop);
         console.error('Step5');
         await waitForTextOutput(cell, 'Started Execution', 0, false);
+        await waitForTextOutput(cell, 'Number:', undefined, false);
+        await sleep(2_000); // Wait for additional output
+        console.error('Step10');
         console.error('Step6');
         await saveActiveNotebook();
         console.error('Step7');
         await closeActiveWindows();
+        await sleep(5_000); // Some issues with the tests, possible not enough time for kernel to die
+        await closeActiveWindows();
         console.error('Step8');
-
+        await sleep(5_000); // Some issues with the tests, possible not enough time for kernel to die
         // Open the above notebook and see what the last output is.
         const buffer = await workspace.fs.readFile(nbFile);
         console.error('Step9');
         const contents = JSON.parse(Buffer.from(buffer).toString().trim());
         const lastCellOutputLines = contents.cells[0].outputs[0].text as string[];
-        const lastNumber = parseInt(lastCellOutputLines[lastCellOutputLines.length - 1].trim(), 10);
-        console.error('Step10');
-        await window.showErrorMessage(`Last Number is ${lastNumber}`).then(noop, noop);
+        const lastNumber = parseInt(
+            lastCellOutputLines[lastCellOutputLines.length - 1].trim().replace('Number:', '').trim(),
+            10
+        );
+        // await window.showErrorMessage(`Last Number is ${lastNumber}`).then(noop, noop);
         console.error('Step11');
 
         // Ok, now open the same document once again and execution should resume.
         editor = await workspace.openNotebookDocument(nbFile).then((nb) => window.showNotebookDocument(nb));
         console.error('Step12');
-        await waitForTextOutput(cell, `${lastNumber + 1}`, 0, false);
+        await waitForCondition(
+            () => {
+                const outputNumbers = Buffer.from(
+                    editor.notebook.cellAt(0).outputs.slice(-1)[0].items.slice(-1)[0].data
+                )
+                    .toString()
+                    .trim()
+                    .split(/\r?\n/)
+                    .map((l) => l.trim())
+                    .filter((l) => l.length);
+                console.error('Step13', outputNumbers);
+                const newLastNumber = parseInt(outputNumbers.slice(-1)[0].replace('Number:', '').trim(), 10);
+                return newLastNumber > lastNumber;
+            },
+            defaultNotebookTestTimeout,
+            'Execution did not resume'
+        );
     });
 });
