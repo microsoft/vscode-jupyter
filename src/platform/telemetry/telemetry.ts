@@ -30,21 +30,14 @@ export function initializeGlobals(interpreterPackageProvider: InterpreterPackage
  * Use this to update with the latest information (if available)
  */
 export function updatePythonPackages(
-    currentData: ResourceSpecificTelemetryProperties & { waitBeforeSending?: Promise<void> },
-    clonedCurrentData?: ResourceSpecificTelemetryProperties & {
-        waitBeforeSending?: Promise<void>;
-    }
+    currentData: ResourceSpecificTelemetryProperties,
+    clonedCurrentData?: ResourceSpecificTelemetryProperties
 ) {
     if (!currentData.pythonEnvironmentPath) {
         return;
     }
     // Getting package information is async, hence update property to indicate that a promise is pending.
     const deferred = createDeferred<void>();
-    // Hold sending of telemetry until we have updated the props with package information.
-    currentData.waitBeforeSending = deferred.promise;
-    if (clonedCurrentData) {
-        clonedCurrentData.waitBeforeSending = deferred.promise;
-    }
     getPythonEnvironmentPackages({
         interpreterHash: currentData.pythonEnvironmentPath
     })
@@ -57,10 +50,6 @@ export function updatePythonPackages(
         .catch(() => undefined)
         .finally(() => {
             deferred.resolve();
-            currentData.waitBeforeSending = undefined;
-            if (clonedCurrentData) {
-                clonedCurrentData.waitBeforeSending = undefined;
-            }
         });
 }
 /**
@@ -94,9 +83,7 @@ export function deleteTrackedInformation(resource: Uri) {
  * Always return a clone of the properties.
  * We will be using a reference of this object elsewhere & adding properties to the object.
  */
-export async function getContextualPropsForTelemetry(
-    resource: Resource
-): Promise<ResourceSpecificTelemetryProperties & { waitBeforeSendingTelemetry?: Promise<void> }> {
+export async function getContextualPropsForTelemetry(resource: Resource): Promise<ResourceSpecificTelemetryProperties> {
     if (!resource) {
         return {};
     }

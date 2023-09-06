@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type TelemetryReporter from '@vscode/extension-telemetry';
+import TelemetryReporter from '@vscode/extension-telemetry';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution } from '../common/constants';
 import { traceError } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { ExcludeType, noop, PickType, UnionToIntersection } from '../common/utils/misc';
-import { isPromise } from 'rxjs/internal-compatibility';
 import { populateTelemetryWithErrorInfo } from '../errors';
 import { TelemetryEventInfo, IEventNamePropertyMapping } from '../../telemetry';
 
@@ -17,7 +16,6 @@ import { TelemetryEventInfo, IEventNamePropertyMapping } from '../../telemetry';
  */
 export { JupyterCommands, Telemetry } from '../common/constants';
 
-export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
@@ -25,14 +23,14 @@ export const waitBeforeSending = 'waitBeforeSending';
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
  * Within DA, there's a completely different way to send telemetry.
  */
-async function isTelemetrySupported(): Promise<boolean> {
+function isTelemetrySupported(): boolean {
     try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const vsc = require('vscode');
         if (vsc === undefined) {
             return false;
         }
-        return (await getTelemetryReporter()) !== undefined;
+        return getTelemetryReporter() !== undefined;
     } catch {
         return false;
     }
@@ -74,19 +72,13 @@ export function _resetSharedProperties(): void {
 }
 
 let telemetryReporter: TelemetryReporter | undefined;
-export async function getTelemetryReporter(): Promise<TelemetryReporter> {
+function getTelemetryReporter(): TelemetryReporter {
     if (telemetryReporter) {
         return telemetryReporter;
     }
 
-    const reporterCtor = (await import('@vscode/extension-telemetry')).default;
-    return (telemetryReporter = new reporterCtor(AppinsightsKey));
+    return (telemetryReporter = new TelemetryReporter(AppinsightsKey));
 }
-
-export function setTelemetryReporter(reporter: TelemetryReporter) {
-    telemetryReporter = reporter;
-}
-
 export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
@@ -95,9 +87,6 @@ function sanitizeProperties(eventName: string, data: Record<string, any>) {
     let customProperties: Record<string, string> = {};
     Object.getOwnPropertyNames(data).forEach((prop) => {
         if (data[prop] === undefined || data[prop] === null) {
-            return;
-        }
-        if (prop === waitBeforeSending) {
             return;
         }
         try {
@@ -116,20 +105,10 @@ function sanitizeProperties(eventName: string, data: Record<string, any>) {
     return customProperties;
 }
 
-const queuedTelemetry: {
-    eventName: string;
-    measures?: Record<string, number> | undefined;
-    properties?: Record<string, any> | undefined;
-    ex?: Error | undefined;
-    queueEverythingUntilCompleted?: Promise<any> | undefined;
-}[] = [];
-
 /**
  * Send this & subsequent telemetry only after this promise has been resolved.
  * We have a default timeout of 30s.
  * @param {P[E]} [properties]
- * Can optionally contain a property `waitBeforeSending` referencing a promise.
- * Which must be awaited before sending the telemetry.
  */
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
@@ -138,70 +117,21 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         | undefined,
     properties?: P[E] extends TelemetryEventInfo<infer R>
         ? ExcludeType<R, number> extends never | undefined
-            ? undefined | { [waitBeforeSending]?: Promise<void> }
-            : ExcludeType<R, number> & { [waitBeforeSending]?: Promise<void> }
-        : undefined | { [waitBeforeSending]?: Promise<void> } | (undefined | { [waitBeforeSending]?: Promise<void> }),
+            ? undefined
+            : ExcludeType<R, number>
+        : undefined | undefined,
     ex?: Error
 ) {
-    if (isTestExecution()) {
+    if (isTestExecution() || !isTelemetrySupported()) {
         return;
     }
-    isTelemetrySupported()
-        .then((isSupported) => {
-            if (!isSupported) {
-                return;
-            }
-            // If stuff is already queued, then queue the rest.
-            // Queue telemetry for now only in insiders.
-            if (isPromise(properties?.waitBeforeSending) || queuedTelemetry.length) {
-                queuedTelemetry.push({
-                    eventName: eventName as string,
-                    measures: measures as unknown as Record<string, number> | undefined,
-                    properties,
-                    ex,
-                    queueEverythingUntilCompleted: properties?.waitBeforeSending
-                });
-                sendNextTelemetryItem();
-            } else {
-                sendTelemetryEventInternal(
-                    eventName as any,
-                    // Because of exactOptionalPropertyTypes we have to cast.
-                    measures as unknown as Record<string, number> | undefined,
-                    properties,
-                    ex
-                );
-            }
-        })
-        .catch(noop);
-}
-
-function sendNextTelemetryItem(): void {
-    if (queuedTelemetry.length === 0) {
-        return;
-    }
-    // Take the first item to be sent.
-    const nextItem = queuedTelemetry[0];
-    let timer: NodeJS.Timeout | undefined | number;
-    function sendThisTelemetryItem() {
-        if (timer) {
-            clearTimeout(timer as any);
-        }
-        // Possible already sent out by another event handler.
-        if (queuedTelemetry.length === 0 || queuedTelemetry[0] !== nextItem) {
-            return;
-        }
-        queuedTelemetry.shift();
-        sendTelemetryEventInternal(nextItem.eventName as any, nextItem.measures, nextItem.properties, nextItem.ex);
-        sendNextTelemetryItem();
-    }
-
-    if (nextItem.queueEverythingUntilCompleted) {
-        timer = setTimeout(() => sendThisTelemetryItem(), 30_000);
-        // Wait for the promise & then send it.
-        nextItem.queueEverythingUntilCompleted.finally(() => sendThisTelemetryItem()).catch(noop);
-    } else {
-        return sendThisTelemetryItem();
-    }
+    sendTelemetryEventInternal(
+        eventName as any,
+        // Because of exactOptionalPropertyTypes we have to cast.
+        measures as unknown as Record<string, number> | undefined,
+        properties,
+        ex
+    );
 }
 
 function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E extends keyof P>(
@@ -224,7 +154,7 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
         populateTelemetryWithErrorInfo(customProperties, ex)
             .then(() => {
                 customProperties = sanitizeProperties(eventNameSent, customProperties);
-                reporter.then((e) => e.sendTelemetryEvent(eventNameSent, customProperties, measures)).catch(noop);
+                reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
             })
             .catch(noop);
     } else {
@@ -235,7 +165,7 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
 
-        reporter.then((r) => r.sendTelemetryEvent(eventNameSent, customProperties, measures)).catch(noop);
+        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
 }
 
