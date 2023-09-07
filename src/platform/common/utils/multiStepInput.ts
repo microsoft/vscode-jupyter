@@ -156,7 +156,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         input.step = step;
         input.totalSteps = totalSteps;
         input.placeholder = placeholder;
-        input.ignoreFocusOut = ignoreFocusOut ?? true;
+        input.ignoreFocusOut = ignoreFocusOut ?? false;
         input.items = items;
         if (stopBusy) {
             input.busy = startBusy ?? false;

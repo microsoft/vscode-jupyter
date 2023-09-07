@@ -355,7 +355,6 @@ export namespace DataScience {
     export const jupyterSelectUriInputTitle = l10n.t('Enter the URL of the running Jupyter Server');
     export const jupyterSelectUriInputPlaceholder = l10n.t('Enter the url of the running Jupyter Server');
     export const connectToToTheJupyterServer = (url: string) => l10n.t('Connect to the Jupyter Server {0}', url);
-    export const jupyterSelectURIMRUDetail = (date: Date) => l10n.t('Last Connection: {0}', date.toLocaleString());
     export const enterOrSelectRemoteJupyterPlaceholder = l10n.t('Enter a remote url, or select a remote server');
     export const selectRemoteJupyterPlaceholder = l10n.t('Select a remote server');
     export const jupyterServerLastConnectionForQuickPickDescription = (date: Date) =>
@@ -603,7 +602,7 @@ export namespace DataScience {
     export const kernelCategoryForJupyterSession = l10n.t('Jupyter Session');
     export const kernelDefaultRemoteDisplayName = l10n.t('Remote');
     export const kernelCategoryForJupyterKernel = l10n.t('Jupyter Kernel');
-    export const kernelCategoryForRemoteJupyterKernel = l10n.t('({0}) Jupyter Kernel');
+    export const kernelCategoryForRemoteJupyterKernel = l10n.t('Jupyter Kernel');
     export const kernelCategoryForConda = l10n.t('Conda Env');
     export const kernelCategoryForCondaWithoutPython = l10n.t('Conda Env Without Python');
     export const kernelCategoryForPoetry = l10n.t('Poetry Env');

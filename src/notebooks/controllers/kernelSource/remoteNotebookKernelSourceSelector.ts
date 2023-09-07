@@ -201,25 +201,70 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             }
             return (a.time || 0) > (b.time || 0) ? -1 : 1;
         });
-        serversAndTimes.forEach(({ server, time }) => {
-            quickPickServerItems.push({
-                type: KernelFinderEntityQuickPickType.KernelFinder,
-                kernelFinderInfo: server,
-                idAndHandle: server.serverProviderHandle,
-                label: server.displayName,
-                detail: time ? DataScience.jupyterSelectURIMRUDetail(new Date(time)) : undefined,
-                buttons:
-                    serverProvider?.removeJupyterServer &&
-                    (provider.extensionId === JVSC_EXTENSION_ID || provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
-                        ? [
-                              {
-                                  iconPath: new ThemeIcon('close'),
-                                  tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
-                              }
-                          ]
-                        : []
+
+        let recentlyUsedSeparatorAdded = false;
+        serversAndTimes
+            .filter(({ time }) => (time || 0) > 0)
+            .forEach(({ server, time }) => {
+                if (!recentlyUsedSeparatorAdded) {
+                    recentlyUsedSeparatorAdded = true;
+                    quickPickServerItems.push({
+                        label: 'Recently Used',
+                        kind: QuickPickItemKind.Separator
+                    });
+                }
+                quickPickServerItems.push({
+                    type: KernelFinderEntityQuickPickType.KernelFinder,
+                    kernelFinderInfo: server,
+                    idAndHandle: server.serverProviderHandle,
+                    label: server.displayName,
+                    description: time
+                        ? DataScience.jupyterServerLastConnectionForQuickPickDescription(new Date(time))
+                        : undefined,
+                    buttons:
+                        serverProvider?.removeJupyterServer &&
+                        (provider.extensionId === JVSC_EXTENSION_ID ||
+                            provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                            ? [
+                                  {
+                                      iconPath: new ThemeIcon('close'),
+                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                                  }
+                              ]
+                            : []
+                });
             });
-        });
+
+        let addedSeparator = false;
+        serversAndTimes
+            .filter(({ time }) => !time)
+            .forEach(({ server }) => {
+                if (!addedSeparator) {
+                    addedSeparator = true;
+                    quickPickServerItems.push({
+                        label: DataScience.jupyterServerNotUsedBeforeQuickPickSeparatorTitle,
+                        kind: QuickPickItemKind.Separator
+                    });
+                }
+
+                quickPickServerItems.push({
+                    type: KernelFinderEntityQuickPickType.KernelFinder,
+                    kernelFinderInfo: server,
+                    idAndHandle: server.serverProviderHandle,
+                    label: server.displayName,
+                    buttons:
+                        serverProvider?.removeJupyterServer &&
+                        (provider.extensionId === JVSC_EXTENSION_ID ||
+                            provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                            ? [
+                                  {
+                                      iconPath: new ThemeIcon('close'),
+                                      tooltip: DataScience.removeRemoteJupyterServerEntryInQuickPick
+                                  }
+                              ]
+                            : []
+                });
+            });
 
         // Add servers that we have never seen before.
         jupyterServers
@@ -233,6 +278,14 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 if (handledServerIds.has(id)) {
                     return;
                 }
+                if (!addedSeparator) {
+                    addedSeparator = true;
+                    quickPickServerItems.push({
+                        label: DataScience.jupyterServerNotUsedBeforeQuickPickSeparatorTitle,
+                        kind: QuickPickItemKind.Separator
+                    });
+                }
+
                 quickPickServerItems.push(<JupyterServerQuickPickItem>{
                     type: KernelFinderEntityQuickPickType.JupyterServer,
                     label: server.label,
@@ -325,6 +378,13 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     ) {
                         const serverId = e.item.idAndHandle.handle;
                         const serverToRemove = jupyterServers.find((s) => s.id === serverId);
+                        this.serverUriStorage
+                            .remove({
+                                extensionId: provider.extensionId,
+                                id: provider.id,
+                                handle: serverId
+                            })
+                            .catch(noop);
                         if (
                             serverProvider?.removeJupyterServer &&
                             serverToRemove &&
