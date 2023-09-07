@@ -9,7 +9,11 @@ import { traceError } from '../../../platform/logging';
 import { IJupyterServerProviderRegistry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { JupyterConnection } from './jupyterConnection';
-import { JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import {
+    JUPYTER_HUB_EXTENSION_ID,
+    JVSC_EXTENSION_ID,
+    TestingKernelPickerProviderId
+} from '../../../platform/common/constants';
 
 export type SelectJupyterUriCommandSource =
     | 'nonUser'
@@ -42,6 +46,13 @@ export class JupyterServerSelector {
             return;
         }
 
+        if (provider.extensionId === JVSC_EXTENSION_ID && provider.id === TestingKernelPickerProviderId) {
+            // However for the tests, we need to add to the Storage, as thats the only way
+            // to get the kernel finders registered.
+            // More debt to be removed (or we need a better way for the tests to work by making this explicit).
+            await this.serverUriStorage.add(provider);
+            return;
+        }
         // No need to add the Uri for providers using the new API.
         if (
             ![JVSC_EXTENSION_ID, JUPYTER_HUB_EXTENSION_ID].includes(provider.extensionId) &&
