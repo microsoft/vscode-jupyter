@@ -244,7 +244,7 @@ export class UserJupyterServerUrlProvider
             const label = DataScience.connectToToTheJupyterServer(url);
             return [{ label, url } as JupyterServerCommand];
         }
-        return [{ label: DataScience.jupyterSelectURIPrompt }];
+        return [{ label: DataScience.jupyterSelectUriCommandLabel }];
     }
     async provideJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
         await this.initializeServers();
@@ -448,7 +448,6 @@ export class UserJupyterServerUrlProvider
                                       url: jupyterServerUri.baseUrl,
                                       isTokenEmpty: jupyterServerUri.token.length === 0,
                                       handle,
-                                      displayName: jupyterServerUri.displayName,
                                       validationErrorMessage: errorMessage,
                                       disposables: passwordDisposables
                                   });
@@ -659,8 +658,7 @@ export class UserJupyterServerUrlProvider
             : await this.jupyterPasswordConnect.getPasswordConnectionInfo({
                   url: serverInfo.baseUrl,
                   isTokenEmpty: serverInfo.token.length === 0,
-                  handle: id,
-                  displayName: serverInfo.displayName
+                  handle: id
               });
 
         const serverUriToReturn = Object.assign({}, serverInfo, {
@@ -702,7 +700,8 @@ export class UserJupyterServerUriInput {
         // Ask the user to enter a URI to connect to.
         const input = this.applicationShell.createInputBox();
         disposables.push(input);
-        input.title = DataScience.jupyterSelectURIPrompt;
+        input.title = DataScience.jupyterSelectUriInputTitle;
+        input.placeholder = DataScience.jupyterSelectUriInputPlaceholder;
         input.value = initialValue;
         input.validationMessage = initialErrorMessage;
         input.buttons = [QuickInputButtons.Back];
@@ -779,6 +778,7 @@ export class UserJupyterServerDisplayName {
             input.ignoreFocusOut = true;
             input.title = DataScience.jupyterRenameServer;
             input.value = defaultValue;
+            input.placeholder = DataScience.jupyterServerUriDisplayNameInputPlaceholder;
             input.buttons = [QuickInputButtons.Back];
             input.show();
             const deferred = createDeferred<string>();

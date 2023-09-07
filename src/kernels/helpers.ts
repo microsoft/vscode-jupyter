@@ -375,7 +375,7 @@ export function getRemoteKernelSessionInformation(
     defaultValue: string = ''
 ): string {
     if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
-        return DataScience.jupyterSelectURIRunningDetailFormat(
+        return DataScience.jupyterSelectLiveRemoteKernelDescription(
             kernelConnection.kernelModel.lastActivityTime,
             kernelConnection.kernelModel.numberOfConnections
         );

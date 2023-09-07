@@ -12,7 +12,7 @@ import {
 import { DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../platform/common/utils/multiStepInput';
-import { traceWarning } from '../../platform/logging';
+import { traceVerbose, traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import {
     IJupyterRequestAgentCreator,
@@ -93,23 +93,28 @@ export class JupyterHubPasswordConnect {
         return result;
     }
     public async isJupyterHub(url: string): Promise<boolean> {
-        // See this for the different REST endpoints:
-        // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html
+        try {
+            // See this for the different REST endpoints:
+            // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html
 
-        // If the URL has the /user/ option in it, it's likely this is jupyter hub
-        if (url.toLowerCase().includes('/user/')) {
-            return true;
+            // If the URL has the /user/ option in it, it's likely this is jupyter hub
+            if (url.toLowerCase().includes('/user/')) {
+                return true;
+            }
+
+            // Otherwise request hub/api. This should return the json with the hub version
+            // if this is a hub url
+            const response = await this.makeRequest(new URL('hub/api', addTrailingSlash(url)).toString(), {
+                method: 'get',
+                redirect: 'manual',
+                headers: { Connection: 'keep-alive' }
+            });
+
+            return response.status === 200;
+        } catch (ex) {
+            traceVerbose(`Error in detecting whether url is isJupyterHub: ${ex}`);
+            return false;
         }
-
-        // Otherwise request hub/api. This should return the json with the hub version
-        // if this is a hub url
-        const response = await this.makeRequest(new URL('hub/api', addTrailingSlash(url)).toString(), {
-            method: 'get',
-            redirect: 'manual',
-            headers: { Connection: 'keep-alive' }
-        });
-
-        return response.status === 200;
     }
 
     private async getJupyterHubConnectionInfo(

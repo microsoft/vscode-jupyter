@@ -44,7 +44,6 @@ export class JupyterPasswordConnect {
     public getPasswordConnectionInfo(options: {
         url: string;
         isTokenEmpty: boolean;
-        displayName?: string;
         handle: string;
         validationErrorMessage?: string;
         disposables?: IDisposable[];
@@ -64,7 +63,6 @@ export class JupyterPasswordConnect {
             result = this.getJupyterConnectionInfo({
                 url: newUrl,
                 isTokenEmpty: options.isTokenEmpty,
-                displayName: options.displayName,
                 disposables,
                 validationErrorMessage: options.validationErrorMessage
             }).then((value) => {
@@ -104,7 +102,6 @@ export class JupyterPasswordConnect {
     private async getJupyterConnectionInfo(options: {
         url: string;
         isTokenEmpty: boolean;
-        displayName?: string;
         validationErrorMessage?: string;
         disposables: IDisposable[];
     }): Promise<IJupyterPasswordConnectInfo> {
@@ -118,15 +115,11 @@ export class JupyterPasswordConnect {
 
         if (requiresPassword || options.isTokenEmpty) {
             // Get password first
-            let friendlyUrl = options.url;
-            const uri = new URL(options.url);
-            friendlyUrl = `${uri.protocol}//${uri.hostname}`;
-            friendlyUrl = options.displayName ? `${options.displayName} (${friendlyUrl})` : friendlyUrl;
             if (requiresPassword && options.isTokenEmpty) {
                 const input = this.appShell.createInputBox();
                 options.disposables.push(input);
-                input.title = DataScience.jupyterSelectPasswordTitle(friendlyUrl);
-                input.prompt = DataScience.jupyterSelectPasswordPrompt;
+                input.title = DataScience.jupyterSelectPasswordTitle;
+                input.placeholder = DataScience.jupyterSelectPasswordPrompt;
                 input.ignoreFocusOut = true;
                 input.password = true;
                 input.validationMessage = options.validationErrorMessage || '';
