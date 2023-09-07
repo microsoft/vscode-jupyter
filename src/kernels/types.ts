@@ -23,8 +23,15 @@ import { IContributedKernelFinder } from './internalTypes';
 import { isWeb, noop } from '../platform/common/utils/misc';
 import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter';
-import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import {
+    InteractiveWindowView,
+    JVSC_EXTENSION_ID,
+    JupyterNotebookView,
+    PYTHON_LANGUAGE,
+    Telemetry
+} from '../platform/common/constants';
 import { sendTelemetryEvent } from '../telemetry';
+import { generateIdFromRemoteProvider } from './jupyter/jupyterUtils';
 
 export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
@@ -965,11 +972,23 @@ function sendKernelTelemetry(kernel: KernelConnectionMetadata) {
             ? getTelemetrySafeHashedString(kernel.kernelSpec.specFile)
             : Promise.resolve('');
     const kernelIdHash = getTelemetrySafeHashedString(kernel.id);
-    Promise.all([kernelSpecHashPromise, kernelIdHash])
-        .then(([kernelSpecHash, kernelId]) =>
+    const serverIdHashPromise = isRemoteConnection(kernel)
+        ? getTelemetrySafeHashedString(generateIdFromRemoteProvider(kernel.serverProviderHandle))
+        : Promise.resolve('');
+    const providerExtensionId = isRemoteConnection(kernel)
+        ? kernel.serverProviderHandle.extensionId
+        : JVSC_EXTENSION_ID;
+    const baseUrlHashPromise = isRemoteConnection(kernel)
+        ? getTelemetrySafeHashedString(kernel.baseUrl.toLowerCase())
+        : Promise.resolve('');
+    Promise.all([kernelSpecHashPromise, kernelIdHash, serverIdHashPromise, baseUrlHashPromise])
+        .then(([kernelSpecHash, kernelId, serverIdHash, baseUrlHash]) =>
             sendTelemetryEvent(Telemetry.KernelSpec, undefined, {
                 kernelId,
+                serverIdHash,
                 kernelSpecHash,
+                baseUrlHash,
+                providerExtensionId,
                 kernelConnectionType: kernel.kind,
                 kernelLanguage: language,
                 envType: interpreter?.envType,

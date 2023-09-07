@@ -713,10 +713,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // If we have an existing kernel, then we know for a fact the user is changing the kernel.
         // Else VSC is just setting a kernel for a notebook after it has opened.
         if (existingKernel) {
-            const telemetryEvent = isLocalConnection(this.kernelConnection)
-                ? Telemetry.SelectLocalJupyterKernel
-                : Telemetry.SelectRemoteJupyterKernel;
-            sendKernelTelemetryEvent(document.uri, telemetryEvent);
             this.notebookApi.notebookEditors
                 .filter((editor) => editor.notebook === document)
                 .forEach((editor) =>

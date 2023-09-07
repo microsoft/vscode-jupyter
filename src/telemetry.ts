@@ -727,53 +727,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Sent when we have failed to connect to the local Jupyter server we started.
-     */
-    [Telemetry.ConnectFailedJupyter]: TelemetryEventInfo<TelemetryErrorProperties> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        properties: commonClassificationForErrorProperties()
-    };
-    /**
-     * Connecting to an existing Jupyter server, but connecting to localhost.
-     */
-    [Telemetry.ConnectRemoteJupyterViaLocalHost]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
-     * Sent when we fail to connect to a remote jupyter server.
-     */
-    [Telemetry.ConnectRemoteFailedJupyter]: TelemetryEventInfo<TelemetryErrorProperties> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        properties: commonClassificationForErrorProperties()
-    };
-    /**
-     * Jupyter server's certificate is not from a trusted authority.
-     */
-    [Telemetry.ConnectRemoteSelfCertFailedJupyter]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
-     * Jupyter server's certificate has expired.
-     */
-    [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
      * Telemetry event sent when user hits the `continue` button while debugging IW
      */
     [Telemetry.DebugContinue]: TelemetryEventInfo<never | undefined> = {
@@ -894,14 +847,25 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * Used to capture time taken to get environment variables for a python environment.
-     * Also lets us know whether it worked or not.
+     * Information about KernelSpecs
      */
     [Telemetry.KernelSpec]: TelemetryEventInfo<{
+        /**
+         * Unique Id of this Server
+         */
+        serverIdHash: string;
+        /**
+         * Extension that owns (provided) this Jupyter Url
+         */
+        providerExtensionId: string;
         /**
          * Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)
          */
         kernelSpecHash: string;
+        /**
+         * Has of the origin/base Url.
+         */
+        baseUrlHash: string;
         /**
          * Hash of the Kernel Connection id.
          */
@@ -946,6 +910,18 @@ export class IEventNamePropertyMapping {
                 classification: 'EndUserPseudonymizedInformation',
                 purpose: 'FeatureInsight'
             },
+            serverIdHash: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            providerExtensionId: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
+            baseUrlHash: {
+                classification: 'SystemMetaData',
+                purpose: 'FeatureInsight'
+            },
             kernelId: {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
@@ -978,40 +954,13 @@ export class IEventNamePropertyMapping {
     };
 
     /**
-     * Sent when we fail to update the kernel spec json file.
-     */
-    [Telemetry.FailedToUpdateKernelSpec]: TelemetryEventInfo<
-        {
-            /**
-             * Name of the kernel spec.
-             */
-            name: string;
-            /**
-             * Language of the kernel spec.
-             */
-            language: string | undefined;
-        } & TelemetryErrorProperties
-    > = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        properties: {
-            ...commonClassificationForErrorProperties(),
-            name: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            },
-            language: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Sent when user enters a Remote Jupyter Url
      */
     [Telemetry.EnterRemoteJupyterUrl]: TelemetryEventInfo<{
+        /**
+         * Unique Id of this Server
+         */
+        serverIdHash: string;
         /**
          * Has of the origin/base Url.
          */
@@ -1038,6 +987,10 @@ export class IEventNamePropertyMapping {
         source: 'N/A',
         tags: ['KernelStartup'],
         properties: {
+            serverIdHash: {
+                classification: 'PublicNonPersonalData',
+                purpose: 'FeatureInsight'
+            },
             baseUrlHash: {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight'
@@ -1577,24 +1530,6 @@ export class IEventNamePropertyMapping {
         source: 'N/A'
     };
     /**
-     * Kernel was switched to a local kernel connection.
-     */
-    [Telemetry.SelectLocalJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
-        owner: 'donjayamanne',
-        source: 'N/A',
-        feature: ['KernelPicker'],
-        properties: commonClassificationForResourceSpecificTelemetryProperties().properties
-    };
-    /**
-     * Kernel was switched to a remote kernel connection.
-     */
-    [Telemetry.SelectRemoteJupyterKernel]: TelemetryEventInfo<ResourceSpecificTelemetryProperties> = {
-        owner: 'donjayamanne',
-        source: 'N/A',
-        feature: ['KernelPicker'],
-        properties: commonClassificationForResourceSpecificTelemetryProperties().properties
-    };
-    /**
      * Sent when user installs Jupyter.
      */
     [Telemetry.UserInstalledJupyter]: TelemetryEventInfo<never | undefined> = {
@@ -1886,14 +1821,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Whether we ran into the ZMQ Error as identified here https://github.com/microsoft/vscode-jupyter/issues/12775
-     */
-    [Telemetry.JupyterServerZMQStreamError]: TelemetryEventInfo<undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A'
-    };
-    /**
      * Information used to determine the zmq binary support.
      * the alpine, libc, armv version is used by the node module @aminya/node-gyp-build to load the zeromq.js binary.
      */
@@ -2099,15 +2026,6 @@ export class IEventNamePropertyMapping {
                 isMeasurement: true
             }
         }
-    };
-    /**
-     * Telemetry event sent when starting a session for a local connection failed.
-     */
-    [Telemetry.StartSessionFailedJupyter]: TelemetryEventInfo<undefined | never> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
     };
     /**
      * Sent to detect the different languages of kernel specs used.

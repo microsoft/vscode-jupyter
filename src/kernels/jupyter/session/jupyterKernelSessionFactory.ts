@@ -55,9 +55,6 @@ import { waitForCondition } from '../../../platform/common/utils/async';
 import { JupyterLabHelper } from './jupyterLabHelper';
 import { JupyterSessionWrapper, getRemoteSessionOptions } from './jupyterSession';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export const LocalHosts = ['localhost', '127.0.0.1', '::1'];
-
 @injectable()
 export class JupyterKernelSessionFactory implements IKernelSessionFactory {
     constructor(
@@ -109,9 +106,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                       token: options.token,
                       ui: options.ui
                   });
-            if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
-            }
 
             await raceCancellationError(options.token, this.validateLocalKernelDependencies(options));
 
@@ -173,15 +167,12 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
             dispose(disposablesIfAnyErrors);
 
             if (isRemoteConnection(options.kernelConnection)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, ex);
                 // Check for the self signed certs error specifically
                 if (!connection) {
                     throw ex;
                 } else if (JupyterSelfCertsError.isSelfCertsError(ex)) {
-                    sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                     throw new JupyterSelfCertsError(connection.baseUrl);
                 } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(ex)) {
-                    sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
                     throw new JupyterSelfCertsExpiredError(connection.baseUrl);
                 } else {
                     throw new RemoteJupyterServerConnectionError(
@@ -191,7 +182,6 @@ export class JupyterKernelSessionFactory implements IKernelSessionFactory {
                     );
                 }
             } else {
-                sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, ex);
                 if (ex instanceof BaseError) {
                     throw ex;
                 } else {

@@ -69,6 +69,7 @@ import { Disposables } from '../../platform/common/utils';
 import { JupyterHubPasswordConnect } from '../userJupyterHubServer/jupyterHubPasswordConnect';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
+import { generateIdFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 
 export const UserJupyterServerUriListKey = 'user-jupyter-server-uri-list';
 export const UserJupyterServerUriListKeyV2 = 'user-jupyter-server-uri-list-version2';
@@ -467,7 +468,12 @@ export class UserJupyterServerUrlProvider
                                 // We can skip this for now, as this will get verified again
                                 // First we need to check with user whether to allow insecure connections and untrusted certs.
                             } else {
-                                sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub, 'ConnectionFailure');
+                                sendRemoteTelemetryForAdditionOfNewRemoteServer(
+                                    handle,
+                                    jupyterServerUri.baseUrl,
+                                    isJupyterHub,
+                                    'ConnectionFailure'
+                                );
                                 // Return the general connection error to show in the validation box
                                 // Replace any Urls in the error message with markdown link.
                                 const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -511,7 +517,12 @@ export class UserJupyterServerUrlProvider
                             dispose(passwordDisposables);
                             const proceed = await this.secureConnectionValidator.promptToUseInsecureConnections();
                             if (!proceed) {
-                                sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub, 'InsecureHTTP');
+                                sendRemoteTelemetryForAdditionOfNewRemoteServer(
+                                    handle,
+                                    jupyterServerUri.baseUrl,
+                                    isJupyterHub,
+                                    'InsecureHTTP'
+                                );
                                 return InputFlowAction.cancel;
                             }
                         }
@@ -539,20 +550,40 @@ export class UserJupyterServerUrlProvider
                             } else if (JupyterSelfCertsError.isSelfCertsError(err)) {
                                 validationErrorMessage = DataScience.jupyterSelfCertFailErrorMessageOnly;
                                 nextStep = 'Get Url';
-                                sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub, 'SelfCert');
+                                sendRemoteTelemetryForAdditionOfNewRemoteServer(
+                                    handle,
+                                    jupyterServerUri.baseUrl,
+                                    isJupyterHub,
+                                    'SelfCert'
+                                );
                                 continue;
                             } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
                                 validationErrorMessage = DataScience.jupyterSelfCertExpiredErrorMessageOnly;
                                 nextStep = 'Get Url';
-                                sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub, 'ExpiredCert');
+                                sendRemoteTelemetryForAdditionOfNewRemoteServer(
+                                    handle,
+                                    jupyterServerUri.baseUrl,
+                                    isJupyterHub,
+                                    'ExpiredCert'
+                                );
                                 continue;
                             } else if (requiresPassword && jupyterServerUri.token.length === 0) {
                                 validationErrorMessage = DataScience.passwordFailure;
                                 nextStep = 'Check Passwords';
-                                sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub, 'AuthFailure');
+                                sendRemoteTelemetryForAdditionOfNewRemoteServer(
+                                    handle,
+                                    jupyterServerUri.baseUrl,
+                                    isJupyterHub,
+                                    'AuthFailure'
+                                );
                                 continue;
                             } else {
-                                sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub, 'ConnectionFailure');
+                                sendRemoteTelemetryForAdditionOfNewRemoteServer(
+                                    handle,
+                                    jupyterServerUri.baseUrl,
+                                    isJupyterHub,
+                                    'ConnectionFailure'
+                                );
                                 // Return the general connection error to show in the validation box
                                 // Replace any Urls in the error message with markdown link.
                                 const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -619,7 +650,7 @@ export class UserJupyterServerUrlProvider
                 uri: url,
                 serverInfo: jupyterServerUri
             });
-            sendRemoteUrlTelemetry(jupyterServerUri.baseUrl, isJupyterHub);
+            sendRemoteTelemetryForAdditionOfNewRemoteServer(handle, jupyterServerUri.baseUrl, isJupyterHub);
             return handle;
         } catch (ex) {
             if (ex instanceof CancellationError) {
@@ -748,17 +779,24 @@ export class UserJupyterServerUriInput {
     }
 }
 
-function sendRemoteUrlTelemetry(
+function sendRemoteTelemetryForAdditionOfNewRemoteServer(
+    handle: string,
     baseUrl: string,
     isJupyterHub: boolean,
     failureReason?: 'ConnectionFailure' | 'InsecureHTTP' | 'SelfCert' | 'ExpiredCert' | 'AuthFailure'
 ) {
     baseUrl = baseUrl.trim().toLowerCase();
-    getTelemetrySafeHashedString(baseUrl.toLowerCase())
-        .then((hashOfBaseUrl) => {
+    const id = generateIdFromRemoteProvider({
+        handle,
+        extensionId: JVSC_EXTENSION_ID,
+        id: UserJupyterServerPickerProviderId
+    });
+    Promise.all([getTelemetrySafeHashedString(baseUrl.toLowerCase()), getTelemetrySafeHashedString(id.toLowerCase())])
+        .then(([baseUrlHash, serverIdHash]) => {
             sendTelemetryEvent(Telemetry.EnterRemoteJupyterUrl, undefined, {
+                serverIdHash,
                 failed: !!failureReason,
-                baseUrlHash: hashOfBaseUrl,
+                baseUrlHash,
                 isJupyterHub,
                 isLocalHost: ['localhost', '127.0.0.1', '::1'].includes(new URL(baseUrl).hostname),
                 reason: failureReason
