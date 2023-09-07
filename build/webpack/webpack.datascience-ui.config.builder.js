@@ -34,10 +34,6 @@ function getEntry(bundle) {
             return {
                 ipywidgetsRenderer: [`./src/webviews/webview-side/ipywidgets/renderer/index.ts`]
             };
-        case 'errorRenderer':
-            return {
-                errorRenderer: [`./src/webviews/webview-side/error-renderer/index.ts`]
-            };
         case 'widgetTester':
             return {
                 widgetTester: [`./src/test/datascience/widgets/rendererUtils.ts`]
