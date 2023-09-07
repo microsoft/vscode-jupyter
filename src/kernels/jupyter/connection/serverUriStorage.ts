@@ -137,9 +137,6 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
         this.hookupStorageEvents();
         await this.newStorage.migrateMRU();
         await this.newStorage.remove(server);
-        // this._all = this._all.filter(
-        //     (s) => generateIdFromRemoteProvider(s.provider) !== generateIdFromRemoteProvider(server)
-        // );
         this.getAll().catch(noop);
     }
 }
