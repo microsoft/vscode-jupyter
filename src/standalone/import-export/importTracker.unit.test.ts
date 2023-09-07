@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 /* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
+import * as sinon from 'sinon';
 import { assert, expect } from 'chai';
-import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
 import {
     EventEmitter,
@@ -27,7 +27,7 @@ import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../platform/telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { ImportTracker } from './importTracker';
-import { ResourceTypeTelemetryProperty } from '../../telemetry';
+import { ResourceTypeTelemetryProperty, getTelemetryReporter } from '../../telemetry';
 import { waitForCondition } from '../../test/common';
 import { createMockedNotebookDocument } from '../../test/datascience/editor-integration/helpers';
 
@@ -113,11 +113,14 @@ suite('Import Tracker', async () => {
         randomHash = await getTelemetrySafeHashedString('random');
     });
     setup(() => {
+        const reporter = getTelemetryReporter();
+        sinon.stub(reporter, 'sendTelemetryEvent').callsFake((eventName: string, properties?: {}, measures?: {}) => {
+            Reporter.eventNames.push(eventName);
+            Reporter.properties.push(properties!);
+            Reporter.measures.push(measures!);
+        });
         setTestExecution(false);
         setUnitTestExecution(false);
-
-        rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         vscNb = mock<IVSCodeNotebook>();
         onDidOpenNbEvent = new EventEmitter<NotebookDocument>();
@@ -144,12 +147,12 @@ suite('Import Tracker', async () => {
         importTracker = new ImportTracker(instance(vscNb), disposables, instance(workspace));
     });
     teardown(() => {
+        sinon.restore();
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
         setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);
         Reporter.properties = [];
         Reporter.eventNames = [];
         Reporter.measures = [];
-        rewiremock.disable();
         dispose(disposables);
     });
 

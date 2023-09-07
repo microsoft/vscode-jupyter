@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 /* eslint-disable , , @typescript-eslint/no-explicit-any */
+import * as sinon from 'sinon';
 import { expect } from 'chai';
-import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
-
 import { instance, mock, verify, when } from 'ts-mockito';
 import { WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
@@ -13,7 +12,7 @@ import { WorkspaceService } from '../common/application/workspace.node';
 import { EXTENSION_ROOT_DIR } from '../constants.node';
 import {
     _resetSharedProperties,
-    clearTelemetryReporter,
+    getTelemetryReporter,
     isTelemetryDisabled,
     sendTelemetryEvent,
     setSharedProperty
@@ -38,15 +37,6 @@ suite('Telemetry', () => {
             Reporter.measures = [];
             Reporter.errorProps = undefined;
         }
-        public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
-            Reporter.eventName.push(eventName);
-            Reporter.properties.push(properties!);
-            Reporter.measures.push(measures!);
-        }
-        public sendTelemetryErrorEvent(eventName: string, properties?: {}, measures?: {}, errorProps?: string[]) {
-            this.sendTelemetryEvent(eventName, properties, measures);
-            Reporter.errorProps = errorProps;
-        }
     }
 
     async function asyncAssertReporterState(
@@ -70,16 +60,21 @@ suite('Telemetry', () => {
     }
 
     setup(() => {
+        const reporter = getTelemetryReporter();
+        sinon.stub(reporter, 'sendTelemetryEvent').callsFake((eventName: string, properties?: {}, measures?: {}) => {
+            Reporter.eventName.push(eventName);
+            Reporter.properties.push(properties!);
+            Reporter.measures.push(measures!);
+        });
         workspaceService = mock(WorkspaceService);
         setTestExecution(false);
         setUnitTestExecution(false);
-        clearTelemetryReporter();
         Reporter.clear();
     });
     teardown(() => {
+        sinon.restore();
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
         setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);
-        rewiremock.disable();
         _resetSharedProperties();
     });
 
@@ -115,9 +110,6 @@ suite('Telemetry', () => {
     });
 
     test('Send Telemetry', async () => {
-        rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
-
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
@@ -128,9 +120,6 @@ suite('Telemetry', () => {
         await asyncAssertReporterState([eventName], [measures], [properties]);
     });
     test('Send Telemetry with no properties', async () => {
-        rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
-
         const eventName = 'Testing';
 
         sendTelemetryEvent(eventName as any);
@@ -138,9 +127,6 @@ suite('Telemetry', () => {
         await asyncAssertReporterState([eventName], [undefined], [{}]);
     });
     test('Send Telemetry with shared properties', async () => {
-        rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
-
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
@@ -154,9 +140,6 @@ suite('Telemetry', () => {
         await asyncAssertReporterState([eventName], [measures], [expectedProperties]);
     });
     test('Shared properties will replace existing ones', async () => {
-        rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
-
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
@@ -170,9 +153,7 @@ suite('Telemetry', () => {
         await asyncAssertReporterState([eventName], [measures], [expectedProperties]);
     });
     test('Send Error Telemetry', async () => {
-        rewiremock.enable();
         const error = new Error('Boo');
-        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
@@ -196,7 +177,6 @@ suite('Telemetry', () => {
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
     });
     test('Send Error Telemetry with stack trace', async () => {
-        rewiremock.enable();
         const error = new Error('Boo');
         const root = EXTENSION_ROOT_DIR.replace(/\\/g, '/');
         error.stack = [
@@ -219,7 +199,6 @@ suite('Telemetry', () => {
             'at tryOnImmediate (timers.js:751:5)',
             'at processImmediate [as _immediateCallback] (timers.js:722:5)'
         ].join('\n\t');
-        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
 
         const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };

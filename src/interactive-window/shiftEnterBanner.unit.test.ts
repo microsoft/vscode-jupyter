@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 
 /* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
+import * as sinon from 'sinon';
 import { expect } from 'chai';
-import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from './shiftEnterBanner';
-
 import { IApplicationShell } from '../platform/common/application/types';
 import {
     isTestExecution,
@@ -21,7 +20,7 @@ import {
     IPersistentStateFactory,
     IWatchableJupyterSettings
 } from '../platform/common/types';
-import { clearTelemetryReporter } from '../telemetry';
+import { getTelemetryReporter } from '../telemetry';
 
 suite('Interactive Shift Enter Banner', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
@@ -33,31 +32,28 @@ suite('Interactive Shift Enter Banner', () => {
         public static eventNames: string[] = [];
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
-        public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
-            Reporter.eventNames.push(eventName);
-            Reporter.properties.push(properties!);
-            Reporter.measures.push(measures!);
-        }
     }
 
     setup(() => {
-        clearTelemetryReporter();
+        const reporter = getTelemetryReporter();
+        sinon.stub(reporter, 'sendTelemetryEvent').callsFake((eventName: string, properties?: {}, measures?: {}) => {
+            Reporter.eventNames.push(eventName);
+            Reporter.properties.push(properties!);
+            Reporter.measures.push(measures!);
+        });
         setUnitTestExecution(false);
         setTestExecution(false);
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         config = typemoq.Mock.ofType<IConfigurationService>();
-        rewiremock.enable();
-        rewiremock('@vscode/extension-telemetry').by(() => Reporter);
     });
 
     teardown(() => {
+        sinon.restore();
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
         setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);
         Reporter.properties = [];
         Reporter.eventNames = [];
         Reporter.measures = [];
-        rewiremock.disable();
-        clearTelemetryReporter();
     });
 
     test('Shift Enter Banner with Jupyter available', async () => {

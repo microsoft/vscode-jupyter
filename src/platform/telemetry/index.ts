@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import TelemetryReporter from '@vscode/extension-telemetry';
+import type TelemetryReporter from '@vscode/extension-telemetry';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution } from '../common/constants';
 import { traceError } from '../logging';
@@ -72,15 +72,12 @@ export function _resetSharedProperties(): void {
 }
 
 let telemetryReporter: TelemetryReporter | undefined;
-function getTelemetryReporter(): TelemetryReporter {
+export function getTelemetryReporter(): TelemetryReporter {
     if (telemetryReporter) {
         return telemetryReporter;
     }
-
-    return (telemetryReporter = new TelemetryReporter(AppinsightsKey));
-}
-export function clearTelemetryReporter() {
-    telemetryReporter = undefined;
+    const TelemetryReporrerClass = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
+    return (telemetryReporter = new TelemetryReporrerClass(AppinsightsKey));
 }
 
 function sanitizeProperties(eventName: string, data: Record<string, any>) {
