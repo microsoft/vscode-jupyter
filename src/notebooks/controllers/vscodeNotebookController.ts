@@ -766,7 +766,7 @@ async function updateNotebookDocumentMetadata(
     kernelConnection?: KernelConnectionMetadata,
     kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
 ) {
-    let metadata = getNotebookMetadata(document) || { orig_nbformat: 3 };
+    let metadata = getNotebookMetadata(document) || {};
     const { changed } = await updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
     if (changed) {
         const edit = new WorkspaceEdit();

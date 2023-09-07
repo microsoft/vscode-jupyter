@@ -88,7 +88,6 @@ export class JupyterExporter implements INotebookExporter {
                 pygments_lexer: `ipython${pythonNumber}`,
                 version: pythonNumber
             },
-            orig_nbformat: defaultNotebookFormat.major,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             kernelspec: kernelSpec as any
         };

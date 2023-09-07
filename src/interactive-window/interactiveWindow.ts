@@ -21,7 +21,7 @@ import {
     NotebookEditorRevealType
 } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
-import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
+import { Commands, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import uuid from 'uuid/v4';
@@ -620,7 +620,7 @@ export class InteractiveWindow implements IInteractiveWindow {
         const kernel = this.controller.kernel?.value;
 
         // Pull out the metadata from our active notebook
-        const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
+        const metadata: nbformat.INotebookMetadata = {};
         if (kernel) {
             await updateNotebookMetadata(metadata, kernel.kernelConnectionMetadata);
         }

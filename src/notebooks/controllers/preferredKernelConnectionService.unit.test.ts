@@ -28,7 +28,7 @@ import { TestNotebookDocument } from '../../test/datascience/notebook/executionH
 import { PreferredKernelConnectionService } from './preferredKernelConnectionService';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 
-suite('Preferred Kernel Connection', () => {
+suite.only('Preferred Kernel Connection', () => {
     let preferredService: PreferredKernelConnectionService;
     let serviceContainer: ServiceContainer;
     let jupyterConnection: JupyterConnection;

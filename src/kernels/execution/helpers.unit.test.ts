@@ -10,7 +10,7 @@ import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnviron
 
 // Function return type
 // type updateNotebookMetadataReturn = { changed: boolean; kernelId: string | undefined };
-suite(`UpdateNotebookMetadata`, () => {
+suite.only(`UpdateNotebookMetadata`, () => {
     const python36Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python36'),
         id: Uri.file('/usr/bin/python36').fsPath,

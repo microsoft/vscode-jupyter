@@ -872,7 +872,6 @@ export async function createNewNotebook() {
         custom: {
             cells: [],
             metadata: <nbformat.INotebookMetadata>{
-                orig_nbformat: defaultNotebookFormat.major,
                 language_info: {
                     name: language
                 }
