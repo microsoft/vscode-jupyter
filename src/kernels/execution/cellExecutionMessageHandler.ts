@@ -480,7 +480,9 @@ export class CellExecutionMessageHandler implements IDisposable {
             this.startTime = new Date().getTime();
             try {
                 // The time from the kernel is more accurate, as that will ignore the network latency.
-                this.startTime = new Date(msg.header.date).getTime();
+                // Note: There could be an offset between the time on the kernel and the time on the client.
+                // https://github.com/microsoft/vscode-jupyter/issues/14072
+                // this.startTime = new Date(msg.header.date).getTime();
             } catch {
                 //
             }
