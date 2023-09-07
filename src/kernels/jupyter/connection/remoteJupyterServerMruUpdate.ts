@@ -10,11 +10,12 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IJupyterServerUriStorage } from '../types';
 import { IKernel, IKernelProvider, isRemoteConnection } from '../../types';
 
-const INTERVAL_IN_SECONDS_TO_UPDATE_MRU = 60_000;
+const INTERVAL_IN_SECONDS_TO_UPDATE_MRU = 1_000;
 @injectable()
 export class RemoteJupyterServerMruUpdate implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
-    private readonly monitoredKernels = new WeakMap<IKernel, NodeJS.Timer | number | undefined>();
+    private readonly monitoredKernels = new WeakSet<IKernel>();
+    private readonly timeouts = new Set<Disposable>();
     constructor(
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
@@ -24,6 +25,7 @@ export class RemoteJupyterServerMruUpdate implements IExtensionSyncActivationSer
     }
     dispose() {
         dispose(this.disposables);
+        dispose(Array.from(this.timeouts.values()));
     }
     activate(): void {
         this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this, this.disposables);
@@ -34,28 +36,26 @@ export class RemoteJupyterServerMruUpdate implements IExtensionSyncActivationSer
         if (!isRemoteConnection(connection) || this.monitoredKernels.has(kernel)) {
             return;
         }
-        this.monitoredKernels.set(kernel, undefined);
+        this.monitoredKernels.add(kernel);
 
-        kernel.onStatusChanged(
-            () => {
-                const timeout = this.monitoredKernels.get(kernel);
-                if (timeout) {
-                    clearTimeout(timeout);
-                }
-                if (kernel.status === 'idle' && !kernel.disposed && !kernel.disposing) {
-                    const timeout = setTimeout(() => {
-                        // Log this remote URI into our MRU list
-                        this.serverStorage.update(connection.serverProviderHandle).catch(noop);
-                    }, INTERVAL_IN_SECONDS_TO_UPDATE_MRU);
-                    this.monitoredKernels.set(kernel, timeout);
-                    this.disposables.push(new Disposable(() => clearTimeout(timeout)));
-                }
-            },
-            this,
-            this.disposables
-        );
+        // We do not want 100s of 1000s of these timeouts,
+        // multiply by notebooks, and multiply by number of kernels, this grows unnecessarily.
+        const disposables: IDisposable[] = [];
+        this.disposables.push(new Disposable(() => dispose(disposables)));
 
+        const updateConnectionTime = () => {
+            dispose(disposables);
+            if (kernel.disposed || kernel.disposing) {
+                return;
+            }
+            const timeout = setTimeout(() => {
+                // Log this remote URI into our MRU list
+                this.serverStorage.update(connection.serverProviderHandle).catch(noop);
+            }, INTERVAL_IN_SECONDS_TO_UPDATE_MRU);
+            disposables.push(new Disposable(() => clearTimeout(timeout)));
+        };
+        this.kernelProvider.getKernelExecution(kernel).onPreExecute(updateConnectionTime, this, this.disposables);
         // Log this remote URI into our MRU list
-        this.serverStorage.update(connection.serverProviderHandle).catch(noop);
+        updateConnectionTime();
     }
 }
