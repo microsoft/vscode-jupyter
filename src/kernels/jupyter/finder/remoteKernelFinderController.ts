@@ -196,9 +196,9 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
     }
 
     // When a URI is removed, dispose the kernel finder for it
-    urisRemoved(uris: IJupyterServerUriEntry[]) {
-        uris.forEach((uri) => {
-            const serverId = generateIdFromRemoteProvider(uri.provider);
+    urisRemoved(providerHandles: JupyterServerProviderHandle[]) {
+        providerHandles.forEach((providerHandle) => {
+            const serverId = generateIdFromRemoteProvider(providerHandle);
             const serverFinder = this.serverFinderMapping.get(serverId);
             serverFinder && serverFinder.dispose();
             this.serverFinderMapping.delete(serverId);

@@ -199,7 +199,7 @@ export interface IJupyterServerUriStorage {
      */
     readonly onDidLoad: Event<void>;
     readonly onDidChange: Event<void>;
-    readonly onDidRemove: Event<IJupyterServerUriEntry[]>;
+    readonly onDidRemove: Event<JupyterServerProviderHandle[]>;
     readonly onDidAdd: Event<IJupyterServerUriEntry>;
     readonly all: readonly IJupyterServerUriEntry[];
     /**

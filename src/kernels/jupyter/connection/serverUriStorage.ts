@@ -4,7 +4,7 @@
 import { EventEmitter, Memento, Uri, env } from 'vscode';
 import { inject, injectable, named } from 'inversify';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
-import { Identifiers, Settings } from '../../../platform/common/constants';
+import { Identifiers, JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID, Settings } from '../../../platform/common/constants';
 import { IMemento, GLOBAL_MEMENTO, IExtensionContext, IDisposableRegistry } from '../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import {
@@ -50,7 +50,7 @@ export class JupyterServerUriStorage extends Disposables implements IJupyterServ
     public get onDidChange() {
         return this._onDidChangeUri.event;
     }
-    private _onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
+    private _onDidRemoveUris = new EventEmitter<JupyterServerProviderHandle[]>();
     public get onDidRemove() {
         return this._onDidRemoveUris.event;
     }
@@ -210,7 +210,7 @@ class NewStorage {
     public get onDidChange() {
         return this._onDidChangeUri.event;
     }
-    private _onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
+    private _onDidRemoveUris = new EventEmitter<JupyterServerProviderHandle[]>();
     public get onDidRemove() {
         return this._onDidRemoveUris.event;
     }
@@ -335,7 +335,7 @@ class NewStorage {
                             displayName: removedItem.displayName || ''
                         };
                     });
-                    this._onDidRemoveUris.fire(removeJupyterUris);
+                    this._onDidRemoveUris.fire(removeJupyterUris.map((item) => item.provider));
                 }
                 this._onDidChangeUri.fire();
             })
@@ -347,45 +347,66 @@ class NewStorage {
         const existingEntry = uriList.find(
             (entry) => entry.provider.id === server.id && entry.provider.handle === server.handle
         );
-        if (!existingEntry) {
+        if (
+            !existingEntry &&
+            server.extensionId !== JVSC_EXTENSION_ID &&
+            server.extensionId !== JUPYTER_HUB_EXTENSION_ID
+        ) {
             throw new Error(`Uri not found for Server Id ${JSON.stringify(server)}`);
         }
         const entry: IJupyterServerUriEntry = {
-            provider: existingEntry.provider,
+            provider: server,
             time: Date.now(),
-            displayName: existingEntry.displayName || ''
+            displayName: existingEntry?.displayName || ''
         };
         await this.add(entry);
     }
     public async remove(server: JupyterServerProviderHandle) {
         await (this.updatePromise = this.updatePromise
             .then(async () => {
-                const all = this.getAll();
-                if (all.length === 0) {
-                    return;
-                }
-                const editedList = all.filter(
-                    (f) => f.provider.id !== server.id || f.provider.handle !== server.handle
-                );
-                const removedItems = all.filter(
-                    (f) => f.provider.id === server.id && f.provider.handle === server.handle
-                );
+                let removedTriggered = false;
+                try {
+                    const all = this.getAll();
+                    if (all.length === 0) {
+                        return;
+                    }
+                    const editedList = all.filter(
+                        (f) => f.provider.id !== server.id || f.provider.handle !== server.handle
+                    );
+                    const removedItems = all.filter(
+                        (f) => f.provider.id === server.id && f.provider.handle === server.handle
+                    );
 
-                if (editedList.length === 0) {
-                    await this.clear();
-                } else if (removedItems.length) {
-                    const items = editedList.map((item) => {
-                        return <StorageMRUItem>{
-                            displayName: item.displayName,
-                            serverHandle: item.provider,
-                            time: item.time
-                        };
-                    });
-                    await this.memento.update(this.mementoKey, items);
-                    this._onDidRemoveUris.fire(removedItems);
+                    if (editedList.length === 0) {
+                        await this.clear();
+                    } else if (removedItems.length) {
+                        const items = editedList.map((item) => {
+                            return <StorageMRUItem>{
+                                displayName: item.displayName,
+                                serverHandle: item.provider,
+                                time: item.time
+                            };
+                        });
+                        removedTriggered = true;
+                        await this.memento.update(this.mementoKey, items);
+                        this._onDidRemoveUris.fire(removedItems.map((item) => item.provider));
+                    }
+                } finally {
+                    // TODO: This is debt.
+                    // For the old code we must trigger the event even if the item does not exist.
+                    // This is required by the Kernel Finder.
+                    // Kernel Finder Controller will look at this URI storage and build a list of kernel finder.
+                    // When we add a new server and then remove it even without using it.
+                    // The the item still shows up in the quick pick and the kernel finder still exists.
+                    // Thats because the kernel finder controller monitors this event and then disposes the corresponding kernel finder.
+                    if (!removedTriggered) {
+                        this._onDidRemoveUris.fire([server]);
+                    }
                 }
             })
-            .catch(noop));
+            .catch((ex) => {
+                console.error(ex);
+            }));
     }
     public getAll(): IJupyterServerUriEntry[] {
         const data = this.memento.get<StorageMRUItem[]>(this.mementoKey, []);
@@ -406,7 +427,7 @@ class NewStorage {
         const all = this.getAll();
         await this.memento.update(this.mementoKey, []);
         if (all.length) {
-            this._onDidRemoveUris.fire(all);
+            this._onDidRemoveUris.fire(all.map((e) => e.provider));
         }
     }
 }

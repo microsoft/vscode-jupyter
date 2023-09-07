@@ -16,7 +16,6 @@ export class ConnectionDisplayData implements IDisposable, IConnectionDisplayDat
     public readonly onDidChange = this._onDidChange.event;
 
     constructor(
-        public readonly connectionId: string,
         public label: string,
         public description: string | undefined,
         public detail: string,

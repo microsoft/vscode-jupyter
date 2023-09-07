@@ -9,7 +9,6 @@ import { noop } from '../../../platform/common/utils/misc';
 import { LiveRemoteKernelConnectionMetadata } from '../../types';
 import { generateIdFromRemoteProvider } from '../jupyterUtils';
 import {
-    IJupyterServerUriEntry,
     IJupyterServerUriStorage,
     ILiveRemoteKernelConnectionUsageTracker,
     JupyterServerProviderHandle
@@ -42,7 +41,7 @@ export class LiveRemoteKernelConnectionUsageTracker
             mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
             {}
         );
-        this.uriStorage.onDidRemove(this.onDidRemoveUris, this, this.disposables);
+        this.uriStorage.onDidRemove(this.onDidRemoveServers, this, this.disposables);
     }
 
     public wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata) {
@@ -97,9 +96,9 @@ export class LiveRemoteKernelConnectionUsageTracker
             )
             .then(noop, noop);
     }
-    private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
-        uriEntries.forEach((uriEntry) => {
-            const id = generateIdFromRemoteProvider(uriEntry.provider);
+    private onDidRemoveServers(servers: JupyterServerProviderHandle[]) {
+        servers.forEach((server) => {
+            const id = generateIdFromRemoteProvider(server);
             delete this.usedRemoteKernelServerIdsAndSessions[id];
             this.memento
                 .update(

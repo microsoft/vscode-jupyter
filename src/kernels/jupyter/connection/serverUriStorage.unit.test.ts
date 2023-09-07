@@ -9,7 +9,8 @@ import { EventEmitter, Memento, Uri } from 'vscode';
 import {
     IJupyterServerUriEntry,
     IJupyterServerUriStorage,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    JupyterServerProviderHandle
 } from '../../../kernels/jupyter/types';
 import { dispose } from '../../../platform/common/helpers';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';
@@ -35,7 +36,7 @@ suite('Server Uri Storage', async () => {
     let context: IExtensionContext;
     let globalStorageUri = Uri.file('GlobalStorage');
     let storageFile = Uri.joinPath(globalStorageUri, 'remoteServersMRUList.json');
-    let onDidRemoveEvent: TestEventHandler<IJupyterServerUriEntry[]>;
+    let onDidRemoveEvent: TestEventHandler<JupyterServerProviderHandle[]>;
     let onDidChangeEvent: TestEventHandler<void>;
     let onDidAddEvent: TestEventHandler<IJupyterServerUriEntry>;
     const machineId = 'SomeMachineId';
@@ -151,7 +152,7 @@ suite('Server Uri Storage', async () => {
 
         // Event should be triggered indicating items have been removed
         await onDidRemoveEvent.assertFired(1);
-        const items = onDidRemoveEvent.first as IJupyterServerUriEntry[];
+        const items = onDidRemoveEvent.first;
         assert.strictEqual(items.length, 2);
     });
     test('Clear without any data', async () => {
@@ -646,7 +647,11 @@ suite('Server Uri Storage', async () => {
         const all = await serverUriStorage.getAll();
 
         assert.strictEqual(all.length, 0);
-        assert.equal(onDidRemoveEvent.count, 5, 'Event should be fired 5 times');
+        assert.equal(
+            onDidRemoveEvent.count,
+            6,
+            'Event should be fired 5 + 1 (extra for a debt issue, even if noting is removed we need to fire an event) times'
+        );
         assert.equal(onDidAddEvent.count, 3, 'Event should be fired 3 times');
         assert.equal(onDidChangeEvent.count, 3, 'Event should be fired 4 times (3 for add, one for remove)');
     });
@@ -862,10 +867,10 @@ suite('Server Uri Storage', async () => {
         assert.strictEqual(all.length, 10);
         assert.strictEqual(onDidRemoveEvent.count, 1, 'One should be automatically removed');
         assert.strictEqual(onDidAddEvent.count, 1, 'Added 1 items');
-        assert.strictEqual(onDidRemoveEvent.first[0].provider.handle, 'handle1');
-        assert.strictEqual(onDidRemoveEvent.first[0].provider.id, UserJupyterServerPickerProviderId);
-        assert.strictEqual(onDidRemoveEvent.first[0].provider.handle, oldest.provider.handle);
-        assert.strictEqual(onDidRemoveEvent.first[0].provider.id, oldest.provider.id);
+        assert.strictEqual(onDidRemoveEvent.first[0].handle, 'handle1');
+        assert.strictEqual(onDidRemoveEvent.first[0].id, UserJupyterServerPickerProviderId);
+        assert.strictEqual(onDidRemoveEvent.first[0].handle, oldest.provider.handle);
+        assert.strictEqual(onDidRemoveEvent.first[0].id, oldest.provider.id);
 
         // Add (or update with the same item) does not remove any items.
         onDidAddEvent.reset();
@@ -891,10 +896,10 @@ suite('Server Uri Storage', async () => {
         assert.strictEqual(all.length, 10);
         assert.strictEqual(onDidRemoveEvent.count, 1, 'One should be automatically removed');
         assert.strictEqual(onDidAddEvent.count, 1, 'Added 1 items');
-        assert.strictEqual(onDidRemoveEvent.first[0].provider.handle, 'handle2');
-        assert.strictEqual(onDidRemoveEvent.first[0].provider.id, UserJupyterServerPickerProviderId);
-        assert.strictEqual(onDidRemoveEvent.first[0].provider.handle, oldest.provider.handle);
-        assert.strictEqual(onDidRemoveEvent.first[0].provider.id, oldest.provider.id);
+        assert.strictEqual(onDidRemoveEvent.first[0].handle, 'handle2');
+        assert.strictEqual(onDidRemoveEvent.first[0].id, UserJupyterServerPickerProviderId);
+        assert.strictEqual(onDidRemoveEvent.first[0].handle, oldest.provider.handle);
+        assert.strictEqual(onDidRemoveEvent.first[0].id, oldest.provider.id);
     });
     test('Can get existing items', async function () {
         generateDummyData(8, true);

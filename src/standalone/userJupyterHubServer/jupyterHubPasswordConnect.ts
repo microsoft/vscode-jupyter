@@ -17,8 +17,8 @@ import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
-    IJupyterServerUriEntry,
-    IJupyterServerUriStorage
+    IJupyterServerUriStorage,
+    JupyterServerProviderHandle
 } from '../../kernels/jupyter/types';
 import { dispose } from '../../platform/common/helpers';
 
@@ -46,7 +46,7 @@ export class JupyterHubPasswordConnect {
         private readonly disposables: IDisposableRegistry
     ) {
         // Sign up to see if servers are removed from our uri storage list
-        this.serverUriStorage.onDidRemove(this.onDidRemoveUris, this, this.disposables);
+        this.serverUriStorage.onDidRemove(this.onDidRemoveServers, this, this.disposables);
     }
     public async getPasswordConnectionInfo(options: {
         url: string;
@@ -407,10 +407,10 @@ export class JupyterHubPasswordConnect {
     /**
      * When URIs are removed from the server list also remove them from
      */
-    private onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
-        uriEntries.forEach((uriEntry) => {
-            if (uriEntry.provider.id.startsWith('_builtin')) {
-                this.savedConnectInfo.delete(uriEntry.provider.handle);
+    private onDidRemoveServers(servers: JupyterServerProviderHandle[]) {
+        servers.forEach((server) => {
+            if (server.id.startsWith('_builtin')) {
+                this.savedConnectInfo.delete(server.handle);
             }
         });
     }

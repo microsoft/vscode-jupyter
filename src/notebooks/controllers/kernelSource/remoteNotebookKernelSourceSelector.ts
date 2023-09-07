@@ -52,6 +52,7 @@ import { traceError } from '../../../platform/logging';
 import { IRemoteKernelFinderController } from '../../../kernels/jupyter/finder/types';
 import { raceCancellationError } from '../../../platform/common/cancellation';
 import { JupyterServer } from '../../../api';
+import { noop } from '../../../platform/common/utils/misc';
 
 enum KernelFinderEntityQuickPickType {
     KernelFinder = 'finder',
@@ -328,6 +329,13 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                                 provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
                         ) {
                             quickPick.busy = true;
+                            this.serverUriStorage
+                                .remove({
+                                    extensionId: provider.extensionId,
+                                    id: provider.id,
+                                    handle: serverId
+                                })
+                                .catch(noop);
                             await serverProvider.removeJupyterServer(serverToRemove);
                             quickPick.busy = false;
                             // the serverUriStorage should be refreshed after the handle removal

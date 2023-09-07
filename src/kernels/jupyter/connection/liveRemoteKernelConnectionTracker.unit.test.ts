@@ -7,7 +7,7 @@ import { assert, use } from 'chai';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
+import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../../../kernels/jupyter/types';
 import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import chaiAsPromised from 'chai-as-promised';
@@ -24,7 +24,7 @@ suite('Live kernel Connection Tracker', async () => {
     let serverUriStorage: IJupyterServerUriStorage;
     let memento: Memento;
     let tracker: LiveRemoteKernelConnectionUsageTracker;
-    let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
+    let onDidRemoveServers: EventEmitter<JupyterServerProviderHandle[]>;
     const disposables: IDisposable[] = [];
     const serverProviderHandle = { handle: 'handle2', id: 'id2', extensionId: '' };
     const remoteLiveKernel1 = LiveRemoteKernelConnectionMetadata.create({
@@ -93,9 +93,9 @@ suite('Live kernel Connection Tracker', async () => {
     setup(() => {
         serverUriStorage = mock<IJupyterServerUriStorage>();
         memento = mock<Memento>();
-        onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
-        disposables.push(onDidRemoveUris);
-        when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveUris.event);
+        onDidRemoveServers = new EventEmitter<JupyterServerProviderHandle[]>();
+        disposables.push(onDidRemoveServers);
+        when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveServers.event);
         tracker = new LiveRemoteKernelConnectionUsageTracker(
             disposables,
             instance(serverUriStorage),
@@ -240,7 +240,7 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Forget the Uri connection all together.
-        onDidRemoveUris.fire([{ time: 0, provider: serverProviderHandle }]);
+        onDidRemoveServers.fire([serverProviderHandle]);
 
         await waitForCondition(
             () => {
