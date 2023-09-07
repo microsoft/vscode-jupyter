@@ -465,16 +465,15 @@ export class CellExecution implements IDisposable {
             traceCellMessage(this.cell, 'Wait for jupyter execution');
             // const reply = await this.request.done;
             await this.request.done;
-            let completedTime: number | undefined;
-            try {
-                // The time from the kernel is more accurate, as that will ignore the network latency.
-                // Note: There could be an offset between the time on the kernel and the time on the client.
-                // https://github.com/microsoft/vscode-jupyter/issues/14072
-                // completedTime = new Date(reply.header.date).getTime();
-                completedTime = new Date().getTime();
-            } catch {
-                //
-            }
+            const completedTime = new Date().getTime();
+            // try {
+            //     // The time from the kernel is more accurate, as that will ignore the network latency.
+            //     // Note: There could be an offset between the time on the kernel and the time on the client.
+            //     // https://github.com/microsoft/vscode-jupyter/issues/14072
+            //     completedTime = new Date(reply.header.date).getTime();
+            // } catch {
+            //     //
+            // }
             traceCellMessage(this.cell, 'Jupyter execution completed');
             this.completedSuccessfully(completedTime);
             traceCellMessage(this.cell, 'Executed successfully in executeCell');

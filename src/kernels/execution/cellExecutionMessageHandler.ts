@@ -478,14 +478,14 @@ export class CellExecutionMessageHandler implements IDisposable {
             // Set the start time after we get some kind of a response to the execution request.
             // This is a more accurate representation of when the cell execution started.
             this.startTime = new Date().getTime();
-            try {
-                // The time from the kernel is more accurate, as that will ignore the network latency.
-                // Note: There could be an offset between the time on the kernel and the time on the client.
-                // https://github.com/microsoft/vscode-jupyter/issues/14072
-                // this.startTime = new Date(msg.header.date).getTime();
-            } catch {
-                //
-            }
+            // try {
+            //     // The time from the kernel is more accurate, as that will ignore the network latency.
+            //     // Note: There could be an offset between the time on the kernel and the time on the client.
+            //     // https://github.com/microsoft/vscode-jupyter/issues/14072
+            //     // this.startTime = new Date(msg.header.date).getTime();
+            // } catch {
+            //     //
+            // }
             this.execution?.start(this.startTime);
             traceInfo(`Kernel acknowledged execution of cell ${this.cell.index} @ ${this.startTime}`);
         }
