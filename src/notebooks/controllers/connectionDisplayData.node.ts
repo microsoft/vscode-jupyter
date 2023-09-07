@@ -8,7 +8,7 @@ import {
     getRemoteKernelSessionInformation
 } from '../../kernels/helpers';
 import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
-import { KernelConnectionMetadata, isRemoteConnection } from '../../kernels/types';
+import { KernelConnectionMetadata } from '../../kernels/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
