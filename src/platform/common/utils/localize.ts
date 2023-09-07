@@ -582,11 +582,10 @@ export namespace DataScience {
     export const restartNotSupported = l10n.t('Restarting is not supported in the interactive window.');
     export const importingIpynb = l10n.t('Importing notebook file');
     export const exportingToFormat = (format: string) => l10n.t('Exporting to {0}', format);
-    export const kernelCategoryForJupyterSession = (serverName: string) => l10n.t('({0}) Jupyter Session', serverName);
+    export const kernelCategoryForJupyterSession = l10n.t('Jupyter Session');
     export const kernelDefaultRemoteDisplayName = l10n.t('Remote');
     export const kernelCategoryForJupyterKernel = l10n.t('Jupyter Kernel');
-    export const kernelCategoryForRemoteJupyterKernel = (kernelSpecName: string) =>
-        l10n.t('({0}) Jupyter Kernel', kernelSpecName);
+    export const kernelCategoryForRemoteJupyterKernel = l10n.t('({0}) Jupyter Kernel');
     export const kernelCategoryForConda = l10n.t('Conda Env');
     export const kernelCategoryForCondaWithoutPython = l10n.t('Conda Env Without Python');
     export const kernelCategoryForPoetry = l10n.t('Poetry Env');
