@@ -311,7 +311,10 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 >
             >({
                 items: items,
-                placeholder: '',
+                placeholder:
+                    provider.extensionId === JVSC_EXTENSION_ID || provider.extensionId === JUPYTER_HUB_EXTENSION_ID
+                        ? DataScience.enterOrSelectRemoteJupyterPlaceholder
+                        : DataScience.selectRemoteJupyterPlaceholder,
                 title: DataScience.quickPickTitleForSelectionOfJupyterServer,
                 supportBackInFirstStep: true,
                 onDidTriggerItemButton: async (e) => {
@@ -501,10 +504,12 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         source: Promise<IRemoteKernelFinder>,
         token: CancellationToken
     ) {
+        let recommended: RemoteKernelConnectionMetadata | undefined;
         const quickPickFactory = (item: KernelConnectionMetadata) => {
             const displayData = this.displayDataProvider.getDisplayData(item);
+            const prefix = item === recommended ? '$(star-full) ' : '';
             return <QuickPickItem>{
-                label: displayData.label,
+                label: `${prefix}${displayData.label}`,
                 description: displayData.description,
                 detail: displayData.detail
             };
@@ -528,7 +533,13 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         const preferred = new PreferredKernelConnectionService(this.jupyterConnection);
         source
             .then((source) => preferred.findPreferredRemoteKernelConnection(notebook, source, token))
-            .then((item) => (remoteKernelPicker.selected = item))
+            .then((item) => {
+                recommended = item;
+                if (item?.kind === 'startUsingRemoteKernelSpec') {
+                    remoteKernelPicker.recommended = item;
+                }
+                remoteKernelPicker.selected = item;
+            })
             .catch((ex) => traceError(`Failed to determine preferred remote kernel`, ex));
         return remoteKernelPicker.selectItem(token);
     }

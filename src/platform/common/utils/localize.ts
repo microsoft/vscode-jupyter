@@ -4,6 +4,7 @@
 import { l10n } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { getDisplayPath } from '../platform/fs-paths';
+import { fromNow } from './date';
 
 function getInterpreterDisplayName(interpreter: PythonEnvironment) {
     const interpreterDisplayName = interpreter.displayName || interpreter.envName || '';
@@ -27,7 +28,7 @@ export namespace Common {
     export const reload = l10n.t('Reload');
     export const moreInfo = l10n.t('More Info');
     export const learnMore = l10n.t('Learn more');
-    export const labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems = l10n.t('More');
+    export const labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems = l10n.t('more');
     export const and = l10n.t('and');
     export const reportThisIssue = l10n.t('Report this issue');
     export const clickHereForMoreInfoWithHtml = (link: string) =>
@@ -202,9 +203,9 @@ export namespace DataScience {
     export const jupyterSelfCertClose = l10n.t('No, close the connection');
     export const pythonInteractiveHelpLink = l10n.t('See <https://aka.ms/pyaiinstall> for help on installing Jupyter.');
     export const importingFormat = (pythoModuleName: string) => l10n.t('Importing {0}', pythoModuleName);
-    export const startingJupyter = l10n.t('Starting Jupyter server');
+    export const startingJupyter = l10n.t('Starting Jupyter Server');
     export const connectingToKernel = (kernelName: string) => l10n.t('Connecting to kernel: {0}', kernelName);
-    export const connectingToJupyter = l10n.t('Connecting to Jupyter server');
+    export const connectingToJupyter = l10n.t('Connecting to Jupyter Server');
     export const exportingFormat = (fileName: string) => l10n.t('Exporting {0}', fileName);
     export const runAllCellsLensCommandTitle = l10n.t('Run All Cells');
     export const runAllCellsAboveLensCommandTitle = l10n.t('Run Above');
@@ -219,7 +220,7 @@ export namespace DataScience {
         l10n.t('Reconnecting to the kernel {0}', kernelName);
     export const restartingKernelStatus = (kernelName: string) => l10n.t('Restarting Kernel {0}', kernelName);
     export const interruptingKernelFailed = l10n.t(
-        'Kernel interrupt failed. Jupyter server is hung. Please reload VS Code.'
+        'Kernel interrupt failed. Jupyter Server is hung. Please reload VS Code.'
     );
     export const sessionStartFailedWithKernel = (kernelName: string) =>
         l10n.t({
@@ -350,24 +351,41 @@ export namespace DataScience {
     export const startingNewKernelHeader = l10n.t('_Connecting to kernel..._');
     export const startingNewKernelCustomHeader = (kernelName: string) => l10n.t('_Connecting to {0}..._', kernelName);
     export const noKernelConnected = l10n.t('No kernel connected');
-    export const jupyterSelectURIPrompt = l10n.t('Enter the URL of the running Jupyter server');
-    export const connectToToTheJupyterServer = (url: string) => l10n.t('Connect to the Jupyter server {0}', url);
+    export const jupyterSelectUriCommandLabel = l10n.t('Enter the URL of the running Jupyter Server...');
+    export const jupyterSelectUriInputTitle = l10n.t('Enter the URL of the running Jupyter Server');
+    export const jupyterSelectUriInputPlaceholder = l10n.t('Enter the url of the running Jupyter Server');
+    export const connectToToTheJupyterServer = (url: string) => l10n.t('Connect to the Jupyter Server {0}', url);
     export const jupyterSelectURIMRUDetail = (date: Date) => l10n.t('Last Connection: {0}', date.toLocaleString());
-    export const jupyterSelectURINewDetail = l10n.t('Specify the URL of an existing server');
+    export const enterOrSelectRemoteJupyterPlaceholder = l10n.t('Enter a remote url, or select a remote server');
+    export const selectRemoteJupyterPlaceholder = l10n.t('Select a remote server');
+    export const jupyterServerLastConnectionForQuickPickDescription = (date: Date) =>
+        l10n.t('Last connected {0}', fromNow(date, true, false, false));
+    export const jupyterServerNotUsedBeforeQuickPickSeparatorTitle = l10n.t('Jupyter Servers');
     export const jupyterSelectURIInvalidURI = l10n.t('Invalid URL specified');
     export const jupyterSelectURIMustBeHttpOrHttps = l10n.t(
         'Invalid protocol in URL specified, only HTTP or HTTPS are supported.'
     );
-    export const jupyterSelectURIRunningDetailFormat = (time: Date, numberOfConnections: number) =>
-        l10n.t('Last connection {0}. {1} existing connections.', time.toLocaleString(), numberOfConnections.toString());
+    export const jupyterSelectLiveRemoteKernelDescription = (time: Date, numberOfConnections: number) => {
+        if (numberOfConnections === 0) {
+            return l10n.t('Last activity {0}', fromNow(time, true, false, false));
+        }
+        if (numberOfConnections === 1) {
+            return l10n.t('Last activity {0}, 1 connection', fromNow(time, true, false, false));
+        }
+        return l10n.t(
+            'Last activity {0}, {1} connections',
+            fromNow(time, true, false, false),
+            numberOfConnections.toString()
+        );
+    };
     export const jupyterSelectUserAndPasswordTitle = l10n.t(
         'Enter your user name and password to connect to Jupyter Hub'
     );
     export const jupyterRenameServer = l10n.t('Change Server Display Name (Leave Blank To Use URL)');
+    export const jupyterServerUriDisplayNameInputPlaceholder = l10n.t('Enter a display name');
     export const jupyterSelectUserPrompt = l10n.t('Enter your user name');
     export const jupyterSelectPasswordPrompt = l10n.t('Enter your password');
-    export const jupyterSelectPasswordTitle = (jupyterServer: string) =>
-        l10n.t('Enter your password for the Jupyter Server {0}', jupyterServer);
+    export const jupyterSelectPasswordTitle = l10n.t('Enter your password for the Jupyter Server');
     export const pythonNotInstalled = l10n.t(
         'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook. \nOnce installed please reload VS Code.'
     );
@@ -397,7 +415,7 @@ export namespace DataScience {
     export const removeRemoteJupyterConnectionButtonText = l10n.t('Forget Connection');
     export const jupyterNotebookRemoteConnectFailedWeb = (hostName: string) =>
         l10n.t(
-            'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URL can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.',
+            'Failed to connect to remote Jupyter Server.\r\nCheck that the Jupyter Server URL can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.',
             hostName
         );
     export const packageNotInstalledWindowsLongPathNotEnabledError = (
@@ -412,7 +430,7 @@ export namespace DataScience {
     export const changeRemoteJupyterConnectionButtonText = l10n.t('Manage Connections');
     export const rawConnectionBrokenError = l10n.t('Direct kernel connection broken');
     export const jupyterServerCrashed = (exitCode: number) =>
-        l10n.t('Jupyter server crashed. Unable to connect. \r\nError code from Jupyter: {0}', exitCode.toString());
+        l10n.t('Jupyter Server crashed. Unable to connect. \r\nError code from Jupyter: {0}', exitCode.toString());
     export const jupyterKernelSpecModuleNotFound = (pythonExecFileName: string) =>
         l10n.t(
             "'Kernelspec' module not installed in the selected interpreter ({0}).\n Please re-install or update 'jupyter'.",
@@ -427,7 +445,7 @@ export namespace DataScience {
     );
     export const documentMismatch = (fileName: string) =>
         l10n.t('Cannot run cells, duplicate documents for {0} found.', fileName);
-    export const jupyterGetVariablesBadResults = l10n.t('Failed to fetch variable info from the Jupyter server.');
+    export const jupyterGetVariablesBadResults = l10n.t('Failed to fetch variable info from the Jupyter Server.');
     l10n.t("Failure to create an 'Interactive' window. Try reinstalling the Python Extension.");
     export const jupyterGetVariablesExecutionError = (errorMessage: string) =>
         l10n.t('Failure during variable extraction: \r\n{0}', errorMessage);
@@ -699,7 +717,7 @@ export namespace DataScience {
     export const quickPickSelectPythonEnvironmentTitle = l10n.t('Select a Python Environment');
     export const kernelPickerSelectKernelFromRemoteTitle = (kernelProvider: string) =>
         l10n.t('Select a Kernel from {0}', kernelProvider);
-    export const kernelPickerSelectKernelFromRemoteTitleWithoutName = l10n.t('Select a Kernel');
+    export const kernelPickerSelectKernelFromRemoteTitleWithoutName = l10n.t('Select a Jupyter Kernel');
     export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');
     export const installPythonExtensionViaKernelPickerToolTip = l10n.t(
         'Python Extension is required to detect and use Python environments for the execution of code cells.'
