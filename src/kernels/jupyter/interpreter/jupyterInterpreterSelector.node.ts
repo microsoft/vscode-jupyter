@@ -76,7 +76,9 @@ export class JupyterInterpreterSelector {
             Promise.resolve(provider),
             pythonEnvironmentQuickPick,
             getPythonEnvironmentCategory,
-            { supportsBack: false }
+            { supportsBack: false },
+            undefined,
+            DataScience.quickPickSelectPythonEnvironmentTitle
         );
         selector.placeholder = placeholder;
         selector.selected = findSelectedEnvironment();

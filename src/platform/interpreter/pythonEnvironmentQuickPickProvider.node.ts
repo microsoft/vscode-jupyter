@@ -18,7 +18,7 @@ import { dispose } from '../common/helpers';
 export class PythonEnvironmentQuickPickItemProvider
     implements IQuickPickItemProvider<Environment>, IExtensionSyncActivationService
 {
-    title: string = DataScience.quickPickSelectPythonEnvironmentTitle;
+    title: string = DataScience.localPythonEnvironments;
     private _onDidChange = new EventEmitter<void>();
     private _onDidChangeStatus = new EventEmitter<void>();
     onDidChange = this._onDidChange.event;
