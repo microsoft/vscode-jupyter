@@ -101,9 +101,11 @@ export class LocalPythonEnvNotebookKernelSourceSelector
     }
     public async selectLocalKernel(notebook: NotebookDocument): Promise<PythonKernelConnectionMetadata | undefined> {
         const cancellationTokenSource = new CancellationTokenSource();
+        const disposables: IDisposable[] = [cancellationTokenSource];
         try {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             const selector = new LocalPythonKernelSelector(notebook, cancellationTokenSource.token);
+            disposables.push(selector);
             const kernel = await selector.selectKernel();
             if (kernel instanceof Error) {
                 if (kernel instanceof InputFlowAction && kernel === InputFlowAction.back) {
@@ -115,7 +117,7 @@ export class LocalPythonEnvNotebookKernelSourceSelector
             this.addUpdateKernel(kernel);
             return kernel;
         } finally {
-            cancellationTokenSource.dispose();
+            dispose(disposables);
         }
     }
     private addUpdateKernel(kernel: PythonKernelConnectionMetadata) {

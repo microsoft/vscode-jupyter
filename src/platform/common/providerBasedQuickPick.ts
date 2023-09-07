@@ -85,7 +85,8 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         private readonly createErrorQuickPickItem?: (
             error: Error,
             provider: BaseProviderBasedQuickPick<T>
-        ) => QuickPickItem
+        ) => QuickPickItem,
+        private _title?: string
     ) {
         super();
     }
@@ -137,11 +138,13 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         quickPick.value = this.previouslyEnteredValue;
         quickPick.onDidChangeValue((e) => (this.previouslyEnteredValue = e), this, disposables);
         quickPick.onDidHide(() => dispose(disposables), this, disposables);
-        quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitleWithoutName;
+        quickPick.title = this._title || DataScience.kernelPickerSelectKernelFromRemoteTitleWithoutName;
         this.provider
             .then((provider) => {
                 this.resolvedProvider = provider;
-                quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitle(provider.title);
+                if (!this._title) {
+                    quickPick.title = DataScience.kernelPickerSelectKernelFromRemoteTitle(provider.title);
+                }
                 quickPick.busy = provider.status === 'discovering';
                 provider.onDidChange(() => this.updateQuickPickItems(quickPick, provider), this, disposables);
                 quickPick.onDidTriggerButton(
