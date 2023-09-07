@@ -6,7 +6,6 @@ import { IExtensionSyncActivationService } from '../../../platform/activation/ty
 import { ICommandManager } from '../../../platform/common/application/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 
 /**
@@ -22,7 +21,6 @@ export class JupyterInterpreterSelectionCommand implements IExtensionSyncActivat
     public activate() {
         this.disposables.push(
             this.cmdManager.registerCommand('jupyter.selectJupyterInterpreter', () => {
-                sendTelemetryEvent(Telemetry.SelectJupyterInterpreterCommand);
                 this.service.selectInterpreter().catch(noop);
             })
         );

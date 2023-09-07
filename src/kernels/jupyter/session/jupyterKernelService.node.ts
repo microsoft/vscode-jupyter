@@ -18,7 +18,7 @@ import { getDisplayPath, getFilePath } from '../../../platform/common/platform/f
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions } from '../../../platform/common/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { capturePerfTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterKernelDependencyError } from '../../errors/jupyterKernelDependencyError';
 import { cleanEnvironment } from '../../helpers';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
@@ -126,7 +126,6 @@ export class JupyterKernelService implements IJupyterKernelService {
      * - metadata.interpreter = Interpreter information (useful in finding a kernel that matches a given interpreter)
      * - env = Will have environment variables of the activated environment.
      */
-    @capturePerfTelemetry(Telemetry.RegisterInterpreterAsKernel)
     @traceDecoratorError('Failed to register an interpreter as a kernel')
     private async registerKernel(
         kernel: LocalKernelConnectionMetadata,
