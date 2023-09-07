@@ -317,6 +317,14 @@ function fixUiFabricCompilationIssues() {
     });
 }
 
+function ensureOrigNBFormatIsOptional() {
+    const stringToReplace = 'orig_nbformat: number;';
+    const filePath = path.join(__dirname, '..', '..', 'node_modules/@jupyterlab/nbformat/lib/index.d.ts');
+    const source = fs.readFileSync(filePath, 'utf8');
+    if (source.includes(stringToReplace)) {
+        fs.writeFileSync(filePath, source.replace(stringToReplace, 'orig_nbformat?: number;'));
+    }
+}
 fixUIFabricForTS49();
 fixJupyterLabRenderers();
 makeVariableExplorerAlwaysSorted();
@@ -327,6 +335,7 @@ updateJSDomTypeDefinition();
 fixStripComments();
 verifyMomentIsOnlyUsedByJupyterLabCoreUtils();
 fixUiFabricCompilationIssues();
+ensureOrigNBFormatIsOptional();
 downloadZmqBinaries()
     .then(() => process.exit(0))
     .catch((ex) => {
