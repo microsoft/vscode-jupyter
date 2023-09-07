@@ -88,12 +88,12 @@ export class BaseKernelConnectionMetadata {
 export class LiveRemoteKernelConnectionMetadata {
     public readonly kind = 'connectToLiveRemoteKernel';
     public readonly kernelModel: LiveKernelModel;
-    /**
-     * Python interpreter will be used for intellisense & the like.
-     */
     public readonly baseUrl: string;
     public readonly serverProviderHandle: JupyterServerProviderHandle;
     public readonly id: string;
+    /**
+     * Python interpreter will be used for intellisense & the like.
+     */
     public readonly interpreter?: PythonEnvironment;
 
     private constructor(options: {
@@ -124,6 +124,9 @@ export class LiveRemoteKernelConnectionMetadata {
         serverProviderHandle: JupyterServerProviderHandle;
     }) {
         return new LiveRemoteKernelConnectionMetadata(options);
+    }
+    public updateModel(model: LiveKernelModel) {
+        Object.assign(this.kernelModel, model);
     }
     public getHashId() {
         return getConnectionIdHash(this);

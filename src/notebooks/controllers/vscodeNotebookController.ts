@@ -365,11 +365,15 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }
     private updateDisplayData() {
         this.controller.label = this.displayData.label;
-        this.controller.description = this.displayData.description;
+        // Do not set descriptions for the live kernels,
+        // Descriptions contains date/time, and the controller never gets updated every second,
+        // Hence having the date time is not going to work.
+        let description = this.connection.kind === 'connectToLiveRemoteKernel' ? '' : this.displayData.description;
+        this.controller.description = description;
         if (this.displayData.serverDisplayName) {
             // MRU kernel picker doesn't show controller kind/category, so add server name to description
-            this.controller.description = this.displayData.description
-                ? `${this.displayData.description} (${this.displayData.serverDisplayName})`
+            this.controller.description = description
+                ? `${description} (${this.displayData.serverDisplayName})`
                 : this.displayData.serverDisplayName;
         }
     }

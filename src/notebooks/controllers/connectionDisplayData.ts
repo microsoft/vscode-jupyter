@@ -3,24 +3,28 @@
 
 import { EventEmitter } from 'vscode';
 import { getKernelRegistrationInfo } from '../../kernels/helpers';
-import { IJupyterUriProviderRegistration } from '../../kernels/jupyter/types';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { IConnectionDisplayData } from './types';
-import { getJupyterDisplayName } from '../../kernels/jupyter/connection/jupyterUriProviderRegistration';
 
 export class ConnectionDisplayData implements IDisposable, IConnectionDisplayData {
     private readonly _onDidChange = new EventEmitter<ConnectionDisplayData>();
     public readonly onDidChange = this._onDidChange.event;
-
+    public get description(): string | undefined {
+        return this.getDescription?.() || this._description;
+    }
+    public set description(value: string | undefined) {
+        this._description = value;
+    }
     constructor(
         public label: string,
-        public description: string | undefined,
+        private _description: string | undefined,
         public detail: string,
         public category: string,
-        public serverDisplayName?: string
+        public serverDisplayName?: string,
+        private readonly getDescription?: () => string
     ) {}
     dispose(): void | undefined {
         this._onDidChange.dispose();
@@ -30,25 +34,12 @@ export class ConnectionDisplayData implements IDisposable, IConnectionDisplayDat
     }
 }
 
-export async function getKernelConnectionCategory(
-    kernelConnection: KernelConnectionMetadata,
-    jupyterUriProviderRegistration: IJupyterUriProviderRegistration
-): Promise<string> {
+export function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata): string {
     switch (kernelConnection.kind) {
         case 'connectToLiveRemoteKernel':
-            const remoteDisplayNameSession = await getJupyterDisplayName(
-                kernelConnection.serverProviderHandle,
-                jupyterUriProviderRegistration,
-                DataScience.kernelDefaultRemoteDisplayName
-            );
-            return DataScience.kernelCategoryForJupyterSession(remoteDisplayNameSession);
+            return DataScience.kernelCategoryForJupyterSession;
         case 'startUsingRemoteKernelSpec':
-            const remoteDisplayNameSpec = await getJupyterDisplayName(
-                kernelConnection.serverProviderHandle,
-                jupyterUriProviderRegistration,
-                DataScience.kernelDefaultRemoteDisplayName
-            );
-            return DataScience.kernelCategoryForRemoteJupyterKernel(remoteDisplayNameSpec);
+            return DataScience.kernelCategoryForRemoteJupyterKernel;
         default:
             return getKernelConnectionCategorySync(kernelConnection);
     }

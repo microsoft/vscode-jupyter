@@ -39,11 +39,23 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
     public getDisplayData(connection: KernelConnectionMetadata): IConnectionDisplayData {
         if (!this.details.get(connection.id)) {
             const label = getDisplayNameOrNameOfKernelConnection(connection);
-            const description = getKernelConnectionDisplayPath(connection, this.workspace, this.platform);
-            const detail =
-                connection.kind === 'connectToLiveRemoteKernel' ? getRemoteKernelSessionInformation(connection) : '';
+            let description = getKernelConnectionDisplayPath(connection, this.workspace, this.platform);
+            if (connection.kind === 'connectToLiveRemoteKernel') {
+                description = getRemoteKernelSessionInformation(connection);
+            }
             const category = getKernelConnectionCategorySync(connection);
-            const newDetails = new ConnectionDisplayData(label, description, detail, category);
+            const descriptionProvider =
+                connection.kind === 'connectToLiveRemoteKernel'
+                    ? () => getRemoteKernelSessionInformation(connection)
+                    : undefined;
+            const newDetails = new ConnectionDisplayData(
+                label,
+                description,
+                '',
+                category,
+                undefined,
+                descriptionProvider
+            );
             this.disposables.push(newDetails);
             this.details.set(connection.id, newDetails);
 
@@ -106,14 +118,11 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
                 .catch(noop);
         }
 
-        getKernelConnectionCategory(connection, this.jupyterUriProviderRegistration)
-            .then((kind) => {
-                if (details.category !== kind) {
-                    details.category = kind;
-                    details.triggerChange();
-                }
-            })
-            .catch(noop);
+        const kind = getKernelConnectionCategory(connection);
+        if (details.category !== kind) {
+            details.category = kind;
+            details.triggerChange();
+        }
 
         return details;
     }

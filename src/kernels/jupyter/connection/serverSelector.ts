@@ -6,9 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
-import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
+import { IJupyterServerProviderRegistry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { JupyterConnection } from './jupyterConnection';
+import { JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
 export type SelectJupyterUriCommandSource =
     | 'nonUser'
@@ -28,7 +29,8 @@ export class JupyterServerSelector {
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry,
+        @inject(IJupyterServerProviderRegistry) readonly serverProviderRegistry: IJupyterServerProviderRegistry
     ) {}
 
     public async addJupyterServer(provider: JupyterServerProviderHandle): Promise<void> {
@@ -40,6 +42,12 @@ export class JupyterServerSelector {
             return;
         }
 
-        await this.serverUriStorage.add(provider);
+        // No need to add the Uri for providers using the new API.
+        if (
+            ![JVSC_EXTENSION_ID, JUPYTER_HUB_EXTENSION_ID].includes(provider.extensionId) &&
+            !this.serverProviderRegistry.jupyterCollections.some((c) => c.extensionId === provider.extensionId)
+        ) {
+            await this.serverUriStorage.add(provider);
+        }
     }
 }
