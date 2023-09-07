@@ -154,25 +154,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
     @swallowExceptions('Failed to create a Remote Kernel Finder')
     private async validateAndCreateFinder(serverUri: IJupyterServerUriEntry) {
         const serverId = generateIdFromRemoteProvider(serverUri.provider);
-        if (this.serverFinderMapping.has(serverId)) {
-            return;
-        }
-        const token = new CancellationTokenSource();
-        // This is the future code path.
-        const getDisplayNameFromNewApi = async () => {
-            const collectionProvider = this.jupyterServerProviderRegistry.jupyterCollections.find(
-                (c) => c.extensionId === serverUri.provider.extensionId && c.id === serverUri.provider.id
-            );
-            if (!collectionProvider || !collectionProvider.serverProvider) {
-                return;
-            }
-            const servers = await collectionProvider.serverProvider.provideJupyterServers(token.token);
-            const displayName = servers?.find((s) => s.id === serverUri.provider.handle)?.label;
-            if (displayName) {
-                this.createRemoteKernelFinder(serverUri.provider, displayName);
-            }
-        };
-        const getDisplayNameFromOldApi = async () => {
+        if (!this.serverFinderMapping.has(serverId)) {
             const displayName = await this.jupyterPickerRegistration.getDisplayNameIfProviderIsLoaded(
                 serverUri.provider
             );
@@ -180,9 +162,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
             if (displayName) {
                 this.createRemoteKernelFinder(serverUri.provider, displayName);
             }
-        };
-        await Promise.all([getDisplayNameFromNewApi().catch(noop), getDisplayNameFromOldApi().catch(noop)]);
-        token.dispose();
+        }
     }
 
     public getOrCreateRemoteKernelFinder(

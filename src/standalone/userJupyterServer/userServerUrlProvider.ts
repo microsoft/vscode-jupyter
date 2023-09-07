@@ -244,7 +244,7 @@ export class UserJupyterServerUrlProvider
             const label = DataScience.connectToToTheJupyterServer(url);
             return [{ label, url } as JupyterServerCommand];
         }
-        return [{ label: DataScience.jupyterSelectUriCommandLabel }];
+        return [{ label: DataScience.jupyterSelectURIPrompt }];
     }
     async provideJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
         await this.initializeServers();
