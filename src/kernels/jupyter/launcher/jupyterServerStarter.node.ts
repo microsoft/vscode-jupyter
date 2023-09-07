@@ -14,7 +14,6 @@ import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -72,7 +71,6 @@ export class JupyterServerStarter implements IJupyterServerStarter {
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
         const disposables: IDisposable[] = [];
-        const stopWatch = new StopWatch();
         const progress = KernelProgressReporter.reportProgress(resource, ReportableAction.NotebookStart);
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
@@ -149,7 +147,6 @@ export class JupyterServerStarter implements IJupyterServerStarter {
                 traceError(`Parsing failed ${connection.baseUrl}`, ex);
             }
             dispose(disposables);
-            sendTelemetryEvent(Telemetry.StartJupyter, { duration: stopWatch.elapsedTime });
             return connection;
         } catch (err) {
             dispose(disposables);

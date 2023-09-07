@@ -15,7 +15,6 @@ import {
     KernelInterpreterDependencyResponse
 } from './kernels/types';
 // eslint-disable-next-line
-import { SelectJupyterUriCommandSource } from './kernels/jupyter/connection/serverSelector';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 import { ExcludeType, PickType } from './platform/common/utils/misc';
 import { SharedPropertyMapping } from './platform/telemetry/index';
@@ -1596,15 +1595,6 @@ export class IEventNamePropertyMapping {
         properties: commonClassificationForResourceSpecificTelemetryProperties().properties
     };
     /**
-     * Sent when we display a message informing the user about Jupyter not being installed (or not detected).
-     */
-    [Telemetry.JupyterNotInstalledErrorShown]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
      * Sent when user installs Jupyter.
      */
     [Telemetry.UserInstalledJupyter]: TelemetryEventInfo<never | undefined> = {
@@ -1780,30 +1770,6 @@ export class IEventNamePropertyMapping {
         measures: commonClassificationForDurationProperties()
     };
     /**
-     * This telemetry tracks the display of the Picker for Jupyter Remote servers.
-     */
-    [Telemetry.SetJupyterURIUIDisplayed]: TelemetryEventInfo<{
-        /**
-         * This telemetry tracks the source of this UI.
-         * nonUser - Invoked internally by our code.
-         * toolbar - Invoked by user from Native or Interactive window toolbar.
-         * commandPalette - Invoked from command palette by the user.
-         * nativeNotebookStatusBar - Invoked from Native notebook statusbar.
-         * nativeNotebookToolbar - Invoked from Native notebook toolbar.
-         */
-        commandSource: SelectJupyterUriCommandSource;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['KernelPicker'],
-        source: 'N/A',
-        properties: {
-            commandSource: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            }
-        }
-    };
-    /**
      * Information banner displayed to give the user the option to configure shift+enter for the Interactive Window.
      */
     [Telemetry.ShiftEnterBannerShown]: TelemetryEventInfo<never | undefined> = {
@@ -1883,15 +1849,6 @@ export class IEventNamePropertyMapping {
         owner: 'IanMatthewHuff',
         feature: ['DataFrameViewer'],
         source: 'User Action'
-    };
-    /**
-     * Time taken to start the Jupyter server.
-     */
-    [Telemetry.StartJupyter]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
     };
     /**
      * Whether we managed to start a remote kernel successfully without a backing file.
@@ -2115,14 +2072,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
-     */
-    [Telemetry.JupyterInstalledButNotKernelSpecModule]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A'
-    };
-    /**
      * How long did it take for a single variable request to be resolved.
      */
     [Telemetry.VariableExplorerFetchTime]: TelemetryEventInfo<DurationMeasurement> = {
@@ -2148,69 +2097,6 @@ export class IEventNamePropertyMapping {
                 classification: 'PublicNonPersonalData',
                 purpose: 'FeatureInsight',
                 isMeasurement: true
-            }
-        }
-    };
-    /**
-     * Sent to measure the time taken to register an interpreter as a Jupyter kernel.
-     */
-    [Telemetry.RegisterInterpreterAsKernel]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Telemetry sent when user selects an interpreter to start jupyter server.
-     * @memberof IEventNamePropertyMapping
-     */
-    [Telemetry.SelectJupyterInterpreterCommand]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
-    };
-    /**
-     * Sent when we notify the user to select an interpreter to start jupyter server
-     * Also sent after the user makes a selection to start the jupyter server.
-     */
-    [Telemetry.SelectJupyterInterpreter]: TelemetryEventInfo<{
-        /**
-         * If the value or `result` is empty this means we displayed the message to the user and user hasn't made a choice yet.
-         *
-         * The result of the selection.
-         * notSelected - No interpreter was selected.
-         * selected - An interpreter was selected (and configured to have jupyter and notebook).
-         * installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.
-         * selectAnotherInterpreter - Selected another interpreter.
-         */
-        result?: 'notSelected' | 'selected' | 'installationCancelled' | 'selectAnotherInterpreter';
-        /**
-         * Type of the Python environment.
-         */
-        envType?: EnvironmentType;
-        /**
-         * Python version. (only contains the numbers, no letters and empty if version is not available)
-         */
-        envVersion?: string;
-    }> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup'],
-        properties: {
-            result: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            envType: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
-            },
-            envVersion: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight'
             }
         }
     };
@@ -2259,15 +2145,6 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             }
         }
-    };
-    /**
-     * Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
-     */
-    [Telemetry.KernelSpecNotFound]: TelemetryEventInfo<undefined | never> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        tags: ['KernelStartup']
     };
     /**
      * Total time taken to Launch a raw kernel.
@@ -2361,23 +2238,6 @@ export class IEventNamePropertyMapping {
                 purpose: 'FeatureInsight'
             }
         }
-    };
-    /**
-     * Time taken to load kernels if needed and rank them all.
-     */
-    [Telemetry.RankKernelsPerf]: TelemetryEventInfo<DurationMeasurement> = {
-        owner: 'donjayamanne',
-        feature: ['KernelPicker'],
-        source: 'N/A',
-        measures: commonClassificationForDurationProperties()
-    };
-    /**
-     * Telemetry event sent to when user customizes the jupyter command line
-     */
-    [Telemetry.JupyterCommandLineNonDefault]: TelemetryEventInfo<never | undefined> = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A'
     };
     /**
      * Telemetry event sent when a user runs the interactive window with a new file
@@ -3137,28 +2997,6 @@ export class IEventNamePropertyMapping {
         }
     };
 
-    /** When users connect to a remote kernel, we store the kernel id so we can re-connect to that
-     * when user opens the same notebook. We only store the last 100.
-     * Count is the number of kernels saved in the list.
-     */
-    [Telemetry.NumberOfSavedRemoteKernelIds]: TelemetryEventInfo<{
-        /**
-         * Count is the number of kernels saved in the list.
-         */
-        count: number;
-    }> = {
-        owner: 'donjayamanne',
-        feature: ['KernelPicker'],
-        source: 'N/A',
-        measures: {
-            count: {
-                classification: 'SystemMetaData',
-                purpose: 'FeatureInsight',
-                isMeasurement: true
-            }
-        }
-    };
-
     /**
      * How long it took to return our hover tooltips for a .py file.
      */
@@ -3305,43 +3143,6 @@ export class IEventNamePropertyMapping {
                 classification: 'SystemMetaData',
                 purpose: 'FeatureInsight'
             }
-        }
-    };
-    /**
-     * Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
-     */
-    [Telemetry.FailedToCreateNotebookController]: TelemetryEventInfo<
-        {
-            /**
-             * What kind of kernel spec did we fail to create.
-             */
-            kind:
-                | 'startUsingPythonInterpreter'
-                | 'startUsingLocalKernelSpec'
-                | 'startUsingRemoteKernelSpec'
-                | 'connectToLiveRemoteKernel';
-        } & Partial<TelemetryErrorProperties>
-    > = {
-        owner: 'IanMatthewHuff',
-        feature: ['KernelPicker'],
-        source: 'N/A',
-        properties: {
-            ...commonClassificationForErrorProperties(),
-            kind: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
-    };
-    /**
-     * Telemetry sent when we fail to create a Notebook Cell Execution (generally happens when the controller has been disposed).
-     */
-    [Telemetry.FailedToCreateNotebookCellExecution]: TelemetryEventInfo<Partial<TelemetryErrorProperties>> = {
-        owner: 'donjayamanne',
-        feature: [],
-        source: 'N/A',
-        properties: {
-            ...commonClassificationForErrorProperties()
         }
     };
     /**

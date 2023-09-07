@@ -10,7 +10,6 @@ import {
     TextDocument
 } from 'vscode';
 import { traceInfo, traceVerbose } from '../../platform/logging';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernelController } from '../types';
 import { noop } from '../../platform/common/utils/misc';
 
@@ -149,20 +148,15 @@ export class CellExecutionCreator {
         controller: IKernelController,
         clearOutputOnStartWithTime = false
     ) {
-        try {
-            const result = new NotebookCellExecutionWrapper(
-                controller.createNotebookCellExecution(cell),
-                controller.id,
-                () => {
-                    CellExecutionCreator._map.delete(key);
-                },
-                clearOutputOnStartWithTime
-            );
-            CellExecutionCreator._map.set(key, result);
-            return result;
-        } catch (ex) {
-            sendTelemetryEvent(Telemetry.FailedToCreateNotebookCellExecution, undefined, undefined, ex);
-            throw ex;
-        }
+        const result = new NotebookCellExecutionWrapper(
+            controller.createNotebookCellExecution(cell),
+            controller.id,
+            () => {
+                CellExecutionCreator._map.delete(key);
+            },
+            clearOutputOnStartWithTime
+        );
+        CellExecutionCreator._map.set(key, result);
+        return result;
     }
 }

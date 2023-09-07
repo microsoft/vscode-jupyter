@@ -331,8 +331,6 @@ export enum Telemetry {
     RunFromLine = 'DATASCIENCE.RUN_FROM_LINE',
     SelectLocalJupyterKernel = 'DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL',
     SelectRemoteJupyterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
-    SetJupyterURIUIDisplayed = 'DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED',
-    Interrupt = 'DATASCIENCE.INTERRUPT',
     /**
      * Exporting from the interactive window
      */
@@ -354,10 +352,6 @@ export enum Telemetry {
      * An export to a specific format failed
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
-    FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
-    FailedToCreateNotebookCellExecution = 'DATASCIENCE.FAILED_TO_CREATE_CELL_EXECUTION',
-
-    StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     StartedRemoteJupyterSessionWithBackingFile = 'DS_INTERNAL.JUPYTER_STARTED_SESSION_WITH_BACKING_FILE',
     ZMQSupport = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT',
     ZMQSupportFailure = 'DS_INTERNAL.JUPYTER_ZMQ_SUPPORT_FAILURE',
@@ -394,15 +388,6 @@ export enum Telemetry {
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
     DocumentWithCodeCells = 'DS_INTERNAL.DOCUMENT_WITH_CODE_CELLS',
-    /**
-     * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
-     */
-    SelectJupyterInterpreter = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER',
-    /**
-     * User used command to select an intrepreter for the jupyter server.
-     */
-    SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
-    NumberOfSavedRemoteKernelIds = 'DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED',
     PerceivedJupyterStartupNotebook = 'DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK',
     GetActivatedEnvironmentVariables = 'DS_INTERNAL.GET_ACTIVATED_ENV_VARIABLES',
     VariableExplorerFetchTime = 'DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME',
@@ -418,30 +403,23 @@ export enum Telemetry {
     JupyterKernelSpecEnumeration = 'DATASCIENCE.JUPYTER_KERNEL_SPEC_FETCH_FAILURE',
     JupyterKernelHiddenViaFilter = 'DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER',
     JupyterKernelFilterUsed = 'DATASCIENCE.JUPYTER_KERNEL_FILTER_USED',
-    JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
     CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
     OpenNotebookAll = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL',
-    JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
-    RegisterInterpreterAsKernel = 'DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL',
     UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
     UserInstalledPandas = 'DATASCIENCE.USER_INSTALLED_PANDAS',
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER',
     UserDidNotInstallPandas = 'DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS',
     KernelSpecLanguage = 'DATASCIENCE.KERNEL_SPEC_LANGUAGE',
-    KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
     KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
     AmbiguousGlobalKernelSpec = 'GLOBAL_PYTHON_KERNELSPEC',
-    RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
-    KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
     ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
     PythonModuleInstall = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     PythonNotInstalled = 'DS_INTERNAL.PYTHON_NOT_INSTALLED',
     PythonExtensionNotInstalled = 'DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED',
     PythonExtensionInstalledViaKernelPicker = 'DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER',
-    JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     CreateInteractiveWindow = 'DS_INTERNAL.CREATED_INTERACTIVE_WINDOW',
     IPyWidgetLoadSuccess = 'DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS',

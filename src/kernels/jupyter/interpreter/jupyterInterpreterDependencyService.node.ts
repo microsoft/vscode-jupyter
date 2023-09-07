@@ -150,7 +150,6 @@ export class JupyterInterpreterDependencyService {
                 moduleName: ProductNames.get(Product.jupyter)!,
                 pythonEnvType: interpreter.envType
             });
-            sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
             const selection = await this.applicationShell.showErrorMessage(
                 message,
                 { modal: true },
@@ -295,7 +294,6 @@ export class JupyterInterpreterDependencyService {
             .then(() => true)
             .catch((e) => {
                 traceError(`Kernel spec not found: `, e);
-                sendTelemetryEvent(Telemetry.KernelSpecNotFound);
                 return false;
             });
     }
@@ -319,7 +317,6 @@ export class JupyterInterpreterDependencyService {
             return JupyterInterpreterDependencyResponse.ok;
         }
         // Indicate no kernel spec module.
-        sendTelemetryEvent(Telemetry.JupyterInstalledButNotKernelSpecModule);
         if (token?.isCancellationRequested) {
             return JupyterInterpreterDependencyResponse.cancel;
         }

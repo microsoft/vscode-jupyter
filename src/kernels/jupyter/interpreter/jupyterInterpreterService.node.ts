@@ -8,7 +8,6 @@ import { raceCancellation } from '../../../platform/common/cancellation';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector.node';
@@ -95,10 +94,8 @@ export class JupyterInterpreterService {
      * @memberof JupyterInterpreterService
      */
     public async selectInterpreter(): Promise<PythonEnvironment | undefined> {
-        sendTelemetryEvent(Telemetry.SelectJupyterInterpreter);
         const interpreter = await this.jupyterInterpreterSelector.selectPythonInterpreter();
         if (!interpreter) {
-            sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'notSelected' });
             return;
         }
 
@@ -109,12 +106,8 @@ export class JupyterInterpreterService {
                 return interpreter;
             }
             case JupyterInterpreterDependencyResponse.cancel:
-                sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'installationCancelled' });
                 return;
             default:
-                sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, {
-                    result: 'selectAnotherInterpreter'
-                });
                 return this.selectInterpreter();
         }
     }
@@ -175,16 +168,6 @@ export class JupyterInterpreterService {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
         this.interpreterSelectionState.updateSelectedPythonPath(interpreter.uri);
-        let envVersion = '';
-        if (interpreter.version) {
-            const { major, minor, patch } = interpreter.version;
-            envVersion = `${major}.${minor}.${patch}`;
-        }
-        sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, {
-            result: 'selected',
-            envType: interpreter.envType,
-            envVersion
-        });
     }
 
     // For a given python path check if it can run jupyter for us

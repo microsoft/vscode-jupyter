@@ -8,7 +8,6 @@ import { Memento, Uri } from 'vscode';
 import { traceVerbose } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../../platform/common/types';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 
 export const ActiveKernelIdList = 'Active_Kernel_Id_List';
 // This is the number of kernel ids that will be remembered between opening and closing VS code
@@ -70,7 +69,6 @@ export class PreferredRemoteKernelIdProvider {
         }
 
         // Prune list if too big
-        sendTelemetryEvent(Telemetry.NumberOfSavedRemoteKernelIds, { count: list.length });
         while (list.length > MaximumKernelIdListSize) {
             requiresUpdate = true;
             list.shift();

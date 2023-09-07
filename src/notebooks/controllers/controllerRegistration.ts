@@ -27,7 +27,6 @@ import {
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { traceError, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { PythonEnvironmentFilter } from '../../platform/interpreter/filter/filterService';
@@ -432,14 +431,6 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
                 // Hence swallow cancellation errors.
                 return { added, existing };
             }
-            // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
-            sendTelemetryEvent(
-                Telemetry.FailedToCreateNotebookController,
-                undefined,
-                { kind: metadata.kind },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any
-            );
             traceError(`Failed to create notebook controller for ${metadata.id}`, ex);
         }
         return { added, existing };
