@@ -378,13 +378,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     ) {
                         const serverId = e.item.idAndHandle.handle;
                         const serverToRemove = jupyterServers.find((s) => s.id === serverId);
-                        this.serverUriStorage
-                            .remove({
-                                extensionId: provider.extensionId,
-                                id: provider.id,
-                                handle: serverId
-                            })
-                            .catch(noop);
                         if (
                             serverProvider?.removeJupyterServer &&
                             serverToRemove &&

@@ -133,7 +133,7 @@ export class BaseProviderBasedQuickPick<T extends { id: string }> extends Dispos
         this.quickPickItems = [];
         quickPick.placeholder = this.placeholder;
         quickPick.buttons = this.options.supportsBack ? [QuickInputButtons.Back, refreshButton] : [refreshButton];
-        quickPick.ignoreFocusOut = false;
+        quickPick.ignoreFocusOut = true;
         quickPick.busy = true;
         quickPick.value = this.previouslyEnteredValue;
         quickPick.onDidChangeValue((e) => (this.previouslyEnteredValue = e), this, disposables);
