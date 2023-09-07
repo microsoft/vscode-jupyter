@@ -11,7 +11,7 @@ import { dispose } from '../../platform/common/helpers';
 import { Disposable, NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { swallowExceptions } from '../../platform/common/utils/misc';
 import { getParentHeaderMsgId } from './cellExecutionMessageHandler';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../jupyter/types';
+import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../jupyter/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { generateIdFromRemoteProvider } from '../jupyter/jupyterUtils';
@@ -43,7 +43,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
         this.storageFile = Uri.joinPath(this.context.globalStorageUri, 'lastExecutedRemoteCell.json');
     }
     public activate(): void {
-        this.serverStorage.onDidRemove(this.onDidRemoveServerUris, this, this.disposables);
+        this.serverStorage.onDidRemove(this.onDidRemoveServers, this, this.disposables);
     }
     public async getLastTrackedCellExecution(
         notebook: NotebookDocument,
@@ -210,7 +210,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
             await this.fs.writeFile(this.storageFile, JSON.stringify(store));
         });
     }
-    private onDidRemoveServerUris(removedServers: IJupyterServerUriEntry[]) {
+    private onDidRemoveServers(removedServers: JupyterServerProviderHandle[]) {
         if (removedServers.length === 0) {
             return;
         }
@@ -224,7 +224,7 @@ export class LastCellExecutionTracker extends Disposables implements IExtensionS
                 // Ignore, as this indicates the file does not exist.
             }
             let removed = false;
-            const removedServerIds = new Set(removedServers.map((s) => generateIdFromRemoteProvider(s.provider)));
+            const removedServerIds = new Set(removedServers.map((s) => generateIdFromRemoteProvider(s)));
             Object.keys(store).forEach((key) => {
                 const data = store[key];
                 if (

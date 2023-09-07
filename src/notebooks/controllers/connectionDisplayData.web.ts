@@ -40,7 +40,7 @@ export class ConnectionDisplayDataProvider implements IConnectionDisplayDataProv
             const detail =
                 connection.kind === 'connectToLiveRemoteKernel' ? getRemoteKernelSessionInformation(connection) : '';
             const category = getKernelConnectionCategorySync(connection);
-            const newDetails = new ConnectionDisplayData(connection.id, label, description, detail, category);
+            const newDetails = new ConnectionDisplayData(label, description, detail, category);
             this.disposables.push(newDetails);
             this.details.set(connection.id, newDetails);
         }

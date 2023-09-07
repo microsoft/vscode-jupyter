@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../../kernels/jupyter/types';
 import {
     IJupyterKernelSpec,
     IKernelFinder,
@@ -105,7 +105,7 @@ suite('Controller Registration', () => {
     }>;
     let onDidChangeFilter: EventEmitter<void>;
     let onDidChangeUri: EventEmitter<void>;
-    let onDidRemoveUris: EventEmitter<IJupyterServerUriEntry[]>;
+    let onDidRemoveUris: EventEmitter<JupyterServerProviderHandle[]>;
     let onDidChangeInterpreter: EventEmitter<PythonEnvironment | undefined>;
     let onDidChangeInterpreters: EventEmitter<PythonEnvironment[]>;
     let contributedLocalKernelFinder: IContributedKernelFinder;
@@ -169,7 +169,7 @@ suite('Controller Registration', () => {
         disposables.push(onDidChangeFilter);
         onDidChangeUri = new EventEmitter<void>();
         disposables.push(onDidChangeUri);
-        onDidRemoveUris = new EventEmitter<IJupyterServerUriEntry[]>();
+        onDidRemoveUris = new EventEmitter<JupyterServerProviderHandle[]>();
         disposables.push(onDidRemoveUris);
         onDidChangeInterpreter = new EventEmitter<PythonEnvironment | undefined>();
         disposables.push(onDidChangeInterpreter);

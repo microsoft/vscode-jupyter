@@ -27,8 +27,8 @@ import {
     IJupyterRequestAgentCreator,
     IJupyterRequestCreator,
     IJupyterServerProviderRegistry,
-    IJupyterServerUriEntry,
-    IJupyterServerUriStorage
+    IJupyterServerUriStorage,
+    JupyterServerProviderHandle
 } from '../../../kernels/jupyter/types';
 import { JupyterConnection } from '../../../kernels/jupyter/connection/jupyterConnection';
 import { dispose } from '../../../platform/common/helpers';
@@ -162,7 +162,7 @@ suite('Connect to Remote Jupyter Servers', function () {
         sinon.stub(appShell, 'createInputBox').callsFake(() => inputBox);
         const serverUriStorage = mock<IJupyterServerUriStorage>();
         when(serverUriStorage.getAll()).thenResolve([]);
-        const onDidRemoveUriStorage = new EventEmitter<IJupyterServerUriEntry[]>();
+        const onDidRemoveUriStorage = new EventEmitter<JupyterServerProviderHandle[]>();
         disposables.push(onDidRemoveUriStorage);
         when(serverUriStorage.onDidRemove).thenReturn(onDidRemoveUriStorage.event);
 

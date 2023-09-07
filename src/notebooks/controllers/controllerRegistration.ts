@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IContributedKernelFinder } from '../../kernels/internalTypes';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
@@ -105,7 +105,7 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         this.pythonEnvFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChange(this.onDidChangeUri, this, this.disposables);
-        this.serverUriStorage.onDidRemove(this.onDidRemoveUris, this, this.disposables);
+        this.serverUriStorage.onDidRemove(this.onDidRemoveServers, this, this.disposables);
 
         this.onDidChange(
             ({ added }) => {
@@ -251,14 +251,14 @@ export class ControllerRegistration implements IControllerRegistration, IExtensi
         this.onDidChangeFilter();
     }
 
-    private async onDidRemoveUris(uriEntries: IJupyterServerUriEntry[]) {
+    private async onDidRemoveServers(servers: JupyterServerProviderHandle[]) {
         // Remove any connections that are no longer available.
-        uriEntries.forEach((item) => {
+        servers.forEach((item) => {
             this.registered.forEach((c) => {
                 if (
                     isRemoteConnection(c.connection) &&
-                    c.connection.serverProviderHandle.id === item.provider.id &&
-                    c.connection.serverProviderHandle.handle === item.provider.handle
+                    c.connection.serverProviderHandle.id === item.id &&
+                    c.connection.serverProviderHandle.handle === item.handle
                 ) {
                     traceWarning(
                         `Deleting controller ${c.id} as it is associated with a connection that has been removed`

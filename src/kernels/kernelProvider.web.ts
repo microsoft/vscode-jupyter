@@ -49,7 +49,7 @@ export class KernelProvider extends BaseCoreKernelProvider {
         @inject(IExperimentService) private readonly experiments: IExperimentService
     ) {
         super(asyncDisposables, disposables, notebook);
-        disposables.push(jupyterServerUriStorage.onDidRemove(this.handleUriRemoval.bind(this)));
+        disposables.push(jupyterServerUriStorage.onDidRemove(this.handleServerRemoval.bind(this)));
     }
 
     public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel {

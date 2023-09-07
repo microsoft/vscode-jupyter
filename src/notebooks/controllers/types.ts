@@ -128,7 +128,6 @@ export interface ILocalPythonNotebookKernelSourceSelector {
 
 export interface IConnectionDisplayData extends IDisposable {
     readonly onDidChange: vscode.Event<IConnectionDisplayData>;
-    readonly connectionId: string;
     readonly label: string;
     readonly description: string | undefined;
     readonly detail: string;

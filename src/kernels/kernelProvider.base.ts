@@ -17,7 +17,7 @@ import {
     ThirdPartyKernelOptions,
     INotebookKernelExecution
 } from './types';
-import { IJupyterServerUriEntry } from './jupyter/types';
+import { JupyterServerProviderHandle } from './jupyter/types';
 
 /**
  * Provides kernels to the system. Generally backed by a URI or a notebook object.
@@ -152,19 +152,19 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
         this.kernelsByNotebook.delete(notebook);
     }
 
-    protected handleUriRemoval(uris: IJupyterServerUriEntry[]) {
+    protected handleServerRemoval(servers: JupyterServerProviderHandle[]) {
         this.notebook.notebookDocuments.forEach((document) => {
             const kernel = this.kernelsByNotebook.get(document);
             if (kernel) {
                 const metadata = kernel.options.metadata;
 
                 if (metadata.kind === 'connectToLiveRemoteKernel' || metadata.kind === 'startUsingRemoteKernelSpec') {
-                    const matchingRemovedUri = uris.find(
-                        (uri) =>
-                            uri.provider.id === metadata.serverProviderHandle.id &&
-                            uri.provider.handle === metadata.serverProviderHandle.handle
+                    const matchingRemovedServer = servers.find(
+                        (server) =>
+                            server.id === metadata.serverProviderHandle.id &&
+                            server.handle === metadata.serverProviderHandle.handle
                     );
-                    if (matchingRemovedUri) {
+                    if (matchingRemovedServer) {
                         // it should be removed
                         this.kernelsByNotebook.delete(document);
                         this.kernelsById.delete(kernel.kernel.id);

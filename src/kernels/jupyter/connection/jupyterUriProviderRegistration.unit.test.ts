@@ -9,7 +9,7 @@ import {
     JupyterUriProviderRegistration,
     REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY
 } from './jupyterUriProviderRegistration';
-import { IJupyterServerUriEntry, IJupyterServerUriStorage } from '../types';
+import { IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { IDisposable, IExtensions } from '../../../platform/common/types';
 import { dispose } from '../../../platform/common/helpers';
 import { IJupyterServerUri, IJupyterUriProvider } from '../../../api';
@@ -27,14 +27,14 @@ suite('Uri Provider Registration', () => {
     let serviceContainer: IServiceContainer;
     let uriStorage: IJupyterServerUriStorage;
     let registration: JupyterUriProviderRegistration;
-    let onDidRemoveServer: EventEmitter<IJupyterServerUriEntry[]>;
+    let onDidRemoveServer: EventEmitter<JupyterServerProviderHandle[]>;
     let clock: fakeTimers.InstalledClock;
     setup(async () => {
         extensions = mock<IExtensions>();
         globalMemento = mock<Memento>();
         serviceContainer = mock<IServiceContainer>();
         uriStorage = mock<IJupyterServerUriStorage>();
-        onDidRemoveServer = new EventEmitter<IJupyterServerUriEntry[]>();
+        onDidRemoveServer = new EventEmitter<JupyterServerProviderHandle[]>();
         when(globalMemento.get(REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY, anything())).thenCall(
             (_, defaultValue) => defaultValue
         );
