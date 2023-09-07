@@ -32,6 +32,9 @@
         "vscode": "^1.82.0"
     },
     "l10n": "./l10n",
+    "extensionKind": [
+        "workspace"
+    ],
     "keywords": [
         "jupyter",
         "notebook",
