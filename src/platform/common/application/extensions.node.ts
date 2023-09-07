@@ -131,8 +131,6 @@ export class Extensions implements IExtensions {
                             return result[1];
                         }
                     })
-                    // Since this is web, look for paths that start with http (which also includes https).
-                    .filter((item) => item && item.toLowerCase().startsWith('http'))
                     .filter((item) => item && !item.toLowerCase().startsWith(jupyterExtRoot)) as string[];
                 parseStack(new Error('Ex')).forEach((item) => {
                     const fileName = item.getFileName();
@@ -142,7 +140,9 @@ export class Extensions implements IExtensions {
                 });
                 for (const frame of frames) {
                     const matchingExt = this.all.find(
-                        (ext) => ext.id !== JVSC_EXTENSION_ID && frame.startsWith(ext.extensionUri.toString())
+                        (ext) =>
+                            ext.id !== JVSC_EXTENSION_ID &&
+                            (frame.startsWith(ext.extensionUri.fsPath) || frame.startsWith(ext.extensionUri.path))
                     );
                     if (matchingExt) {
                         return { extensionId: matchingExt.id, displayName: matchingExt.packageJSON.displayName };
