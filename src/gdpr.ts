@@ -326,25 +326,6 @@
      ]
    }
  */
-//Telemetry.FailedToCreateNotebookCellExecution
-/* __GDPR__
-   "DATASCIENCE.FAILED_TO_CREATE_CELL_EXECUTION" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.FailedToCreateNotebookController
-/* __GDPR__
-   "DATASCIENCE.FAILED_TO_CREATE_CONTROLLER" : {
-     "kind": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"What kind of kernel spec did we fail to create.","owner":"IanMatthewHuff"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.GotoNextCellInFile
 /* __GDPR__
    "DATASCIENCE.GOTO_NEXT_CELL_IN_FILE" : {
@@ -463,15 +444,6 @@
    "DATASCIENCE.JUPYTER_KERNEL_STARTUP_HOOK" : {
      "extensionId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Extension Id that's attempting to use the API.","owner":"donjayamanne"},
      "providerId": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Id of the Jupyter Server Provider.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.JupyterNotInstalledErrorShown
-/* __GDPR__
-   "DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN" : {
      "${include}": [
        "${F1}"
 
@@ -928,15 +900,6 @@
      ]
    }
  */
-//Telemetry.SelectJupyterInterpreterCommand
-/* __GDPR__
-   "DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.SelectLocalJupyterKernel
 /* __GDPR__
    "DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL" : {
@@ -1001,16 +964,6 @@
 //Telemetry.SelfCertsMessageEnabled
 /* __GDPR__
    "DATASCIENCE.SELFCERTSMESSAGEENABLED" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.SetJupyterURIUIDisplayed
-/* __GDPR__
-   "DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED" : {
-     "commandSource": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"This telemetry tracks the source of this UI. nonUser - Invoked internally by our code. toolbar - Invoked by user from Native or Interactive window toolbar. commandPalette - Invoked from command palette by the user. nativeNotebookStatusBar - Invoked from Native notebook statusbar. nativeNotebookToolbar - Invoked from Native notebook toolbar.","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
@@ -1414,28 +1367,10 @@
      ]
    }
  */
-//Telemetry.JupyterCommandLineNonDefault
-/* __GDPR__
-   "DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.CheckPasswordJupyterHub
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_HUB_PASSWORD" : {
      "info": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.JupyterInstalledButNotKernelSpecModule
-/* __GDPR__
-   "DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE" : {
      "${include}": [
        "${F1}"
 
@@ -1453,15 +1388,6 @@
      "isArgv0SameAsInterpreter": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Whether the argv0 is same as the interpreter.","owner":"donjayamanne"},
      "argv0": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"First argument of the kernelSpec argv (without the full path) Helps determine if we have python/conda executables used for kernelSpecs.","owner":"donjayamanne"},
      "argv": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"argv of KernelSpec Helps determine if we have ipykernel, ipykernel_launcher, etc and other combinations In the case of paths, all path values are stripped, exe names are not.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.RegisterInterpreterAsKernel
-/* __GDPR__
-   "DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL" : {
      "${include}": [
        "${F1}"
 
@@ -1524,15 +1450,6 @@
      ]
    }
  */
-//Telemetry.StartJupyter
-/* __GDPR__
-   "DS_INTERNAL.JUPYTERSTARTUPCOST" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
 //Telemetry.KernelCount
 /* __GDPR__
    "DS_INTERNAL.KERNEL_COUNT" : {
@@ -1551,15 +1468,6 @@
 /* __GDPR__
    "DS_INTERNAL.KERNEL_LAUNCHER_PERF" : {
      "resourceType": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Used to determine whether this event is related to a Notebooks or Interactive window. Common to most of the events.","owner":"donjayamanne"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.KernelSpecNotFound
-/* __GDPR__
-   "DS_INTERNAL.KERNEL_SPEC_NOT_FOUND" : {
      "${include}": [
        "${F1}"
 
@@ -1587,16 +1495,6 @@
 //Telemetry.NewFileForInteractiveWindow
 /* __GDPR__
    "DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE" : {
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.NumberOfSavedRemoteKernelIds
-/* __GDPR__
-   "DS_INTERNAL.NUMBER_OF_REMOTE_KERNEL_IDS_SAVED" : {
-     "count": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Count is the number of kernels saved in the list.","owner":"donjayamanne","isMeasurement":true},
      "${include}": [
        "${F1}"
 
@@ -1678,15 +1576,6 @@
 /* __GDPR__
    "DS_INTERNAL.PYTHON_NOT_INSTALLED" : {
      "action": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"The message was displayed, or indicate that the user dismissed or downloaded the message.","owner":"IanMatthewHuff"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.RankKernelsPerf
-/* __GDPR__
-   "DS_INTERNAL.RANK_KERNELS_PERF" : {
      "${include}": [
        "${F1}"
 
@@ -1848,18 +1737,6 @@
      "perfWarmup": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"If the test was an initial run to warmup the product.","owner":"amunger"},
      "commitHash": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"The git commit that the test was run against.","owner":"amunger"},
      "timedCheckpoints": {"classification":"SystemMetaData","purpose":"PerformanceAndHealth","comment":"Timings for segments of the test.","owner":"amunger"},
-     "${include}": [
-       "${F1}"
-
-     ]
-   }
- */
-//Telemetry.SelectJupyterInterpreter
-/* __GDPR__
-   "DS_INTERNAL.SELECT_JUPYTER_INTERPRETER" : {
-     "result": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"If the value or `result` is empty this means we displayed the message to the user and user hasn't made a choice yet.  The result of the selection. notSelected - No interpreter was selected. selected - An interpreter was selected (and configured to have jupyter and notebook). installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter. selectAnotherInterpreter - Selected another interpreter.","owner":"donjayamanne"},
-     "envType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Type of the Python environment.","owner":"donjayamanne"},
-     "envVersion": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Python version. (only contains the numbers, no letters and empty if version is not available)","owner":"donjayamanne"},
      "${include}": [
        "${F1}"
 
