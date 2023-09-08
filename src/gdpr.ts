@@ -230,6 +230,7 @@
 //Telemetry.EnterRemoteJupyterUrl
 /* __GDPR__
    "DATASCIENCE.ENTER_REMOTE_JUPYTER_URL" : {
+     "serverIdHash": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Unique Id of this Server","owner":"donjayamanne"},
      "baseUrlHash": {"classification":"PublicNonPersonalData","purpose":"FeatureInsight","comment":"Has of the origin/base Url.","owner":"donjayamanne"},
      "isLocalHost": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether user is connecting to the local host.","owner":"donjayamanne"},
      "isJupyterHub": {"classification":"PublicNonPersonalData","purpose":"PerformanceAndHealth","comment":"Whether this is Jupyter Hub or not.","owner":"donjayamanne"},
@@ -1273,6 +1274,9 @@
 /* __GDPR__
    "DS_INTERNAL.JUPYTER_KERNEL_SPEC" : {
      "kernelSpecHash": {"classification":"EndUserPseudonymizedInformation","purpose":"FeatureInsight","comment":"Hash of the kernelspec file (so we do not end up with duplicate telemetry for the same user in same session)","owner":"donjayamanne"},
+     "serverIdHash": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Unique Id of this Server","owner":"donjayamanne"},
+     "providerExtensionId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Extension that owns (provided) this Jupyter Url","owner":"donjayamanne"},
+     "baseUrlHash": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Has of the origin/base Url.","owner":"donjayamanne"},
      "kernelId": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Hash of the Kernel Connection id.","owner":"donjayamanne"},
      "kernelConnectionType": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"What kind of kernel spec did we fail to create.","owner":"donjayamanne"},
      "kernelLanguage": {"classification":"SystemMetaData","purpose":"FeatureInsight","comment":"Language of the kernel spec.","owner":"donjayamanne"},
