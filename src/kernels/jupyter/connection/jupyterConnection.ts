@@ -14,7 +14,6 @@ import {
 } from '../types';
 import { IJupyterServerUri } from '../../../api';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
-import { Telemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { IDataScienceErrorHandler } from '../../errors/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
@@ -79,13 +78,11 @@ export class JupyterConnection {
             // We should throw an exception if any of that fails.
         } catch (err) {
             if (JupyterSelfCertsError.isSelfCertsError(err)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                 const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
                     throw err;
                 }
             } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                 const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
                     throw err;

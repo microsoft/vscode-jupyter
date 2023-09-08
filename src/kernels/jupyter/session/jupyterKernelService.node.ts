@@ -18,7 +18,6 @@ import { getDisplayPath, getFilePath } from '../../../platform/common/platform/f
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions } from '../../../platform/common/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterKernelDependencyError } from '../../errors/jupyterKernelDependencyError';
 import { cleanEnvironment } from '../../helpers';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
@@ -180,20 +179,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         );
 
         // Write out the contents into the new spec file
-        try {
-            await this.fs.writeFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
-        } catch (ex) {
-            const name = kernel.kernelSpec.name;
-            const language = kernel.kernelSpec.language;
-            sendTelemetryEvent(
-                Telemetry.FailedToUpdateKernelSpec,
-                undefined,
-                { name, language, failed: true },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any
-            );
-            throw ex;
-        }
+        await this.fs.writeFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         if (cancelToken.isCancellationRequested) {
             return;
         }
@@ -299,8 +285,6 @@ export class JupyterKernelService implements IJupyterKernelService {
                 if (cancelToken?.isCancellationRequested) {
                     return;
                 }
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any);
                 traceError(
                     `Failed to update kernel spec for ${
                         kernelConnection.id

@@ -23,15 +23,11 @@ import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCerts
 import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
 import { BaseError } from '../../../platform/errors/types';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
 import { JupyterConnection } from '../connection/jupyterConnection';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterLabHelper } from './jupyterLabHelper';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 @injectable()
 export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
@@ -78,10 +74,6 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
                       ui: options.ui
                   });
 
-            if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
-            }
-
             Cancellation.throwIfCanceled(options.token);
 
             const sessionManager = this.sessionManagerFactory.create(connection);
@@ -99,15 +91,12 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
             dispose(disposablesWhenThereAreFailures);
 
             if (isRemoteConnection(options.kernelConnection)) {
-                sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, ex);
                 // Check for the self signed certs error specifically
                 if (!connection) {
                     throw ex;
                 } else if (JupyterSelfCertsError.isSelfCertsError(ex)) {
-                    sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                     throw new JupyterSelfCertsError(connection.baseUrl);
                 } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(ex)) {
-                    sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
                     throw new JupyterSelfCertsExpiredError(connection.baseUrl);
                 } else {
                     throw new RemoteJupyterServerConnectionError(
@@ -117,7 +106,6 @@ export class OldJupyterKernelSessionFactory implements IKernelSessionFactory {
                     );
                 }
             } else {
-                sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, ex);
                 if (ex instanceof BaseError) {
                     throw ex;
                 } else {

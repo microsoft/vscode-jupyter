@@ -22,7 +22,6 @@ import { IDisposable, Resource } from '../../platform/common/types';
 import { createDeferred, raceTimeout } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
-import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation, IBaseKernelSession } from '../types';
@@ -72,7 +71,6 @@ export function suppressShutdownErrors(realKernel: any) {
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
         super(originalException.message, originalException);
-        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException);
     }
 }
 
