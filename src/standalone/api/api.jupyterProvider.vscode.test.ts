@@ -326,9 +326,10 @@ suite('Jupyter Provider Tests', function () {
         assert.isUndefined(controllerId);
         // Verify quick pick was displayed with three items.
         assert.strictEqual(multiStepStub.callCount, 1);
-        assert.strictEqual(multiStepStub.args[0][0].items.length, 3);
+        let quickPickItems = multiStepStub.args[0][0].items.filter((q) => q.kind !== QuickPickItemKind.Separator);
+        assert.strictEqual(quickPickItems.length, 3);
         assert.deepEqual(
-            multiStepStub.args[0][0].items.map((e) => e.label).sort(),
+            quickPickItems.map((e) => e.label).sort(),
             ['Server 1', 'Server 2', 'Server 3'],
             'Jupyter Servers not displayed in quick picks'
         );
@@ -340,9 +341,10 @@ suite('Jupyter Provider Tests', function () {
         // Verify a controller is not selected
         assert.isUndefined(controllerId2);
         assert.strictEqual(multiStepStub.callCount, 2);
-        assert.strictEqual(multiStepStub.args[1][0].items.length, 2);
+        quickPickItems = multiStepStub.args[1][0].items.filter((q) => q.kind !== QuickPickItemKind.Separator);
+        assert.strictEqual(quickPickItems.length, 2);
         assert.deepEqual(
-            multiStepStub.args[1][0].items.map((e) => e.label).sort(),
+            quickPickItems.map((e) => e.label).sort(),
             ['Server 1', 'Server 3'],
             'Jupyter Servers not displayed in quick picks'
         );
@@ -359,7 +361,8 @@ suite('Jupyter Provider Tests', function () {
         // Verify a controller is not selected
         assert.isUndefined(controllerId3);
         assert.strictEqual(multiStepStub.callCount, 3);
-        assert.strictEqual(multiStepStub.args[2][0].items.length, 4); // One separator and one item
+        quickPickItems = multiStepStub.args[2][0].items.filter((q) => q.kind !== QuickPickItemKind.Separator);
+        assert.strictEqual(quickPickItems.length, 3); // One separator and one item
         assert.deepEqual(
             multiStepStub.args[2][0].items
                 .filter((e) => e.kind !== QuickPickItemKind.Separator)
@@ -376,7 +379,8 @@ suite('Jupyter Provider Tests', function () {
         // Verify a controller is not selected
         assert.isUndefined(controllerId4);
         assert.strictEqual(multiStepStub.callCount, 4);
-        assert.strictEqual(multiStepStub.args[3][0].items.length, 2);
+        quickPickItems = multiStepStub.args[3][0].items.filter((q) => q.kind !== QuickPickItemKind.Separator);
+        assert.strictEqual(quickPickItems.length, 2);
         assert.deepEqual(
             multiStepStub.args[3][0].items
                 .filter((e) => e.kind !== QuickPickItemKind.Separator)
