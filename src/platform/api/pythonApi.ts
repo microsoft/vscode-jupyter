@@ -412,7 +412,7 @@ export class InterpreterService implements IInterpreterService {
     private pauseEnvDetection = false;
     private readonly onResumeEnvDetection = new EventEmitter<void>();
     public get known() {
-        traceVerbose('KNOWN', JSON.stringify(this.api?.environments.known));
+        console.error('KNOWN', JSON.stringify(this.api?.environments.known));
         return this.api?.environments.known || [];
     }
     constructor(
