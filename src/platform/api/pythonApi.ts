@@ -412,6 +412,7 @@ export class InterpreterService implements IInterpreterService {
     private pauseEnvDetection = false;
     private readonly onResumeEnvDetection = new EventEmitter<void>();
     public get known() {
+        traceVerbose('KNOWN', JSON.stringify(this.api?.environments.known));
         return this.api?.environments.known || [];
     }
     constructor(
@@ -456,6 +457,7 @@ export class InterpreterService implements IInterpreterService {
                 return;
             }
             const env = typeof id === 'string' ? api.environments.known.find((e) => e.id === id || e.path === id) : id;
+            traceVerbose('KNOWN', JSON.stringify(env));
             return api.environments.resolveEnvironment(env || id);
         });
     }
