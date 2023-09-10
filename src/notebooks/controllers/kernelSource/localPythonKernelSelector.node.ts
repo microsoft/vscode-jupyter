@@ -55,7 +55,7 @@ export class LocalPythonKernelSelector extends Disposables {
         let creationCommandAdded = false;
         const addCreationCommand = () => {
             if (creationCommandAdded) {
-                return ;
+                return;
             }
             creationCommandAdded = true;
             this.pythonEnvPicker.addCommand(
