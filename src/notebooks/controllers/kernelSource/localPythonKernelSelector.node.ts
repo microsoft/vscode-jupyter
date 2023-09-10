@@ -65,16 +65,23 @@ export class LocalPythonKernelSelector extends Disposables {
         };
         if (this.provider.items.length) {
             addCreationCommand();
-        } else {
-            this.provider.onDidChange(() => addCreationCommand, this, this.disposables);
         }
+        let installPythonCommand = { dispose: noop };
+        const onDidChangeHandler = this.provider.onDidChange(() => {
+            if (this.provider.items.length) {
+                addCreationCommand();
+                installPythonCommand.dispose();
+                onDidChangeHandler.dispose();
+            }
+        });
+        this.disposables.push(onDidChangeHandler);
         this.provider
             .refresh()
             .finally(() => {
                 if (this.provider.items.length) {
                     return;
                 }
-                this.pythonEnvPicker.addCommand(
+                installPythonCommand = this.pythonEnvPicker.addCommand(
                     {
                         label: DataScience.installPythonQuickPickTitle,
                         tooltip: DataScience.installPythonQuickPickToolTip,
