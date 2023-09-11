@@ -9,7 +9,6 @@ import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ExtensionRecommendationService } from './recommendation/extensionRecommendation.node';
 import { ActiveEditorContextService } from './context/activeEditorContext';
-import { AmlComputeContext } from './context/amlContext.node';
 import { IImportTracker, ImportTracker } from './import-export/importTracker';
 import { GlobalActivation } from './activation/globalActivation';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
@@ -40,8 +39,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         ActiveEditorContextService
     );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, AmlComputeContext);
-    serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, ImportTracker);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

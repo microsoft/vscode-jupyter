@@ -180,11 +180,6 @@ type PropertyMeasureDefinition<P> = P extends never
 
 function globallySharedProperties(): PropertyMeasureDefinition<SharedPropertyMapping>['properties'] {
     return {
-        isamlcompute: {
-            classification: 'SystemMetaData',
-            purpose: 'FeatureInsight',
-            comment: 'Whether this is an AML compute instance. Common to all events.'
-        },
         isInsiderExtension: {
             classification: 'SystemMetaData',
             purpose: 'FeatureInsight',

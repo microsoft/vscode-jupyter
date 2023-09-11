@@ -302,12 +302,6 @@ export class SharedPropertyMapping {
     ['isInsiderExtension']: 'true' | 'false';
 
     /**
-     * For every DS telemetry we would like to know whether the this is from AML compute or not.
-     * If not in AML compute, then do not send this telemetry.
-     */
-    ['isamlcompute']: 'true' | 'false';
-
-    /**
      * Whether raw kernel is supported or not.
      */
     ['rawKernelSupported']: 'true' | 'false';
