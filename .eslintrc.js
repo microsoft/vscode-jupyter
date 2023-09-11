@@ -222,6 +222,15 @@ module.exports = {
             rules: {
                 '@typescript-eslint/no-explicit-any': 'off'
             }
+        },
+        {
+            files: ['src/*.d.ts'],
+            rules: {
+                // Keep the *.d.ts files clean of any linting suppressions.
+                // These files will be distributed as is as part of the npm package.
+                '@typescript-eslint/no-explicit-any': 'off',
+                '@typescript-eslint/no-unused-vars': 'off',
+            }
         }
     ],
     settings: {
