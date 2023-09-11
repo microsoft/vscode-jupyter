@@ -17,7 +17,6 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { Disposable, EventEmitter, Memento, QuickPickItem } from 'vscode';
 import { createEventHandler } from '../../../test/common';
 import { resolvableInstance } from '../../../test/datascience/helpers';
-import { DataScience } from '../../../platform/common/utils/localize';
 use(chaiAsPromised);
 
 suite('Uri Provider Registration', () => {
@@ -228,7 +227,7 @@ suite('Uri Provider Registration', () => {
             quickPickItemsForHandle1.map((item) => {
                 return {
                     ...item,
-                    description: DataScience.uriProviderDescriptionFormat(item.description || '', 'a'),
+                    detail: undefined,
                     original: item
                 };
             })
@@ -238,7 +237,7 @@ suite('Uri Provider Registration', () => {
             quickPickItemsForHandle2.map((item) => {
                 return {
                     ...item,
-                    description: DataScience.uriProviderDescriptionFormat(item.description || '', 'ext2'),
+                    detail: undefined,
                     original: item
                 };
             })

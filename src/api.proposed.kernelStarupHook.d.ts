@@ -12,7 +12,7 @@ declare module './api' {
          * Invoked after a kernel has been started, allowing the contributing extension to perform startup
          * actions on the kernel.
          * This is only invoked for kernels
-         * - That belong to JupyterServers contributed by this provider.
+         * - That belong to {@link JupyterServer JupyterServers} contributed by this provider.
          * - That have been started, not for connecting to already started (active) kernels
          *
          * Note: This operation affects the over all startup time of a kernel, which could adversely impact the UX.
@@ -20,7 +20,7 @@ declare module './api' {
          *
          * @param uri The Uri of the resource associated with the kernel.
          * In the case of Jupyter Notebooks and Interactive Window, this is the Uri of the Notebook.
-         * @session The Session Connection for the Kernel. Use this to communicate with the backend kernel.
+         * @session The {@link Session.ISessionConnection Session Connection} for the Kernel. Use this to communicate with the backend kernel.
          */
         onStartKernel?(
             data: { uri: Uri; server: JupyterServer; session: Session.ISessionConnection },

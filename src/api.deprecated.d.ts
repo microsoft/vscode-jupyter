@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Uri } from 'vscode';
 
 declare module './api' {
@@ -18,9 +17,5 @@ declare module './api' {
          * @deprecated Use `label` instead.
          */
         title?: string;
-        /**
-         * @deprecated Use `description` instead.
-         */
-        detail?: string;
     }
 }

@@ -132,7 +132,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             return items.map((c) => {
                 return {
                     label: stripCodicons(c.label || c.title),
-                    detail: stripCodicons(c.description || c.detail),
+                    description: stripCodicons(c.description),
                     command: c
                 };
             });
@@ -196,7 +196,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
-                    mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
+                    mappedRemoteNotebookDir: info.mappedRemote?.toString(),
                     webSocketProtocols: info.webSocketProtocols
                 };
             }
@@ -215,7 +215,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
-                    mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
+                    mappedRemoteNotebookDir: info.mappedRemote?.toString(),
                     webSocketProtocols: info.webSocketProtocols
                 };
             }

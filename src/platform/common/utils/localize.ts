@@ -28,7 +28,7 @@ export namespace Common {
     export const reload = l10n.t('Reload');
     export const moreInfo = l10n.t('More Info');
     export const learnMore = l10n.t('Learn more');
-    export const labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems = l10n.t('more');
+    export const labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems = l10n.t('More');
     export const and = l10n.t('and');
     export const reportThisIssue = l10n.t('Report this issue');
     export const clickHereForMoreInfoWithHtml = (link: string) =>
@@ -82,8 +82,6 @@ export namespace DataScience {
     export const pythonExtensionInstalled = l10n.t(
         'Python Extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'
     );
-    export const uriProviderDescriptionFormat = (description: string, extensionId: string) =>
-        l10n.t('{0} (From {1} extension)', description, extensionId);
     export const unknownPackage = l10n.t('unknown');
     export const interactiveWindowTitleFormat = (ownerFileName: string) => l10n.t('Interactive - {0}', ownerFileName);
 

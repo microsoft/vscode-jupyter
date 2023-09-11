@@ -18,16 +18,6 @@ declare module './api' {
          */
         onDidChangeProvider: Event<void>;
     }
-    export interface JupyterServerProvider {
-        /**
-         * Display a `trash` icon next to each server in the quick pick.
-         * Allowing the user to remove this server.
-         * Currently used only by the Jupyter Extension.
-         * A better more generic way to deal with this would be via commands.
-         */
-        removeJupyterServer?(server: JupyterServer): Promise<void>;
-    }
-
     export interface IJupyterUriProvider {
         /**
          * Internal cache of the Jupyter Servers, providing sync access to the servers.
