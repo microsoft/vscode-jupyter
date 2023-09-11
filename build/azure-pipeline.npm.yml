@@ -1,0 +1,34 @@
+trigger: none
+pr: none
+name: $(Date:yyyyMMdd)_$(Hours)_$(Minutes)_$(Rev:r)
+
+resources:
+  repositories:
+    - repository: templates
+      type: github
+      name: microsoft/vscode-engineering
+      ref: main
+      endpoint: Monaco
+
+parameters:
+  - name: quality
+    displayName: Quality
+    type: string
+    default: latest
+    values:
+      - latest
+      - beta
+      - proposed
+  - name: publishJupyterApi
+    displayName: 🚀 Publish Jupyter Extension API
+    type: boolean
+    default: false
+
+extends:
+  template: azure-pipelines/npm-package/pipeline.yml@templates
+  parameters:
+    npmPackages:
+      - name: jupyterExtensionApi
+        tag: ${{ parameters.quality }}
+        publishPackage: ${{ parameters.publishJupyterApi }}
+        workingDirectory: $(Build.SourcesDirectory)/api
