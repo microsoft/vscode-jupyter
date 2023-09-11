@@ -1,7 +1,7 @@
 {
-    "name": "@vscode/jupyter",
+    "name": "@vscode/jupyter-extension",
     "description": "Contains the type definitions for the API exposed by the Jupyter Extension for VS Code",
-    "version": "1.0.0-rc1",
+    "version": "1.0.0",
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -21,9 +21,8 @@
         "url": "https://github.com/Microsoft/vscode-jupyter/issues"
     },
     "scripts": {
-        "prepack": "npm run clean && npm run buildStable && npm run build",
-        "buildStable": "node ./stable.js",
-        "buildProposed": "node ./proposed.js",
+        "prepublishOnly": "npm run clean && npm run build",
+        "build": "node ./build.js",
         "clean": "node ./clean.js"
     }
 }

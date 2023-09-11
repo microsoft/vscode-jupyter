@@ -1,3 +1,4 @@
 .gitignore
 tsconfig.json
-*.js
+build.js
+clean.js
