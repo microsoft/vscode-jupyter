@@ -313,7 +313,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         ...i,
                         provider: provider,
                         type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
-                        description: undefined,
                         originalItem: i
                     };
                 }
@@ -421,7 +420,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                             ...i,
                             provider: provider,
                             type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
-                            description: undefined,
                             originalItem: i
                         };
                     });

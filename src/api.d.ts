@@ -142,10 +142,6 @@ export interface JupyterServerCommand {
      * A human-readable string which is rendered less prominent on the same line.
      */
     description?: string;
-    /**
-     * Human-readable detail message that is rendered less prominent.
-     */
-    detail?: string;
 }
 
 /**

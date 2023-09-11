@@ -6,7 +6,6 @@ import { Disposable, EventEmitter, Memento, QuickPickItem } from 'vscode';
 import { JVSC_EXTENSION_ID, Telemetry } from '../../../platform/common/constants';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
-import * as localize from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInternalJupyterUriProvider, IJupyterUriProviderRegistration, JupyterServerProviderHandle } from '../types';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -229,11 +228,10 @@ class JupyterUriProviderWrapper extends Disposables implements IInternalJupyterU
         }
         return (await this.provider.getQuickPickEntryItems(value)).map((q) => {
             q.label = stripCodicons(q.label);
-            q.detail = stripCodicons(q.detail);
+            q.description = stripCodicons(q.description || q.detail); // We only support description, not detail.
             return {
                 ...q,
-                // Add the package name onto the description
-                description: localize.DataScience.uriProviderDescriptionFormat(q.description || '', this.extensionId),
+                detail: undefined,
                 original: q
             };
         });
