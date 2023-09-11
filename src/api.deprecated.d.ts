@@ -17,9 +17,5 @@ declare module './api' {
          * @deprecated Use `label` instead.
          */
         title?: string;
-        /**
-         * @deprecated Use `description` instead.
-         */
-        detail?: string;
     }
 }
