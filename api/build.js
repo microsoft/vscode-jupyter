@@ -5,9 +5,14 @@ const { EOL } = require('os');
 const fs = require('fs');
 const path = require('path');
 
+// For stable we only ship the api.d.ts file.
 fs.copyFileSync(path.join(__dirname, '../src/api.d.ts'), path.join(__dirname, 'api.d.ts'));
 
 // For proposed API, we need to merge all proposed API files into a single file.
+// Anyone installing the proposed tag will get all of the proposed API
+// Today we have at lest 3 extensions that manually pull down *.d.ts files via some automated scripts, shipping proposed API
+// in the npm makes it easier for other consumers as well (DW, AzML, Synapse, etc).
+
 // Ensure all imports are on top
 // Ensure we have a module declaration that matches the npm package name.
 // Duplicate imports is not a problem.
