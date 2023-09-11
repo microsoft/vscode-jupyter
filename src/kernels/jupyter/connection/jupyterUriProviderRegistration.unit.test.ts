@@ -227,6 +227,7 @@ suite('Uri Provider Registration', () => {
             quickPickItemsForHandle1.map((item) => {
                 return {
                     ...item,
+                    detail: undefined,
                     original: item
                 };
             })
@@ -236,6 +237,7 @@ suite('Uri Provider Registration', () => {
             quickPickItemsForHandle2.map((item) => {
                 return {
                     ...item,
+                    detail: undefined,
                     original: item
                 };
             })
