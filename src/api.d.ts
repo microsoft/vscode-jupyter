@@ -41,20 +41,22 @@ export interface JupyterServerConnectionInformation {
     readonly headers?: Record<string, string>;
     /**
      * The local directory that maps to the remote directory of the Jupyter Server.
-     * E.g. assume you start Jupyter Notebook with --notebook-dir=/foo/bar,
+     * E.g. assume you start Jupyter Notebook on a remote machine with --notebook-dir=/foo/bar,
      * and you have a file named /foo/bar/sample.ipynb, /foo/bar/sample2.ipynb and the like.
-     * Then assume the mapped local directory will be /users/xyz/remoteServer and the files sample.ipynb and sample2.ipynb
-     * are in the above local directory.
+     * Next assume you have local directory named /users/xyz/remoteServer with the files with the same names, sample.ipynb and sample2.ipynb
+     *
      *
      * Using this setting one can map the local directory to the remote directory.
-     * In this case the value of this property would be /users/xyz/remoteServer.
+     * With the previous example in mind, the value of this property would be Uri.file('/users/xyz/remoteServer').
      *
-     * Note: A side effect of providing this value is the session names are generated the way they are in Jupyter Notebook/Lab.
+     * This results in Jupyter Session names being generated in a way thats is consistent with Jupyter Notebook/Lab.
      * I.e. the session names map to the relative path of the notebook file.
-     * As a result when attempting to create a new session for a notebook/file, Jupyter will
-     * first check if a session already exists for the same file and same kernel, and if so, will re-use that session.
+     * Taking the previous example into account, if one were to start a Remote Kernel for the local file `/users/xyz/remoteServer/sample2.ipynb`,
+     * then the name of the remote Jupyter Session would be `sample2.ipynb`.
+     *
+     * This is useful in the context where the remote Jupyter Server is running on the same machine as VS Code, but the files are mapped on different directories.
      */
-    readonly mappedRemoteNotebookDir?: Uri;
+    readonly mappedRemote?: Uri;
     /**
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
      * Useful if there is a custom authentication scheme that needs to be used for WebSocket connections.

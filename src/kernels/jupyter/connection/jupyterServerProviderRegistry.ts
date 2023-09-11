@@ -196,7 +196,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
-                    mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
+                    mappedRemoteNotebookDir: info.mappedRemote?.toString(),
                     webSocketProtocols: info.webSocketProtocols
                 };
             }
@@ -215,7 +215,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
-                    mappedRemoteNotebookDir: info.mappedRemoteNotebookDir?.toString(),
+                    mappedRemoteNotebookDir: info.mappedRemote?.toString(),
                     webSocketProtocols: info.webSocketProtocols
                 };
             }
