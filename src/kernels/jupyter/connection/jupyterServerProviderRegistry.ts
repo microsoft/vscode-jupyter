@@ -27,18 +27,10 @@ import { traceError } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 
 export class JupyterServerCollectionImpl extends Disposables implements JupyterServerCollection {
-    private _serverProvider?: JupyterServerProvider;
     private _commandProvider?: JupyterServerCommandProvider;
     documentation?: Uri | undefined;
     private _onDidChangeProvider = new EventEmitter<void>();
     onDidChangeProvider = this._onDidChangeProvider.event;
-    set serverProvider(value: JupyterServerProvider | undefined) {
-        this._serverProvider = value;
-        this._onDidChangeProvider.fire();
-    }
-    get serverProvider(): JupyterServerProvider | undefined {
-        return this._serverProvider;
-    }
     set commandProvider(value: JupyterServerCommandProvider | undefined) {
         this._commandProvider = value;
         this._onDidChangeProvider.fire();
@@ -50,7 +42,8 @@ export class JupyterServerCollectionImpl extends Disposables implements JupyterS
     constructor(
         public readonly extensionId: string,
         public readonly id: string,
-        public label: string
+        public label: string,
+        public readonly serverProvider: JupyterServerProvider
     ) {
         super();
     }
@@ -112,26 +105,15 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
         }
         const token = new CancellationTokenSource();
         try {
-            let items: JupyterServerCommand[] = [];
-            if (this.provider.commandProvider.provideCommands) {
-                items = await this.provider.commandProvider.provideCommands(value || '', token.token);
-                if (
-                    (!items || !items.length) &&
-                    Array.isArray(this.provider.commandProvider.commands) &&
-                    this.provider.commandProvider.commands.length
-                ) {
-                    items = this.provider.commandProvider.commands;
-                }
-            } else {
-                items = this.provider.commandProvider.commands || [];
-            }
+            const items =
+                (await Promise.resolve(this.provider.commandProvider.provideCommands(value || '', token.token))) || [];
             if (!value) {
                 this.commands.clear();
             }
-            items.forEach((c) => this.commands.set(c.label || c.title || '', c));
+            items.forEach((c) => this.commands.set(c.label, c));
             return items.map((c) => {
                 return {
-                    label: stripCodicons(c.label || c.title),
+                    label: stripCodicons(c.label),
                     description: stripCodicons(c.description),
                     command: c
                 };
@@ -196,7 +178,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
-                    mappedRemoteNotebookDir: info.mappedRemote?.toString(),
+                    mappedRemoteNotebookDir: server.mappedRemoteDirectory?.toString(),
                     webSocketProtocols: info.webSocketProtocols
                 };
             }
@@ -215,7 +197,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                     displayName: server.label,
                     token: info.token || '',
                     authorizationHeader: info.headers,
-                    mappedRemoteNotebookDir: info.mappedRemote?.toString(),
+                    mappedRemoteNotebookDir: (result || server).mappedRemoteDirectory?.toString(),
                     webSocketProtocols: info.webSocketProtocols
                 };
             }
@@ -302,7 +284,12 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
         super();
         disposables.push(this);
     }
-    createJupyterServerCollection(extensionId: string, id: string, label: string): JupyterServerCollection {
+    createJupyterServerCollection(
+        extensionId: string,
+        id: string,
+        label: string,
+        serverProvider: JupyterServerProvider
+    ): JupyterServerCollection {
         const extId = `${extensionId}#${id}`;
         if (this._collections.has(extId)) {
             // When testing we might have a duplicate as we call the registration API in ctor of a test.
@@ -310,7 +297,7 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
                 throw new Error(`Jupyter Server Provider with id ${extId} already exists`);
             }
         }
-        const collection = new JupyterServerCollectionImpl(extensionId, id, label);
+        const collection = new JupyterServerCollectionImpl(extensionId, id, label, serverProvider);
         this._collections.set(extId, collection);
         let uriRegistration: IDisposable | undefined;
         let adapter: JupyterUriProviderAdaptor | undefined;

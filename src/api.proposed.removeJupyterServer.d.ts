@@ -3,11 +3,12 @@
 
 import { Uri } from 'vscode';
 
-// Ability to remove a Jupyter server is internal to the Jupyter Extension & Jupyter Hub extension.
-
 declare module './api' {
     export interface JupyterServerProvider {
         /**
+         * Note: For Internal Jupyter Server Provider and JupyterHub extension.
+         * Ability to remove a Jupyter server is internal to the Jupyter Extension & Jupyter Hub extension.
+         *
          * Display a `trash` icon next to each server in the quick pick.
          * Allowing the user to remove this server.
          * Currently used only by the Jupyter Extension.

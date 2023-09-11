@@ -17,6 +17,10 @@ declare module './api' {
          * Used internally by Jupyter Extension to detect changes to the JupyterServerProvider.
          */
         onDidChangeProvider: Event<void>;
+        /**
+         * Used internal by Jupyter extension to tarck the Server Provider.
+         */
+        readonly serverProvider: JupyterServerProvider;
     }
     export interface IJupyterUriProvider {
         /**

@@ -15,7 +15,11 @@ export interface JupyterAPI {
      * Extensions can use this API to provide a list of Jupyter Servers to VS Code users with custom authentication schemes.
      * E.g. one could provide a list of Jupyter Servers that require Kerberos authentication or other.
      */
-    createJupyterServerCollection(id: string, label: string): JupyterServerCollection;
+    createJupyterServerCollection(
+        id: string,
+        label: string,
+        serverProvider: JupyterServerProvider
+    ): JupyterServerCollection;
 }
 
 /**
@@ -38,24 +42,7 @@ export interface JupyterServerConnectionInformation {
      * If a {@link token token} is not provided, then headers will be used to connect to the server.
      */
     readonly headers?: Record<string, string>;
-    /**
-     * The local directory that maps to the remote directory of the Jupyter Server.
-     * E.g. assume you start Jupyter Notebook on a remote machine with --notebook-dir=/foo/bar,
-     * and you have a file named /foo/bar/sample.ipynb, /foo/bar/sample2.ipynb and the like.
-     * Next assume you have local directory named /users/xyz/remoteServer with the files with the same names, sample.ipynb and sample2.ipynb
-     *
-     *
-     * Using this setting one can map the local directory to the remote directory.
-     * With the previous example in mind, the value of this property would be Uri.file('/users/xyz/remoteServer').
-     *
-     * This results in Jupyter Session names being generated in a way thats is consistent with Jupyter Notebook/Lab.
-     * I.e. the session names map to the relative path of the notebook file.
-     * Taking the previous example into account, if one were to start a Remote Kernel for the local file `/users/xyz/remoteServer/sample2.ipynb`,
-     * then the name of the remote Jupyter Session would be `sample2.ipynb`.
-     *
-     * This is useful in the context where the remote Jupyter Server is running on the same machine as VS Code, but the files are mapped on different directories.
-     */
-    readonly mappedRemote?: Uri;
+
     /**
      * Returns the sub-protocols to be used. See details of `protocols` here https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket
      * Useful if there is a custom authentication scheme that needs to be used for WebSocket connections.
@@ -90,25 +77,6 @@ export interface JupyterServer {
 }
 
 /**
- * Represents a Jupyter Server with certain information that cannot be `undefined`.
- * For instance the {@link connectionInformation} cannot be `undefined` as this is required to connect to the server.
- */
-export interface ResolvedJupyterServer {
-    /**
-     * Unique identifier for this server.
-     */
-    readonly id: string;
-    /**
-     * A human-readable string representing the name of the Server.
-     */
-    readonly label: string;
-    /**
-     * Information required to Connect to the Jupyter Server.
-     */
-    readonly connectionInformation: JupyterServerConnectionInformation;
-}
-
-/**
  * Provider of Jupyter Servers.
  */
 export interface JupyterServerProvider {
@@ -126,7 +94,7 @@ export interface JupyterServerProvider {
      * Returns the connection information for the Jupyter server.
      * It is OK to return the given `server`. When no result is returned, the given `server` will be used.
      */
-    resolveJupyterServer(server: JupyterServer, token: CancellationToken): ProviderResult<ResolvedJupyterServer>;
+    resolveJupyterServer(server: JupyterServer, token: CancellationToken): ProviderResult<JupyterServer>;
 }
 
 /**
@@ -153,7 +121,7 @@ export interface JupyterServerCommandProvider {
      * Returns a list of commands to be displayed to the user.
      * @param value The value entered by the user in the quick pick.
      */
-    provideCommands(value: string | undefined, token: CancellationToken): Promise<JupyterServerCommand[]>;
+    provideCommands(value: string | undefined, token: CancellationToken): ProviderResult<JupyterServerCommand[]>;
     /**
      * Invoked when a {@link JupyterServerCommand command} has been selected.
      * @param command The {@link JupyterServerCommand command} selected by the user.
@@ -186,10 +154,6 @@ export interface JupyterServerCollection {
      * A link to a resource containing more information. This can be read and updated by the extension.
      */
     documentation?: Uri;
-    /**
-     * Provider of {@link JupyterServer Jupyter Servers}. This can be read and updated by the extension.
-     */
-    serverProvider?: JupyterServerProvider;
     /**
      * Provider of {@link JupyterServerCommand Commands}. This can be read and updated by the extension.
      */

@@ -177,7 +177,7 @@ suite('User Uri Provider', () => {
         const collection = mock<JupyterServerCollection>();
         when(collection.dispose()).thenReturn();
         when(
-            jupyterServerProviderRegistry.createJupyterServerCollection(anything(), anything(), anything())
+            jupyterServerProviderRegistry.createJupyterServerCollection(anything(), anything(), anything(), anything())
         ).thenReturn(instance(collection));
         const appEnv = mock<IApplicationEnvironment>();
         when(appEnv.channel).thenReturn('stable');
