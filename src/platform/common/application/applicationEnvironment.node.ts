@@ -20,9 +20,9 @@ export class ApplicationEnvironment extends BaseApplicationEnvironment {
 
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
+        @inject(IExtensionContext) extensionContext: IExtensionContext
     ) {
-        super();
+        super(extensionContext);
     }
 
     public get userSettingsFile(): Uri | undefined {

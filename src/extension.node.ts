@@ -41,8 +41,6 @@ import {
     window,
     workspace
 } from 'vscode';
-import * as fsExtra from 'fs-extra';
-import * as path from './platform/vscode-path/path';
 import { buildApi, IExtensionApi } from './standalone/api/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
 import { setHomeDirectory, traceError } from './platform/logging';
@@ -58,7 +56,6 @@ import {
     IOutputChannel,
     IsCodeSpace,
     IsDevMode,
-    IsPreRelease,
     IsWebExtension,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
@@ -330,13 +327,6 @@ async function activateLegacy(
             workspace.getConfiguration('jupyter').get<boolean>('development', false));
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
     serviceManager.addSingletonInstance<boolean>(IsWebExtension, false);
-    const isPreReleasePromise = fsExtra
-        .readFile(path.join(context.extensionPath, 'package.json'), { encoding: 'utf-8' })
-        .then((contents) => {
-            const packageJSONLive = JSON.parse(contents);
-            return isDevMode || packageJSONLive?.__metadata?.preRelease;
-        });
-    serviceManager.addSingletonInstance<Promise<boolean>>(IsPreRelease, isPreReleasePromise);
     if (isDevMode) {
         commands.executeCommand('setContext', 'jupyter.development', true).then(noop, noop);
     }

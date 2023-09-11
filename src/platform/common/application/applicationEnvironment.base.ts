@@ -51,10 +51,8 @@ export abstract class BaseApplicationEnvironment implements IApplicationEnvironm
     public get shell(): string {
         return vscode.env.shell;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public get packageJson(): any {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        return require('../../../../package.json');
+    public get packageJson() {
+        return this.extensionContext.extension.packageJSON;
     }
     public get channel(): Channel {
         return this.appName.indexOf('Insider') > 0 || this.appName.indexOf('Code - OSS Dev') >= 0
@@ -64,4 +62,5 @@ export abstract class BaseApplicationEnvironment implements IApplicationEnvironm
     public get uriScheme(): string {
         return vscode.env.uriScheme;
     }
+    constructor(protected readonly extensionContext: vscode.ExtensionContext) {}
 }

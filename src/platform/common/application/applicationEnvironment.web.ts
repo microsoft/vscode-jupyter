@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { BaseApplicationEnvironment } from './applicationEnvironment.base';
+import { IExtensionContext } from '../types';
 
 /**
  * BaseApplicationEnvironment for web. Some properties are not available in web.
@@ -15,5 +16,8 @@ export class ApplicationEnvironment extends BaseApplicationEnvironment {
     }
     public get userCustomKeybindingsFile(): Uri | undefined {
         return undefined;
+    }
+    constructor(@inject(IExtensionContext) extensionContext: IExtensionContext) {
+        super(extensionContext);
     }
 }
