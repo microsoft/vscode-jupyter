@@ -356,7 +356,6 @@ export namespace DataScience {
     export const selectRemoteJupyterPlaceholder = l10n.t('Select a remote server');
     export const jupyterServerLastConnectionForQuickPickDescription = (date: Date) =>
         l10n.t('Last connected {0}', fromNow(date, true, false, false));
-    export const jupyterServerNotUsedBeforeQuickPickSeparatorTitle = l10n.t('Jupyter Servers');
     export const jupyterSelectURIInvalidURI = l10n.t('Invalid URL specified');
     export const jupyterSelectURIMustBeHttpOrHttps = l10n.t(
         'Invalid protocol in URL specified, only HTTP or HTTPS are supported.'
@@ -380,8 +379,8 @@ export namespace DataScience {
     export const jupyterRenameServer = l10n.t('Change Server Display Name (Leave Blank To Use URL)');
     export const jupyterServerUriDisplayNameInputPlaceholder = l10n.t('Enter a display name');
     export const jupyterSelectUserPrompt = l10n.t('Enter your user name');
-    export const jupyterSelectPasswordPrompt = l10n.t('Enter your password');
-    export const jupyterSelectPasswordTitle = l10n.t('Enter your password for the Jupyter Server');
+    export const jupyterSelectPasswordPrompt = l10n.t('Enter your token/password');
+    export const jupyterSelectPasswordTitle = l10n.t('Enter your token/password for the Jupyter Server');
     export const pythonNotInstalled = l10n.t(
         'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook. \nOnce installed please reload VS Code.'
     );
@@ -447,13 +446,8 @@ export namespace DataScience {
         l10n.t('Failure during variable extraction: \r\n{0}', errorMessage);
     export const selectKernel = l10n.t('Change Kernel');
     export const selectDifferentKernel = l10n.t('Select a different Kernel');
-    export const kernelFilterPlaceholder = l10n.t('Choose the kernels that are available in the kernel picker.');
     export const recommendedItemCategoryInQuickPick = l10n.t('Recommended');
-    export const selectedKernelCategoryInQuickPick = l10n.t('Selected');
     export const createPythonEnvironmentInQuickPick = l10n.t('Create Python Environment');
-    export const createPythonEnvironmentInQuickPickTooltip = l10n.t(
-        'Create an isolated Python Environment per workspace folder'
-    );
 
     export const selectDifferentJupyterInterpreter = l10n.t('Change Interpreter');
     export const pandasTooOldForViewingFormat = (currentVersion: string, requiredVersion: string) =>
@@ -579,7 +573,6 @@ export namespace DataScience {
     export const insecureSessionMessage = l10n.t(
         'Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?'
     );
-    export const insecureSessionDenied = l10n.t('Denied connection to insecure server.');
     export const selectKernelForEditor = l10n.t('[Select a kernel](command:_notebook.selectKernel) to run cells.');
     export const needIpykernel6 = l10n.t('Ipykernel setup required for this feature');
     export const setup = l10n.t('Setup');
@@ -713,10 +706,6 @@ export namespace DataScience {
     export const kernelPickerSelectKernelFromRemoteTitle = (kernelProvider: string) =>
         l10n.t('Select a Kernel from {0}', kernelProvider);
     export const kernelPickerSelectKernelFromRemoteTitleWithoutName = l10n.t('Select a Jupyter Kernel');
-    export const installPythonExtensionViaKernelPickerTitle = l10n.t('Install Python Extension');
-    export const installPythonExtensionViaKernelPickerToolTip = l10n.t(
-        'Python Extension is required to detect and use Python environments for the execution of code cells.'
-    );
     export const installPythonQuickPickTitle = l10n.t('Install Python');
     export const installPythonQuickPickToolTip = l10n.t(
         'Python Environments not detected. Upon installation reload VS Code or refresh the list of Kernels.'
