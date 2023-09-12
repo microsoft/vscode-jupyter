@@ -71,7 +71,7 @@ if (process.env.npm_config_tag === 'proposed') {
                 return imports + [`declare module '@vscode/jupyter-extension' {`, `${tab}${line}`].join(EOL);
             }
             if (foundFirstExport) {
-                `${tab}${line}`;
+                return `${tab}${line}`;
             }
             return line;
         })

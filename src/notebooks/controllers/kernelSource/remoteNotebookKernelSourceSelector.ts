@@ -33,7 +33,7 @@ import {
 } from '../../../platform/common/constants';
 import { dispose } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
-import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInput,
     InputFlowAction,
@@ -202,17 +202,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             return (a.time || 0) > (b.time || 0) ? -1 : 1;
         });
 
-        let recentlyUsedSeparatorAdded = false;
         serversAndTimes
             .filter(({ time }) => (time || 0) > 0)
             .forEach(({ server, time }) => {
-                if (!recentlyUsedSeparatorAdded) {
-                    recentlyUsedSeparatorAdded = true;
-                    quickPickServerItems.push({
-                        label: 'Recently Used',
-                        kind: QuickPickItemKind.Separator
-                    });
-                }
                 quickPickServerItems.push({
                     type: KernelFinderEntityQuickPickType.KernelFinder,
                     kernelFinderInfo: server,
@@ -235,18 +227,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 });
             });
 
-        let addedSeparator = false;
         serversAndTimes
             .filter(({ time }) => !time)
             .forEach(({ server }) => {
-                if (!addedSeparator) {
-                    addedSeparator = true;
-                    quickPickServerItems.push({
-                        label: DataScience.jupyterServerNotUsedBeforeQuickPickSeparatorTitle,
-                        kind: QuickPickItemKind.Separator
-                    });
-                }
-
                 quickPickServerItems.push({
                     type: KernelFinderEntityQuickPickType.KernelFinder,
                     kernelFinderInfo: server,
@@ -277,13 +260,6 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 });
                 if (handledServerIds.has(id)) {
                     return;
-                }
-                if (!addedSeparator) {
-                    addedSeparator = true;
-                    quickPickServerItems.push({
-                        label: DataScience.jupyterServerNotUsedBeforeQuickPickSeparatorTitle,
-                        kind: QuickPickItemKind.Separator
-                    });
                 }
 
                 quickPickServerItems.push(<JupyterServerQuickPickItem>{
@@ -319,7 +295,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             );
             if (quickPickServerItems.length > 0 && newProviderItems.length) {
                 quickPickCommandItems.push({
-                    label: Common.labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems,
+                    label: '',
                     kind: QuickPickItemKind.Separator
                 });
             }
@@ -406,10 +382,10 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     if (!provider.getQuickPickEntryItems) {
                         return;
                     }
-                    const quickPickCommandItems = [];
+                    const quickPickCommandItems: QuickPickItem[] = [];
                     if (quickPickServerItems.length > 0) {
                         quickPickCommandItems.push({
-                            label: Common.labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems,
+                            label: '',
                             kind: QuickPickItemKind.Separator
                         });
                     }

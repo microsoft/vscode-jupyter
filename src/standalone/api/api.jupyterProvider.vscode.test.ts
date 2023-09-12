@@ -23,7 +23,7 @@ import {
     commands,
     notebooks
 } from 'vscode';
-import { JupyterServer } from '../../api';
+import { JupyterServer, JupyterServerProvider } from '../../api';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterServer as JupyterServerStarter } from '../../test/datascience/jupyterServer.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
@@ -78,16 +78,16 @@ suite('Jupyter Provider Tests', function () {
         traceInfo(`End Test Completed ${this.currentTest?.title}`);
     });
     test('Verify Kernel Source Action is registered & unregistered for the 3rd party extension', async () => {
-        const collection1 = api.createJupyterServerCollection('sample1', 'First Collection');
-        const collection2 = api.createJupyterServerCollection('sample2', 'Second Collection');
-        collection1.serverProvider = {
+        const serverProvider1 = {
             provideJupyterServers: () => Promise.resolve([]),
             resolveJupyterServer: () => Promise.reject(new Error('Not Implemented'))
         };
-        collection2.serverProvider = {
+        const serverProvider2 = {
             provideJupyterServers: () => Promise.resolve([]),
             resolveJupyterServer: () => Promise.reject(new Error('Not Implemented'))
         };
+        const collection1 = api.createJupyterServerCollection('sample1', 'First Collection', serverProvider1);
+        const collection2 = api.createJupyterServerCollection('sample2', 'Second Collection', serverProvider2);
         disposables.push(collection1);
         disposables.push(collection2);
         let matchingDisposable1: IDisposable | undefined;
@@ -239,15 +239,16 @@ suite('Jupyter Provider Tests', function () {
     //     assert.strictEqual(remoteConnection.id, selectedItem!.id);
     // });
     test('When there are 2 or more servers, then user is prompted to select a server', async () => {
-        const collection = api.createJupyterServerCollection(
-            'sampleServerProvider2',
-            'First Collection For Third Test'
-        );
-        disposables.push(collection);
-        collection.serverProvider = {
+        const serverProvider: JupyterServerProvider = {
             provideJupyterServers: () => Promise.resolve([]),
             resolveJupyterServer: () => Promise.reject(new Error('Not Implemented'))
         };
+        const collection = api.createJupyterServerCollection(
+            'sampleServerProvider2',
+            'First Collection For Third Test',
+            serverProvider
+        );
+        disposables.push(collection);
         const server1: JupyterServer = {
             id: 'Server1ForTesting',
             label: 'Server 1',
@@ -275,11 +276,9 @@ suite('Jupyter Provider Tests', function () {
         const servers = [server1, server2, server3];
         const onDidChangeServers = new EventEmitter<void>();
         disposables.push(onDidChangeServers);
-        collection.serverProvider = {
-            onDidChangeServers: onDidChangeServers.event,
-            provideJupyterServers: () => Promise.resolve(servers),
-            resolveJupyterServer: () => Promise.reject(new Error('Not Implemented'))
-        };
+        serverProvider.onDidChangeServers = onDidChangeServers.event;
+        serverProvider.provideJupyterServers = () => Promise.resolve(servers);
+        serverProvider.resolveJupyterServer = () => Promise.reject(new Error('Not Implemented'));
 
         let matchingProvider: NotebookKernelSourceActionProvider | undefined;
         await waitForCondition(

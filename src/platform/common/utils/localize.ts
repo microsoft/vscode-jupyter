@@ -28,7 +28,6 @@ export namespace Common {
     export const reload = l10n.t('Reload');
     export const moreInfo = l10n.t('More Info');
     export const learnMore = l10n.t('Learn more');
-    export const labelForQuickPickSeparatorIndicatingThereIsAnotherGroupOfMoreItems = l10n.t('More');
     export const and = l10n.t('and');
     export const reportThisIssue = l10n.t('Report this issue');
     export const clickHereForMoreInfoWithHtml = (link: string) =>

@@ -24,7 +24,7 @@ import {
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 import { ContributedKernelFinderKind, IContributedKernelFinder } from '../internalTypes';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection } from '../../api';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerCollection, JupyterServerProvider } from '../../api';
 import { IQuickPickItemProvider } from '../../platform/common/providerBasedQuickPick';
 
 export type JupyterServerInfo = {
@@ -308,5 +308,10 @@ export const IJupyterServerProviderRegistry = Symbol('IJupyterServerProviderRegi
 export interface IJupyterServerProviderRegistry {
     onDidChangeCollections: Event<{ added: JupyterServerCollection[]; removed: JupyterServerCollection[] }>;
     readonly jupyterCollections: readonly JupyterServerCollection[];
-    createJupyterServerCollection(extensionId: string, id: string, label: string): JupyterServerCollection;
+    createJupyterServerCollection(
+        extensionId: string,
+        id: string,
+        label: string,
+        serverProvider: JupyterServerProvider
+    ): JupyterServerCollection;
 }

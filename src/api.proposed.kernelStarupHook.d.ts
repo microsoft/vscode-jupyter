@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-// https://github.com/microsoft/vscode-jupyter/issues/13893
-
 import type { Session } from '@jupyterlab/services';
 import type { CancellationToken, Uri } from 'vscode';
 
 declare module './api' {
     export interface JupyterServerProvider {
         /**
+         * Note: For Synapse, https://github.com/microsoft/vscode-jupyter/issues/13893
+         *
          * Invoked after a kernel has been started, allowing the contributing extension to perform startup
          * actions on the kernel.
          * This is only invoked for kernels

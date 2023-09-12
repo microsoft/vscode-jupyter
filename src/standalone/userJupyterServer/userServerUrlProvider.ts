@@ -157,11 +157,11 @@ export class UserJupyterServerUrlProvider
         const collection = this.jupyterServerProviderRegistry.createJupyterServerCollection(
             JVSC_EXTENSION_ID,
             this.id,
-            this.displayName
+            this.displayName,
+            this
         );
         this.disposables.push(collection);
         collection.commandProvider = this;
-        collection.serverProvider = this;
         collection.documentation = this.documentation;
         this.onDidChangeHandles(() => this._onDidChangeServers.fire(), this, this.disposables);
         this.disposables.push(
