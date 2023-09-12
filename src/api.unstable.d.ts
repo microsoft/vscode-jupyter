@@ -15,7 +15,7 @@ import type { Session } from '@jupyterlab/services';
 import type { IDataViewerDataProvider } from './webviews/extension-side/dataviewer/types';
 
 declare module './api' {
-    export interface JupyterAPI {
+    export interface Jupyter {
         /**
          * Promise indicating whether all parts of the extension have completed loading or not.
          * @type {Promise<void>}
