@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { PythonApi } from './platform/api/types';
+import type { PythonApi } from './platform/api/types';
 
 declare module './api' {
     /**

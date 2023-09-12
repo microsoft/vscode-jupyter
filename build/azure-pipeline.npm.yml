@@ -11,6 +11,10 @@ resources:
       endpoint: Monaco
 
 parameters:
+  - name: nextVersion
+    displayName: '🚀 Release Version (eg: none, major, minor, patch, or X.X.X)'
+    type: string
+    default: 'none'
   - name: quality
     displayName: Quality
     type: string
@@ -29,6 +33,14 @@ extends:
   parameters:
     npmPackages:
       - name: jupyterExtensionApi
+        buildSteps:
+          - script: npm run buildStable
+            workingDirectory: $(Build.SourcesDirectory)/api
+            condition: not(eq('${{ parameters.quality }}', 'proposed'))
+          - script: npm run buildProposed
+            workingDirectory: $(Build.SourcesDirectory)/api
+            condition: eq('${{ parameters.quality }}', 'proposed')
         tag: ${{ parameters.quality }}
         publishPackage: ${{ parameters.publishJupyterApi }}
+        nextVersion: ${{ parameters.nextVersion }}
         workingDirectory: $(Build.SourcesDirectory)/api

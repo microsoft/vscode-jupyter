@@ -1,10 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, Disposable, Event, NotebookController, NotebookDocument, QuickPickItem, Uri } from 'vscode';
+import type {
+    CancellationToken,
+    Disposable,
+    Event,
+    NotebookController,
+    NotebookDocument,
+    QuickPickItem,
+    Uri
+} from 'vscode';
 import type { Kernel } from '@jupyterlab/services/lib/kernel';
 import type { Session } from '@jupyterlab/services';
-import { IDataViewerDataProvider } from './webviews/extension-side/dataviewer/types';
+import type { IDataViewerDataProvider } from './webviews/extension-side/dataviewer/types';
 
 declare module './api' {
     export interface JupyterAPI {
