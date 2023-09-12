@@ -3513,69 +3513,6 @@ export class IEventNamePropertyMapping {
         }
     };
     /**
-     * Telemetry sent with result of detecting Jupyter in the current path.
-     */
-    [Telemetry.JupyterInstalled]: TelemetryEventInfo<
-        | /* Detection of jupyter failed */ {
-              /**
-               * Failed to detect Jupyter.
-               */
-              failed: true;
-              /**
-               * Reason for failure.
-               */
-              reason: 'notInstalled';
-              /**
-               * Whether this is jupyter lab or notebook.
-               */
-              frontEnd: 'notebook' | 'lab';
-          }
-        | /** Jupyter was successfully detected */ {
-              /**
-               * Jupyter is in current path of process owned by VS Code.
-               * I.e. jupyter can be found in the path as defined by the env variable process.env['PATH'].
-               */
-              detection: 'process';
-              /**
-               * Whether this is jupyter lab or notebook.
-               */
-              frontEnd: 'notebook' | 'lab';
-              /**
-               * Version of the form 6.11, 4.8
-               */
-              frontEndVersion: number;
-          }
-    > = {
-        owner: 'donjayamanne',
-        feature: 'N/A',
-        source: 'N/A',
-        measures: {
-            frontEndVersion: {
-                classification: 'SystemMetaData',
-                isMeasurement: true,
-                purpose: 'PerformanceAndHealth'
-            }
-        },
-        properties: {
-            detection: {
-                classification: 'SystemMetaData',
-                purpose: 'PerformanceAndHealth'
-            },
-            failed: {
-                classification: 'CallstackOrException',
-                purpose: 'PerformanceAndHealth'
-            },
-            frontEnd: {
-                classification: 'PublicNonPersonalData',
-                purpose: 'FeatureInsight'
-            },
-            reason: {
-                classification: 'CallstackOrException',
-                purpose: 'PerformanceAndHealth'
-            }
-        }
-    };
-    /**
      * Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
      * E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.
      */
