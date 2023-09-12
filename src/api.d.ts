@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { CancellationToken, ProviderResult, CancellationError } from 'vscode';
-import { Event, Uri } from 'vscode';
+import type { CancellationToken, ProviderResult, CancellationError } from 'vscode';
+import type { Event, Uri } from 'vscode';
 
-export interface JupyterAPI {
+export interface Jupyter {
     /**
      * Creates a Jupyter Server Collection that can be displayed in the Notebook Kernel Picker.
      *

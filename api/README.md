@@ -1,6 +1,6 @@
 # Installation
 
-`npm install @vscode/jupyter`
+`npm install @vscode/jupyter-extension`
 
 # Summary
 

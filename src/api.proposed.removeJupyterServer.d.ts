@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import type { Uri } from 'vscode';
 
 declare module './api' {
     export interface JupyterServerProvider {

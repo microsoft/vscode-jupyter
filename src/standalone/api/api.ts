@@ -15,7 +15,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { isRemoteConnection } from '../../kernels/types';
 import {
-    JupyterAPI,
+    Jupyter,
     IExportedKernelService,
     IJupyterUriProvider,
     JupyterServerCollection,
@@ -33,7 +33,7 @@ export interface IExportedKernelServiceFactory {
  * This is the public API for other extensions to interact with this extension.
  */
 
-export interface IExtensionApi extends JupyterAPI {}
+export interface IExtensionApi extends Jupyter {}
 
 function waitForNotebookControllersCreationForServer(
     serverId: { id: string; handle: string },
