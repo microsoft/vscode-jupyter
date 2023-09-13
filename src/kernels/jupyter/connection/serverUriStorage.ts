@@ -4,7 +4,7 @@
 import { EventEmitter, Memento, Uri, env } from 'vscode';
 import { inject, injectable, named } from 'inversify';
 import { IEncryptedStorage } from '../../../platform/common/application/types';
-import { Identifiers, JUPYTER_HUB_EXTENSION_ID, JVSC_EXTENSION_ID, Settings } from '../../../platform/common/constants';
+import { Identifiers, Settings } from '../../../platform/common/constants';
 import { IMemento, GLOBAL_MEMENTO, IExtensionContext, IDisposableRegistry } from '../../../platform/common/types';
 import { traceError, traceInfoIfCI, traceVerbose } from '../../../platform/logging';
 import {
@@ -347,13 +347,6 @@ class NewStorage {
         const existingEntry = uriList.find(
             (entry) => entry.provider.id === server.id && entry.provider.handle === server.handle
         );
-        if (
-            !existingEntry &&
-            server.extensionId !== JVSC_EXTENSION_ID &&
-            server.extensionId !== JUPYTER_HUB_EXTENSION_ID
-        ) {
-            throw new Error(`Uri not found for Server Id ${JSON.stringify(server)}`);
-        }
         const entry: IJupyterServerUriEntry = {
             provider: server,
             time: Date.now(),
