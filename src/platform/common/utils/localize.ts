@@ -520,7 +520,7 @@ export namespace DataScience {
         ]
     });
     export const exportToPDFDependencyMessage = l10n.t(
-        'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex. \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
+        'If you have not installed xelatex (TeX), you will need to do so before you can export to PDF. For further instructions, please see https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex. \r\nTo avoid installing xelatex (TeX), you might want to try exporting to HTML and using your browser\'s "Print to PDF" feature.'
     );
     export const failedExportMessage = l10n.t('Export failed.');
     export const startingJupyterLogMessage = (pythonExec: string, cliArgs: string) =>
