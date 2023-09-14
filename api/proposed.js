@@ -34,7 +34,10 @@ fs.readdirSync(path.join(__dirname, '../src')).forEach((file) => {
                     return true;
                 }
                 if (line.startsWith('import ') && line.trim().endsWith(';')) {
-                    proposedApiImports.push(line);
+                    if (!proposedApiImports.includes(line)) {
+                        proposedApiImports.push('// @ts-ignore Ignore Duplicate types');
+                        proposedApiImports.push(line);
+                    }
                     return false;
                 }
                 if (line.startsWith(newModuleDeclaration)) {
