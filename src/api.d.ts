@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { CancellationToken, ProviderResult, CancellationError } from 'vscode';
-import type { Event, Uri } from 'vscode';
+import type { CancellationToken, ProviderResult, CancellationError, Event, Uri } from 'vscode';
 
 export interface Jupyter {
     /**

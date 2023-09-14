@@ -34,7 +34,10 @@ fs.readdirSync(path.join(__dirname, '../src')).forEach((file) => {
                     return true;
                 }
                 if (line.startsWith('import ') && line.trim().endsWith(';')) {
-                    proposedApiImports.push(line);
+                    if (!proposedApiImports.includes(line)) {
+                        proposedApiImports.push('// @ts-ignore Ignore Duplicate types');
+                        proposedApiImports.push(line);
+                    }
                     return false;
                 }
                 if (line.startsWith(newModuleDeclaration)) {
@@ -57,7 +60,7 @@ const newSource = source
     .split(/\r?\n/g)
     .map((line) => {
         if (proposedApiImports.length && line.startsWith('import ') && line.trim().endsWith(';')) {
-            const newLine = [line, ...proposedApiImports].join(EOL);
+            const newLine = ['// @ts-ignore Ignore Duplicate types', line, ...proposedApiImports].join(EOL);
             proposedApiImports = [];
             return newLine;
         }
