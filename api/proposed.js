@@ -60,7 +60,7 @@ const newSource = source
     .split(/\r?\n/g)
     .map((line) => {
         if (proposedApiImports.length && line.startsWith('import ') && line.trim().endsWith(';')) {
-            const newLine = [line, ...proposedApiImports].join(EOL);
+            const newLine = ['// @ts-ignore Ignore Duplicate types', line, ...proposedApiImports].join(EOL);
             proposedApiImports = [];
             return newLine;
         }
