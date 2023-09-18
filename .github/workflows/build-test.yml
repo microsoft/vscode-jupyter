@@ -307,6 +307,13 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            packageVersion: 'prerelease'
+            tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
