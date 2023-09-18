@@ -289,7 +289,6 @@ export namespace vscMock {
         public static readonly SourceFixAll: CodeActionKind = new CodeActionKind('source.fix.all');
         public static readonly RefactorMove: CodeActionKind = new CodeActionKind('refactor.move');
         static readonly Notebook: CodeActionKind;
-
         private constructor(private _value: string) {}
 
         public append(parts: string): CodeActionKind {

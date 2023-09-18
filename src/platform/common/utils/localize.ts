@@ -361,7 +361,16 @@ export namespace DataScience {
     export const jupyterSelectURIMustBeHttpOrHttps = l10n.t(
         'Invalid protocol in URL specified, only HTTP or HTTPS are supported.'
     );
-    export const jupyterSelectLiveRemoteKernelDescription = (time: Date, numberOfConnections: number) => {
+    export const jupyterSelectLiveRemoteKernelDescription = (time: Date | undefined, numberOfConnections: number) => {
+        if (!time) {
+            if (numberOfConnections === 0) {
+                return '';
+            }
+            if (numberOfConnections === 1) {
+                return l10n.t('1 connection');
+            }
+            return l10n.t('{1} connections', numberOfConnections.toString());
+        }
         if (numberOfConnections === 0) {
             return l10n.t('Last activity {0}', fromNow(time, true, false, false));
         }
