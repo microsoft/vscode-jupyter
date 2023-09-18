@@ -1,0 +1,21 @@
+.cell-output-text {
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-x: hidden;
+    font-size: var(--notebook-cell-output-font-size);
+    padding: 4px 8px;
+}
+
+.cell-output-text {
+    white-space: pre-wrap;
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+}
+
+b {
+    font-weight: 500;
+}
+
+.error-view-more {
+    margin: 8px 0px;
+}
