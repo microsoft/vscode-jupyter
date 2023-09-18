@@ -375,8 +375,18 @@ export function getRemoteKernelSessionInformation(
     defaultValue: string = ''
 ): string {
     if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
+        let date: Date | undefined;
+        if (typeof kernelConnection.kernelModel.lastActivityTime === 'string') {
+            try {
+                date = new Date(kernelConnection.kernelModel.lastActivityTime);
+            } catch (ex) {
+                traceVerbose(`Error parsing date ${ex}`);
+            }
+        } else {
+            date = kernelConnection.kernelModel.lastActivityTime;
+        }
         return DataScience.jupyterSelectLiveRemoteKernelDescription(
-            kernelConnection.kernelModel.lastActivityTime,
+            date,
             kernelConnection.kernelModel.numberOfConnections
         );
     }

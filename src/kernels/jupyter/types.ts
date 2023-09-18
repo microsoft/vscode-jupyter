@@ -80,7 +80,7 @@ export interface IJupyterKernel {
      */
     id?: string;
     name: string;
-    lastActivityTime: Date;
+    lastActivityTime: Date | string;
     numberOfConnections: number;
 }
 
