@@ -307,13 +307,6 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
-          - jupyterConnection: remote
-            python: python
-            pythonVersion: '3.10'
-            packageVersion: 'prerelease'
-            tags: '^[^@]+$|@mandatory'
-            os: ubuntu-latest
-            ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
@@ -529,7 +522,7 @@ jobs:
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
-          python -m pip install jupyter notebook ipykernel ipython nbconvert nbformat --pre
+          python -m pip install jupyter notebook ipykernel ipython nbconvert nbformat jupyterlab traitlets --pre
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
