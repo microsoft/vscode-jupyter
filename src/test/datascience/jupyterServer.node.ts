@@ -109,7 +109,6 @@ export class JupyterServer {
                         detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    console.log(`Started Jupyter Server on ${url}`);
                     // Anything with a cert is https, not http
                     resolve(url);
                 } catch (ex) {
@@ -133,7 +132,6 @@ export class JupyterServer {
         const token = typeof options.token === 'string' ? options.token : this.generateToken();
         const result = await this.startJupyterServer({ ...options, port, token });
         await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-        console.log(`Started Jupyter Server on ${result.url}`);
         return result;
     }
 
@@ -152,7 +150,6 @@ export class JupyterServer {
                         detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    console.log(`Started Jupyter Server on ${url}`);
                     resolve(url);
                 } catch (ex) {
                     reject(ex);
@@ -174,7 +171,6 @@ export class JupyterServer {
                         token
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    console.log(`Started Jupyter Server on ${url}`);
                     resolve(url);
                 } catch (ex) {
                     reject(ex);
@@ -309,6 +305,7 @@ export class JupyterServer {
                         } else {
                             url = `http://localhost:${port}/?token=${token}`;
                         }
+                        console.log(`Started Jupyter Server on ${url}`);
                         resolve({ url, dispose: () => procDisposable.dispose() });
                     }
                 });
