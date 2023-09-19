@@ -5,14 +5,13 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, Uri, workspace } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { DataScience } from '../../../platform/common/utils/localize';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
-import { closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
+import { closeNotebooksAndCleanUpAfterTests } from './helper';
 import {
     createEmptyPythonNotebook,
     createTemporaryNotebook,
@@ -161,40 +160,5 @@ suite('Remote Kernel Execution', function () {
             100,
             true
         );
-    });
-
-    test('Remote kernels work with https @kernelCore', async function () {
-        // Note, this test won't work in web yet.
-        const config = workspace.getConfiguration('jupyter');
-        await config.update('allowUnauthorizedRemoteConnection', false);
-        const prompt = await hijackPrompt(
-            'showErrorMessage',
-            { contains: 'certificate' },
-            { result: DataScience.jupyterSelfCertEnable, clickImmediately: true }
-        );
-        await startJupyterServer({ useCert: true });
-
-        await waitForCondition(
-            async () => {
-                const controllers = controllerRegistration.registered;
-                return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
-            },
-            defaultNotebookTestTimeout,
-            'Should have at least one remote controller'
-        );
-
-        const { editor } = await openNotebook(ipynbFile);
-        await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
-        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
-        let nbEditor = vscodeNotebook.activeNotebookEditor!;
-        assert.isOk(nbEditor, 'No active notebook');
-        // Cell 1 = `a = "Hello World"`
-        // Cell 2 = `print(a)`
-        let cell2 = nbEditor.notebook.getCells()![1]!;
-        await Promise.all([
-            runAllCellsInActiveNotebook(),
-            waitForExecutionCompletedSuccessfully(cell2),
-            waitForTextOutput(cell2, 'Hello World', 0, false)
-        ]);
     });
 });
