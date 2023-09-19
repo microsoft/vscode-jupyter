@@ -125,7 +125,7 @@ export class JupyterServer {
         useCert?: boolean;
         jupyterLab?: boolean;
         password?: string;
-    }): Promise<{ url: string; dispose: Function }> {
+    }): Promise<{ url: string; dispose: () => void }> {
         const port = await getPort({ host: 'localhost', port: this.nextPort });
         // Possible previous instance of jupyter has not completely shutdown.
         // Wait for it to shutdown fully so that we can re-use the same port.
@@ -218,8 +218,8 @@ export class JupyterServer {
         jupyterLab?: boolean;
         password?: string;
         detached?: boolean;
-    }): Promise<{ url: string; dispose: Function }> {
-        return new Promise<{ url: string; dispose: Function }>(async (resolve, reject) => {
+    }): Promise<{ url: string; dispose: () => void }> {
+        return new Promise<{ url: string; dispose: () => void }>(async (resolve, reject) => {
             try {
                 const args = [
                     '-m',
