@@ -222,14 +222,18 @@ export class JupyterServer {
                     'jupyter',
                     jupyterLab ? 'lab' : 'notebook',
                     '--no-browser',
-                    `--ServerApp.port=${port}`,
-                    `--ServerApp.token=${token}`,
-                    `--ServerApp.allow_origin=*`
+                    `--NotebookApp.port=${port}`,
+                    `--NotebookApp.token=${token}`,
+                    `--ServerAppApp.port=${port}`,
+                    `--ServerAppApp.token=${token}`,
+                    `--NotebookApp.allow_origin=*`
                 ];
                 if (typeof password === 'string') {
                     if (password.length === 0) {
+                        args.push(`--NotebookApp.password=`);
                         args.push(`--ServerApp.password=`);
                     } else {
+                        args.push(`--NotebookApp.password=${generateHashedPassword(password)}`);
                         args.push(`--ServerApp.password=${generateHashedPassword(password)}`);
                     }
                 }
@@ -286,7 +290,7 @@ export class JupyterServer {
 
                     // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
                     // This way we can click the link in the output panel easily.
-                    if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
+                    if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels') >= 0) {
                         const lines = splitLines(allOutput, { trim: true, removeEmptyEntries: true });
                         const indexOfCtrlC = lines.findIndex((item) =>
                             item.includes('Use Control-C to stop this server')
@@ -305,7 +309,11 @@ export class JupyterServer {
                         } else {
                             url = `http${useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
                         }
-                        console.log(`Started Jupyter Server on ${useCert ? 'with certificate' : ''}${url}`);
+                        // token might not be printed in the output
+                        if (url.includes(`token=...`)) {
+                            url = url.replace(`token=...`, `token=${token}`);
+                        }
+                        console.log(`Started Jupyter Server on ${url}`);
                         resolve({ url, dispose: () => procDisposable.dispose() });
                     }
                 });
