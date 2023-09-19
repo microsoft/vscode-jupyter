@@ -49,7 +49,7 @@ import {
 } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { traceError, traceWarning } from '../../platform/logging';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { JupyterPasswordConnect } from './jupyterPasswordConnect';
 import {
     IJupyterServerUri,
@@ -130,7 +130,7 @@ export class UserJupyterServerUrlProvider
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.secureConnectionValidator = new SecureConnectionValidator(applicationShell, globalMemento);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        this.jupyterServerUriInput = new UserJupyterServerUriInput(clipboard, applicationShell);
+        this.jupyterServerUriInput = new UserJupyterServerUriInput(clipboard, applicationShell, requestCreator);
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         this.jupyterServerUriDisplayName = new UserJupyterServerDisplayName(applicationShell);
         this.jupyterPasswordConnect = new JupyterPasswordConnect(
@@ -388,7 +388,7 @@ export class UserJupyterServerUrlProvider
         let initialUrlWasValid = false;
         if (initialUrl) {
             // Validate the URI first, which would otherwise be validated when user enters the Uri into the input box.
-            const initialVerification = this.jupyterServerUriInput.parseUserUriAndGetValidationError(initialUrl);
+            const initialVerification = await this.jupyterServerUriInput.parseUserUriAndGetValidationError(initialUrl);
             if (typeof initialVerification.validationError === 'string') {
                 // Uri has an error, show the error message by displaying the input box and pre-populating the url.
                 validationErrorMessage = initialVerification.validationError;
@@ -709,7 +709,8 @@ export class UserJupyterServerUrlProvider
 export class UserJupyterServerUriInput {
     constructor(
         @inject(IClipboard) private readonly clipboard: IClipboard,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
     ) {}
 
     async getUrlFromUser(
@@ -753,7 +754,7 @@ export class UserJupyterServerUriInput {
         );
 
         input.onDidAccept(async () => {
-            const result = this.parseUserUriAndGetValidationError(input.value);
+            const result = await this.parseUserUriAndGetValidationError(input.value);
             if (typeof result.validationError === 'string') {
                 input.validationMessage = result.validationError;
                 return;
@@ -763,19 +764,52 @@ export class UserJupyterServerUriInput {
         return deferred.promise;
     }
 
-    public parseUserUriAndGetValidationError(
+    public async parseUserUriAndGetValidationError(
         value: string
-    ): { validationError: string } | { jupyterServerUri: IJupyterServerUri; url: string; validationError: undefined } {
+    ): Promise<
+        { validationError: string } | { jupyterServerUri: IJupyterServerUri; url: string; validationError: undefined }
+    > {
         // If it ends with /lab? or /lab or /tree? or /tree, then remove that part.
         const uri = value.trim().replace(/\/(lab|tree)(\??)$/, '');
         const jupyterServerUri = parseUri(uri, '');
         if (!jupyterServerUri) {
             return { validationError: DataScience.jupyterSelectURIInvalidURI };
         }
+        jupyterServerUri.baseUrl = (await getBaseJupyterUrl(uri, this.requestCreator)) || jupyterServerUri.baseUrl;
         if (!uri.toLowerCase().startsWith('http:') && !uri.toLowerCase().startsWith('https:')) {
             return { validationError: DataScience.jupyterSelectURIMustBeHttpOrHttps };
         }
         return { jupyterServerUri, url: uri, validationError: undefined };
+    }
+}
+
+export async function getBaseJupyterUrl(url: string, requestCreator: IJupyterRequestCreator) {
+    // Jupyter URLs can contain a path, but we only want the base URL
+    // E.g. user can enter http://localhost:8000/tree?token=1234
+    // and we need http://localhost:8000/
+    // Similarly user can enter http://localhost:8888/lab/workspaces/auto-R
+    // or http://localhost:8888/notebooks/Untitled.ipynb?kernel_name=python3
+    // In all of these cases, once we remove the token, and we make a request to the url
+    // then the jupyter server will redirect the user the loging page
+    // which is of the form http://localhost:8000/login?next....
+    // And the base url is easily identifiable as what ever is before `login?`
+    try {
+        // parseUri has special handling of `tree?` and `lab?`
+        // For some reasson Jupyter does not redirecto those the the a
+        url = parseUri(url, '')?.baseUrl || url;
+        if (new URL(url).pathname === '/') {
+            // No need to make a request, as we already have the base url.
+            return url;
+        }
+        const urlWithoutToken = url.indexOf('token=') > 0 ? url.substring(0, url.indexOf('token=')) : url;
+        const fetch = requestCreator.getFetchMethod();
+        const response = await fetch(urlWithoutToken, { method: 'GET', redirect: 'manual' });
+        const loginPage = response.headers.get('location');
+        if (loginPage && loginPage.includes('login?')) {
+            return loginPage.substring(0, loginPage.indexOf('login?'));
+        }
+    } catch (ex) {
+        traceVerbose(`Unable to identify the baseUrl of the Jupyter Server`, ex);
     }
 }
 
