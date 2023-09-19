@@ -224,7 +224,7 @@ export class JupyterServer {
                 const args = [
                     '-m',
                     'jupyter',
-                    jupyterLab || process.env.VSC_USE_JUPYTER_LAB === 'true' ? 'lab' : 'notebook',
+                    jupyterLab ? 'lab' : 'notebook',
                     '--no-browser',
                     `--NotebookApp.port=${port}`,
                     `--NotebookApp.token=${token}`,
