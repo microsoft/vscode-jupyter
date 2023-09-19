@@ -26,7 +26,7 @@ import {
 import { JupyterServer, JupyterServerProvider } from '../../api';
 import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
 import { JupyterServer as JupyterServerStarter } from '../../test/datascience/jupyterServer.node';
-import { IS_REMOTE_NATIVE_TEST } from '../../test/constants';
+import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../test/constants';
 import { isWeb } from '../../platform/common/utils/misc';
 import { MultiStepInput } from '../../platform/common/utils/multiStepInput';
 
@@ -41,6 +41,10 @@ suite('Jupyter Provider Tests', function () {
     const tokenForJupyterServer = 'TokenForJupyterServer';
     suiteSetup(async function () {
         if (IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            return this.skip();
+        }
+        if (IS_CONDA_TEST()) {
+            // Due to upstream issue documented here https://github.com/microsoft/vscode-jupyter/issues/14338
             return this.skip();
         }
         this.timeout(120_000);
