@@ -305,7 +305,7 @@ export class JupyterServer {
                         } else {
                             url = `http${useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
                         }
-                        console.log(`Started Jupyter Server on ${url}`);
+                        console.log(`Started Jupyter Server on ${useCert ? 'with certificate' : ''}${url}`);
                         resolve({ url, dispose: () => procDisposable.dispose() });
                     }
                 });
