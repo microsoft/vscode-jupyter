@@ -226,15 +226,15 @@ export class JupyterServer {
                     'jupyter',
                     jupyterLab ? 'lab' : 'notebook',
                     '--no-browser',
-                    `--NotebookApp.port=${port}`,
-                    `--NotebookApp.token=${token}`,
-                    `--NotebookApp.allow_origin=*`
+                    `--ServerApp.port=${port}`,
+                    `--ServerApp.token=${token}`,
+                    `--ServerApp.allow_origin=*`
                 ];
                 if (typeof password === 'string') {
                     if (password.length === 0) {
-                        args.push(`--NotebookApp.password=`);
+                        args.push(`--ServerApp.password=`);
                     } else {
-                        args.push(`--NotebookApp.password=${generateHashedPassword(password)}`);
+                        args.push(`--ServerApp.password=${generateHashedPassword(password)}`);
                     }
                 }
                 if (useCert) {
@@ -298,7 +298,11 @@ export class JupyterServer {
                         const lineWithUrl = lines
                             .slice(0, indexOfCtrlC)
                             .reverse()
-                            .find((line) => line.includes(`http://localhost:${port}`));
+                            .find(
+                                (line) =>
+                                    line.includes(`http://localhost:${port}`) ||
+                                    line.includes(`https://localhost:${port}`)
+                            );
                         let url = '';
                         if (lineWithUrl) {
                             url = lineWithUrl.substring(lineWithUrl.indexOf('http'));
