@@ -15,7 +15,7 @@ import * as fs from 'fs-extra';
 import * as child_process from 'child_process';
 const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
-import { dispose } from '../../platform/common/helpers';
+import { dispose, splitLines } from '../../platform/common/helpers';
 import { Observable } from 'rxjs-compat/Observable';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 import { sleep } from '../core';
@@ -102,16 +102,16 @@ export class JupyterServer {
                 // Wait for it to shutdown fully so that we can re-use the same port.
                 await tcpPortUsed.waitUntilFree(port, 200, 10_000);
                 try {
-                    await this.startJupyterServer({
+                    const { url } = await this.startJupyterServer({
                         port,
                         token,
                         useCert: true,
                         detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-
+                    console.log(`Started Jupyter Server on ${url}`);
                     // Anything with a cert is https, not http
-                    resolve(`https://localhost:${port}/?token=${token}`);
+                    resolve(url);
                 } catch (ex) {
                     reject(ex);
                 }
@@ -125,18 +125,16 @@ export class JupyterServer {
         useCert?: boolean;
         jupyterLab?: boolean;
         password?: string;
-    }): Promise<{ url: string } & IDisposable> {
+    }): Promise<{ url: string; dispose: Function }> {
         const port = await getPort({ host: 'localhost', port: this.nextPort });
         // Possible previous instance of jupyter has not completely shutdown.
         // Wait for it to shutdown fully so that we can re-use the same port.
         await tcpPortUsed.waitUntilFree(port, 200, 10_000);
         const token = typeof options.token === 'string' ? options.token : this.generateToken();
-        const disposable = await this.startJupyterServer({ ...options, port, token });
+        const result = await this.startJupyterServer({ ...options, port, token });
         await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-
-        // Anything with a cert is https, not http
-        const url = `http${options.useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
-        return { url, dispose: () => disposable.dispose() };
+        console.log(`Started Jupyter Server on ${result.url}`);
+        return result;
     }
 
     public async startJupyterWithToken({ detached }: { detached?: boolean } = {}): Promise<string> {
@@ -148,13 +146,12 @@ export class JupyterServer {
                 // Wait for it to shutdown fully so that we can re-use the same port.
                 await tcpPortUsed.waitUntilFree(port, 200, 10_000);
                 try {
-                    await this.startJupyterServer({
+                    const { url } = await this.startJupyterServer({
                         port,
                         token,
                         detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    const url = `http://localhost:${port}/?token=${token}`;
                     console.log(`Started Jupyter Server on ${url}`);
                     resolve(url);
                 } catch (ex) {
@@ -172,12 +169,11 @@ export class JupyterServer {
                 // Wait for it to shutdown fully so that we can re-use the same port.
                 await tcpPortUsed.waitUntilFree(port, 200, 10_000);
                 try {
-                    await this.startJupyterServer({
+                    const { url } = await this.startJupyterServer({
                         port,
                         token
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    const url = `http://localhost:${port}/?token=${token}`;
                     console.log(`Started Jupyter Server on ${url}`);
                     resolve(url);
                 } catch (ex) {
@@ -222,13 +218,13 @@ export class JupyterServer {
         jupyterLab?: boolean;
         password?: string;
         detached?: boolean;
-    }): Promise<IDisposable> {
-        return new Promise<IDisposable>(async (resolve, reject) => {
+    }): Promise<{ url: string; dispose: Function }> {
+        return new Promise<{ url: string; dispose: Function }>(async (resolve, reject) => {
             try {
                 const args = [
                     '-m',
                     'jupyter',
-                    jupyterLab ? 'lab' : 'notebook',
+                    jupyterLab || process.env.VSC_USE_JUPYTER_LAB === 'true' ? 'lab' : 'notebook',
                     '--no-browser',
                     `--NotebookApp.port=${port}`,
                     `--NotebookApp.token=${token}`,
@@ -288,11 +284,28 @@ export class JupyterServer {
                         }
                     }
                 };
+                let allOutput = '';
                 const subscription = result.out.subscribe((output) => {
+                    allOutput += output.out;
+
                     // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
                     // This way we can click the link in the output panel easily.
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
-                        resolve(procDisposable);
+                        const lines = splitLines(allOutput, { trim: true, removeEmptyEntries: true });
+                        const indexOfCtrlC = lines.findIndex((item) =>
+                            item.includes('Use Control-C to stop this server')
+                        );
+                        const lineWithUrl = lines
+                            .slice(0, indexOfCtrlC)
+                            .reverse()
+                            .find((line) => line.includes(`http://localhost:${port}`));
+                        let url = '';
+                        if (lineWithUrl) {
+                            url = lineWithUrl.substring(lineWithUrl.indexOf('http'));
+                        } else {
+                            url = `http://localhost:${port}/?token=${token}`;
+                        }
+                        resolve({ url, dispose: () => procDisposable.dispose() });
                     }
                 });
                 this._disposables.push(procDisposable);

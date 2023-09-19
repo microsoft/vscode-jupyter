@@ -314,6 +314,14 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
+          - jupyterConnection: remote
+            python: python
+            pythonVersion: '3.10'
+            packageVersion: 'prerelease'
+            useJupyterLab: 'true'
+            tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: web
             python: python
             pythonVersion: '3.10'
@@ -683,6 +691,7 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
           VSC_JUPYTER_CI_TEST_GREP: ${{ matrix.tags }}
+          VSC_USE_JUPYTER_LAB: ${{ matrix.useJupyterLab }}
         id: test_notebook_vscode_ubuntu
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.jupyterConnection != 'web'
 
