@@ -303,7 +303,7 @@ export class JupyterServer {
                         if (lineWithUrl) {
                             url = lineWithUrl.substring(lineWithUrl.indexOf('http'));
                         } else {
-                            url = `http://localhost:${port}/?token=${token}`;
+                            url = `http${useCert ? 's' : ''}://localhost:${port}/?token=${token}`;
                         }
                         console.log(`Started Jupyter Server on ${url}`);
                         resolve({ url, dispose: () => procDisposable.dispose() });
