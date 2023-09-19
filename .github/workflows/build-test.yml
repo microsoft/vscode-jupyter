@@ -314,53 +314,53 @@ jobs:
             tags: '^[^@]+$|@mandatory'
             os: ubuntu-latest
             ipywidgetsVersion: ''
-        #   - jupyterConnection: web
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '^[^@]+$|@mandatory'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: ''
-        #   - jupyterConnection: raw
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '^[^@]+$|@mandatory'
-        #     os: windows-latest
-        #     ipywidgetsVersion: ''
-        # # IPyWidgets 8
-        #   - jupyterConnection: raw
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '@widgets'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: '8'
-        # # Conda
-        #   - jupyterConnection: raw
-        #     python: conda
-        #     pythonVersion: '3.10'
-        #     tags: '^[^@]+$|@mandatory|@python'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: ''
-        # # Pre-Release Versions
-        #   - jupyterConnection: raw
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     packageVersion: 'prerelease'
-        #     tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: ''
-        # # Without Python
-        #   - jupyterConnection: raw
-        #     python: noPython
-        #     tags: '@nonPython'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: ''
-        # # Misc
-        #   - jupyterConnection: local
-        #     python: python
-        #     pythonVersion: '3.10'
-        #     tags: '@kernelCore|@kernelInstall'
-        #     os: ubuntu-latest
-        #     ipywidgetsVersion: ''
+          - jupyterConnection: web
+            python: python
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory'
+            os: windows-latest
+            ipywidgetsVersion: ''
+        # IPyWidgets 8
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            tags: '@widgets'
+            os: ubuntu-latest
+            ipywidgetsVersion: '8'
+        # Conda
+          - jupyterConnection: raw
+            python: conda
+            pythonVersion: '3.10'
+            tags: '^[^@]+$|@mandatory|@python'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+        # Pre-Release Versions
+          - jupyterConnection: raw
+            python: python
+            pythonVersion: '3.10'
+            packageVersion: 'prerelease'
+            tags: '^[^@]+$|@mandatory|@kernelCore|@python|@jupyter'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+        # Without Python
+          - jupyterConnection: raw
+            python: noPython
+            tags: '@nonPython'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
+        # Misc
+          - jupyterConnection: local
+            python: python
+            pythonVersion: '3.10'
+            tags: '@kernelCore|@kernelInstall'
+            os: ubuntu-latest
+            ipywidgetsVersion: ''
           - jupyterConnection: remote
             python: python
             pythonVersion: '3.10'
