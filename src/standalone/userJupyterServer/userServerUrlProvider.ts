@@ -249,7 +249,7 @@ export class UserJupyterServerUrlProvider
             const label = DataScience.connectToToTheJupyterServer(url);
             return [{ label, url } as JupyterServerCommand];
         }
-        return [{ label: DataScience.jupyterSelectUriCommandLabel, canBeAutoPicked: true }];
+        return [{ label: DataScience.jupyterSelectUriCommandLabel, canBeAutoSelected: true }];
     }
     async provideJupyterServers(_token: CancellationToken): Promise<JupyterServer[]> {
         await this.initializeServers();

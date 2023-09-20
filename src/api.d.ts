@@ -116,7 +116,7 @@ export interface JupyterServerCommand {
      *
      * In all other cases initializing this property is a no-op.
      */
-    canBeAutoPicked?: boolean;
+    canBeAutoSelected?: boolean;
 }
 
 /**
