@@ -112,6 +112,7 @@ export const DefaultTheme = 'Default Light+';
 export const PythonExtension = 'ms-python.python';
 export const RendererExtension = 'ms-toolsai.jupyter-renderers';
 export const PylanceExtension = 'ms-python.vscode-pylance';
+export const JupyterHubExetnsion = 'ms-toolsai.jupyter-hub';
 
 export const LanguagesSupportedByPythonkernel = [
     'python',

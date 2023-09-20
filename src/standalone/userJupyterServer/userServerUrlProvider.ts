@@ -14,7 +14,10 @@ import {
     Memento,
     QuickInputButtons,
     Uri,
-    env
+    commands,
+    env,
+    extensions,
+    window
 } from 'vscode';
 import { JupyterConnection } from '../../kernels/jupyter/connection/jupyterConnection';
 import {
@@ -33,6 +36,7 @@ import {
 import {
     Identifiers,
     JVSC_EXTENSION_ID,
+    JupyterHubExetnsion,
     Settings,
     Telemetry,
     UserJupyterServerPickerProviderId
@@ -101,7 +105,7 @@ export class UserJupyterServerUrlProvider
     private jupyterServerUriDisplayName: UserJupyterServerDisplayName;
     constructor(
         @inject(IClipboard) clipboard: IClipboard,
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
         @inject(IsWebExtension) private readonly isWebExtension: boolean,
@@ -364,6 +368,42 @@ export class UserJupyterServerUrlProvider
             .catch(noop);
         return this._cachedServerInfoInitialized;
     }
+    private recommendInstallingJupyterHubExtension() {
+        if (extensions.getExtension(JupyterHubExetnsion)) {
+            this.applicationShell
+                .showInformationMessage(DataScience.useJupyterHubExtension, {
+                    modal: true,
+                    detail: DataScience.useJupyterHubExtensionDetail
+                })
+                .then(() => {
+                    // Re-display the kernel picker forcing the user to pick the right option.
+                    commands
+                        .executeCommand('notebook.selectKernel', { notebookEditor: window.activeNotebookEditor })
+                        .then(noop, noop);
+                }, noop);
+        } else {
+            this.applicationShell
+                .showInformationMessage(
+                    DataScience.installJupyterHub,
+                    { modal: true, detail: DataScience.installJupyterHubDetail },
+                    Common.install,
+                    Common.moreInfo
+                )
+                .then((selection) => {
+                    if (selection === Common.install) {
+                        commands
+                            .executeCommand('workbench.extensions.installExtension', JupyterHubExetnsion, {
+                                context: { skipWalkthrough: true }
+                            })
+                            .then(noop, noop);
+                    } else if (selection === Common.moreInfo) {
+                        env.openExternal(
+                            Uri.parse('https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter-hub')
+                        ).then(noop, noop);
+                    }
+                }, noop);
+        }
+    }
     async captureRemoteJupyterUrl(
         token: CancellationToken,
         initialUrl: string = ''
@@ -437,6 +477,10 @@ export class UserJupyterServerUrlProvider
                             const errorMessage = validationErrorMessage;
                             validationErrorMessage = ''; // Never display this validation message again.
                             isJupyterHub = await this.jupyterHubPasswordConnect.isJupyterHub(jupyterServerUri.baseUrl);
+                            if (isJupyterHub) {
+                                this.recommendInstallingJupyterHubExtension();
+                                throw new CancellationError();
+                            }
                             const result = isJupyterHub
                                 ? await this.jupyterHubPasswordConnect.getPasswordConnectionInfo({
                                       url: jupyterServerUri.baseUrl,
