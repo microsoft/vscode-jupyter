@@ -413,6 +413,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         token
                     ).catch((ex) => traceError(`Failed to select a kernel`, ex));
                     if (result && result === InputFlowAction.back) {
+                        if (selectedSource === defaultSelection) {
+                            throw InputFlowAction.back;
+                        }
                         return this.getRemoteServersFromProvider(provider, token, multiStep, state);
                     }
                     if (!result || result instanceof InputFlowAction) {
@@ -439,6 +442,9 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         (ex) => traceError(`Failed to select a kernel`, ex)
                     );
                     if (result && result === InputFlowAction.back) {
+                        if (selectedSource === defaultSelection) {
+                            throw InputFlowAction.back;
+                        }
                         return this.getRemoteServersFromProvider(provider, token, multiStep, state);
                     }
                     if (!result || result instanceof InputFlowAction) {
@@ -512,7 +518,12 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
             traceError(`Failed to select a kernel`, ex)
         );
         if (result && result === InputFlowAction.back) {
-            return this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
+            // Do not go back to the previous command,
+            // We have no idea whta the previous command in the 3rd party extension does,
+            // Its possible we start a server, or make some http request or the like.
+            // Thus implicitly calling the action on the command is wrong, instead the user must chose this operation.
+            // return this.selectRemoteServerFromRemoteKernelFinder(selectedSource, state, token);
+            throw InputFlowAction.back;
         }
         if (!result || result instanceof InputFlowAction) {
             throw new CancellationError();
