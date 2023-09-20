@@ -111,7 +111,7 @@ export interface JupyterServerCommand {
     description?: string;
     /**
      * If no servers are returned by {@link JupyterServerProvider.provideJupyterServers} and
-     * only one of the commands returned by {@link JupyterServerCommandProvider.provideCommands} is initialized with `canBeAutoPicked=true`,
+     * only one of the commands returned by {@link JupyterServerCommandProvider.provideCommands} is initialized with `canBeAutoSelected=true`,
      * then that command is automatically selected without displaying it to the user.
      *
      * In all other cases initializing this property is a no-op.
