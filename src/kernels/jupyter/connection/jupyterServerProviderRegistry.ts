@@ -115,6 +115,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 return {
                     label: stripCodicons(c.label),
                     description: stripCodicons(c.description),
+                    picked: c.picked,
+                    default: c.picked,
                     command: c
                 };
             });

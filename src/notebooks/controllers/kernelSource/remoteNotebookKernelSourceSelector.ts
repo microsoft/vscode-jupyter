@@ -303,8 +303,27 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
         const onDidChangeItems = new EventEmitter<typeof items>();
         let defaultSelection: (typeof items)[0] | undefined =
             items.length === 1 && 'default' in items[0] && items[0].default ? items[0] : undefined;
-        if (serverProvider && items.length === 1) {
-            defaultSelection = items[0];
+        if (serverProvider) {
+            // If the only item is a server, then aut select that.
+            const itemsWithoutSeparators = items.filter((i) => 'type' in i) as (
+                | ContributedKernelFinderQuickPickItem
+                | KernelProviderItemsQuickPickItem
+                | JupyterServerQuickPickItem
+            )[];
+            if (
+                itemsWithoutSeparators.length === 1 &&
+                itemsWithoutSeparators.every((i) => i.type !== KernelFinderEntityQuickPickType.UriProviderQuickPick)
+            ) {
+                defaultSelection = itemsWithoutSeparators[0];
+            } else if (
+                itemsWithoutSeparators.every((i) => i.type === KernelFinderEntityQuickPickType.UriProviderQuickPick) &&
+                itemsWithoutSeparators.filter((i) => i.picked).length === 1
+            ) {
+                // Anyone using the new API must explicitly state the fact that commands are auto selected.
+                // We will auto select a command only if there is one command that has `picked=true`
+                // And if there are no servers.
+                defaultSelection = items.filter((i) => i.picked)[0];
+            }
         }
         let lazyQuickPick:
             | QuickPick<
