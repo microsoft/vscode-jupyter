@@ -413,7 +413,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         token
                     ).catch((ex) => traceError(`Failed to select a kernel`, ex));
                     if (result && result === InputFlowAction.back) {
-                        if ((selectedSource === defaultSelection)) {
+                        if (selectedSource === defaultSelection) {
                             throw InputFlowAction.back;
                         }
                         return this.getRemoteServersFromProvider(provider, token, multiStep, state);
@@ -442,7 +442,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         (ex) => traceError(`Failed to select a kernel`, ex)
                     );
                     if (result && result === InputFlowAction.back) {
-                        if ((selectedSource === defaultSelection)) {
+                        if (selectedSource === defaultSelection) {
                             throw InputFlowAction.back;
                         }
                         return this.getRemoteServersFromProvider(provider, token, multiStep, state);
