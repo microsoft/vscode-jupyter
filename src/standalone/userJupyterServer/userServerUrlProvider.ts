@@ -37,7 +37,6 @@ import {
     Identifiers,
     JUPYTER_HUB_EXTENSION_ID,
     JVSC_EXTENSION_ID,
-    JupyterHubExetnsion,
     Settings,
     Telemetry,
     UserJupyterServerPickerProviderId
