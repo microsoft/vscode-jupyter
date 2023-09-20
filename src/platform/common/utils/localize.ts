@@ -383,6 +383,12 @@ export namespace DataScience {
             numberOfConnections.toString()
         );
     };
+    export const installJupyterHub = l10n.t('Install the JupyterHub extension to connect to JupyterHub servers.');
+    export const useJupyterHubExtension = l10n.t(`Select 'Existing JupyterHub Server...' from the Kernel Picker`);
+    export const useJupyterHubExtensionDetail = l10n.t(`Use this option when connecting to JupyterHub servers`);
+    export const installJupyterHubDetail = l10n.t(
+        `Once installed, open the Kernel Picker and select 'Existing JupyterHub Server...'`
+    );
     export const jupyterSelectUserAndPasswordTitle = l10n.t(
         'Enter your user name and password to connect to Jupyter Hub'
     );

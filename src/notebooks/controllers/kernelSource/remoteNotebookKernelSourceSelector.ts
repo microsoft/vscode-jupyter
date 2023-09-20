@@ -83,6 +83,9 @@ interface KernelProviderItemsQuickPickItem extends QuickPickItem {
     originalItem: QuickPickItem & { default?: boolean };
 }
 
+function doesExtensionSupportRemovingAServer(extensionId: string) {
+    return extensionId === JVSC_EXTENSION_ID || extensionId === JUPYTER_HUB_EXTENSION_ID;
+}
 // Provides the UI to select a Kernel Source for a given notebook document
 @injectable()
 export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernelSourceSelector {
@@ -214,9 +217,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         ? DataScience.jupyterServerLastConnectionForQuickPickDescription(new Date(time))
                         : undefined,
                     buttons:
-                        serverProvider?.removeJupyterServer &&
-                        (provider.extensionId === JVSC_EXTENSION_ID ||
-                            provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                        serverProvider?.removeJupyterServer && doesExtensionSupportRemovingAServer(provider.extensionId)
                             ? [
                                   {
                                       iconPath: new ThemeIcon('close'),
@@ -236,9 +237,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     idAndHandle: server.serverProviderHandle,
                     label: server.displayName,
                     buttons:
-                        serverProvider?.removeJupyterServer &&
-                        (provider.extensionId === JVSC_EXTENSION_ID ||
-                            provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                        serverProvider?.removeJupyterServer && doesExtensionSupportRemovingAServer(provider.extensionId)
                             ? [
                                   {
                                       iconPath: new ThemeIcon('close'),
@@ -268,9 +267,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                     idAndHandle: { extensionId: provider.extensionId, id: provider.id, handle: server.id },
                     server,
                     buttons:
-                        serverProvider?.removeJupyterServer &&
-                        (provider.extensionId === JVSC_EXTENSION_ID ||
-                            provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                        serverProvider?.removeJupyterServer && doesExtensionSupportRemovingAServer(provider.extensionId)
                             ? [
                                   {
                                       iconPath: new ThemeIcon('close'),
@@ -356,8 +353,7 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                         if (
                             serverProvider?.removeJupyterServer &&
                             serverToRemove &&
-                            (provider.extensionId === JVSC_EXTENSION_ID ||
-                                provider.extensionId === JUPYTER_HUB_EXTENSION_ID)
+                            doesExtensionSupportRemovingAServer(provider.extensionId)
                         ) {
                             quickPick.busy = true;
                             this.serverUriStorage
@@ -377,31 +373,29 @@ export class RemoteNotebookKernelSourceSelector implements IRemoteNotebookKernel
                 },
                 onDidChangeItems: onDidChangeItems.event
             });
-            if (provider.extensionId === JVSC_EXTENSION_ID || provider.extensionId === JUPYTER_HUB_EXTENSION_ID) {
-                quickPick.onDidChangeValue(async (e) => {
-                    if (!provider.getQuickPickEntryItems) {
-                        return;
-                    }
-                    const quickPickCommandItems: QuickPickItem[] = [];
-                    if (quickPickServerItems.length > 0) {
-                        quickPickCommandItems.push({
-                            label: '',
-                            kind: QuickPickItemKind.Separator
-                        });
-                    }
-
-                    const commands = await provider.getQuickPickEntryItems(e);
-                    const newProviderItems: KernelProviderItemsQuickPickItem[] = commands.map((i) => {
-                        return {
-                            ...i,
-                            provider: provider,
-                            type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
-                            originalItem: i
-                        };
+            quickPick.onDidChangeValue(async (e) => {
+                if (!provider.getQuickPickEntryItems) {
+                    return;
+                }
+                const quickPickCommandItems: QuickPickItem[] = [];
+                if (quickPickServerItems.length > 0) {
+                    quickPickCommandItems.push({
+                        label: '',
+                        kind: QuickPickItemKind.Separator
                     });
-                    quickPick.items = quickPickServerItems.concat(quickPickCommandItems).concat(newProviderItems);
-                }, this);
-            }
+                }
+
+                const commands = await provider.getQuickPickEntryItems(e);
+                const newProviderItems: KernelProviderItemsQuickPickItem[] = commands.map((i) => {
+                    return {
+                        ...i,
+                        provider: provider,
+                        type: KernelFinderEntityQuickPickType.UriProviderQuickPick,
+                        originalItem: i
+                    };
+                });
+                quickPick.items = quickPickServerItems.concat(quickPickCommandItems).concat(newProviderItems);
+            }, this);
             lazyQuickPick = quickPick;
             selectedSource = await selection;
         }
