@@ -189,6 +189,10 @@ const ExtensionsWithKnownProviderIds = new Set(
 
 export function generateIdFromRemoteProvider(provider: JupyterServerProviderHandle) {
     if (ExtensionsWithKnownProviderIds.has(provider.extensionId.toLowerCase())) {
+        // This is done to maintain backwards compatibility, as the old Ids
+        // did not have extension Ids in the urls, and we need to ensure we stick with that, else
+        // if this change, then the kernle ids generated for controller ids will be different, meaning kernel MRUs stop working
+
         // For extensions that we support migration, like AzML and Jupyter extension and the like,
         // we can ignore storing the extension id in the url.
         // eslint-disable-next-line

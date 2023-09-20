@@ -9,11 +9,7 @@ import { traceError } from '../../../platform/logging';
 import { IJupyterServerProviderRegistry, IJupyterServerUriStorage, JupyterServerProviderHandle } from '../types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { JupyterConnection } from './jupyterConnection';
-import {
-    JUPYTER_HUB_EXTENSION_ID,
-    JVSC_EXTENSION_ID,
-    TestingKernelPickerProviderId
-} from '../../../platform/common/constants';
+import { JVSC_EXTENSION_ID, TestingKernelPickerProviderId } from '../../../platform/common/constants';
 
 export type SelectJupyterUriCommandSource =
     | 'nonUser'
@@ -55,7 +51,7 @@ export class JupyterServerSelector {
         }
         // No need to add the Uri for providers using the new API.
         if (
-            ![JVSC_EXTENSION_ID, JUPYTER_HUB_EXTENSION_ID].includes(provider.extensionId) &&
+            ![JVSC_EXTENSION_ID].includes(provider.extensionId) &&
             !this.serverProviderRegistry.jupyterCollections.some((c) => c.extensionId === provider.extensionId)
         ) {
             await this.serverUriStorage.add(provider);

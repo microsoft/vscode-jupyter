@@ -35,8 +35,8 @@ import {
 } from '../../platform/common/application/types';
 import {
     Identifiers,
+    JUPYTER_HUB_EXTENSION_ID,
     JVSC_EXTENSION_ID,
-    JupyterHubExetnsion,
     Settings,
     Telemetry,
     UserJupyterServerPickerProviderId
@@ -369,7 +369,7 @@ export class UserJupyterServerUrlProvider
         return this._cachedServerInfoInitialized;
     }
     private recommendInstallingJupyterHubExtension() {
-        if (extensions.getExtension(JupyterHubExetnsion)) {
+        if (extensions.getExtension(JUPYTER_HUB_EXTENSION_ID)) {
             this.applicationShell
                 .showInformationMessage(DataScience.useJupyterHubExtension, {
                     modal: true,
@@ -392,7 +392,7 @@ export class UserJupyterServerUrlProvider
                 .then((selection) => {
                     if (selection === Common.install) {
                         commands
-                            .executeCommand('workbench.extensions.installExtension', JupyterHubExetnsion, {
+                            .executeCommand('workbench.extensions.installExtension', JUPYTER_HUB_EXTENSION_ID, {
                                 context: { skipWalkthrough: true }
                             })
                             .then(noop, noop);
