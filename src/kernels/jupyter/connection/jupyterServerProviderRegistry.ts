@@ -25,6 +25,8 @@ import { inject, injectable } from 'inversify';
 import { dispose, stripCodicons } from '../../../platform/common/helpers';
 import { traceError } from '../../../platform/logging';
 import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import { JupyterConnection } from './jupyterConnection';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 
 export class JupyterServerCollectionImpl extends Disposables implements JupyterServerCollection {
     private _commandProvider?: JupyterServerCommandProvider;
@@ -49,6 +51,10 @@ export class JupyterServerCollectionImpl extends Disposables implements JupyterS
     }
 }
 
+// Assume connections are valid only for 5 minutes,
+// Ever 5 minutes we try to access the same connection, we need to validate it.
+const RemoteConnectionValidityPeriod = 5 * 60_000;
+
 class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvider {
     readonly id: string;
     public get displayName() {
@@ -69,7 +75,8 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
     private commands = new Map<string, JupyterServerCommand>();
     constructor(
         private readonly provider: JupyterServerCollection,
-        public readonly extensionId: string
+        public readonly extensionId: string,
+        private readonly jupyterConnection: JupyterConnection
     ) {
         super();
         this.id = provider.id;
@@ -90,6 +97,7 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             this.provider.serverProvider.onDidChangeServers(
                 () => {
                     this._servers.clear();
+                    this.cachedServerUri.clear();
                     this._onDidChangeHandles.fire();
                 },
                 this,
@@ -164,7 +172,57 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
             token.dispose();
         }
     }
+    private cachedServerUri = new Map<string, { lastValidated: StopWatch; promise: Promise<IJupyterServerUri> }>();
     async getServerUri(handle: string): Promise<IJupyterServerUri> {
+        let cache = this.cachedServerUri.get(handle);
+        if (!cache) {
+            // Nothing we can do if its invalid the first time we get it from extension.
+            // Hence no need to validate it here, just return it as is
+            cache = { promise: this.getServerUriImpl(handle), lastValidated: new StopWatch() };
+            cache.promise.catch(() => {
+                if (this.cachedServerUri.get(handle) === cache) {
+                    this.cachedServerUri.delete(handle);
+                }
+            });
+            this.cachedServerUri.set(handle, cache);
+            return cache.promise;
+        }
+
+        // Validate the connection returned.
+        // However if the connection was last validated 60 seconds ago, then no need to validate it again.
+        if (cache.lastValidated.elapsedTime <= RemoteConnectionValidityPeriod) {
+            return cache.promise;
+        }
+        return cache.promise.then(async (c) => {
+            try {
+                await this.jupyterConnection.validateRemoteUri(
+                    { extensionId: this.extensionId, id: this.id, handle },
+                    c,
+                    true
+                );
+                cache!.lastValidated.reset();
+                return c;
+            } catch (ex) {
+                // Not valid
+                const currentPromise = this.cachedServerUri.get(handle);
+                if (currentPromise === cache) {
+                    cache = { promise: this.getServerUriImpl(handle), lastValidated: new StopWatch() };
+                    this.cachedServerUri.set(handle, cache);
+                    cache.promise.catch(() => {
+                        if (this.cachedServerUri.get(handle) === cache) {
+                            this.cachedServerUri.delete(handle);
+                        }
+                    });
+                    return cache.promise;
+                }
+                if (currentPromise) {
+                    return currentPromise.promise;
+                }
+                throw ex;
+            }
+        });
+    }
+    async getServerUriImpl(handle: string): Promise<IJupyterServerUri> {
         const token = new CancellationTokenSource();
         if (!this.provider.serverProvider) {
             throw new Error(
@@ -204,6 +262,9 @@ class JupyterUriProviderAdaptor extends Disposables implements IJupyterUriProvid
                 };
             }
             throw new Error('Jupyter Provider does not implement the method resolveJupyterServer');
+        } catch (ex) {
+            console.error(ex);
+            throw ex;
         } finally {
             token.dispose();
         }
@@ -281,7 +342,8 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IJupyterUriProviderRegistration)
-        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration
+        private readonly jupyterUriProviderRegistration: IJupyterUriProviderRegistration,
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
     ) {
         super();
         disposables.push(this);
@@ -308,7 +370,7 @@ export class JupyterServerProviderRegistry extends Disposables implements IJupyt
                 if (collection.serverProvider) {
                     adapter?.dispose();
                     uriRegistration?.dispose();
-                    adapter = new JupyterUriProviderAdaptor(collection, extensionId);
+                    adapter = new JupyterUriProviderAdaptor(collection, extensionId, this.jupyterConnection);
                     uriRegistration = this.jupyterUriProviderRegistration.registerProvider(adapter, extensionId);
                     this.disposables.push(uriRegistration);
                     this._onDidChangeCollections.fire({ added: [collection], removed: [] });
