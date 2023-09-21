@@ -102,23 +102,23 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                 this.mappedProviders.add(serverProvider);
                 if (serverProvider?.onDidChangeServers) {
                     serverProvider?.onDidChangeServers(
-                        () => this.lookForServersInCollection(collection),
+                        () => this.lookForServersInCollectionAndRemoveOldServers(collection),
                         this,
                         this.disposables
                     );
                 }
                 this.serverUriStorage.onDidLoad(
-                    () => this.lookForServersInCollection(collection),
+                    () => this.lookForServersInCollectionAndRemoveOldServers(collection),
                     this,
                     this.disposables
                 );
-                return this.lookForServersInCollection(collection).catch(noop);
+                return this.lookForServersInCollectionAndRemoveOldServers(collection).catch(noop);
             })
         );
         token.dispose();
     }
     @swallowExceptions('Check Servers in Jupyter Server Provider')
-    private async lookForServersInCollection(collection: JupyterServerCollection) {
+    private async lookForServersInCollectionAndRemoveOldServers(collection: JupyterServerCollection) {
         if (!this.serverUriStorage.all.length) {
             // We do not have any of the previously used servers, or the data has not yet loaded.
             return;
@@ -131,6 +131,7 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
         const token = new CancellationTokenSource();
         try {
             const servers = await Promise.resolve(serverProvider.provideJupyterServers(token.token));
+            const currentServerIds = new Set<string>();
             (servers || []).forEach((server) => {
                 const serverProviderHandle = {
                     extensionId: collection.extensionId,
@@ -138,12 +139,24 @@ export class RemoteKernelFinderController implements IRemoteKernelFinderControll
                     id: collection.id
                 };
                 const serverId = generateIdFromRemoteProvider(serverProviderHandle);
+                currentServerIds.add(serverId);
                 // If this sever was never used in the past, then no need to create a finder for this.
                 if (this.mappedServers.has(serverId) || !usedServers.has(serverId)) {
                     return;
                 }
                 this.mappedServers.add(serverId);
                 this.createRemoteKernelFinder(serverProviderHandle, server.label);
+            });
+            // If we have finders that belong to old servers of this same collection, then remove them.
+            this.serverFinderMapping.forEach((finder, serverId) => {
+                if (
+                    finder.serverProviderHandle.extensionId === collection.extensionId &&
+                    finder.serverProviderHandle.id === collection.id &&
+                    !currentServerIds.has(finder.serverProviderHandle.handle)
+                ) {
+                    finder.dispose();
+                    this.serverFinderMapping.delete(serverId);
+                }
             });
         } catch (ex) {
             traceError(`Failed to get servers for Collection ${collection.id} in ${collection.extensionId}`, ex);
