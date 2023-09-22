@@ -5,6 +5,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { ContentsManager } from '@jupyterlab/services';
+import type WebSocketIsomorphic from 'isomorphic-ws';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri } from 'vscode';
@@ -261,6 +262,7 @@ export interface IJupyterRequestCreator {
         getAuthHeaders?: () => Record<string, string>,
         getWebSocketProtocols?: () => string | string[] | undefined
     ): ClassType<WebSocket>;
+    wrapWebSocketCtor(websocketCtor: ClassType<WebSocketIsomorphic>): ClassType<WebSocketIsomorphic>;
     getWebsocket(id: string): IKernelSocket | undefined;
     getRequestInit(): RequestInit;
 }
