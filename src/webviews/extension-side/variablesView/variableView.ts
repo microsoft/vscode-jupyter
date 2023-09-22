@@ -167,10 +167,12 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                     .map((e) => {
                         const contributes = e.packageJSON?.contributes;
                         if (contributes?.dataframeViewer) {
-                            return contributes.dataframeViewer.map((dataframeViewer: any) => ({
-                                extension: e,
-                                dataframeViewer
-                            }));
+                            return contributes.dataframeViewer.map(
+                                (dataframeViewer: { command: string; title: string }[]) => ({
+                                    extension: e,
+                                    dataframeViewer
+                                })
+                            );
                         }
                         return [];
                     })
@@ -201,6 +203,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
                         const item = quickPick.selectedItems[0];
                         if (item) {
                             quickPick.hide();
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             this.commandManager.executeCommand(item.command as any, {
                                 container: {},
                                 variable: request.variable
